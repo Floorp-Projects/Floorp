@@ -253,12 +253,11 @@ export type ChromeFrame = {
   location: ?SourceLocation,
 };
 
-export type OriginalFrame = {
+export type OriginalFrame = {|
   displayName: string,
   variables?: Object,
   location?: SourceLocation,
-  thread: string,
-};
+|};
 
 /**
  * ContextMenuItem
@@ -401,7 +400,6 @@ export type SourceWithContentAndType<+Content: SourceContent> = $ReadOnly<{
 export type Source = {
   +id: SourceId,
   +url: string,
-  +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
   +relativeUrl: string,

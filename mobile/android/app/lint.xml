@@ -244,6 +244,7 @@
         <ignore path="**/raw/.mkdir.done" />
         <!-- Ignore drawables used for localized Top Sites. -->
         <ignore regexp="^.*?/res/drawable-[xhmdpi]+/suggestedsites_[a-z]+.png$" />
+        <ignore regexp="firstrun_signin_button2|activity_stream_signin_title|activity_stream_signin_description|activity_stream_signin_button" />
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />

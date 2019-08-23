@@ -113,16 +113,27 @@ class LogFile {
   LogFile* mNextToRelease;
 };
 
-static const char* ExpandPIDMarker(const char* aFilename,
-                                   char (&buffer)[2048]) {
+static const char* ExpandLogFileName(const char* aFilename,
+                                     char (&buffer)[2048]) {
   MOZ_ASSERT(aFilename);
   static const char kPIDToken[] = "%PID";
+  static const char kMOZLOGExt[] = MOZ_LOG_FILE_EXTENSION;
+
+  bool hasMozLogExtension = StringEndsWith(nsDependentCString(aFilename),
+                                           nsLiteralCString(kMOZLOGExt));
+
   const char* pidTokenPtr = strstr(aFilename, kPIDToken);
   if (pidTokenPtr &&
-      SprintfLiteral(
-          buffer, "%.*s%s%d%s", static_cast<int>(pidTokenPtr - aFilename),
-          aFilename, XRE_IsParentProcess() ? "-main." : "-child.",
-          base::GetCurrentProcId(), pidTokenPtr + strlen(kPIDToken)) > 0) {
+      SprintfLiteral(buffer, "%.*s%s%d%s%s",
+                     static_cast<int>(pidTokenPtr - aFilename), aFilename,
+                     XRE_IsParentProcess() ? "-main." : "-child.",
+                     base::GetCurrentProcId(), pidTokenPtr + strlen(kPIDToken),
+                     hasMozLogExtension ? "" : kMOZLOGExt) > 0) {
+    return buffer;
+  }
+
+  if (!hasMozLogExtension &&
+      SprintfLiteral(buffer, "%s%s", aFilename, kMOZLOGExt) > 0) {
     return buffer;
   }
 
@@ -258,7 +269,7 @@ class LogModuleManager {
 
     if (logFile && logFile[0]) {
       char buf[2048];
-      logFile = detail::ExpandPIDMarker(logFile, buf);
+      logFile = detail::ExpandLogFileName(logFile, buf);
       mOutFilePath.reset(strdup(logFile));
 
       if (mRotate > 0) {
@@ -288,7 +299,7 @@ class LogModuleManager {
 
     const char* filename = aFilename ? aFilename : "";
     char buf[2048];
-    filename = detail::ExpandPIDMarker(filename, buf);
+    filename = detail::ExpandLogFileName(filename, buf);
 
     // Can't use rotate at runtime yet.
     MOZ_ASSERT(mRotate == 0,

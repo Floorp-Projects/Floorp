@@ -118,8 +118,6 @@ class HTMLEditRules : public TextEditRules {
     return mData->HTMLEditorRef();
   }
 
-  enum RulesEndpoint { kStart, kEnd };
-
   /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is
    * executed or something equivalent.  This method actually tries to insert
@@ -526,20 +524,6 @@ class HTMLEditRules : public TextEditRules {
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
   /**
-   * aLists and aTables allow the caller to specify what kind of content to
-   * "look inside".  If aTables is Tables::yes, look inside any table content,
-   * and insert the inner content into the supplied nsTArray at offset
-   * aIndex.  Similarly with aLists and list content.  aIndex is updated to
-   * point past inserted elements.
-   */
-  enum class Lists { no, yes };
-  enum class Tables { no, yes };
-  void GetInnerContent(nsINode& aNode,
-                       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                       int32_t* aIndex, Lists aLists = Lists::yes,
-                       Tables aTables = Tables::yes) const;
-
-  /**
    * If aNode is the descendant of a listitem, return that li.  But table
    * element boundaries are stoppers on the search.  Also stops on the active
    * editor host (contenteditable).  Also test if aNode is an li itself.
@@ -803,14 +787,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult NormalizeSelection();
 
   /**
-   * GetPromotedPoint() figures out where a start or end point for a block
-   * operation really is.
-   */
-  EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
-                                  int32_t aOffset,
-                                  EditSubAction aEditSubAction) const;
-
-  /**
    * GetPromotedRanges() runs all the selection range endpoint through
    * GetPromotedPoint().
    */
@@ -823,22 +799,10 @@ class HTMLEditRules : public TextEditRules {
    */
   void PromoteRange(nsRange& aRange, EditSubAction aEditSubAction) const;
 
-  /**
-   * GetNodesForOperation() runs through the ranges in the array and construct a
-   * new array of nodes to be acted on.
-   *
-   * XXX This name stats with "Get" but actually this modifies the DOM tree with
-   *     transaction.  We should rename this to making clearer what this does.
-   */
-  enum class TouchContent { no, yes };
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult GetNodesForOperation(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-      EditSubAction aEditSubAction, TouchContent aTouchContent) const;
-
   void GetChildNodesForOperation(
       nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
+
+  enum class TouchContent { no, yes };
 
   /**
    * GetNodesFromPoint() constructs a list of nodes from a point that will be
@@ -872,22 +836,6 @@ class HTMLEditRules : public TextEditRules {
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
   void LookInsideDivBQandList(
       nsTArray<OwningNonNull<nsINode>>& aNodeArray) const;
-
-  /**
-   * BustUpInlinesAtBRs() splits before all <br> elements in aNode.  All <br>
-   * nodes will be moved before right node at splitting its parent.  Finally,
-   * this returns all <br> elements, every left node and aNode with
-   * aOutArrayNodes.
-   *
-   * @param aNode               An inline container element.
-   * @param aOutArrayOfNodes    All found <br> elements, left nodes (may not
-   *                            be set if <br> is at start edge of aNode) and
-   *                            aNode itself.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  BustUpInlinesAtBRs(nsIContent& aNode,
-                     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
 
   /**
    * MakeTransitionList() detects all the transitions in the array, where a

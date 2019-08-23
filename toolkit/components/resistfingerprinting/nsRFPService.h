@@ -249,7 +249,7 @@ class nsRFPService final : public nsIObserver {
   static void MaybeCreateSpoofingKeyCodesForEnUS();
 
   static void GetKeyboardLangAndRegion(const nsAString& aLanguage,
-                                       KeyboardLangs& aLang,
+                                       KeyboardLangs& aLocale,
                                        KeyboardRegions& aRegion);
   static bool GetSpoofedKeyCodeInfo(const mozilla::dom::Document* aDoc,
                                     const WidgetKeyboardEvent* aKeyboardEvent,

@@ -15,34 +15,39 @@
   text-align: end;
 }
 
-.fxaccounts-avatar-button,
+.fxaccount-avatar,
 .fxaccounts-enable-button {
   margin-inline-start: 9px;
 }
 
-.fxaccount-email {
-  font-weight: bold;
-  font-size: .9em;
+.fxaccounts-avatar-button {
+  cursor: pointer;
 }
 
-.fxaccounts-avatar-button {
+.fxaccount-email {
+  font-weight: 600;
+  font-size: .9em;
+  vertical-align: middle;
+}
+
+.fxaccount-avatar {
+  display: inline-block;
+  vertical-align: middle;
   background-image: var(--avatar-url),
     url(chrome://browser/skin/fxa/avatar-color.svg);
-  background-color: transparent;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   border: 1px solid var(--in-content-border-color);
   border-radius: 1000px;
   width: 32px;
-  min-width: auto;
-  cursor: pointer;
+  height: 32px;
 }
 
-.fxaccounts-avatar-button:hover {
+.fxaccounts-avatar-button:hover .fxaccount-avatar {
   border-color: var(--in-content-border-hover);
 }
 
-.fxaccounts-avatar-button:hover:active {
+.fxaccounts-avatar-button:hover:active .fxaccount-avatar {
   border-color: var(--in-content-border-active);
 }

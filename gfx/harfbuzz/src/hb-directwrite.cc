@@ -879,29 +879,12 @@ _hb_directwrite_shape (hb_shape_plan_t    *shape_plan,
 				     features, num_features, 0);
 }
 
-/**
- * hb_directwrite_shape_experimental_width:
- * Experimental API to test DirectWrite's justification algorithm.
- *
- * It inserts Kashida at wrong order so don't use the API ever.
- *
- * It doesn't work with cygwin/msys due to header bugs so one
- * should use MSVC toolchain in order to use it for now.
- *
- * @font:
- * @buffer:
- * @features:
- * @num_features:
- * @width:
- *
- * Since: 1.4.2
- **/
-hb_bool_t
-hb_directwrite_shape_experimental_width (hb_font_t          *font,
-					 hb_buffer_t        *buffer,
-					 const hb_feature_t *features,
-					 unsigned int        num_features,
-					 float               width)
+HB_UNUSED static bool
+_hb_directwrite_shape_experimental_width (hb_font_t          *font,
+					  hb_buffer_t        *buffer,
+					  const hb_feature_t *features,
+					  unsigned int        num_features,
+					  float               width)
 {
   static const char *shapers = "directwrite";
   hb_shape_plan_t *shape_plan;

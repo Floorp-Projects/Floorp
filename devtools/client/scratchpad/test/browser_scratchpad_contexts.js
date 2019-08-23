@@ -54,9 +54,10 @@ function runTests() {
           "chrome menuitem is not checked"
         );
 
-        ok(
-          !notificationBox.currentNotification,
-          "there is no notification in content context"
+        is(
+          notificationBox.currentNotification.messageText.textContent,
+          "Scratchpad will be disabled in a future release. Learn more…",
+          "The deprecation warning is displayed in content context"
         );
 
         sp.editor.setText("window.foobarBug636725 = 'aloha';");
@@ -98,9 +99,23 @@ function runTests() {
           "content menuitem is not checked"
         );
 
-        ok(
-          notificationBox.currentNotification,
-          "there is a notification in browser context"
+        const { allNotifications } = notificationBox;
+        is(
+          allNotifications.length,
+          2,
+          "There are 2 notifications in browser context"
+        );
+
+        is(
+          allNotifications[0].messageText.textContent,
+          "This scratchpad executes in the Browser context.",
+          "There is a notification in browser context"
+        );
+
+        is(
+          allNotifications[1].messageText.textContent,
+          "Scratchpad will be disabled in a future release. Learn more…",
+          "The deprecation warning is displayed"
         );
 
         const [from, to] = sp.editor.getPosition(31, 32);

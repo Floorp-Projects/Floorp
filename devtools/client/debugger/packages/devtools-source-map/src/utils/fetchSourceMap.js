@@ -4,14 +4,14 @@
 
 // @flow
 
+import type { SourceMapInput } from "../source-map";
+
 const { networkRequest } = require("devtools-utils");
 const { getSourceMap, setSourceMap } = require("./sourceMapRequests");
 const { WasmRemap } = require("./wasmRemap");
 const { SourceMapConsumer } = require("source-map");
 const { convertToJSON } = require("devtools-wasm-dwarf");
 const { createConsumer } = require("./createConsumer");
-
-import type { Source } from "debugger-html";
 
 // URLs which have been seen in a completed source map request.
 const originalURLs = new Set();
@@ -24,7 +24,7 @@ function hasOriginalURL(url: string): boolean {
   return originalURLs.has(url);
 }
 
-function _resolveSourceMapURL(source: Source) {
+function _resolveSourceMapURL(source: SourceMapInput) {
   const { url = "", sourceMapURL = "" } = source;
 
   if (!url) {
@@ -45,7 +45,9 @@ function _resolveSourceMapURL(source: Source) {
   return { sourceMapURL: resolvedString, baseURL };
 }
 
-async function _resolveAndFetch(generatedSource: Source): SourceMapConsumer {
+async function _resolveAndFetch(
+  generatedSource: SourceMapInput
+): SourceMapConsumer {
   // Fetch the sourcemap over the network and create it.
   const { sourceMapURL, baseURL } = _resolveSourceMapURL(generatedSource);
 
@@ -73,7 +75,7 @@ async function _resolveAndFetch(generatedSource: Source): SourceMapConsumer {
   return map;
 }
 
-function fetchSourceMap(generatedSource: Source): SourceMapConsumer {
+function fetchSourceMap(generatedSource: SourceMapInput): SourceMapConsumer {
   const existingRequest = getSourceMap(generatedSource.id);
 
   // If it has already been requested, return the request. Make sure

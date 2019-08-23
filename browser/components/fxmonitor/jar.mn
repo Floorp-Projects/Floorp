@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-[features/fxmonitor@mozilla.org] @AB_CD@.jar:
-% locale fxmonitor @AB_CD@ %locale/@AB_CD@/
-  locale/@AB_CD@/fxmonitor.properties (%fxmonitor.properties)
+browser.jar:
+  content/browser/fxmonitor/FirefoxMonitor.css    (content/FirefoxMonitor.css)
+  content/browser/fxmonitor/monitor32.svg         (content/monitor32.svg)

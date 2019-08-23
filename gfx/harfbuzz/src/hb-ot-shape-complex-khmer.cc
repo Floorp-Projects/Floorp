@@ -56,13 +56,6 @@ khmer_features[] =
   {HB_TAG('a','b','v','s'), F_GLOBAL_MANUAL_JOINERS},
   {HB_TAG('b','l','w','s'), F_GLOBAL_MANUAL_JOINERS},
   {HB_TAG('p','s','t','s'), F_GLOBAL_MANUAL_JOINERS},
-  /*
-   * Positioning features.
-   * We don't care about the types.
-   */
-  {HB_TAG('d','i','s','t'), F_GLOBAL},
-  {HB_TAG('a','b','v','m'), F_GLOBAL},
-  {HB_TAG('b','l','w','m'), F_GLOBAL},
 };
 
 /*
@@ -79,10 +72,6 @@ enum {
   _KHMER_ABVS,
   _KHMER_BLWS,
   _KHMER_PSTS,
-
-  _KHMER_DIST,
-  _KHMER_ABVM,
-  _KHMER_BLWM,
 
   KHMER_NUM_FEATURES,
   KHMER_BASIC_FEATURES = _KHMER_PRES, /* Don't forget to update this! */

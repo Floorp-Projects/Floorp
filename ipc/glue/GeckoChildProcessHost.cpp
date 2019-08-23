@@ -38,6 +38,7 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/RecordReplay.h"
@@ -763,6 +764,13 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 #endif
   {
     buffer.Append(origLogName);
+  }
+
+  // Remove .moz_log extension to avoid its duplication, it will be added
+  // automatically by the logging backend
+  static NS_NAMED_LITERAL_CSTRING(kMozLogExt, MOZ_LOG_FILE_EXTENSION);
+  if (StringEndsWith(buffer, kMozLogExt)) {
+    buffer.Truncate(buffer.Length() - kMozLogExt.Length());
   }
 
   // Append child-specific postfix to name

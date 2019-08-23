@@ -375,10 +375,14 @@ hb_ot_layout_get_ligature_carets (hb_font_t      *font,
   {
     if (caret_count) *caret_count = result_caret_count;
   }
-#ifndef HB_NO_AAT
   else
+  {
+#ifndef HB_NO_AAT
     result = font->face->table.lcar->get_lig_carets (font, direction, glyph, start_offset, caret_count, caret_array);
+#else
+    if (caret_count) *caret_count = 0;
 #endif
+  }
   return result;
 }
 #endif

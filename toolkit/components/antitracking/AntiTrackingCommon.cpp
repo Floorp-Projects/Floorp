@@ -6,6 +6,7 @@
 
 #include "AntiTrackingCommon.h"
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AbstractThread.h"
@@ -44,6 +45,7 @@
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
 
 using namespace mozilla;
+using mozilla::dom::BrowsingContext;
 using mozilla::dom::ContentChild;
 using mozilla::dom::Document;
 
@@ -338,7 +340,8 @@ bool CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow) {
     return entry.Data().mResult;
   }
 
-  nsPIDOMWindowOuter* top = aWindow->GetInProcessScriptableTop();
+  nsPIDOMWindowOuter* top =
+      aWindow->GetBrowsingContext()->Top()->GetDOMWindow();
   Document* doc = top ? top->GetExtantDoc() : nullptr;
   if (doc) {
     bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
@@ -573,11 +576,8 @@ already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> pwin;
-  auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-  if (outer) {
-    pwin = outer->GetInProcessScriptableTop();
-  }
+  nsCOMPtr<nsPIDOMWindowOuter> pwin =
+      aWindow->GetBrowsingContext()->Top()->GetDOMWindow();
 
   if (!pwin) {
     return nullptr;
@@ -1004,8 +1004,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     }
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
-      outerParentWindow->GetInProcessTop();
+  nsPIDOMWindowOuter* topOuterWindow =
+      aParentWindow->GetBrowsingContext()->Top()->GetDOMWindow();
   nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window."));
@@ -1301,15 +1301,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsGlobalWindowOuter* outerWindow =
-      nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-  if (!outerWindow) {
-    LOG(("Our window has no outer window"));
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetInProcessTop();
-  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
+  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(
+      aWindow->GetBrowsingContext()->Top()->GetDOMWindow());
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window"));
     return false;

@@ -1078,10 +1078,10 @@ class HTMLEditor final : public TextEditor,
   nsIContent* GetNextEditableHTMLNodeInternal(
       const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
 
-  bool IsFirstEditableChild(nsINode* aNode);
-  bool IsLastEditableChild(nsINode* aNode);
-  nsIContent* GetFirstEditableChild(nsINode& aNode);
-  nsIContent* GetLastEditableChild(nsINode& aNode);
+  bool IsFirstEditableChild(nsINode* aNode) const;
+  bool IsLastEditableChild(nsINode* aNode) const;
+  nsIContent* GetFirstEditableChild(nsINode& aNode) const;
+  nsIContent* GetLastEditableChild(nsINode& aNode) const;
 
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
@@ -1225,6 +1225,133 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
+
+  /**
+   * SplitParentInlineElementsAtRangeEdges(nsTArray<RefPtr<nsRange>>&) calls
+   * SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.  Then,
+   * updates given range to keep edit target ranges as expected.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitParentInlineElementsAtRangeEdges(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+
+  /**
+   * SplitElementsAtEveryBRElement() splits before all <br> elements in
+   * aMostAncestorToBeSplit.  All <br> nodes will be moved before right node
+   * at splitting its parent.  Finally, this returns left node, first <br>
+   * element, next left node, second <br> element... and right-most node.
+   *
+   * @param aMostAncestorToBeSplit      Most-ancestor element which should
+   *                                    be split.
+   * @param aOutArrayOfNodes            First left node, first <br> element,
+   *                                    Second left node, second <br> element,
+   *                                    ...right-most node.  So, all nodes
+   *                                    in this list should be siblings (may be
+   *                                    broken the relation by mutation event
+   *                                    listener though). If first <br> element
+   *                                    is first leaf node of
+   *                                    aMostAncestorToBeSplit, starting from
+   *                                    the first <br> element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitElementsAtEveryBRElement(
+      nsIContent& aMostAncestorToBeSplit,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+
+  /**
+   * MaybeSplitElementsAtEveryBRElement() calls SplitElementsAtEveryBRElement()
+   * for each given node when this needs to do that for aEditSubAction.
+   * If split a node, it in aArrayOfNodes is replaced with split nodes and
+   * <br> elements.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeSplitElementsAtEveryBRElement(
+      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      EditSubAction aEditSubAction);
+
+  /**
+   * CollectEditableChildren() collects child nodes of aNode (starting from
+   * first editable child, but may return non-editable children after it).
+   *
+   * @param aNode               Parent node of retrieving children.
+   * @param aOutArrayOfNodes    [out] This method will inserts found children
+   *                            into this array.
+   * @param aIndexToInsertChildren      Starting from this index, found
+   *                                    children will be inserted to the array.
+   * @param aCollectListChildren        If Yes, will collect children of list
+   *                                    and list-item elements recursively.
+   * @param aCollectTableChildren       If Yes, will collect children of table
+   *                                    related elements recursively.
+   * @return                    Number of found children.
+   */
+  enum class CollectListChildren { No, Yes };
+  enum class CollectTableChildren { No, Yes };
+  size_t CollectChildren(
+      nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      size_t aIndexToInsertChildren,
+      CollectListChildren aCollectListChildren = CollectListChildren::Yes,
+      CollectTableChildren aCollectTableChildren =
+          CollectTableChildren::Yes) const;
+
+  /**
+   * SplitInlinessAndCollectEditTargetNodes() splits text nodes and inline
+   * elements around aArrayOfRanges.  Then, collects edit target nodes to
+   * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
+   * <br> element in it.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitInlinesAndCollectEditTargetNodes(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction);
+
+  /**
+   * SplitTextNodesAtRangeEnd() splits text nodes if each range end is in
+   * middle of a text node.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitTextNodesAtRangeEnd(nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+
+  /**
+   * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
+   * First, this collects all nodes in given ranges, then, modifies the
+   * result for specific edit sub-actions.
+   */
+  nsresult CollectEditTargetNodes(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction) const;
+
+  /**
+   * GetWhiteSpaceEndPoint() returns point at first or last ASCII whitespace
+   * or non-breakable space starting from aPoint.  I.e., this returns next or
+   * previous point whether the character is neither ASCII whitespace nor
+   * non-brekable space.
+   */
+  enum class ScanDirection { Backward, Forward };
+  static EditorDOMPoint GetWhiteSpaceEndPoint(const RangeBoundary& aPoint,
+                                              ScanDirection aScanDirection);
+
+  /**
+   * GetCurrentHardLineStartPoint() returns start point of hard line
+   * including aPoint.  If the line starts after a `<br>` element, returns
+   * next sibling of the `<br>` element.  If the line is first line of a block,
+   * returns point of the block.
+   * NOTE: The result may be point of editing host.  I.e., the container may
+   *       be outside of editing host.
+   */
+  EditorDOMPoint GetCurrentHardLineStartPoint(const RangeBoundary& aPoint,
+                                              EditSubAction aEditSubAction);
+
+  /**
+   * GetCurrentHardLineEndPoint() returns end point of hard line including
+   * aPoint.  If the line ends with a `<br>` element, returns the `<br>`
+   * element unless it's the last node of a block.  If the line is last line
+   * of a block, returns next sibling of the block.  Additionally, if the
+   * line ends with a linefeed in pre-formated text node, returns point of
+   * the linefeed.
+   * NOTE: This result may be point of editing host.  I.e., the container
+   *       may be outside of editing host.
+   */
+  EditorDOMPoint GetCurrentHardLineEndPoint(const RangeBoundary& aPoint);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(

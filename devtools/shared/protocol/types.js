@@ -525,7 +525,11 @@ function getFront(client, typeName, form, target = null) {
   // hierarchy of fronts. So that they have to self-own themself. But now, Root and Target
   // are fronts and should own them. The only issue here is that we should manage the
   // front *before* calling initialize which is going to try managing child fronts.
-  instance.manage(instance);
+  if (!target) {
+    instance.manage(instance);
+  } else {
+    target.manage(instance);
+  }
 
   if (typeof instance.initialize == "function") {
     return instance.initialize().then(() => instance);

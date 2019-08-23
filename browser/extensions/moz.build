@@ -6,7 +6,6 @@
 
 DIRS += [
     'formautofill',
-    'fxmonitor',
     'pdfjs',
     'screenshots',
     'webcompat',

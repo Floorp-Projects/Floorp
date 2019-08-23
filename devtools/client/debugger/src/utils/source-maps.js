@@ -20,8 +20,7 @@ export async function getGeneratedLocation(
   }
 
   const { line, sourceId, column } = await sourceMaps.getGeneratedLocation(
-    location,
-    source
+    location
   );
 
   const generatedSource = getSource(state, sourceId);
