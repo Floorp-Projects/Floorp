@@ -15,9 +15,14 @@
 /* Inspector HTMLBreadcrumbs */
 
 .breadcrumbs-widget-container {
-  margin-inline-end: 3px;
+  margin-right: 3px;
   max-height: 24px; /* Set max-height for proper sizing on linux */
   height: 24px; /* Set height to prevent starting small waiting for content */
+}
+
+.breadcrumbs-widget-container:-moz-locale-dir(rtl) {
+  margin-right: 0;
+  margin-left: 3px;
 }
 
 .scrollbutton-up,
@@ -59,19 +64,13 @@
 }
 
 /* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
-.scrollbutton-up:-moz-locale-dir(ltr):not(:dir(rtl)),
-.scrollbutton-up:dir(ltr),
-.scrollbutton-down:-moz-locale-dir(rtl),
-.scrollbutton-down:dir(rtl) {
+.scrollbutton-up {
   border-right: solid 1px rgba(255, 255, 255, .1);
   border-left: solid 1px transparent;
   box-shadow: 3px 0px 3px -3px var(--theme-sidebar-background);
 }
 
-.scrollbutton-down:-moz-locale-dir(ltr):not(:dir(rtl)),
-.scrollbutton-down:dir(ltr),
-.scrollbutton-up:-moz-locale-dir(rtl),
-.scrollbutton-up:dir(rtl) {
+.scrollbutton-down {
   border-right: solid 1px transparent;
   border-left: solid 1px rgba(255, 255, 255, .1);
   box-shadow: -3px 0px 3px -3px var(--theme-sidebar-background);
@@ -83,10 +82,7 @@
   border-color: transparent;
 }
 
-.scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
-.scrollbutton-up > .toolbarbutton-icon:dir(rtl),
-.scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr):not(:dir(rtl)),
-.scrollbutton-down > .toolbarbutton-icon:dir(ltr) {
+.scrollbutton-down > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
