@@ -16,27 +16,6 @@
 add_task(async function test_api() {
   let URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
 
-  // Test that an unspecified extension is not logged by the watcher extension.
-  let unlogged = ExtensionTestUtils.loadExtension({
-    isPrivileged: true,
-    manifest: {
-      applications: { gecko: { id: "unlogged@tests.mozilla.org" } },
-      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
-    },
-    background() {
-      // This privileged test extension should not affect the webRequest
-      // data received by non-privileged extensions (See Bug 1576272).
-      browser.webRequest.onBeforeRequest.addListener(
-        details => {
-          return { cancel: false };
-        },
-        { urls: ["http://mochi.test/*/file_sample.html"] },
-        ["blocking"]
-      );
-    },
-  });
-  await unlogged.startup();
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: { gecko: { id: "watched@tests.mozilla.org" } },
@@ -301,7 +280,6 @@ add_task(async function test_api() {
   ]);
 
   await extension.unload();
-  await unlogged.unload();
   await logger.unload();
 });
 
