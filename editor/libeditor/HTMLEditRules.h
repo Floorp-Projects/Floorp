@@ -809,22 +809,10 @@ class HTMLEditRules : public TextEditRules {
    */
   void PromoteRange(nsRange& aRange, EditSubAction aEditSubAction) const;
 
-  /**
-   * GetNodesForOperation() runs through the ranges in the array and construct a
-   * new array of nodes to be acted on.
-   *
-   * XXX This name stats with "Get" but actually this modifies the DOM tree with
-   *     transaction.  We should rename this to making clearer what this does.
-   */
-  enum class TouchContent { no, yes };
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult GetNodesForOperation(
-      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-      EditSubAction aEditSubAction, TouchContent aTouchContent) const;
-
   void GetChildNodesForOperation(
       nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
+
+  enum class TouchContent { no, yes };
 
   /**
    * GetNodesFromPoint() constructs a list of nodes from a point that will be
