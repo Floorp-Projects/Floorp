@@ -90,20 +90,6 @@ const POLICIES_TESTS = [
     },
   },
 
-  {
-    policies: {
-      EnableTrackingProtection: {
-        Cryptomining: true,
-        Fingerprinting: true,
-        Locked: true,
-      },
-    },
-    lockedPrefs: {
-      "privacy.trackingprotection.cryptomining.enabled": false,
-      "privacy.trackingprotection.fingerprinting.enabled": false,
-    },
-  },
-
   // POLICY: OverrideFirstRunPage
   {
     policies: { OverrideFirstRunPage: "https://www.example.com/" },
