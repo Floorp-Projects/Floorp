@@ -12,7 +12,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/net/TimingStruct.h"
 
@@ -148,35 +147,6 @@ class DOMEventMarkerPayload : public TracingMarkerPayload {
  private:
   mozilla::TimeStamp mTimeStamp;
   nsString mEventType;
-};
-
-class PrefMarkerPayload : public ProfilerMarkerPayload {
- public:
-  PrefMarkerPayload(const char* aPrefName,
-                    const mozilla::Maybe<mozilla::PrefValueKind>& aPrefKind,
-                    const mozilla::Maybe<mozilla::PrefType>& aPrefType,
-                    const nsCString& aPrefValue,
-                    const mozilla::TimeStamp& aPrefAccessTime)
-      : ProfilerMarkerPayload(aPrefAccessTime, aPrefAccessTime),
-        mPrefAccessTime(aPrefAccessTime),
-        mPrefName(aPrefName),
-        mPrefKind(aPrefKind),
-        mPrefType(aPrefType),
-        mPrefValue(aPrefValue) {}
-
-  DECL_STREAM_PAYLOAD
-
- private:
-  mozilla::TimeStamp mPrefAccessTime;
-  nsCString mPrefName;
-  // Nothing means this is a shared preference. Something, on the other hand,
-  // holds an actual PrefValueKind indicating either a Default or User
-  // preference.
-  mozilla::Maybe<mozilla::PrefValueKind> mPrefKind;
-  // Nothing means that the mPrefName preference was not found. Something
-  // contains the type of the preference.
-  mozilla::Maybe<mozilla::PrefType> mPrefType;
-  nsCString mPrefValue;
 };
 
 class UserTimingMarkerPayload : public ProfilerMarkerPayload {

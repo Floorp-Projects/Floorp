@@ -33,7 +33,6 @@ const features = [
   "tasktracer",
   "jstracer",
   "jsallocations",
-  "preferencereads",
   "trackopts",
 ];
 const threadPrefix = "perf-settings-thread-checkbox-";
