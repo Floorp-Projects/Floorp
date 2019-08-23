@@ -241,6 +241,7 @@
 @BINPATH@/components/GeckoView.manifest
 @BINPATH@/components/GeckoViewExternalAppService.js
 @BINPATH@/components/GeckoViewPrompt.js
+@BINPATH@/components/GeckoViewPush.js
 @BINPATH@/components/GeckoViewPermission.js
 @BINPATH@/components/GeckoViewStartup.js
 #else
