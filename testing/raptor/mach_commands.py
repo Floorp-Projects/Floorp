@@ -201,10 +201,10 @@ def create_parser():
 
 @CommandProvider
 class MachRaptor(MachCommandBase):
-    @Command('raptor-test', category='testing',
-             description='Run raptor performance tests.',
+    @Command('raptor', category='testing',
+             description='Run Raptor performance tests.',
              parser=create_parser)
-    def run_raptor_test(self, **kwargs):
+    def run_raptor(self, **kwargs):
         build_obj = self
 
         is_android = Conditions.is_android(build_obj) or \
@@ -251,3 +251,9 @@ class MachRaptor(MachCommandBase):
                     adbhost.command_output(["disconnect", device_serial])
             except Exception:
                 adbhost.command_output(["kill-server"])
+
+    @Command('raptor-test', category='testing',
+             description='Run Raptor performance tests.',
+             parser=create_parser)
+    def run_raptor_test(self, **kwargs):
+        return self.run_raptor(**kwargs)
