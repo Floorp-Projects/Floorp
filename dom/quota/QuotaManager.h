@@ -193,6 +193,10 @@ class QuotaManager final : public BackgroundThreadObject {
                            const nsACString& aGroup, const nsACString& aOrigin,
                            Client::Type aClientType);
 
+  bool GetUsageForClient(PersistenceType aPersistenceType,
+                         const nsACString& aGroup, const nsACString& aOrigin,
+                         Client::Type aClientType, uint64_t& aUsage);
+
   void UpdateOriginAccessTime(PersistenceType aPersistenceType,
                               const nsACString& aGroup,
                               const nsACString& aOrigin);
