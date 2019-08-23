@@ -345,9 +345,9 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
     // it
     if (aSecretSeed != nullptr) {
       StaticMutexAutoLock lock(sLock);
-      if (sSecretMidpointSeed != nullptr) {
-        delete[] sSecretMidpointSeed;
-      }
+
+      delete[] sSecretMidpointSeed;
+
       sSecretMidpointSeed = new uint8_t[kSeedSize];
       memcpy(sSecretMidpointSeed, aSecretSeed, kSeedSize);
     }
@@ -474,12 +474,11 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
   if (!IsTimerPrecisionReductionEnabled(aType)) {
     if (!StaticPrefs::privacy_reduceTimerPrecision_unconditional()) {
       return aTime;
-    } else {
-      unconditionalClamping = true;
-      aResolutionUSec = RFP_TIMER_UNCONDITIONAL_VALUE;  // 20 microseconds
-      aContextMixin = 0;  // Just clarifies our logging statement at the end,
-                          // otherwise unused
     }
+    unconditionalClamping = true;
+    aResolutionUSec = RFP_TIMER_UNCONDITIONAL_VALUE;  // 20 microseconds
+    aContextMixin = 0;  // Just clarifies our logging statement at the end,
+                        // otherwise unused
   }
 
   if (aResolutionUSec <= 0) {
