@@ -267,5 +267,5 @@ For further details on actions in general, see `the actions.json spec`_.
 The hooks used for in-tree actions are set up by `ci-admin`_ based on configuration in `ci-configuration`_.
 
 .. _the actions.json spec: https://docs.taskcluster.net/manual/tasks/actions/spec
-.. _ci-admin: http://hg.mozilla.org/build/ci-admin/
-.. _ci-configuration: http://hg.mozilla.org/build/ci-configuration/
+.. _ci-admin: http://hg.mozilla.org/ci/ci-admin/
+.. _ci-configuration: http://hg.mozilla.org/ci/ci-configuration/
