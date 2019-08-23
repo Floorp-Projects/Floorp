@@ -3725,6 +3725,15 @@ class Document : public nsINode,
   void SetTooltipNode(nsINode* aNode) { /* do nothing */
   }
 
+  bool DontWarnAboutMutationEventsAndAllowSlowDOMMutations() {
+    return mDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
+  }
+  void SetDontWarnAboutMutationEventsAndAllowSlowDOMMutations(
+      bool aDontWarnAboutMutationEventsAndAllowSlowDOMMutations) {
+    mDontWarnAboutMutationEventsAndAllowSlowDOMMutations =
+        aDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
+  }
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
@@ -4436,6 +4445,8 @@ class Document : public nsINode,
   bool mBlockAllMixedContentPreloads;
   bool mUpgradeInsecureRequests;
   bool mUpgradeInsecurePreloads;
+
+  bool mDontWarnAboutMutationEventsAndAllowSlowDOMMutations;
 
   WeakPtr<nsDocShell> mDocumentContainer;
 

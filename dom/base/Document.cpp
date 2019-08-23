@@ -1193,6 +1193,7 @@ Document::Document(const char* aContentType)
       mBlockAllMixedContentPreloads(false),
       mUpgradeInsecureRequests(false),
       mUpgradeInsecurePreloads(false),
+      mDontWarnAboutMutationEventsAndAllowSlowDOMMutations(false),
       mCharacterSet(WINDOWS_1252_ENCODING),
       mCharacterSetSource(0),
       mParentDocument(nullptr),
