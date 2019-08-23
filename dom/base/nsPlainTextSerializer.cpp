@@ -1094,7 +1094,7 @@ void nsPlainTextSerializer::FlushLine() {
 
     MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
     Output(mCurrentLineContent.mValue);
-    mAtFirstColumn = mAtFirstColumn && mCurrentLineContent.mValue.IsEmpty();
+    mAtFirstColumn = false;
     mCurrentLineContent.mValue.Truncate();
     mCurrentLineContent.mWidth = 0;
   }
@@ -1396,7 +1396,6 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
       quotes.Append(char16_t(' '));
     }
     stringToOutput = quotes;
-    mAtFirstColumn = false;
   }
 
   // Indent if necessary
@@ -1408,12 +1407,10 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
     nsAutoString spaces;
     for (int i = 0; i < indentwidth; ++i) spaces.Append(char16_t(' '));
     stringToOutput += spaces;
-    mAtFirstColumn = false;
   }
 
   if (!mInIndentString.IsEmpty()) {
     stringToOutput += mInIndentString;
-    mAtFirstColumn = false;
     mInIndentString.Truncate();
   }
 
@@ -1427,6 +1424,7 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
 
   if (!stringToOutput.IsEmpty()) {
     Output(stringToOutput);
+    mAtFirstColumn = false;
   }
 }
 
