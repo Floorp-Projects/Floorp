@@ -92,16 +92,16 @@ nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
     aParams.persistenceTypeIsExplicit() = true;
   }
 
-  Nullable<Client::Type> clientType;
-  rv = Client::NullableTypeFromText(aClientType, &clientType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (clientType.IsNull()) {
+  if (aClientType.IsVoid()) {
     aParams.clientTypeIsExplicit() = false;
   } else {
-    aParams.clientType() = clientType.Value();
+    Client::Type clientType;
+    bool ok = Client::TypeFromText(aClientType, clientType, fallible);
+    if (NS_WARN_IF(!ok)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    aParams.clientType() = clientType;
     aParams.clientTypeIsExplicit() = true;
   }
 
