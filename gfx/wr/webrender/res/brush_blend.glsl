@@ -269,7 +269,8 @@ Fragment brush_fs() {
             break;
         case 13: {
             // Component Transfer
-            vec4 colora = alpha != 0.0 ? Cs / alpha : Cs;
+            // Get the unpremultiplied color with alpha.
+            vec4 colora = vec4(color, alpha);
             colora = ComponentTransfer(colora);
             color = colora.rgb;
             alpha = colora.a;
