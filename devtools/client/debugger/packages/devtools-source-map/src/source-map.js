@@ -362,8 +362,20 @@ async function getOriginalSourceText(
 
   let text = map.sourceContentFor(originalSource.url);
   if (!text) {
-    text = (await networkRequest(originalSource.url, { loadFromCache: false }))
-      .content;
+    try {
+      const response = await networkRequest(originalSource.url, {
+        loadFromCache: false,
+      });
+      text = response.content;
+    } catch (err) {
+      // Wrapper logic renders a notification about the specific URL that
+      // failed to load, so we include it in the error metadata.
+      err.metadata = {
+        ...err.metadata,
+        url: originalSource.url,
+      };
+      throw err;
+    }
   }
 
   return {
