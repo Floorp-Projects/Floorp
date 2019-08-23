@@ -84,8 +84,7 @@
   border-color: var(--toolbar-field-focus-border-color);
 }
 
-#urlbar.megabar:not(.hidden-focus)[focused="true"],
-#urlbar.megabar[open="true"] {
+#urlbar[breakout] {
   position: absolute;
   z-index: 2;
   top: 0;
@@ -96,12 +95,11 @@
   padding: calc(3px + @urlbarBreakoutExtend@) 0;
 }
 
-#urlbar.megabar[open="true"] {
-  padding-bottom: 0 !important;
+#urlbar[breakout][open="true"] {
+  padding-bottom: 0;
 }
 
-#urlbar.megabar:not(.hidden-focus)[focused="true"] > #urlbar-input-container,
-#urlbar.megabar[open="true"] > #urlbar-input-container {
+#urlbar[breakout] > #urlbar-input-container {
   width: 100%;
 }
 

@@ -884,6 +884,7 @@ class UrlbarInput {
     );
     this._layoutBreakoutPlaceholder.style.height = px(inputRect.height);
     this.textbox.before(this._layoutBreakoutPlaceholder);
+    this.setAttribute("breakout", "true");
   }
 
   endLayoutBreakout(force) {
@@ -894,6 +895,7 @@ class UrlbarInput {
     ) {
       return;
     }
+    this.removeAttribute("breakout");
     if (this._layoutBreakoutPlaceholder) {
       this._layoutBreakoutPlaceholder.remove();
       this._layoutBreakoutPlaceholder = null;
