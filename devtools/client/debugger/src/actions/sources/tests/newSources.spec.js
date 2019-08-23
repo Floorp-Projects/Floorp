@@ -10,6 +10,7 @@ import {
   createStore,
   makeSource,
   makeSourceURL,
+  makeOriginalSource,
   waitForState,
 } from "../../../utils/test-head";
 const {
@@ -36,7 +37,20 @@ describe("sources - new sources", () => {
     expect(jquery && jquery.id).toEqual("jquery.js");
   });
 
-  it("should not add multiple identical sources", async () => {
+  it("should not add multiple identical original sources", async () => {
+    const { dispatch, getState } = createStore(threadClient);
+
+    const generated = await dispatch(
+      actions.newGeneratedSource(makeSource("base.js"))
+    );
+
+    await dispatch(actions.newOriginalSource(makeOriginalSource(generated)));
+    await dispatch(actions.newOriginalSource(makeOriginalSource(generated)));
+
+    expect(getSourceCount(getState())).toEqual(2);
+  });
+
+  it("should not add multiple identical generated sources", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("base.js")));
