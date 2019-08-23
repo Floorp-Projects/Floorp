@@ -18,11 +18,12 @@ class SearchOneOffs {
     this.container.appendChild(
       MozXULElement.parseXULToFragment(
         `
-      <div class="search-panel-one-offs-header search-panel-header search-panel-current-input">
+      <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
         <label class="searchbar-oneoffheader-search" value="&searchWithDesc.label;"/>
-      </div>
-      <div class="search-panel-one-offs"/>
+      </hbox>
+      <hbox class="search-panel-one-offs"/>
       <vbox class="search-add-engines"/>
+      <hbox class="search-one-offs-spacer"/>
       <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
       <button class="search-setting-button" label="&changeSearchSettings.button;"/>
       <menupopup class="search-one-offs-context-menu">
@@ -61,6 +62,8 @@ class SearchOneOffs {
     this.settingsButtonCompact = this.querySelector(
       ".search-setting-button-compact"
     );
+
+    this.spacerCompact = this.querySelector(".search-one-offs-spacer");
 
     this.contextMenuPopup = this.querySelector(".search-one-offs-context-menu");
 
@@ -483,10 +486,11 @@ class SearchOneOffs {
 
     // If the header string is very long, then the searchbar buttons will
     // overflow their container unless max-width is set.
-    this.buttons.style.setProperty(
-      this.compact ? "width" : "max-width",
-      `${buttonsWidth}px`
-    );
+    if (this.compact) {
+      this.spacerCompact.setAttribute("flex", "1");
+    } else {
+      this.buttons.style.setProperty("max-width", `${buttonsWidth}px`);
+    }
 
     // 24: 12px left padding + 12px right padding.
     if (this.compact) {
