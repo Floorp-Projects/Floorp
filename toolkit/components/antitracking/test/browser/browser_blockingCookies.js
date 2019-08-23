@@ -1,5 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
+requestLongerTimeout(2);
+
 AntiTracking.runTestInNormalAndPrivateMode(
   "Set/Get Cookies",
   // Blocking callback
