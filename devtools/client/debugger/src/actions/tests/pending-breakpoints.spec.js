@@ -11,7 +11,6 @@ import {
 } from "./helpers/breakpoints.js";
 
 import { mockCommandClient } from "./helpers/mockCommandClient";
-import { generatedToOriginalId } from "devtools-source-map";
 import { asyncStore } from "../../utils/prefs";
 
 function loadInitialState(opts = {}) {
@@ -57,15 +56,15 @@ function mockClient(bpPos = {}) {
 function mockSourceMaps() {
   return {
     ...sourceMaps,
-    getOriginalSourceText: async source => ({
-      id: source.id,
+    getOriginalSourceText: async id => ({
+      id,
       text: "",
       contentType: "text/javascript",
     }),
     getGeneratedRangesForOriginal: async () => [
       { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
     ],
-    getOriginalLocations: async (sourceId, items) => items,
+    getOriginalLocations: async items => items,
   };
 }
 
@@ -378,21 +377,21 @@ describe("adding sources", () => {
     const store = createStore(mockClient({ "5": [2] }), loadInitialState(), {
       getOriginalURLs: async source => [
         {
-          id: generatedToOriginalId(source.id, sourceURL),
+          id: sourceMaps.generatedToOriginalId(source.id, sourceURL),
           url: sourceURL,
         },
       ],
       getOriginalSourceText: async () => ({ source: "" }),
-      getGeneratedLocation: async (location, _source) => ({
+      getGeneratedLocation: async location => ({
         line: location.line,
         column: location.column,
-        sourceId: _source.id,
+        sourceId: location.sourceId,
       }),
       getOriginalLocation: async location => location,
       getGeneratedRangesForOriginal: async () => [
         { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
       ],
-      getOriginalLocations: async (sourceId, items) => items,
+      getOriginalLocations: async items => items,
     });
 
     const { getState, dispatch } = store;
