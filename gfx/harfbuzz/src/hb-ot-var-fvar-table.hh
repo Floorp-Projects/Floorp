@@ -240,6 +240,20 @@ struct fvar
     return roundf (v * 16384.f);
   }
 
+  float unnormalize_axis_value (unsigned int axis_index, float v) const
+  {
+    hb_ot_var_axis_info_t axis;
+    get_axis_info (axis_index, &axis);
+
+    if (v == 0)
+      return axis.default_value;
+    else if (v < 0)
+      v = v * (axis.default_value - axis.min_value) / 16384.f + axis.default_value;
+    else
+      v = v * (axis.max_value - axis.default_value) / 16384.f + axis.default_value;
+    return v;
+  }
+
   unsigned int get_instance_count () const { return instanceCount; }
 
   hb_ot_name_id_t get_instance_subfamily_name_id (unsigned int instance_index) const
