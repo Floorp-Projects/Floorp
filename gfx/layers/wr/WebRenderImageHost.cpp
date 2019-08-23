@@ -124,10 +124,7 @@ TimeStamp WebRenderImageHost::GetCompositionTime() const {
 }
 
 TextureHost* WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect) {
-  const TimedImage* img = ChooseImage();
-  if (img) {
-    return img->mTextureHost;
-  }
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   return nullptr;
 }
 
@@ -224,10 +221,7 @@ void WebRenderImageHost::Dump(std::stringstream& aStream, const char* aPrefix,
 }
 
 already_AddRefed<gfx::DataSourceSurface> WebRenderImageHost::GetAsSurface() {
-  const TimedImage* img = ChooseImage();
-  if (img) {
-    return img->mTextureHost->GetAsSurface();
-  }
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   return nullptr;
 }
 
@@ -251,6 +245,7 @@ IntSize WebRenderImageHost::GetImageSize() {
 void WebRenderImageHost::SetWrBridge(const wr::PipelineId& aPipelineId,
                                      WebRenderBridgeParent* aWrBridge) {
   MOZ_ASSERT(aWrBridge);
+  MOZ_ASSERT(!mCurrentAsyncImageManager);
 #ifdef DEBUG
   const auto it = mWrBridges.find(wr::AsUint64(aPipelineId));
   MOZ_ASSERT(it == mWrBridges.end());
@@ -261,6 +256,7 @@ void WebRenderImageHost::SetWrBridge(const wr::PipelineId& aPipelineId,
 void WebRenderImageHost::ClearWrBridge(const wr::PipelineId& aPipelineId,
                                        WebRenderBridgeParent* aWrBridge) {
   MOZ_ASSERT(aWrBridge);
+  MOZ_ASSERT(!mCurrentAsyncImageManager);
 
   const auto it = mWrBridges.find(wr::AsUint64(aPipelineId));
   MOZ_ASSERT(it != mWrBridges.end());
