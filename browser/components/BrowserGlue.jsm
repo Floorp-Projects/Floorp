@@ -514,6 +514,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Corroborate: "resource://gre/modules/Corroborate.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
+  FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
@@ -1998,6 +1999,8 @@ BrowserGlue.prototype = {
     if (pService.createdAlternateProfile) {
       this._showNewInstallModal();
     }
+
+    FirefoxMonitor.init();
   },
 
   /**
