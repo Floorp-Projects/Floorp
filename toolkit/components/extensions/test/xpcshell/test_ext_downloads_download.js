@@ -532,6 +532,12 @@ add_task(async function test_download_http_details() {
   ok(result.ok, "download works with a custom header");
   confirm("GET", { "X-Custom": "13" });
 
+  // Test Referer header.
+  const referer = "http://example.org";
+  result = await download({ headers: [{ name: "Referer", value: referer }] });
+  ok(result.ok, "download works with Referer header");
+  confirm("GET", { Referer: referer });
+
   // Test forbidden headers.
   result = await download({ headers: [{ name: "DNT", value: "1" }] });
   ok(!result.ok, "download rejected because of forbidden header name DNT");

@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style>
+        HTML, .class_1 {
+            margin-block-start: 65%;
+            text-decoration: line-through blink overline underline;
+        }
+
+        .class_1 {
+            all: initial;
+            word-spacing: -27777ex;
+            text-align: justify ! important;
+            scale: 68;
+            text-rendering: geometricPrecision;
+        }
+
+    </style>
+    <script>
+      function start () {
+        const map = document.createElement('map')
+        const textarea = document.createElement('textarea')
+        textarea.setAttribute('class', 'class_1')
+        textarea.value = '㙐߲󠔩٩٠𝅯^=0]٫f󠆮⡛󠗸𯴋󠇬󠷠%۰󠊍꣭ሯ⁡c椕㐞𯏆󠾷9Nᷙ𯷘𛊍𝼑\\w٫⁡‬%=⁄٩𪡢҃�'
+        textarea.selectionStart = 128
+        document.documentElement.appendChild(map)
+        map.insertAdjacentElement('afterbegin', textarea)
+      }
+
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+</head>
+</html>

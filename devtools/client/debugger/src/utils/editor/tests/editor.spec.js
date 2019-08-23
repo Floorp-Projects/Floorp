@@ -5,7 +5,6 @@
 // @flow
 
 import {
-  shouldShowPrettyPrint,
   traverseResults,
   toEditorLine,
   toEditorPosition,
@@ -22,19 +21,7 @@ import {
   getCursorLine,
 } from "../index";
 
-import { makeMockSource, makeMockSourceAndContent } from "../../test-mockup";
-
-describe("shouldShowPrettyPrint", () => {
-  it("shows pretty print for a source", () => {
-    const { content, ...source } = makeMockSourceAndContent(
-      "http://example.com/index.js",
-      "test-id-123",
-      "text/javascript",
-      "some text here"
-    );
-    expect(shouldShowPrettyPrint(source, content)).toEqual(true);
-  });
-});
+import { makeMockSource } from "../../test-mockup";
 
 describe("traverseResults", () => {
   const e: any = { stopPropagation: jest.fn(), preventDefault: jest.fn() };

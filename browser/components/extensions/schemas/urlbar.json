@@ -184,7 +184,15 @@
             "description": "Specifies the default icon and theme icons",
             "properties": {
               "defaultIcon": {
-                "$ref": "manifest.IconPath",
+                "choices": [
+                  {
+                    "type": "string",
+                    "description": "A URL to an image (e.g. favicon's URL)"
+                  },
+                  {
+                    "$ref": "manifest.IconPath"
+                  }
+                ],
                 "description": "Specifies the default icon to use in the contextual tip."
               },
               "themeIcons": {

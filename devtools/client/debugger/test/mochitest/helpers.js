@@ -1736,26 +1736,6 @@ async function getDebuggerSplitConsole(dbg) {
   return toolbox.getPanel("webconsole");
 }
 
-async function openConsoleContextMenu(hud, element) {
-  const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
-  synthesizeContextMenuEvent(element);
-  await onConsoleMenuOpened;
-  const toolbox = gDevTools.getToolbox(hud.target);
-  return toolbox.topDoc.getElementById("webconsole-menu");
-}
-
-function hideConsoleContextMenu(hud) {
-  const toolbox = gDevTools.getToolbox(hud.target);
-  const popup = toolbox.topDoc.getElementById("webconsole-menu");
-  if (!popup) {
-    return Promise.resolve();
-  }
-
-  const onPopupHidden = once(popup, "popuphidden");
-  popup.hidePopup();
-  return onPopupHidden;
-}
-
 // Return a promise that resolves with the result of a thread evaluating a
 // string in the topmost frame.
 async function evaluateInTopFrame(target, text) {

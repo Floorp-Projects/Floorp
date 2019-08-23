@@ -114,6 +114,10 @@ const L10N = new MultiLocalizationHelper(
   "devtools/startup/locales/key-shortcuts.properties"
 );
 
+// URL to direct people to the deprecated tools panel
+const DEPRECATION_URL =
+  "https://developer.mozilla.org/docs/Tools/Deprecated_tools";
+
 var Tools = {};
 exports.Tools = Tools;
 
@@ -389,6 +393,8 @@ Tools.storage = {
 
 Tools.scratchpad = {
   id: "scratchpad",
+  deprecated: true,
+  deprecationURL: `${DEPRECATION_URL}#Scratchpad`,
   ordinal: 12,
   visibilityswitch: "devtools.scratchpad.enabled",
   icon: "chrome://devtools/skin/images/tool-scratchpad.svg",

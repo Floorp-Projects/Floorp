@@ -110,12 +110,10 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
 
   if (unlikely (!is_valid () || (glyph >= num_glyphs))) return false;
 
-  unsigned int num_coords;
-  const int *coords = hb_font_get_var_coords_normalized (font, &num_coords);
   unsigned int fd = fdSelect->get_fd (glyph);
   cff2_cs_interpreter_t<cff2_cs_opset_extents_t, cff2_extents_param_t> interp;
   const byte_str_t str = (*charStrings)[glyph];
-  interp.env.init (str, *this, fd, coords, num_coords);
+  interp.env.init (str, *this, fd, font->coords, font->num_coords);
   cff2_extents_param_t  param;
   param.init ();
   if (unlikely (!interp.interpret (param))) return false;

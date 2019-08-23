@@ -5,13 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAnonymousTemporaryFile.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "prio.h"
+#include "SpecialSystemDirectory.h"
 
 #ifdef XP_WIN
 #  include "nsIObserver.h"
@@ -54,7 +52,8 @@ static nsresult GetTempDir(nsIFile** aTempDir) {
     return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<nsIFile> tmpFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
+  nsresult rv =
+      GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(tmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

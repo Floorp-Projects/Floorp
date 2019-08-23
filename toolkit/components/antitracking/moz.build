@@ -8,6 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Privacy: Anti-Tracking')
 
 XPIDL_SOURCES += [
+    'nsIAsyncStreamReader.idl',
     'nsITrackingDBService.idl',
     'nsIURLDecorationAnnotationsService.idl',
 ]
@@ -19,6 +20,8 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'AsyncStreamReader.jsm',
+    'ContentBlockingAllowList.jsm',
     'TrackingDBService.jsm',
     'URLDecorationAnnotationsService.jsm',
 ]
@@ -39,10 +42,6 @@ UNIFIED_SOURCES += [
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
     'URLDecorationStripper.cpp',
-]
-
-EXTRA_JS_MODULES += [
-    'ContentBlockingAllowList.jsm',
 ]
 
 LOCAL_INCLUDES += [

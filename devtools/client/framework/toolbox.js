@@ -1144,14 +1144,14 @@ Toolbox.prototype = {
             };
 
           case "getOriginalSourceText":
-            return originalSource => {
+            return originalSourceId => {
               return target
-                .getOriginalSourceText(originalSource)
-                .catch(text => {
+                .getOriginalSourceText(originalSourceId)
+                .catch(error => {
                   const message = L10N.getFormatStr(
                     "toolbox.sourceMapSourceFailure",
-                    text,
-                    originalSource.url
+                    error.message,
+                    error.metadata ? error.metadata.url : "<unknown>"
                   );
                   this.target.logWarningInPage(message, "source map");
                   // Also replace the result with the error text.

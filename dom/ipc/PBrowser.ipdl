@@ -1011,7 +1011,7 @@ child:
     /**
      * Requests the content blocking log, which is sent back in response.
      */
-    async GetContentBlockingLog() returns(nsCString log, bool success);
+    async GetContentBlockingLog() returns(IPCStream ipcStream, bool success);
 
     async SkipBrowsingContextDetach();
 parent:

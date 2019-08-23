@@ -8,9 +8,54 @@
 
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
+#include "nsIAsyncStreamReader.h"
 #include "nsIObserverService.h"
+#include "nsImportModule.h"
+#include "nsStreamUtils.h"
+
+namespace {
+
+class AsyncStreamReaderPromiseHandler final : public PromiseNativeHandler {
+ public:
+  explicit AsyncStreamReaderPromiseHandler(Promise* aFinalPromise)
+      : mPromise(aFinalPromise) {}
+
+  NS_DECL_ISUPPORTS
+
+ public:
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    if (NS_WARN_IF(!aValue.isString())) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    nsAutoString result;
+    if (NS_WARN_IF(!AssignJSString(aCx, result, aValue.toString()))) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    mPromise->MaybeResolve(std::move(result));
+  }
+
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    mPromise->MaybeRejectWithUndefined();
+  }
+
+ private:
+  ~AsyncStreamReaderPromiseHandler() = default;
+
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_ISUPPORTS0(AsyncStreamReaderPromiseHandler)
+
+}  // namespace
 
 namespace mozilla {
 namespace dom {
@@ -356,10 +401,36 @@ BrowserHost::GetContentBlockingLog(::mozilla::dom::Promise** aPromise) {
   auto cblPromise = mRoot->SendGetContentBlockingLog();
   cblPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [jsPromise](Tuple<nsCString, bool>&& aResult) {
+      [jsPromise](Tuple<IPCStream, bool>&& aResult) {
         if (Get<1>(aResult)) {
-          NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
-          jsPromise->MaybeResolve(std::move(utf16));
+          const IPCStream& ipcStream(Get<0>(aResult));
+
+          nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(ipcStream);
+          nsCOMPtr<nsIAsyncInputStream> asyncStream;
+          nsresult rv = NS_MakeAsyncNonBlockingInputStream(
+              stream.forget(), getter_AddRefs(asyncStream));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            jsPromise->MaybeRejectWithUndefined();
+            return;
+          }
+
+          nsCOMPtr<nsIAsyncStreamReader> ar =
+              do_ImportModule("resource://gre/modules/AsyncStreamReader.jsm");
+          if (NS_WARN_IF(!ar)) {
+            jsPromise->MaybeRejectWithUndefined();
+            return;
+          }
+
+          RefPtr<Promise> promise;
+          rv = ar->ReadAsyncStream(asyncStream, getter_AddRefs(promise));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            jsPromise->MaybeRejectWithUndefined();
+            return;
+          }
+
+          RefPtr<AsyncStreamReaderPromiseHandler> handler =
+              new AsyncStreamReaderPromiseHandler(jsPromise);
+          promise->AppendNativeHandler(handler);
         } else {
           jsPromise->MaybeRejectWithUndefined();
         }

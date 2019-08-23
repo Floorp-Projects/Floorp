@@ -2,55 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals ExtensionAPI, XPCOMUtils */
+"use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "EveryWindow",
-  "resource:///modules/EveryWindow.jsm"
+const EXPORTED_SYMBOLS = ["FirefoxMonitor"];
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PluralForm",
-  "resource://gre/modules/PluralForm.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "RemoteSettings",
-  "resource://services-settings/remote-settings.js"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EveryWindow: "resource:///modules/EveryWindow.jsm",
+  PluralForm: "resource://gre/modules/PluralForm.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-this.fxmonitor = class extends ExtensionAPI {
-  getAPI(context) {
-    return {
-      fxmonitor: {
-        async start() {
-          await FirefoxMonitor.init(context.extension);
-        },
-      },
-    };
-  }
-
-  onShutdown(shutdownReason) {
-    if (Services.startup.shuttingDown) {
-      return;
-    }
-
-    FirefoxMonitor.stopObserving();
-  }
-};
+const STYLESHEET = "chrome://browser/content/fxmonitor/FirefoxMonitor.css";
+const ICON = "chrome://browser/content/fxmonitor/monitor32.svg";
 
 this.FirefoxMonitor = {
   // Map of breached site host -> breach metadata.
@@ -101,10 +71,6 @@ this.FirefoxMonitor = {
     Preferences.set(this.kEnabledPref, false);
   },
 
-  getURL(aPath) {
-    return this.extension.getURL(aPath);
-  },
-
   getString(aKey) {
     return this.strings.GetStringFromName(aKey);
   },
@@ -138,9 +104,7 @@ this.FirefoxMonitor = {
     Preferences.reset(this.kWarnedHostsPref);
   },
 
-  init(aExtension) {
-    this.extension = aExtension;
-
+  init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "enabled",
@@ -200,6 +164,9 @@ this.FirefoxMonitor = {
       },
     });
 
+    let telemetryEnabled = !Preferences.get(this.kTelemetryDisabledPref);
+    Services.telemetry.setEventRecordingEnabled("fxmonitor", telemetryEnabled);
+
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "FirefoxMonitorURL",
@@ -214,6 +181,12 @@ this.FirefoxMonitor = {
       false
     );
 
+    XPCOMUtils.defineLazyGetter(this, "strings", () => {
+      return Services.strings.createBundle(
+        "chrome://browser/locale/fxmonitor.properties"
+      );
+    });
+
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "telemetryDisabled",
@@ -221,35 +194,7 @@ this.FirefoxMonitor = {
       false
     );
 
-    await this.loadStrings();
     await this.loadBreaches();
-  },
-
-  loadStrings() {
-    let l10nManifest;
-    if (this.extension.rootURI instanceof Ci.nsIJARURI) {
-      l10nManifest = this.extension.rootURI.JARFile.QueryInterface(
-        Ci.nsIFileURL
-      ).file;
-    } else if (this.extension.rootURI instanceof Ci.nsIFileURL) {
-      l10nManifest = this.extension.rootURI.file;
-    }
-
-    if (l10nManifest) {
-      XPCOMUtils.defineLazyGetter(this, "strings", () => {
-        Components.manager.addBootstrappedManifestLocation(l10nManifest);
-
-        return Services.strings.createBundle(
-          "chrome://fxmonitor/locale/fxmonitor.properties"
-        );
-      });
-    } else {
-      // Something is very strange if we reach this line, so we throw
-      // in order to prevent init from completing and burst the stack.
-      throw new Error(
-        "Cannot find fxmonitor chrome.manifest for registering translated strings"
-      );
-    }
   },
 
   kRemoteSettingsKey: "fxmonitor-breaches",
@@ -358,7 +303,7 @@ this.FirefoxMonitor = {
 
         let DOMWindowUtils = win.windowUtils;
         DOMWindowUtils.removeSheetUsingURIString(
-          this.getURL("privileged/FirefoxMonitor.css"),
+          STYLESHEET,
           DOMWindowUtils.AUTHOR_SHEET
         );
 
@@ -389,7 +334,7 @@ this.FirefoxMonitor = {
     // Inject our stylesheet.
     let DOMWindowUtils = win.windowUtils;
     DOMWindowUtils.loadSheetUsingURIString(
-      this.getURL("privileged/FirefoxMonitor.css"),
+      STYLESHEET,
       DOMWindowUtils.AUTHOR_SHEET
     );
 
@@ -406,7 +351,7 @@ this.FirefoxMonitor = {
     let img = doc.createElementNS(XUL_NS, "image");
     img.setAttribute("role", "button");
     img.classList.add(`${this.kNotificationID}-icon`);
-    img.style.listStyleImage = `url(${this.getURL("assets/monitor32.svg")})`;
+    img.style.listStyleImage = `url(${ICON})`;
     anchorBox.appendChild(img);
     notificationBox.appendChild(anchorBox);
     img.setAttribute(
@@ -551,7 +496,7 @@ this.FirefoxMonitor = {
         persistent: true,
         hideClose: true,
         eventCallback: populatePanel,
-        popupIconURL: this.getURL("assets/monitor32.svg"),
+        popupIconURL: ICON,
       }
     );
 

@@ -691,6 +691,20 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       MOZ_ASSERT(XRE_IsParentProcess());
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     }
+
+    // Propagate the remote & fission status of the parent window, if available,
+    // to the child.
+    if (parentWindow) {
+      auto* docShell = nsDocShell::Cast(parentWindow->GetDocShell());
+
+      if (docShell->UseRemoteTabs()) {
+        chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+      }
+
+      if (docShell->UseRemoteSubframes()) {
+        chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
+      }
+    }
   }
 
   SizeSpec sizeSpec;
@@ -2472,6 +2486,7 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
       // which might have been automatically flipped by Gecko.
       int32_t uiChromeFlags = aChromeFlags;
       uiChromeFlags &= ~(nsIWebBrowserChrome::CHROME_REMOTE_WINDOW |
+                         nsIWebBrowserChrome::CHROME_FISSION_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
