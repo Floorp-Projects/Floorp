@@ -27,6 +27,12 @@ const {
 const { L10N } = require("../utils/l10n");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
+loader.lazyRequireGetter(
+  this,
+  "KeyShortcuts",
+  "devtools/client/shared/key-shortcuts"
+);
+
 // MDN
 const { getFilterBoxURL } = require("../utils/mdn-utils");
 const LEARN_MORE_URL = getFilterBoxURL();
@@ -42,9 +48,10 @@ const SearchBox = createFactory(
 const { button, div, input, label, span } = dom;
 
 // Localization
-const SEARCH_KEY_SHORTCUT = L10N.getStr(
+const FILTER_KEY_SHORTCUT = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.key"
 );
+const SEARCH_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.search.key");
 const SEARCH_PLACE_HOLDER = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.label"
 );
@@ -163,6 +170,14 @@ class Toolbar extends Component {
       DEVTOOLS_DISABLE_CACHE_PREF,
       this.updateBrowserCacheDisabled
     );
+
+    this.shortcuts = new KeyShortcuts({
+      window,
+    });
+
+    this.shortcuts.on(SEARCH_KEY_SHORTCUT, event => {
+      this.props.toggleSearchPanel();
+    });
   }
 
   shouldComponentUpdate(nextProps) {
@@ -431,7 +446,7 @@ class Toolbar extends Component {
   renderFilterBox(setRequestFilterText) {
     return SearchBox({
       delay: FILTER_SEARCH_DELAY,
-      keyShortcut: SEARCH_KEY_SHORTCUT,
+      keyShortcut: FILTER_KEY_SHORTCUT,
       placeholder: SEARCH_PLACE_HOLDER,
       type: "filter",
       ref: "searchbox",
