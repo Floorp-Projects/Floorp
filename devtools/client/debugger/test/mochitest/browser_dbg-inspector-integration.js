@@ -5,10 +5,6 @@
 // Tests that clicking the DOM node button in any ObjectInspect
 // opens the Inspector panel
 
-function waitForInspectorPanelChange(dbg) {
-  return dbg.toolbox.getPanelWhenReady("inspector");
-}
-
 add_task(async function() {
   // Ensures the end panel is wide enough to show the inspector icon
   await pushPref("devtools.debugger.end-panel-size", 600);

@@ -6,7 +6,9 @@
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 
+import actions from "../../actions";
 import assert from "../../utils/assert";
+import { connect } from "../../utils/connect";
 import InlinePreview from "./InlinePreview";
 
 import type { Preview } from "../../types";
@@ -18,6 +20,9 @@ type Props = {
   // Represents the number of column breakpoints to help with preview
   // positioning
   numColumnBreakpoints: number,
+  openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement,
 };
 
 import "./InlinePreview.css";
@@ -70,7 +75,14 @@ class InlinePreviewRow extends PureComponent<Props> {
       );
     }
 
-    const { editor, line, previews } = props;
+    const {
+      editor,
+      line,
+      previews,
+      openElementInInspector,
+      highlightDomElement,
+      unHighlightDomElement,
+    } = props;
 
     if (!this.IPWidget) {
       const widget = document.createElement("div");
@@ -91,6 +103,9 @@ class InlinePreviewRow extends PureComponent<Props> {
             line={line}
             variable={preview.name}
             value={preview.value}
+            openElementInInspector={openElementInInspector}
+            highlightDomElement={highlightDomElement}
+            unHighlightDomElement={unHighlightDomElement}
           />
         ))}
       </React.Fragment>,
@@ -103,4 +118,11 @@ class InlinePreviewRow extends PureComponent<Props> {
   }
 }
 
-export default InlinePreviewRow;
+export default connect(
+  () => ({}),
+  {
+    openElementInInspector: actions.openElementInInspectorCommand,
+    highlightDomElement: actions.highlightDomElement,
+    unHighlightDomElement: actions.unHighlightDomElement,
+  }
+)(InlinePreviewRow);

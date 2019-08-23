@@ -6,7 +6,6 @@
 import { sortBy } from "lodash";
 import { getOriginalFrameScope, getGeneratedFrameScope } from "../../selectors";
 import { features } from "../../utils/prefs";
-import { getValue } from "../../utils/pause";
 
 import type { OriginalScope } from "../../utils/pause/mapScopes";
 import type { ThreadId, Frame, Scope, Previews } from "../../types";
@@ -170,7 +169,7 @@ function getBindingValues(
 
     previews[line].push({
       name: displayName,
-      value: getValue(displayValue),
+      value: displayValue,
       column,
     });
   }
