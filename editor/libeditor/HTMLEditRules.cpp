@@ -4511,10 +4511,10 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
   AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
-  // Contruct a list of nodes to act on.
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock, arrayOfNodes,
-                             TouchContent::yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+               arrayOfNodes, EditSubAction::eCreateOrRemoveBlock);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4753,7 +4753,7 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
 
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
   nsTArray<OwningNonNull<nsRange>> arrayOfRanges;
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
 
   // short circuit: detect case of collapsed selection inside an <li>.
   // just sublist that <li>.  This prevents bug 97797.
@@ -4775,12 +4775,10 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
   if (liNode) {
     arrayOfNodes.AppendElement(*liNode);
   } else {
-    // convert the selection ranges into "promoted" selection ranges:
-    // this basically just expands the range to include the immediate
-    // block parent, and then further expands to include any ancestors
-    // whose children are all in the range
-    nsresult rv = GetNodesFromSelection(EditSubAction::eIndent, arrayOfNodes,
-                                        TouchContent::yes);
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+                arrayOfNodes, EditSubAction::eIndent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5446,9 +5444,11 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
   // basically just expands the range to include the immediate block parent,
   // and then further expands to include any ancestors whose children are all
   // in the range
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv = GetNodesFromSelection(EditSubAction::eOutdent, arrayOfNodes,
-                                      TouchContent::yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+              arrayOfNodes, EditSubAction::eOutdent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return SplitRangeOffFromNodeResult(rv);
   }
@@ -6062,9 +6062,11 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
   // basically just expands the range to include the immediate block parent,
   // and then further expands to include any ancestors whose children are all
   // in the range
-  nsTArray<OwningNonNull<nsINode>> nodeArray;
-  nsresult rv = GetNodesFromSelection(EditSubAction::eSetOrClearAlignment,
-                                      nodeArray, TouchContent::yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> nodeArray;
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+              nodeArray, EditSubAction::eSetOrClearAlignment);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7597,10 +7599,21 @@ nsresult HTMLEditRules::GetListActionNodes(
     AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // contruct a list of nodes to act on.
-    nsresult rv = GetNodesFromSelection(EditSubAction::eCreateOrChangeList,
-                                        aOutArrayOfNodes, aTouchContent);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (aTouchContent == TouchContent::yes) {
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+                  aOutArrayOfNodes, EditSubAction::eCreateOrChangeList);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      nsresult rv =
+          HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+              aOutArrayOfNodes, EditSubAction::eCreateOrChangeList);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
 
@@ -7698,9 +7711,8 @@ nsresult HTMLEditRules::GetParagraphFormatNodes(
     nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // Contruct a list of nodes to act on.
-  nsresult rv = GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock,
-                                      outArrayOfNodes, TouchContent::no);
+  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+      outArrayOfNodes, EditSubAction::eCreateOrRemoveBlock);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7917,44 +7929,6 @@ nsresult HTMLEditRules::GetNodesFromPoint(
 
   // Stuff new opRange into array
   arrayOfRanges.AppendElement(range);
-
-  if (aTouchContent == TouchContent::yes) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .SplitInlinesAndCollectEditTargetNodes(
-                          arrayOfRanges, outArrayOfNodes, aEditSubAction);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
-
-  nsresult rv = HTMLEditorRef().CollectEditTargetNodes(
-      arrayOfRanges, outArrayOfNodes, aEditSubAction);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
-  return rv;
-}
-
-nsresult HTMLEditRules::GetNodesFromSelection(
-    EditSubAction aEditSubAction,
-    nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-    TouchContent aTouchContent) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // Promote selection ranges
-  AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
-  switch (aEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eInsertLineBreak:
-    case EditSubAction::eInsertParagraphSeparator:
-    case EditSubAction::eDeleteText:
-      HTMLEditorRef().GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
-          arrayOfRanges);
-      break;
-    default:
-      HTMLEditorRef().GetSelectionRangesExtendedToHardLineStartAndEnd(
-          arrayOfRanges, aEditSubAction);
-      break;
-  }
 
   if (aTouchContent == TouchContent::yes) {
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
