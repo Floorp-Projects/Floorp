@@ -12440,19 +12440,16 @@ void ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     printf("InitFrameType");
 
-    const nsStyleDisplay* disp = aState->mStyleDisplay;
-
     if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) printf(" out-of-flow");
     if (aFrame->GetPrevInFlow()) printf(" prev-in-flow");
     if (aFrame->IsAbsolutelyPositioned()) printf(" abspos");
     if (aFrame->IsFloating()) printf(" float");
 
-    const nsCSSKeyword displayVal = nsCSSProps::ValueToKeywordEnum(
-        disp->mDisplay, nsCSSProps::kDisplayKTable);
-    if (displayVal == eCSSKeyword_UNKNOWN)
-      printf(" display=%u", static_cast<uint32_t>(disp->mDisplay));
-    else
-      printf(" display=%s", nsCSSKeywords::GetStringValue(displayVal).get());
+    {
+      nsAutoString result;
+      Servo_GetPropertyValue(aFrame->Style(), eCSSProperty_display, &result);
+      printf(" display=%s", NS_ConvertUTF16toUTF8(result).get());
+    }
 
     // This array must exactly match the NS_CSS_FRAME_TYPE constants.
     const char* const cssFrameTypes[] = {
