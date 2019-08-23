@@ -1040,28 +1040,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::IPCInitializer::GetOpener() {
   return opener.forget();
 }
 
-void BrowsingContext::LocationProxy::SetHref(const nsAString& aHref,
-                                             nsIPrincipal& aSubjectPrincipal,
-                                             ErrorResult& aError) {
-  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
-  if (!win || !win->GetLocation()) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  win->GetLocation()->SetHref(aHref, aSubjectPrincipal, aError);
-}
-
-void BrowsingContext::LocationProxy::Replace(const nsAString& aUrl,
-                                             nsIPrincipal& aSubjectPrincipal,
-                                             ErrorResult& aError) {
-  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
-  if (!win || !win->GetLocation()) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  win->GetLocation()->Replace(aUrl, aSubjectPrincipal, aError);
-}
-
 void BrowsingContext::StartDelayedAutoplayMediaComponents() {
   if (!mDocShell) {
     return;
