@@ -116,16 +116,21 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
     try {
       // Unable to correctly type the result of a spread on a union type.
       // See https://github.com/facebook/flow/pull/7298
-      const urlInfo: Source = { ...(source: any) };
-      if (!urlInfo.url && typeof urlInfo.introductionUrl === "string") {
+      let url = source.url;
+      if (!source.url && typeof source.introductionUrl === "string") {
         // If the source was dynamically generated (via eval, dynamically
         // created script elements, and so forth), it won't have a URL, so that
         // it is not collapsed into other sources from the same place. The
         // introduction URL will include the point it was constructed at,
         // however, so use that for resolving any source maps in the source.
-        (urlInfo: any).url = urlInfo.introductionUrl;
+        url = source.introductionUrl;
       }
-      data = await sourceMaps.getOriginalURLs(urlInfo);
+      data = await sourceMaps.getOriginalURLs({
+        id: source.id,
+        url,
+        sourceMapURL: source.sourceMapURL || "",
+        isWasm: source.isWasm,
+      });
     } catch (e) {
       console.error(e);
     }
