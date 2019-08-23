@@ -38,4 +38,16 @@ async function testSteps() {
   let length = storage.length;
 
   ok(length === 0, "Correct length");
+
+  info("Resetting origin");
+
+  request = resetOrigin(principal);
+  await requestFinished(request);
+
+  info("Getting usage");
+
+  request = getOriginUsage(principal);
+  await requestFinished(request);
+
+  is(request.result.usage, 0, "Correct usage");
 }

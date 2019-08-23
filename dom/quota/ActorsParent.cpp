@@ -665,6 +665,8 @@ class OriginInfo final {
 
   void LockedResetUsageForClient(Client::Type aClientType);
 
+  bool LockedGetUsageForClient(Client::Type aClientType, uint64_t& aUsage);
+
   void LockedUpdateAccessTime(int64_t aAccessTime) {
     AssertCurrentThreadOwnsQuotaMutex();
 
@@ -3684,6 +3686,34 @@ void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
   }
 }
 
+bool QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     Client::Type aClientType,
+                                     uint64_t& aUsage) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+
+  MutexAutoLock lock(mQuotaMutex);
+
+  GroupInfoPair* pair;
+  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
+    return false;
+  }
+
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  if (!groupInfo) {
+    return false;
+  }
+
+  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
+  if (!originInfo) {
+    return false;
+  }
+
+  return originInfo->LockedGetUsageForClient(aClientType, aUsage);
+}
+
 void QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
                                           const nsACString& aGroup,
                                           const nsACString& aOrigin) {
@@ -5895,13 +5925,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   // for whole profile can be collected
   nsresult statusKeeper = NS_OK;
 
-  AutoTArray<RefPtr<Client>, Client::TYPE_MAX>& clients = mClients;
-  auto autoNotifier = MakeScopeExit([&clients] {
-    for (RefPtr<Client>& client : clients) {
-      client->OnStorageInitFailed();
-    }
-  });
-
   if (NS_WARN_IF(IsShuttingDown())) {
     RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
   }
@@ -5964,8 +5987,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   mTemporaryStorageInitialized = true;
 
   CheckTemporaryStorageLimits();
-
-  autoNotifier.release();
 
   return rv;
 }
@@ -6801,6 +6822,20 @@ void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
 
   AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, size);
   quotaManager->mTemporaryStorageUsage -= size;
+}
+
+bool OriginInfo::LockedGetUsageForClient(Client::Type aClientType,
+                                         uint64_t& aUsage) {
+  AssertCurrentThreadOwnsQuotaMutex();
+
+  Maybe<uint64_t>& clientUsage = mClientUsages[aClientType];
+
+  if (clientUsage.isNothing()) {
+    return false;
+  }
+
+  aUsage = clientUsage.value();
+  return true;
 }
 
 void OriginInfo::LockedPersist() {
