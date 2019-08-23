@@ -240,8 +240,6 @@ class PermissionDelegateTest : BaseSessionTest() {
     }
 
     @Test fun notification_reject() {
-        //Disable for frequent failures Bug 1542525
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
@@ -257,7 +255,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         val result = mainSession.waitForJS("Notification.requestPermission()")
 
         assertThat("Permission should not be granted",
-                result as String, equalTo("default"))
+                result as String, equalTo("denied"))
     }
 
     // @Test fun persistentStorage() {
