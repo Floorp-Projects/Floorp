@@ -36,7 +36,8 @@
           "threads",
           "trackopts",
           "jstracer",
-          "jsallocations"
+          "jsallocations",
+          "preferencereads"
         ]
       },
       {
