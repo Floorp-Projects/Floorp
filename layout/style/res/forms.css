@@ -917,9 +917,14 @@ input[type=range]::-moz-range-track {
   position: static !important;
   writing-mode: unset !important;
   direction: unset !important;
-  block-size: 0.2em;
+  block-size: 0.2em; /* same as inline-size below */
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   user-select: none !important;
+}
+
+input[type=range][orient=vertical]::-moz-range-track {
+  inline-size: 0.2em; /* same as block-size above */
+  block-size: 100%;
 }
 
 /**
