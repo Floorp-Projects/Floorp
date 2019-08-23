@@ -1078,10 +1078,10 @@ class HTMLEditor final : public TextEditor,
   nsIContent* GetNextEditableHTMLNodeInternal(
       const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const;
 
-  bool IsFirstEditableChild(nsINode* aNode);
-  bool IsLastEditableChild(nsINode* aNode);
-  nsIContent* GetFirstEditableChild(nsINode& aNode);
-  nsIContent* GetLastEditableChild(nsINode& aNode);
+  bool IsFirstEditableChild(nsINode* aNode) const;
+  bool IsLastEditableChild(nsINode* aNode) const;
+  nsIContent* GetFirstEditableChild(nsINode& aNode) const;
+  nsIContent* GetLastEditableChild(nsINode& aNode) const;
 
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
@@ -1225,6 +1225,30 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
+
+  /**
+   * CollectEditableChildren() collects child nodes of aNode (starting from
+   * first editable child, but may return non-editable children after it).
+   *
+   * @param aNode               Parent node of retrieving children.
+   * @param aOutArrayOfNodes    [out] This method will inserts found children
+   *                            into this array.
+   * @param aIndexToInsertChildren      Starting from this index, found
+   *                                    children will be inserted to the array.
+   * @param aCollectListChildren        If Yes, will collect children of list
+   *                                    and list-item elements recursively.
+   * @param aCollectTableChildren       If Yes, will collect children of table
+   *                                    related elements recursively.
+   * @return                    Number of found children.
+   */
+  enum class CollectListChildren { No, Yes };
+  enum class CollectTableChildren { No, Yes };
+  size_t CollectChildren(
+      nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      size_t aIndexToInsertChildren,
+      CollectListChildren aCollectListChildren = CollectListChildren::Yes,
+      CollectTableChildren aCollectTableChildren =
+          CollectTableChildren::Yes) const;
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(

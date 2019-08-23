@@ -4221,8 +4221,7 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // into our node array, and remove the div
     if (curNode->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
-      int32_t j = i + 1;
-      GetInnerContent(*curNode, arrayOfNodes, &j);
+      HTMLEditorRef().CollectChildren(*curNode, arrayOfNodes, i + 1);
       rv = MOZ_KnownLive(HTMLEditorRef())
                .RemoveContainerWithTransaction(
                    MOZ_KnownLive(*curNode->AsElement()));
@@ -6562,23 +6561,32 @@ Element* HTMLEditRules::CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
   return nullptr;
 }
 
-void HTMLEditRules::GetInnerContent(
+size_t HTMLEditor::CollectChildren(
     nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-    int32_t* aIndex, Lists aLists, Tables aTables) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aIndex);
+    size_t aIndexToInsertChildren,
+    CollectListChildren aCollectListChildren /* = CollectListChildren::Yes */,
+    CollectTableChildren
+        aCollectTableChildren /* = CollectTableChildren::Yes */) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  for (nsCOMPtr<nsIContent> node = HTMLEditorRef().GetFirstEditableChild(aNode);
-       node; node = node->GetNextSibling()) {
-    if ((aLists == Lists::yes &&
-         (HTMLEditUtils::IsList(node) || HTMLEditUtils::IsListItem(node))) ||
-        (aTables == Tables::yes && HTMLEditUtils::IsTableElement(node))) {
-      GetInnerContent(*node, aOutArrayOfNodes, aIndex, aLists, aTables);
+  size_t numberOfFoundChildren = 0;
+  for (nsIContent* content = GetFirstEditableChild(aNode); content;
+       content = content->GetNextSibling()) {
+    if ((aCollectListChildren == CollectListChildren::Yes &&
+         (HTMLEditUtils::IsList(content) ||
+          HTMLEditUtils::IsListItem(content))) ||
+        (aCollectTableChildren == CollectTableChildren::Yes &&
+         HTMLEditUtils::IsTableElement(content))) {
+      numberOfFoundChildren +=
+          CollectChildren(*content, aOutArrayOfNodes,
+                          aIndexToInsertChildren + numberOfFoundChildren,
+                          aCollectListChildren, aCollectTableChildren);
     } else {
-      aOutArrayOfNodes.InsertElementAt(*aIndex, *node);
-      (*aIndex)++;
+      aOutArrayOfNodes.InsertElementAt(
+          aIndexToInsertChildren + numberOfFoundChildren++, *content);
     }
   }
+  return numberOfFoundChildren;
 }
 
 nsresult HTMLEditRules::ExpandSelectionForDeletion() {
@@ -7258,9 +7266,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsListItem(node)) {
-        int32_t j = i;
         aOutArrayOfNodes.RemoveElementAt(i);
-        GetInnerContent(*node, aOutArrayOfNodes, &j);
+        HTMLEditorRef().CollectChildren(*node, aOutArrayOfNodes, i);
       }
     }
     // Empty text node shouldn't be selected if unnecessary
@@ -7281,9 +7288,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsTableElementButNotTable(node)) {
-        int32_t j = i;
         aOutArrayOfNodes.RemoveElementAt(i);
-        GetInnerContent(*node, aOutArrayOfNodes, &j);
+        HTMLEditorRef().CollectChildren(*node, aOutArrayOfNodes, i);
       }
     }
   }
@@ -7293,9 +7299,10 @@ nsresult HTMLEditRules::GetNodesForOperation(
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (node->IsHTMLElement(nsGkAtoms::div)) {
-        int32_t j = i;
         aOutArrayOfNodes.RemoveElementAt(i);
-        GetInnerContent(*node, aOutArrayOfNodes, &j, Lists::no, Tables::no);
+        HTMLEditorRef().CollectChildren(*node, aOutArrayOfNodes, i,
+                                        HTMLEditor::CollectListChildren::No,
+                                        HTMLEditor::CollectTableChildren::No);
       }
     }
   }
@@ -7389,9 +7396,9 @@ nsresult HTMLEditRules::GetListActionNodes(
     // Scan for table elements and divs.  If we find table elements other than
     // table, replace it with a list of any editable non-table content.
     if (HTMLEditUtils::IsTableElementButNotTable(testNode)) {
-      int32_t j = i;
       aOutArrayOfNodes.RemoveElementAt(i);
-      GetInnerContent(*testNode, aOutArrayOfNodes, &j, Lists::no);
+      HTMLEditorRef().CollectChildren(*testNode, aOutArrayOfNodes, i,
+                                      HTMLEditor::CollectListChildren::No);
     }
   }
 
@@ -7439,8 +7446,9 @@ void HTMLEditRules::LookInsideDivBQandList(
   // array with these nodes
   aNodeArray.RemoveElementAt(0);
   if (curNode->IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::blockquote)) {
-    int32_t j = 0;
-    GetInnerContent(*curNode, aNodeArray, &j, Lists::no, Tables::no);
+    HTMLEditorRef().CollectChildren(*curNode, aNodeArray, 0,
+                                    HTMLEditor::CollectListChildren::No,
+                                    HTMLEditor::CollectTableChildren::No);
     return;
   }
 
@@ -7492,9 +7500,8 @@ nsresult HTMLEditRules::GetParagraphFormatNodes(
     if (HTMLEditUtils::IsTableElement(testNode) ||
         HTMLEditUtils::IsList(testNode) ||
         HTMLEditUtils::IsListItem(testNode)) {
-      int32_t j = i;
       outArrayOfNodes.RemoveElementAt(i);
-      GetInnerContent(testNode, outArrayOfNodes, &j);
+      HTMLEditorRef().CollectChildren(testNode, outArrayOfNodes, i);
     }
   }
   return NS_OK;
