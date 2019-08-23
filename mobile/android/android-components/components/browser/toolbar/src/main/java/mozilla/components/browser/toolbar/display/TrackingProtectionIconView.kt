@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.toolbar.display
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
@@ -82,7 +81,6 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
         return drawableStates
     }
 
-    @SuppressLint("NewApi")
     private fun updateIcon() {
         val descriptionId = when (siteTrackingProtection) {
             ON_NO_TRACKERS_BLOCKED -> {
