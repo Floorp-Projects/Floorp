@@ -15,7 +15,6 @@ import type {
   Source,
   SourceId,
 } from "../../../src/types";
-import type { SourceMapConsumer } from "source-map";
 import type { LocationOptions } from "./source-map";
 
 export const dispatcher = new WorkerDispatcher();
@@ -40,7 +39,7 @@ export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
 
 export const getOriginalURLs = async (
   generatedSource: Source
-): Promise<SourceMapConsumer> =>
+): Promise<?Array<{| id: SourceId, url: string |}>> =>
   dispatcher.invoke("getOriginalURLs", generatedSource);
 
 export const hasOriginalURL = async (url: string): Promise<boolean> =>
