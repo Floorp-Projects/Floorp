@@ -1327,8 +1327,9 @@ class HTMLEditor final : public TextEditor,
    * non-brekable space.
    */
   enum class ScanDirection { Backward, Forward };
-  static EditorDOMPoint GetWhiteSpaceEndPoint(const RangeBoundary& aPoint,
-                                              ScanDirection aScanDirection);
+  template <typename PT, typename RT>
+  static EditorDOMPoint GetWhiteSpaceEndPoint(
+      const RangeBoundaryBase<PT, RT>& aPoint, ScanDirection aScanDirection);
 
   /**
    * GetCurrentHardLineStartPoint() returns start point of hard line
@@ -1338,8 +1339,9 @@ class HTMLEditor final : public TextEditor,
    * NOTE: The result may be point of editing host.  I.e., the container may
    *       be outside of editing host.
    */
-  EditorDOMPoint GetCurrentHardLineStartPoint(const RangeBoundary& aPoint,
-                                              EditSubAction aEditSubAction);
+  template <typename PT, typename RT>
+  EditorDOMPoint GetCurrentHardLineStartPoint(
+      const RangeBoundaryBase<PT, RT>& aPoint, EditSubAction aEditSubAction);
 
   /**
    * GetCurrentHardLineEndPoint() returns end point of hard line including
@@ -1351,7 +1353,45 @@ class HTMLEditor final : public TextEditor,
    * NOTE: This result may be point of editing host.  I.e., the container
    *       may be outside of editing host.
    */
-  EditorDOMPoint GetCurrentHardLineEndPoint(const RangeBoundary& aPoint);
+  template <typename PT, typename RT>
+  EditorDOMPoint GetCurrentHardLineEndPoint(
+      const RangeBoundaryBase<PT, RT>& aPoint);
+
+  /**
+   * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
+   * which may be expanded from the given range to include adjuscent
+   * whitespaces.  If this fails handling something, returns nullptr.
+   */
+  already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
+      const dom::AbstractRange& aAbstractRange);
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
+      const RangeBoundaryBase<SPT, SRT>& aStartRef,
+      const RangeBoundaryBase<EPT, ERT>& aEndRef);
+
+  /**
+   * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
+   * which may be expanded to start/end of hard line at both edges of the given
+   * range.  If this fails handling something, returns nullptr.
+   */
+  already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
+      const dom::AbstractRange& aAbstractRange, EditSubAction aEditSubAction);
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
+      const RangeBoundaryBase<SPT, SRT>& aStartRef,
+      const RangeBoundaryBase<EPT, ERT>& aEndRef, EditSubAction aEditSubAction);
+
+  /**
+   * SelectBRElementIfCollapsedInEmptyBlock() helper method for
+   * CreateRangeIncludingAdjuscentWhiteSpaces() and
+   * CreateRangeExtendedToLineStartAndEnd().  If the given range is collapsed
+   * in a block and the block has only one `<br>` element, this makes
+   * aStartRef and aEndRef select the `<br>` element.
+   */
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  void SelectBRElementIfCollapsedInEmptyBlock(
+      RangeBoundaryBase<SPT, SRT>& aStartRef,
+      RangeBoundaryBase<EPT, ERT>& aEndRef);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
