@@ -1500,6 +1500,19 @@ class HTMLEditor final : public TextEditor,
       RangeBoundaryBase<SPT, SRT>& aStartRef,
       RangeBoundaryBase<EPT, ERT>& aEndRef);
 
+  /**
+   * GetChildNodesOf() returns all child nodes of aParent with an array.
+   */
+  static void GetChildNodesOf(nsINode& aParentNode,
+                              nsTArray<OwningNonNull<nsINode>>& aChildNodes) {
+    MOZ_ASSERT(aChildNodes.IsEmpty());
+    aChildNodes.SetCapacity(aParentNode.GetChildCount());
+    for (nsIContent* childContent = aParentNode.GetFirstChild(); childContent;
+         childContent = childContent->GetNextSibling()) {
+      aChildNodes.AppendElement(*childContent);
+    }
+  }
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
