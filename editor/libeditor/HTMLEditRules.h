@@ -860,22 +860,6 @@ class HTMLEditRules : public TextEditRules {
       nsTArray<OwningNonNull<nsINode>>& aNodeArray) const;
 
   /**
-   * BustUpInlinesAtBRs() splits before all <br> elements in aNode.  All <br>
-   * nodes will be moved before right node at splitting its parent.  Finally,
-   * this returns all <br> elements, every left node and aNode with
-   * aOutArrayNodes.
-   *
-   * @param aNode               An inline container element.
-   * @param aOutArrayOfNodes    All found <br> elements, left nodes (may not
-   *                            be set if <br> is at start edge of aNode) and
-   *                            aNode itself.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  BustUpInlinesAtBRs(nsIContent& aNode,
-                     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
-
-  /**
    * MakeTransitionList() detects all the transitions in the array, where a
    * transition means that adjacent nodes in the array don't have the same
    * parent.

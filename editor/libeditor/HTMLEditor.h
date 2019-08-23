@@ -1227,6 +1227,28 @@ class HTMLEditor final : public TextEditor,
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
 
   /**
+   * SplitElementsAtEveryBRElement() splits before all <br> elements in
+   * aMostAncestorToBeSplit.  All <br> nodes will be moved before right node
+   * at splitting its parent.  Finally, this returns left node, first <br>
+   * element, next left node, second <br> element... and right-most node.
+   *
+   * @param aMostAncestorToBeSplit      Most-ancestor element which should
+   *                                    be split.
+   * @param aOutArrayOfNodes            First left node, first <br> element,
+   *                                    Second left node, second <br> element,
+   *                                    ...right-most node.  So, all nodes in
+   *                                    this list should be siblings (may be
+   *                                    broken the relation by mutation event
+   *                                    listener though).
+   *                                    If first <br> element is first leaf
+   *                                    node of aMostAncestorToBeSplit,
+   *                                    starting from first <br> element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitElementsAtEveryBRElement(
+      nsIContent& aMostAncestorToBeSplit,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+
+  /**
    * CollectEditableChildren() collects child nodes of aNode (starting from
    * first editable child, but may return non-editable children after it).
    *
