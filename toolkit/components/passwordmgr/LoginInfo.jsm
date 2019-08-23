@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -33,24 +32,6 @@ nsLoginInfo.prototype = {
   password: null,
   usernameField: null,
   passwordField: null,
-
-  get displayOrigin() {
-    let displayOrigin = this.origin;
-    try {
-      let uri = Services.io.newURI(this.origin);
-      // Fallback to handle file: URIs
-      displayOrigin = uri.displayHostPort || this.origin;
-    } catch (ex) {
-      // Fallback to this.origin set above in case a URI can't be contructed e.g.
-      // chrome://FirefoxAccounts
-    }
-
-    if (this.httpRealm === null) {
-      return displayOrigin;
-    }
-
-    return `${displayOrigin} (${this.httpRealm})`;
-  },
 
   /**
    * @deprecated Use `origin` instead.
