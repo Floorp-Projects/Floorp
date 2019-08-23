@@ -7560,14 +7560,6 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
   }
 }
 
-void HTMLEditRules::GetChildNodesForOperation(
-    nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes) {
-  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    outArrayOfNodes.AppendElement(*child);
-  }
-}
-
 nsresult HTMLEditRules::GetListActionNodes(
     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes, EntireList aEntireList,
     TouchContent aTouchContent) const {
@@ -8668,9 +8660,9 @@ nsresult HTMLEditRules::MakeBlockquote(
       // Forget any previous block
       curBlock = nullptr;
       // Recursion time
-      nsTArray<OwningNonNull<nsINode>> childArray;
-      GetChildNodesForOperation(*curNode, childArray);
-      nsresult rv = MakeBlockquote(childArray);
+      AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
+      HTMLEditor::GetChildNodesOf(*curNode, childNodes);
+      nsresult rv = MakeBlockquote(childNodes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8781,9 +8773,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
         continue;
       }
       // Recursion time
-      nsTArray<OwningNonNull<nsINode>> childArray;
-      GetChildNodesForOperation(*curNode, childArray);
-      nsresult rv = RemoveBlockStyle(childArray);
+      AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
+      HTMLEditor::GetChildNodesOf(*curNode, childNodes);
+      nsresult rv = RemoveBlockStyle(childNodes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8911,10 +8903,10 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
       // Recursion time
-      nsTArray<OwningNonNull<nsINode>> childArray;
-      GetChildNodesForOperation(*curNode, childArray);
-      if (!childArray.IsEmpty()) {
-        nsresult rv = ApplyBlockStyle(childArray, aBlockTag);
+      AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
+      HTMLEditor::GetChildNodesOf(*curNode, childNodes);
+      if (!childNodes.IsEmpty()) {
+        nsresult rv = ApplyBlockStyle(childNodes, aBlockTag);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
