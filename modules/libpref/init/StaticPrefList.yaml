@@ -2017,7 +2017,7 @@
 # Note, this is not currently safe to use for normal browsing yet.
 - name: dom.serviceWorkers.parent_intercept
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: never
 
 - name: dom.serviceWorkers.testing.enabled
