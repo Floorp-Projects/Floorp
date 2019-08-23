@@ -4172,7 +4172,7 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
                           : GetNextEditableNode(aPoint);
 }
 
-bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) {
+bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) const {
   MOZ_ASSERT(aNode);
   // find first editable child and compare it to aNode
   nsCOMPtr<nsINode> parent = aNode->GetParentNode();
@@ -4182,7 +4182,7 @@ bool HTMLEditor::IsFirstEditableChild(nsINode* aNode) {
   return (GetFirstEditableChild(*parent) == aNode);
 }
 
-bool HTMLEditor::IsLastEditableChild(nsINode* aNode) {
+bool HTMLEditor::IsLastEditableChild(nsINode* aNode) const {
   MOZ_ASSERT(aNode);
   // find last editable child and compare it to aNode
   nsCOMPtr<nsINode> parent = aNode->GetParentNode();
@@ -4192,7 +4192,7 @@ bool HTMLEditor::IsLastEditableChild(nsINode* aNode) {
   return (GetLastEditableChild(*parent) == aNode);
 }
 
-nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) {
+nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) const {
   nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
 
   while (child && !IsEditable(child)) {
@@ -4202,7 +4202,7 @@ nsIContent* HTMLEditor::GetFirstEditableChild(nsINode& aNode) {
   return child;
 }
 
-nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) {
+nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
   nsCOMPtr<nsIContent> child = aNode.GetLastChild();
 
   while (child && !IsEditable(child)) {

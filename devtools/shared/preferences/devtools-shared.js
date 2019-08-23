@@ -69,11 +69,5 @@ pref("devtools.remote.adb.extensionURL", "https://ftp.mozilla.org/pub/mozilla.or
 // URL of the remote JSON catalog used for device simulation
 pref("devtools.devices.url", "https://code.cdn.mozilla.net/devices/devices.json");
 
-// Enable Inactive CSS detection. This preference is used both by the client and the
-// server.
-// TODO: clarify the feature detection strategy for this feature. Bug 1552116.
-#if defined(NIGHTLY_BUILD)
+// Enable Inactive CSS detection; used both by the client and the server.
 pref("devtools.inspector.inactive.css.enabled", true);
-#else
-pref("devtools.inspector.inactive.css.enabled", false);
-#endif

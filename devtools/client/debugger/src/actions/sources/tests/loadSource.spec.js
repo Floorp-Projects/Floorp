@@ -69,7 +69,7 @@ describe("loadSourceText", () => {
         getGeneratedRangesForOriginal: async () => [
           { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } },
         ],
-        getOriginalLocations: async (sourceId, items) =>
+        getOriginalLocations: async items =>
           items.map(item => ({
             ...item,
             sourceId:

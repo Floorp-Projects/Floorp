@@ -366,14 +366,10 @@ StyleEditorUI.prototype = {
           this._removeStyleSheetEditor(editor);
           editor = null;
 
-          for (const source of sources) {
-            const generatedId = sourceMapService.generatedToOriginalId(
-              id,
-              source
-            );
+          for (const { id: originalId, url: originalURL } of sources) {
             const original = new OriginalSource(
-              source,
-              generatedId,
+              originalURL,
+              originalId,
               sourceMapService
             );
 

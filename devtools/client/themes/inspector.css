@@ -120,6 +120,7 @@ window {
 #inspector-breadcrumbs-toolbar,
 #inspector-breadcrumbs-toolbar * {
   box-sizing: border-box;
+  direction: ltr;
 }
 
 #inspector-breadcrumbs {
@@ -146,7 +147,6 @@ window {
   flex: 1;
   display: flex;
   overflow: hidden;
-  direction: ltr;
 }
 
 #inspector-breadcrumbs .breadcrumbs-widget-item {

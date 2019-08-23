@@ -4,8 +4,8 @@
 
 .frames [role="list"] {
   list-style: none;
-  margin-top: 4px;
-  padding: 0;
+  margin: 0;
+  padding: 4px 0;
 }
 
 .frames [role="list"] [role="listitem"] {

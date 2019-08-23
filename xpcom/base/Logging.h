@@ -30,6 +30,10 @@
 #  define MOZ_LOGGING_ENABLED 0
 #endif
 
+// The mandatory extension we add to log files.  Note that rotate will append
+// the file piece number still at the end.
+#define MOZ_LOG_FILE_EXTENSION ".moz_log"
+
 namespace mozilla {
 
 // While not a 100% mapping to PR_LOG's numeric values, mozilla::LogLevel does

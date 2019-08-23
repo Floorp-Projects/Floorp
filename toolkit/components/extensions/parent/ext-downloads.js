@@ -64,6 +64,7 @@ const DOWNLOAD_ITEM_CHANGE_FIELDS = [
 ];
 
 // From https://fetch.spec.whatwg.org/#forbidden-header-name
+// Since bug 1367626 we allow extensions to set REFERER.
 const FORBIDDEN_HEADERS = [
   "ACCEPT-CHARSET",
   "ACCEPT-ENCODING",
@@ -79,7 +80,6 @@ const FORBIDDEN_HEADERS = [
   "HOST",
   "KEEP-ALIVE",
   "ORIGIN",
-  "REFERER",
   "TE",
   "TRAILER",
   "TRANSFER-ENCODING",

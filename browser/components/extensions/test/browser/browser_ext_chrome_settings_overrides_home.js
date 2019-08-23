@@ -390,6 +390,8 @@ add_task(async function test_doorhanger_homepage_button() {
   await popupHidden;
   await prefPromise;
 
+  await BrowserTestUtils.waitForLocationChange(gBrowser, defaultHomePage);
+
   is(getHomePageURL(), defaultHomePage, "The homepage is set back to default");
 
   await ext1.unload();

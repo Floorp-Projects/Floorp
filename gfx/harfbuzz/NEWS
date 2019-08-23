@@ -1,3 +1,14 @@
+Overview of changes leading to 2.6.1
+Thursday, August 22, 2019
+====================================
+- Fix regression with hb_font_create_sub_font scaling introduced in 2.6.0.
+- Change interpretation of font PTEM size / CoreText font size handling.
+  See https://github.com/harfbuzz/harfbuzz/pull/1484
+- hb-ot-font: Prefer symbol cmap subtable if present.
+- Apply 'dist'/'abvm'/'blwm' features to all scripts.
+- Drop experimental DirectWrite API.
+
+
 Overview of changes leading to 2.6.0
 Tuesday, August 13, 2019
 ====================================

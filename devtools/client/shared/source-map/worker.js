@@ -76,27 +76,64 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ({
 
 /***/ 104:
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const {
+  generatedToOriginalId
+} = __webpack_require__(64);
+
 const sourceMapRequests = new Map();
 
 function clearSourceMaps() {
   sourceMapRequests.clear();
 }
 
-function getSourceMap(generatedSourceId) {
+function getSourceMapWithMetadata(generatedSourceId) {
   return sourceMapRequests.get(generatedSourceId);
 }
 
+function getSourceMap(generatedSourceId) {
+  const request = getSourceMapWithMetadata(generatedSourceId);
+
+  if (!request) {
+    return null;
+  }
+
+  return request.then(result => result ? result.map : null);
+}
+
 function setSourceMap(generatedId, request) {
-  sourceMapRequests.set(generatedId, request);
+  sourceMapRequests.set(generatedId, request.then(map => {
+    if (!map || !map.sources) {
+      return null;
+    }
+
+    const urlsById = new Map();
+    const sources = [];
+
+    for (const url of map.sources) {
+      const id = generatedToOriginalId(generatedId, url);
+      urlsById.set(id, url);
+      sources.push({
+        id,
+        url
+      });
+    }
+
+    return {
+      map,
+      urlsById,
+      sources
+    };
+  }));
 }
 
 module.exports = {
   clearSourceMaps,
+  getSourceMapWithMetadata,
   getSourceMap,
   setSourceMap
 };
@@ -511,7 +548,9 @@ WorkerDispatcher.prototype = {
           const [, resolve, reject] = items[i];
 
           if (resultData.error) {
-            reject(resultData.error);
+            const err = new Error(resultData.message);
+            err.metadata = resultData.metadata;
+            reject(err);
           } else {
             resolve(resultData.response);
           }
@@ -544,22 +583,14 @@ function workerHandler(publicInterface) {
         if (response instanceof Promise) {
           return response.then(val => ({
             response: val
-          }), // Error can't be sent via postMessage, so be sure to
-          // convert to string.
-          err => ({
-            error: err.toString()
-          }));
+          }), err => asErrorMessage(err));
         }
 
         return {
           response
         };
       } catch (error) {
-        // Error can't be sent via postMessage, so be sure to convert to
-        // string.
-        return {
-          error: error.toString()
-        };
+        return asErrorMessage(error);
       }
     })).then(results => {
       self.postMessage({
@@ -567,6 +598,24 @@ function workerHandler(publicInterface) {
         results
       });
     });
+  };
+}
+
+function asErrorMessage(error) {
+  if (typeof error === "object" && error && "message" in error) {
+    // Error can't be sent via postMessage, so be sure to convert to
+    // string.
+    return {
+      error: true,
+      message: error.message,
+      metadata: error.metadata
+    };
+  }
+
+  return {
+    error: true,
+    message: error == null ? error : error.toString(),
+    metadata: undefined
   };
 }
 
@@ -1338,7 +1387,6 @@ const {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
-  hasMappedSource,
   clearSourceMaps,
   applySourceMap
 } = __webpack_require__(391);
@@ -1373,7 +1421,6 @@ self.onmessage = workerHandler({
   getOriginalStackFrames,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
-  hasMappedSource,
   applySourceMap,
   clearSourceMaps
 });
@@ -1414,6 +1461,7 @@ const {
 
 const {
   getSourceMap,
+  getSourceMapWithMetadata,
   setSourceMap,
   clearSourceMaps: clearSourceMapsRequests
 } = __webpack_require__(104);
@@ -1431,25 +1479,30 @@ const {
 } = __webpack_require__(510);
 
 async function getOriginalURLs(generatedSource) {
-  const map = await fetchSourceMap(generatedSource);
-  return map && map.sources;
+  await fetchSourceMap(generatedSource);
+  const data = await getSourceMapWithMetadata(generatedSource.id);
+  return data ? data.sources : null;
 }
 
 const COMPUTED_SPANS = new WeakSet();
 const SOURCE_MAPPINGS = new WeakMap();
 
-async function getOriginalRanges(sourceId, url) {
+async function getOriginalRanges(sourceId) {
   if (!isOriginalId(sourceId)) {
     return [];
   }
 
   const generatedSourceId = originalToGeneratedId(sourceId);
-  const map = await getSourceMap(generatedSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
 
-  if (!map) {
+  if (!data) {
     return [];
   }
 
+  const {
+    map
+  } = data;
+  const url = data.urlsById.get(sourceId);
   let mappings = SOURCE_MAPPINGS.get(map);
 
   if (!mappings) {
@@ -1495,17 +1548,22 @@ async function getOriginalRanges(sourceId, url) {
  */
 
 
-async function getGeneratedRanges(location, originalSource) {
+async function getGeneratedRanges(location) {
   if (!isOriginalId(location.sourceId)) {
     return [];
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
 
-  if (!map) {
+  if (!data) {
     return [];
   }
+
+  const {
+    urlsById,
+    map
+  } = data;
 
   if (!COMPUTED_SPANS.has(map)) {
     COMPUTED_SPANS.add(map);
@@ -1519,7 +1577,7 @@ async function getGeneratedRanges(location, originalSource) {
 
 
   const genPos = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column,
     bias: SourceMapConsumer.GREATEST_LOWER_BOUND
@@ -1543,20 +1601,24 @@ async function getGeneratedRanges(location, originalSource) {
   });
 }
 
-async function getGeneratedLocation(location, originalSource) {
+async function getGeneratedLocation(location) {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
 
-  if (!map) {
+  if (!data) {
     return location;
   }
 
+  const {
+    urlsById,
+    map
+  } = data;
   const positions = map.allGeneratedPositionsFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column
   }); // Prior to source-map 0.7, the source-map module returned the earliest
@@ -1574,7 +1636,7 @@ async function getGeneratedLocation(location, originalSource) {
 
   if (!match) {
     match = map.generatedPositionFor({
-      source: originalSource.url,
+      source: urlsById.get(location.sourceId),
       line: location.line,
       column: location.column == null ? 0 : location.column,
       bias: SourceMapConsumer.LEAST_UPPER_BOUND
@@ -1588,20 +1650,24 @@ async function getGeneratedLocation(location, originalSource) {
   };
 }
 
-async function getAllGeneratedLocations(location, originalSource) {
+async function getAllGeneratedLocations(location) {
   if (!isOriginalId(location.sourceId)) {
     return [];
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
 
-  if (!map) {
+  if (!data) {
     return [];
   }
 
+  const {
+    urlsById,
+    map
+  } = data;
   const positions = map.allGeneratedPositionsFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column
   });
@@ -1615,18 +1681,22 @@ async function getAllGeneratedLocations(location, originalSource) {
   }));
 }
 
-async function getOriginalLocations(sourceId, locations, options = {}) {
-  if (locations.some(location => location.sourceId != sourceId)) {
-    throw new Error("Generated locations must belong to the same source");
+async function getOriginalLocations(locations, options = {}) {
+  const maps = {};
+  const results = [];
+
+  for (const location of locations) {
+    let map = maps[location.sourceId];
+
+    if (map === undefined) {
+      map = await getSourceMap(location.sourceId);
+      maps[location.sourceId] = map || null;
+    }
+
+    results.push(map ? getOriginalLocationSync(map, location, options) : location);
   }
 
-  const map = await getSourceMap(sourceId);
-
-  if (!map) {
-    return locations;
-  }
-
-  return locations.map(location => getOriginalLocationSync(map, location, options));
+  return results;
 }
 
 function getOriginalLocationSync(map, location, {
@@ -1687,26 +1757,41 @@ async function getOriginalLocation(location, options = {}) {
   return getOriginalLocationSync(map, location, options);
 }
 
-async function getOriginalSourceText(originalSource) {
-  assert(isOriginalId(originalSource.id), "Source is not an original source");
-  const generatedSourceId = originalToGeneratedId(originalSource.id);
-  const map = await getSourceMap(generatedSourceId);
+async function getOriginalSourceText(originalSourceId) {
+  assert(isOriginalId(originalSourceId), "Source is not an original source");
+  const generatedSourceId = originalToGeneratedId(originalSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
 
-  if (!map) {
+  if (!data) {
     return null;
   }
 
-  let text = map.sourceContentFor(originalSource.url);
+  const {
+    urlsById,
+    map
+  } = data;
+  const url = urlsById.get(originalSourceId);
+  let text = map.sourceContentFor(url);
 
   if (!text) {
-    text = (await networkRequest(originalSource.url, {
-      loadFromCache: false
-    })).content;
+    try {
+      const response = await networkRequest(url, {
+        loadFromCache: false
+      });
+      text = response.content;
+    } catch (err) {
+      // Wrapper logic renders a notification about the specific URL that
+      // failed to load, so we include it in the error metadata.
+      err.metadata = { ...err.metadata,
+        url
+      };
+      throw err;
+    }
   }
 
   return {
     text,
-    contentType: getContentType(originalSource.url || "")
+    contentType: getContentType(url || "")
   };
 }
 /**
@@ -1725,13 +1810,19 @@ async function getOriginalSourceText(originalSource) {
 
 const GENERATED_MAPPINGS = new WeakMap();
 
-async function getGeneratedRangesForOriginal(sourceId, url, mergeUnmappedRegions = false) {
+async function getGeneratedRangesForOriginal(sourceId, mergeUnmappedRegions = false) {
   assert(isOriginalId(sourceId), "Source is not an original source");
-  const map = await getSourceMap(originalToGeneratedId(sourceId)); // NOTE: this is only needed for Flow
+  const data = await getSourceMapWithMetadata(originalToGeneratedId(sourceId)); // NOTE: this is only needed for Flow
 
-  if (!map) {
+  if (!data) {
     return [];
   }
+
+  const {
+    urlsById,
+    map
+  } = data;
+  const url = urlsById.get(sourceId);
 
   if (!COMPUTED_SPANS.has(map)) {
     COMPUTED_SPANS.add(map);
@@ -1836,22 +1927,26 @@ function wrappedMappingPosition(pos) {
   };
 }
 
-async function getFileGeneratedRange(originalSource) {
-  assert(isOriginalId(originalSource.id), "Source is not an original source");
-  const map = await getSourceMap(originalToGeneratedId(originalSource.id));
+async function getFileGeneratedRange(originalSourceId) {
+  assert(isOriginalId(originalSourceId), "Source is not an original source");
+  const data = await getSourceMapWithMetadata(originalToGeneratedId(originalSourceId));
 
-  if (!map) {
+  if (!data) {
     return;
   }
 
+  const {
+    urlsById,
+    map
+  } = data;
   const start = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(originalSourceId),
     line: 1,
     column: 0,
     bias: SourceMapConsumer.LEAST_UPPER_BOUND
   });
   const end = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(originalSourceId),
     line: Number.MAX_SAFE_INTEGER,
     column: Number.MAX_SAFE_INTEGER,
     bias: SourceMapConsumer.GREATEST_LOWER_BOUND
@@ -1860,15 +1955,6 @@ async function getFileGeneratedRange(originalSource) {
     start,
     end
   };
-}
-
-async function hasMappedSource(location) {
-  if (isOriginalId(location.sourceId)) {
-    return true;
-  }
-
-  const loc = await getOriginalLocation(location);
-  return loc.sourceId !== location.sourceId;
 }
 
 function applySourceMap(generatedId, url, code, mappings) {
@@ -1900,8 +1986,7 @@ module.exports = {
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
   applySourceMap,
-  clearSourceMaps,
-  hasMappedSource
+  clearSourceMaps
 };
 
 /***/ }),
@@ -3754,9 +3839,9 @@ const {
 
 const {
   createConsumer
-} = __webpack_require__(179);
+} = __webpack_require__(179); // URLs which have been seen in a completed source map request.
 
-// URLs which have been seen in a completed source map request.
+
 const originalURLs = new Set();
 
 function clearOriginalURLs() {

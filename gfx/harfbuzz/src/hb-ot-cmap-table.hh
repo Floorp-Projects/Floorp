@@ -993,6 +993,15 @@ struct cmap
 
     const CmapSubtable *subtable;
 
+    /* Symbol subtable.
+     * Prefer symbol if available.
+     * https://github.com/harfbuzz/harfbuzz/issues/1918 */
+    if ((subtable = this->find_subtable (3, 0)))
+    {
+      if (symbol) *symbol = true;
+      return subtable;
+    }
+
     /* 32-bit subtables. */
     if ((subtable = this->find_subtable (3, 10))) return subtable;
     if ((subtable = this->find_subtable (0, 6))) return subtable;
@@ -1004,13 +1013,6 @@ struct cmap
     if ((subtable = this->find_subtable (0, 2))) return subtable;
     if ((subtable = this->find_subtable (0, 1))) return subtable;
     if ((subtable = this->find_subtable (0, 0))) return subtable;
-
-    /* Symbol subtable. */
-    if ((subtable = this->find_subtable (3, 0)))
-    {
-      if (symbol) *symbol = true;
-      return subtable;
-    }
 
     /* Meh. */
     return &Null (CmapSubtable);

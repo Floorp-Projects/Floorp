@@ -38,6 +38,80 @@ namespace AAT {
 
 typedef ArrayOf<HBINT16> LigCaretClassEntry;
 
+struct lcarFormat0
+{
+  unsigned int get_lig_carets (hb_font_t      *font,
+			       hb_direction_t  direction,
+			       hb_codepoint_t  glyph,
+			       unsigned int    start_offset,
+			       unsigned int   *caret_count /* IN/OUT */,
+			       hb_position_t  *caret_array /* OUT */,
+			       const void     *base) const
+  {
+    const OffsetTo<LigCaretClassEntry>* entry_offset = lookupTable.get_value (glyph,
+									      font->face->get_num_glyphs ());
+    const LigCaretClassEntry& array = entry_offset ? base+*entry_offset : Null (LigCaretClassEntry);
+    if (caret_count)
+    {
+      hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
+      for (unsigned int i = 0; i < arr.length; ++i)
+	caret_array[i] = font->em_scale_dir (arr[i], direction);
+    }
+    return array.len;
+  }
+
+  bool sanitize (hb_sanitize_context_t *c, const void *base) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (likely (c->check_struct (this) && lookupTable.sanitize (c, base)));
+  }
+
+  protected:
+  Lookup<OffsetTo<LigCaretClassEntry>>
+		lookupTable;	/* data Lookup table associating glyphs */
+  public:
+  DEFINE_SIZE_MIN (2);
+};
+
+struct lcarFormat1
+{
+  unsigned int get_lig_carets (hb_font_t      *font,
+			       hb_direction_t  direction,
+			       hb_codepoint_t  glyph,
+			       unsigned int    start_offset,
+			       unsigned int   *caret_count /* IN/OUT */,
+			       hb_position_t  *caret_array /* OUT */,
+			       const void     *base) const
+  {
+    const OffsetTo<LigCaretClassEntry>* entry_offset = lookupTable.get_value (glyph,
+									      font->face->get_num_glyphs ());
+    const LigCaretClassEntry& array = entry_offset ? base+*entry_offset : Null (LigCaretClassEntry);
+    if (caret_count)
+    {
+      hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
+      for (unsigned int i = 0; i < arr.length; ++i)
+      {
+	hb_position_t x = 0, y = 0;
+	font->get_glyph_contour_point_for_origin (glyph, arr[i], direction, &x, &y);
+	caret_array[i] = HB_DIRECTION_IS_HORIZONTAL (direction) ? x : y;
+      }
+    }
+    return array.len;
+  }
+
+  bool sanitize (hb_sanitize_context_t *c, const void *base) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (likely (c->check_struct (this) && lookupTable.sanitize (c, base)));
+  }
+
+  protected:
+  Lookup<OffsetTo<LigCaretClassEntry>>
+		lookupTable;	/* data Lookup table associating glyphs */
+  public:
+  DEFINE_SIZE_MIN (2);
+};
+
 struct lcar
 {
   static constexpr hb_tag_t tableTag = HB_AAT_TAG_lcar;
@@ -49,45 +123,36 @@ struct lcar
 			       unsigned int   *caret_count /* IN/OUT */,
 			       hb_position_t  *caret_array /* OUT */) const
   {
-    const OffsetTo<LigCaretClassEntry>* entry_offset = lookup.get_value (glyph,
-									 font->face->get_num_glyphs ());
-    const LigCaretClassEntry& array = entry_offset ? this+*entry_offset : Null (LigCaretClassEntry);
-    if (caret_count)
+    switch (format)
     {
-      hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
-      switch (format)
-      {
-      case 0:
-	for (unsigned int i = 0; i < arr.length; ++i)
-	  caret_array[i] = font->em_scale_dir (arr[i], direction);
-	break;
-      case 1:
-	for (unsigned int i = 0; i < arr.length; ++i)
-	{
-	  hb_position_t x, y;
-	  font->get_glyph_contour_point_for_origin (glyph, arr[i], direction, &x, &y);
-	  caret_array[i] = HB_DIRECTION_IS_HORIZONTAL (direction) ? x : y;
-	}
-	break;
-      }
+    case 0: return u.format0.get_lig_carets (font, direction, glyph, start_offset,
+					     caret_count, caret_array, this);
+    case 1: return u.format1.get_lig_carets (font, direction, glyph, start_offset,
+					     caret_count, caret_array, this);
+    default:if (caret_count) *caret_count = 0; return 0;
     }
-    return array.len;
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (likely (c->check_struct (this) &&
-			  version.major == 1 &&
-			  lookup.sanitize (c, this)));
+    if (unlikely (!c->check_struct (this) || version.major != 1))
+      return_trace (false);
+
+    switch (format) {
+    case 0: return_trace (u.format0.sanitize (c, this));
+    case 1: return_trace (u.format1.sanitize (c, this));
+    default:return_trace (true);
+    }
   }
 
   protected:
   FixedVersion<>version;	/* Version number of the ligature caret table */
   HBUINT16	format;		/* Format of the ligature caret table. */
-  Lookup<OffsetTo<LigCaretClassEntry>>
-		lookup;		/* data Lookup table associating glyphs */
-
+  union {
+  lcarFormat0	format0;
+  lcarFormat0	format1;
+  } u;
   public:
   DEFINE_SIZE_MIN (8);
 };
