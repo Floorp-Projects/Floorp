@@ -9,7 +9,6 @@
 | Name | Summary |
 |---|---|
 | [getUploadEnabled](get-upload-enabled.md) | `fun getUploadEnabled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Get whether or not Glean is allowed to record and upload data. |
-| [handleBackgroundEvent](handle-background-event.md) | `fun handleBackgroundEvent(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Handle the background event and send the appropriate pings. |
 | [initialize](initialize.md) | `fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Initialize Glean. |
 | [isInitialized](is-initialized.md) | `fun isInitialized(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the Glean library has been initialized. |
 | [registerPings](register-pings.md) | `fun registerPings(pings: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Register the pings generated from `pings.yaml` with Glean. |

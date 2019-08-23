@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaStateMachine.kt#L71)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/state/MediaStateMachine.kt#L87)
 
 Interface for observers that are interested in [MediaState](../../-media-state/index.md) changes.
 
