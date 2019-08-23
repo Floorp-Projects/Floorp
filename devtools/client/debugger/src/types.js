@@ -400,7 +400,6 @@ export type SourceWithContentAndType<+Content: SourceContent> = $ReadOnly<{
 export type Source = {
   +id: SourceId,
   +url: string,
-  +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
   +relativeUrl: string,
