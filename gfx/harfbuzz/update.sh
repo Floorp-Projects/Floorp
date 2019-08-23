@@ -5,7 +5,7 @@
 
 MY_TEMP_DIR=`mktemp -d -t harfbuzz_update.XXXXXX` || exit 1
 
-VERSION=2.6.0
+VERSION=2.6.1
 
 git clone https://github.com/harfbuzz/harfbuzz ${MY_TEMP_DIR}/harfbuzz
 git -C ${MY_TEMP_DIR}/harfbuzz checkout ${VERSION}

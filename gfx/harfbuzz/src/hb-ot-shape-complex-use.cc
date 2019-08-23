@@ -88,17 +88,6 @@ use_other_features[] =
   HB_TAG('p','r','e','s'),
   HB_TAG('p','s','t','s'),
 };
-static const hb_tag_t
-use_positioning_features[] =
-{
-  /*
-   * Positioning features.
-   * We don't care about the types.
-   */
-  HB_TAG('d','i','s','t'),
-  HB_TAG('a','b','v','m'),
-  HB_TAG('b','l','w','m'),
-};
 
 static void
 setup_syllables_use (const hb_ot_shape_plan_t *plan,
@@ -154,10 +143,6 @@ collect_features_use (hb_ot_shape_planner_t *plan)
   /* "Standard typographic presentation" */
   for (unsigned int i = 0; i < ARRAY_LENGTH (use_other_features); i++)
     map->enable_feature (use_other_features[i], F_MANUAL_ZWJ);
-
-  /* "Positional feature application" */
-  for (unsigned int i = 0; i < ARRAY_LENGTH (use_positioning_features); i++)
-    map->enable_feature (use_positioning_features[i]);
 }
 
 struct use_shape_plan_t

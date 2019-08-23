@@ -285,6 +285,8 @@ hb_ot_shape_plan_t::position (hb_font_t   *font,
 static const hb_ot_map_feature_t
 common_features[] =
 {
+  {HB_TAG('a','b','v','m'), F_GLOBAL},
+  {HB_TAG('b','l','w','m'), F_GLOBAL},
   {HB_TAG('c','c','m','p'), F_GLOBAL},
   {HB_TAG('l','o','c','l'), F_GLOBAL},
   {HB_TAG('m','a','r','k'), F_GLOBAL_MANUAL_JOINERS},
@@ -299,6 +301,7 @@ horizontal_features[] =
   {HB_TAG('c','a','l','t'), F_GLOBAL},
   {HB_TAG('c','l','i','g'), F_GLOBAL},
   {HB_TAG('c','u','r','s'), F_GLOBAL},
+  {HB_TAG('d','i','s','t'), F_GLOBAL},
   {HB_TAG('k','e','r','n'), F_GLOBAL_HAS_FALLBACK},
   {HB_TAG('l','i','g','a'), F_GLOBAL},
   {HB_TAG('r','c','l','t'), F_GLOBAL},
