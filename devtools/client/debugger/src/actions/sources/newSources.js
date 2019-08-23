@@ -10,7 +10,7 @@
  */
 
 import { generatedToOriginalId } from "devtools-source-map";
-import { flatten } from "lodash";
+import { flatten, uniqBy } from "lodash";
 
 import {
   stringToSourceActorId,
@@ -254,6 +254,9 @@ export function newOriginalSource(sourceInfo: OriginalSourceData) {
 }
 export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
   return async ({ dispatch, getState }: ThunkArgs) => {
+    sourceInfo = sourceInfo.filter(({ id }) => !getSource(getState(), id));
+    sourceInfo = uniqBy(sourceInfo, ({ id }) => id);
+
     const sources: Array<Source> = sourceInfo.map(({ id, url }) => ({
       id,
       url,
