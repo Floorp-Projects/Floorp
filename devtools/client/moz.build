@@ -7,7 +7,7 @@
 include('../templates.mozbuild')
 
 DIRS += [
-    'aboutdebugging-new',
+    'aboutdebugging',
     'accessibility',
     'application',
     'debugger',
