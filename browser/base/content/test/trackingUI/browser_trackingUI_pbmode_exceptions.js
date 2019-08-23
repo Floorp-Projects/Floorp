@@ -138,7 +138,7 @@ add_task(async function testExceptionAddition() {
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
   testTrackingPageUnblocked();
 
-  privateWin.close();
+  await BrowserTestUtils.closeWindow(privateWin);
 });
 
 add_task(async function testExceptionPersistence() {
@@ -179,5 +179,5 @@ add_task(async function testExceptionPersistence() {
   ]);
   testTrackingPageUnblocked();
 
-  privateWin.close();
+  await BrowserTestUtils.closeWindow(privateWin);
 });
