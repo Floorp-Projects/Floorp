@@ -118,8 +118,6 @@ class HTMLEditRules : public TextEditRules {
     return mData->HTMLEditorRef();
   }
 
-  enum RulesEndpoint { kStart, kEnd };
-
   /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is
    * executed or something equivalent.  This method actually tries to insert
@@ -787,14 +785,6 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult NormalizeSelection();
-
-  /**
-   * GetPromotedPoint() figures out where a start or end point for a block
-   * operation really is.
-   */
-  EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
-                                  int32_t aOffset,
-                                  EditSubAction aEditSubAction) const;
 
   /**
    * GetPromotedRanges() runs all the selection range endpoint through

@@ -1320,6 +1320,39 @@ class HTMLEditor final : public TextEditor,
       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
       EditSubAction aEditSubAction) const;
 
+  /**
+   * GetWhiteSpaceEndPoint() returns point at first or last ASCII whitespace
+   * or non-breakable space starting from aPoint.  I.e., this returns next or
+   * previous point whether the character is neither ASCII whitespace nor
+   * non-brekable space.
+   */
+  enum class ScanDirection { Backward, Forward };
+  static EditorDOMPoint GetWhiteSpaceEndPoint(const RangeBoundary& aPoint,
+                                              ScanDirection aScanDirection);
+
+  /**
+   * GetCurrentHardLineStartPoint() returns start point of hard line
+   * including aPoint.  If the line starts after a `<br>` element, returns
+   * next sibling of the `<br>` element.  If the line is first line of a block,
+   * returns point of the block.
+   * NOTE: The result may be point of editing host.  I.e., the container may
+   *       be outside of editing host.
+   */
+  EditorDOMPoint GetCurrentHardLineStartPoint(const RangeBoundary& aPoint,
+                                              EditSubAction aEditSubAction);
+
+  /**
+   * GetCurrentHardLineEndPoint() returns end point of hard line including
+   * aPoint.  If the line ends with a `<br>` element, returns the `<br>`
+   * element unless it's the last node of a block.  If the line is last line
+   * of a block, returns next sibling of the block.  Additionally, if the
+   * line ends with a linefeed in pre-formated text node, returns point of
+   * the linefeed.
+   * NOTE: This result may be point of editing host.  I.e., the container
+   *       may be outside of editing host.
+   */
+  EditorDOMPoint GetCurrentHardLineEndPoint(const RangeBoundary& aPoint);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
