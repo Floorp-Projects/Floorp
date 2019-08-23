@@ -11,6 +11,7 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
+#include <fstream>
 
 namespace nss_test {
 
@@ -120,7 +121,7 @@ TEST_F(SoftokenTest, CreateObjectChangePassword) {
   EXPECT_EQ(nullptr, obj);
 }
 
-/* The size limit for a password is 500 characters as defined in pkcs11i.h */
+// The size limit for a password is 500 characters as defined in pkcs11i.h
 TEST_F(SoftokenTest, CreateObjectChangeToBigPassword) {
   ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   ASSERT_TRUE(slot);
@@ -155,6 +156,76 @@ TEST_F(SoftokenTest, CreateObjectChangeToEmptyPassword) {
   // Because there's no password we can't logout and the operation should have
   // succeeded.
   EXPECT_NE(nullptr, obj);
+}
+
+// We should be able to read CRLF, LF and CR.
+// During the Initialization of the NSS Database, is called a function to load
+// PKCS11 modules defined in pkcs11.txt. This file is read to get the
+// specifications, parse them and load the modules. Here we are ensuring that
+// the parsing will work correctly, independent of the breaking line format of
+// pkcs11.txt file, which could vary depending where it was created.
+// If the parsing is not well interpreted, the database cannot initialize.
+TEST_F(SoftokenTest, CreateObjectReadBreakLine) {
+  const std::string path = mNSSDBDir.GetPath();
+  const std::string dbname_in = path + "/pkcs11.txt";
+  const std::string dbname_out_cr = path + "/pkcs11_cr.txt";
+  const std::string dbname_out_crlf = path + "/pkcs11_crlf.txt";
+  const std::string dbname_out_lf = path + "/pkcs11_lf.txt";
+
+  std::ifstream in(dbname_in);
+  ASSERT_TRUE(in);
+  std::ofstream out_cr(dbname_out_cr);
+  ASSERT_TRUE(out_cr);
+  std::ofstream out_crlf(dbname_out_crlf);
+  ASSERT_TRUE(out_crlf);
+  std::ofstream out_lf(dbname_out_lf);
+  ASSERT_TRUE(out_lf);
+
+  // Database should be correctly initialized by Setup()
+  ASSERT_TRUE(NSS_IsInitialized());
+  ASSERT_EQ(SECSuccess, NSS_Shutdown());
+
+  // Prepare the file formats with CR, CRLF and LF
+  for (std::string line; getline(in, line);) {
+    out_cr << line << "\r";
+    out_crlf << line << "\r\n";
+    out_lf << line << "\n";
+  }
+  in.close();
+  out_cr.close();
+  out_crlf.close();
+  out_lf.close();
+
+  // Change the pkcs11.txt to CR format.
+  ASSERT_TRUE(!remove(dbname_in.c_str()));
+  ASSERT_TRUE(!rename(dbname_out_cr.c_str(), dbname_in.c_str()));
+
+  // Try to initialize with CR format.
+  std::string nssInitArg("sql:");
+  nssInitArg.append(mNSSDBDir.GetUTF8Path());
+  ASSERT_EQ(SECSuccess, NSS_Initialize(nssInitArg.c_str(), "", "", SECMOD_DB,
+                                       NSS_INIT_NOROOTINIT));
+  ASSERT_TRUE(NSS_IsInitialized());
+  ASSERT_EQ(SECSuccess, NSS_Shutdown());
+
+  // Change the pkcs11.txt to CRLF format.
+  ASSERT_TRUE(!remove(dbname_in.c_str()));
+  ASSERT_TRUE(!rename(dbname_out_crlf.c_str(), dbname_in.c_str()));
+
+  // Try to initialize with CRLF format.
+  ASSERT_EQ(SECSuccess, NSS_Initialize(nssInitArg.c_str(), "", "", SECMOD_DB,
+                                       NSS_INIT_NOROOTINIT));
+  ASSERT_TRUE(NSS_IsInitialized());
+  ASSERT_EQ(SECSuccess, NSS_Shutdown());
+
+  // Change the pkcs11.txt to LF format.
+  ASSERT_TRUE(!remove(dbname_in.c_str()));
+  ASSERT_TRUE(!rename(dbname_out_lf.c_str(), dbname_in.c_str()));
+
+  // Try to initialize with LF format.
+  ASSERT_EQ(SECSuccess, NSS_Initialize(nssInitArg.c_str(), "", "", SECMOD_DB,
+                                       NSS_INIT_NOROOTINIT));
+  ASSERT_TRUE(NSS_IsInitialized());
 }
 
 class SoftokenNonAsciiTest : public SoftokenTest {

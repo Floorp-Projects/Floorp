@@ -413,7 +413,10 @@ nssutil_ReadSecmodDB(const char *appName,
 
         /* remove the ending newline */
         len = PORT_Strlen(line);
-        if (len && line[len - 1] == '\n') {
+        if (len >= 2 && line[len - 2] == '\r' && line[len - 1] == '\n') {
+            len = len - 2;
+            line[len] = 0;
+        } else if (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
             len--;
             line[len] = 0;
         }

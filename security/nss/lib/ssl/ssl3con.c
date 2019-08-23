@@ -862,6 +862,11 @@ ssl3_config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
     const ssl3CipherSuiteDef *cipher_def;
     const ssl3KEADef *kea_def;
 
+    if (!suite) {
+        PORT_Assert(suite);
+        return PR_FALSE;
+    }
+
     PORT_Assert(policy != SSL_NOT_ALLOWED);
     if (policy == SSL_NOT_ALLOWED)
         return PR_FALSE;
@@ -907,6 +912,27 @@ count_cipher_suites(sslSocket *ss, PRUint8 policy)
         PORT_SetError(SSL_ERROR_SSL_DISABLED);
     }
     return count;
+}
+
+/* For TLS 1.3, when resuming, check for a ciphersuite that is both compatible
+ * with the identified ciphersuite and enabled. */
+static PRBool
+tls13_ResumptionCompatible(sslSocket *ss, ssl3CipherSuite suite)
+{
+    SSLVersionRange vrange = { SSL_LIBRARY_VERSION_TLS_1_3,
+                               SSL_LIBRARY_VERSION_TLS_1_3 };
+    SSLHashType hash = tls13_GetHashForCipherSuite(suite);
+    for (unsigned int i = 0; i < PR_ARRAY_SIZE(cipher_suite_defs); i++) {
+        if (cipher_suite_defs[i].prf_hash == hash) {
+            const ssl3CipherSuiteCfg *suiteCfg =
+                ssl_LookupCipherSuiteCfg(cipher_suite_defs[i].cipher_suite,
+                                         ss->cipherSuites);
+            if (suite && ssl3_config_match(suiteCfg, ss->ssl3.policy, &vrange, ss)) {
+                return PR_TRUE;
+            }
+        }
+    }
+    return PR_FALSE;
 }
 
 /*
@@ -4897,14 +4923,20 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
      */
     if (sid) {
         PRBool sidOK = PR_TRUE;
-        const ssl3CipherSuiteCfg *suite;
 
-        /* Check that the cipher suite we need is enabled. */
-        suite = ssl_LookupCipherSuiteCfg(sid->u.ssl3.cipherSuite,
+        if (sid->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+            if (!tls13_ResumptionCompatible(ss, sid->u.ssl3.cipherSuite)) {
+                sidOK = PR_FALSE;
+            }
+        } else {
+            /* Check that the cipher suite we need is enabled. */
+            const ssl3CipherSuiteCfg *suite =
+                ssl_LookupCipherSuiteCfg(sid->u.ssl3.cipherSuite,
                                          ss->cipherSuites);
-        PORT_Assert(suite);
-        if (!suite || !ssl3_config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
-            sidOK = PR_FALSE;
+            SSLVersionRange vrange = { sid->version, sid->version };
+            if (!suite || !ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss)) {
+                sidOK = PR_FALSE;
+            }
         }
 
         /* Check that we can recover the master secret. */
@@ -8680,9 +8712,9 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
               !ss->firstHsDone))) {
 
             SSL_AtomicIncrementLong(&ssl3stats.hch_sid_cache_not_ok);
-            ssl_UncacheSessionID(ss);
             ssl_FreeSID(sid);
             sid = NULL;
+            ss->statelessResume = PR_FALSE;
         }
     }
 
