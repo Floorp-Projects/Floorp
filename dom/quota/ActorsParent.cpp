@@ -3801,8 +3801,8 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   }
 
   nsAutoString clientType;
-  rv = Client::TypeToText(aClientType, clientType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  bool ok = Client::TypeToText(aClientType, clientType, fallible);
+  if (NS_WARN_IF(!ok)) {
     return nullptr;
   }
 
@@ -4379,8 +4379,8 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     }
 
     Client::Type clientType;
-    rv = Client::TypeFromText(leafName, clientType);
-    if (NS_FAILED(rv)) {
+    bool ok = Client::TypeFromText(leafName, clientType, fallible);
+    if (!ok) {
       UNKNOWN_FILE_WARNING(leafName);
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_UnexpectedClient);
       RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
@@ -7806,8 +7806,8 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
       }
 
       Client::Type clientType;
-      rv = Client::TypeFromText(leafName, clientType);
-      if (NS_FAILED(rv)) {
+      bool ok = Client::TypeFromText(leafName, clientType, fallible);
+      if (!ok) {
         UNKNOWN_FILE_WARNING(leafName);
         if (!initialized) {
           return NS_ERROR_UNEXPECTED;
@@ -8460,8 +8460,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
         }
 
         Client::Type clientType;
-        rv = Client::TypeFromText(leafName, clientType);
-        if (NS_FAILED(rv)) {
+        bool ok = Client::TypeFromText(leafName, clientType, fallible);
+        if (!ok) {
           UNKNOWN_FILE_WARNING(leafName);
           continue;
         }
@@ -8474,8 +8474,9 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
 
       if (hasOtherClient) {
         nsAutoString clientDirectoryName;
-        rv = Client::TypeToText(mClientType.Value(), clientDirectoryName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        bool ok = Client::TypeToText(mClientType.Value(), clientDirectoryName,
+                                     fallible);
+        if (NS_WARN_IF(!ok)) {
           return;
         }
 
@@ -9939,8 +9940,8 @@ nsresult RepositoryOperationBase::MaybeUpgradeClients(
     }
 
     Client::Type clientType;
-    rv = Client::TypeFromText(leafName, clientType);
-    if (NS_FAILED(rv)) {
+    bool ok = Client::TypeFromText(leafName, clientType, fallible);
+    if (!ok) {
       UNKNOWN_FILE_WARNING(leafName);
       continue;
     }
@@ -9992,8 +9993,8 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
     // Move all files to IDB specific directory.
 
     nsString idbDirectoryName;
-    rv = Client::TypeToText(Client::IDB, idbDirectoryName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    bool ok = Client::TypeToText(Client::IDB, idbDirectoryName, fallible);
+    if (NS_WARN_IF(!ok)) {
       return rv;
     }
 

@@ -38,8 +38,6 @@ class Client {
  public:
   typedef mozilla::Atomic<bool> AtomicBool;
 
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   enum Type {
     IDB = 0,
     // APPCACHE,
@@ -56,123 +54,24 @@ class Client {
     return LS;
   }
 
-  virtual Type GetType() = 0;
+  static bool TypeToText(Type aType, nsAString& aText, const fallible_t&);
 
-  static void TypeToText(Type aType, nsACString& aText) {
-    switch (aType) {
-      case IDB:
-        aText.AssignLiteral(IDB_DIRECTORY_NAME);
-        return;
+  static void TypeToText(Type aType, nsAString& aText);
 
-      case DOMCACHE:
-        aText.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
-        return;
+  static void TypeToText(Type aType, nsACString& aText);
 
-      case SDB:
-        aText.AssignLiteral(SDB_DIRECTORY_NAME);
-        return;
+  static bool TypeFromText(const nsAString& aText, Type& aType,
+                           const fallible_t&);
 
-      case LS:
-        if (CachedNextGenLocalStorageEnabled()) {
-          aText.AssignLiteral(LS_DIRECTORY_NAME);
-          return;
-        }
-        MOZ_FALLTHROUGH;
-
-      case TYPE_MAX:
-      default:
-        MOZ_CRASH("Bad client type value!");
-    }
-  }
-
-  static nsresult TypeToText(Type aType, nsAString& aText) {
-    switch (aType) {
-      case IDB:
-        aText.AssignLiteral(IDB_DIRECTORY_NAME);
-        break;
-
-      case DOMCACHE:
-        aText.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
-        break;
-
-      case SDB:
-        aText.AssignLiteral(SDB_DIRECTORY_NAME);
-        break;
-
-      case LS:
-        if (CachedNextGenLocalStorageEnabled()) {
-          aText.AssignLiteral(LS_DIRECTORY_NAME);
-          break;
-        }
-        MOZ_FALLTHROUGH;
-
-      case TYPE_MAX:
-      default:
-        MOZ_ASSERT_UNREACHABLE("Bad id value!");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-  }
-
-  static Type TypeFromText(const nsACString& aText) {
-    if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
-      return IDB;
-    }
-
-    if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
-      return DOMCACHE;
-    }
-
-    if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
-      return SDB;
-    }
-
-    if (CachedNextGenLocalStorageEnabled() &&
-        aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
-      return LS;
-    }
-
-    MOZ_CRASH("Should never get here!");
-  }
-
-  static nsresult TypeFromText(const nsAString& aText, Type& aType) {
-    if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
-      aType = IDB;
-    } else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
-      aType = DOMCACHE;
-    } else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
-      aType = SDB;
-    } else if (CachedNextGenLocalStorageEnabled() &&
-               aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
-      aType = LS;
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-
-  static nsresult NullableTypeFromText(const nsAString& aText,
-                                       Nullable<Type>* aType) {
-    if (aText.IsVoid()) {
-      *aType = Nullable<Type>();
-      return NS_OK;
-    }
-
-    Type type;
-    nsresult rv = TypeFromText(aText, type);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    *aType = Nullable<Type>(type);
-    return NS_OK;
-  }
+  static Type TypeFromText(const nsACString& aText);
 
   static bool IsDeprecatedClient(const nsAString& aText) {
     return aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME);
   }
+
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual Type GetType() = 0;
 
   // Methods which are called on the IO thread.
   virtual nsresult UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
