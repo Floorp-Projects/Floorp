@@ -20,7 +20,7 @@ import { renderWasmText } from "./wasm";
 import { toEditorLine } from "./editor";
 export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
-import { prefs, features } from "./prefs";
+import { features } from "./prefs";
 
 import type {
   SourceId,
@@ -72,23 +72,6 @@ export function shouldBlackbox(source: ?Source) {
   }
 
   if (isOriginalId(source.id) && !features.originalBlackbox) {
-    return false;
-  }
-
-  return true;
-}
-
-export function shouldPrettyPrint(
-  source: Source,
-  content: SourceContent
-): boolean {
-  if (
-    !source ||
-    isPretty(source) ||
-    !isJavaScript(source, content) ||
-    isOriginal(source) ||
-    (prefs.clientSourceMapsEnabled && source.sourceMapURL)
-  ) {
     return false;
   }
 
