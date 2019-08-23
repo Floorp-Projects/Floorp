@@ -783,14 +783,16 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
-void BrowsingContext::LoadURI(BrowsingContext* aAccessor,
-                              nsDocShellLoadState* aLoadState) {
+nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
+                                  nsDocShellLoadState* aLoadState) {
   MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
   MOZ_DIAGNOSTIC_ASSERT(!aAccessor || !aAccessor->IsDiscarded());
 
   if (mDocShell) {
-    mDocShell->LoadURI(aLoadState);
-  } else if (!aAccessor && XRE_IsParentProcess()) {
+    return mDocShell->LoadURI(aLoadState);
+  }
+
+  if (!aAccessor && XRE_IsParentProcess()) {
     Unused << Canonical()->GetCurrentWindowGlobal()->SendLoadURIInChild(
         aLoadState);
   } else {
@@ -804,6 +806,7 @@ void BrowsingContext::LoadURI(BrowsingContext* aAccessor,
       wgc->SendLoadURI(this, aLoadState);
     }
   }
+  return NS_OK;
 }
 
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
