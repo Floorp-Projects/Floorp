@@ -211,6 +211,7 @@
       testGroupAttrs("h4", 0, 0, 4);
       testGroupAttrs("h5", 0, 0, 5);
       testGroupAttrs("h6", 0, 0, 6);
+      testGroupAttrs("ariaHeadingNoLevel", 0, 0, 2);
       // No child item counts or "hierarchical" flag for parent of headings
       testAbsentAttrs("headings", {"child-item-count": "", "hierarchical": ""});
 
@@ -487,6 +488,7 @@
     <h4 id="h4">heading4</h4>
     <h5 id="h5">heading5</h5>
     <h6 id="h6">heading6</h6>
+    <div id="ariaHeadingNoLevel" role="heading">ariaHeadingNoLevel</div>
   </div>
 
   <ul id="combo1" role="combobox">Password
