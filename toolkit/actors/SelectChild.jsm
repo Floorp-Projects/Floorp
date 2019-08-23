@@ -212,7 +212,12 @@ this.SelectContentHelper.prototype = {
         }
 
         let win = this.element.ownerGlobal;
-        let selectedOption = this.element.item(this.element.selectedIndex);
+
+        // Running arbitrary script below (dispatching events for example) can
+        // close us, but we should still send events consistently.
+        let element = this.element;
+
+        let selectedOption = element.item(element.selectedIndex);
 
         // For ordering of events, we're using non-e10s as our guide here,
         // since the spec isn't exactly clear. In non-e10s:
@@ -229,7 +234,7 @@ this.SelectContentHelper.prototype = {
 
         // Clear active document no matter user selects via keyboard or mouse
         InspectorUtils.removeContentState(
-          this.element,
+          element,
           kStateActive,
           /* aClearActiveDocument */ true
         );
@@ -239,12 +244,12 @@ this.SelectContentHelper.prototype = {
           let inputEvent = new win.Event("input", {
             bubbles: true,
           });
-          this.element.dispatchEvent(inputEvent);
+          element.dispatchEvent(inputEvent);
 
           let changeEvent = new win.Event("change", {
             bubbles: true,
           });
-          this.element.dispatchEvent(changeEvent);
+          element.dispatchEvent(changeEvent);
         }
 
         // Fire click event
