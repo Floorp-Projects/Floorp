@@ -89,8 +89,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void FlushLine();
   void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
 
-  void MaybeReplaceNbspsForOutput(nsString& aString) const;
-
   void Output(nsString& aString);
   void Write(const nsAString& aString);
 
@@ -168,7 +166,11 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   Settings mSettings;
 
-  struct CurrentLineContent {
+  class CurrentLineContent {
+   public:
+    // @param aFlags As defined in nsIDocumentEncoder.idl.
+    void MaybeReplaceNbsps(int32_t aFlags);
+
     // Excludes indentation and quotes.
     nsString mValue;
 

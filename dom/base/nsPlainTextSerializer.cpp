@@ -81,6 +81,15 @@ nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer) {
   return NS_OK;
 }
 
+void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps(
+    const int32_t aFlags) {
+  if (!(aFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
+    // First, replace all nbsp characters with spaces,
+    // which the unicode encoder won't do for us.
+    mValue.ReplaceChar(kNBSP, kSPACE);
+  }
+}
+
 nsPlainTextSerializer::nsPlainTextSerializer()
     : mFloatingLines(-1),
       mLineBreakDue(false),
@@ -1092,20 +1101,11 @@ void nsPlainTextSerializer::FlushLine() {
       OutputQuotesAndIndent();  // XXX: Should we always do this? Bug?
     }
 
-    MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
+    mCurrentLineContent.MaybeReplaceNbsps(mSettings.mFlags);
     Output(mCurrentLineContent.mValue);
     mAtFirstColumn = false;
     mCurrentLineContent.mValue.Truncate();
     mCurrentLineContent.mWidth = 0;
-  }
-}
-
-void nsPlainTextSerializer::MaybeReplaceNbspsForOutput(
-    nsString& aString) const {
-  if (!(mSettings.mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
-    // First, replace all nbsp characters with spaces,
-    // which the unicode encoder won't do for us.
-    aString.ReplaceChar(kNBSP, kSPACE);
   }
 }
 
@@ -1362,7 +1362,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   }
 
   mCurrentLineContent.mValue.Append(mLineBreak);
-  MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
+  mCurrentLineContent.MaybeReplaceNbsps(mSettings.mFlags);
   Output(mCurrentLineContent.mValue);
   mCurrentLineContent.mValue.Truncate();
   mCurrentLineContent.mWidth = 0;
@@ -1557,7 +1557,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         OutputQuotesAndIndent();
       }
 
-      MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
+      mCurrentLineContent.MaybeReplaceNbsps(mSettings.mFlags);
       Output(mCurrentLineContent.mValue);
       if (outputLineBreak) {
         Output(mLineBreak);
