@@ -216,8 +216,8 @@ char* nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const {
   snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
            IsBlock() ? "block" : "inline", IsDirty() ? "dirty" : "clean",
            IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
-           IsImpactedByFloat() ? "impacted" : "not impacted",
-           IsLineWrapped() ? "wrapped" : "not wrapped",
+           IsImpactedByFloat() ? "impacted" : "not-impacted",
+           IsLineWrapped() ? "wrapped" : "not-wrapped",
            BreakTypeToString(GetBreakTypeBefore()),
            BreakTypeToString(GetBreakTypeAfter()), mAllFlags);
   return aBuf;

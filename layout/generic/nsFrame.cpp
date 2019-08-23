@@ -7795,7 +7795,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || !wm.IsBidiLTR()) {
-    aTo += nsPrintfCString(" wm=%s: logical size={%d,%d}", wm.DebugString(),
+    aTo += nsPrintfCString(" wm=%s logical-size={%d,%d}", wm.DebugString(),
                            ISize(), BSize());
   }
 
@@ -7806,8 +7806,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
       aTo += nsPrintfCString(
-          " parent wm=%s, cs={%d,%d}, "
-          " logicalRect={%d,%d,%d,%d}",
+          " parent-wm=%s cs={%d,%d} logicalRect={%d,%d,%d,%d}",
           pWM.DebugString(), containerSize.width, containerSize.height,
           lr.IStart(pWM), lr.BStart(pWM), lr.ISize(pWM), lr.BSize(pWM));
     }
@@ -7816,13 +7815,13 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   if (f->HasOverflowAreas()) {
     nsRect vo = f->GetVisualOverflowRect();
     if (!vo.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" vis-overflow=%d,%d,%d,%d", vo.x, vo.y, vo.width,
-                             vo.height);
+      aTo += nsPrintfCString(" vis-overflow={%d,%d,%d,%d}", vo.x, vo.y,
+                             vo.width, vo.height);
     }
     nsRect so = f->GetScrollableOverflowRect();
     if (!so.IsEqualEdges(mRect)) {
-      aTo += nsPrintfCString(" scr-overflow=%d,%d,%d,%d", so.x, so.y, so.width,
-                             so.height);
+      aTo += nsPrintfCString(" scr-overflow={%d,%d,%d,%d}", so.x, so.y,
+                             so.width, so.height);
     }
   }
   bool hasNormalPosition;
