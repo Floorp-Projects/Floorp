@@ -23,12 +23,12 @@ class RemoteClientManager {
    * Store a remote client that is already connected.
    *
    * @param {String} id
-   *        Remote runtime id (see devtools/client/aboutdebugging/src/types).
+   *        Remote runtime id (see devtools/client/aboutdebugging-new/src/types).
    * @param {String} type
-   *        Remote runtime type (see devtools/client/aboutdebugging/src/types).
+   *        Remote runtime type (see devtools/client/aboutdebugging-new/src/types).
    * @param {DebuggerClient} client
    * @param {Object} runtimeInfo
-   *        See runtimeInfo type from client/aboutdebugging/src/types/runtime.js
+   *        See runtimeInfo type from client/aboutdebugging-new/src/types/runtime.js
    */
   setClient(id, type, client, runtimeInfo) {
     const key = this._getKey(id, type);

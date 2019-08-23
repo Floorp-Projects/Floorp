@@ -25,8 +25,8 @@ const TEST_TYPES = {
 };
 
 const SUITES = {
-  aboutdebugging: {
-    path: "../aboutdebugging/test/jest",
+  "aboutdebugging-new": {
+    path: "../aboutdebugging-new/test/jest",
     type: TEST_TYPES.JEST,
   },
   accessibility: {

@@ -21,7 +21,9 @@ AboutDebugging.prototype = {
 
   newChannel: function(_, loadInfo) {
     const chan = Services.io.newChannelFromURIWithLoadInfo(
-      Services.io.newURI("chrome://devtools/content/aboutdebugging/index.html"),
+      Services.io.newURI(
+        "chrome://devtools/content/aboutdebugging-new/index.html"
+      ),
       loadInfo
     );
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
