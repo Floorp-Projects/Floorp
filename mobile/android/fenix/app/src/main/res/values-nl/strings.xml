@@ -219,6 +219,8 @@
     <string name="preference_usage_data">Gebruiks- en technische gegevens</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Deelt gegevens over prestaties, gebruik, hardware en aanpassingen van uw browser met Mozilla om %1$s te helpen verbeteren</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experimenten</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Crashreporter</string>
     <!-- Preference switch for Mozilla location service -->
@@ -576,6 +578,8 @@
     <string name="snackbar_tab_deleted">Tabblad verwijderd</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Tabbladen verwijderd</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Privétabbladen verwijderd</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">ONGEDAAN MAKEN</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -618,16 +622,40 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adressen</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Geschiedenis</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pagina’s</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">Collecties</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d collecties</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">U wordt bij de meeste websites afgemeld</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Maakt opslagruimte vrij</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Websitemachtigingen</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Navigatiegegevens verwijderen</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Navigatiegegevens verwijderen bij afsluiten</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Verwijdert automatisch navigatiegegevens wanneer u in het hoofdmenu ‘Afsluiten’ selecteert</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Afsluiten</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Hierdoor worden al uw navigatiegegevens verwijderd.</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">Weet u zeker dat u de geselecteerde navigatiegegevens wilt verwijderen?</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s verwijdert de geselecteerde navigatiegegevens.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Annuleren</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -749,9 +777,9 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Sterkere bescherming, maar kan ervoor zorgen dat sommige websites of inhoud niet werken.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">Geblokkeerd</string>
+    <string name="enhanced_tracking_protection_blocked">Geblokkeerd</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">Niet geblokkeerd</string>
+    <string name="enhanced_tracking_protection_allowed">Toegestaan</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sociale-mediatrackers</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->

@@ -737,6 +737,8 @@
     <string name="preference_enhanced_tracking_protection">ਟਰੈਕ ਹੋਣ ਤੋਂ ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">ਬਿਨਾਂ ਪਿੱਛੇ ਕੀਤੇ ਜਾਣ ਤੋਂ ਬਰਾਊਜ਼ ਕਰੋ</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">ਆਪਣੇ ਡਾਟੇ ਨੂੰ ਆਪਣੇ ਕੋਲ ਰੱਖੋ। %s ਤੁਹਾਨੂੰ ਬਹੁਤੇ ਆਮ ਟਰੈਕਰਾਂ ਤੋਂ ਸੁਰ਼ਖਿਅਤ ਕਰਦਾ ਹੈ, ਜੋ ਕਿ ਆਨਲਾਈਨ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -753,12 +755,28 @@
     <string name="enhanced_tracking_protection_not_blocking">ਪਾਬੰਦੀ ਨਹੀਂ</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">ਸਮਾਜਿਕ ਮੀਡਿਆ ਟਰੈਕਰ</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ਵੈੱਬ ‘ਤੇ ਸਮਾਜਿਕ ਨੈੱਟਵਰਕਾਂ ਨੂੰ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੀ ਸਰਗਰਮ ਨੂੰ ਟਰੈਕ ਕਰਨ ਦੀ ਸਮਰੱਥਾ ਦੀ ਸੀਮਿਤ ਕਰਦਾ ਹੈ।</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕ ਕਰਨ ਵਾਲੇ ਕੂਕੀਜ਼</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">ਕੂਕੀਜ਼ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਉਂਦਾ ਹੈ, ਜੋ ਕਿ ਇਸ਼ਤਿਹਾਰ ਨੈੱਟਵਰਕ ਤੇ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਵਾਲੀਆਂ ਕੰਪਨੀਆਂ ਕਈ ਸਾਈਟਾਂ ‘ਤੇ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਡਾਟੇ ਨੂੰ ਇਕੱਤਰ ਕਰਨ ਲਈ ਵਰਤਦੀਆਂ ਹਨ।</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ਕ੍ਰਿਪਟੋਮਾਈਨਰ</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਨੂੰ ਡਿਜ਼ਿਟਲ ਮੁਦਰਾ ਦੀ ਟਕਸਾਲ ਵਜੋਂ ਵਰਤਣ ਲਈ ਪਹੁੰਚ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਲੀਆਂ ਦੋਖੀ ਸਕ੍ਰਿਪਟਾਂ ਨੂੰ ਰੋਕਦਾ ਹੈ।</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ਫਿੰਗਰਪਰਿੰਟਰ</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ਸਮੱਗਰੀ ਟਰੈਕ ਕਰਨ ਵਾਲੇ</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">ਜਦੋਂ ਢਾਲ ਦੇ ਰੰਗ ਬਦਲਦੇ ਹਨ ਤਾਂ %s ਵੈੱਬਸਾਈਟ ‘ਤੇ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਰਿਹਾ ਹੈ। ਪਾਬੰਦੀ ਲਗਾਏ ਜਾ ਰਹਿਆਂ ਨੂੰ ਵੇਖਣ ਲਈ ਇਸ ਨੂੰ ਖੋਲ੍ਹਣ ਵਾਸਤੇ ਟੈਪ ਕਰੋ।</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">ਇਸ ਸਾਈਟ ਲਈ ਸੁਰੱਖਿਆ ਚਾਲੂ ਹੈ</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">ਇਸ ਸਾਈਟ ਲਈ ਸੁਰੱਖਿਆ ਬੰਦ ਹੈ</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">ਇਹਨਾਂ ਵੈੱਬਸਾਈਟਾਂ ਲਈ ਵਧੇਰੇ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਬੰਦ ਹੈ</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
     <!-- About page link text to open open source licenses screen -->

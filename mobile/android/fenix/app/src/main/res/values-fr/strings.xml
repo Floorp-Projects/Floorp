@@ -684,7 +684,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Vous êtes connecté⋅e en tant que %s sur un autre navigateur Firefox avec ce téléphone. Voulez-vous vous connecter avec ce compte ?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">Vous êtes connecté·e en tant que %s sur un autre navigateur Firefox avec ce téléphone. Voulez-vous vous connecter avec ce compte ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Oui, connectez-moi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -693,7 +693,7 @@
     <string name="onboarding_firefox_account_sign_in">Connectez-vous à votre compte Firefox</string>
 
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Rester déconnecté⋅e</string>
+    <string name="onboarding_firefox_account_stay_signed_out">Rester déconnecté·e</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronisation activée</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -761,6 +761,8 @@
     <string name="etp_settings">Paramètres de protection</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protection renforcée contre le pistage</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Naviguer sans être suivi·e</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Gardez vos données pour vous. %s vous protège de la plupart des traqueurs les plus courants qui suivent ce que vous faites en ligne.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -781,6 +783,8 @@
     <string name="etp_social_media_trackers_title">Traqueurs de réseaux sociaux</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Limite la capacité des réseaux sociaux à pister votre activité de navigation sur le Web.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookies utilisés pour le pistage entre les sites</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloque les cookies que les réseaux publicitaires et les sociétés d’analyse des données utilisent pour compiler vos données de navigation sur de nombreux sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->

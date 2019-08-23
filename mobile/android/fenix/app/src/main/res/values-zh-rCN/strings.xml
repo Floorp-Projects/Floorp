@@ -650,11 +650,18 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 条地址</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 页</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">收藏集</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d 个收藏集</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">站点权限</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">删除浏览数据</string>
 
@@ -773,10 +780,6 @@
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">更强大的保护，但可能导致某些网站异常。</string>
-    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">拦截开启</string>
-    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">未在拦截</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">社交媒体跟踪器</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->

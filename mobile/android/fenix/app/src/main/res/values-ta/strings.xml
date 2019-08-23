@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">கூடுதல் தேர்வுகள்</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">கமுக்க உலாவல் முறை செயலில்</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">கமுக்க உலாவல் முறையை முடுக்கு</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">தேடு/முகவரியை உள்ளிடு</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header">கீற்றுகள் எதுவும் திறக்கப்படவில்லை</string>
+
+
+    </resources>

@@ -19,6 +19,17 @@
     <string name="private_browsing_title">Estás en una ventana privada</string>
 
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder">
+         %1$s elimina tu historial de búsqueda y navegación cuando salís de la aplicación o cerrás todas las pestañas privadas. Si bien esto no te hace anónimo a los sitios web o tu proveedor de servicios de Internet, 
+        resulta más fácil mantener privado lo que hacés en línea de cualquier otra persona que use este dispositivo.  \n\n Mitos comunes sobre la navegación
+        privada
+    
+     
+        
+        
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 

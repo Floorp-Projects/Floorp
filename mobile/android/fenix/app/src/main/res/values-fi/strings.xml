@@ -69,6 +69,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Täytä linkki leikepöydältä</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Hae</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Hae verkosta</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Asetukset</string>
@@ -190,6 +196,8 @@
     <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message">Poikkeukset mahdollistavat kytkeä seurannan suojauksen pois käytöstä valituilla sivustoilla.\n\nLue lisää</string>
 
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetria</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozillan sijaintipalvelu</string>
 
@@ -327,6 +335,12 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Poista %1$d tietuetta</string>
 
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Viimeiset 24 tuntia</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Viimeiset 7 päivää</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Viimeiset 30 päivää</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Vanhemmat</string>
     <!-- Text shown when no history exists -->
@@ -603,6 +617,8 @@
     <string name="onboarding_firefox_account_signing_in">Kirjaudutaan sisään…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Kirjaudu sisään Firefoxiin</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Pysy uloskirjautuneena</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync on päällä</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -666,6 +682,16 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Selaa ilman seurantaa</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lue lisää</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Normaali (suositeltu)</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Tiukka</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sosiaalisen median seuraimet</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Kryptolouhijat</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Yksilöijät</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Oikeutesi</string>
     <!-- About page link text to open open source licenses screen -->
