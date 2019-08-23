@@ -87,10 +87,6 @@ class nsTreeContentView final : public nsITreeView,
                     const nsAString& aValue, mozilla::ErrorResult& aError);
   void SetCellText(int32_t aRow, nsTreeColumn& aColumn, const nsAString& aText,
                    mozilla::ErrorResult& aError);
-  void PerformAction(const nsAString& aAction) {}
-  void PerformActionOnRow(const nsAString& aAction, int32_t aRow) {}
-  void PerformActionOnCell(const nsAString& aAction, int32_t aRow,
-                           nsTreeColumn& aColumn) {}
   Element* GetItemAtIndex(int32_t aRow, mozilla::ErrorResult& aError);
   int32_t GetIndexOfItem(Element* aItem);
 
