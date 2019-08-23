@@ -57,3 +57,4 @@ skip-if(Android) == range-border-background.html range-border-background-ref.htm
 == range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
 
 == auto-size.html auto-size-ref.html
+== range-track-bg.html range-track-bg-ref.html
