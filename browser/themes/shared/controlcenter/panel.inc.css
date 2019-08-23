@@ -683,7 +683,7 @@ description#identity-popup-content-verifier,
   grid-row: 1;
 }
 
-#protections-popup:not([hasException]) .protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
+#protections-popup:not([hasException]) .protections-popup-category.blocked:not(.notFound) ~ #protections-popup-blocking-section-header,
 .protections-popup-category.notFound ~ #protections-popup-not-found-section-header,
 .protections-popup-category:not(.blocked):not(.notFound) ~ #protections-popup-not-blocking-section-header,
 #protections-popup[hasException] .protections-popup-category:not(.notFound) ~ #protections-popup-not-blocking-section-header {
