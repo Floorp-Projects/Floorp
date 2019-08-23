@@ -22,6 +22,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "FxAccountsCommon",
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
@@ -175,9 +180,9 @@ var AboutProtectionsHandler = {
     const userFacingLogins =
       Services.logins.countLogins("", "", "") -
       Services.logins.countLogins(
-        "chrome://FirefoxAccounts",
+        FxAccountsCommon.FXA_PWDMGR_HOST,
         null,
-        "Firefox Accounts credentials"
+        FxAccountsCommon.FXA_PWDMGR_REALM
       );
 
     return {
