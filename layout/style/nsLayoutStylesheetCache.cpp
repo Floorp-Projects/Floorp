@@ -262,6 +262,9 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
       // Use the shared memory handle that was given to us by a SetSharedMemory
       // call under ContentChild::InitXPCOM.
       mSharedMemory = sSharedMemory.forget();
+      MOZ_ASSERT(!mSharedMemory || mSharedMemory->mShm.memory(),
+                 "nsLayoutStylesheetCache::SetSharedMemory should have mapped "
+                 "the shared memory");
     }
   }
 
@@ -270,12 +273,17 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
   // (unexpected), or we failed to map the shared memory buffer at the address
   // we needed in the content process (might happen).
   //
+  // If mSharedMemory is non-null, but it is not currently mapped, then it means
+  // we are in the parent process, and we failed to re-map the memory after
+  // freezing it.  (We keep mSharedMemory around so that we can still share it
+  // to content processes.)
+  //
   // In the parent process, this means we'll just leave our eagerly loaded
   // non-shared sheets in the mFooSheet fields.  In a content process, we'll
   // lazily load our own copies of the sheets later.
   if (mSharedMemory) {
-    Header* header = static_cast<Header*>(mSharedMemory->mShm.memory());
-    MOZ_RELEASE_ASSERT(header->mMagic == Header::kMagic);
+    if (auto header = static_cast<Header*>(mSharedMemory->mShm.memory())) {
+      MOZ_RELEASE_ASSERT(header->mMagic == Header::kMagic);
 
 #define STYLE_SHEET(identifier_, url_, shared_)                           \
   if (shared_) {                                                          \
@@ -285,6 +293,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
+    }
   }
 }
 
@@ -316,7 +325,10 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   mSharedMemory = new Shm();
-  mSharedMemory->mShm.Create(kSharedMemorySize);
+  if (NS_WARN_IF(!mSharedMemory->mShm.CreateFreezeable(kSharedMemorySize))) {
+    mSharedMemory = nullptr;
+    return;
+  }
 
   // We need to choose an address to map the shared memory in the parent process
   // that we'll also be able to use in content processes.  There's no way to
@@ -353,10 +365,14 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
     // Failed to map at the address we computed for some reason.  Fall back
     // to just allocating at a location of the OS's choosing, and hope that
     // it works in the content process.
-    mSharedMemory->mShm.Map(kSharedMemorySize);
+    if (NS_WARN_IF(!mSharedMemory->mShm.Map(kSharedMemorySize))) {
+      mSharedMemory = nullptr;
+      return;
+    }
   }
+  address = mSharedMemory->mShm.memory();
 
-  Header* header = static_cast<Header*>(mSharedMemory->mShm.memory());
+  auto header = static_cast<Header*>(address);
   header->mMagic = Header::kMagic;
 #ifdef DEBUG
   for (auto ptr : header->mSheets) {
@@ -378,6 +394,20 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
+
+  // Finished writing into the shared memory.  Freeze it, so that a process
+  // can't confuse other processes by changing the UA style sheet contents.
+  if (NS_WARN_IF(!mSharedMemory->mShm.Freeze())) {
+    mSharedMemory = nullptr;
+    return;
+  }
+
+  // The Freeze() call unmaps the shared memory.  Re-map it again as read only.
+  // If this fails, due to something else being mapped into the same place
+  // between the Freeze() and Map() call, we can just fall back to keeping our
+  // own copy of the UA style sheets in the parent, and still try sending the
+  // shared memory to the content processes.
+  mSharedMemory->mShm.Map(kSharedMemorySize, address);
 
   // Record how must of the shared memory we have used, for memory reporting
   // later.  We round up to the nearest page since the free space at the end

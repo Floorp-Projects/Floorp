@@ -137,6 +137,7 @@ class SandboxBroker final : private SandboxBrokerCommon,
   const int mChildPid;
   const UniquePtr<const Policy> mPolicy;
   nsCString mTempPath;
+  nsCString mContentTempPath;
 
   typedef nsDataHashtable<nsCStringHashKey, nsCString> PathMap;
   PathMap mSymlinkMap;

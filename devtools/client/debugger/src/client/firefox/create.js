@@ -73,12 +73,23 @@ export function createPause(
   };
 }
 
+function getTargetType(target: Target) {
+  if (target.isWorkerTarget) {
+    return "worker";
+  }
+
+  if (target.isContentProcess) {
+    return "content-process";
+  }
+
+  return "main-thread";
+}
+
 export function createThread(actor: string, target: Target): Thread {
   return {
     actor,
-    url: target.url || "",
-    // Ci.nsIWorkerDebugger.TYPE_DEDICATED
-    type: actor.includes("process") ? 1 : 0,
-    name: "",
+    url: target.url,
+    type: getTargetType(target),
+    name: target.name,
   };
 }

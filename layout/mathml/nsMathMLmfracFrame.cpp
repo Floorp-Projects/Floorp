@@ -111,6 +111,7 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
                         nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
                         aComputedStyle, aFontSizeInflation);
     } else {
+      bool isDeprecatedLineThicknessValue = true;
       if (aThicknessAttribute.EqualsLiteral("thin")) {
         lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
         minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
@@ -131,10 +132,15 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
         }
       } else {
         // length value
+        isDeprecatedLineThicknessValue = false;
         lineThickness = defaultThickness;
         ParseNumericValue(aThicknessAttribute, &lineThickness,
                           nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
                           aComputedStyle, aFontSizeInflation);
+      }
+      if (isDeprecatedLineThicknessValue) {
+        mContent->OwnerDoc()->WarnOnceAbout(
+            dom::Document::eMathML_DeprecatedLineThicknessValue);
       }
     }
   }

@@ -54,7 +54,8 @@ class nsMathMLElement final : public nsMathMLElementBase,
     CONVERT_UNITLESS_TO_PERCENT = 0x08
   };
   static bool ParseNamedSpaceValue(const nsString& aString,
-                                   nsCSSValue& aCSSValue, uint32_t aFlags);
+                                   nsCSSValue& aCSSValue, uint32_t aFlags,
+                                   const Document& aDocument);
 
   static bool ParseNumericValue(const nsString& aString, nsCSSValue& aCSSValue,
                                 uint32_t aFlags, Document* aDocument);

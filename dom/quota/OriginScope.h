@@ -232,6 +232,48 @@ class OriginScope {
 
   OriginScope Clone() { return OriginScope(mData); }
 
+  template <typename T, typename U>
+  class Setter {
+    typedef void (OriginScope::*Method)(const U& aOrigin);
+
+    OriginScope* mOriginScope;
+    Method mMethod;
+    T mData;
+
+   public:
+    Setter(OriginScope* aOriginScope, Method aMethod)
+        : mOriginScope(aOriginScope), mMethod(aMethod) {}
+
+    Setter(Setter&& aOther)
+        : mOriginScope(aOther.mOriginScope),
+          mMethod(aOther.mMethod),
+          mData(std::move(aOther.mData)) {}
+
+    ~Setter() { ((*mOriginScope).*mMethod)(mData); }
+
+    operator T&() { return mData; }
+
+    operator T*() { return &mData; }
+
+   private:
+    Setter() = delete;
+    Setter(const Setter&) = delete;
+    Setter& operator=(const Setter&) = delete;
+    Setter& operator=(const Setter&&) = delete;
+  };
+
+  /**
+   * Magic helper for cases where you are calling a method that takes a
+   * ns(A)CString outparam to write an origin into. This method returns a helper
+   * temporary that returns the underlying string storage, then on the
+   * destruction of the temporary at the conclusion of the call, automatically
+   * invokes SetFromOrigin using the origin value that was written into the
+   * string.
+   */
+  Setter<nsCString, nsACString> AsOriginSetter() {
+    return Setter<nsCString, nsACString>(this, &OriginScope::SetFromOrigin);
+  }
+
  private:
   // Move constructors
   explicit OriginScope(const Origin&& aOrigin) : mData(aOrigin) {}

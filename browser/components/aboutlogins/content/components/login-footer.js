@@ -25,14 +25,15 @@ export default class LoginFooter extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "click": {
-        let classList = event.originalTarget.classList;
+        let target = event.currentTarget;
+        let classList = target.classList;
 
         if (
-          classList.contains("image-play-store") ||
-          classList.contains("image-app-store") ||
+          classList.contains("play-store") ||
+          classList.contains("app-store") ||
           classList.contains("close")
         ) {
-          let eventName = event.originalTarget.dataset.eventName;
+          let eventName = target.dataset.eventName;
           const linkTrackingSource = "Footer_Menu";
           document.dispatchEvent(
             new CustomEvent(eventName, {

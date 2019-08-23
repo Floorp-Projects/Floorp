@@ -286,7 +286,7 @@
 }
 
 #pageActionSeparator {
-  /* This draws the separator the same way that #urlbar-display-box draws its
+  /* This draws the separator the same way that #urlbar-label-box draws its
      left and right borders, which end up looking like separators.  It might not
      be the best way in this case, but it makes sure that all these vertical
      lines in the urlbar look the same: same height, vertical position, etc. */
@@ -361,19 +361,6 @@
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
   -moz-outline-radius: var(--toolbarbutton-border-radius);
-}
-
-.urlbar-display {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.urlbar-display:not(:-moz-lwtheme) {
-  color: GrayText;
-}
-
-.urlbar-display:-moz-lwtheme {
-  opacity: 0.5;
 }
 
 #urlbar-go-button,

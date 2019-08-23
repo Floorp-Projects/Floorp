@@ -570,7 +570,6 @@ void main(void) {
             needsPremul = false;
             break;
         case FILTER_COMPONENT_TRANSFER:
-            vec4 colora = Ca.a != 0.0 ? Ca / Ca.a : Ca;
             result = ComponentTransfer(Ca);
             break;
         case FILTER_IDENTITY:

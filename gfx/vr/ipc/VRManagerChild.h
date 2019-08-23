@@ -60,7 +60,7 @@ class VRManagerChild : public PVRManagerChild {
   void StartActivity();
   void StopActivity();
 
-  bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays);
+  void GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
 

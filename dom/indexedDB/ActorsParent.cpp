@@ -8910,10 +8910,10 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    uint64_t usage = 0;
+    uint64_t usage;
 
     if (aQuotaManager) {
-      rv = FileManager::GetUsage(fmDirectory, &usage);
+      rv = FileManager::GetUsage(fmDirectory, usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8925,7 +8925,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
       // information before returning the error.
       if (aQuotaManager) {
         uint64_t newUsage;
-        if (NS_SUCCEEDED(FileManager::GetUsage(fmDirectory, &newUsage))) {
+        if (NS_SUCCEEDED(FileManager::GetUsage(fmDirectory, newUsage))) {
           MOZ_ASSERT(newUsage <= usage);
           usage = usage - newUsage;
         }
@@ -15644,10 +15644,9 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
 }
 
 // static
-nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage) {
+nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aUsage);
 
   bool exists;
   nsresult rv = aDirectory->Exists(&exists);
@@ -15656,7 +15655,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage) {
   }
 
   if (!exists) {
-    *aUsage = 0;
+    aUsage.reset();
     return NS_OK;
   }
 
@@ -15666,7 +15665,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage) {
     return rv;
   }
 
-  uint64_t usage = 0;
+  Maybe<uint64_t> usage;
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -15687,14 +15686,29 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage) {
       return rv;
     }
 
-    UsageInfo::IncrementUsage(&usage, uint64_t(fileSize));
+    UsageInfo::IncrementUsage(usage, Some(uint64_t(fileSize)));
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  *aUsage = usage;
+  aUsage = usage;
+  return NS_OK;
+}
+
+// static
+nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t& aUsage) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+
+  Maybe<uint64_t> usage;
+  nsresult rv = GetUsage(aDirectory, usage);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aUsage = usage.valueOr(0);
   return NS_OK;
 }
 
@@ -16100,20 +16114,20 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
 
       MOZ_ASSERT(fileSize >= 0);
 
-      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
 
       rv = walFile->GetFileSize(&fileSize);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(fileSize >= 0);
-        aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+        aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
       } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
                             rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetWalFileSize);
         return rv;
       }
 
-      uint64_t usage;
-      rv = FileManager::GetUsage(fmDirectory, &usage);
+      Maybe<uint64_t> usage;
+      rv = FileManager::GetUsage(fmDirectory, usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetUsage);
         return rv;
@@ -16609,9 +16623,9 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     MOZ_ASSERT(fileSize >= 0);
 
     if (aDatabaseFiles) {
-      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
     } else {
-      aUsageInfo->AppendToFileUsage(uint64_t(fileSize));
+      aUsageInfo->AppendToFileUsage(Some(uint64_t(fileSize)));
     }
   }
 

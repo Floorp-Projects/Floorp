@@ -195,3 +195,12 @@ endif
 # Most things are built during compile (target/host), but some things happen during export
 # Those need to depend on config/export for system wrappers.
 $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: config/export
+
+# When building gtest as part of the build (LINK_GTEST_DURING_COMPILE),
+# force the build system to get to it first, so that it can be linked
+# quickly without LTO, allowing the build system to go ahead with
+# plain gkrust and libxul while libxul-gtest is being linked and
+# dump-sym'ed.
+ifneq (,$(filter toolkit/library/gtest/rust/target,$(compile_targets)))
+toolkit/library/rust/target: toolkit/library/gtest/rust/target
+endif

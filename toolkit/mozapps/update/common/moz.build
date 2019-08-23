@@ -14,17 +14,14 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
+        'certificatecheck.h',
         'pathhash.h',
+        'registrycertificates.h',
         'uachelper.h',
         'updatehelper.cpp',
         'updatehelper.h',
         'updateutils_win.h',
     ]
-    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-        EXPORTS += [
-            'certificatecheck.h',
-            'registrycertificates.h',
-        ]
 
 Library('updatecommon')
 
@@ -35,26 +32,21 @@ DisableStlWrapping()
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
+        'certificatecheck.cpp',
         'pathhash.cpp',
+        'registrycertificates.cpp',
         'uachelper.cpp',
         'updatehelper.cpp',
         'updateutils_win.cpp',
     ]
     OS_LIBS += [
         'advapi32',
+        'crypt32',
         'ole32',
         'rpcrt4',
         'shell32',
+        'wintrust',
     ]
-    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-        SOURCES += [
-            'certificatecheck.cpp',
-            'registrycertificates.cpp',
-        ]
-        OS_LIBS += [
-            'crypt32',
-            'wintrust',
-        ]
 
 SOURCES += [
     '/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',

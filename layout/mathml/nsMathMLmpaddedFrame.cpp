@@ -208,7 +208,8 @@ bool nsMathMLmpaddedFrame::ParseAttribute(nsString& aString, int32_t& aSign,
 
     // see if the unit is a named-space
     if (nsMathMLElement::ParseNamedSpaceValue(
-            unit, aCSSValue, nsMathMLElement::PARSE_ALLOW_NEGATIVE)) {
+            unit, aCSSValue, nsMathMLElement::PARSE_ALLOW_NEGATIVE,
+            *mContent->OwnerDoc())) {
       // re-scale properly, and we know that the unit of the named-space is 'em'
       floatValue *= aCSSValue.GetFloatValue();
       aCSSValue.SetFloatValue(floatValue, eCSSUnit_EM);

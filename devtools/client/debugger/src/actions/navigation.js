@@ -56,7 +56,12 @@ export function connect(
     dispatch(
       ({
         type: "CONNECT",
-        mainThread: { url, actor, type: -1, name: "" },
+        mainThread: {
+          url,
+          actor,
+          type: "main-thread",
+          name: L10N.getStr("mainThread"),
+        },
         canRewind,
         isWebExtension,
       }: Action)

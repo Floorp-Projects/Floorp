@@ -436,6 +436,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   static const char* GetGenericName(
       mozilla::StyleGenericFontFamily aGenericType);
 
+  bool SkipFontFallbackForChar(uint32_t aCh) const {
+    return mCodepointsWithNoFonts.test(aCh);
+  }
+
  protected:
   friend class mozilla::fontlist::FontList;
 

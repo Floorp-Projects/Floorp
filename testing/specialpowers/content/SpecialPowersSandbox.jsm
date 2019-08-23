@@ -68,7 +68,12 @@ class SpecialPowersSandbox {
         `(operator ${err.operator})`;
     }
 
-    this.reportCallback({ name, diag, passed: !err, stack });
+    this.reportCallback({
+      name,
+      diag,
+      passed: !err,
+      stack: stack && stack.formattedStack,
+    });
   }
 
   execute(task, args, caller) {
