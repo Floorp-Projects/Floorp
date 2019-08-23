@@ -61,7 +61,6 @@ libs-%:
 ifneq (,$(wildcard ../extensions/formautofill/locales))
 	@$(MAKE) -C ../extensions/formautofill/locales AB_CD=$* XPI_NAME=locale-$*
 endif
-	@$(MAKE) -C ../extensions/fxmonitor/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../extensions/report-site-issue/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../devtools/startup/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
@@ -79,7 +78,6 @@ chrome-%:
 ifneq (,$(wildcard ../extensions/formautofill/locales))
 	@$(MAKE) -C ../extensions/formautofill/locales chrome AB_CD=$*
 endif
-	@$(MAKE) -C ../extensions/fxmonitor/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../devtools/client/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../devtools/startup/locales chrome AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*

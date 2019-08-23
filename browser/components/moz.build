@@ -36,6 +36,7 @@ DIRS += [
     'downloads',
     'enterprisepolicies',
     'extensions',
+    'fxmonitor',
     'library',
     'migration',
     'newtab',

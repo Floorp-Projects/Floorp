@@ -50,64 +50,6 @@ async function clearWarnedHosts() {
   });
 }
 
-add_task(async function test_warnedHosts_migration() {
-  info("Test that we correctly migrate the warnedHosts pref to content prefs.");
-
-  // Pre-set the warnedHosts pref to include example.com.
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.fxmonitor.warnedHosts", '["example.com"]']],
-  });
-
-  // Pre-populate the Remote Settings collection with a breach.
-  let collection = await RemoteSettings(kRemoteSettingsKey).openCollection();
-  let BreachDate = new Date();
-  let AddedDate = new Date();
-  await collection.create({
-    Domain: "example.com",
-    Name: "Example Site",
-    BreachDate: `${BreachDate.getFullYear()}-${BreachDate.getMonth() +
-      1}-${BreachDate.getDate()}`,
-    AddedDate: `${AddedDate.getFullYear()}-${AddedDate.getMonth() +
-      1}-${AddedDate.getDate()}`,
-    PwnCount: 1000000,
-  });
-  await collection.db.saveLastModified(1234567);
-
-  // Finally, reload the extension.
-  let addon = await AddonManager.getAddonByID("fxmonitor@mozilla.org");
-  await addon.reload();
-
-  await TestUtils.waitForCondition(() => {
-    return !Services.prefs.prefHasUserValue("extensions.fxmonitor.warnedHosts");
-  }, "Waiting for the warnedHosts pref to be cleared");
-  ok(true, "The warnedHosts pref was cleared");
-
-  // Open a tab and ensure the alert isn't shown.
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://example.com"
-  );
-  await fxmonitorNotificationGone();
-
-  // Clean up.
-  BrowserTestUtils.removeTab(tab);
-  await collection.clear();
-  await collection.db.saveLastModified(1234567);
-  // Trigger a sync to clear.
-  await RemoteSettings(kRemoteSettingsKey).emit("sync", {
-    data: {
-      current: [],
-    },
-  });
-  await clearWarnedHosts();
-  await SpecialPowers.pushPrefEnv({
-    clear: [
-      ["extensions.fxmonitor.enabled"],
-      ["extensions.fxmonitor.firstAlertShown"],
-    ],
-  });
-});
-
 add_task(async function test_main_flow() {
   info("Test that we show the first alert correctly for a recent breach.");
 
