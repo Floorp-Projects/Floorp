@@ -90,6 +90,7 @@ android {
         // | fenixNightly       | ✅            | ✅       | Built with both, but only the "geckoNightly" one is published to Google Play
         // | fenixBeta          | ❌            | ✅       | Fenix Beta ships with GV Beta
         // | fenixProduction    | ❌            | ✅       | Fenix Production ships with GV Beta
+        // | fennecProduction   | ❌            | ✅       | Fenix build to replace production Firefox builds
         //
 
         def flavors = flavors*.name.toString().toLowerCase()
@@ -99,6 +100,10 @@ android {
         }
 
         if (buildType.name == 'fenixProduction' && flavors.contains("geckonightly")) {
+            setIgnore true
+        }
+
+        if (buildType.name == 'fennecProduction' && flavors.contains("geckonightly")) {
             setIgnore true
         }
     }
