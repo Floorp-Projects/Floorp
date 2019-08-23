@@ -71,13 +71,6 @@ ArrowScrollBox.prototype = {
   },
 
   /**
-   * Determine whether the current text directionality is RTL
-   */
-  isRtl: function() {
-    return this.doc.dir === "rtl";
-  },
-
-  /**
    * Scroll to the specified element using the current scroll behavior
    * @param {Element} element element to scroll
    * @param {String} block desired alignment of element after scrolling
@@ -153,8 +146,7 @@ ArrowScrollBox.prototype = {
         return;
       }
 
-      const block = this.isRtl() ? "end" : "start";
-      this.scrollToElement(element, block);
+      this.scrollToElement(element, "start");
     };
 
     this.clickOrHold(scrollToStart);
@@ -170,8 +162,7 @@ ArrowScrollBox.prototype = {
         return;
       }
 
-      const block = this.isRtl() ? "start" : "end";
-      this.scrollToElement(element, block);
+      this.scrollToElement(element, "end");
     };
 
     this.clickOrHold(scrollToEnd);
@@ -250,9 +241,7 @@ ArrowScrollBox.prototype = {
   getFirstInvisibleElement: function() {
     const elementsList = Array.from(this.inner.childNodes).reverse();
 
-    const predicate = this.isRtl()
-      ? this.elementRightOfContainer
-      : this.elementLeftOfContainer;
+    const predicate = this.elementLeftOfContainer;
     return this.findFirstWithBounds(elementsList, predicate);
   },
 
@@ -261,9 +250,7 @@ ArrowScrollBox.prototype = {
    * non or partly visible element in the scroll box
    */
   getLastInvisibleElement: function() {
-    const predicate = this.isRtl()
-      ? this.elementLeftOfContainer
-      : this.elementRightOfContainer;
+    const predicate = this.elementRightOfContainer;
     return this.findFirstWithBounds(this.inner.childNodes, predicate);
   },
 
