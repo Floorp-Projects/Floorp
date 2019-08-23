@@ -7,9 +7,9 @@ extern crate rustc_demangle;
 extern crate thin_vec;
 
 #[cfg(feature = "parse_elf")]
-extern crate object;
-#[cfg(feature = "parse_elf")]
 extern crate goblin;
+#[cfg(feature = "parse_elf")]
+extern crate object;
 
 mod compact_symbol_table;
 
@@ -21,12 +21,12 @@ use memmap::MmapOptions;
 #[cfg(feature = "parse_elf")]
 use std::fs::File;
 
+use compact_symbol_table::CompactSymbolTable;
+use rustc_demangle::try_demangle;
 use std::ffi::CStr;
 use std::mem;
 use std::os::raw::c_char;
 use std::ptr;
-use compact_symbol_table::CompactSymbolTable;
-use rustc_demangle::try_demangle;
 
 #[cfg(feature = "parse_elf")]
 pub fn get_compact_symbol_table_from_file(
