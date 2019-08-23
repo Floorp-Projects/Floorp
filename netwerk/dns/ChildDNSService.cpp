@@ -282,6 +282,11 @@ NS_IMETHODIMP
 ChildDNSService::ClearCache(bool aTrrToo) { return NS_ERROR_NOT_AVAILABLE; }
 
 NS_IMETHODIMP
+ChildDNSService::ReloadParentalControlEnabled() {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetMyHostName(nsACString& result) {
   // TODO: get value from parent during PNecko construction?
   return NS_ERROR_NOT_AVAILABLE;

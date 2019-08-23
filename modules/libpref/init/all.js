@@ -2086,6 +2086,9 @@ pref("network.dns.offline-localhost", true);
 // A negative value will keep the thread alive forever.
 pref("network.dns.resolver-thread-extra-idle-time-seconds", 60);
 
+// Whether to disable TRR when parental control is enabled.
+pref("network.dns.skipTRR-when-parental-control-enabled", true);
+
 // The maximum allowed length for a URL - 1MB default
 pref("network.standard-url.max-length", 1048576);
 
