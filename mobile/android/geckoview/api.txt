@@ -84,9 +84,6 @@ import org.mozilla.geckoview.WebExtensionEventDispatcher;
 import org.mozilla.geckoview.WebMessage;
 import org.mozilla.geckoview.WebNotification;
 import org.mozilla.geckoview.WebNotificationDelegate;
-import org.mozilla.geckoview.WebPushController;
-import org.mozilla.geckoview.WebPushDelegate;
-import org.mozilla.geckoview.WebPushSubscription;
 import org.mozilla.geckoview.WebRequest;
 import org.mozilla.geckoview.WebRequestError;
 import org.mozilla.geckoview.WebResponse;
@@ -317,7 +314,6 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
     method @UiThread @NonNull public WebExtensionController getWebExtensionController();
     method @UiThread @Nullable public WebNotificationDelegate getWebNotificationDelegate();
-    method @UiThread @NonNull public WebPushController getWebPushController();
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
@@ -1266,29 +1262,6 @@ package org.mozilla.geckoview {
   public interface WebNotificationDelegate {
     method @AnyThread default public void onCloseNotification(@NonNull WebNotification);
     method @AnyThread default public void onShowNotification(@NonNull WebNotification);
-  }
-
-  public class WebPushController {
-    method @UiThread public void onPushEvent(@NonNull WebPushSubscription);
-    method @UiThread public void onPushEvent(@NonNull WebPushSubscription, @Nullable byte[]);
-    method @UiThread public void onSubscriptionChanged(@NonNull WebPushSubscription);
-    method @UiThread public void setDelegate(@Nullable WebPushDelegate);
-  }
-
-  public interface WebPushDelegate {
-    method @UiThread @Nullable default public GeckoResult<WebPushSubscription> onGetSubscription(@NonNull String);
-    method @UiThread @Nullable default public GeckoResult<WebPushSubscription> onSubscribe(@NonNull String, @Nullable byte[]);
-    method @UiThread @Nullable default public GeckoResult<Void> onUnsubscribe(@NonNull String);
-  }
-
-  public class WebPushSubscription implements Parcelable {
-    ctor public WebPushSubscription(@NonNull String, @NonNull String, @Nullable byte[], @NonNull byte[], @NonNull byte[]);
-    field public static final Parcelable.Creator<WebPushSubscription> CREATOR;
-    field @Nullable public final byte[] appServerKey;
-    field @NonNull public final byte[] authSecret;
-    field @NonNull public final byte[] browserPublicKey;
-    field @NonNull public final String endpoint;
-    field @NonNull public final String scope;
   }
 
   @AnyThread public class WebRequest extends WebMessage {

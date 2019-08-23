@@ -34,7 +34,7 @@ pref("geckoview.console.enabled", false);
 pref("dom.capture.enabled", true);
 
 // Disable Web Push until we get it working
-pref("dom.push.enabled", true);
+pref("dom.push.enabled", false);
 
 // enable external storage API
 pref("dom.storageManager.enabled", true);
