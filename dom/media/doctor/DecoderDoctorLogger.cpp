@@ -89,6 +89,11 @@ void DecoderDoctorLogger::PanicInternal(const char* aReason, bool aDontBlock) {
 
 /* static */
 bool DecoderDoctorLogger::EnsureLogIsEnabled() {
+#ifdef RELEASE_OR_BETA
+  // Just refuse to enable DDLogger on release&beta because it makes it too easy
+  // to trigger an OOM. See bug 1571648.
+  return false;
+#else
   for (;;) {
     LogState state = static_cast<LogState>(sLogState);
     switch (state) {
@@ -137,6 +142,7 @@ bool DecoderDoctorLogger::EnsureLogIsEnabled() {
     }
     // Not returned yet, loop around to examine the new situation.
   }
+#endif
 }
 
 /* static */
