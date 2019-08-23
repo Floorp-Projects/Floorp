@@ -399,8 +399,8 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
 
   JS::AutoFilename af;
   if (JS::DescribeScriptedCaller(cx, &af, &caller->line)) {
-    caller->filename.reset(
-        FormatIntroducedFilename(cx, af.get(), caller->line, introducer));
+    caller->filename =
+        FormatIntroducedFilename(cx, af.get(), caller->line, introducer);
     if (!caller->filename) {
       return false;
     }
