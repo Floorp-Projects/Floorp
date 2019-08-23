@@ -547,6 +547,8 @@ static const char kPrefGetTtl[] = "network.dns.get-ttl";
 static const char kPrefNativeIsLocalhost[] = "network.dns.native-is-localhost";
 static const char kPrefThreadIdleTime[] =
     "network.dns.resolver-thread-extra-idle-time-seconds";
+static const char kPrefSkipTRRParentalControl[] =
+    "network.dns.skipTRR-when-parental-control-enabled";
 static bool sGetTtlEnabled = false;
 mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
@@ -576,6 +578,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
       mLock("nsHostResolver.mLock"),
       mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV"),
       mEvictionQSize(0),
+      mSkipTRRWhenParentalControlEnabled(true),
       mShutdown(true),
       mNumIdleTasks(0),
       mActiveTaskCount(0),
@@ -599,6 +602,8 @@ nsresult nsHostResolver::Init() {
 
   mShutdown = false;
   mNCS = NetworkConnectivityService::GetSingleton();
+  mSkipTRRWhenParentalControlEnabled =
+      Preferences::GetBool(kPrefSkipTRRParentalControl, true);
 
   // The preferences probably haven't been loaded from the disk yet, so we
   // need to register a callback that will set up the experiment once they
@@ -1396,13 +1401,15 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     addrRec->mTrrAAAAUsed = AddrHostRecord::INIT;
   }
 
-  // For domains that are excluded from TRR we fallback to NativeLookup.
-  // This happens even in MODE_TRRONLY.
-  // By default localhost and local are excluded (so we cover *.local hosts)
-  // See the network.trr.excluded-domains pref.
+  // For domains that are excluded from TRR or when parental control is enabled,
+  // we fallback to NativeLookup. This happens even in MODE_TRRONLY. By default
+  // localhost and local are excluded (so we cover *.local hosts) See the
+  // network.trr.excluded-domains pref.
   bool skipTRR = true;
   if (gTRRService) {
-    skipTRR = gTRRService->IsExcludedFromTRR(rec->host);
+    skipTRR = gTRRService->IsExcludedFromTRR(rec->host) ||
+              (mSkipTRRWhenParentalControlEnabled &&
+               gTRRService->ParentalControlEnabled());
   }
 
   if (rec->flags & RES_DISABLE_TRR) {
