@@ -8,10 +8,17 @@
     position the user is at. The first argument is the position, the second argument is the total. -->
     <string name="mozac_feature_findindpage_result">%1$d/%2$d</string>
 
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+    and the position the user is at. The first argument is the position, the second argument is the total. -->
+    <string name="mozac_feature_findindpage_accessibility_result" tools:ignore="PluralsCandidate">Osuma %1$d yhteensä %2$d osumasta</string>
+
     <!-- String to be read by the accessibility service when focusing the next result button. -->
     <string name="mozac_feature_findindpage_next_result">Etsi seuraava osuma</string>
 
     <!-- String to be read by the accessibility service when focusing the previous result button. -->
     <string name="mozac_feature_findindpage_previous_result">Etsi edellinen osuma</string>
 
-    </resources>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
+    <string name="mozac_feature_findindpage_dismiss">Sulje Etsi sivulta -toiminto</string>
+
+</resources>

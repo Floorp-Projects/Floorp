@@ -55,14 +55,47 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Tenggang waktu tersambung habis</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Situs yang diminta tidak menjawab permintaan sambungan dan peramban berhenti menunggu jawaban</p>
+      <ul>
+        <li>Mungkinkan server sedang dalam keadaan sibuk atau mati sementara? Coba lagi nanti.</li>
+        <li>Apakah Anda tidak dapat mengakses situs lainnya? Periksa koneksi jaringan komputer Anda.</li>
+        <li>Apakah jaringan atau komputer Anda dilindungi firewall atau proxy? Pengaturan yang salah dapat mengganggu penjelajahan Web.</li>
+        <li>Masih bermasalah? Tanyakan pada adminstrator jaringan Anda atau Penyedia Jasa Layanan Internet Anda.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Tidak dapat tersambung</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Situs mungkin tidak tersedia untuk sementara atau terlalu sibuk . Cobalah beberapa saat lagi.</li>
+        <li>Jika Anda tidak dapat memuat halaman apa pun, periksa data peranti atau koneksi Wi-Fi Anda.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Respon tidak terduga dari server</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Situs menanggapi permintaan jaringan dengan cara yang tak terduga dan peramban tidak dapat melanjutkan.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Laman tidak teralihkan dengan benar</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Peramban telah berhenti untuk menerima item yang diminta. Situs tersebut mengalihkan permintaan seakan-akan tidak pernah selesai</p>
+      <ul>
+        <li>Apakah Anda menonaktifkan atau memblokir kuki yang diperlukan oleh situs ini?</li>
+        <li>Jika menerima kuki situs tidak menyelesaikan masalah, nampaknya ada masalah konfigurasi server dan bukan masalah pada komputer Anda.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Mode Luring</string>
@@ -75,6 +108,13 @@
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Jenis Berkas Tidak Aman</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Mohon hubungi pemilik situs web untuk mengabarkan masalah ini pada mereka.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Galat Konten Rusak</string>
@@ -136,4 +176,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Masalah situs tipuan</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Laman web di %1$ telah dilaporkan sebagai situs tipuan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
+    ]]></string>
+</resources>

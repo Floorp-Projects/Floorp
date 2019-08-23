@@ -7,6 +7,11 @@
     <!-- Text shown on the second row of an ongoing download notification. -->
     <string name="mozac_feature_downloads_ongoing_notification_text">ダウンロードしています</string>
 
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text">ダウンロードが完了しました。</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text">ダウンロードに失敗しました。</string>
+
     <!-- Alert dialog confirmation before download a file, this is the title. -->
     <string name="mozac_feature_downloads_dialog_title">ファイルをダウンロード</string>
 

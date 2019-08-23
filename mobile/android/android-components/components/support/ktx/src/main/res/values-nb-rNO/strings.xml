@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mozac_support_ktx_menu_share_with">Del med…</string>
+    <string name="mozac_support_ktx_share_dialog_title">Del via</string>
+</resources>
