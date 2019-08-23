@@ -534,7 +534,8 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
   long long clamped =
       floor(double(timeAsInt) / resolutionAsInt) * resolutionAsInt;
 
-  long long midpoint = 0, clampedAndJittered = clamped;
+  long long midpoint = 0;
+  long long clampedAndJittered = clamped;
   if (!unconditionalClamping &&
       StaticPrefs::privacy_resistFingerprinting_reduceTimerPrecision_jitter()) {
     if (!NS_FAILED(RandomMidpoint(clamped, resolutionAsInt, aContextMixin,
@@ -625,7 +626,7 @@ uint32_t nsRFPService::GetSpoofedDroppedFrames(double aTime, uint32_t aWidth,
   double precision = TimerResolution() / 1000 / 1000;
   double time = floor(aTime / precision) * precision;
   // Bound the dropped ratio from 0 to 100.
-  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100u);
+  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100U);
 
   return NSToIntFloor(time * kVideoFramesPerSec *
                       (boundedDroppedRatio / 100.0));
@@ -646,7 +647,7 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
   double precision = TimerResolution() / 1000 / 1000;
   double time = floor(aTime / precision) * precision;
   // Bound the dropped ratio from 0 to 100.
-  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100u);
+  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100U);
 
   return NSToIntFloor(time * kVideoFramesPerSec *
                       ((100 - boundedDroppedRatio) / 100.0));
