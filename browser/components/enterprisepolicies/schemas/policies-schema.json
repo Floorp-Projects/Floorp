@@ -292,9 +292,14 @@
         },
         "Locked": {
           "type": "boolean"
+        },
+        "Cryptomining": {
+          "type": "boolean"
+        },
+        "Fingerprinting": {
+          "type": "boolean"
         }
-      },
-      "required": ["Value"]
+      }
     },
 
     "Extensions": {
