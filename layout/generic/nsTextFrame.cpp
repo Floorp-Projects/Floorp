@@ -6724,11 +6724,6 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
 
   // Trim trailing whitespace, unless we're painting a selection highlight,
   // which should include trailing spaces if present (bug 1146754).
-  Range glyphRange;
-  if (aIsSelected) {
-    provider.InitializeForDisplay(true);
-    glyphRange = ComputeTransformedRange(provider);
-  }
   provider.InitializeForDisplay(!aIsSelected);
 
   const bool reversed = mTextRun->IsInlineReversed();
@@ -6785,7 +6780,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
     params.provider = &provider;
     params.contentRange = contentRange;
     params.textPaintStyle = &textPaintStyle;
-    params.glyphRange = glyphRange;
+    params.glyphRange = range;
     if (PaintTextWithSelection(params, clipEdges)) {
       return;
     }
