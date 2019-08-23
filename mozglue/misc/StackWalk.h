@@ -168,6 +168,10 @@ MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
                                     void* aClosure, void** aBp,
                                     void* aStackEnd);
 
+#ifdef XP_LINUX
+MFBT_API void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen);
+#endif
+
 }  // namespace mozilla
 
 #endif
