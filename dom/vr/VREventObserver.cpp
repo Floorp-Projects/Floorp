@@ -162,5 +162,7 @@ void VREventObserver::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
   }
 }
 
+void VREventObserver::NotifyEnumerationCompleted() {}
+
 }  // namespace dom
 }  // namespace mozilla
