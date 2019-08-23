@@ -40,6 +40,7 @@ class VRManagerEventObserver {
   virtual void NotifyVRDisplayPresentChange(uint32_t aDisplayID) = 0;
   virtual void NotifyPresentationGenerationChanged(uint32_t aDisplayID) = 0;
   virtual bool GetStopActivityStatus() const = 0;
+  virtual void NotifyEnumerationCompleted() = 0;
 
  protected:
   virtual ~VRManagerEventObserver() = default;
@@ -62,6 +63,7 @@ class VRManagerChild : public PVRManagerChild {
 
   void GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
+  bool EnumerateVRDisplays();
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
 
   static void InitSameProcess();
@@ -136,6 +138,7 @@ class VRManagerChild : public PVRManagerChild {
   void FireDOMVRDisplayConnectEventsForLoadInternal(
       uint32_t aDisplayID, VRManagerEventObserver* aObserver);
   void NotifyPresentationGenerationChangedInternal(uint32_t aDisplayID);
+  void NotifyEnumerationCompletedInternal();
 
   nsTArray<RefPtr<VRDisplayClient>> mDisplays;
   bool mDisplaysInitialized;
@@ -153,6 +156,7 @@ class VRManagerChild : public PVRManagerChild {
   mozilla::TimeStamp mStartTimeStamp;
 
   nsTArray<RefPtr<VRManagerEventObserver>> mListeners;
+  bool mWaitingForEnumeration;
 
   layers::LayersBackend mBackend;
   RefPtr<layers::SyncObjectClient> mSyncObject;

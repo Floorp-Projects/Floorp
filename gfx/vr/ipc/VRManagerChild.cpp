@@ -38,6 +38,7 @@ VRManagerChild::VRManagerChild()
     : mDisplaysInitialized(false),
       mMessageLoop(MessageLoop::current()),
       mFrameRequestCallbackCounter(0),
+      mWaitingForEnumeration(false),
       mBackend(layers::LayersBackend::LAYERS_NONE) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -235,6 +236,12 @@ mozilla::ipc::IPCResult VRManagerChild::RecvUpdateDisplayInfo(
     nav->NotifyVRDisplaysUpdated();
   }
   mNavigatorCallbacks.Clear();
+  if (mWaitingForEnumeration) {
+    nsContentUtils::AddScriptRunner(NewRunnableMethod<>(
+        "gfx::VRManagerChild::NotifyEnumerationCompletedInternal", this,
+        &VRManagerChild::NotifyEnumerationCompletedInternal));
+    mWaitingForEnumeration = false;
+  }
   return IPC_OK();
 }
 
@@ -293,6 +300,14 @@ bool VRManagerChild::RefreshVRDisplaysWithCallback(uint64_t aWindowId) {
   bool success = SendRefreshDisplays();
   if (success) {
     mNavigatorCallbacks.AppendElement(aWindowId);
+  }
+  return success;
+}
+
+bool VRManagerChild::EnumerateVRDisplays() {
+  bool success = SendRefreshDisplays();
+  if (success) {
+    mWaitingForEnumeration = true;
   }
   return success;
 }
@@ -458,6 +473,14 @@ void VRManagerChild::NotifyPresentationGenerationChangedInternal(
   nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
   for (auto& listener : listeners) {
     listener->NotifyPresentationGenerationChanged(aDisplayID);
+  }
+}
+
+void VRManagerChild::NotifyEnumerationCompletedInternal() {
+  nsTArray<RefPtr<VRManagerEventObserver>> listeners;
+  listeners = mListeners;
+  for (auto& listener : listeners) {
+    listener->NotifyEnumerationCompleted();
   }
 }
 
