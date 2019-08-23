@@ -1884,9 +1884,10 @@ nsresult TextEditor::ComputeValueInternal(const nsAString& aFormatType,
   subActionInfo.flags = aDocumentEncoderFlags;
   subActionInfo.outputFormat = &aFormatType;
 
-  bool cancel, handled;
+  bool cancel{false};
+  bool handled{false};
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || cancel) {
     return rv;
   }
   if (handled) {
