@@ -103,4 +103,10 @@ void profiler_received_exit_profile(const nsCString& aExitProfile);
 // still intersect with this process' buffer range).
 mozilla::Vector<nsCString> profiler_move_exit_profiles();
 
+// If the "MOZ_PROFILER_SYMBOLICATE" env-var is set, we return a new
+// ProfilerCodeAddressService object to use for local symbolication of profiles.
+// This is off by default, and mainly intended for local development.
+mozilla::UniquePtr<ProfilerCodeAddressService>
+profiler_code_address_service_for_presymbolication();
+
 #endif /* ndef TOOLS_PLATFORM_H_ */
