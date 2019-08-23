@@ -64,9 +64,9 @@ async function runTests() {
   );
 
   is(
-    notificationBox.currentNotification,
-    null,
-    "there is no notification currently shown for content context"
+    notificationBox.currentNotification.messageText.textContent,
+    "Scratchpad will be disabled in a future release. Learn more…",
+    "The deprecation warning is displayed in content context"
   );
 
   sp.setText("window.foosbug653108 = 'aloha';");
