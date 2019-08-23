@@ -1296,6 +1296,9 @@ class HTMLEditor final : public TextEditor,
    * elements around aArrayOfRanges.  Then, collects edit target nodes to
    * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
    * <br> element in it.
+   * FYI: You can use
+   *      SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges()
+   *      instead if you want to call this with extended selection ranges.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SplitInlinesAndCollectEditTargetNodes(
@@ -1314,6 +1317,8 @@ class HTMLEditor final : public TextEditor,
    * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
    * First, this collects all nodes in given ranges, then, modifies the
    * result for specific edit sub-actions.
+   * FYI: You can use CollectEditTargetNodesInExtendedSelectionRanges() instead
+   *      if you want to call this with extended selection ranges.
    */
   nsresult CollectEditTargetNodes(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
@@ -1405,6 +1410,44 @@ class HTMLEditor final : public TextEditor,
   void GetSelectionRangesExtendedToHardLineStartAndEnd(
       nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
       EditSubAction aEditSubAction);
+
+  /**
+   * SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges() calls
+   * SplitInlinesAndCollectEditTargetNodes() with result of
+   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
+   * methods for the detail.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction) {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
+                                                    aEditSubAction);
+    nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+        extendedSelectionRanges, aOutArrayOfNodes, aEditSubAction);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "SplitInlinesAndCollectEditTargetNodes() failed");
+    return rv;
+  }
+
+  /**
+   * CollectEditTargetNodesInExtendedSelectionRanges() calls
+   * CollectEditTargetNodes() with result of
+   * GetSelectionRangesExtendedToHardLineStartAndEnd().  See comments for these
+   * methods for the detail.
+   */
+  nsresult CollectEditTargetNodesInExtendedSelectionRanges(
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction) {
+    AutoTArray<RefPtr<nsRange>, 4> extendedSelectionRanges;
+    GetSelectionRangesExtendedToHardLineStartAndEnd(extendedSelectionRanges,
+                                                    aEditSubAction);
+    nsresult rv = CollectEditTargetNodes(extendedSelectionRanges,
+                                         aOutArrayOfNodes, aEditSubAction);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
+    return rv;
+  }
 
   /**
    * SelectBRElementIfCollapsedInEmptyBlock() helper method for
