@@ -362,19 +362,19 @@ add_task(function test_deduplicate_logins() {
   let keyCombinations = [
     {
       keyset: ["username", "password"],
-      results: 13,
-    },
-    {
-      keyset: ["origin", "username"],
       results: 17,
     },
     {
+      keyset: ["origin", "username"],
+      results: 21,
+    },
+    {
       keyset: ["origin", "username", "password"],
-      results: 18,
+      results: 22,
     },
     {
       keyset: ["origin", "username", "password", "formActionOrigin"],
-      results: 23,
+      results: 27,
     },
   ];
 
