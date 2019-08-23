@@ -181,6 +181,11 @@ const featureCheckboxes = [
     value: "jstracer",
     title: "Trace JS engine (Experimental, requires custom build.)",
   },
+  {
+    name: "Preference Read",
+    value: "preferencereads",
+    title: "Track Preference Reads",
+  },
 ];
 
 /**
