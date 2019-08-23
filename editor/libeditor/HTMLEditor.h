@@ -1370,6 +1370,18 @@ class HTMLEditor final : public TextEditor,
       const RangeBoundaryBase<EPT, ERT>& aEndRef);
 
   /**
+   * GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces() collects
+   * selection ranges with extending to include adjuscent whitespaces
+   * of each range start and end.
+   *
+   * @param aOutArrayOfRanges   [out] Always appended same number of ranges
+   *                            as Selection::RangeCount().  Must be empty
+   *                            when you call this.
+   */
+  void GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
+      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges);
+
+  /**
    * CreateRangeExtendedToHardLineStartAndEnd() creates an nsRange instance
    * which may be expanded to start/end of hard line at both edges of the given
    * range.  If this fails handling something, returns nullptr.
@@ -1380,6 +1392,19 @@ class HTMLEditor final : public TextEditor,
   already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
       const RangeBoundaryBase<SPT, SRT>& aStartRef,
       const RangeBoundaryBase<EPT, ERT>& aEndRef, EditSubAction aEditSubAction);
+
+  /**
+   * GetSelectionRangesExtendedToHardLineStartAndEnd() collects selection ranges
+   * with extending to start/end of hard line from each range start and end.
+   * XXX This means that same range may be included in the result.
+   *
+   * @param aOutArrayOfRanges   [out] Always appended same number of ranges
+   *                            as Selection::RangeCount().  Must be empty
+   *                            when you call this.
+   */
+  void GetSelectionRangesExtendedToHardLineStartAndEnd(
+      nsTArray<RefPtr<nsRange>>& aOutArrayOfRanges,
+      EditSubAction aEditSubAction);
 
   /**
    * SelectBRElementIfCollapsedInEmptyBlock() helper method for
