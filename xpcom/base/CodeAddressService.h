@@ -56,6 +56,7 @@ template <class AllocPolicy_ = MallocAllocPolicy,
               detail::DefaultDescribeCodeAddressLock>
 class CodeAddressService
     : private detail::CodeAddressServiceAllocPolicy<AllocPolicy_> {
+ protected:
   // GetLocation() is the key function in this class.  It's basically a wrapper
   // around MozDescribeCodeAddress.
   //
@@ -144,31 +145,7 @@ class CodeAddressService
     return newString;
   }
 
-  // A direct-mapped cache.  When doing dmd::Analyze() just after starting
-  // desktop Firefox (which is similar to analyzing after a longer-running
-  // session, thanks to the limit on how many records we print), a cache with
-  // 2^24 entries (which approximates an infinite-entry cache) has a ~91% hit
-  // rate.  A cache with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB
-  // (on 32-bit platforms) or ~150 KiB (on 64-bit platforms).
-  static const size_t kNumEntries = 1 << 12;
-  static const size_t kMask = kNumEntries - 1;
-  Entry mEntries[kNumEntries];
-
-  size_t mNumCacheHits;
-  size_t mNumCacheMisses;
-
- public:
-  CodeAddressService()
-      : mLibraryStrings(64), mEntries(), mNumCacheHits(0), mNumCacheMisses(0) {}
-
-  ~CodeAddressService() {
-    for (auto iter = mLibraryStrings.iter(); !iter.done(); iter.next()) {
-      AllocPolicy::free_(const_cast<char*>(iter.get()));
-    }
-  }
-
-  void GetLocation(uint32_t aFrameNumber, const void* aPc, char* aBuf,
-                   size_t aBufLen) {
+  Entry& GetEntry(const void* aPc) {
     MOZ_ASSERT(DescribeCodeAddressLock::IsLocked());
 
     uint32_t index = HashGeneric(aPc) & kMask;
@@ -200,6 +177,35 @@ class CodeAddressService
 
     MOZ_ASSERT(entry.mPc == aPc);
 
+    return entry;
+  }
+
+  // A direct-mapped cache.  When doing dmd::Analyze() just after starting
+  // desktop Firefox (which is similar to analyzing after a longer-running
+  // session, thanks to the limit on how many records we print), a cache with
+  // 2^24 entries (which approximates an infinite-entry cache) has a ~91% hit
+  // rate.  A cache with 2^12 entries has a ~83% hit rate, and takes up ~85 KiB
+  // (on 32-bit platforms) or ~150 KiB (on 64-bit platforms).
+  static const size_t kNumEntries = 1 << 12;
+  static const size_t kMask = kNumEntries - 1;
+  Entry mEntries[kNumEntries];
+
+  size_t mNumCacheHits;
+  size_t mNumCacheMisses;
+
+ public:
+  CodeAddressService()
+      : mLibraryStrings(64), mEntries(), mNumCacheHits(0), mNumCacheMisses(0) {}
+
+  ~CodeAddressService() {
+    for (auto iter = mLibraryStrings.iter(); !iter.done(); iter.next()) {
+      AllocPolicy::free_(const_cast<char*>(iter.get()));
+    }
+  }
+
+  void GetLocation(uint32_t aFrameNumber, const void* aPc, char* aBuf,
+                   size_t aBufLen) {
+    Entry& entry = GetEntry(aPc);
     MozFormatCodeAddress(aBuf, aBufLen, aFrameNumber, entry.mPc,
                          entry.mFunction, entry.mLibrary, entry.mLOffset,
                          entry.mFileName, entry.mLineNo);

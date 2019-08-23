@@ -41,6 +41,10 @@
 #include <functional>
 #include <stdint.h>
 
+namespace mozilla {
+struct SymbolTable;
+}
+
 extern mozilla::LazyLogModule gProfilerLog;
 
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for
@@ -108,5 +112,15 @@ mozilla::Vector<nsCString> profiler_move_exit_profiles();
 // This is off by default, and mainly intended for local development.
 mozilla::UniquePtr<ProfilerCodeAddressService>
 profiler_code_address_service_for_presymbolication();
+
+extern "C" {
+// This function is defined in the profiler rust module at
+// tools/profiler/rust-helper. mozilla::SymbolTable and CompactSymbolTable
+// have identical memory layout.
+bool profiler_get_symbol_table(const char* debug_path, const char* breakpad_id,
+                               mozilla::SymbolTable* symbol_table);
+
+bool profiler_demangle_rust(const char* mangled, char* buffer, size_t len);
+}
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

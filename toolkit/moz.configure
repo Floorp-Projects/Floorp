@@ -78,10 +78,16 @@ set_define('MOZ_GECKO_PROFILER', gecko_profiler_define)
 # (for symbol table dumping).
 @depends(gecko_profiler, target)
 def gecko_profiler_parse_elf(value, target):
-    # Currently we only want to build this code on Android, in order to dump
-    # symbols from Android system libraries on the device. For other platforms
-    # there exist alternatives that don't require bloating up our binary size.
-    if value and target.os == 'Android':
+    # Currently we only want to build this code on Linux (including Android).
+    # For Android, this is in order to dump symbols from Android system, where
+    # on other platforms there exist alternatives that don't require bloating
+    # up our binary size. For Linux more generally, we use this in profile
+    # pre-symbolication support, since MozDescribeCodeAddress doesn't do
+    # anything useful on that platform. (Ideally, we would update
+    # MozDescribeCodeAddress to call into some Rust crates that parse ELF and
+    # DWARF data, but build system issues currently prevent Rust from being
+    # used in mozglue.)
+    if value and target.kernel == 'Linux':
         return True
 
 set_config('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)

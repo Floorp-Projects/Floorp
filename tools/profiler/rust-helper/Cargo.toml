@@ -5,6 +5,7 @@ authors = ["Markus Stange <mstange@themasta.com>"]
 
 [dependencies]
 memmap = "0.6.2"
+rustc-demangle = "0.1"
 
 [dependencies.object]
 version = "0.10.0"

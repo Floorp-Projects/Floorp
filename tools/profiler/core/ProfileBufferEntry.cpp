@@ -958,23 +958,19 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         void* pc = e.Get().GetPtr();
         e.Next();
 
-        static const uint32_t BUF_SIZE = 256;
-        char buf[BUF_SIZE];
+        nsCString buf;
 
-        if (aUniqueStacks.mCodeAddressService) {
-          // Add description after space. Note: Using a frame number of 0,
-          // as using `numFrames` wouldn't help here, and would prevent
-          // combining same function calls that happen at different depths.
-          // TODO: Remove unsightly "#00: " if too annoying. :-)
-          aUniqueStacks.mCodeAddressService->GetLocation(0, pc, buf, BUF_SIZE);
-        } else {
+        if (!aUniqueStacks.mCodeAddressService ||
+            !aUniqueStacks.mCodeAddressService->GetFunction(pc, buf) ||
+            buf.IsEmpty()) {
           // Bug 753041: We need a double cast here to tell GCC that we don't
           // want to sign extend 32-bit addresses starting with 0xFXXXXXX.
           unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
-          SprintfLiteral(buf, "%#llx", pcULL);
+          buf.AppendPrintf("0x%llx", pcULL);
         }
 
-        stack = aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf));
+        stack =
+            aUniqueStacks.AppendFrame(stack, UniqueStacks::FrameKey(buf.get()));
 
       } else if (e.Get().IsLabel()) {
         numFrames++;
