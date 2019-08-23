@@ -186,6 +186,54 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
 /********************************************************
  * mozilla::HTMLEditRules
  ********************************************************/
+template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
+    RangeBoundary& aStartRef, RangeBoundary& aEndRef);
+template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
+    RawRangeBoundary& aStartRef, RangeBoundary& aEndRef);
+template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
+    RangeBoundary& aStartRef, RawRangeBoundary& aEndRef);
+template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
+    RawRangeBoundary& aStartRef, RawRangeBoundary& aEndRef);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const RangeBoundary& aStartRef, const RangeBoundary& aEndRef);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const RawRangeBoundary& aStartRef, const RangeBoundary& aEndRef);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const RangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const RangeBoundary& aStartRef, const RangeBoundary& aEndRef,
+    EditSubAction aEditSubAction);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const RawRangeBoundary& aStartRef, const RangeBoundary& aEndRef,
+    EditSubAction aEditSubAction);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const RangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
+    EditSubAction aEditSubAction);
+template already_AddRefed<nsRange>
+HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef,
+    EditSubAction aEditSubAction);
+template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
+    const RangeBoundary& aPoint, ScanDirection aScanDirection);
+template EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
+    const RawRangeBoundary& aPoint, ScanDirection aScanDirection);
+template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
+    const RangeBoundary& aPoint, EditSubAction aEditSubAction);
+template EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
+    const RawRangeBoundary& aPoint, EditSubAction aEditSubAction);
+template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
+    const RangeBoundary& aPoint);
+template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
+    const RawRangeBoundary& aPoint);
 
 HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
@@ -400,9 +448,37 @@ nsresult HTMLEditRules::AfterEditInner() {
     // Note that this won't prevent explicit selection setting from working.
     AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
-    // expand the "changed doc range" as needed
-    PromoteRange(*HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange,
-                 HTMLEditorRef().GetTopLevelEditSubAction());
+    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eInsertLineBreak:
+      case EditSubAction::eInsertParagraphSeparator:
+      case EditSubAction::eDeleteText: {
+        // XXX We should investigate whether this is really needed because it
+        //     seems that the following code does not handle the whitespaces.
+        RefPtr<nsRange> extendedChangedRange =
+            HTMLEditorRef().CreateRangeIncludingAdjuscentWhiteSpaces(
+                *HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange);
+        if (extendedChangedRange) {
+          // Use extended range temporarily.
+          HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange =
+              std::move(extendedChangedRange);
+        }
+        break;
+      }
+      default: {
+        RefPtr<nsRange> extendedChangedRange =
+            HTMLEditorRef().CreateRangeExtendedToHardLineStartAndEnd(
+                *HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange,
+                HTMLEditorRef().GetTopLevelEditSubAction());
+        if (extendedChangedRange) {
+          // Use extended range temporarily.
+          HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange =
+              std::move(extendedChangedRange);
+        }
+        break;
+      }
+    }
 
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
@@ -6863,8 +6939,9 @@ nsresult HTMLEditRules::NormalizeSelection() {
 }
 
 // static
-EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(const RangeBoundary& aPoint,
-                                                 ScanDirection aScanDirection) {
+template <typename PT, typename RT>
+EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
+    const RangeBoundaryBase<PT, RT>& aPoint, ScanDirection aScanDirection) {
   if (NS_WARN_IF(!aPoint.IsSet()) ||
       NS_WARN_IF(!aPoint.Container()->IsContent())) {
     return EditorDOMPoint();
@@ -6894,8 +6971,9 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(const RangeBoundary& aPoint,
   return EditorDOMPoint(newContent, newOffset);
 }
 
+template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
-    const RangeBoundary& aPoint, EditSubAction aEditSubAction) {
+    const RangeBoundaryBase<PT, RT>& aPoint, EditSubAction aEditSubAction) {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
   }
@@ -6966,8 +7044,9 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
   return point;
 }
 
+template <typename PT, typename RT>
 EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
-    const RangeBoundary& aPoint) {
+    const RangeBoundaryBase<PT, RT>& aPoint) {
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return EditorDOMPoint();
   }
@@ -7070,135 +7149,188 @@ void HTMLEditRules::GetPromotedRanges(
     RefPtr<nsRange> selectionRange = SelectionRefPtr()->GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
 
-    // Clone range so we don't muck with actual selection ranges
-    RefPtr<nsRange> opRange = selectionRange->CloneRange();
-
     // Make a new adjusted range to represent the appropriate block content.
     // The basic idea is to push out the range endpoints to truly enclose the
     // blocks that we will affect.  This call alters opRange.
-    PromoteRange(*opRange, aEditSubAction);
+
+    RefPtr<nsRange> opRange;
+    switch (aEditSubAction) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eInsertLineBreak:
+      case EditSubAction::eInsertParagraphSeparator:
+      case EditSubAction::eDeleteText:
+        opRange = HTMLEditorRef().CreateRangeIncludingAdjuscentWhiteSpaces(
+            *selectionRange);
+        break;
+      default:
+        opRange = HTMLEditorRef().CreateRangeExtendedToHardLineStartAndEnd(
+            *selectionRange, aEditSubAction);
+        break;
+    }
+    if (!opRange) {
+      opRange = selectionRange->CloneRange();
+    }
 
     // Stuff new opRange into array
     outArrayOfRanges.AppendElement(opRange);
   }
 }
 
-void HTMLEditRules::PromoteRange(nsRange& aRange,
-                                 EditSubAction aEditSubAction) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(!aRange.IsInSelection());
-
-  if (!aRange.IsPositioned()) {
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
+    RangeBoundaryBase<SPT, SRT>& aStartRef,
+    RangeBoundaryBase<EPT, ERT>& aEndRef) {
+  // MOOSE major hack:
+  // The GetWhiteSpaceEndPoint(), GetCurrentHardLineStartPoint() and
+  // GetCurrentHardLineEndPoint() don't really do the right thing for
+  // collapsed ranges inside block elements that contain nothing but a solo
+  // <br>.  It's easier/ to put a workaround here than to revamp them.  :-(
+  // XXX This sounds odd in the cases using `GetWhiteSpaceEndPoint()`.  Don't
+  //     we hack something in the edit sub-action handlers?
+  if (aStartRef != aEndRef) {
     return;
   }
 
-  nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
-  nsCOMPtr<nsINode> endNode = aRange.GetEndContainer();
-  int32_t startOffset = aRange.StartOffset();
-  int32_t endOffset = aRange.EndOffset();
-
-  // MOOSE major hack:
-  // The following methods don't really do the right thing for collapsed ranges
-  // inside block elements that contain nothing but a solo <br>.  It's easier
-  // to put a workaround here than to revamp them.  :-(
-  // XXX This sounds odd in the cases using `GetWhiteSpaceEndPoint()`.  Don't
-  //     we hack something in the edit sub-action handlers?
-  if (startNode == endNode && startOffset == endOffset) {
-    RefPtr<Element> block = HTMLEditorRef().GetBlock(*startNode);
-    if (block) {
-      bool bIsEmptyNode = false;
-      nsIContent* host = HTMLEditorRef().GetActiveEditingHost();
-      if (NS_WARN_IF(!host)) {
-        return;
-      }
-      // Make sure we don't go higher than our root element in the content tree
-      if (!host->IsInclusiveDescendantOf(block)) {
-        HTMLEditorRef().IsEmptyNode(block, &bIsEmptyNode, true, false);
-      }
-      if (bIsEmptyNode) {
-        startNode = block;
-        endNode = block;
-        startOffset = 0;
-        endOffset = block->Length();
-      }
-    }
+  Element* block = GetBlock(*aStartRef.Container());
+  if (!block) {
+    return;
   }
 
-  switch (aEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eInsertLineBreak:
-    case EditSubAction::eInsertParagraphSeparator:
-    case EditSubAction::eDeleteText: {
-      if (!startNode->IsContent() || !endNode->IsContent()) {
-        return;
-      }
-      // For text actions, we want to look backwards (or forwards, as
-      // appropriate) for additional whitespace or nbsp's.  We may have to act
-      // on these later even though they are outside of the initial selection.
-      // Even if they are in another node!
-      // XXX Although the comment mentioned that this may scan other text nodes,
-      //     GetWhiteSpaceEndPoint() scans only in given container node.
-      // XXX Looks like that we should make GetWhiteSpaceEndPoint() be a
-      //     instance method and stop scanning whitespaces when it reaches
-      //     active editing host.
-      EditorDOMPoint startPoint = HTMLEditor::GetWhiteSpaceEndPoint(
-          RangeBoundary(startNode, startOffset),
-          HTMLEditor::ScanDirection::Backward);
-      if (!HTMLEditorRef().IsDescendantOfEditorRoot(
-              EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
-        return;
-      }
-      EditorDOMPoint endPoint =
-          HTMLEditor::GetWhiteSpaceEndPoint(RangeBoundary(endNode, endOffset),
-                                            HTMLEditor::ScanDirection::Forward);
-      EditorRawDOMPoint lastRawPoint(endPoint);
-      lastRawPoint.RewindOffset();
-      if (!HTMLEditorRef().IsDescendantOfEditorRoot(
-              EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
-        return;
-      }
-      DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
-          startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
-      MOZ_ASSERT(NS_SUCCEEDED(rvIgnored));
-      break;
-    }
-    default: {
-      // Make a new adjusted range to represent the appropriate block content.
-      // This is tricky.  The basic idea is to push out the range endpoints to
-      // truly enclose the blocks that we will affect.
-
-      // Make sure that the new range ends up to be in the editable section.
-      // XXX Looks like that this check wastes the time.  Perhaps, we should
-      //     implement a method which checks both two DOM points in the editor
-      //     root.
-
-      EditorDOMPoint startPoint = HTMLEditorRef().GetCurrentHardLineStartPoint(
-          RangeBoundary(startNode, startOffset), aEditSubAction);
-      // XXX GetCurrentHardLineStartPoint() may return point of editing host.
-      //     Perhaps, we should change it and stop checking it here since
-      //     this check may be expensive.
-      if (!HTMLEditorRef().IsDescendantOfEditorRoot(
-              EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
-        return;
-      }
-      EditorDOMPoint endPoint = HTMLEditorRef().GetCurrentHardLineEndPoint(
-          RangeBoundary(endNode, endOffset));
-      EditorRawDOMPoint lastRawPoint(endPoint);
-      lastRawPoint.RewindOffset();
-      // XXX GetCurrentHardLineEndPoint() may return point of editing host.
-      //     Perhaps, we should change it and stop checking it here since this
-      //     check may be expensive.
-      if (!HTMLEditorRef().IsDescendantOfEditorRoot(
-              EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
-        return;
-      }
-      DebugOnly<nsresult> rvIgnored = aRange.SetStartAndEnd(
-          startPoint.ToRawRangeBoundary(), endPoint.ToRawRangeBoundary());
-      MOZ_ASSERT(NS_SUCCEEDED(rvIgnored));
-      break;
-    }
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return;
   }
+
+  // Make sure we don't go higher than our root element in the content tree
+  if (editingHost->IsInclusiveDescendantOf(block)) {
+    return;
+  }
+
+  bool isEmptyNode = false;
+  IsEmptyNode(block, &isEmptyNode, true, false);
+  if (isEmptyNode) {
+    aStartRef.Set(block, 0);
+    aEndRef.Set(block, block->Length());
+  }
+}
+
+already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const AbstractRange& aAbstractRange) {
+  if (!aAbstractRange.IsPositioned()) {
+    return nullptr;
+  }
+  return CreateRangeIncludingAdjuscentWhiteSpaces(aAbstractRange.StartRef(),
+                                                  aAbstractRange.EndRef());
+}
+
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
+    const RangeBoundaryBase<SPT, SRT>& aStartRef,
+    const RangeBoundaryBase<EPT, ERT>& aEndRef) {
+  if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
+    return nullptr;
+  }
+
+  if (!aStartRef.Container()->IsContent() ||
+      !aEndRef.Container()->IsContent()) {
+    return nullptr;
+  }
+
+  RangeBoundaryBase<SPT, SRT> startRef(aStartRef);
+  RangeBoundaryBase<EPT, ERT> endRef(aEndRef);
+  SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
+
+  // For text actions, we want to look backwards (or forwards, as
+  // appropriate) for additional whitespace or nbsp's.  We may have to act
+  // on these later even though they are outside of the initial selection.
+  // Even if they are in another node!
+  // XXX Although the comment mentioned that this may scan other text nodes,
+  //     GetWhiteSpaceEndPoint() scans only in given container node.
+  // XXX Looks like that we should make GetWhiteSpaceEndPoint() be a
+  //     instance method and stop scanning whitespaces when it reaches
+  //     active editing host.
+  EditorDOMPoint startPoint = HTMLEditor::GetWhiteSpaceEndPoint(
+      startRef, HTMLEditor::ScanDirection::Backward);
+  if (!IsDescendantOfEditorRoot(
+          EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
+    return nullptr;
+  }
+  EditorDOMPoint endPoint = HTMLEditor::GetWhiteSpaceEndPoint(
+      endRef, HTMLEditor::ScanDirection::Forward);
+  EditorRawDOMPoint lastRawPoint(endPoint);
+  lastRawPoint.RewindOffset();
+  if (!IsDescendantOfEditorRoot(
+          EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
+    return nullptr;
+  }
+
+  RefPtr<nsRange> range = new nsRange(GetDocument());
+  nsresult rv = range->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
+                                      endPoint.ToRawRangeBoundary());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  return range.forget();
+}
+
+already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const AbstractRange& aAbstractRange, EditSubAction aEditSubAction) {
+  if (!aAbstractRange.IsPositioned()) {
+    return nullptr;
+  }
+  return CreateRangeExtendedToHardLineStartAndEnd(
+      aAbstractRange.StartRef(), aAbstractRange.EndRef(), aEditSubAction);
+}
+
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
+    const RangeBoundaryBase<SPT, SRT>& aStartRef,
+    const RangeBoundaryBase<EPT, ERT>& aEndRef, EditSubAction aEditSubAction) {
+  if (NS_WARN_IF(!aStartRef.IsSet()) || NS_WARN_IF(!aEndRef.IsSet())) {
+    return nullptr;
+  }
+
+  RangeBoundaryBase<SPT, SRT> startRef(aStartRef);
+  RangeBoundaryBase<EPT, ERT> endRef(aEndRef);
+  SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
+
+  // Make a new adjusted range to represent the appropriate block content.
+  // This is tricky.  The basic idea is to push out the range endpoints to
+  // truly enclose the blocks that we will affect.
+
+  // Make sure that the new range ends up to be in the editable section.
+  // XXX Looks like that this check wastes the time.  Perhaps, we should
+  //     implement a method which checks both two DOM points in the editor
+  //     root.
+
+  EditorDOMPoint startPoint =
+      GetCurrentHardLineStartPoint(startRef, aEditSubAction);
+  // XXX GetCurrentHardLineStartPoint() may return point of editing
+  //     host.  Perhaps, we should change it and stop checking it here
+  //     since this check may be expensive.
+  if (!IsDescendantOfEditorRoot(
+          EditorBase::GetNodeAtRangeOffsetPoint(startPoint))) {
+    return nullptr;
+  }
+  EditorDOMPoint endPoint = GetCurrentHardLineEndPoint(endRef);
+  EditorRawDOMPoint lastRawPoint(endPoint);
+  lastRawPoint.RewindOffset();
+  // XXX GetCurrentHardLineEndPoint() may return point of editing host.
+  //     Perhaps, we should change it and stop checking it here since this
+  //     check may be expensive.
+  if (!IsDescendantOfEditorRoot(
+          EditorBase::GetNodeAtRangeOffsetPoint(lastRawPoint))) {
+    return nullptr;
+  }
+
+  RefPtr<nsRange> range = new nsRange(GetDocument());
+  nsresult rv = range->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
+                                      endPoint.ToRawRangeBoundary());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  return range.forget();
 }
 
 class UniqueFunctor final : public BoolDomIterFunctor {
@@ -7752,15 +7884,30 @@ nsresult HTMLEditRules::GetNodesFromPoint(
   if (NS_WARN_IF(!aPoint.IsSet())) {
     return NS_ERROR_INVALID_ARG;
   }
-  RefPtr<nsRange> range = new nsRange(aPoint.GetContainer());
-  IgnoredErrorResult ignoredError;
-  range->SetStart(aPoint, ignoredError);
-  // error will assert on failure, because we are not cleaning it up,
-  // but we're asserting in that case anyway.
-  MOZ_ASSERT(!ignoredError.Failed());
-
-  // Expand the range to include adjacent inlines
-  PromoteRange(*range, aEditSubAction);
+  RefPtr<nsRange> range;
+  switch (aEditSubAction) {
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
+    case EditSubAction::eInsertLineBreak:
+    case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eDeleteText:
+      range = HTMLEditorRef().CreateRangeIncludingAdjuscentWhiteSpaces(
+          aPoint.ToRawRangeBoundary(), aPoint.ToRawRangeBoundary());
+      break;
+    default:
+      range = HTMLEditorRef().CreateRangeExtendedToHardLineStartAndEnd(
+          aPoint.ToRawRangeBoundary(), aPoint.ToRawRangeBoundary(),
+          aEditSubAction);
+      break;
+  }
+  if (!range) {
+    ErrorResult error;
+    range = nsRange::Create(aPoint.ToRawRangeBoundary(),
+                            aPoint.ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
 
   // Make array of ranges
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
