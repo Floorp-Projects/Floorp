@@ -38,10 +38,6 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       updateNoLogins();
       break;
     }
-    case "InitialInfo": {
-      gElements.loginFooter.hidden = event.detail.value.hideMobileFooter;
-      break;
-    }
     case "LocalizeBadges": {
       gElements.loginFooter.showStoreIconsForLocales(event.detail.value);
       break;
@@ -71,6 +67,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "SyncState": {
       gElements.fxAccountsButton.updateState(event.detail.value);
+      gElements.loginFooter.hidden = event.detail.value.hideMobileFooter;
       break;
     }
     case "UpdateBreaches": {

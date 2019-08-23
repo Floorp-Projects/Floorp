@@ -34,8 +34,6 @@ const TELEMETRY_EVENT_CATEGORY = "pwmgr";
 
 let masterPasswordPromise;
 
-const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
-
 class AboutLoginsChild extends ActorChild {
   handleEvent(event) {
     switch (event.type) {
@@ -74,10 +72,6 @@ class AboutLoginsChild extends ActorChild {
             cloneFunctions: true,
           }
         );
-        this.sendToContent("InitialInfo", {
-          hideMobileFooter: Services.prefs.getBoolPref(HIDE_MOBILE_FOOTER_PREF),
-          appLocales: Services.locale.appLocalesAsBCP47,
-        });
         break;
       }
       case "AboutLoginsCopyLoginDetail": {
