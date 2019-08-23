@@ -16,6 +16,7 @@
 #include "mozilla/Vector.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
+#include "ProfilerCodeAddressService.h"
 
 class nsProfiler final : public nsIProfiler, public nsIObserver {
  public:
@@ -35,24 +36,12 @@ class nsProfiler final : public nsIProfiler, public nsIObserver {
 
   void GatheredOOPProfile(const nsACString& aProfile);
 
-  // This SymbolTable struct, and the CompactSymbolTable struct in the
-  // profiler rust module, have the exact same memory layout.
-  // nsTArray and ThinVec are FFI-compatible, because the thin-vec crate is
-  // being compiled with the "gecko-ffi" feature enabled.
-  struct SymbolTable {
-    SymbolTable() = default;
-    SymbolTable(SymbolTable&& aOther) = default;
-
-    nsTArray<uint32_t> mAddrs;
-    nsTArray<uint32_t> mIndex;
-    nsTArray<uint8_t> mBuffer;
-  };
-
  private:
   ~nsProfiler();
 
   typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
-  typedef mozilla::MozPromise<SymbolTable, nsresult, true> SymbolTablePromise;
+  typedef mozilla::MozPromise<mozilla::SymbolTable, nsresult, true>
+      SymbolTablePromise;
 
   RefPtr<GatheringPromise> StartGathering(double aSinceTime);
   void FinishGathering();
