@@ -2985,6 +2985,14 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
     return false;
   }
 
+  // Don't start subsequent incremental slices if we're already collecting this
+  // zone. This is different to our behaviour for GC allocation in
+  // maybeAllocTriggerZoneGC.
+  if (zone->wasGCStarted()) {
+    MOZ_ASSERT(isIncrementalGCInProgress());
+    return false;
+  }
+
   // Start or continue an in progress incremental GC.
   triggerZoneGC(zone, reason, usedBytes, thresholdBytes);
   return true;
