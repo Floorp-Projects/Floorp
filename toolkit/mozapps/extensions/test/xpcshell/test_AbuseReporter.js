@@ -18,7 +18,10 @@ const APPNAME = "XPCShell";
 const APPVERSION = "1";
 const ADDON_ID = "test-addon@tests.mozilla.org";
 const ADDON_ID2 = "test-addon2@tests.mozilla.org";
-const FAKE_INSTALL_INFO = { source: "fake-install-method" };
+const FAKE_INSTALL_INFO = {
+  source: "fake-Install:Source",
+  method: "fake:install method",
+};
 const REPORT_OPTIONS = { reportEntryPoint: "menu" };
 const TELEMETRY_EVENTS_FILTERS = {
   category: "addonsManager",
@@ -113,8 +116,13 @@ async function assertBaseReportData({ reportData, addon }) {
     "Got expected 'addon_install_origin'"
   );
   equal(
+    reportData.addon_install_source,
+    "fake_install_source",
+    "Got expected 'addon_install_source'"
+  );
+  equal(
     reportData.addon_install_method,
-    "other",
+    "fake_install_method",
     "Got expected 'addon_install_method'"
   );
   equal(
@@ -192,7 +200,7 @@ add_task(async function test_addon_report_data() {
   });
   const data3 = await AbuseReporter.getReportData(addon3);
   equal(
-    data3.addon_install_method,
+    data3.addon_install_source,
     "temporary_addon",
     "Got expected 'addon_install_method' on temporary install"
   );
@@ -219,17 +227,24 @@ add_task(async function test_report_on_not_installed_addon() {
   );
 });
 
-// This tests verifies the mapping between the addon installTelemetryInfo
-// values and the addon_install_method expected by the API endpoint.
-add_task(async function test_addon_install_method_mapping() {
+// This tests verifies how the addon installTelemetryInfo values are being
+// normalized into the addon_install_source and addon_install_method
+// expected by the API endpoint.
+add_task(async function test_normalized_addon_install_source_and_method() {
   async function assertAddonInstallMethod(amInstallTelemetryInfo, expected) {
     const { addon, extension } = await installTestExtension({
       amInstallTelemetryInfo,
     });
-    const { addon_install_method } = await AbuseReporter.getReportData(addon);
-    equal(
+    const {
+      addon_install_source,
       addon_install_method,
-      expected,
+    } = await AbuseReporter.getReportData(addon);
+    Assert.deepEqual(
+      { addon_install_source, addon_install_method },
+      {
+        addon_install_source: expected.source,
+        addon_install_method: expected.method,
+      },
       `Got the expected addon_install_method for ${JSON.stringify(
         amInstallTelemetryInfo
       )}`
@@ -237,35 +252,44 @@ add_task(async function test_addon_install_method_mapping() {
     await extension.unload();
   }
 
-  // Array of [ expected, amInstallTelemetryInfo ]
+  // Array of testcases: the `test` property contains the installTelemetryInfo value
+  // and the `expect` contains the expected normalized values.
   const TEST_CASES = [
-    ["amwebapi", { source: "amo", method: "amWebAPI" }],
-    ["amwebapi", { source: "disco", method: "amWebAPI" }],
-    ["distribution", { source: "distribution" }],
-    ["drag_and_drop", { source: "about:addons", method: "drag-and-drop" }],
-    ["enterprise_policy", { source: "enterprise-policy" }],
-    ["file_url", { source: "file-url" }],
-    [
-      "install_from_file",
-      { source: "about:addons", method: "install-from-file" },
-    ],
-    ["installtrigger", { source: "test-host", method: "installTrigger" }],
-    ["link", { source: "unknown", method: "link" }],
-    [
-      "management_webext_api",
-      { source: "extension", method: "management-webext-api" },
-    ],
-    ["sideload", { source: "app-profile", method: "sideload" }],
-    ["sync", { source: "sync" }],
-    ["system_addon", { source: "system-addon" }],
-    ["temporary_addon", { source: "temporary-addon" }],
-    ["other", { source: "internal" }],
-    ["other", { source: "about:debugging" }],
-    ["other", { source: "webide" }],
+    // Explicitly verify normalized values on missing telemetry info.
+    {
+      test: null,
+      expect: { source: null, method: null },
+    },
+
+    // Verify expected normalized values for some common install telemetry info.
+    {
+      test: { source: "about:addons", method: "drag-and-drop" },
+      expect: { source: "about_addons", method: "drag_and_drop" },
+    },
+    {
+      test: { source: "amo", method: "amWebAPI" },
+      expect: { source: "amo", method: "amwebapi" },
+    },
+    {
+      test: { source: "app-profile", method: "sideload" },
+      expect: { source: "app_profile", method: "sideload" },
+    },
+    {
+      test: { source: "distribution" },
+      expect: { source: "distribution", method: null },
+    },
+    {
+      test: { source: "test-host", method: "installTrigger" },
+      expect: { source: "test_host", method: "installtrigger" },
+    },
+    {
+      test: { source: "unknown", method: "link" },
+      expect: { source: "unknown", method: "link" },
+    },
   ];
 
-  for (const [expected, telemetryInfo] of TEST_CASES) {
-    await assertAddonInstallMethod(telemetryInfo, expected);
+  for (const { expect, test } of TEST_CASES) {
+    await assertAddonInstallMethod(test, expect);
   }
 });
 
