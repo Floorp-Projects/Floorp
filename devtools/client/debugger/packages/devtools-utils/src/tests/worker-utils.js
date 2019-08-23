@@ -114,7 +114,9 @@ describe("worker utils", () => {
       id: 53,
       results: [
         {
-          error: "Error: failed",
+          error: true,
+          message: "failed",
+          metadata: undefined,
         },
       ],
     });
