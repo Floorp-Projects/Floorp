@@ -33,6 +33,7 @@
 <!ENTITY  onboard_start_button_browser "Start Browsing">
 <!ENTITY firstrun_button_notnow "Not right now">
 <!ENTITY firstrun_button_next "Next">
+<!ENTITY firstrun_signin_button2 "Sign in">
 
 <!ENTITY firstrun_tabqueue_title "Links">
 
@@ -877,6 +878,12 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY helper_triple_readerview_open_title "Available offline">
 <!ENTITY helper_triple_readerview_open_message "Bookmark Reader View items to read them offline.">
 <!ENTITY helper_triple_readerview_open_button "Add to Bookmarks">
+
+<!ENTITY activity_stream_signin_title "Welcome to &brandShortName;">
+<!ENTITY activity_stream_signin_description "Start syncing bookmarks, passwords, and more with your Firefox account.">
+<!ENTITY activity_stream_signin_button "Sign in">
+<!-- LOCALIZATION NOTE (activity_stream_signin_title & activity_stream_signin_description & activity_stream_signin_button):
+These labels are shown in the Activity Stream recommending the user to sign in. -->
 
 <!ENTITY activity_stream_topsites "Top Sites">
 <!-- LOCALIZATION NOTE (activity_stream_topstories): &brandPocket is the brand of the company, Pocket, that is being used to provide suggestions for articles. -->
