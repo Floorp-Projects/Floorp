@@ -85,16 +85,6 @@ function searchInResource(resource, query) {
     );
   }
 
-  if (resource.securityInfo) {
-    results.push(
-      findMatches(resource, query, {
-        key: "securityInfo",
-        type: "securityInfo",
-        panel: "security",
-      })
-    );
-  }
-
   if (resource.responseContent) {
     results.push(
       findMatches(resource, query, {
