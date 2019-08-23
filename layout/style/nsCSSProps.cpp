@@ -219,52 +219,6 @@ const KTableEntry nsCSSProps::kCursorKTable[] = {
     {eCSSKeyword__moz_zoom_out, StyleCursorKind::ZoomOut},
     {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
-KTableEntry nsCSSProps::kDisplayKTable[] = {
-    {eCSSKeyword_none, StyleDisplay::None},
-    {eCSSKeyword_inline, StyleDisplay::Inline},
-    {eCSSKeyword_block, StyleDisplay::Block},
-    {eCSSKeyword_inline_block, StyleDisplay::InlineBlock},
-    {eCSSKeyword_list_item, StyleDisplay::ListItem},
-    {eCSSKeyword_table, StyleDisplay::Table},
-    {eCSSKeyword_inline_table, StyleDisplay::InlineTable},
-    {eCSSKeyword_table_row_group, StyleDisplay::TableRowGroup},
-    {eCSSKeyword_table_header_group, StyleDisplay::TableHeaderGroup},
-    {eCSSKeyword_table_footer_group, StyleDisplay::TableFooterGroup},
-    {eCSSKeyword_table_row, StyleDisplay::TableRow},
-    {eCSSKeyword_table_column_group, StyleDisplay::TableColumnGroup},
-    {eCSSKeyword_table_column, StyleDisplay::TableColumn},
-    {eCSSKeyword_table_cell, StyleDisplay::TableCell},
-    {eCSSKeyword_table_caption, StyleDisplay::TableCaption},
-    // Make sure this is kept in sync with the code in
-    // nsCSSFrameConstructor::ConstructXULFrame
-    {eCSSKeyword__moz_box, StyleDisplay::MozBox},
-    {eCSSKeyword__moz_inline_box, StyleDisplay::MozInlineBox},
-#ifdef MOZ_XUL
-    {eCSSKeyword__moz_grid, StyleDisplay::MozGrid},
-    {eCSSKeyword__moz_grid_group, StyleDisplay::MozGridGroup},
-    {eCSSKeyword__moz_grid_line, StyleDisplay::MozGridLine},
-    {eCSSKeyword__moz_stack, StyleDisplay::MozStack},
-    {eCSSKeyword__moz_deck, StyleDisplay::MozDeck},
-    {eCSSKeyword__moz_popup, StyleDisplay::MozPopup},
-    {eCSSKeyword__moz_groupbox, StyleDisplay::MozGroupbox},
-#endif
-    {eCSSKeyword_flex, StyleDisplay::Flex},
-    {eCSSKeyword_inline_flex, StyleDisplay::InlineFlex},
-    {eCSSKeyword_ruby, StyleDisplay::Ruby},
-    {eCSSKeyword_ruby_base, StyleDisplay::RubyBase},
-    {eCSSKeyword_ruby_base_container, StyleDisplay::RubyBaseContainer},
-    {eCSSKeyword_ruby_text, StyleDisplay::RubyText},
-    {eCSSKeyword_ruby_text_container, StyleDisplay::RubyTextContainer},
-    {eCSSKeyword_grid, StyleDisplay::Grid},
-    {eCSSKeyword_inline_grid, StyleDisplay::InlineGrid},
-    {eCSSKeyword__webkit_box, StyleDisplay::WebkitBox},
-    {eCSSKeyword__webkit_inline_box, StyleDisplay::WebkitInlineBox},
-    {eCSSKeyword__webkit_flex, StyleDisplay::Flex},
-    {eCSSKeyword__webkit_inline_flex, StyleDisplay::InlineFlex},
-    {eCSSKeyword_contents, StyleDisplay::Contents},
-    {eCSSKeyword_flow_root, StyleDisplay::FlowRoot},
-    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
-
 const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
     {eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO},
     {eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE},
