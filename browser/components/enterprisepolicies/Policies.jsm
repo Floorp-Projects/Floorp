@@ -611,6 +611,20 @@ var Policies = {
         setAndLockPref("privacy.trackingprotection.enabled", false);
         setAndLockPref("privacy.trackingprotection.pbmode.enabled", false);
       }
+      if ("Cryptomining" in param) {
+        setDefaultPref(
+          "privacy.trackingprotection.cryptomining.enabled",
+          param.Cryptomining,
+          param.Locked
+        );
+      }
+      if ("Fingerprinting" in param) {
+        setDefaultPref(
+          "privacy.trackingprotection.fingerprinting.enabled",
+          param.Fingerprinting,
+          param.Locked
+        );
+      }
     },
   },
 
