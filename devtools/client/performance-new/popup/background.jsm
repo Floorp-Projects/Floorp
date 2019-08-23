@@ -245,7 +245,6 @@ function intializeState() {
     tasktracer: false,
     trackopts: false,
     jstracer: false,
-    preferencereads: false,
     jsallocations: false,
   };
 

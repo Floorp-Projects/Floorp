@@ -159,10 +159,7 @@ class Vector;
     MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
     MACRO(13, "jsallocations", JSAllocations,                                  \
-          "Have the JavaScript engine track allocations")                      \
-                                                                               \
-    MACRO(15, "preferencereads", PreferenceReads,                              \
-          "Track when preferences are read")
+          "Have the JavaScript engine track allocations")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
