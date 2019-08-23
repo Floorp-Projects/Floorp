@@ -8,6 +8,8 @@
 %define urlbarViewPadding 4px
 %define urlbarViewIconMarginEnd 8px
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
+%define urlbarViewInlineStartPadding (@urlbarBreakoutHorizontalExtend@ - 16px /* type icon width */ - @urlbarViewIconMarginEnd@ - 2px /* border */)
+%define urlbarViewHorizontalMargin 8px
 
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
@@ -30,6 +32,10 @@
   text-shadow: none;
 }
 
+.urlbarView.megabar {
+  margin-inline: @urlbarViewHorizontalMargin@;
+}
+
 .urlbarView:not(.megabar) {
   position: fixed;
   z-index: 1;
@@ -47,6 +53,11 @@
 
   padding-top: 24px;
   padding-bottom: 24px;
+  padding-inline-start: calc(@urlbarViewInlineStartPadding@);
+  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewHorizontalMargin@);
+}
+
+.urlbarView:not(.megabar) #urlbar-contextual-tip {
   padding-inline-start: var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@));
   padding-inline-end: var(--item-padding-end, 5px);
 }
@@ -83,12 +94,17 @@
 }
 
 .urlbarView.megabar .urlbarView-body-inner {
-  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutExtend@ - 2px /* urlbar border */);
+  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutHorizontalExtend@ - 2 * @urlbarViewHorizontalMargin@ - 2px /* urlbar border */);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .urlbarView-results {
-  padding: @urlbarViewPadding@;
+  padding-block: @urlbarViewPadding@;
   white-space: nowrap;
+}
+
+.urlbarView:not(.megabar) .urlbarView-results {
+  padding-inline: @urlbarViewPadding@;
 }
 
 .urlbarView-row {
@@ -97,6 +113,11 @@
   fill-opacity: .6;
   padding-top: 6px;
   padding-bottom: 6px;
+  padding-inline-start: calc(@urlbarViewInlineStartPadding@);
+  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewHorizontalMargin@);
+}
+
+.urlbarView:not(.megabar) .urlbarView-row {
   padding-inline-start: calc(var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
   padding-inline-end: var(--item-padding-end, 5px);
 }
@@ -255,6 +276,10 @@
   -moz-box-orient: horizontal;
   padding-top: 16px;
   padding-bottom: 16px;
+}
+
+.urlbarView.megabar .search-one-offs {
+  padding-inline: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewHorizontalMargin@);
 }
 
 #urlbar:not(.megabar) .search-one-offs {
