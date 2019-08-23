@@ -71,6 +71,17 @@ matchingLogins.push(
   )
 );
 
+// HTTP auth
+matchingLogins.push(
+  new nsLoginInfo(
+    "http://mochi.test:8888",
+    null,
+    "My HTTP auth realm",
+    "httpuser",
+    "httppass"
+  )
+);
+
 add_task(async function setup() {
   // Get a profile so we have storage access and insert the logins to get unique GUIDs.
   do_get_profile();
@@ -115,6 +126,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testuser3",
@@ -189,6 +206,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testuser3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -231,6 +254,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testpass3",
@@ -284,6 +313,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testpass3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -326,6 +361,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testuser3",
@@ -372,6 +413,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testuser3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -416,6 +463,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testpass3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -458,6 +511,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testpass3",
@@ -502,6 +561,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testuser3",
@@ -555,6 +620,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testuser3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -597,6 +668,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testpass3",
@@ -650,6 +727,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testpass3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -692,6 +775,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testuser3",
@@ -767,6 +856,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testuser3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -811,6 +906,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "testpass3",
           label: "testuser3",
           style: "loginWithOrigin",
@@ -853,6 +954,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "testpass3",
@@ -959,6 +1066,12 @@ add_task(async function test_all_patterns() {
           comment: { comment: "mochi.test:8888" },
         },
         {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
           value: "",
           label: "View Saved Logins",
           style: "loginsFooter",
@@ -1003,6 +1116,12 @@ add_task(async function test_all_patterns() {
           label: "zzzuser4",
           style: "loginWithOrigin",
           comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httppass",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
         },
         {
           value: "",
