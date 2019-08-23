@@ -185,6 +185,7 @@ var gTestPage =
 const kBasePage =
   "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 var gNextTest;
+var gUsingDocumentChannel;
 
 function test() {
   waitForExplicitFinish();
@@ -194,6 +195,22 @@ function test() {
   gBackgroundBrowser = gBrowser.getBrowserForTab(gBackgroundTab);
   gForegroundBrowser = gBrowser.getBrowserForTab(gForegroundTab);
   gBrowser.selectedTab = gForegroundTab;
+
+  gUsingDocumentChannel = Services.prefs.getBoolPref(
+    "browser.tabs.documentchannel"
+  );
+
+  gAllNotifications = [
+    "onStateChange",
+    "onLocationChange",
+    "onSecurityChange",
+    "onStateChange",
+  ];
+  // DocumentChannel issues an extra onStateChange at the
+  // start, when it switches over to the real channel
+  if (gUsingDocumentChannel) {
+    gAllNotifications.unshift("onStateChange");
+  }
 
   // We must wait until a page has completed loading before
   // starting tests or we get notifications from that
@@ -219,48 +236,24 @@ function startTest1() {
   gBrowser.addProgressListener(gFrontProgressListener);
   gBrowser.addTabsProgressListener(gAllProgressListener);
 
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = gAllNotifications;
   runTest(gForegroundBrowser, "http://example.org" + gTestPage, startTest2);
 }
 
 function startTest2() {
   info("\nTest 2");
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = gAllNotifications;
   runTest(gForegroundBrowser, "https://example.com" + gTestPage, startTest3);
 }
 
 function startTest3() {
   info("\nTest 3");
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = [];
   runTest(gBackgroundBrowser, "http://example.org" + gTestPage, startTest4);
 }
 
 function startTest4() {
   info("\nTest 4");
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = [];
   runTest(gBackgroundBrowser, "https://example.com" + gTestPage, startTest5);
 }
@@ -278,24 +271,12 @@ function startTest5() {
   gBrowser.selectedTab = gForegroundTab;
   gBrowser.addProgressListener(gFrontProgressListener);
 
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = gAllNotifications;
   runTest(gForegroundBrowser, "http://example.org" + gTestPage, startTest6);
 }
 
 function startTest6() {
   info("\nTest 6");
-  gAllNotifications = [
-    "onStateChange",
-    "onLocationChange",
-    "onSecurityChange",
-    "onStateChange",
-  ];
   gFrontNotifications = [];
   runTest(gBackgroundBrowser, "http://example.org" + gTestPage, finishTest);
 }
