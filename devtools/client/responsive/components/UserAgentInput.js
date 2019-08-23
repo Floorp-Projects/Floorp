@@ -76,7 +76,7 @@ class UserAgentInput extends PureComponent {
       "UA:",
       dom.input({
         id: "user-agent-input",
-        class: "text-input",
+        className: "text-input",
         onChange: this.onChange,
         onKeyUp: this.onKeyUp,
         placeholder: getStr("responsive.customUserAgent"),
