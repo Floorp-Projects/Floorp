@@ -15,6 +15,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/GeckoProfilerReporter.h',
         'public/ProfileJSONWriter.h',
         'public/ProfilerChild.h',
+        'public/ProfilerCodeAddressService.h',
         'public/ProfilerMarkerPayload.h',
         'public/ProfilerParent.h',
         'public/shared-libraries.h',

@@ -35,7 +35,8 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     SpliceableJSONWriter& aWriter,
                                     const nsACString& aProcessName,
                                     const mozilla::TimeStamp& aProcessStartTime,
-                                    double aSinceTime, bool JSTracerEnabled) {
+                                    double aSinceTime, bool JSTracerEnabled,
+                                    ProfilerCodeAddressService* aService) {
   if (mJITFrameInfoForPreviousJSContexts &&
       mJITFrameInfoForPreviousJSContexts->HasExpired(aBuffer.mRangeStart)) {
     mJITFrameInfoForPreviousJSContexts = nullptr;
@@ -54,6 +55,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   }
 
   UniqueStacks uniqueStacks(std::move(jitFrameInfo));
+  uniqueStacks.mCodeAddressService = aService;
 
   aWriter.Start();
   {
