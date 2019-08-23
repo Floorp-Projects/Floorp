@@ -52,11 +52,6 @@ class Toolbar extends Component {
     };
   }
 
-  componentWillUnmount() {
-    const { setFrameFilterText } = this.props;
-    setFrameFilterText("");
-  }
-
   /**
    * Render a separator.
    */
