@@ -24,7 +24,10 @@ from mozversioncontrol import (
     InvalidRepoPath,
 )
 
-from .backend.configenvironment import ConfigEnvironment
+from .backend.configenvironment import (
+    ConfigEnvironment,
+    ConfigStatusFailure,
+)
 from .configure import ConfigureSandbox
 from .controller.clobber import Clobberer
 from .mozconfig import (
@@ -336,8 +339,12 @@ class MozbuildObject(ProcessExecutionMixin):
         if not os.path.exists(config_status) or not os.path.getsize(config_status):
             raise BuildEnvironmentNotFoundException('config.status not available. Run configure.')
 
-        self._config_environment = \
-            ConfigEnvironment.from_config_status(config_status)
+        try:
+            self._config_environment = \
+                ConfigEnvironment.from_config_status(config_status)
+        except ConfigStatusFailure as e:
+            six.raise_from(BuildEnvironmentNotFoundException(
+                'config.status is outdated or broken. Run configure.'), e)
 
         return self._config_environment
 
