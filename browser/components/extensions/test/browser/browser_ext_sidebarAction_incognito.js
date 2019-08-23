@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function test_sidebarAction_not_allowed() {
-  SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.allowPrivateBrowsingByDefault", false]],
   });
 
