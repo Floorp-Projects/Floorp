@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Watermark/Hint for the find in page input field. -->
+    <string name="mozac_feature_findindpage_input">Sayfada bul</string>
+
+    <!-- String to show the number of results found in the page and the
+    position the user is at. The first argument is the position, the second argument is the total. -->
+    <string name="mozac_feature_findindpage_result">%1$d/%2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button. -->
+    <string name="mozac_feature_findindpage_next_result">Sonraki sonucu bul</string>
+
+    <!-- String to be read by the accessibility service when focusing the previous result button. -->
+    <string name="mozac_feature_findindpage_previous_result">Önceki sonucu bul</string>
+
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
+    <string name="mozac_feature_findindpage_dismiss">Sayfa bulmayı kapat</string>
+
+</resources>

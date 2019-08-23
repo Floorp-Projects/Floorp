@@ -10,8 +10,19 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">ਸੈਰੀਫ਼ ਫ਼ੋਂਟ</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ਫ਼ੋਂਟ ਆਕਾਰ ਘਟਾਓ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ਫ਼ੋਂਟ ਆਕਾਰ ਵਧਾਓ</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">ਗੂੜ੍ਹਾ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ਗੂੜ੍ਹੇ ਰੰਗ ਦੀ ਰੂਪ-ਰੇਖਾ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ਭੂਰਾ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ਭੂਰੇ ਰੰਗ ਦੀ ਰੂਪ-ਰੇਖਾ</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">ਹਲਕਾ</string>
     <!-- Accessible description for the color option -->

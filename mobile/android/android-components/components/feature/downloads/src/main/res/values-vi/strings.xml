@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Tải xuống</string>
+    <!-- Text shown on the first row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_title">Đang tải xuống</string>
+    <!-- Text shown on the second row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_text">Đang trong tiến trình tải xuống</string>
+
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text">Đã hoàn tất tải xuống.</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text">Thất bại khi tải xuống.</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. -->
+    <string name="mozac_feature_downloads_dialog_title">Tải xuống tập tin</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Tải xuống</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Hủy bỏ</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s không thể tải xuống loại tập tin này</string>
+</resources>

@@ -33,6 +33,9 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Yhteydetön tila</string>
 
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Vaarallinen tiedostotyyppi</string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Sisältö kaatui</string>
 
@@ -45,7 +48,13 @@
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Osoite ei ole kelvollinen</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Tuntematon yhteyskäytäntö</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Tiedostoa ei löydy</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Pääsy tiedostoon estettiin</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Välityspalvelinta ei löytynyt</string>
