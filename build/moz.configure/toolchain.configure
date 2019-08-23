@@ -1958,8 +1958,17 @@ option('--enable-gold',
 
 imply_option('--enable-linker', 'gold', when='--enable-gold')
 
+@depends(target, developer_options)
+def enable_linker_default(target, developer_options):
+    # x86-64 gold has bugs in how it lays out .note.* sections. See bug 1573820.
+    # lld is faster, so prefer that for developer builds.
+    if target.os == 'Android' and target.cpu == 'x86_64':
+        return 'lld' if developer_options else 'bfd'
+
+
 js_option('--enable-linker', nargs=1,
-          help='Select the linker {bfd, gold, ld64, lld, lld-*}',
+          help='Select the linker {bfd, gold, ld64, lld, lld-*}{|}',
+          default=enable_linker_default,
           when=is_linker_option_enabled)
 
 
