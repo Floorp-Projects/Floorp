@@ -1902,6 +1902,11 @@ def cargo_incremental(opt_level, debug_rust, automation, code_coverage,
     if not enabled:
         return '0'
 
+    # Respect a forceful --enable-cargo-incremental even if we would otherwise
+    # disable it.
+    if enabled and enabled.origin != 'default':
+        return '1'
+
     # We never want to use incremental compilation in automation.  sccache
     # handles our automation use case much better than incremental compilation
     # would.
