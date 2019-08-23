@@ -47,7 +47,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -630,10 +629,13 @@ class OriginInfo final {
     AssertCurrentThreadOwnsQuotaMutex();
 
 #ifdef DEBUG
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
     uint64_t usage = 0;
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      AssertNoOverflow(usage, mClientUsages[index].valueOr(0));
-      usage += mClientUsages[index].valueOr(0);
+    for (Client::Type type : quotaManager->AllClientTypes()) {
+      AssertNoOverflow(usage, mClientUsages[type].valueOr(0));
+      usage += mClientUsages[type].valueOr(0);
     }
     MOZ_ASSERT(mUsage == usage);
 #endif
@@ -3509,6 +3511,11 @@ nsresult QuotaManager::Init(const nsAString& aBasePath) {
     mClients.SetLength(Client::TypeMax());
   }
 
+  mAllClientTypes = {Client::Type::IDB, Client::Type::DOMCACHE,
+                     Client::Type::SDB, Client::Type::LS};
+  mAllClientTypesExceptLS = {Client::Type::IDB, Client::Type::DOMCACHE,
+                             Client::Type::SDB};
+
   return NS_OK;
 }
 
@@ -3530,8 +3537,8 @@ void QuotaManager::Shutdown() {
 
   // Each client will spin the event loop while we wait on all the threads
   // to close. Our timer may fire during that loop.
-  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-    mClients[index]->ShutdownWorkThreads();
+  for (Client::Type type : AllClientTypes()) {
+    mClients[type]->ShutdownWorkThreads();
   }
 
   // Cancel the timer regardless of whether it actually fired.
@@ -5799,12 +5806,12 @@ void QuotaManager::OpenDirectoryInternal(
     }
   }
 
-  for (uint32_t index : IntegerRange(uint32_t(Client::TypeMax()))) {
-    if (origins[index]) {
-      for (auto iter = origins[index]->Iter(); !iter.Done(); iter.Next()) {
-        MOZ_ASSERT(mClients[index]);
+  for (Client::Type type : AllClientTypes()) {
+    if (origins[type]) {
+      for (auto iter = origins[type]->Iter(); !iter.Done(); iter.Next()) {
+        MOZ_ASSERT(mClients[type]);
 
-        mClients[index]->AbortOperations(iter.Get()->GetKey());
+        mClients[type]->AbortOperations(iter.Get()->GetKey());
       }
     }
   }
@@ -6035,8 +6042,8 @@ nsresult QuotaManager::AboutToClearOrigins(
   nsresult rv;
 
   if (aClientType.IsNull()) {
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      rv = mClients[index]->AboutToClearOrigins(aPersistenceType, aOriginScope);
+    for (Client::Type type : AllClientTypes()) {
+      rv = mClients[type]->AboutToClearOrigins(aPersistenceType, aOriginScope);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6062,8 +6069,8 @@ void QuotaManager::OriginClearCompleted(
       mInitializedOrigins.RemoveElement(aOrigin);
     }
 
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      mClients[index]->OnOriginClearCompleted(aPersistenceType, aOrigin);
+    for (Client::Type type : AllClientTypes()) {
+      mClients[type]->OnOriginClearCompleted(aPersistenceType, aOrigin);
     }
   } else {
     mClients[aClientType.Value()]->OnOriginClearCompleted(aPersistenceType,
@@ -6086,6 +6093,14 @@ Client* QuotaManager::GetClient(Client::Type aClientType) {
   MOZ_ASSERT(aClientType < Client::TypeMax());
 
   return mClients.ElementAt(aClientType);
+}
+
+const AutoTArray<Client::Type, Client::TYPE_MAX>&
+QuotaManager::AllClientTypes() {
+  if (CachedNextGenLocalStorageEnabled()) {
+    return mAllClientTypes;
+  }
+  return mAllClientTypesExceptLS;
 }
 
 uint64_t QuotaManager::GetGroupLimit() const {
@@ -6769,10 +6784,13 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
                 aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
 #ifdef DEBUG
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   uint64_t usage = 0;
-  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-    AssertNoOverflow(usage, aClientUsages[index].valueOr(0));
-    usage += aClientUsages[index].valueOr(0);
+  for (Client::Type type : quotaManager->AllClientTypes()) {
+    AssertNoOverflow(usage, aClientUsages[type].valueOr(0));
+    usage += aClientUsages[type].valueOr(0);
   }
   MOZ_ASSERT(aUsage == usage);
 #endif
