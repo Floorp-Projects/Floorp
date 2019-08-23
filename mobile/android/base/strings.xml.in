@@ -50,6 +50,7 @@
   <string name="updatednewfirstrun_signin_button">&updatednewfirstrun_signin_button;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_button_next">&firstrun_button_next;</string>
+  <string name="firstrun_signin_button2">&firstrun_signin_button2;</string>
 
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
 
@@ -646,6 +647,10 @@
   <string name="activity_stream_delete_history">&activity_stream_delete_history;</string>
 
   <string name="activity_stream_highlights_empty">&activity_stream_highlights_empty;</string>
+
+  <string name="activity_stream_signin_title">&activity_stream_signin_title;</string>
+  <string name="activity_stream_signin_description">&activity_stream_signin_description;</string>
+  <string name="activity_stream_signin_button">&activity_stream_signin_button;</string>
 
   <string name="private_tab_panel_title">&private_tab_panel_title;</string>
   <string name="private_tab_panel_description">&private_tab_panel_description;</string>
