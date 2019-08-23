@@ -20,6 +20,7 @@ const {
   getSourceByURL,
 } = selectors;
 import sourceQueue from "../../../utils/source-queue";
+import { generatedToOriginalId } from "devtools-source-map";
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
@@ -77,7 +78,12 @@ describe("sources - new sources", () => {
       mockCommandClient,
       {},
       {
-        getOriginalURLs: async () => ["magic.js"],
+        getOriginalURLs: async source => [
+          {
+            id: generatedToOriginalId(source.id, "magic.js"),
+            url: "magic.js",
+          },
+        ],
         getOriginalLocations: async items => items,
       }
     );
@@ -138,8 +144,13 @@ describe("sources - new sources", () => {
             // simulate a hang loading foo.js.map
             return new Promise(_ => {});
           }
-
-          return [source.id.replace(".js", ".cljs")];
+          const url = source.id.replace(".js", ".cljs");
+          return [
+            {
+              id: generatedToOriginalId(source.id, url),
+              url: url,
+            },
+          ];
         },
         getOriginalLocations: async items => items,
         getGeneratedLocation: location => location,
