@@ -23,6 +23,10 @@ from mozbuild.util import (
 from mozbuild.shellutil import quote as shell_quote
 
 
+class ConfigStatusFailure(Exception):
+    """Error loading config.status"""
+
+
 class BuildConfig(object):
     """Represents the output of configure."""
 
@@ -64,7 +68,10 @@ class BuildConfig(object):
             '__file__': path,
         }
         l = {}
-        exec(code_cache[path][1], g, l)
+        try:
+            exec(code_cache[path][1], g, l)
+        except Exception:
+            raise ConfigStatusFailure()
 
         config = BuildConfig()
 
