@@ -38,22 +38,22 @@ add_task(async function() {
   await selectSource(dbg, "inline-preview.js");
 
   await checkInlinePreview(dbg, "checkValues", [
-    { identifier: "a", value: '""' },
-    { identifier: "b", value: "false" },
-    { identifier: "c", value: "undefined" },
-    { identifier: "d", value: "null" },
-    { identifier: "e", value: "[]" },
-    { identifier: "f", value: "Object { }" },
-    { identifier: "obj", value: "Object { foo: 1 }" },
+    { identifier: "a:", value: '""' },
+    { identifier: "b:", value: "false" },
+    { identifier: "c:", value: "undefined" },
+    { identifier: "d:", value: "null" },
+    { identifier: "e:", value: "[]" },
+    { identifier: "f:", value: "Object { }" },
+    { identifier: "obj:", value: "Object { foo: 1 }" },
     {
-      identifier: "bs",
+      identifier: "bs:",
       value: "[ {…}, {…}, {…}, … ]",
     },
   ]);
 
   await checkInlinePreview(dbg, "columnWise", [
-    { identifier: "c", value: '"c"' },
-    { identifier: "a", value: '"a"' },
-    { identifier: "b", value: '"b"' },
+    { identifier: "c:", value: '"c"' },
+    { identifier: "a:", value: '"a"' },
+    { identifier: "b:", value: '"b"' },
   ]);
 });

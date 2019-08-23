@@ -12,6 +12,7 @@
 #  include "mozilla/UniquePtr.h"
 #  include "pathhash.h"
 #  include "shlobj.h"
+#  include "registrycertificates.h"
 #  include "uachelper.h"
 #  include "updatehelper.h"
 #  include "updateutils_win.h"
@@ -119,6 +120,14 @@ BOOL StartServiceUpdate(LPCWSTR installDir) {
   // Copy the temp file in alongside the maintenace service.
   // This is a requirement for maintenance service upgrades.
   if (!CopyFileW(newMaintServicePath, tmpService, FALSE)) {
+    return FALSE;
+  }
+
+  // Check that the copied file's certificate matches the expected name and
+  // issuer stored in the registry for this installation and that the
+  // certificate is trusted by the system's certificate store.
+  if (!DoesBinaryMatchAllowedCertificates(installDir, tmpService)) {
+    DeleteFileW(tmpService);
     return FALSE;
   }
 

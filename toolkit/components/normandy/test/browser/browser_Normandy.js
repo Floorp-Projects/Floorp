@@ -1,6 +1,7 @@
 "use strict";
 
 ChromeUtils.import("resource://normandy/Normandy.jsm", this);
+ChromeUtils.import("resource://normandy/lib/AddonRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
@@ -16,6 +17,7 @@ const experimentPref4 = "test.initExperimentPrefs4";
 function withStubInits(testFunction) {
   return decorate(
     withStub(AboutPages, "init"),
+    withStub(AddonRollouts, "init"),
     withStub(AddonStudies, "init"),
     withStub(PreferenceRollouts, "init"),
     withStub(PreferenceExperiments, "init"),
@@ -212,6 +214,7 @@ decorate_task(withStubInits, async function testStartupPrefInitFail() {
   await Normandy.finishInit();
   ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+  ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
   ok(
     PreferenceExperiments.init.called,
     "startup calls PreferenceExperiments.init"
@@ -227,6 +230,7 @@ decorate_task(withStubInits, async function testStartupAboutPagesInitFail() {
   await Normandy.finishInit();
   ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+  ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
   ok(
     PreferenceExperiments.init.called,
     "startup calls PreferenceExperiments.init"
@@ -242,6 +246,7 @@ decorate_task(withStubInits, async function testStartupAddonStudiesInitFail() {
   await Normandy.finishInit();
   ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+  ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
   ok(
     PreferenceExperiments.init.called,
     "startup calls PreferenceExperiments.init"
@@ -259,6 +264,7 @@ decorate_task(
     await Normandy.finishInit();
     ok(AboutPages.init.called, "startup calls AboutPages.init");
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
     ok(
       PreferenceExperiments.init.called,
       "startup calls PreferenceExperiments.init"
@@ -277,6 +283,7 @@ decorate_task(
     await Normandy.finishInit();
     ok(AboutPages.init.called, "startup calls AboutPages.init");
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
+    ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
     ok(
       PreferenceExperiments.init.called,
       "startup calls PreferenceExperiments.init"

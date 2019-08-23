@@ -1168,7 +1168,14 @@ GroupPos Accessible::GroupPosition() {
   // Calculate group level if ARIA is missed.
   if (groupPos.level == 0) {
     int32_t level = GetLevelInternal();
-    if (level != 0) groupPos.level = level;
+    if (level != 0) {
+      groupPos.level = level;
+    } else {
+      const nsRoleMapEntry* role = this->ARIARoleMap();
+      if (role && role->Is(nsGkAtoms::heading)) {
+        groupPos.level = 2;
+      }
+    }
   }
 
   // Calculate position in group and group size if ARIA is missed.
@@ -1940,7 +1947,8 @@ void Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
 
 void Accessible::Shutdown() {
   // Mark the accessible as defunct, invalidate the child count and pointers to
-  // other accessibles, also make sure none of its children point to this parent
+  // other accessibles, also make sure none of its children point to this
+  // parent
   mStateFlags |= eIsDefunct;
 
   int32_t childCount = mChildren.Length();

@@ -604,13 +604,10 @@ namespace {
 
 }  // namespace
 
-class ClientUsageArray final : public AutoTArray<uint64_t, Client::TYPE_MAX> {
+class ClientUsageArray final
+    : public AutoTArray<Maybe<uint64_t>, Client::TYPE_MAX> {
  public:
-  ClientUsageArray() {
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      AppendElement(0);
-    }
-  }
+  ClientUsageArray() { SetLength(Client::TypeMax()); }
 };
 
 class OriginInfo final {
@@ -635,8 +632,8 @@ class OriginInfo final {
 #ifdef DEBUG
     uint64_t usage = 0;
     for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      AssertNoOverflow(usage, mClientUsages[index]);
-      usage += mClientUsages[index];
+      AssertNoOverflow(usage, mClientUsages[index].valueOr(0));
+      usage += mClientUsages[index].valueOr(0);
     }
     MOZ_ASSERT(mUsage == usage);
 #endif
@@ -667,6 +664,8 @@ class OriginInfo final {
   void LockedDecreaseUsage(Client::Type aClientType, int64_t aSize);
 
   void LockedResetUsageForClient(Client::Type aClientType);
+
+  bool LockedGetUsageForClient(Client::Type aClientType, uint64_t& aUsage);
 
   void LockedUpdateAccessTime(int64_t aAccessTime) {
     AssertCurrentThreadOwnsQuotaMutex();
@@ -868,7 +867,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   bool mActorDestroyed;
 
  protected:
-  bool mNeedsMainThreadInit;
   bool mNeedsQuotaManagerInit;
 
  public:
@@ -892,7 +890,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
         mResultCode(NS_OK),
         mState(State_Initial),
         mActorDestroyed(false),
-        mNeedsMainThreadInit(false),
         mNeedsQuotaManagerInit(false) {}
 
   // Reference counted.
@@ -991,6 +988,7 @@ class NormalOriginOperationBase : public OriginOperationBase,
   Nullable<Client::Type> mClientType;
   mozilla::Atomic<bool> mCanceled;
   const bool mExclusive;
+  bool mNeedsDirectoryLocking;
 
  public:
   void RunImmediately() {
@@ -1004,7 +1002,8 @@ class NormalOriginOperationBase : public OriginOperationBase,
                             const OriginScope& aOriginScope, bool aExclusive)
       : mPersistenceType(aPersistenceType),
         mOriginScope(aOriginScope),
-        mExclusive(aExclusive) {
+        mExclusive(aExclusive),
+        mNeedsDirectoryLocking(true) {
     AssertIsOnOwningThread();
   }
 
@@ -1186,23 +1185,17 @@ class GetUsageOp final : public QuotaUsageRequestBase,
 };
 
 class GetOriginUsageOp final : public QuotaUsageRequestBase {
-  // If mGetGroupUsage is false, we use mUsageInfo to record the origin usage
-  // and the file usage. Otherwise, we use it to record the group usage and the
-  // limit.
-  UsageInfo mUsageInfo;
-
-  const OriginUsageParams mParams;
   nsCString mSuffix;
   nsCString mGroup;
-  bool mGetGroupUsage;
+  uint64_t mUsage;
+  uint64_t mFileUsage;
+  bool mFromMemory;
 
  public:
   explicit GetOriginUsageOp(const UsageRequestParams& aParams);
 
-  MOZ_IS_CLASS_INIT bool Init(Quota* aQuota) override;
-
  private:
-  ~GetOriginUsageOp() {}
+  ~GetOriginUsageOp() = default;
 
   virtual nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -1377,6 +1370,22 @@ class PersistOp final : public PersistRequestBase {
   ~PersistOp() {}
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class EstimateOp final : public QuotaRequestBase {
+  nsCString mGroup;
+  uint64_t mUsage;
+  uint64_t mLimit;
+
+ public:
+  explicit EstimateOp(const RequestParams& aParams);
+
+ private:
+  ~EstimateOp() = default;
+
+  virtual nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -2849,8 +2858,10 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
       AssertNoUnderflow(mOriginInfo->mUsage, delta);
       mOriginInfo->mUsage -= delta;
 
-      AssertNoUnderflow(mOriginInfo->mClientUsages[mClientType], delta);
-      mOriginInfo->mClientUsages[mClientType] -= delta;
+      MOZ_ASSERT(mOriginInfo->mClientUsages[mClientType].isSome());
+      AssertNoUnderflow(mOriginInfo->mClientUsages[mClientType].value(), delta);
+      mOriginInfo->mClientUsages[mClientType] =
+          Some(mOriginInfo->mClientUsages[mClientType].value() - delta);
 
       mSize = aSize;
     }
@@ -2865,8 +2876,9 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
   uint64_t delta = aSize - mSize;
 
-  AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
-  uint64_t newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
+  AssertNoOverflow(mOriginInfo->mClientUsages[mClientType].valueOr(0), delta);
+  uint64_t newClientUsage =
+      mOriginInfo->mClientUsages[mClientType].valueOr(0) + delta;
 
   AssertNoOverflow(mOriginInfo->mUsage, delta);
   uint64_t newUsage = mOriginInfo->mUsage + delta;
@@ -2962,8 +2974,8 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     AssertNoUnderflow(aSize, mSize);
     delta = aSize - mSize;
 
-    AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
-    newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
+    AssertNoOverflow(mOriginInfo->mClientUsages[mClientType].valueOr(0), delta);
+    newClientUsage = mOriginInfo->mClientUsages[mClientType].valueOr(0) + delta;
 
     AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
@@ -3002,7 +3014,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
     // Ok, we successfully freed enough space and the operation can continue
     // without throwing the quota error.
-    mOriginInfo->mClientUsages[mClientType] = newClientUsage;
+    mOriginInfo->mClientUsages[mClientType] = Some(newClientUsage);
 
     mOriginInfo->mUsage = newUsage;
     if (!mOriginInfo->LockedPersisted()) {
@@ -3025,7 +3037,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     return true;
   }
 
-  mOriginInfo->mClientUsages[mClientType] = newClientUsage;
+  mOriginInfo->mClientUsages[mClientType] = Some(newClientUsage);
 
   mOriginInfo->mUsage = newUsage;
   if (!mOriginInfo->LockedPersisted()) {
@@ -3672,6 +3684,34 @@ void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
   if (originInfo) {
     originInfo->LockedResetUsageForClient(aClientType);
   }
+}
+
+bool QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     Client::Type aClientType,
+                                     uint64_t& aUsage) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+
+  MutexAutoLock lock(mQuotaMutex);
+
+  GroupInfoPair* pair;
+  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
+    return false;
+  }
+
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  if (!groupInfo) {
+    return false;
+  }
+
+  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
+  if (!originInfo) {
+    return false;
+  }
+
+  return originInfo->LockedGetUsageForClient(aClientType, aUsage);
 }
 
 void QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
@@ -4379,12 +4419,12 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     }
 
     if (trackQuota) {
-      uint64_t clientUsage = usageInfo.TotalUsage();
+      Maybe<uint64_t> clientUsage = usageInfo.TotalUsage();
 
       clientUsages[clientType] = clientUsage;
 
-      AssertNoOverflow(usage, clientUsage);
-      usage += clientUsage;
+      AssertNoOverflow(usage, clientUsage.valueOr(0));
+      usage += clientUsage.valueOr(0);
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5885,13 +5925,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   // for whole profile can be collected
   nsresult statusKeeper = NS_OK;
 
-  AutoTArray<RefPtr<Client>, Client::TYPE_MAX>& clients = mClients;
-  auto autoNotifier = MakeScopeExit([&clients] {
-    for (RefPtr<Client>& client : clients) {
-      client->OnStorageInitFailed();
-    }
-  });
-
   if (NS_WARN_IF(IsShuttingDown())) {
     RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
   }
@@ -5954,8 +5987,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   mTemporaryStorageInitialized = true;
 
   CheckTemporaryStorageLimits();
-
-  autoNotifier.release();
 
   return rv;
 }
@@ -6071,36 +6102,55 @@ uint64_t QuotaManager::GetGroupLimit() const {
                             std::max<uint64_t>(x, 10 MB));
 }
 
-void QuotaManager::GetGroupUsageAndLimit(const nsACString& aGroup,
-                                         UsageInfo* aUsageInfo) {
+uint64_t QuotaManager::GetGroupUsage(const nsACString& aGroup) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aUsageInfo);
+
+  uint64_t usage = 0;
 
   {
     MutexAutoLock lock(mQuotaMutex);
 
-    aUsageInfo->SetLimit(GetGroupLimit());
-    aUsageInfo->ResetUsage();
-
     GroupInfoPair* pair;
-    if (!mGroupInfoPairs.Get(aGroup, &pair)) {
-      return;
-    }
-
-    // Calculate temporary group usage
-    RefPtr<GroupInfo> temporaryGroupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-    if (temporaryGroupInfo) {
-      aUsageInfo->AppendToDatabaseUsage(temporaryGroupInfo->mUsage);
-    }
-
-    // Calculate default group usage
-    RefPtr<GroupInfo> defaultGroupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-    if (defaultGroupInfo) {
-      aUsageInfo->AppendToDatabaseUsage(defaultGroupInfo->mUsage);
+    if (mGroupInfoPairs.Get(aGroup, &pair)) {
+      for (const PersistenceType type : kBestEffortPersistenceTypes) {
+        RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(type);
+        if (groupInfo) {
+          AssertNoOverflow(usage, groupInfo->mUsage);
+          usage += groupInfo->mUsage;
+        }
+      }
     }
   }
+
+  return usage;
+}
+
+uint64_t QuotaManager::GetOriginUsage(const nsACString& aGroup,
+                                      const nsACString& aOrigin) {
+  AssertIsOnIOThread();
+
+  uint64_t usage = 0;
+
+  {
+    MutexAutoLock lock(mQuotaMutex);
+
+    GroupInfoPair* pair;
+    if (mGroupInfoPairs.Get(aGroup, &pair)) {
+      for (const PersistenceType type : kBestEffortPersistenceTypes) {
+        RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(type);
+        if (groupInfo) {
+          RefPtr<OriginInfo> originInfo =
+              groupInfo->LockedGetOriginInfo(aOrigin);
+          if (originInfo) {
+            AssertNoOverflow(usage, originInfo->LockedUsage());
+            usage += originInfo->LockedUsage();
+          }
+        }
+      }
+    }
+  }
+
+  return usage;
 }
 
 void QuotaManager::NotifyStoragePressure(uint64_t aUsage) {
@@ -6721,8 +6771,8 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 #ifdef DEBUG
   uint64_t usage = 0;
   for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-    AssertNoOverflow(usage, aClientUsages[index]);
-    usage += aClientUsages[index];
+    AssertNoOverflow(usage, aClientUsages[index].valueOr(0));
+    usage += aClientUsages[index].valueOr(0);
   }
   MOZ_ASSERT(aUsage == usage);
 #endif
@@ -6733,8 +6783,9 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 void OriginInfo::LockedDecreaseUsage(Client::Type aClientType, int64_t aSize) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  AssertNoUnderflow(mClientUsages[aClientType], aSize);
-  mClientUsages[aClientType] -= aSize;
+  MOZ_ASSERT(mClientUsages[aClientType].isSome());
+  AssertNoUnderflow(mClientUsages[aClientType].value(), aSize);
+  mClientUsages[aClientType] = Some(mClientUsages[aClientType].value() - aSize);
 
   AssertNoUnderflow(mUsage, aSize);
   mUsage -= aSize;
@@ -6754,9 +6805,9 @@ void OriginInfo::LockedDecreaseUsage(Client::Type aClientType, int64_t aSize) {
 void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  uint64_t size = mClientUsages[aClientType];
+  uint64_t size = mClientUsages[aClientType].valueOr(0);
 
-  mClientUsages[aClientType] = 0;
+  mClientUsages[aClientType].reset();
 
   AssertNoUnderflow(mUsage, size);
   mUsage -= size;
@@ -6771,6 +6822,20 @@ void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
 
   AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, size);
   quotaManager->mTemporaryStorageUsage -= size;
+}
+
+bool OriginInfo::LockedGetUsageForClient(Client::Type aClientType,
+                                         uint64_t& aUsage) {
+  AssertCurrentThreadOwnsQuotaMutex();
+
+  Maybe<uint64_t>& clientUsage = mClientUsages[aClientType];
+
+  if (clientUsage.isNothing()) {
+    return false;
+  }
+
+  aUsage = clientUsage.value();
+  return true;
 }
 
 void OriginInfo::LockedPersist() {
@@ -7131,8 +7196,16 @@ void NormalOriginOperationBase::Open() {
 
   AdvanceState();
 
-  QuotaManager::Get()->OpenDirectoryInternal(mPersistenceType, mOriginScope,
-                                             mClientType, mExclusive, this);
+  if (mNeedsDirectoryLocking) {
+    QuotaManager::Get()->OpenDirectoryInternal(mPersistenceType, mOriginScope,
+                                               mClientType, mExclusive, this);
+  } else {
+    nsresult rv = DirectoryOpen();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Finish(rv);
+      return;
+    }
+  }
 }
 
 void NormalOriginOperationBase::UnblockOpen() {
@@ -7141,7 +7214,9 @@ void NormalOriginOperationBase::UnblockOpen() {
 
   SendResults();
 
-  mDirectoryLock = nullptr;
+  if (mNeedsDirectoryLocking) {
+    mDirectoryLock = nullptr;
+  }
 
   AdvanceState();
 }
@@ -7370,6 +7445,18 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
+    case RequestParams::TEstimateParams: {
+      const EstimateParams& params = aParams.get_EstimateParams();
+
+      if (NS_WARN_IF(
+              !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      break;
+    }
+
     default:
       MOZ_CRASH("Should never get here!");
   }
@@ -7504,6 +7591,10 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
     case RequestParams::TPersistParams:
       actor = new PersistOp(aParams);
+      break;
+
+    case RequestParams::TEstimateParams:
+      actor = new EstimateOp(aParams);
       break;
 
     case RequestParams::TListInitializedOriginsParams:
@@ -7643,7 +7734,6 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
   MOZ_ASSERT(aUsageInfo);
-  MOZ_ASSERT(aUsageInfo->TotalUsage() == 0);
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
@@ -7928,7 +8018,7 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager* aQuotaManager,
   }
 
   ProcessOriginInternal(aQuotaManager, aPersistenceType, origin, timestamp,
-                        persisted, usageInfo.TotalUsage());
+                        persisted, usageInfo.TotalUsage().valueOr(0));
 
   return NS_OK;
 }
@@ -7976,70 +8066,70 @@ void GetUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 }
 
 GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
-    : mParams(aParams.get_OriginUsageParams()),
-      mGetGroupUsage(aParams.get_OriginUsageParams().getGroupUsage()) {
+    : mUsage(0), mFileUsage(0) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
-}
 
-bool GetOriginUsageOp::Init(Quota* aQuota) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aQuota);
+  const OriginUsageParams& params = aParams.get_OriginUsageParams();
 
-  if (NS_WARN_IF(!QuotaUsageRequestBase::Init(aQuota))) {
-    return false;
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(
+      params.principalInfo(), &mSuffix, &mGroup, mOriginScope.AsOriginSetter());
+
+  mFromMemory = params.fromMemory();
+
+  // Overwrite NormalOriginOperationBase default values.
+  if (mFromMemory) {
+    mNeedsDirectoryLocking = false;
   }
 
-  // Figure out which origin we're dealing with.
-  nsCString origin;
-  QuotaManager::GetInfoFromValidatedPrincipalInfo(mParams.principalInfo(),
-                                                  &mSuffix, &mGroup, &origin);
-
-  mOriginScope.SetFromOrigin(origin);
-
-  return true;
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
 }
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mUsageInfo.TotalUsage() == 0);
+  MOZ_ASSERT(mUsage == 0);
+  MOZ_ASSERT(mFileUsage == 0);
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
 
   nsresult rv;
 
-  if (mGetGroupUsage) {
-    // Ensure temporary storage is initialized first. It will initialize all
-    // origins for temporary storage including origins belonging to our group by
-    // traversing the repositories. EnsureStorageIsInitialized is needed before
-    // EnsureTemporaryStorageIsInitialized.
+  if (mFromMemory) {
+    // This must be called before EnsureTemporaryStorageIsInitialized.
     rv = aQuotaManager->EnsureStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
+    // Ensure temporary storage is initialized. If temporary storage hasn't been
+    // initialized yet, the method will initialize it by traversing the
+    // repositories for temporary and default storage (including our origin).
     rv = aQuotaManager->EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // Get cached usage and limit (the method doesn't have to stat any files).
-    aQuotaManager->GetGroupUsageAndLimit(mGroup, &mUsageInfo);
+    // Get cached usage (the method doesn't have to stat any files). File usage
+    // is not tracked in memory separately, so just add to the total usage.
+    mUsage = aQuotaManager->GetOriginUsage(mGroup, mOriginScope.GetOrigin());
 
     return NS_OK;
   }
 
+  UsageInfo usageInfo;
+
   // Add all the persistent/temporary/default storage files we care about.
   for (const PersistenceType type : kAllPersistenceTypes) {
-    UsageInfo usageInfo;
     rv = GetUsageForOrigin(aQuotaManager, type, mGroup,
                            mOriginScope.GetOrigin(), &usageInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    mUsageInfo.Append(usageInfo);
   }
+
+  mUsage = usageInfo.TotalUsage().valueOr(0);
+  mFileUsage = usageInfo.FileUsage().valueOr(0);
 
   return NS_OK;
 }
@@ -8049,15 +8139,8 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 
   OriginUsageResponse usageResponse;
 
-  // We'll get the group usage when mGetGroupUsage is true and get the
-  // origin usage when mGetGroupUsage is false.
-  usageResponse.usage() = mUsageInfo.TotalUsage();
-
-  if (mGetGroupUsage) {
-    usageResponse.limit() = mUsageInfo.Limit();
-  } else {
-    usageResponse.fileUsage() = mUsageInfo.FileUsage();
-  }
+  usageResponse.usage() = mUsage;
+  usageResponse.fileUsage() = mFileUsage;
 
   aResponse = usageResponse;
 }
@@ -8754,6 +8837,60 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = PersistResponse();
+}
+
+EstimateOp::EstimateOp(const RequestParams& aParams)
+    : QuotaRequestBase(/* aExclusive */ false), mUsage(0), mLimit(0) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == RequestParams::TEstimateParams);
+
+  QuotaManager::GetInfoFromValidatedPrincipalInfo(
+      aParams.get_EstimateParams().principalInfo(), nullptr, &mGroup, nullptr);
+
+  // Overwrite NormalOriginOperationBase default values.
+  mNeedsDirectoryLocking = false;
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+}
+
+nsresult EstimateOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("EstimateOp::DoDirectoryWork", OTHER);
+
+  // This must be called before EnsureTemporaryStorageIsInitialized.
+  nsresult rv = aQuotaManager->EnsureStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Ensure temporary storage is initialized. If temporary storage hasn't been
+  // initialized yet, the method will initialize it by traversing the
+  // repositories for temporary and default storage (including origins belonging
+  // to our group).
+  rv = aQuotaManager->EnsureTemporaryStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Get cached usage (the method doesn't have to stat any files).
+  mUsage = aQuotaManager->GetGroupUsage(mGroup);
+
+  mLimit = aQuotaManager->GetGroupLimit();
+
+  return NS_OK;
+}
+
+void EstimateOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  EstimateResponse estimateResponse;
+
+  estimateResponse.usage() = mUsage;
+  estimateResponse.limit() = mLimit;
+
+  aResponse = estimateResponse;
 }
 
 ListInitializedOriginsOp::ListInitializedOriginsOp()

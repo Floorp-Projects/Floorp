@@ -25,7 +25,12 @@ export type ThreadsState = {
 export function initialThreadsState(): ThreadsState {
   return {
     threads: [],
-    mainThread: { actor: "", url: "", type: -1, name: "" },
+    mainThread: {
+      actor: "",
+      url: "",
+      type: "main-thread",
+      name: "",
+    },
     isWebExtension: false,
   };
 }
@@ -38,7 +43,7 @@ export default function update(
     case "CONNECT":
       return {
         ...state,
-        mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") },
+        mainThread: action.mainThread,
         isWebExtension: action.isWebExtension,
       };
     case "INSERT_THREADS":
@@ -46,7 +51,6 @@ export default function update(
         ...state,
         threads: [...state.threads, ...action.threads],
       };
-
     case "REMOVE_THREADS":
       const { threads } = action;
       return {

@@ -62,6 +62,15 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
     mFileDesc = -1;
     aClientFd = -1;
   }
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                                       getter_AddRefs(tmpDir));
+  if (NS_SUCCEEDED(rv)) {
+    rv = tmpDir->GetNativePath(mContentTempPath);
+    if (NS_FAILED(rv)) {
+      mContentTempPath.Truncate();
+    }
+  }
 }
 
 UniquePtr<SandboxBroker> SandboxBroker::Create(
@@ -540,17 +549,12 @@ size_t SandboxBroker::RemapTempDirs(char* aPath, size_t aBufSize,
         Substring(path, prefixLen, path.Length() - prefixLen);
 
     // Only now try to get the content process temp dir
-    nsCOMPtr<nsIFile> tmpDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                         getter_AddRefs(tmpDir));
-    if (NS_SUCCEEDED(rv)) {
+    if (!mContentTempPath.IsEmpty()) {
       nsAutoCString tmpPath;
-      rv = tmpDir->GetNativePath(tmpPath);
-      if (NS_SUCCEEDED(rv)) {
-        tmpPath.Append(cutPath);
-        base::strlcpy(aPath, tmpPath.get(), aBufSize);
-        return strlen(aPath);
-      }
+      tmpPath.Assign(mContentTempPath);
+      tmpPath.Append(cutPath);
+      base::strlcpy(aPath, tmpPath.get(), aBufSize);
+      return strlen(aPath);
     }
   }
 

@@ -4,13 +4,8 @@
 
 // @flow
 
-import { basename } from "./path";
 import type { Thread } from "../types";
 
-export function getDisplayName(thread: Thread) {
-  return basename(thread.url);
-}
-
 export function isWorker(thread: Thread) {
-  return thread.actor.includes("workerTarget");
+  return thread.type == "worker";
 }

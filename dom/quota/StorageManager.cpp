@@ -27,8 +27,7 @@ namespace {
 
 // This class is used to get quota usage, request persist and check persisted
 // status callbacks.
-class RequestResolver final : public nsIQuotaCallback,
-                              public nsIQuotaUsageCallback {
+class RequestResolver final : public nsIQuotaCallback {
  public:
   enum Type { Estimate, Persist, Persisted };
 
@@ -65,7 +64,6 @@ class RequestResolver final : public nsIQuotaCallback,
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIQUOTACALLBACK
-  NS_DECL_NSIQUOTAUSAGECALLBACK
 
  private:
   ~RequestResolver() {}
@@ -74,8 +72,7 @@ class RequestResolver final : public nsIQuotaCallback,
 
   nsresult GetPersisted(nsIVariant* aResult);
 
-  template <typename T>
-  nsresult OnCompleteOrUsageResult(T* aRequest);
+  nsresult OnCompleteInternal(nsIQuotaRequest* aRequest);
 
   nsresult Finish();
 };
@@ -164,24 +161,35 @@ class PersistentStoragePermissionRequest final
   ~PersistentStoragePermissionRequest() = default;
 };
 
-nsresult GetUsageForPrincipal(nsIPrincipal* aPrincipal,
-                              nsIQuotaUsageCallback* aCallback,
-                              nsIQuotaUsageRequest** aRequest) {
+nsresult Estimate(nsIPrincipal* aPrincipal, nsIQuotaCallback* aCallback,
+                  nsIQuotaRequest** aRequest) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aRequest);
+
+  // Firefox and Quota Manager have always used the schemeless origin group
+  // (https://storage.spec.whatwg.org/#schemeless-origin-group) for quota limit
+  // purposes. This has been to prevent a site/eTLD+1 from claiming more than
+  // its fair share of storage through the use of sub-domains. Because the limit
+  // is at the group level and the usage needs to make sense in the context of
+  // that limit, we also expose the group usage. Bug 1374970 reflects this
+  // reality and bug 1305665 tracks our plan to eliminate our use of groups for
+  // this.
 
   nsCOMPtr<nsIQuotaManagerService> qms = QuotaManagerService::GetOrCreate();
   if (NS_WARN_IF(!qms)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv =
-      qms->GetUsageForPrincipal(aPrincipal, aCallback, true, aRequest);
+  nsCOMPtr<nsIQuotaRequest> request;
+  nsresult rv = qms->Estimate(aPrincipal, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  MOZ_ALWAYS_SUCCEEDS(request->SetCallback(aCallback));
+
+  request.forget(aRequest);
   return NS_OK;
 };
 
@@ -275,9 +283,8 @@ already_AddRefed<Promise> ExecuteOpOnMainOrWorkerThread(
         RefPtr<RequestResolver> resolver =
             new RequestResolver(RequestResolver::Type::Estimate, promise);
 
-        RefPtr<nsIQuotaUsageRequest> request;
-        aRv =
-            GetUsageForPrincipal(principal, resolver, getter_AddRefs(request));
+        RefPtr<nsIQuotaRequest> request;
+        aRv = Estimate(principal, resolver, getter_AddRefs(request));
 
         break;
       }
@@ -389,7 +396,7 @@ void RequestResolver::ResolveOrReject() {
   }
 }
 
-NS_IMPL_ISUPPORTS(RequestResolver, nsIQuotaUsageCallback, nsIQuotaCallback)
+NS_IMPL_ISUPPORTS(RequestResolver, nsIQuotaCallback)
 
 nsresult RequestResolver::GetStorageEstimate(nsIVariant* aResult) {
   MOZ_ASSERT(aResult);
@@ -406,15 +413,14 @@ nsresult RequestResolver::GetStorageEstimate(nsIVariant* aResult) {
 
   free(iid);
 
-  nsCOMPtr<nsIQuotaOriginUsageResult> originUsageResult =
-      do_QueryInterface(supports);
-  MOZ_ASSERT(originUsageResult);
+  nsCOMPtr<nsIQuotaEstimateResult> estimateResult = do_QueryInterface(supports);
+  MOZ_ASSERT(estimateResult);
 
   MOZ_ALWAYS_SUCCEEDS(
-      originUsageResult->GetUsage(&mStorageEstimate.mUsage.Construct()));
+      estimateResult->GetUsage(&mStorageEstimate.mUsage.Construct()));
 
   MOZ_ALWAYS_SUCCEEDS(
-      originUsageResult->GetLimit(&mStorageEstimate.mQuota.Construct()));
+      estimateResult->GetLimit(&mStorageEstimate.mQuota.Construct()));
 
   return NS_OK;
 }
@@ -446,8 +452,7 @@ nsresult RequestResolver::GetPersisted(nsIVariant* aResult) {
   return NS_OK;
 }
 
-template <typename T>
-nsresult RequestResolver::OnCompleteOrUsageResult(T* aRequest) {
+nsresult RequestResolver::OnCompleteInternal(nsIQuotaRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
 
@@ -512,22 +517,7 @@ RequestResolver::OnComplete(nsIQuotaRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
 
-  mResultCode = OnCompleteOrUsageResult(aRequest);
-
-  nsresult rv = Finish();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RequestResolver::OnUsageResult(nsIQuotaUsageRequest* aRequest) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRequest);
-
-  mResultCode = OnCompleteOrUsageResult(aRequest);
+  mResultCode = OnCompleteInternal(aRequest);
 
   nsresult rv = Finish();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -567,9 +557,8 @@ bool EstimateWorkerMainThreadRunnable::MainThreadRun() {
   RefPtr<RequestResolver> resolver =
       new RequestResolver(RequestResolver::Type::Estimate, mProxy);
 
-  RefPtr<nsIQuotaUsageRequest> request;
-  nsresult rv =
-      GetUsageForPrincipal(principal, resolver, getter_AddRefs(request));
+  RefPtr<nsIQuotaRequest> request;
+  nsresult rv = Estimate(principal, resolver, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

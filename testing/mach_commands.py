@@ -327,6 +327,14 @@ class Test(MachCommandBase):
             import mozdebug
             if not mozdebug.get_debugger_info(log_args.get('debugger')):
                 sys.exit(1)
+            extra_args_debugger_notation = '='.join([
+                    '--debugger',
+                    log_args.get('debugger')
+                ]).encode('ascii')
+            if extra_args:
+                extra_args.append(extra_args_debugger_notation)
+            else:
+                extra_args = [extra_args_debugger_notation]
 
         # Create shared logger
         format_args = {'level': self._mach_context.settings['test']['level']}

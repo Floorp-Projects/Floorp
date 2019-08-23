@@ -385,6 +385,11 @@ install-theme-button = Install Theme
 manage-addon-button = Manage
 find-more-addons = Find more add-ons
 
+# This is a label for the button to open the "more options" menu, it is only
+# used for screen readers.
+addon-options-button =
+    .aria-label = More Options
+
 ## Add-on actions
 report-addon-button = Report
 remove-addon-button = Remove

@@ -193,6 +193,10 @@ class QuotaManager final : public BackgroundThreadObject {
                            const nsACString& aGroup, const nsACString& aOrigin,
                            Client::Type aClientType);
 
+  bool GetUsageForClient(PersistenceType aPersistenceType,
+                         const nsACString& aGroup, const nsACString& aOrigin,
+                         Client::Type aClientType, uint64_t& aUsage);
+
   void UpdateOriginAccessTime(PersistenceType aPersistenceType,
                               const nsACString& aGroup,
                               const nsACString& aOrigin);
@@ -384,7 +388,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   uint64_t GetGroupLimit() const;
 
-  void GetGroupUsageAndLimit(const nsACString& aGroup, UsageInfo* aUsageInfo);
+  uint64_t GetGroupUsage(const nsACString& aGroup);
+
+  uint64_t GetOriginUsage(const nsACString& aGroup, const nsACString& aOrigin);
 
   void NotifyStoragePressure(uint64_t aUsage);
 

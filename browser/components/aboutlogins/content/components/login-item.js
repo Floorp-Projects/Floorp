@@ -526,7 +526,7 @@ export default class LoginItem extends HTMLElement {
   _loginFromForm() {
     return {
       username: this._usernameInput.value.trim(),
-      password: this._passwordInput.value.trim(),
+      password: this._passwordInput.value,
       origin:
         window.AboutLoginsUtils.getLoginOrigin(this._originInput.value) || "",
     };

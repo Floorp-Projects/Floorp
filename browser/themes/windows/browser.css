@@ -560,12 +560,6 @@ menuitem.bookmark-item {
   }
 }
 
-/* ::::: URL Bar Zoom Reset Button ::::: */
-
-.urlbar-display {
-  margin-inline-start: 0;
-}
-
 #pageAction-urlbar-shareURL,
 #pageAction-panel-shareURL {
   list-style-image: url("chrome://browser/skin/share.svg");
