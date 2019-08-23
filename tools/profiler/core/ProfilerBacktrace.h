@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 
 class ProfileBuffer;
+class ProfilerCodeAddressService;
 class SpliceableJSONWriter;
 class ThreadInfo;
 class UniqueStacks;
