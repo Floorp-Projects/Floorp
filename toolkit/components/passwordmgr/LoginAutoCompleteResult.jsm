@@ -72,6 +72,16 @@ function loginSort(formHostPort, a, b) {
     return 1;
   }
 
+  if (a.httpRealm !== b.httpRealm) {
+    // Sort HTTP auth. logins after form logins for the same origin.
+    if (b.httpRealm === null) {
+      return 1;
+    }
+    if (a.httpRealm === null) {
+      return -1;
+    }
+  }
+
   let userA = a.username.toLowerCase();
   let userB = b.username.toLowerCase();
 
@@ -163,18 +173,9 @@ class LoginAutocompleteItem extends AutocompleteItem {
     });
 
     XPCOMUtils.defineLazyGetter(this, "comment", () => {
-      let comment = login.origin;
-      try {
-        let uri = Services.io.newURI(login.origin);
-        // Fallback to handle file: URIs
-        comment = uri.displayHostPort || login.origin;
-      } catch (ex) {
-        // Fallback to login.origin set above.
-      }
-
       return JSON.stringify({
         guid: login.guid,
-        comment,
+        comment: login.displayOrigin,
       });
     });
   }
