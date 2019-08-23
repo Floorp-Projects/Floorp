@@ -407,10 +407,23 @@ class AutoIncumbentScript : protected ScriptSettingsStackEntry {
  *
  * This class may not be instantiated if an exception is pending.
  */
-class AutoNoJSAPI : protected ScriptSettingsStackEntry {
+class AutoNoJSAPI : protected ScriptSettingsStackEntry,
+                    protected JSAutoNullableRealm {
  public:
-  explicit AutoNoJSAPI();
+  AutoNoJSAPI() : AutoNoJSAPI(danger::GetJSContext()) {}
   ~AutoNoJSAPI();
+
+ private:
+  // Helper constructor to avoid doing GetJSContext() multiple times
+  // during construction.
+  explicit AutoNoJSAPI(JSContext* aCx);
+
+  // Stashed JSContext* so we don't need to GetJSContext in our destructor.
+  // It's probably safe to hold on to this, in the sense that the world should
+  // not get torn down while we're on the stack, and if it's not, we'd need to
+  // fix JSAutoNullableRealm to not hold on to a JSContext either, or
+  // something.
+  JSContext* mCx;
 };
 
 }  // namespace dom
