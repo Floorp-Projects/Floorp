@@ -12,10 +12,9 @@ import type {
   OriginalFrame,
   Range,
   SourceLocation,
-  Source,
   SourceId,
 } from "../../../src/types";
-import type { LocationOptions } from "./source-map";
+import type { SourceMapInput, LocationOptions } from "./source-map";
 
 export const dispatcher = new WorkerDispatcher();
 
@@ -38,7 +37,7 @@ export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
   dispatcher.invoke("setAssetRootURL", assetRoot);
 
 export const getOriginalURLs = async (
-  generatedSource: Source
+  generatedSource: SourceMapInput
 ): Promise<?Array<{| id: SourceId, url: string |}>> =>
   dispatcher.invoke("getOriginalURLs", generatedSource);
 
@@ -46,36 +45,31 @@ export const hasOriginalURL = async (url: string): Promise<boolean> =>
   dispatcher.invoke("hasOriginalURL", url);
 
 export const getOriginalRanges = async (
-  sourceId: SourceId,
-  url: string
+  sourceId: SourceId
 ): Promise<
   Array<{
     line: number,
     columnStart: number,
     columnEnd: number,
   }>
-> => dispatcher.invoke("getOriginalRanges", sourceId, url);
+> => dispatcher.invoke("getOriginalRanges", sourceId);
 export const getGeneratedRanges = async (
-  location: SourceLocation,
-  originalSource: Source
+  location: SourceLocation
 ): Promise<
   Array<{
     line: number,
     columnStart: number,
     columnEnd: number,
   }>
-> => _getGeneratedRanges(location, originalSource);
+> => _getGeneratedRanges(location);
 
 export const getGeneratedLocation = async (
-  location: SourceLocation,
-  originalSource: Source
-): Promise<SourceLocation> => _getGeneratedLocation(location, originalSource);
+  location: SourceLocation
+): Promise<SourceLocation> => _getGeneratedLocation(location);
 
 export const getAllGeneratedLocations = async (
-  location: SourceLocation,
-  originalSource: Source
-): Promise<Array<SourceLocation>> =>
-  _getAllGeneratedLocations(location, originalSource);
+  location: SourceLocation
+): Promise<Array<SourceLocation>> => _getAllGeneratedLocations(location);
 
 export const getOriginalLocation = async (
   location: SourceLocation,
@@ -83,36 +77,32 @@ export const getOriginalLocation = async (
 ): Promise<SourceLocation> => _getOriginalLocation(location, options);
 
 export const getOriginalLocations = async (
-  sourceId: SourceId,
   locations: SourceLocation[],
   options: LocationOptions = {}
 ): Promise<SourceLocation[]> =>
-  dispatcher.invoke("getOriginalLocations", sourceId, locations, options);
+  dispatcher.invoke("getOriginalLocations", locations, options);
 
 export const getGeneratedRangesForOriginal = async (
   sourceId: SourceId,
-  url: string,
   mergeUnmappedRegions?: boolean
 ): Promise<Range[]> =>
   dispatcher.invoke(
     "getGeneratedRangesForOriginal",
     sourceId,
-    url,
     mergeUnmappedRegions
   );
 
 export const getFileGeneratedRange = async (
-  originalSource: Source
-): Promise<Range> => dispatcher.invoke("getFileGeneratedRange", originalSource);
-
-export const getLocationScopes = dispatcher.task("getLocationScopes");
+  originalSourceId: SourceId
+): Promise<Range> =>
+  dispatcher.invoke("getFileGeneratedRange", originalSourceId);
 
 export const getOriginalSourceText = async (
-  originalSource: Source
+  originalSourceId: SourceId
 ): Promise<?{
   text: string,
   contentType: string,
-}> => dispatcher.invoke("getOriginalSourceText", originalSource);
+}> => dispatcher.invoke("getOriginalSourceText", originalSourceId);
 
 export const applySourceMap = async (
   generatedId: string,
@@ -124,10 +114,6 @@ export const applySourceMap = async (
 
 export const clearSourceMaps = async (): Promise<void> =>
   dispatcher.invoke("clearSourceMaps");
-
-export const hasMappedSource = async (
-  location: SourceLocation
-): Promise<boolean> => dispatcher.invoke("hasMappedSource", location);
 
 export const getOriginalStackFrames = async (
   generatedLocation: SourceLocation

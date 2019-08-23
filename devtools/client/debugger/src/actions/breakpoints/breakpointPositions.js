@@ -43,10 +43,7 @@ async function mapLocations(
     return [];
   }
 
-  const { sourceId } = generatedLocations[0];
-
   const originalLocations = await sourceMaps.getOriginalLocations(
-    sourceId,
     generatedLocations
   );
 
@@ -120,7 +117,6 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
     // https://github.com/facebook/flow/issues/5294
     const ranges: Range[] = await sourceMaps.getGeneratedRangesForOriginal(
       sourceId,
-      generatedSource.url,
       true
     );
     const generatedSourceId = originalToGeneratedId(sourceId);
