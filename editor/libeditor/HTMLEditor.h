@@ -1513,6 +1513,16 @@ class HTMLEditor final : public TextEditor,
     }
   }
 
+  /**
+   * GetDeepestEditableOnlyChildDivBlockquoteOrListElement() returns a `<div>`,
+   * `<blockquote>` or one of list elements.  This method climbs down from
+   * aContent while there is only one editable children and the editable child
+   * is `<div>`, `<blockquote>` or a list element.  When it reaches different
+   * kind of node, returns the last found element.
+   */
+  Element* GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+      nsINode& aNode);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

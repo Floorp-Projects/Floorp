@@ -4097,8 +4097,24 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
 
   // if there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
-
-  LookInsideDivBQandList(arrayOfNodes);
+  if (arrayOfNodes.Length() == 1) {
+    if (Element* deepestDivBlockquoteOrListElement =
+            HTMLEditorRef()
+                .GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+                    arrayOfNodes[0])) {
+      if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
+              nsGkAtoms::div, nsGkAtoms::blockquote)) {
+        arrayOfNodes.Clear();
+        HTMLEditorRef().CollectChildren(*deepestDivBlockquoteOrListElement,
+                                        arrayOfNodes, 0,
+                                        HTMLEditor::CollectListChildren::No,
+                                        HTMLEditor::CollectTableChildren::No);
+      } else {
+        arrayOfNodes.ReplaceElementAt(
+            0, OwningNonNull<nsINode>(*deepestDivBlockquoteOrListElement));
+      }
+    }
+  }
 
   // Ok, now go through all the nodes and put then in the list,
   // or whatever is approriate.  Wohoo!
@@ -7630,55 +7646,50 @@ nsresult HTMLEditRules::GetListActionNodes(
 
   // If there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
-  LookInsideDivBQandList(aOutArrayOfNodes);
+  if (aOutArrayOfNodes.Length() != 1) {
+    return NS_OK;
+  }
 
+  Element* deepestDivBlockquoteOrListElement =
+      HTMLEditorRef().GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+          aOutArrayOfNodes[0]);
+  if (!deepestDivBlockquoteOrListElement) {
+    return NS_OK;
+  }
+
+  if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
+          nsGkAtoms::div, nsGkAtoms::blockquote)) {
+    aOutArrayOfNodes.Clear();
+    HTMLEditorRef().CollectChildren(*deepestDivBlockquoteOrListElement,
+                                    aOutArrayOfNodes, 0,
+                                    HTMLEditor::CollectListChildren::No,
+                                    HTMLEditor::CollectTableChildren::No);
+    return NS_OK;
+  }
+
+  aOutArrayOfNodes.ReplaceElementAt(
+      0, OwningNonNull<nsINode>(*deepestDivBlockquoteOrListElement));
   return NS_OK;
 }
 
-void HTMLEditRules::LookInsideDivBQandList(
-    nsTArray<OwningNonNull<nsINode>>& aNodeArray) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // If there is only one node in the array, and it is a list, div, or
-  // blockquote, then look inside of it until we find inner list or content.
-  if (aNodeArray.Length() != 1) {
-    return;
+Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+    nsINode& aNode) {
+  if (!aNode.IsElement()) {
+    return nullptr;
   }
-
-  OwningNonNull<nsINode> curNode = aNodeArray[0];
-
-  while (curNode->IsHTMLElement(nsGkAtoms::div) ||
-         HTMLEditUtils::IsList(curNode) ||
-         curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
-    // Dive as long as there's only one child, and it's a list, div, blockquote
-    uint32_t numChildren = HTMLEditorRef().CountEditableChildren(curNode);
-    if (numChildren != 1) {
-      break;
+  // XXX If aNode is non-editable, shouldn't we return nullptr here?
+  Element* parentElement = nullptr;
+  for (nsIContent* content = aNode.AsContent();
+       content && content->IsElement() &&
+       (content->IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::blockquote) ||
+        HTMLEditUtils::IsList(content));
+       content = content->GetFirstChild()) {
+    if (CountEditableChildren(content) != 1) {
+      return content->AsElement();
     }
-
-    // Keep diving!  XXX One would expect to dive into the one editable node.
-    nsCOMPtr<nsIContent> child = curNode->GetFirstChild();
-    if (!child->IsHTMLElement(nsGkAtoms::div) &&
-        !HTMLEditUtils::IsList(child) &&
-        !child->IsHTMLElement(nsGkAtoms::blockquote)) {
-      break;
-    }
-
-    // check editability XXX floppy moose
-    curNode = child;
+    parentElement = content->AsElement();
   }
-
-  // We've found innermost list/blockquote/div: replace the one node in the
-  // array with these nodes
-  aNodeArray.RemoveElementAt(0);
-  if (curNode->IsAnyOfHTMLElements(nsGkAtoms::div, nsGkAtoms::blockquote)) {
-    HTMLEditorRef().CollectChildren(*curNode, aNodeArray, 0,
-                                    HTMLEditor::CollectListChildren::No,
-                                    HTMLEditor::CollectTableChildren::No);
-    return;
-  }
-
-  aNodeArray.AppendElement(*curNode);
+  return parentElement;
 }
 
 void HTMLEditRules::GetDefinitionListItemTypes(dom::Element* aElement,
