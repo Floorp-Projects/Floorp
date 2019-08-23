@@ -295,7 +295,7 @@ class HomeFragment : Fragment(), AccountObserver {
         Do exhaustive when (action) {
             is OnboardingAction.Finish -> {
                 onboarding.finish()
-
+                homeLayout?.progress = 0F
                 val mode = currentMode(context!!)
                 getManagedEmitter<SessionControlChange>().onNext(
                     SessionControlChange.ModeChange(
