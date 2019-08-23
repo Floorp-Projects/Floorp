@@ -424,6 +424,10 @@ class nsWindow final : public nsWindowBase {
   static void UpdateFirstEventTime(DWORD aEventTime);
   void FinishLiveResizing(ResizeState aNewState);
   nsIntPoint GetTouchCoordinates(WPARAM wParam, LPARAM lParam);
+  Maybe<mozilla::PanGestureInput> ConvertTouchToPanGesture(
+      const mozilla::MultiTouchInput& aTouchInput, PTOUCHINPUT aOriginalEvent);
+  void DispatchTouchOrPanGestureInput(mozilla::MultiTouchInput& aTouchInput,
+                                      PTOUCHINPUT aOSEvent);
 
   /**
    * Event handlers
@@ -686,6 +690,8 @@ class nsWindow final : public nsWindowBase {
 
   // Pointer events processing and management
   WinPointerEvents mPointerEvents;
+
+  ScreenPoint mLastPanGestureFocus;
 };
 
 #endif  // Window_h__

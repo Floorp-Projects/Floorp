@@ -6678,6 +6678,113 @@ nsIntPoint nsWindow::GetTouchCoordinates(WPARAM wParam, LPARAM lParam) {
   return ret;
 }
 
+// Determine if the touch device that originated |aOSEvent| needs to have
+// touch events representing a two-finger gesture converted to pan
+// gesture events.
+// We only do this for touch devices with a specific name and identifiers.
+bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
+                                          uint32_t aTouchCount) {
+  if (aTouchCount == 0) {
+    return false;
+  }
+  HANDLE source = aOSEvent[0].hSource;
+  std::string deviceName;
+  UINT dataSize;
+  // The first call just queries how long the name string will be.
+  GetRawInputDeviceInfoA(source, RIDI_DEVICENAME, nullptr, &dataSize);
+  if (!dataSize) {
+    return false;
+  }
+  deviceName.resize(dataSize);
+  // The second call actually populates the string.
+  UINT result = GetRawInputDeviceInfoA(source, RIDI_DEVICENAME, &deviceName[0],
+                                       &dataSize);
+  if (result == UINT_MAX) {
+    return false;
+  }
+  // The affected device name is "\\?\VIRTUAL_DIGITIZER", but each backslash
+  // needs to be escaped with another one.
+  if (deviceName != "\\\\?\\VIRTUAL_DIGITIZER") {
+    return false;
+  }
+
+  RID_DEVICE_INFO deviceInfo;
+  deviceInfo.cbSize = sizeof(deviceInfo);
+  dataSize = sizeof(deviceInfo);
+  result =
+      GetRawInputDeviceInfoA(source, RIDI_DEVICEINFO, &deviceInfo, &dataSize);
+  if (result == UINT_MAX) {
+    return false;
+  }
+  // The device identifiers that we check for here come from bug 1355162
+  // comment 1 (see also bug 1511901 comment 35).
+  return deviceInfo.dwType == RIM_TYPEHID && deviceInfo.hid.dwVendorId == 0 &&
+         deviceInfo.hid.dwProductId == 0 &&
+         deviceInfo.hid.dwVersionNumber == 1 &&
+         deviceInfo.hid.usUsagePage == 13 && deviceInfo.hid.usUsage == 4;
+}
+
+Maybe<PanGestureInput> nsWindow::ConvertTouchToPanGesture(
+    const MultiTouchInput& aTouchInput, PTOUCHINPUT aOSEvent) {
+  // The first time this function is called, perform some checks on the
+  // touch device that originated the touch event, to see if it's a device
+  // for which we want to convert the touch events to pang gesture events.
+  static bool shouldConvert = TouchDeviceNeedsPanGestureConversion(
+      aOSEvent, aTouchInput.mTouches.Length());
+  if (!shouldConvert) {
+    return Nothing();
+  }
+
+  // Only two-finger gestures need conversion.
+  if (aTouchInput.mTouches.Length() != 2) {
+    return Nothing();
+  }
+
+  PanGestureInput::PanGestureType eventType = PanGestureInput::PANGESTURE_PAN;
+  if (aTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+    eventType = PanGestureInput::PANGESTURE_START;
+  } else if (aTouchInput.mType == MultiTouchInput::MULTITOUCH_END) {
+    eventType = PanGestureInput::PANGESTURE_END;
+  } else if (aTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL) {
+    eventType = PanGestureInput::PANGESTURE_CANCELLED;
+  }
+
+  // Use the midpoint of the two touches as the start point of the pan gesture.
+  ScreenPoint focusPoint = (aTouchInput.mTouches[0].mScreenPoint +
+                            aTouchInput.mTouches[1].mScreenPoint) /
+                           2;
+  // To compute the displacement of the pan gesture, we keep track of the
+  // location of the previous event.
+  ScreenPoint displacement = (eventType == PanGestureInput::PANGESTURE_START)
+                                 ? ScreenPoint(0, 0)
+                                 : (focusPoint - mLastPanGestureFocus);
+  mLastPanGestureFocus = focusPoint;
+
+  // We need to negate the displacement because for a touch event, moving the
+  // fingers down results in scrolling up, but for a touchpad gesture, we want
+  // moving the fingers down to result in scrolling down.
+  PanGestureInput result(eventType, aTouchInput.mTime, aTouchInput.mTimeStamp,
+                         focusPoint, -displacement, aTouchInput.modifiers);
+  result.mSimulateMomentum = true;
+
+  return Some(result);
+}
+
+// Dispatch an event that originated as an OS touch event.
+// Usually, we want to dispatch it as a touch event, but some touchpads
+// produce touch events for two-finger scrolling, which need to be converted
+// to pan gesture events for correct behaviour.
+void nsWindow::DispatchTouchOrPanGestureInput(MultiTouchInput& aTouchInput,
+                                              PTOUCHINPUT aOSEvent) {
+  if (Maybe<PanGestureInput> panInput =
+          ConvertTouchToPanGesture(aTouchInput, aOSEvent)) {
+    DispatchPanGestureInput(*panInput);
+    return;
+  }
+
+  DispatchTouchInput(aTouchInput);
+}
+
 bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
   uint32_t cInputs = LOWORD(wParam);
   PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
@@ -6761,11 +6868,11 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
 
     // Dispatch touch start and touch move event if we have one.
     if (!touchInput.mTimeStamp.IsNull()) {
-      DispatchTouchInput(touchInput);
+      DispatchTouchOrPanGestureInput(touchInput, pInputs);
     }
     // Dispatch touch end event if we have one.
     if (!touchEndInput.mTimeStamp.IsNull()) {
-      DispatchTouchInput(touchEndInput);
+      DispatchTouchOrPanGestureInput(touchEndInput, pInputs);
     }
   }
 
