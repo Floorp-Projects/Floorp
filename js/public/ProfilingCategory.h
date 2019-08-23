@@ -35,6 +35,7 @@
     SUBCATEGORY(IDLE, IDLE, "Other")                                          \
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(OTHER, "Other", "grey")                                      \
+    SUBCATEGORY(OTHER, OTHER_PreferenceRead, "Preference Read")               \
     SUBCATEGORY(OTHER, OTHER, "Other")                                        \
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(LAYOUT, "Layout", "purple")                                  \
