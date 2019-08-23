@@ -797,8 +797,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-  void LookInsideDivBQandList(
-      nsTArray<OwningNonNull<nsINode>>& aNodeArray) const;
 
   /**
    * MakeTransitionList() detects all the transitions in the array, where a
