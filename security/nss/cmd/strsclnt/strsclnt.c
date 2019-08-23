@@ -166,6 +166,9 @@ Usage(void)
             "       -u enable TLS Session Ticket extension\n"
             "       -z enable compression\n"
             "       -g enable false start\n"
+            "       -4  Enforce using an IPv4 destination address\n"
+            "       -6  Enforce using an IPv6 destination address\n"
+            "           Note: Default behavior is both IPv4 and IPv6 enabled\n"
             "       -J enable signature schemes\n"
             "          This takes a comma separated list of signature schemes in preference\n"
             "          order.\n"
@@ -1061,7 +1064,9 @@ client_main(
     int connections,
     cert_and_key *Cert_And_Key,
     const char *hostName,
-    const char *sniHostName)
+    const char *sniHostName,
+    PRBool allowIPv4,
+    PRBool allowIPv6)
 {
     PRFileDesc *model_sock = NULL;
     int i;
@@ -1083,11 +1088,15 @@ client_main(
             SECU_PrintError(progName, "error looking up host");
             return;
         }
-        do {
+        for (;;) {
             enumPtr = PR_EnumerateAddrInfo(enumPtr, addrInfo, port, &addr);
-        } while (enumPtr != NULL &&
-                 addr.raw.family != PR_AF_INET &&
-                 addr.raw.family != PR_AF_INET6);
+            if (enumPtr == NULL)
+                break;
+            if (addr.raw.family == PR_AF_INET && allowIPv4)
+                break;
+            if (addr.raw.family == PR_AF_INET6 && allowIPv6)
+                break;
+        }
         PR_FreeAddrInfo(addrInfo);
         if (enumPtr == NULL) {
             SECU_PrintError(progName, "error looking up host address");
@@ -1319,6 +1328,8 @@ main(int argc, char **argv)
     int connections = 1;
     int exitVal;
     int tmpInt;
+    PRBool allowIPv4 = PR_TRUE;
+    PRBool allowIPv6 = PR_TRUE;
     unsigned short port = 443;
     SECStatus rv;
     PLOptState *optstate;
@@ -1338,9 +1349,25 @@ main(int argc, char **argv)
     /* XXX: 'B' was used in the past but removed in 3.28,
      *      please leave some time before resuing it. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "C:DJ:NP:TUV:W:a:c:d:f:gin:op:qst:uvw:z");
+                                 "46C:DJ:NP:TUV:W:a:c:d:f:gin:op:qst:uvw:z");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
+            case '4':
+                if (!allowIPv4) {
+                    fprintf(stderr, "Only one of [-4, -6] can be specified.\n");
+                    Usage();
+                }
+                allowIPv6 = PR_FALSE;
+                break;
+
+            case '6':
+                if (!allowIPv6) {
+                    fprintf(stderr, "Only one of [-4, -6] can be specified.\n");
+                    Usage();
+                }
+                allowIPv4 = PR_FALSE;
+                break;
+
             case 'C':
                 cipherString = optstate->value;
                 break;
@@ -1523,7 +1550,7 @@ main(int argc, char **argv)
     }
 
     client_main(port, connections, &Cert_And_Key, hostName,
-                sniHostName);
+                sniHostName, allowIPv4, allowIPv6);
 
     /* clean up */
     if (Cert_And_Key.cert) {

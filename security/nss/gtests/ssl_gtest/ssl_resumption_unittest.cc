@@ -599,15 +599,17 @@ static uint16_t ChooseOneCipher(uint16_t version) {
   return TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
 }
 
-static uint16_t ChooseAnotherCipher(uint16_t version) {
+static uint16_t ChooseIncompatibleCipher(uint16_t version) {
   if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
     return TLS_AES_256_GCM_SHA384;
   }
   return TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA;
 }
 
-// Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectGenericResumption, TestResumeClientDifferentCipher) {
+// Test that we don't resume when we can't negotiate the same cipher.  Note that
+// for TLS 1.3, resumption is allowed between compatible ciphers, that is those
+// with the same KDF hash, but we choose an incompatible one here.
+TEST_P(TlsConnectGenericResumption, ResumeClientIncompatibleCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   client_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
@@ -617,7 +619,7 @@ TEST_P(TlsConnectGenericResumption, TestResumeClientDifferentCipher) {
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
-  client_->EnableSingleCipher(ChooseAnotherCipher(version_));
+  client_->EnableSingleCipher(ChooseIncompatibleCipher(version_));
   uint16_t ticket_extension;
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     ticket_extension = ssl_tls13_pre_shared_key_xtn;
@@ -632,24 +634,24 @@ TEST_P(TlsConnectGenericResumption, TestResumeClientDifferentCipher) {
 }
 
 // Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectGenericResumption, TestResumeServerDifferentCipher) {
+TEST_P(TlsConnectGenericResumption, ResumeServerIncompatibleCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
-  SendReceive();  // Need to read so that we absorb the session ticket.
+  SendReceive();  // Absorb the session ticket.
   CheckKeys();
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
-  server_->EnableSingleCipher(ChooseAnotherCipher(version_));
+  server_->EnableSingleCipher(ChooseIncompatibleCipher(version_));
   Connect();
   CheckKeys();
 }
 
 // Test that the client doesn't tolerate the server picking a different cipher
 // suite for resumption.
-TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
+TEST_P(TlsConnectStream, ResumptionOverrideCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
@@ -658,8 +660,8 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  MakeTlsFilter<SelectedCipherSuiteReplacer>(server_,
-                                             ChooseAnotherCipher(version_));
+  MakeTlsFilter<SelectedCipherSuiteReplacer>(
+      server_, ChooseIncompatibleCipher(version_));
 
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     client_->ExpectSendAlert(kTlsAlertIllegalParameter);
@@ -676,6 +678,38 @@ TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
   } else {
     server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_FAILURE_ALERT);
   }
+}
+
+// In TLS 1.3, it is possible to resume with a different cipher if it has the
+// same hash.
+TEST_P(TlsConnectTls13, ResumeClientCompatibleCipher) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  Connect();
+  SendReceive();  // Absorb the session ticket.
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_TICKET);
+  client_->EnableSingleCipher(TLS_CHACHA20_POLY1305_SHA256);
+  Connect();
+  CheckKeys();
+}
+
+TEST_P(TlsConnectTls13, ResumeServerCompatibleCipher) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  Connect();
+  SendReceive();  // Absorb the session ticket.
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_TICKET);
+  server_->EnableSingleCipher(TLS_CHACHA20_POLY1305_SHA256);
+  Connect();
+  CheckKeys();
 }
 
 class SelectedVersionReplacer : public TlsHandshakeFilter {
@@ -1332,6 +1366,54 @@ TEST_P(TlsConnectGenericResumption, ConnectResumeClientAuth) {
   }
   Connect();
   SendReceive();
+}
+
+// Check that resumption is blocked if the server requires client auth.
+TEST_P(TlsConnectGenericResumption, ClientAuthRequiredOnResumption) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  server_->RequestClientAuth(false);
+  Connect();
+  SendReceive();
+
+  Reset();
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_NONE);
+  Connect();
+  SendReceive();
+}
+
+// Check that resumption is blocked if the server requires client auth and
+// the client fails to provide a certificate.
+TEST_P(TlsConnectGenericResumption, ClientAuthRequiredOnResumptionNoCert) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  server_->RequestClientAuth(false);
+  Connect();
+  SendReceive();
+
+  Reset();
+  server_->RequestClientAuth(true);
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  // Drive handshake manually because TLS 1.3 needs it.
+  StartConnect();
+  client_->Handshake();  // CH
+  server_->Handshake();  // SH.. (no resumption)
+  client_->Handshake();  // ...
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // In TLS 1.3, the client thinks that everything is OK here.
+    ASSERT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+    ExpectAlert(server_, kTlsAlertCertificateRequired);
+    server_->Handshake();  // Alert
+    client_->Handshake();  // Receive Alert
+    client_->CheckErrorCode(SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT);
+  } else {
+    ExpectAlert(server_, kTlsAlertBadCertificate);
+    server_->Handshake();  // Alert
+    client_->Handshake();  // Receive Alert
+    client_->CheckErrorCode(SSL_ERROR_BAD_CERT_ALERT);
+  }
+  server_->CheckErrorCode(SSL_ERROR_NO_CERTIFICATE);
 }
 
 TEST_F(TlsConnectStreamTls13, ExternalTokenAfterHrr) {
