@@ -13,9 +13,11 @@
 
 :host([data-editing]) .edit-button,
 :host([data-editing]) .copy-button,
+:host([data-editing]) login-footer,
 :host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
 :host([data-is-new-login]) .meta-info,
+:host([data-is-new-login]) login-footer,
 :host([data-is-new-login]) .login-item-title,
 :host(:not([data-is-new-login])) .new-login-title,
 :host(:not([data-editing])) .form-actions-row {
