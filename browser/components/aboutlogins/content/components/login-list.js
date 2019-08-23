@@ -367,6 +367,8 @@ export default class LoginList extends HTMLElement {
           let { login } = this._logins[guid];
           return (
             login.origin.toLocaleLowerCase().includes(this._filter) ||
+            (!!login.httpRealm &&
+              login.httpRealm.toLocaleLowerCase().includes(this._filter)) ||
             login.username.toLocaleLowerCase().includes(this._filter)
           );
         })

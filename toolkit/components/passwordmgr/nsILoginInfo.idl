@@ -12,6 +12,13 @@
 [scriptable, uuid(c41b7dff-6b9b-42fe-b78d-113051facb05)]
 interface nsILoginInfo : nsISupports {
   /**
+   * A string to display to the user for the origin which includes the httpRealm,
+   * where applicable.
+   * e.g. "site.com", "site.com:1234", or "site.com (My Secure Realm)"
+   */
+  readonly attribute AString displayOrigin;
+
+  /**
    * The origin the login applies to.
    *
    * For example,

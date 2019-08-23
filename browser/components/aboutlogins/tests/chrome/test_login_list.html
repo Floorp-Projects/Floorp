@@ -29,6 +29,7 @@ let gLoginList;
 const TEST_LOGIN_1 = {
   guid: "123456789",
   origin: "https://abc.example.com",
+  httpRealm: null,
   username: "user1",
   password: "pass1",
   title: "abc.example.com",
@@ -39,6 +40,7 @@ const TEST_LOGIN_1 = {
 const TEST_LOGIN_2 = {
   guid: "987654321",
   origin: "https://example.com",
+  httpRealm: null,
   username: "user2",
   password: "pass2",
   title: "example.com",
@@ -49,9 +51,21 @@ const TEST_LOGIN_2 = {
 const TEST_LOGIN_3 = {
   guid: "1111122222",
   origin: "https://def.example.com",
+  httpRealm: null,
   username: "",
   password: "pass3",
   title: "def.example.com",
+  // new Date("June 1, 2019").getTime()
+  timeLastUsed: 1559361600000,
+  timePasswordChanged: 1559361600000,
+};
+const TEST_HTTP_AUTH_LOGIN_1 = {
+  guid: "8675309",
+  origin: "https://httpauth.example.com",
+  httpRealm: "My Realm",
+  username: "http_auth_user",
+  password: "pass4",
+  title: "httpauth.example.com (My Realm)",
   // new Date("June 1, 2019").getTime()
   timeLastUsed: 1559361600000,
   timePasswordChanged: 1559361600000,
@@ -220,6 +234,29 @@ add_task(async function test_filtered_list() {
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
+
+  info("Add an HTTP Auth login");
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, TEST_HTTP_AUTH_LOGIN_1]);
+  await asyncElementRendered();
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 3, "Count should match full list length");
+  info("Filter by httpRealm");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "realm",
+  }));
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
+  ok(loginListItems[0].hidden, "user1 should be hidden");
+  ok(loginListItems[1].hidden, "user2 should be hidden");
+  ok(!loginListItems[2].hidden, "http_auth_user should be visible");
+  is(loginListItems[2].querySelector(".username").textContent, "http_auth_user", "Verify the login with a matching httpRealm is visible");
+
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "",
+  }));
+  await asyncElementRendered();
 });
 
 add_task(async function test_login_modified() {
