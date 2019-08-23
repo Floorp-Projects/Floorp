@@ -183,7 +183,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Triggers a load in the process which currently owns this BrowsingContext.
   // aAccessor is the context which initiated the load, and may be null only for
   // in-process BrowsingContexts.
-  void LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState);
+  nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
