@@ -1227,6 +1227,15 @@ class HTMLEditor final : public TextEditor,
   SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
 
   /**
+   * SplitParentInlineElementsAtRangeEdges(nsTArray<RefPtr<nsRange>>&) calls
+   * SplitParentInlineElementsAtRangeEdges(RangeItem&) for each range.  Then,
+   * updates given range to keep edit target ranges as expected.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitParentInlineElementsAtRangeEdges(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+
+  /**
    * SplitElementsAtEveryBRElement() splits before all <br> elements in
    * aMostAncestorToBeSplit.  All <br> nodes will be moved before right node
    * at splitting its parent.  Finally, this returns left node, first <br>
@@ -1236,17 +1245,27 @@ class HTMLEditor final : public TextEditor,
    *                                    be split.
    * @param aOutArrayOfNodes            First left node, first <br> element,
    *                                    Second left node, second <br> element,
-   *                                    ...right-most node.  So, all nodes in
-   *                                    this list should be siblings (may be
+   *                                    ...right-most node.  So, all nodes
+   *                                    in this list should be siblings (may be
    *                                    broken the relation by mutation event
-   *                                    listener though).
-   *                                    If first <br> element is first leaf
-   *                                    node of aMostAncestorToBeSplit,
-   *                                    starting from first <br> element.
+   *                                    listener though). If first <br> element
+   *                                    is first leaf node of
+   *                                    aMostAncestorToBeSplit, starting from
+   *                                    the first <br> element.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitElementsAtEveryBRElement(
       nsIContent& aMostAncestorToBeSplit,
       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+
+  /**
+   * MaybeSplitElementsAtEveryBRElement() calls SplitElementsAtEveryBRElement()
+   * for each given node when this needs to do that for aEditSubAction.
+   * If split a node, it in aArrayOfNodes is replaced with split nodes and
+   * <br> elements.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeSplitElementsAtEveryBRElement(
+      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+      EditSubAction aEditSubAction);
 
   /**
    * CollectEditableChildren() collects child nodes of aNode (starting from
@@ -1271,6 +1290,35 @@ class HTMLEditor final : public TextEditor,
       CollectListChildren aCollectListChildren = CollectListChildren::Yes,
       CollectTableChildren aCollectTableChildren =
           CollectTableChildren::Yes) const;
+
+  /**
+   * SplitInlinessAndCollectEditTargetNodes() splits text nodes and inline
+   * elements around aArrayOfRanges.  Then, collects edit target nodes to
+   * aOutArrayOfNodes.  Finally, each edit target nodes is split at every
+   * <br> element in it.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitInlinesAndCollectEditTargetNodes(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction);
+
+  /**
+   * SplitTextNodesAtRangeEnd() splits text nodes if each range end is in
+   * middle of a text node.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitTextNodesAtRangeEnd(nsTArray<RefPtr<nsRange>>& aArrayOfRanges);
+
+  /**
+   * CollectEditTargetNodes() collects edit target nodes in aArrayOfRanges.
+   * First, this collects all nodes in given ranges, then, modifies the
+   * result for specific edit sub-actions.
+   */
+  nsresult CollectEditTargetNodes(
+      nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+      EditSubAction aEditSubAction) const;
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
