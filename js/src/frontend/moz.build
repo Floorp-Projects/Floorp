@@ -81,9 +81,10 @@ if CONFIG['JS_BUILD_BINAST']:
         'BinASTTokenReaderMultipart.cpp',
     ]
 
-    DIRS += [
-        'binast'
-    ]
+    if CONFIG['JS_STANDALONE']:
+        DIRS += [
+            'binast'
+        ]
 
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
     if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
