@@ -165,6 +165,8 @@ android.applicationVariants.all { variant ->
     def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
     def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
 
+    def versionName = Config.releaseVersionName(project)
+
     if (useReleaseVersioning) {
         // The Google Play Store does not allow multiple APKs for the same app that all have the
         // same version code. Therefore we need to have different version codes for our ARM and x86
@@ -192,6 +194,9 @@ android.applicationVariants.all { variant ->
             }
 
             println("versionCode for $abi = $versionCodeOverride")
+
+            output.versionNameOverride = versionName
+            output.versionCodeOverride = versionCodeOverride
         }
 
         // If this is a release build, validate that "versionName" is set
