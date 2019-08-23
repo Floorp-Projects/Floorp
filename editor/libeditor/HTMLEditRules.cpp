@@ -7218,7 +7218,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
     }
     // Now bust up inlines.
     for (auto& item : Reversed(rangeItemArray)) {
-      nsresult rv = BustUpInlinesAtRangeEndpoints(*item);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .SplitParentInlineElementsAtRangeEdges(*item);
       if (NS_FAILED(rv)) {
         break;
       }
@@ -7499,51 +7500,41 @@ nsresult HTMLEditRules::GetParagraphFormatNodes(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::BustUpInlinesAtRangeEndpoints(
-    RangeItem& aRangeItem) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
+    RangeItem& aRangeItem) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  bool isCollapsed = aRangeItem.mStartContainer == aRangeItem.mEndContainer &&
-                     aRangeItem.mStartOffset == aRangeItem.mEndOffset;
+  if (!aRangeItem.IsCollapsed()) {
+    nsCOMPtr<nsIContent> mostAncestorInlineContentAtEnd =
+        GetMostAncestorInlineElement(*aRangeItem.mEndContainer);
 
-  nsCOMPtr<nsIContent> endInline =
-      HTMLEditorRef().GetMostAncestorInlineElement(*aRangeItem.mEndContainer);
-
-  // XXX Oh, then, if the range is collapsed, we don't need to call
-  //     GetMostAncestorInlineElement(), isn't it?
-  if (endInline && !isCollapsed) {
-    SplitNodeResult splitEndInlineResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SplitNodeDeepWithTransaction(
-                *endInline,
-                EditorDOMPoint(aRangeItem.mEndContainer, aRangeItem.mEndOffset),
-                SplitAtEdges::eDoNotCreateEmptyContainer);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    if (mostAncestorInlineContentAtEnd) {
+      SplitNodeResult splitEndInlineResult = SplitNodeDeepWithTransaction(
+          *mostAncestorInlineContentAtEnd, aRangeItem.EndPoint(),
+          SplitAtEdges::eDoNotCreateEmptyContainer);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(splitEndInlineResult.Failed())) {
+        return splitEndInlineResult.Rv();
+      }
+      EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
+      if (NS_WARN_IF(!splitPointAtEnd.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
+      aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
+      aRangeItem.mEndOffset = splitPointAtEnd.Offset();
     }
-    if (NS_WARN_IF(splitEndInlineResult.Failed())) {
-      return splitEndInlineResult.Rv();
-    }
-    EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
-    if (NS_WARN_IF(!splitPointAtEnd.IsSet())) {
-      return NS_ERROR_FAILURE;
-    }
-    aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
-    aRangeItem.mEndOffset = splitPointAtEnd.Offset();
   }
 
-  nsCOMPtr<nsIContent> startInline =
-      HTMLEditorRef().GetMostAncestorInlineElement(*aRangeItem.mStartContainer);
+  nsCOMPtr<nsIContent> mostAncestorInlineContentAtStart =
+      GetMostAncestorInlineElement(*aRangeItem.mStartContainer);
 
-  if (startInline) {
-    SplitNodeResult splitStartInlineResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SplitNodeDeepWithTransaction(
-                *startInline,
-                EditorDOMPoint(aRangeItem.mStartContainer,
-                               aRangeItem.mStartOffset),
-                SplitAtEdges::eDoNotCreateEmptyContainer);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (mostAncestorInlineContentAtStart) {
+    SplitNodeResult splitStartInlineResult = SplitNodeDeepWithTransaction(
+        *mostAncestorInlineContentAtStart, aRangeItem.StartPoint(),
+        SplitAtEdges::eDoNotCreateEmptyContainer);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(splitStartInlineResult.Failed())) {
@@ -7641,7 +7632,8 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
     return nullptr;
   }
 
-  // If aNode is the editing host itself, there is no modifiable inline parent.
+  // If aNode is the editing host itself, there is no modifiable inline
+  // parent.
   if (&aNode == host) {
     return nullptr;
   }
@@ -7931,7 +7923,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
          container && container != &aParentDivOrP;
          container = container->GetParent()) {
       if (HTMLEditUtils::IsLink(container)) {
-        // Found link should be only in right node.  So, we shouldn't split it.
+        // Found link should be only in right node.  So, we shouldn't split
+        // it.
         atStartOfSelection.Set(container);
         // Even if we found an anchor element, don't break because DOM API
         // allows to nest anchor elements.
@@ -8041,9 +8034,9 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       // above.
       pointToInsertBR.Set(pointToSplitParentDivOrP.GetContainer());
       DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
-      NS_WARNING_ASSERTION(
-          advanced,
-          "Failed to advance offset to after the container of selection start");
+      NS_WARNING_ASSERTION(advanced,
+                           "Failed to advance offset to after the container "
+                           "of selection start");
     }
   } else {
     // not in a text node.
@@ -8474,9 +8467,9 @@ nsresult HTMLEditRules::MakeBlockquote(
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // The idea here is to put the nodes into a minimal number of blockquotes.
-  // When the user blockquotes something, they expect one blockquote.  That may
-  // not be possible (for instance, if they have two table cells selected, you
-  // need two blockquotes inside the cells).
+  // When the user blockquotes something, they expect one blockquote.  That
+  // may not be possible (for instance, if they have two table cells selected,
+  // you need two blockquotes inside the cells).
   RefPtr<Element> curBlock;
   nsCOMPtr<nsINode> prevParent;
 
@@ -8879,9 +8872,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         if (NS_WARN_IF(!curBlock)) {
           return NS_ERROR_FAILURE;
         }
-        // If the new block element was moved to different element or removed by
-        // the web app via mutation event listener, we should stop handling this
-        // action since we cannot handle each of a lot of edge cases.
+        // If the new block element was moved to different element or removed
+        // by the web app via mutation event listener, we should stop handling
+        // this action since we cannot handle each of a lot of edge cases.
         if (NS_WARN_IF(curBlock->GetParentNode() !=
                        splitPoint.GetContainer())) {
           return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
@@ -8992,8 +8985,8 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   }
   nsCOMPtr<nsINode> rightParent = aNodeRight.GetParentNode();
 
-  // If they don't have the same parent, first move the right node to after the
-  // left one
+  // If they don't have the same parent, first move the right node to after
+  // the left one
   if (parent != rightParent) {
     int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
@@ -9105,7 +9098,8 @@ nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,
 
     bool isSet = false;
     nsAutoString outValue;
-    // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
+    // Don't use CSS for <font size>, we don't support it usefully (bug
+    // 780035)
     if (!useCSS || (styleCache.mTag == nsGkAtoms::font &&
                     styleCache.mAttr == nsGkAtoms::size)) {
       isSet = IsTextPropertySetByContent(&aNode, styleCache.mTag,
@@ -9253,8 +9247,8 @@ nsresult HTMLEditRules::PinSelectionToNewBlock() {
     return NS_ERROR_FAILURE;
   }
 
-  // Use ranges and RangeUtils::CompareNodeToRange() to compare selection start
-  // to new block.
+  // Use ranges and RangeUtils::CompareNodeToRange() to compare selection
+  // start to new block.
   RefPtr<StaticRange> staticRange = StaticRange::Create(
       selectionStartPoint.ToRawRangeBoundary(),
       selectionStartPoint.ToRawRangeBoundary(), IgnoreErrors());
@@ -9478,8 +9472,8 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
             return createPaddingBRResult.Rv();
           }
           point.Set(createPaddingBRResult.GetNewNode());
-          // Selection stays *before* padding <br> element for empty last line,
-          // sticking to it.
+          // Selection stays *before* padding <br> element for empty last
+          // line, sticking to it.
           ErrorResult error;
           SelectionRefPtr()->SetInterlinePosition(true, error);
           if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -9624,15 +9618,16 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // Some general notes on the algorithm used here: the goal is to examine all
-  // the nodes in TopLevelEditSubActionData::mChangedRange, and remove the empty
-  // ones.  We do this by using a content iterator to traverse all the nodes
-  // in the range, and placing the empty nodes into an array.  After finishing
-  // the iteration, we delete the empty nodes in the array.  (They cannot be
-  // deleted as we find them because that would invalidate the iterator.)
+  // the nodes in TopLevelEditSubActionData::mChangedRange, and remove the
+  // empty ones.  We do this by using a content iterator to traverse all the
+  // nodes in the range, and placing the empty nodes into an array.  After
+  // finishing the iteration, we delete the empty nodes in the array.  (They
+  // cannot be deleted as we find them because that would invalidate the
+  // iterator.)
   //
-  // Since checking to see if a node is empty can be costly for nodes with many
-  // descendants, there are some optimizations made.  I rely on the fact that
-  // the iterator is post-order: it will visit children of a node before
+  // Since checking to see if a node is empty can be costly for nodes with
+  // many descendants, there are some optimizations made.  I rely on the fact
+  // that the iterator is post-order: it will visit children of a node before
   // visiting the parent node.  So if I find that a child node is not empty, I
   // know that its parent is not empty without even checking.  So I put the
   // parent on a "skipList" which is just a voidArray of nodes I can skip the
@@ -9640,14 +9635,15 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   // processing for that node and replace its slot in the skiplist with that
   // node's parent.
   //
-  // An interesting idea is to go ahead and regard parent nodes that are NOT on
-  // the skiplist as being empty (without even doing the IsEmptyNode check) on
-  // the theory that if they weren't empty, we would have encountered a
+  // An interesting idea is to go ahead and regard parent nodes that are NOT
+  // on the skiplist as being empty (without even doing the IsEmptyNode check)
+  // on the theory that if they weren't empty, we would have encountered a
   // non-empty child earlier and thus put this parent node on the skiplist.
   //
   // Unfortunately I can't use that strategy here, because the range may
-  // include some children of a node while excluding others.  Thus I could find
-  // all the _examined_ children empty, but still not have an empty parent.
+  // include some children of a node while excluding others.  Thus I could
+  // find all the _examined_ children empty, but still not have an empty
+  // parent.
 
   PostContentIterator postOrderIter;
   nsresult rv = postOrderIter.Init(
@@ -9829,8 +9825,8 @@ bool HTMLEditRules::ListIsEmptyLine(
     nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // We have a list of nodes which we are candidates for being moved into a new
-  // block.  Determine if it's anything more than a blank line.  Look for
+  // We have a list of nodes which we are candidates for being moved into a
+  // new block.  Determine if it's anything more than a blank line.  Look for
   // editable content above and beyond one single BR.
   if (NS_WARN_IF(!aArrayOfNodes.Length())) {
     return true;

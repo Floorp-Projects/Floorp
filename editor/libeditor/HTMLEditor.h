@@ -1214,6 +1214,18 @@ class HTMLEditor final : public TextEditor,
    */
   nsIContent* GetMostAncestorInlineElement(nsINode& aNode) const;
 
+  /**
+   * SplitParentInlineElementsAtRangeEdges() splits parent inline nodes at both
+   * start and end of aRangeItem.  If this splits at every point, this modifies
+   * aRangeItem to point each split point (typically, right node).
+   *
+   * @param aRangeItem          [in/out] One or two DOM points where should be
+   *                            split.  Will be modified to split point if
+   *                            they're split.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
