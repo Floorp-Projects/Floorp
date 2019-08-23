@@ -339,7 +339,7 @@ module.exports = {
       "browser/components/preferences/in-content/tests/browser_extension_controlled.js",
       "browser/extensions/formautofill/FormAutofillParent.jsm",
       "browser/tools/mozscreenshots/head.js",
-      "devtools/client/aboutdebugging-new/test/browser/helper-addons.js",
+      "devtools/client/aboutdebugging/test/browser/helper-addons.js",
       "devtools/client/inspector/animation/animation.js",
       "devtools/client/inspector/changes/ChangesView.js",
       "devtools/client/inspector/markup/test/helper_screenshot_node.js",
