@@ -19,7 +19,7 @@ import com.android.build.OutputFile
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "org.mozilla.fenix"
+        applicationId "org.mozilla"
         minSdkVersion Config.minSdkVersion
         targetSdkVersion Config.targetSdkVersion
         versionCode 1
@@ -43,32 +43,35 @@ android {
         debug {
             shrinkResources false
             minifyEnabled false
-            applicationIdSuffix ".debug"
+            applicationIdSuffix ".fenix.debug"
             manifestPlaceholders.isRaptorEnabled = "true"
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
         }
         forPerformanceTest releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
             manifestPlaceholders.isRaptorEnabled = "true"
-            applicationIdSuffix ".performancetest"
+            applicationIdSuffix ".fenix.performancetest"
             debuggable true
         }
         fenixNightlyLegacy releaseTemplate >> {
+            applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         fenixNightly releaseTemplate >> {
-            applicationIdSuffix ".nightly"
+            applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         fenixBeta releaseTemplate >> {
-            applicationIdSuffix ".beta"
+            applicationIdSuffix ".fenix.beta"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         fenixProduction releaseTemplate >> {
+            applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         fennecProduction releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            applicationIdSuffix ".firefox"
         }
     }
 
@@ -167,8 +170,14 @@ android.applicationVariants.all { variant ->
 
     def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
     def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
-
     def versionName = Config.releaseVersionName(project)
+
+    println("----------------------------------------------")
+    println("Variant name:      " + variant.name)
+    println("Application ID:    " + [variant.mergedFlavor.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Build type:        " + variant.buildType.name)
+    println("Flavor:            " + variant.flavorName)
+    println("Telemetry enabled: " + !isDebug)
 
     if (useReleaseVersioning) {
         // The Google Play Store does not allow multiple APKs for the same app that all have the
@@ -224,13 +233,6 @@ android.applicationVariants.all { variant ->
             }
         }
     }
-
-    println("----------------------------------------------")
-    println("Variant name:      " + variant.name)
-    println("Build type:        " + variant.buildType.name)
-    println("Flavor:            " + variant.flavorName)
-    println("Version code:      " + (versionCode ?: variant.mergedFlavor.versionCode))
-    println("Telemetry enabled: " + !isDebug)
 
 // -------------------------------------------------------------------------------------------------
 // BuildConfig: Set variables for Sentry, Crash Reporting, and Telemetry
