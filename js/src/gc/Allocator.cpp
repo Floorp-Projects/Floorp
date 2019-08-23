@@ -368,12 +368,13 @@ bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
     gcIfRequested();
   }
 
-  // If we have grown past our GC heap threshold while in the middle of
-  // an incremental GC, we're growing faster than we're GCing, so stop
+  // If we have grown past our non-incremental heap threshold while in the
+  // middle of an incremental GC, we're growing faster than we're GCing, so stop
   // the world and do a full, non-incremental GC right now, if possible.
   Zone* zone = cx->zone();
   if (isIncrementalGCInProgress() &&
-      zone->gcHeapSize.bytes() > zone->gcHeapThreshold.bytes()) {
+      zone->gcHeapSize.bytes() >
+          zone->gcHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
     PrepareZoneForGC(cx->zone());
     gc(GC_NORMAL, JS::GCReason::INCREMENTAL_TOO_SLOW);
   }
