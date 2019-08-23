@@ -1886,13 +1886,17 @@ def rust_compile_flags(opt_level, debug_rust, debug_symbols, frame_pointers):
 # Rust incremental compilation
 # ==============================================================
 
+js_option(env='RUSTC_WRAPPER', nargs=1,
+          help='Wrap rust compilation with given tool')
+
 js_option('--disable-cargo-incremental',
           help='Disable incremental rust compilation.')
 
 @depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION', code_coverage,
-         '--disable-cargo-incremental')
+         '--disable-cargo-incremental', using_sccache, 'RUSTC_WRAPPER')
+@imports('os')
 def cargo_incremental(opt_level, debug_rust, automation, code_coverage,
-                      enabled):
+                      enabled, using_sccache, rustc_wrapper):
     """Return a value for the CARGO_INCREMENTAL environment variable."""
 
     if not enabled:
@@ -1907,6 +1911,15 @@ def cargo_incremental(opt_level, debug_rust, automation, code_coverage,
     # Coverage instrumentation doesn't play well with incremental compilation
     # https://github.com/rust-lang/rust/issues/50203.
     if code_coverage:
+        return '0'
+
+    # Incremental compilation doesn't work as well as it should, and if we're
+    # using sccache, it's better to use sccache than incremental compilation.
+    if not using_sccache and rustc_wrapper:
+        rustc_wrapper = os.path.basename(rustc_wrapper[0])
+        if os.path.splitext(rustc_wrapper)[0].lower() == 'sccache':
+            using_sccache = True
+    if using_sccache:
         return '0'
 
     # Incremental compilation is automatically turned on for debug builds, so
