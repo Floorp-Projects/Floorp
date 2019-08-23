@@ -764,6 +764,10 @@ TextPropertyEditor.prototype = {
       this.element.classList.remove("ruleview-overridden");
     }
 
+    this.updatePropertyUsedIndicator();
+  },
+
+  updatePropertyUsedIndicator: function() {
     const { used } = this.prop.isUsed();
 
     if (this.editing || this.prop.overridden || !this.prop.enabled || used) {
