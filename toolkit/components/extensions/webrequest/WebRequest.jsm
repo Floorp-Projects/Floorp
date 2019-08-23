@@ -757,7 +757,7 @@ HttpObserverManager = {
     }
   },
 
-  getRequestData(channel, extraData, policy) {
+  getRequestData(channel, extraData) {
     let originAttributes =
       channel.loadInfo && channel.loadInfo.originAttributes;
     let data = {
@@ -783,12 +783,6 @@ HttpObserverManager = {
 
       serialize: serializeRequestData,
     };
-
-    // We're limiting access to
-    // urlClassification while the feature is further fleshed out.
-    if (policy && policy.extension.isPrivileged) {
-      data.urlClassification = channel.urlClassification;
-    }
 
     return Object.assign(data, extraData);
   },
@@ -845,13 +839,20 @@ HttpObserverManager = {
         }
 
         if (!commonData) {
-          commonData = this.getRequestData(channel, extraData, opts.extension);
+          commonData = this.getRequestData(channel, extraData);
           if (this.STATUS_TYPES.has(kind)) {
             commonData.statusCode = channel.statusCode;
             commonData.statusLine = channel.statusLine;
           }
         }
         let data = Object.create(commonData);
+
+        // We're limiting access to urlClassification while the feature is
+        // further fleshed out.
+        let policy = opts.extension;
+        if (policy && policy.extension.isPrivileged) {
+          data.urlClassification = channel.urlClassification;
+        }
 
         if (registerFilter && opts.blocking && opts.extension) {
           data.registerTraceableChannel = (extension, remoteTab) => {
