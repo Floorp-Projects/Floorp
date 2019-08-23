@@ -685,7 +685,8 @@ description#identity-popup-content-verifier,
 
 #protections-popup:not([hasException]) .protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
 .protections-popup-category.notFound ~ #protections-popup-not-found-section-header,
-.protections-popup-category:not(.blocked):not(.notFound) ~ #protections-popup-not-blocking-section-header {
+.protections-popup-category:not(.blocked):not(.notFound) ~ #protections-popup-not-blocking-section-header,
+#protections-popup[hasException] .protections-popup-category:not(.notFound) ~ #protections-popup-not-blocking-section-header {
   display: flex;
 }
 
