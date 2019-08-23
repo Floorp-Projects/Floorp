@@ -46,7 +46,7 @@ To run the other (non-debugger) DevTools tests, the easiest is to rely on the sa
 > node devtools/client/bin/devtools-node-test-runner.js --suite={suitename}
 ```
 
-At the moment of writing, the supported suites for this script are: `aboutdebugging`, `accessibility`, `application`, `framework`, `netmonitor`, `webconsole`.
+At the moment of writing, the supported suites for this script are: `aboutdebugging-new`, `accessibility`, `application`, `framework`, `netmonitor`, `webconsole`.
 
 Alternatively, you can also locate the `package.json` corresponding to a given suite, and run `yarn && yarn test`.
 
