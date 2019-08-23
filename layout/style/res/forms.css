@@ -97,15 +97,8 @@ input {
   color: -moz-FieldText;
   font: -moz-field;
   text-rendering: optimizeLegibility;
-  line-height: normal;
-  text-align: start;
-  text-transform: none;
-  word-spacing: normal;
-  letter-spacing: normal;
   cursor: text;
-  text-indent: 0;
   user-select: text;
-  text-shadow: none;
   overflow-clip-box: padding-box content-box;
 }
 
@@ -135,7 +128,10 @@ textarea {
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-clip-box: content-box;
-  /* A few properties that we don't want to inherit by default: */
+}
+
+/* A few properties that we don't want to inherit by default: */
+input, textarea, select, button {
   text-align: initial;
   text-indent: initial;
   text-shadow: initial;
@@ -237,19 +233,15 @@ select {
   background-color: -moz-Combobox;
   color: -moz-ComboboxText;
   font: -moz-list;
-  line-height: initial;
   white-space: nowrap !important;
   word-wrap: normal !important;
-  text-align: start;
   cursor: default;
   box-sizing: border-box;
   user-select: none;
   -moz-appearance: menulist;
   border-width: 2px;
   border-style: inset;
-  text-indent: 0;
   overflow: -moz-hidden-unscrollable;
-  text-shadow: none;
   /* No text-decoration reaching inside, by default */
   display: inline-block;
   page-break-inside: avoid;
@@ -626,10 +618,8 @@ input[type="button"],
 input[type="submit"] {
   color: ButtonText;
   font: -moz-button;
-  line-height: normal;
   white-space: pre;
   text-align: center;
-  text-shadow: none;
   overflow-clip-box: padding-box;
 }
 
