@@ -368,6 +368,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   Client* GetClient(Client::Type aClientType);
 
+  const AutoTArray<Client::Type, Client::TYPE_MAX>& AllClientTypes();
+
   const nsString& GetBasePath() const { return mBasePath; }
 
   const nsString& GetStoragePath() const { return mStoragePath; }
@@ -521,8 +523,8 @@ class QuotaManager final : public BackgroundThreadObject {
   void ReleaseIOThreadObjects() {
     AssertIsOnIOThread();
 
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      mClients[index]->ReleaseIOThreadObjects();
+    for (Client::Type type : AllClientTypes()) {
+      mClients[type]->ReleaseIOThreadObjects();
     }
   }
 
@@ -564,6 +566,9 @@ class QuotaManager final : public BackgroundThreadObject {
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.
   AutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
+
+  AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypes;
+  AutoTArray<Client::Type, Client::TYPE_MAX> mAllClientTypesExceptLS;
 
   nsString mBasePath;
   nsString mIndexedDBPath;

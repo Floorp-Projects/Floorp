@@ -36,7 +36,7 @@ class UsageInfo;
 // to participate in centralized quota and storage handling.
 class Client {
  public:
-  typedef mozilla::Atomic<bool> AtomicBool;
+  typedef Atomic<bool> AtomicBool;
 
   enum Type {
     IDB = 0,
