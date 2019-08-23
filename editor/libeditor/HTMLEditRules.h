@@ -786,9 +786,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult NormalizeSelection();
 
-  void GetChildNodesForOperation(
-      nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-
   enum class TouchContent { no, yes };
   enum class EntireList { no, yes };
   MOZ_CAN_RUN_SCRIPT
