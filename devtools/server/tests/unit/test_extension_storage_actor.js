@@ -246,26 +246,35 @@ add_task(async function test_extension_store_exists() {
   await shutdown(extension, target);
 });
 
-add_task(async function test_extension_origin_matches_debugger_target() {
-  async function background() {
-    browser.test.sendMessage("extension-origin", window.location.origin);
+add_task(
+  {
+    // This test currently fails if the extension runs in the main process
+    // like in Thunderbird (see bug 1575183 comment #15 for details).
+    skip_if: () => !WebExtensionPolicy.useRemoteWebExtensions,
+  },
+  async function test_extension_origin_matches_debugger_target() {
+    async function background() {
+      browser.test.sendMessage("extension-origin", window.location.origin);
+    }
+
+    const extension = await startupExtension(
+      getExtensionConfig({ background })
+    );
+
+    const { target, extensionStorage } = await openAddonStoragePanel(
+      extension.id
+    );
+
+    const { hosts } = extensionStorage;
+    const expectedHost = await extension.awaitMessage("extension-origin");
+    ok(
+      expectedHost in hosts,
+      "Should have the expected extension host in the extensionStorage store"
+    );
+
+    await shutdown(extension, target);
   }
-
-  const extension = await startupExtension(getExtensionConfig({ background }));
-
-  const { target, extensionStorage } = await openAddonStoragePanel(
-    extension.id
-  );
-
-  const { hosts } = extensionStorage;
-  const expectedHost = await extension.awaitMessage("extension-origin");
-  ok(
-    expectedHost in hosts,
-    "Should have the expected extension host in the extensionStorage store"
-  );
-
-  await shutdown(extension, target);
-});
+);
 
 /**
  * Test case: Background page modifies items while storage panel is open.
@@ -843,19 +852,26 @@ add_task(
  * storage actor. Since this pref is set at the beginning of the file, it
  * already will be cleared via registerCleanupFunction when the test finishes.
  */
-add_task(async function test_extensionStorage_store_disabled_on_pref() {
-  Services.prefs.setBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false);
+add_task(
+  {
+    // This test fails if the extension runs in the main process
+    // like in Thunderbird (see bug 1575183 comment #15 for details).
+    skip_if: () => !WebExtensionPolicy.useRemoteWebExtensions,
+  },
+  async function test_extensionStorage_store_disabled_on_pref() {
+    Services.prefs.setBoolPref(EXTENSION_STORAGE_ENABLED_PREF, false);
 
-  const extension = await startupExtension(getExtensionConfig());
+    const extension = await startupExtension(getExtensionConfig());
 
-  const { target, extensionStorage } = await openAddonStoragePanel(
-    extension.id
-  );
+    const { target, extensionStorage } = await openAddonStoragePanel(
+      extension.id
+    );
 
-  ok(
-    extensionStorage === null,
-    "Should not have an extensionStorage store when pref disabled"
-  );
+    ok(
+      extensionStorage === null,
+      "Should not have an extensionStorage store when pref disabled"
+    );
 
-  await shutdown(extension, target);
-});
+    await shutdown(extension, target);
+  }
+);
