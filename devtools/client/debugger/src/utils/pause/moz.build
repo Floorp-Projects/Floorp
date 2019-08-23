@@ -11,6 +11,5 @@ DIRS += [
 
 CompiledModules(
     'index.js',
-    'inlinePreview.js',
     'why.js',
 )

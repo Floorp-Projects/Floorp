@@ -1288,6 +1288,7 @@ const selectors = {
   CodeMirrorLines: ".CodeMirror-lines",
   inlinePreviewLables: ".CodeMirror-linewidget .inline-preview-label",
   inlinePreviewValues: ".CodeMirror-linewidget .inline-preview-value",
+  inlinePreviewOpenInspector: ".inline-preview-value button.open-inspector",
 };
 
 function getSelector(elementName, ...args) {
@@ -1792,4 +1793,8 @@ function evaluateExpressionInConsole(hud, expression) {
   });
   hud.ui.wrapper.dispatchEvaluateExpression(expression);
   return onResult;
+}
+
+function waitForInspectorPanelChange(dbg) {
+  return dbg.toolbox.getPanelWhenReady("inspector");
 }
