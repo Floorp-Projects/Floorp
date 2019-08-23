@@ -2,7 +2,7 @@ browser/components/newtab/node_modules/
 browser/components/newtab/vendor/
 browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
-devtools/client/aboutdebugging-new/test/jest/node_modules/
+devtools/client/aboutdebugging/test/jest/node_modules/
 devtools/client/application/test/components/node_modules/
 devtools/client/debugger/flow-typed/npm/
 devtools/client/debugger/node_modules/
