@@ -23,6 +23,7 @@ import mozinfo
 from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
 from mozlog import commandline
+from mozpower import MozPower
 from mozprofile import create_profile
 from mozproxy import get_playback
 from mozrunner import runners
@@ -170,6 +171,19 @@ either Raptor or browsertime."""
             return os.path.join(build.topsrcdir, 'testing', 'profiles')
         return os.path.join(here, 'profile_data')
 
+    @property
+    def artifact_dir(self):
+        artifact_dir = os.getcwd()
+        if self.config.get('run_local', False):
+            if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
+                artifact_dir = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'],
+                                            'testing', 'mozharness', 'build')
+            else:
+                artifact_dir = here
+        elif os.getenv('MOZ_UPLOAD_DIR'):
+            artifact_dir = os.getenv('MOZ_UPLOAD_DIR')
+        return artifact_dir
+
     @abstractmethod
     def check_for_crashes(self):
         pass
@@ -210,13 +224,8 @@ either Raptor or browsertime."""
     def process_results(self, test_names):
         # when running locally output results in build/raptor.json; when running
         # in production output to a local.json to be turned into tc job artifact
-        if self.config.get('run_local', False):
-            if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
-                raptor_json_path = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'],
-                                                'testing', 'mozharness', 'build', 'raptor.json')
-            else:
-                raptor_json_path = os.path.join(here, 'raptor.json')
-        else:
+        raptor_json_path = os.path.join(self.artifact_dir, 'raptor.json')
+        if not self.config.get('run_local', False):
             raptor_json_path = os.path.join(os.getcwd(), 'local.json')
 
         self.config['raptor_json_path'] = raptor_json_path
@@ -537,10 +546,48 @@ class RaptorDesktop(Raptor):
     def run_test(self, test, timeout):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
         # unless otheriwse specified in the test INI by using 'cold = true'
+        mozpower_measurer = None
+        if self.config.get('power_test', False):
+            output_dir = os.path.join(self.artifact_dir, 'power-measurements')
+            test_dir = os.path.join(output_dir, test['name'].replace('/', '-').replace('\\', '-'))
+
+            try:
+                if not os.path.exists(output_dir):
+                    os.mkdir(output_dir)
+                if not os.path.exists(test_dir):
+                    os.mkdir(test_dir)
+            except Exception as e:
+                LOG.critical("Could not create directories to store power testing data.")
+                raise e
+
+            # Start power measurements with IPG creating a power usage log
+            # every 30 seconds with 1 data point per second (or a 1000 milli-
+            # second sampling rate).
+            mozpower_measurer = MozPower(
+                ipg_measure_duration=30,
+                sampling_rate=1000,
+                output_file_path=os.path.join(test_dir, 'power-usage')
+            )
+            mozpower_measurer.initialize_power_measurements()
+
         if test.get('cold', False) is True:
             self.__run_test_cold(test, timeout)
         else:
             self.__run_test_warm(test, timeout)
+
+        if mozpower_measurer:
+            mozpower_measurer.finalize_power_measurements(test_name=test['name'])
+            perfherder_data = mozpower_measurer.get_perfherder_data()
+
+            if not self.config.get('run_local', False):
+                # when not running locally, zip the data and delete the folder which
+                # was placed in the zip
+                power_data_path = os.path.join(self.artifact_dir, 'power-measurements')
+                shutil.make_archive(power_data_path + '.zip', 'zip', power_data_path)
+                shutil.rmtree(power_data_path)
+
+            self.control_server.submit_supporting_data(perfherder_data['utilization'])
+            self.control_server.submit_supporting_data(perfherder_data['power-usage'])
 
     def __run_test_cold(self, test, timeout):
         '''
