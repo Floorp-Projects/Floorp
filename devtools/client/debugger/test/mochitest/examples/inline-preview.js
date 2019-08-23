@@ -24,3 +24,13 @@ function columnWise() {
   console.log(c, a, b);
   debugger;
 }
+
+function btnClick() {
+  const btn = document.querySelector("button");
+  debugger;
+  btn.click();
+}
+
+function onBtnClick(event) {
+  debugger;
+}

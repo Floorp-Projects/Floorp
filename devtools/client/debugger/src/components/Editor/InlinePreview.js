@@ -6,8 +6,13 @@
 import React, { PureComponent } from "react";
 import Reps from "devtools-reps";
 
+import actions from "../../actions";
+
 const {
-  REPS: { Rep },
+  REPS: {
+    Rep,
+    ElementNode: { supportsObject: isElement },
+  },
   MODE,
 } = Reps;
 
@@ -15,6 +20,9 @@ type Props = {
   line: number,
   value: any,
   variable: string,
+  openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement,
 };
 
 // Renders single variable preview inside a codemirror line widget
@@ -25,7 +33,16 @@ class InlinePreview extends PureComponent<Props> {
   }
 
   render() {
-    const { value, variable } = this.props;
+    const {
+      value,
+      variable,
+      openElementInInspector,
+      highlightDomElement,
+      unHighlightDomElement,
+    } = this.props;
+
+    const mode = isElement(value) ? MODE.TINY : MODE.SHORT;
+
     return (
       <span
         className="inline-preview-outer"
@@ -33,7 +50,14 @@ class InlinePreview extends PureComponent<Props> {
       >
         <span className="inline-preview-label">{variable}:</span>
         <span className="inline-preview-value">
-          <Rep object={value} mode={MODE.SHORT} noGrip={true} />
+          <Rep
+            object={value}
+            mode={mode}
+            onDOMNodeClick={grip => openElementInInspector(grip)}
+            onInspectIconClick={grip => openElementInInspector(grip)}
+            onDOMNodeMouseOver={grip => highlightDomElement(grip)}
+            onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+          />
         </span>
       </span>
     );

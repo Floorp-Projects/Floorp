@@ -27,6 +27,29 @@ async function checkInlinePreview(dbg, fnName, inlinePreviews) {
   await resume(dbg);
 }
 
+async function checkInspectorIcon(dbg) {
+  await waitForElement(dbg, "inlinePreviewOpenInspector");
+
+  const { toolbox } = dbg;
+  const node = findElement(dbg, "inlinePreviewOpenInspector");
+
+  // Ensure hovering over button highlights the node in content pane
+  const view = node.ownerDocument.defaultView;
+  const inspectorFront = await toolbox.target.getFront("inspector");
+  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+
+  EventUtils.synthesizeMouseAtCenter(node, { type: "mousemove" }, view);
+
+  const nodeFront = await onNodeHighlight;
+  is(nodeFront.displayName, "button", "The correct node was highlighted");
+
+  // Ensure panel changes when button is clicked
+  node.click();
+  await waitForInspectorPanelChange(dbg);
+
+  await resume(dbg);
+}
+
 // Test checking inline preview feature
 add_task(async function() {
   await pushPref("devtools.debugger.features.inline-preview", true);
@@ -42,12 +65,12 @@ add_task(async function() {
     { identifier: "b:", value: "false" },
     { identifier: "c:", value: "undefined" },
     { identifier: "d:", value: "null" },
-    { identifier: "e:", value: "[]" },
+    { identifier: "e:", value: "Array []" },
     { identifier: "f:", value: "Object { }" },
     { identifier: "obj:", value: "Object { foo: 1 }" },
     {
       identifier: "bs:",
-      value: "[ {…}, {…}, {…}, … ]",
+      value: "Array(101) [ {…}, {…}, {…}, … ]",
     },
   ]);
 
@@ -56,4 +79,17 @@ add_task(async function() {
     { identifier: "a:", value: '"a"' },
     { identifier: "b:", value: '"b"' },
   ]);
+
+  // Checks that open in inspector button works in inline preview
+  invokeInTab("btnClick");
+  await checkInspectorIcon(dbg);
+
+  const { toolbox } = dbg;
+  await toolbox.selectTool("jsdebugger");
+
+  await waitForPaused(dbg);
+
+  // Check preview of event ( event.target should be clickable )
+  // onBtnClick function in inline-preview.js
+  await checkInspectorIcon(dbg);
 });
