@@ -345,7 +345,7 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
     // it
     if (aSecretSeed != nullptr) {
       StaticMutexAutoLock lock(sLock);
-      if (sSecretMidpointSeed) {
+      if (sSecretMidpointSeed != nullptr) {
         delete[] sSecretMidpointSeed;
       }
       sSecretMidpointSeed = new uint8_t[kSeedSize];
@@ -731,7 +731,7 @@ nsresult nsRFPService::Init() {
 
   // We backup the original TZ value here.
   const char* tzValue = PR_GetEnv("TZ");
-  if (tzValue) {
+  if (tzValue != nullptr) {
     mInitialTZValue = nsCString(tzValue);
   }
 
@@ -740,7 +740,7 @@ nsresult nsRFPService::Init() {
 
   // Create the LRU Cache when we initialize, to avoid accidently trying to
   // create it (and call ClearOnShutdown) on a non-main-thread
-  if (!sCache) {
+  if (sCache == nullptr) {
     sCache = new LRUCache();
   }
 
@@ -788,13 +788,13 @@ void nsRFPService::UpdateRFPPref() {
 
       // If the tz has been set before, we free it first since it will be
       // allocated a new value later.
-      if (tz) {
+      if (tz != nullptr) {
         free(tz);
       }
       // PR_SetEnv() needs the input string been leaked intentionally, so
       // we copy it here.
       tz = ToNewCString(tzValue);
-      if (tz) {
+      if (tz != nullptr) {
         PR_SetEnv(tz);
       }
     } else {
@@ -843,7 +843,7 @@ void nsRFPService::StartShutdown() {
 /* static */
 void nsRFPService::MaybeCreateSpoofingKeyCodes(const KeyboardLangs aLang,
                                                const KeyboardRegions aRegion) {
-  if (!sSpoofingKeyboardCodes) {
+  if (sSpoofingKeyboardCodes == nullptr) {
     sSpoofingKeyboardCodes =
         new nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>();
   }
@@ -941,7 +941,7 @@ bool nsRFPService::GetSpoofedKeyCodeInfo(
   KeyboardRegions keyboardRegion = RFP_DEFAULT_SPOOFING_KEYBOARD_REGION;
   // If the document is given, we use the content language which is get from the
   // document. Otherwise, we use the default one.
-  if (aDoc) {
+  if (aDoc != nullptr) {
     nsAutoString language;
     aDoc->GetContentLanguage(language);
 
@@ -950,7 +950,7 @@ bool nsRFPService::GetSpoofedKeyCodeInfo(
     if (language.IsEmpty()) {
       dom::Element* elm = aDoc->GetHtmlElement();
 
-      if (elm) {
+      if (elm != nullptr) {
         elm->GetLang(language);
       }
     }
@@ -975,7 +975,7 @@ bool nsRFPService::GetSpoofedKeyCodeInfo(
   KeyboardHashKey key(keyboardLang, keyboardRegion, keyIdx, keyName);
   const SpoofingKeyboardCode* keyboardCode = sSpoofingKeyboardCodes->Get(key);
 
-  if (keyboardCode) {
+  if (keyboardCode != nullptr) {
     aOut = *keyboardCode;
     return true;
   }
@@ -997,11 +997,11 @@ bool nsRFPService::GetSpoofedModifierStates(
   // We will spoof the modifer state for Alt, Shift, and AltGraph.
   // We don't spoof the Control key, because it is often used
   // for command key combinations in web apps.
-  if (aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH)) {
+  if ((aModifier & (MODIFIER_ALT | MODIFIER_SHIFT | MODIFIER_ALTGRAPH)) != 0) {
     SpoofingKeyboardCode keyCodeInfo;
 
     if (GetSpoofedKeyCodeInfo(aDoc, aKeyboardEvent, keyCodeInfo)) {
-      aOut = keyCodeInfo.mModifierStates & aModifier;
+      aOut = ((keyCodeInfo.mModifierStates & aModifier) != 0);
       return true;
     }
   }
@@ -1075,7 +1075,7 @@ void nsRFPService::PrefChanged(const char* aPref) {
 NS_IMETHODIMP
 nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
                       const char16_t* aMessage) {
-  if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+  if (strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) == 0) {
     StartShutdown();
   }
 #if defined(XP_WIN)
