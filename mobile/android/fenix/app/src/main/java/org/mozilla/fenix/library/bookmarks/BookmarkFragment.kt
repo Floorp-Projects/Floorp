@@ -234,7 +234,10 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         nav(R.id.bookmarkFragment, directions)
     }
 
-    override fun onBackPressed(): Boolean = bookmarkView.onBackPressed()
+    override fun onBackPressed(): Boolean {
+        invokePendingDeletion()
+        return bookmarkView.onBackPressed()
+    }
 
     override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         bookmarkInteractor.onSignedIn()
