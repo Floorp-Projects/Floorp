@@ -57,6 +57,7 @@ XPCOM_MANIFESTS += [
 UNIFIED_SOURCES += [
     'ActorsChild.cpp',
     'ActorsParent.cpp',
+    'Client.cpp',
     'FileStreams.cpp',
     'MemoryOutputStream.cpp',
     'nsIndexedDBProtocolHandler.cpp',
