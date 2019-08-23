@@ -14,6 +14,7 @@
 #include "Layers.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 
 #include <inttypes.h>
@@ -125,6 +126,44 @@ void DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
   WriteTime(aWriter, aProcessStartTime, mTimeStamp, "timeStamp");
   aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
+}
+
+static const char* PrefValueKindToString(
+    const mozilla::Maybe<PrefValueKind>& aKind) {
+  if (aKind) {
+    return *aKind == PrefValueKind::Default ? "Default" : "User";
+  }
+  return "Shared";
+}
+
+static const char* PrefTypeToString(const mozilla::Maybe<PrefType>& type) {
+  if (type) {
+    switch (*type) {
+      case PrefType::None:
+        return "None";
+      case PrefType::Int:
+        return "Int";
+      case PrefType::Bool:
+        return "Bool";
+      case PrefType::String:
+        return "String";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown preference type.");
+    }
+  }
+  return "Preference not found";
+}
+
+void PrefMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                      const TimeStamp& aProcessStartTime,
+                                      UniqueStacks& aUniqueStacks) {
+  StreamCommonProps("PreferenceRead", aWriter, aProcessStartTime,
+                    aUniqueStacks);
+  WriteTime(aWriter, aProcessStartTime, mPrefAccessTime, "prefAccessTime");
+  aWriter.StringProperty("prefName", mPrefName.get());
+  aWriter.StringProperty("prefKind", PrefValueKindToString(mPrefKind));
+  aWriter.StringProperty("prefType", PrefTypeToString(mPrefType));
+  aWriter.StringProperty("prefValue", mPrefValue.get());
 }
 
 void LayerTranslationMarkerPayload::StreamPayload(
