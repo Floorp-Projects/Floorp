@@ -405,12 +405,10 @@ dependencies {
 
     implementation Deps.google_ads_id // Required for the Google Advertising ID
 
-//    androidTestImplementation Deps.tools_test_runner
-//    androidTestImplementation Deps.tools_espresso_core
-
     androidTestImplementation Deps.uiautomator
-    androidTestImplementation "tools.fastlane:screengrab:1.2.0"
-    androidTestImplementation "br.com.concretesolutions:kappuccino:1.2.1"
+// Removed pending AndroidX fixes
+//    androidTestImplementation "tools.fastlane:screengrab:1.2.0"
+//    androidTestImplementation "br.com.concretesolutions:kappuccino:1.2.1"
 
     androidTestImplementation Deps.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
