@@ -26,6 +26,11 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/LoginHelper.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "FXA_PWDMGR_HOST": "resource://gre/modules/FxAccountsCommon.js",
+  "FXA_PWDMGR_REALM": "resource://gre/modules/FxAccountsCommon.js",
+});
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
@@ -175,9 +180,9 @@ var AboutProtectionsHandler = {
     const userFacingLogins =
       Services.logins.countLogins("", "", "") -
       Services.logins.countLogins(
-        "chrome://FirefoxAccounts",
+        FXA_PWDMGR_HOST,
         null,
-        "Firefox Accounts credentials"
+        FXA_PWDMGR_REALM
       );
 
     return {
