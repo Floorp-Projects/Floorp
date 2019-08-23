@@ -170,21 +170,4 @@ interface nsITreeView : nsISupports
    * setCellText is called when the contents of the cell have been edited by the user.
    */
   void setCellText(in long row, in TreeColumn col, in AString value);
-
-  /**
-   * A command API that can be used to invoke commands on the selection.  The tree
-   * will automatically invoke this method when certain keys are pressed.  For example,
-   * when the DEL key is pressed, performAction will be called with the "delete" string.
-   */
-  void performAction(in wstring action);
-
-  /**
-   * A command API that can be used to invoke commands on a specific row.
-   */
-  void performActionOnRow(in wstring action, in long row);
-
-  /**
-   * A command API that can be used to invoke commands on a specific cell.
-   */
-  void performActionOnCell(in wstring action, in long row, in TreeColumn col);
 };

@@ -311,17 +311,6 @@ nsNSSASN1Tree::SetCellText(int32_t, nsTreeColumn*, const nsAString&) {
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::PerformAction(const char16_t*) { return NS_OK; }
-
-NS_IMETHODIMP
-nsNSSASN1Tree::PerformActionOnRow(const char16_t*, int32_t) { return NS_OK; }
-
-NS_IMETHODIMP
-nsNSSASN1Tree::PerformActionOnCell(const char16_t*, int32_t, nsTreeColumn*) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSASN1Tree::CanDrop(int32_t, int32_t, mozilla::dom::DataTransfer*,
                        bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);

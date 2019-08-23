@@ -163,9 +163,6 @@ nsTreeView.prototype = {
 
     this.mTree.invalidateCell(aRow, aCol);
   },
-  performAction: function performAction(aAction) {},
-  performActionOnRow: function performActionOnRow(aAction, aRow) {},
-  performActionOnCell: function performActionOnCell(aAction, aRow, aCol) {},
 
   // ////////////////////////////////////////////////////////////////////////////
   // public implementation

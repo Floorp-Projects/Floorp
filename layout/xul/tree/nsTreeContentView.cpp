@@ -689,20 +689,6 @@ nsTreeContentView::SetCellText(int32_t aRow, nsTreeColumn* aCol,
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-nsTreeContentView::PerformAction(const char16_t* aAction) { return NS_OK; }
-
-NS_IMETHODIMP
-nsTreeContentView::PerformActionOnRow(const char16_t* aAction, int32_t aRow) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::PerformActionOnCell(const char16_t* aAction, int32_t aRow,
-                                       nsTreeColumn* aCol) {
-  return NS_OK;
-}
-
 Element* nsTreeContentView::GetItemAtIndex(int32_t aIndex,
                                            ErrorResult& aError) {
   if (!IsValidRowIndex(aIndex)) {
