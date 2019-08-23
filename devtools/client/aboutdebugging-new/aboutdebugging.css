@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+* Global styles
+*/
+@import "resource://devtools/client/themes/variables.css";
+@import "resource://devtools/client/aboutdebugging-new/src/base.css";
+
+/*
+* Components
+*/
+@import "resource://devtools/client/aboutdebugging-new/src/components/App.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/ProfilerDialog.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/RuntimeActions.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/RuntimeInfo.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/connect/ConnectPage.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/connect/ConnectSection.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/connect/ConnectSteps.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/connect/NetworkLocationsForm.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/connect/NetworkLocationsList.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/DebugTargetItem.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/DebugTargetList.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/DebugTargetPane.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/FieldPair.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/ServiceWorkerAction.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/debugtarget/TemporaryExtensionInstallSection.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/shared/IconLabel.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/shared/Message.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/Sidebar.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarFixedItem.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarItem.css";
+@import "resource://devtools/client/aboutdebugging-new/src/components/sidebar/SidebarRuntimeItem.css";
