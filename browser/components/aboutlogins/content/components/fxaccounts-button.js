@@ -27,7 +27,7 @@ export default class FxAccountsButton extends HTMLElement {
   }
 
   handleEvent(event) {
-    if (event.target == this._avatarButton) {
+    if (event.currentTarget == this._avatarButton) {
       document.dispatchEvent(
         new CustomEvent("AboutLoginsSyncOptions", {
           bubbles: true,
