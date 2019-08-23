@@ -24,6 +24,7 @@ EXTRA_COMPONENTS += [
     'GeckoViewExternalAppService.js',
     'GeckoViewPermission.js',
     'GeckoViewPrompt.js',
+    'GeckoViewPush.js',
     'GeckoViewStartup.js',
 ]
 
