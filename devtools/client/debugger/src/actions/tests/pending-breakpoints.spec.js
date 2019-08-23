@@ -381,7 +381,7 @@ describe("adding sources", () => {
           url: sourceURL,
         },
       ],
-      getOriginalSourceText: async () => ({ source: "" }),
+      getOriginalSourceText: async () => ({ text: "" }),
       getGeneratedLocation: async location => ({
         line: location.line,
         column: location.column,
@@ -391,7 +391,11 @@ describe("adding sources", () => {
       getGeneratedRangesForOriginal: async () => [
         { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
       ],
-      getOriginalLocations: async items => items,
+      getOriginalLocations: async items =>
+        items.map(item => ({
+          ...item,
+          sourceId: sourceMaps.generatedToOriginalId(item.sourceId, sourceURL),
+        })),
     });
 
     const { getState, dispatch } = store;

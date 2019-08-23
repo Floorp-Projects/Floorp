@@ -89,7 +89,6 @@ type PlainUrlsMap = { [string]: string[] };
 export type SourceBase = {|
   +id: SourceId,
   +url: string,
-  +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
   +relativeUrl: string,
@@ -159,8 +158,6 @@ function update(
   let location = null;
 
   switch (action.type) {
-    case "CLEAR_SOURCE_MAP_URL":
-      return clearSourceMaps(state, action.sourceId);
     case "ADD_SOURCE":
       return addSources(state, [action.source]);
 
@@ -448,25 +445,6 @@ function updateLoadedState(
       {
         id: sourceId,
         content,
-      },
-    ]),
-  };
-}
-
-function clearSourceMaps(
-  state: SourcesState,
-  sourceId: SourceId
-): SourcesState {
-  if (!hasResource(state.sources, sourceId)) {
-    return state;
-  }
-
-  return {
-    ...state,
-    sources: updateResources(state.sources, [
-      {
-        id: sourceId,
-        sourceMapURL: "",
       },
     ]),
   };
@@ -939,8 +917,9 @@ export function isSourceWithMap(
   state: OuterState & SourceActorOuterState,
   id: SourceId
 ): boolean {
-  const source = getSource(state, id);
-  return source ? !!source.sourceMapURL : false;
+  return getSourceActorsForSource(state, id).some(
+    soureActor => soureActor.sourceMapURL
+  );
 }
 
 export function canPrettyPrintSource(
