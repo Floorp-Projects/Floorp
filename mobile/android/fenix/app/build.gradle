@@ -197,8 +197,9 @@ android.applicationVariants.all { variant ->
             def abi = output.getFilter(OutputFile.ABI)
 
             def versionCodeOverride
-
-            if (abi == "x86_64") {
+            if (variant.name.contains("Fennec")) {
+                versionCodeOverride = Config.generateFennecVersionCode(abi)
+            } else if (abi == "x86_64") {
                 versionCodeOverride = baseVersionCode + 3
             } else if (abi == "x86") {
                 versionCodeOverride = baseVersionCode + 2
