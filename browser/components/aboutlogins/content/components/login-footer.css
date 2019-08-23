@@ -57,8 +57,10 @@ footer {
   fill: currentColor;
   fill-opacity: 0;
   height: 16px;
+  min-height: auto;
   position: absolute;
   inset-inline-end: 12px;
   top: 12px;
   width: 16px;
+  min-width: auto;
 }

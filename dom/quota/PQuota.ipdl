@@ -48,7 +48,7 @@ struct AllUsageParams
 struct OriginUsageParams
 {
   PrincipalInfo principalInfo;
-  bool getGroupUsage;
+  bool fromMemory;
 };
 
 union UsageRequestParams
@@ -100,6 +100,11 @@ struct PersistParams
   PrincipalInfo principalInfo;
 };
 
+struct EstimateParams
+{
+  PrincipalInfo principalInfo;
+};
+
 struct ListInitializedOriginsParams
 {
 };
@@ -116,6 +121,7 @@ union RequestParams
   ResetAllParams;
   PersistedParams;
   PersistParams;
+  EstimateParams;
   ListInitializedOriginsParams;
 };
 

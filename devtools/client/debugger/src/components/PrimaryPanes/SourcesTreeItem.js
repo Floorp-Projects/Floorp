@@ -11,7 +11,7 @@ import { showMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";
-import { getDisplayName, isWorker } from "../../utils/threads";
+import { isWorker } from "../../utils/threads";
 
 import {
   getGeneratedSourceByURL,
@@ -229,7 +229,7 @@ class SourceTreeItem extends Component<Props, State> {
       const thread = threads.find(thrd => thrd.actor == item.name);
 
       if (thread) {
-        const icon = thread === this.props.mainThread ? "window" : "worker";
+        const icon = isWorker(thread) ? "worker" : "window";
         return (
           <AccessibleImage
             className={classnames(icon, {
@@ -269,9 +269,7 @@ class SourceTreeItem extends Component<Props, State> {
     if (depth === 0) {
       const thread = threads.find(({ actor }) => actor == item.name);
       if (thread) {
-        return isWorker(thread)
-          ? getDisplayName((thread: any))
-          : L10N.getStr("mainThread");
+        return thread.name;
       }
     }
 

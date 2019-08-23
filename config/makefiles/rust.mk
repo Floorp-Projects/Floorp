@@ -46,8 +46,11 @@ endif
 cargo_rustc_flags = $(CARGO_RUSTCFLAGS)
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
-# Enable link-time optimization for release builds.
-cargo_rustc_flags += -C lto
+# Enable link-time optimization for release builds, but not when linking
+# gkrust_gtest.
+ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
+cargo_rustc_flags += -Clto
+endif
 endif
 endif
 
@@ -248,12 +251,11 @@ $(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
+# The check only works when rust code is built with -Clto.
 ifndef MOZ_PROFILE_GENERATE
-ifndef DEVELOPER_OPTIONS
-ifndef MOZ_DEBUG_RUST
 ifeq ($(OS_ARCH), Linux)
+ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
 	$(call py_action,check_binary,--target --networking $@)
-endif
 endif
 endif
 endif

@@ -135,7 +135,14 @@ addon-card[expanded] .addon-card-message {
   font-size: 16px;
   font-weight: 600;
   line-height: 22px;
+  margin: 0;
   margin-inline-end: 8px;
+}
+
+.addon-name-link,
+.addon-name-link:hover {
+  color: var(--in-content-text-color);
+  text-decoration: none;
 }
 
 .addon-badge {
@@ -429,11 +436,7 @@ addon-permissions-list > .addon-detail-row:first-of-type {
 }
 
 .deck-tab-group {
-  border-bottom: 1px solid var(--in-content-box-border-color);
-  border-top: 1px solid var(--in-content-box-border-color);
   margin-top: 8px;
   /* Pull the buttons flush with the side of the card */
   margin-inline: calc(var(--card-padding) * -1);
-  font-size: 0;
-  line-height: 0;
 }

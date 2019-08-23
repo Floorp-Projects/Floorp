@@ -165,8 +165,8 @@ void QuotaUsageRequestChild::HandleResponse(
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  RefPtr<OriginUsageResult> result = new OriginUsageResult(
-      aResponse.usage(), aResponse.fileUsage(), aResponse.limit());
+  RefPtr<OriginUsageResult> result =
+      new OriginUsageResult(aResponse.usage(), aResponse.fileUsage());
 
   RefPtr<nsVariant> variant = new nsVariant();
   variant->SetAsInterface(NS_GET_IID(nsIQuotaOriginUsageResult), result);
@@ -263,6 +263,19 @@ void QuotaRequestChild::HandleResponse(bool aResponse) {
   mRequest->SetResult(variant);
 }
 
+void QuotaRequestChild::HandleResponse(const EstimateResponse& aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<EstimateResult> result =
+      new EstimateResult(aResponse.usage(), aResponse.limit());
+
+  RefPtr<nsVariant> variant = new nsVariant();
+  variant->SetAsInterface(NS_GET_IID(nsIQuotaEstimateResult), result);
+
+  mRequest->SetResult(variant);
+}
+
 void QuotaRequestChild::HandleResponse(const nsTArray<nsCString>& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
@@ -323,6 +336,10 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
 
     case RequestResponse::TPersistedResponse:
       HandleResponse(aResponse.get_PersistedResponse().persisted());
+      break;
+
+    case RequestResponse::TEstimateResponse:
+      HandleResponse(aResponse.get_EstimateResponse());
       break;
 
     case RequestResponse::TListInitializedOriginsResponse:

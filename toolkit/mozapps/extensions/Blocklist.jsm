@@ -165,6 +165,112 @@ const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS =
   "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
 
+const BlocklistTelemetry = {
+  /**
+   * Record the current value of "Blocklist.useXML" into the
+   * "blocklist.useXML" scalar.
+   */
+  recordUseXML() {
+    Services.telemetry.scalarSet("blocklist.useXML", Blocklist.useXML);
+  },
+
+  /**
+   * Record the XML Blocklist lastModified server time into the
+   * "blocklist.lastModified_xml scalar.
+   *
+   * @param {XMLDocument} xmlDoc
+   *        The blocklist XML file to retrieve the lastupdate attribute
+   *        and record it into the "blocklist.lastModified_xml" scalar.
+   *        The scalar value is a datetime string in UTC format.
+   */
+  recordXMLBlocklistLastModified(xmlDoc) {
+    const lastUpdate =
+      xmlDoc && xmlDoc.documentElement.getAttribute("lastupdate");
+    if (lastUpdate) {
+      Services.telemetry.scalarSet(
+        "blocklist.lastModified_xml",
+        // Date(...).toUTCString will return "Invalid Date" if the
+        // timestamp isn't valid (e.g. parseInt returns NaN).
+        new Date(parseInt(lastUpdate, 10)).toUTCString()
+      );
+    } else {
+      Services.telemetry.scalarSet(
+        "blocklist.lastModified_xml",
+        "Missing Date"
+      );
+    }
+  },
+
+  /**
+   * Record the RemoteSettings Blocklist lastModified server time into the
+   * "blocklist.lastModified_rs keyed scalar (or "Missing Date" when unable
+   * to retrieve a valid timestamp).
+   *
+   * @param {string} blocklistType
+   *        The blocklist type that has been updated (one of "addons" or "plugins",
+   *        the "gfx" blocklist is not covered by this telemetry).
+   * @param {RemoteSettingsClient} remoteSettingsClient
+   *        The RemoteSettings client to retrieve the lastModified timestamp from.
+   */
+  async recordRSBlocklistLastModified(blocklistType, remoteSettingsClient) {
+    // In some tests overrides ensureInitialized and remoteSettingsClient
+    // can be undefined, and in that case we don't want to record any
+    // telemetry scalar.
+    if (!remoteSettingsClient) {
+      return;
+    }
+
+    let lastModified = await remoteSettingsClient.getLastModified();
+
+    if (lastModified > 0) {
+      // convert from timestamp in ms into UTC datetime string, so it is going
+      // to be record in the same format used by blocklist.lastModified_xml.
+      lastModified = new Date(lastModified).toUTCString();
+      Services.telemetry.scalarSet(
+        `blocklist.lastModified_rs_${blocklistType}`,
+        lastModified
+      );
+    } else {
+      Services.telemetry.scalarSet(
+        `blocklist.lastModified_rs_${blocklistType}`,
+        "Missing Date"
+      );
+    }
+  },
+
+  /**
+   * Record a telemety event on XML Blocklist update errors.
+   *
+   * @param {string} errorType
+   *        A string that identify the type of update error (one of CHECK_CERT_ERROR,
+   *        DOWNLOAD_ERROR, INVALID_XML_ERROR, INVALID_BLOCKLIST_URL,
+   *        MISSING_BLOCKLIST_SERVER_URL, UNEXPECTED_STATUS_CODE, WRITE_FILE_ERROR)
+   *
+   * @param {object} [extra]
+   *        An optional set of extra vars.
+   * @param {number} [extra.status_code]
+   *        HTTP status code (included when reportType is "UNEXPECTED_STATUS_CODE"
+   *        or "DOWNLOAD_ERROR").
+   */
+  recordXMLBlocklistUpdateError(errorType, { status_code } = {}) {
+    const extra = {};
+
+    if (typeof status_code === "number") {
+      extra.status_code = String(status_code);
+    }
+
+    Services.telemetry.recordEvent(
+      "addonsManager",
+      "blocklistUpdateError",
+      "xml",
+      errorType,
+      extra
+    );
+  },
+};
+
+this.BlocklistTelemetry = BlocklistTelemetry;
+
 const Utils = {
   /**
    * Checks whether this entry is valid for the current OS and ABI.
@@ -634,6 +740,8 @@ this.PluginBlocklistRS = {
       }
       Utils.ensureVersionRangeIsSane(entry);
     });
+
+    BlocklistTelemetry.recordRSBlocklistLastModified("plugins", this._client);
   },
 
   async _filterItem(entry) {
@@ -1069,6 +1177,8 @@ this.ExtensionBlocklistRS = {
       }
       Utils.ensureVersionRangeIsSane(entry);
     });
+
+    BlocklistTelemetry.recordRSBlocklistLastModified("addons", this._client);
   },
 
   async _filterItem(entry) {
@@ -1707,14 +1817,21 @@ var BlocklistXML = {
     return url.replace(/%blockID%/g, id);
   },
 
+  _getBlocklistServerURL() {
+    return Services.prefs.getCharPref(PREF_BLOCKLIST_URL);
+  },
+
   notify(aTimer) {
     if (!gBlocklistEnabled) {
       return;
     }
 
     try {
-      var dsURI = Services.prefs.getCharPref(PREF_BLOCKLIST_URL);
+      var dsURI = this._getBlocklistServerURL();
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError(
+        "MISSING_BLOCKLIST_SERVER_URL"
+      );
       LOG(
         "Blocklist::notify: The " +
           PREF_BLOCKLIST_URL +
@@ -1823,6 +1940,7 @@ var BlocklistXML = {
     try {
       var uri = Services.io.newURI(dsURI);
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("INVALID_BLOCKLIST_URL");
       LOG(
         "Blocklist::notify: There was an error creating the blocklist URI\r\n" +
           "for: " +
@@ -1862,6 +1980,7 @@ var BlocklistXML = {
       CertUtils.checkCert(request.channel);
     } catch (e) {
       LOG("Blocklist::onXMLLoad: " + e);
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("CHECK_CERT_ERROR");
       return;
     }
 
@@ -1876,6 +1995,10 @@ var BlocklistXML = {
         "Blocklist::onXMLLoad: there was an error during load, got status: " +
           status
       );
+      BlocklistTelemetry.recordXMLBlocklistUpdateError(
+        "UNEXPECTED_STATUS_CODE",
+        { status_code: status }
+      );
       return;
     }
 
@@ -1887,6 +2010,7 @@ var BlocklistXML = {
       LOG(
         "Blocklist::onXMLLoad: there was an error during load, we got invalid XML"
       );
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("INVALID_XML_ERROR");
       return;
     }
 
@@ -1912,6 +2036,7 @@ var BlocklistXML = {
         tmpPath: path + ".tmp",
       });
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("WRITE_FILE_ERROR");
       LOG("Blocklist::onXMLLoad: " + e);
     }
   },
@@ -1932,6 +2057,9 @@ var BlocklistXML = {
         statusText = request.statusText;
       } catch (e) {}
     }
+    BlocklistTelemetry.recordXMLBlocklistUpdateError("DOWNLOAD_ERROR", {
+      status_code: status,
+    });
     LOG(
       "Blocklist:onError: There was an error loading the blocklist file\r\n" +
         statusText
@@ -2137,6 +2265,10 @@ var BlocklistXML = {
         "Blocklist::_loadBlocklistFromXML: Error constructing blocklist " + e
       );
     }
+
+    // Record the last modified timestamp right before notify the observers.
+    BlocklistTelemetry.recordXMLBlocklistLastModified(doc);
+
     // Dispatch to mainthread because consumers may try to construct nsIPluginHost
     // again based on this notification, while we were called from nsIPluginHost
     // anyway, leading to re-entrancy.
@@ -3045,6 +3177,7 @@ let Blocklist = {
         this._impl.forceUpdate();
       }
     }
+    BlocklistTelemetry.recordUseXML();
   },
 
   shutdown() {

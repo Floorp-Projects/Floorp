@@ -681,8 +681,9 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
       UndefineCaretBidiLevel();
-      return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
-                            aInfo.inString, aInfo.outString, aInfo.maxLength);
+      return MOZ_KnownLive(HTMLEditorRef())
+          .WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
+                          aInfo.inString, aInfo.outString, aInfo.maxLength);
     case EditSubAction::eInsertParagraphSeparator: {
       UndefineCaretBidiLevel();
       EditActionResult result = WillInsertParagraphSeparator();
@@ -1303,12 +1304,10 @@ nsresult HTMLEditor::WillInsert(bool* aCancel) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
-                                       bool* aCancel, bool* aHandled,
-                                       const nsAString* inString,
-                                       nsAString* outString,
-                                       int32_t aMaxLength) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::WillInsertText(EditSubAction aEditSubAction, bool* aCancel,
+                                    bool* aHandled, const nsAString* inString,
+                                    nsAString* outString, int32_t aMaxLength) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
     return NS_ERROR_NULL_POINTER;
@@ -1321,9 +1320,8 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // tags, because we're hopefully going to insert text (bug 787432).
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1332,14 +1330,14 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // we need to get the doc
-  RefPtr<Document> doc = HTMLEditorRef().GetDocument();
+  RefPtr<Document> doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
@@ -1352,7 +1350,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // for every property that is set, insert a new inline style node
   // XXX CreateStyleForInsertText() adjusts selection automatically, but
   //     it should just return the insertion point instead.
-  rv = MOZ_KnownLive(HTMLEditorRef()).CreateStyleForInsertText(*firstRange);
+  rv = CreateStyleForInsertText(*firstRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1370,14 +1368,12 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
 
   // dont put text in places that can't have it
   if (!EditorBase::IsTextNode(pointToInsert.GetContainer()) &&
-      !HTMLEditorRef().CanContainTag(*pointToInsert.GetContainer(),
-                                     *nsGkAtoms::textTagName)) {
+      !CanContainTag(*pointToInsert.GetContainer(), *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    EditorRawDOMPoint compositionStartPoint =
-        HTMLEditorRef().GetCompositionStartPoint();
+    EditorRawDOMPoint compositionStartPoint = GetCompositionStartPoint();
     if (!compositionStartPoint.IsSet()) {
       compositionStartPoint = pointToInsert;
     }
@@ -1386,52 +1382,44 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
       // Right now the WSRunObject code bails on empty strings, but IME needs
       // the InsertTextWithTransaction() call to still happen since empty
       // strings are meaningful there.
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .InsertTextWithTransaction(*doc, *inString,
-                                          compositionStartPoint);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = InsertTextWithTransaction(*doc, *inString, compositionStartPoint);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "InsertTextWithTransaction() failed");
+      return rv;
     }
 
-    EditorRawDOMPoint compositionEndPoint =
-        HTMLEditorRef().GetCompositionEndPoint();
+    EditorRawDOMPoint compositionEndPoint = GetCompositionEndPoint();
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
-    WSRunObject wsObj(&HTMLEditorRef(), compositionStartPoint,
-                      compositionEndPoint);
+    WSRunObject wsObj(this, compositionStartPoint, compositionEndPoint);
     rv = wsObj.InsertText(*doc, *inString);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    compositionStartPoint = HTMLEditorRef().GetCompositionStartPoint();
-    compositionEndPoint = HTMLEditorRef().GetCompositionEndPoint();
+    compositionStartPoint = GetCompositionStartPoint();
+    compositionEndPoint = GetCompositionEndPoint();
     if (NS_WARN_IF(!compositionStartPoint.IsSet()) ||
         NS_WARN_IF(!compositionEndPoint.IsSet())) {
       // Mutation event listener has changed the DOM tree...
       return NS_OK;
     }
-    rv = HTMLEditorRef()
-             .TopLevelEditSubActionDataRef()
-             .mChangedRange->SetStartAndEnd(
-                 compositionStartPoint.ToRawRangeBoundary(),
-                 compositionEndPoint.ToRawRangeBoundary());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+        compositionStartPoint.ToRawRangeBoundary(),
+        compositionEndPoint.ToRawRangeBoundary());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Faliled to set mChangedRange to composing range");
+    return rv;
   }
 
-  // aEditSubAction == kInsertText
+  MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText);
 
   // find where we are
   EditorDOMPoint currentPoint(pointToInsert);
@@ -1445,20 +1433,18 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // must faster to do it once here than to track all
   // the changes one at a time.
   AutoRestore<bool> disableListener(
-      HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener);
-  HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener =
-      false;
+      EditSubActionDataRef().mAdjustChangedRangeFromListener);
+  EditSubActionDataRef().mAdjustChangedRangeFromListener = false;
 
   // don't change my selection in subtransactions
-  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
   nsAutoString tString(*inString);
   const char16_t* unicodeBuf = tString.get();
   int32_t pos = 0;
   NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
 
   {
-    AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
-                              &pointToInsert);
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
 
     // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
@@ -1485,10 +1471,9 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
-          RefPtr<Element> brElement = MOZ_KnownLive(HTMLEditorRef())
-                                          .InsertBRElementWithTransaction(
-                                              currentPoint, nsIEditor::eNone);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          RefPtr<Element> brElement =
+              InsertBRElementWithTransaction(currentPoint, nsIEditor::eNone);
+          if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           if (NS_WARN_IF(!brElement)) {
@@ -1513,11 +1498,10 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
                                "by mutation observer");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = MOZ_KnownLive(HTMLEditorRef())
-                   .InsertTextWithTransaction(*doc, subStr,
-                                              EditorRawDOMPoint(currentPoint),
-                                              &pointAfterInsertedString);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          rv = InsertTextWithTransaction(*doc, subStr,
+                                         EditorRawDOMPoint(currentPoint),
+                                         &pointAfterInsertedString);
+          if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1549,13 +1533,13 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
         }
 
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
-        WSRunObject wsObj(&HTMLEditorRef(), currentPoint);
+        WSRunObject wsObj(this, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
           EditorRawDOMPoint pointAfterInsertedSpaces;
           rv = wsObj.InsertText(*doc, spacesStr, &pointAfterInsertedSpaces);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1571,7 +1555,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
           RefPtr<Element> newBRElement =
               wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()), currentPoint,
                                 nsIEditor::eNone);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           if (NS_WARN_IF(!newBRElement)) {
@@ -1597,7 +1581,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
           rv = wsObj.InsertText(*doc, subStr, &pointAfterInsertedString);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1621,7 +1605,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   if (currentPoint.IsSet()) {
     IgnoredErrorResult ignoredError;
     SelectionRefPtr()->Collapse(currentPoint, ignoredError);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
@@ -1631,22 +1615,15 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // manually update the doc changed range so that AfterEdit will clean up
   // the correct portion of the document.
   if (currentPoint.IsSet()) {
-    rv = HTMLEditorRef()
-             .TopLevelEditSubActionDataRef()
-             .mChangedRange->SetStartAndEnd(pointToInsert.ToRawRangeBoundary(),
-                                            currentPoint.ToRawRangeBoundary());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-
-  rv = HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(
-      pointToInsert);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+        pointToInsert.ToRawRangeBoundary(), currentPoint.ToRawRangeBoundary());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set mChangedRange");
     return rv;
   }
-  return NS_OK;
+
+  rv = TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(pointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse mChangedRange");
+  return rv;
 }
 
 bool HTMLEditRules::CanContainParagraph(Element& aElement) const {
@@ -1696,7 +1673,13 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
   // Split any mailcites in the way.  Should we abort this if we encounter
   // table cell boundaries?
   if (IsMailEditor()) {
-    EditActionResult result = SplitMailCites();
+    EditorDOMPoint pointToSplit(EditorBase::GetStartPoint(*SelectionRefPtr()));
+    if (NS_WARN_IF(!pointToSplit.IsSet())) {
+      return EditActionIgnored(NS_ERROR_FAILURE);
+    }
+
+    EditActionResult result =
+        MOZ_KnownLive(HTMLEditorRef()).SplitMailCiteElements(pointToSplit);
     if (NS_WARN_IF(result.Failed())) {
       return result;
     }
@@ -2062,19 +2045,18 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   return NS_OK;
 }
 
-EditActionResult HTMLEditRules::SplitMailCites() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  EditorDOMPoint pointToSplit(EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!pointToSplit.IsSet())) {
-    return EditActionIgnored(NS_ERROR_FAILURE);
-  }
+EditActionResult HTMLEditor::SplitMailCiteElements(
+    const EditorDOMPoint& aPointToSplit) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToSplit.IsSet());
 
   RefPtr<Element> citeNode =
-      GetTopEnclosingMailCite(*pointToSplit.GetContainer());
+      GetMostAncestorMailCiteElement(*aPointToSplit.GetContainer());
   if (!citeNode) {
     return EditActionIgnored();
   }
+
+  EditorDOMPoint pointToSplit(aPointToSplit);
 
   // If our selection is just before a break, nudge it to be just after it.
   // This does two things for us.  It saves us the trouble of having to add
@@ -2085,7 +2067,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   // The latter can confuse a user if they click there and start typing,
   // because being in the mailquote may affect wrapping behavior, or font
   // color, etc.
-  WSRunObject wsObj(&HTMLEditorRef(), pointToSplit);
+  WSRunObject wsObj(this, pointToSplit);
   nsCOMPtr<nsINode> visNode;
   WSType wsType;
   wsObj.NextVisibleNode(pointToSplit, address_of(visNode), nullptr, &wsType);
@@ -2103,12 +2085,9 @@ EditActionResult HTMLEditRules::SplitMailCites() {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
-  SplitNodeResult splitCiteNodeResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              *citeNode, pointToSplit,
-              SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SplitNodeResult splitCiteNodeResult = SplitNodeDeepWithTransaction(
+      *citeNode, pointToSplit, SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(splitCiteNodeResult.Failed())) {
@@ -2136,9 +2115,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
       EditorDOMPoint endOfPreviousNodeOfSplitPoint;
       endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
       RefPtr<Element> invisibleBrElement =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertBRElementWithTransaction(endOfPreviousNodeOfSplitPoint);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+          InsertBRElementWithTransaction(endOfPreviousNodeOfSplitPoint);
+      if (NS_WARN_IF(Destroyed())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(invisibleBrElement,
@@ -2151,9 +2129,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   // cite node, <br> should be inserted before the current cite.
   EditorDOMPoint pointToInsertBrNode(splitCiteNodeResult.SplitPoint());
   RefPtr<Element> brElement =
-      MOZ_KnownLive(HTMLEditorRef())
-          .InsertBRElementWithTransaction(pointToInsertBrNode);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+      InsertBRElementWithTransaction(pointToInsertBrNode);
+  if (NS_WARN_IF(Destroyed())) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(!brElement)) {
@@ -2170,7 +2147,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   NS_WARNING_ASSERTION(!error.Failed(), "Failed to set interline position");
   error = NS_OK;
   SelectionRefPtr()->Collapse(atBrNode, error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -2187,7 +2164,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
     EditorDOMPoint pointToCreateNewBrNode(atBrNode.GetContainer(),
                                           atBrNode.Offset());
 
-    WSRunObject wsObj(&HTMLEditorRef(), pointToCreateNewBrNode);
+    WSRunObject wsObj(this, pointToCreateNewBrNode);
     WSType wsType;
     wsObj.PriorVisibleNode(pointToCreateNewBrNode, nullptr, nullptr, &wsType);
     if (wsType == WSType::normalWS || wsType == WSType::text ||
@@ -2196,15 +2173,14 @@ EditActionResult HTMLEditRules::SplitMailCites() {
       DebugOnly<bool> advanced = pointAfterNewBrNode.AdvanceOffset();
       NS_WARNING_ASSERTION(advanced,
                            "Failed to advance offset after the <br> node");
-      WSRunObject wsObjAfterBR(&HTMLEditorRef(), pointAfterNewBrNode);
+      WSRunObject wsObjAfterBR(this, pointAfterNewBrNode);
       wsObjAfterBR.NextVisibleNode(pointAfterNewBrNode, &wsType);
       if (wsType == WSType::normalWS || wsType == WSType::text ||
           wsType == WSType::special ||
           // In case we're at the very end.
           wsType == WSType::thisBlock) {
-        brElement = MOZ_KnownLive(HTMLEditorRef())
-                        .InsertBRElementWithTransaction(pointToCreateNewBrNode);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        brElement = InsertBRElementWithTransaction(pointToCreateNewBrNode);
+        if (NS_WARN_IF(Destroyed())) {
           return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(!brElement)) {
@@ -2220,16 +2196,14 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   // delete any empty cites
   bool bEmptyCite = false;
   if (previousNodeOfSplitPoint) {
-    nsresult rv = HTMLEditorRef().IsEmptyNode(previousNodeOfSplitPoint,
-                                              &bEmptyCite, true, false);
+    nsresult rv =
+        IsEmptyNode(previousNodeOfSplitPoint, &bEmptyCite, true, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
     if (bEmptyCite) {
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .DeleteNodeWithTransaction(
-                   MOZ_KnownLive(*previousNodeOfSplitPoint));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*previousNodeOfSplitPoint));
+      if (NS_WARN_IF(Destroyed())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2239,14 +2213,13 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   }
 
   if (citeNode) {
-    nsresult rv =
-        HTMLEditorRef().IsEmptyNode(citeNode, &bEmptyCite, true, false);
+    nsresult rv = IsEmptyNode(citeNode, &bEmptyCite, true, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
     if (bEmptyCite) {
-      rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*citeNode);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = DeleteNodeWithTransaction(*citeNode);
+      if (NS_WARN_IF(Destroyed())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2943,8 +2916,10 @@ nsresult HTMLEditRules::WillDeleteSelection(
       }
     } else {
       // Figure out mailcite ancestors
-      nsCOMPtr<Element> startCiteNode = GetTopEnclosingMailCite(*startNode);
-      nsCOMPtr<Element> endCiteNode = GetTopEnclosingMailCite(*endNode);
+      RefPtr<Element> startCiteNode =
+          HTMLEditorRef().GetMostAncestorMailCiteElement(*startNode);
+      RefPtr<Element> endCiteNode =
+          HTMLEditorRef().GetMostAncestorMailCiteElement(*endNode);
 
       // If we only have a mailcite at one of the two endpoints, set the
       // directionality of the deletion so that the selection will end up
@@ -3842,8 +3817,8 @@ nsresult HTMLEditRules::DidDeleteSelection() {
   }
 
   // find any enclosing mailcite
-  RefPtr<Element> citeNode =
-      GetTopEnclosingMailCite(*atStartOfSelection.GetContainer());
+  RefPtr<Element> citeNode = HTMLEditorRef().GetMostAncestorMailCiteElement(
+      *atStartOfSelection.GetContainer());
   if (citeNode) {
     bool isEmpty = true, seenBR = false;
     HTMLEditorRef().IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false,
@@ -9094,20 +9069,19 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   return NS_OK;
 }
 
-Element* HTMLEditRules::GetTopEnclosingMailCite(nsINode& aNode) {
-  nsCOMPtr<Element> ret;
-
-  for (nsCOMPtr<nsINode> node = &aNode; node; node = node->GetParentNode()) {
-    if ((IsPlaintextEditor() && node->IsHTMLElement(nsGkAtoms::pre)) ||
+Element* HTMLEditor::GetMostAncestorMailCiteElement(nsINode& aNode) const {
+  Element* mailCiteElement = nullptr;
+  bool isPlaintextEditor = IsPlaintextEditor();
+  for (nsINode* node = &aNode; node; node = node->GetParentNode()) {
+    if ((isPlaintextEditor && node->IsHTMLElement(nsGkAtoms::pre)) ||
         HTMLEditUtils::IsMailCite(node)) {
-      ret = node->AsElement();
+      mailCiteElement = node->AsElement();
     }
     if (node->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
   }
-
-  return ret;
+  return mailCiteElement;
 }
 
 nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {

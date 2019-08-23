@@ -57,9 +57,7 @@ async function check_addon(aAddon, aVersion) {
   let { version } = await get_tooltip_info(item, gManagerWindow);
   is(version, aVersion, "Version should be correct");
 
-  const l10nAttrs = item.ownerDocument.l10n.getAttributes(
-    item.querySelector(".addon-name")
-  );
+  const l10nAttrs = item.ownerDocument.l10n.getAttributes(item.addonNameEl);
   if (aAddon.userDisabled) {
     Assert.deepEqual(
       l10nAttrs,

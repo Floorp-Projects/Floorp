@@ -33,6 +33,10 @@ class ContentProcessTargetFront extends TargetMixin(
     this.targetForm.contextActor = this._threadActor;
   }
 
+  get name() {
+    return `Content Process ${this.processID}`;
+  }
+
   attach() {
     // All target actors have a console actor to attach.
     // All but xpcshell test actors... which is using a ContentProcessTargetActor

@@ -417,8 +417,14 @@ nsresult gfxPlatformFontList::InitFontList() {
   // initialize ranges of characters for which system-wide font search should be
   // skipped
   mCodepointsWithNoFonts.reset();
-  mCodepointsWithNoFonts.SetRange(0, 0x1f);     // C0 controls
-  mCodepointsWithNoFonts.SetRange(0x7f, 0x9f);  // C1 controls
+  mCodepointsWithNoFonts.SetRange(0, 0x1f);            // C0 controls
+  mCodepointsWithNoFonts.SetRange(0x7f, 0x9f);         // C1 controls
+  mCodepointsWithNoFonts.SetRange(0xE000, 0xF8FF);     // PUA
+  mCodepointsWithNoFonts.SetRange(0xF0000, 0x10FFFD);  // Supplementary PUA
+  mCodepointsWithNoFonts.SetRange(0xfdd0, 0xfdef);     // noncharacters
+  for (unsigned i = 0; i <= 0x100000; i += 0x10000) {
+    mCodepointsWithNoFonts.SetRange(i + 0xfffe, i + 0xffff);  // noncharacters
+  }
 
   sPlatformFontList = this;
 
@@ -709,12 +715,10 @@ void gfxPlatformFontList::GetFontFamilyList(
 gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
     const gfxFontStyle* aStyle) {
-  gfxFontEntry* fontEntry = nullptr;
+  MOZ_ASSERT(!mCodepointsWithNoFonts.test(aCh),
+             "don't call for codepoints already known to be unsupported");
 
-  // is codepoint with no matching font? return null immediately
-  if (mCodepointsWithNoFonts.test(aCh)) {
-    return nullptr;
-  }
+  gfxFontEntry* fontEntry = nullptr;
 
   // Try to short-circuit font fallback for U+FFFD, used to represent
   // encoding errors: just use cached family from last time U+FFFD was seen.

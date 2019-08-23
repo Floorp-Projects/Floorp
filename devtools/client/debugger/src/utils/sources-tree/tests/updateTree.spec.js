@@ -41,7 +41,7 @@ const threads = [
   {
     actor: "FakeThread",
     url: "https://davidwalsh.name",
-    type: 1,
+    type: "worker",
     name: "FakeThread",
   },
 ];

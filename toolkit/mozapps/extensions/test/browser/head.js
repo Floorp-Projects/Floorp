@@ -251,9 +251,8 @@ var get_tooltip_info = async function(addonEl, managerWindow) {
   // Extract from title attribute.
   const { addon } = addonEl;
   const name = addon.name;
-  const nameEl = addonEl.querySelector(".addon-name");
 
-  let nameWithVersion = nameEl.title;
+  let nameWithVersion = addonEl.addonNameEl.title;
   if (addonEl.addon.userDisabled) {
     // TODO - Bug 1558077: Currently Fluent is clearing the addon title
     // when the addon is disabled, fixing it requires changes to the

@@ -66,7 +66,13 @@
   color: #30e60b;
 }
 
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels {
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:not(:-moz-lwtheme),
+.urlbar-label:not(:-moz-lwtheme) {
+  color: GrayText;
+}
+
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:-moz-lwtheme,
+.urlbar-label:-moz-lwtheme {
   opacity: .6;
 }
 
@@ -87,7 +93,7 @@
 #identity-box[pageproxystate="valid"].verifiedIdentity,
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage,
-#urlbar-display-box {
+#urlbar-label-box {
   margin-inline-end: 8px;
   border-inline-end: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
@@ -101,11 +107,13 @@
   padding-inline-end: 8px;
 }
 
-#urlbar-display-box {
-  padding-inline-start: 4px;
+#urlbar-label-box {
+  padding-inline: 4px;
   border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
+}
+
+.urlbar-label {
+  margin: 0;
 }
 
 .sharing-icon,

@@ -192,7 +192,9 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
 
   // It is not possible to have a text change event for something other than a
   // hyper text accessible.
-  if (!container->IsHyperText()) {
+  // If the accessible doesn't have a frame, we are probably mid frame
+  // destruction bail early.
+  if (!container->IsHyperText() || !container->GetFrame()) {
     return true;
   }
 
