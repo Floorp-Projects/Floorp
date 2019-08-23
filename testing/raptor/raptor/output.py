@@ -878,6 +878,11 @@ class Output(object):
                 }
 
             _subtests[name]['replicates'].append(value)
+            if self.subtest_alert_on is not None:
+                if name in self.subtest_alert_on:
+                    LOG.info("turning on subtest alerting for measurement type: %s"
+                             % name)
+                    _subtests[name]['shouldAlert'] = True
 
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
