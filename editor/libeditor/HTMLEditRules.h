@@ -526,20 +526,6 @@ class HTMLEditRules : public TextEditRules {
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
   /**
-   * aLists and aTables allow the caller to specify what kind of content to
-   * "look inside".  If aTables is Tables::yes, look inside any table content,
-   * and insert the inner content into the supplied nsTArray at offset
-   * aIndex.  Similarly with aLists and list content.  aIndex is updated to
-   * point past inserted elements.
-   */
-  enum class Lists { no, yes };
-  enum class Tables { no, yes };
-  void GetInnerContent(nsINode& aNode,
-                       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                       int32_t* aIndex, Lists aLists = Lists::yes,
-                       Tables aTables = Tables::yes) const;
-
-  /**
    * If aNode is the descendant of a listitem, return that li.  But table
    * element boundaries are stoppers on the search.  Also stops on the active
    * editor host (contenteditable).  Also test if aNode is an li itself.
