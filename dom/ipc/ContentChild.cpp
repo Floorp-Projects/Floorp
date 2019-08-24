@@ -2094,6 +2094,10 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
+  // XXX bug 1576296: Figure out why we intermittently we don't have a docShell
+  if (auto docShell = owner->OwnerDoc()->GetDocShell()) {
+    nsDocShell::Cast(docShell)->OOPChildLoadStarted(browserBridge);
+  }
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
