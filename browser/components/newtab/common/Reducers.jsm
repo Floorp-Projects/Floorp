@@ -62,7 +62,6 @@ const INITIAL_STATE = {
     },
     spocs: {
       spocs_endpoint: "",
-      spocs_per_domain: 1,
       lastUpdated: null,
       data: {}, // {spocs: []}
       loaded: false,
@@ -598,11 +597,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         spocs: {
           ...INITIAL_STATE.DiscoveryStream.spocs,
           spocs_endpoint:
-            action.data.url ||
-            INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
-          spocs_per_domain:
-            action.data.spocs_per_domain ||
-            INITIAL_STATE.DiscoveryStream.spocs.spocs_per_domain,
+            action.data || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
         },
       };
     case at.DISCOVERY_STREAM_SPOCS_UPDATE:

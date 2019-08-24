@@ -56,12 +56,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/updates/update-manager;1",
   "nsIUpdateManager"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "TrackingDBService",
-  "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
-);
 
 const FXA_USERNAME_PREF = "services.sync.username";
 const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
@@ -427,9 +421,6 @@ const TargetingGetters = {
       "browser.messaging-system.fxatoolbarbadge.enabled",
       false
     );
-  },
-  get totalBlockedCount() {
-    return TrackingDBService.sumAllEvents();
   },
 };
 
