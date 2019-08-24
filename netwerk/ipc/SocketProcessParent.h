@@ -64,6 +64,10 @@ class SocketProcessParent final
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
   bool DeallocPDNSRequestParent(PDNSRequestParent*);
+  PProxyConfigLookupParent* AllocPProxyConfigLookupParent();
+  virtual mozilla::ipc::IPCResult RecvPProxyConfigLookupConstructor(
+      PProxyConfigLookupParent* aActor) override;
+  bool DeallocPProxyConfigLookupParent(PProxyConfigLookupParent* aActor);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
