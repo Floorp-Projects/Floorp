@@ -38,7 +38,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
 * [earliestFirefoxVersion](#earliestfirefoxversion)
 * [isFxABadgeEnabled](#isfxabadgeenabled)
-* [totalBlockedCount](#totalblockedcount)
 
 ## Detailed usage
 
@@ -518,14 +517,4 @@ Boolean pref that controls if the FxA toolbar button is badged by Messaging Syst
 
 ```ts
 declare const isFxABadgeEnabled: boolean;
-```
-
-### `totalBlockedCount`
-
-Total number of events from the content blocking database
-
-#### Definition
-
-```ts
-declare const totalBlockedCount: number;
 ```
