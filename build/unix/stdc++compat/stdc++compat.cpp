@@ -16,7 +16,6 @@
    GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
    GLIBCXX_3.4.21 is from gcc 5.0 (210290)
    GLIBCXX_3.4.22 is from gcc 6.0 (222482)
-   GLIBCXX_3.4.23 is from gcc 7.0
 
 This file adds the necessary compatibility tricks to avoid symbols with
 version GLIBCXX_3.4.17 and bigger, keeping binary compatibility with
@@ -144,12 +143,4 @@ namespace std {
  * depending on optimization level */
 template basic_ios<char, char_traits<char> >::operator bool() const;
 }  // namespace std
-#endif
-
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 23)
-namespace std {
-/* Instantiate this template to avoid GLIBCXX_3.4.23 symbol versions
- * depending on optimization level */
-template basic_string<char, char_traits<char>, allocator<char>>::basic_string(const basic_string&, size_t, const allocator<char>&);
-} // namespace std
 #endif
