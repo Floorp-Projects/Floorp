@@ -373,4 +373,5 @@
   }
   window.test_interpolation = test_interpolation;
   window.test_no_interpolation = test_no_interpolation;
+  window.neutralKeyframe = neutralKeyframe;
 })();
