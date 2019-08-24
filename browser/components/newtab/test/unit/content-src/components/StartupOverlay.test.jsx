@@ -5,6 +5,8 @@ import { StartupOverlay } from "content-src/asrouter/templates/StartupOverlay/St
 
 describe("<StartupOverlay>", () => {
   let wrapper;
+  let fakeDocument;
+  let dummyNode;
   let dispatch;
   let onBlock;
   let sandbox;
@@ -13,7 +15,27 @@ describe("<StartupOverlay>", () => {
     dispatch = sandbox.stub();
     onBlock = sandbox.stub();
 
-    wrapper = mount(<StartupOverlay onBlock={onBlock} dispatch={dispatch} />);
+    dummyNode = document.createElement("body");
+    sandbox.stub(dummyNode, "querySelector").returns(dummyNode);
+    fakeDocument = {
+      get activeElement() {
+        return dummyNode;
+      },
+      get body() {
+        return dummyNode;
+      },
+      getElementById() {
+        return dummyNode;
+      },
+    };
+
+    wrapper = mount(
+      <StartupOverlay
+        onBlock={onBlock}
+        dispatch={dispatch}
+        document={fakeDocument}
+      />
+    );
   });
 
   afterEach(() => {
@@ -22,7 +44,14 @@ describe("<StartupOverlay>", () => {
 
   it("should add show class after mount and timeout", async () => {
     const clock = sandbox.useFakeTimers();
-    wrapper = mount(<StartupOverlay onBlock={onBlock} dispatch={dispatch} />);
+    // We need to mount here to trigger ComponentDidMount after the FakeTimers are added.
+    wrapper = mount(
+      <StartupOverlay
+        onBlock={onBlock}
+        dispatch={dispatch}
+        document={fakeDocument}
+      />
+    );
     assert.isFalse(
       wrapper.find(".overlay-wrapper").hasClass("show"),
       ".overlay-wrapper does not have .show class"

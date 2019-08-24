@@ -405,6 +405,7 @@ const ONBOARDING_MESSAGES = () => [
       cta_url: `${Services.urlFormatter.formatURLPref(
         "app.support.baseURL"
       )}etp-promotions?as=u&utm_source=inproduct`,
+      cta_type: "OPEN_URL",
     },
     trigger: { id: "protectionsPanelOpen" },
   },
