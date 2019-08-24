@@ -849,9 +849,29 @@ function convertCompletionValue(value, options) {
     return { return: convertValue(value.return, options) };
   }
   if ("throw" in value) {
-    return { throw: convertValue(value.throw, options) };
+    return {
+      throw: convertValue(value.throw, options),
+      stack: convertSavedFrameToPlainObject(value.stack),
+    };
   }
   throwError("Unexpected completion value");
+}
+
+// Make sure that SavedFrame objects can be serialized to JSON.
+function convertSavedFrameToPlainObject(frame) {
+  if (!frame) {
+    return null;
+  }
+  return {
+    source: frame.source,
+    sourceId: frame.sourceId,
+    line: frame.line,
+    column: frame.column,
+    functionDisplayName: frame.functionDisplayName,
+    asyncCause: frame.asyncCause,
+    parent: convertSavedFrameToPlainObject(frame.parent),
+    asyncParent: convertSavedFrameToPlainObject(frame.asyncParent),
+  };
 }
 
 // Convert a value we received from the parent.
@@ -1305,6 +1325,18 @@ function getObjectData(id) {
       rv.proxyUnwrapped = convertValue(object.unwrap());
       rv.proxyTarget = convertValue(object.proxyTarget);
       rv.proxyHandler = convertValue(object.proxyHandler);
+    }
+    if (object.errorMessageName) {
+      rv.errorMessageName = object.errorMessageName;
+    }
+    if (object.errorNotes) {
+      rv.errorNotes = object.errorNotes;
+    }
+    if (object.errorLineNumber) {
+      rv.errorLineNumber = object.errorLineNumber;
+    }
+    if (object.errorColumnNumber) {
+      rv.errorColumnNumber = object.errorColumnNumber;
     }
     return rv;
   }
