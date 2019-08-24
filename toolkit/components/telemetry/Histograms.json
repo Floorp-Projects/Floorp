@@ -4011,6 +4011,7 @@
     "kind": "categorical",
     "labels": ["BothWorked", "NativeWorked", "TRRWorked", "BothFailed"],
     "bug_numbers": [1460589],
+    "releaseChannelCollection": "opt-out",
     "description": "DNS: success distribution when both native and TRR were used"
   },
   "DNS_TRR_FIRST2": {
@@ -4021,6 +4022,7 @@
     "kind": "categorical",
     "labels": ["TRR", "NativeAfterTRR", "Native", "BothFailed"],
     "bug_numbers": [1497252],
+    "releaseChannelCollection": "opt-out",
     "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed"
   },
   "DNS_TRR_DISABLED": {
@@ -4030,6 +4032,7 @@
     "kind": "boolean",
     "description": "Resolve success rate when in TRR-first and called TRR-disabled (fall-back mode)",
     "bug_numbers": [1472659],
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
   },
   "DNS_TRR_BLACKLISTED": {
@@ -4069,6 +4072,7 @@
     "labels": ["Fine", "Timeout", "Bad"],
     "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error.",
     "bug_numbers": [1497438],
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
@@ -4090,6 +4094,7 @@
     "labels": ["trrOK", "trrFail", "trrAOK", "trrAFail",
 	       "trrAAAAOK", "trrAAAAFail", "osOK", "osFail"],
     "bug_numbers": [1434852],
+    "releaseChannelCollection": "opt-out",
     "description": "DNS: lookup algorithm"
   },
   "DNS_RENEWAL_TIME": {
