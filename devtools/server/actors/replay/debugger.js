@@ -407,7 +407,10 @@ ReplayDebugger.prototype = {
       if (!this._objects[data.id]) {
         this._addObject(data);
       }
-      this._getObject(data.id)._preview = preview;
+      this._getObject(data.id)._preview = {
+        ...preview,
+        enumerableOwnProperties: mapify(preview.enumerableOwnProperties),
+      };
     }
 
     for (const { data, names } of Object.values(pauseData.environments)) {
@@ -489,7 +492,7 @@ ReplayDebugger.prototype = {
 
   _getScript(id) {
     if (!id) {
-      return null;
+      return undefined;
     }
     const rv = this._scripts[id];
     if (rv) {
@@ -625,7 +628,10 @@ ReplayDebugger.prototype = {
       return { return: this._convertValue(value.return) };
     }
     if ("throw" in value) {
-      return { throw: this._convertValue(value.throw) };
+      return {
+        throw: this._convertValue(value.throw),
+        stack: value.stack,
+      };
     }
     ThrowError("Unexpected completion value");
     return null; // For eslint
@@ -1039,6 +1045,11 @@ ReplayDebuggerObject.prototype = {
     this._properties = null;
   },
 
+  toString() {
+    const id = this._data ? this._data.id : "INVALID";
+    return `ReplayDebugger.Object #${id}`;
+  },
+
   get callable() {
     return this._data.callable;
   },
@@ -1096,12 +1107,12 @@ ReplayDebuggerObject.prototype = {
 
   getOwnPropertyNames() {
     this._ensureProperties();
-    return Object.keys(this._properties);
+    return [...this._properties.keys()];
   },
 
   getEnumerableOwnPropertyNamesForPreview() {
-    if (this._preview) {
-      return Object.keys(this._preview.enumerableOwnProperties);
+    if (this._preview && this._preview.enumerableOwnProperties) {
+      return [...this._preview.enumerableOwnProperties.keys()];
     }
     return this.getOwnPropertyNames();
   },
@@ -1121,7 +1132,7 @@ ReplayDebuggerObject.prototype = {
   getOwnPropertyDescriptor(name) {
     if (this._preview) {
       if (this._preview.enumerableOwnProperties) {
-        const desc = this._preview.enumerableOwnProperties[name];
+        const desc = this._preview.enumerableOwnProperties.get(name);
         if (desc) {
           return this._convertPropertyDescriptor(desc);
         }
@@ -1136,16 +1147,17 @@ ReplayDebuggerObject.prototype = {
       }
     }
     this._ensureProperties();
-    return this._convertPropertyDescriptor(this._properties[name]);
+    return this._convertPropertyDescriptor(this._properties.get(name));
   },
 
   _ensureProperties() {
     if (!this._properties) {
       const id = this._data.id;
-      this._properties = this._dbg._sendRequestAllowDiverge(
+      const properties = this._dbg._sendRequestAllowDiverge(
         { type: "getObjectProperties", id },
         []
       );
+      this._properties = mapify(properties);
     }
   },
 
@@ -1226,16 +1238,16 @@ ReplayDebuggerObject.prototype = {
     NYI();
   },
   get errorMessageName() {
-    NYI();
+    return this._data.errorMessageName;
   },
   get errorNotes() {
-    NYI();
+    return this._data.errorNotes;
   },
   get errorLineNumber() {
-    NYI();
+    return this._data.errorLineNumber;
   },
   get errorColumnNumber() {
-    NYI();
+    return this._data.errorColumnNumber;
   },
   get isPromise() {
     NYI();
@@ -1267,9 +1279,9 @@ ReplayDebugger.Object = ReplayDebuggerObject;
 function ReplayDebuggerObjectSnapshot(dbg, data) {
   this._dbg = dbg;
   this._data = data;
-  this._properties = Object.create(null);
+  this._properties = new Map();
   data.properties.forEach(({ name, desc }) => {
-    this._properties[name] = desc;
+    this._properties.set(name, desc);
   });
 }
 
@@ -1385,6 +1397,17 @@ function stringify(object) {
     return `${str.substr(0, 4096)} TRIMMED ${str.length}`;
   }
   return str;
+}
+
+function mapify(object) {
+  if (!object) {
+    return undefined;
+  }
+  const map = new Map();
+  for (const key of Object.keys(object)) {
+    map.set(key, object[key]);
+  }
+  return map;
 }
 
 module.exports = ReplayDebugger;
