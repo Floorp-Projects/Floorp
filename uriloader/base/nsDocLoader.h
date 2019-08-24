@@ -31,6 +31,12 @@
 
 #include "mozilla/LinkedList.h"
 
+namespace mozilla {
+namespace dom {
+class BrowserBridgeChild;
+}  // namespace dom
+}  // namespace mozilla
+
 /****************************************************************************
  * nsDocLoader implementation...
  ****************************************************************************/
@@ -51,6 +57,8 @@ class nsDocLoader : public nsIDocumentLoader,
                     public nsIChannelEventSink,
                     public nsISupportsPriority {
  public:
+  typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID)
 
   nsDocLoader();
@@ -134,6 +142,27 @@ class nsDocLoader : public nsIDocumentLoader,
     mIsReadyToHandlePostMessage = false;
     mTreatAsBackgroundLoad = false;
   };
+
+  // Inform a parent docloader that a BrowserBridgeChild has been created for
+  // an OOP sub-document.
+  // (This is the OOP counterpart to ChildEnteringOnload below.)
+  void OOPChildLoadStarted(BrowserBridgeChild* aChild) {
+    MOZ_ASSERT(!mOOPChildrenLoading.Contains(aChild));
+    mOOPChildrenLoading.AppendElement(aChild);
+  }
+
+  // Inform a parent docloader that the BrowserBridgeChild for one of its
+  // OOP sub-documents is done calling its onload handler.
+  // (This is the OOP counterpart to ChildDoneWithOnload below.)
+  void OOPChildLoadDone(BrowserBridgeChild* aChild) {
+    // aChild may not be in the list if nsDocLoader::Stop was called.  We don't
+    // want to unblock 'load' for a different document than the one that was
+    // loading the OOP-iframe so we need to check if RemoveElement returns
+    // false.
+    if (mOOPChildrenLoading.RemoveElement(aChild)) {
+      DocLoaderIsEmpty(true);
+    }
+  }
 
  protected:
   virtual ~nsDocLoader();
@@ -340,6 +369,10 @@ class nsDocLoader : public nsIDocumentLoader,
   // DocLoaderIsEmpty calls (those coming from requests finishing in our
   // loadgroup) unless this is empty.
   nsCOMArray<nsIDocumentLoader> mChildrenInOnload;
+
+  // The OOP counterpart to mChildrenInOnload.
+  // Not holding strong refs here since we don't actually use the BBCs.
+  nsTArray<const BrowserBridgeChild*> mOOPChildrenLoading;
 
   int64_t GetMaxTotalProgress();
 
