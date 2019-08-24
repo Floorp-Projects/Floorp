@@ -1,7 +1,6 @@
 'use strict';
 (function() {
   var interpolationTests = [];
-  var compositionTests = [];
   var cssAnimationsData = {
     sharedStyle: null,
     nextID: 0,
@@ -261,6 +260,16 @@
       target.measure = function() {
         var expectedValue = getComputedStyle(expectedTargetContainer.target).getPropertyValue(property);
         test(function() {
+          if (from && from !== neutralKeyframe) {
+            assert_true(CSS.supports(property, from), '\'from\' value should be supported');
+          }
+          if (to && to !== neutralKeyframe) {
+            assert_true(CSS.supports(property, to), '\'to\' value should be supported');
+          }
+          if (typeof underlying !== 'undefined') {
+            assert_true(CSS.supports(property, underlying), '\'underlying\' value should be supported');
+          }
+
           assert_equals(
             normalizeValue(getComputedStyle(target).getPropertyValue(property)),
             normalizeValue(expectedValue));
@@ -270,79 +279,13 @@
     });
   }
 
-  function createCompositionTestTargets(compositionContainer, compositionTest) {
-    var options = compositionTest.options;
-    var property = options.property;
-    var underlying = options.underlying;
-    var from = options.addFrom || options.replaceFrom;
-    var to = options.addTo || options.replaceTo;
-    var fromComposite = 'addFrom' in options ? 'add' : 'replace';
-    var toComposite = 'addTo' in options ? 'add' : 'replace';
-    if ('addFrom' in options === 'replaceFrom' in options
-      || 'addTo' in options === 'replaceTo' in options) {
-      test(function() {
-        assert_true('addFrom' in options !== 'replaceFrom' in options, 'addFrom xor replaceFrom must be specified');
-        assert_true('addTo' in options !== 'replaceTo' in options, 'addTo xor replaceTo must be specified');
-      }, `Composition tests must use addFrom xor replaceFrom, and addTo xor replaceTo`);
-    }
-    validateTestInputs(property, from, to, underlying);
-
-    var testText = `Compositing: property <${property}> underlying [${underlying}] from ${fromComposite} [${from}] to ${toComposite} [${to}]`;
-    var testContainer = createElement(compositionContainer, 'div');
-    createElement(testContainer, 'br');
-    return compositionTest.expectations.map(function(expectation) {
-      var actualTargetContainer = createTargetContainer(testContainer, 'actual');
-      var expectedTargetContainer = createTargetContainer(testContainer, 'expected');
-      expectedTargetContainer.target.style.setProperty(property, expectation.expect);
-      var target = actualTargetContainer.target;
-      target.style.setProperty(property, underlying);
-      target.interpolate = function() {
-        webAnimationsInterpolation.interpolateComposite(property, from, fromComposite, to, toComposite, expectation.at, target);
-      };
-      target.measure = function() {
-        var actualValue = getComputedStyle(target).getPropertyValue(property);
-        test(function() {
-          assert_equals(
-            normalizeValue(actualValue),
-            normalizeValue(getComputedStyle(expectedTargetContainer.target).getPropertyValue(property)));
-        }, `${testText} at (${expectation.at}) is [${sanitizeUrls(actualValue)}]`);
-      };
-      return target;
-    });
-  }
-
-  function validateTestInputs(property, from, to, underlying) {
-    if (from && from !== neutralKeyframe && !CSS.supports(property, from)) {
-        test(function() {
-          assert_unreached('from value not supported');
-        }, `${property} supports [${from}]`);
-    }
-    if (to && to !== neutralKeyframe && !CSS.supports(property, to)) {
-        test(function() {
-          assert_unreached('to value not supported');
-        }, `${property} supports [${to}]`);
-    }
-    if (typeof underlying !== 'undefined' && !CSS.supports(property, underlying)) {
-        test(function() {
-          assert_unreached('underlying value not supported');
-        }, `${property} supports [${underlying}]`);
-    }
-  }
-
-  function createTestTargets(interpolationMethods, interpolationTests, compositionTests, container) {
+  function createTestTargets(interpolationMethods, interpolationTests, container) {
     var targets = [];
-    for (var interpolationTest of interpolationTests) {
-      validateTestInputs(interpolationTest.options.property, interpolationTest.options.from, interpolationTest.options.to);
-    }
     for (var interpolationMethod of interpolationMethods) {
       var interpolationMethodContainer = createElement(container);
       for (var interpolationTest of interpolationTests) {
         [].push.apply(targets, createInterpolationTestTargets(interpolationMethod, interpolationMethodContainer, interpolationTest));
       }
-    }
-    var compositionContainer = createElement(container);
-    for (var compositionTest of compositionTests) {
-      [].push.apply(targets, createCompositionTestTargets(compositionContainer, compositionTest));
     }
     return targets;
   }
@@ -360,7 +303,7 @@
       webAnimationsInterpolation,
     ];
     var container = createElement(document.body);
-    var targets = createTestTargets(interpolationMethods, interpolationTests, compositionTests, container);
+    var targets = createTestTargets(interpolationMethods, interpolationTests, container);
     // Separate interpolation and measurement into different phases to avoid O(n^2) of the number of targets.
     for (var target of targets) {
       target.interpolate();
