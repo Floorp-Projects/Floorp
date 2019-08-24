@@ -1061,8 +1061,8 @@ description#identity-popup-content-verifier,
   box-sizing: border-box;
   min-width: 26px;
   border-radius: 10px;
-  background-color: var(--arrowpanel-dimmed-even-further);
-  border: 1px solid transparent;
+  background-color: #f9f9fa;
+  border: 1px solid var(--panel-separator-color);
   margin-top: 4px;
   margin-bottom: 4px;
   margin-inline-start: 1px;
@@ -1079,6 +1079,8 @@ description#identity-popup-content-verifier,
   height: 10px;
   border-radius: 10px;
   background: white;
+  outline: 1px solid var(--panel-separator-color);
+  -moz-outline-radius: 11px;
 }
 
 .protections-popup-tp-switch[enabled] {
