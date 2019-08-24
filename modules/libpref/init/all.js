@@ -1103,6 +1103,8 @@ pref("toolkit.dump.emit", false);
 pref("devtools.recordreplay.mvp.enabled", false);
 pref("devtools.recordreplay.allowRepaintFailures", true);
 pref("devtools.recordreplay.includeSystemScripts", false);
+pref("devtools.recordreplay.logging", false);
+pref("devtools.recordreplay.loggingFull", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
