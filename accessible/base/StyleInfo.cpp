@@ -21,10 +21,7 @@ StyleInfo::StyleInfo(dom::Element* aElement) : mElement(aElement) {
 
 void StyleInfo::Display(nsAString& aValue) {
   aValue.Truncate();
-  AppendASCIItoUTF16(
-      nsCSSProps::ValueToKeyword(mComputedStyle->StyleDisplay()->mDisplay,
-                                 nsCSSProps::kDisplayKTable),
-      aValue);
+  Servo_GetPropertyValue(mComputedStyle, eCSSProperty_display, &aValue);
 }
 
 void StyleInfo::TextAlign(nsAString& aValue) {

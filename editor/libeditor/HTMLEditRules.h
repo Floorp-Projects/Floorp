@@ -790,17 +790,6 @@ class HTMLEditRules : public TextEditRules {
       nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
   enum class TouchContent { no, yes };
-
-  /**
-   * GetNodesFromPoint() constructs a list of nodes from a point that will be
-   * operated on.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  GetNodesFromPoint(const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
-                    nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-                    TouchContent aTouchContent) const;
-
   enum class EntireList { no, yes };
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult

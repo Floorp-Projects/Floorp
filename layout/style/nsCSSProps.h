@@ -290,9 +290,6 @@ class nsCSSProps {
 
   // Keyword/Enum value tables
   static const KTableEntry kCursorKTable[];
-  // Not const because we modify its entries when various
-  // "layout.css.*.enabled" prefs changes:
-  static KTableEntry kDisplayKTable[];
   static const KTableEntry kFontSmoothingKTable[];
   static const KTableEntry kTextAlignKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];
