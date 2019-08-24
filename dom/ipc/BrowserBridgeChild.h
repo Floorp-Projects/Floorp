@@ -20,6 +20,7 @@ class RemoteIframeDocProxyAccessibleWrap;
 namespace dom {
 class BrowsingContext;
 class ContentChild;
+class Document;
 
 /**
  * BrowserBridgeChild implements the child actor part of the PBrowserBridge
@@ -96,9 +97,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
  private:
   ~BrowserBridgeChild();
 
+  void UnblockOwnerDocsLoadEvent(Document* aOwnerDoc);
+
   TabId mId;
   LayersId mLayersId;
   bool mIPCOpen;
+  bool mHadInitialLoad = false;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
