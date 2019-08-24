@@ -1023,19 +1023,19 @@ main {
     margin-bottom: 49px; }
     .search-wrapper .logo-and-wordmark .logo {
       background: url("chrome://branding/content/icon128.png") no-repeat center center;
-      background-size: 97px;
+      background-size: 96px;
       display: inline-block;
-      height: 97px;
-      width: 97px; }
+      height: 96px;
+      width: 96px; }
     .search-wrapper .logo-and-wordmark .wordmark {
       background: url("../data/content/assets/firefox-wordmark.svg") no-repeat center center;
-      background-size: 142px;
+      background-size: 172px;
       -moz-context-properties: fill;
       display: inline-block;
       fill: var(--newtab-search-wordmark-color);
-      height: 97px;
+      height: 96px;
       margin-inline-start: 15px;
-      width: 142px; }
+      width: 172px; }
     @media (max-width: 609px) {
       .search-wrapper .logo-and-wordmark .logo {
         background-size: 64px;
@@ -2979,6 +2979,62 @@ main {
   to {
     transform: rotate(360deg); } }
 
+.ds-text-promo {
+  display: flex;
+  max-width: 744px;
+  margin: 16px auto; }
+  .ds-text-promo img {
+    width: 40px;
+    height: 40px;
+    margin: 0 12px 0 0;
+    border-radius: 4px; }
+  .ds-text-promo .text {
+    line-height: 24px;
+    margin: -4.5px 0 0; }
+  .ds-text-promo h3 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 15px; }
+    [lwt-newtab-brighttext] .ds-text-promo h3 {
+      color: #F9F9FA; }
+  .ds-text-promo .subtitle {
+    font-size: 13px;
+    margin: 0;
+    color: #737373; }
+    [lwt-newtab-brighttext] .ds-text-promo .subtitle {
+      color: #B1B1B3; }
+
+.ds-chevron-link {
+  color: #0060DF;
+  display: inline-block;
+  outline: 0; }
+  .ds-chevron-link:hover {
+    text-decoration: underline; }
+  .ds-chevron-link:active {
+    color: #003EAA; }
+    [lwt-newtab-brighttext] .ds-chevron-link:active {
+      color: #0A84FF; }
+    .ds-chevron-link:active::after {
+      background-color: #003EAA; }
+      [lwt-newtab-brighttext] .ds-chevron-link:active::after {
+        background-color: #0A84FF; }
+  .ds-chevron-link:focus {
+    box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5);
+    border-radius: 2px; }
+    [lwt-newtab-brighttext] .ds-chevron-link:focus {
+      box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
+  .ds-chevron-link::after {
+    content: ' ';
+    mask: url("../data/content/assets/glyph-caret-right.svg") 0 -8px no-repeat;
+    background-color: #0060DF;
+    margin: 0 0 0 4px;
+    width: 5px;
+    height: 8px;
+    text-decoration: none;
+    display: inline-block; }
+    [lwt-newtab-brighttext] .ds-chevron-link::after {
+      background-color: #45A1FF; }
+
 .ASRouterButton {
   font-weight: 600;
   font-size: 14px;
@@ -3362,7 +3418,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
         margin: 0 60px; } }
     @media (max-width: 865px) {
       .SimpleBelowSearchSnippet .innerWrapper {
-        margin: 0 60px 0 0; } }
+        margin-inline-start: 0; } }
+    @media (max-width: 609px) {
+      .SimpleBelowSearchSnippet .innerWrapper {
+        margin: auto; } }
     .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet .innerWrapper {
       align-items: flex-start;
       background-color: transparent;
@@ -3397,6 +3456,9 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       .SimpleBelowSearchSnippet .icon {
         height: 24px;
         width: 24px; } }
+    @media (max-width: 610px) {
+      .SimpleBelowSearchSnippet .icon {
+        margin: auto; } }
     .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet .icon {
       height: 24px;
       width: 24px; }
@@ -3417,9 +3479,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       @media (max-width: 1120px) {
         .SimpleBelowSearchSnippet.withButton .blockButton {
           inset-inline-end: 2%; } }
-      @media (max-width: 865px) {
-        .SimpleBelowSearchSnippet.withButton .blockButton {
-          margin-top: 10px; } }
       .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet.withButton .blockButton {
         inset-inline-end: -10%;
         margin: auto; }
@@ -3432,9 +3491,18 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       flex-shrink: 0;
       margin: auto 0;
       margin-inline-end: 10px; }
+      @media (max-width: 610px) {
+        .SimpleBelowSearchSnippet.withButton .icon {
+          margin: auto; } }
     .SimpleBelowSearchSnippet.withButton .buttonContainer {
       margin: auto;
       margin-inline-end: 0; }
+      @media (max-width: 610px) {
+        .SimpleBelowSearchSnippet.withButton .buttonContainer {
+          margin: auto; } }
+  @media (max-width: 610px) {
+    .SimpleBelowSearchSnippet button {
+      margin: auto; } }
   .SimpleBelowSearchSnippet .body {
     display: inline;
     position: sticky;

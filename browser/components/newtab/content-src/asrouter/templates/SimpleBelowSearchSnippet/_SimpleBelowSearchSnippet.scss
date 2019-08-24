@@ -91,7 +91,12 @@
     }
 
     @media (max-width: 865px) {
-      margin: 0 60px 0 0;
+      margin-inline-start: 0;
+    }
+
+    // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 610px.
+    @media (max-width: $break-point-medium - 1px) {
+      margin: auto;
     }
 
     // Disable breakpoints for now if discovery stream is enabled.
@@ -142,6 +147,10 @@
       @include full-width-styles;
     }
 
+    @media (max-width: $break-point-medium) {
+      margin: auto;
+    }
+
     // Disable breakpoints for now if discovery stream is enabled.
     .ds-outer-wrapper-breakpoint-override & {
       @include full-width-styles;
@@ -170,10 +179,6 @@
         inset-inline-end: 2%;
       }
 
-      @media (max-width: 865px) {
-        margin-top: 10px;
-      }
-
       .ds-outer-wrapper-breakpoint-override & {
         inset-inline-end: -10%;
         margin: auto;
@@ -190,11 +195,25 @@
       flex-shrink: 0;
       margin: auto 0;
       margin-inline-end: 10px;
+
+      @media (max-width: $break-point-medium) {
+        margin: auto;
+      }
     }
 
     .buttonContainer {
       margin: auto;
       margin-inline-end: 0;
+
+      @media (max-width: $break-point-medium) {
+        margin: auto;
+      }
+    }
+  }
+
+  button {
+    @media (max-width: $break-point-medium) {
+      margin: auto;
     }
   }
 

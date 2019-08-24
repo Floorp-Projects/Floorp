@@ -7,6 +7,7 @@ import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardG
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { connect } from "react-redux";
 import { DSMessage } from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
+import { DSTextPromo } from "content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo";
 import { Hero } from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import { Highlights } from "content-src/components/DiscoveryStreamComponents/Highlights/Highlights";
 import { HorizontalRule } from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
@@ -114,6 +115,17 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return <Highlights />;
       case "TopSites":
         return <TopSites header={component.header} />;
+      case "TextPromo":
+        return (
+          <DSTextPromo
+            image={component.properties.image_src}
+            alt_text={component.properties.alt_text}
+            header={component.properties.excerpt}
+            cta_text={component.properties.cta_text}
+            cta_url={component.properties.cta_url}
+            subtitle={component.properties.context}
+          />
+        );
       case "Message":
         return (
           <DSMessage
