@@ -2711,6 +2711,9 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 // used for a window is determined in the window's frameViewClassForStyleMask:
 // method, so this is where we make sure that we have swizzled the method on
 // all encountered classes.
+// We also override the _wantsFloatingTitlebar method to return NO in order to
+// avoid some glitches in the titlebar that are caused by the way we mess with
+// the window.
 + (Class)frameViewClassForStyleMask:(NSUInteger)styleMask {
   Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
 
@@ -2746,19 +2749,25 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
                                 @selector(FrameView__fullScreenButtonOrigin));
     }
-    if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-      // When we're not using CoreAnimation, we need to override the
-      // _wantsFloatingTitlebar method to return NO, because the "floating
-      // titlebar" overlaps in a glitchy way with the NSOpenGLContext when we're
-      // drawing in the titlebar. These glitches do not appear when we use a
-      // CoreAnimation layer instead of an NSView-attached NSOpenGLContext.
-      IMP _wantsFloatingTitlebar =
-          class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
-      if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
-        nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
-                                  @selector(FrameView__wantsFloatingTitlebar));
-      }
+    // Override the _wantsFloatingTitlebar method to return NO, because it works around multiple
+    // problems:
+    // When we're not using CoreAnimation, the "floating titlebar" overlaps in a glitchy way with
+    // the NSOpenGLContext when we're drawing in the titlebar. These glitches do not happen when we
+    // use CoreAnimation.
+    // An additional problem appears in builds that link against the 10.14 SDK: In windows where
+    // _wantsFloatingTitlebar returns YES, the root NSView contains an additional view that provides
+    // a window background. This confuses our setContentView override which will place the content
+    // view *below* that background view, effectively hiding the content view completely.
+    // The floating titlebar view also slightly clips the bottom of the window buttons which we
+    // forcefully move down with our override of _closeButtonOrigin.
+    // See bug 1576391 for the removal of the _wantsFloatingTitlebar override.
+    IMP _wantsFloatingTitlebar =
+        class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
+    if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
+                                @selector(FrameView__wantsFloatingTitlebar));
     }
+
     [gSwizzledFrameViewClasses addObject:frameViewClass];
   }
 
