@@ -29,6 +29,7 @@ function getComputedViewProperty(view, name) {
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_styles.html", {
     waitForRecording: true,
+    disableLogging: true,
   });
   const { threadFront } = dbg;
 
