@@ -18,10 +18,15 @@
   fill: currentColor;
   --horizontal-padding: 2.1rem;
   --vertical-section-padding: 0.9em;
+  --height-offset: 0;
 }
 
 #protections-popup[toast] {
   --popup-width: 32rem;
+}
+
+#protections-popoup[infoMessageShowing] {
+  --height-offset: 260px;
 }
 
 /* This is used by screenshots tests to hide intermittently different
@@ -481,7 +486,7 @@ description#identity-popup-content-verifier,
 #protections-popup-socialblockView,
 #protections-popup-cookiesView,
 #protections-popup-trackersView {
-  max-height: 600px;
+  max-height: calc(600px + var(--height-offset));
 }
 
 #protections-popup-trackersView-list.empty {
