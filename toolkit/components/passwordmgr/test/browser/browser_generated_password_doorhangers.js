@@ -1024,7 +1024,7 @@ add_task(async function autosaved_login_updated_to_existing_login() {
 
       info("storage-change promises resolved");
       // Check the auto-saved login was removed and the original login updated
-      verifyLogins([
+      let savedLogins = verifyLogins([
         {
           username: "user1",
           password: autoSavedLogin.password,
@@ -1042,12 +1042,15 @@ add_task(async function autosaved_login_updated_to_existing_login() {
         "No notifications"
       );
 
-      // make sure the cache entry was removed with the removal of the auto-saved login
-      ok(
-        !LoginManagerParent._generatedPasswordsByPrincipalOrigin.has(
-          "https://example.com"
-        ),
-        "Generated password cache entry has been removed"
+      // make sure the cache entry is up to date:
+      let updatedLogin = savedLogins[0];
+      passwordCacheEntry = LoginManagerParent._generatedPasswordsByPrincipalOrigin.get(
+        "https://example.com"
+      );
+      todo_is(
+        passwordCacheEntry.storageGUID,
+        updatedLogin.guid,
+        "Generated password cache entry points at the correct login"
       );
     }
   );

@@ -202,33 +202,6 @@ this.LoginManagerParent = {
     return undefined;
   },
 
-  // Observers are added in BrowserGlue.jsm on desktop
-  observe(subject, topic, data) {
-    if (topic == "passwordmgr-autosaved-login-merged") {
-      // in the case where an autosaved login is merged into an existing login,
-      // remove the generated-password cache entry entirely
-      let { origin } = subject;
-      if (this._generatedPasswordsByPrincipalOrigin.has(origin)) {
-        log("Removing generated-password cache entry for origin:", origin);
-        this._generatedPasswordsByPrincipalOrigin.delete(origin);
-      }
-    } else if (
-      topic == "passwordmgr-storage-changed" &&
-      data == "removeLogin"
-    ) {
-      // in the case where an autosaved login is deleted, remove storageGUID for that entry
-      let { origin } = subject;
-      let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(origin);
-      if (generatedPW) {
-        log(
-          "Removing storageGUID for generated-password cache entry on origin:",
-          origin
-        );
-        generatedPW.storageGUID = null;
-      }
-    }
-  },
-
   /**
    * Trigger a login form fill and send relevant data (e.g. logins and recipes)
    * to the child process (LoginManagerContent).
