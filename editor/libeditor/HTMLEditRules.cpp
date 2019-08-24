@@ -3719,11 +3719,11 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
                                           int32_t aRightOffset) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
-  nsresult rv = GetNodesFromPoint(EditorDOMPoint(&aRightBlock, aRightOffset),
-                                  EditSubAction::eCreateOrChangeList,
-                                  arrayOfNodes, TouchContent::yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .SplitInlinesAndCollectEditTargetNodesInOneHardLine(
+                        EditorDOMPoint(&aRightBlock, aRightOffset),
+                        arrayOfNodes, EditSubAction::eCreateOrChangeList);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
@@ -7890,59 +7890,6 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
     content = parent;
   }
   return content;
-}
-
-nsresult HTMLEditRules::GetNodesFromPoint(
-    const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
-    nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-    TouchContent aTouchContent) const {
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  RefPtr<nsRange> range;
-  switch (aEditSubAction) {
-    case EditSubAction::eInsertText:
-    case EditSubAction::eInsertTextComingFromIME:
-    case EditSubAction::eInsertLineBreak:
-    case EditSubAction::eInsertParagraphSeparator:
-    case EditSubAction::eDeleteText:
-      range = HTMLEditorRef().CreateRangeIncludingAdjuscentWhiteSpaces(
-          aPoint.ToRawRangeBoundary(), aPoint.ToRawRangeBoundary());
-      break;
-    default:
-      range = HTMLEditorRef().CreateRangeExtendedToHardLineStartAndEnd(
-          aPoint.ToRawRangeBoundary(), aPoint.ToRawRangeBoundary(),
-          aEditSubAction);
-      break;
-  }
-  if (!range) {
-    ErrorResult error;
-    range = nsRange::Create(aPoint.ToRawRangeBoundary(),
-                            aPoint.ToRawRangeBoundary(), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-  }
-
-  // Make array of ranges
-  nsTArray<RefPtr<nsRange>> arrayOfRanges;
-
-  // Stuff new opRange into array
-  arrayOfRanges.AppendElement(range);
-
-  if (aTouchContent == TouchContent::yes) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .SplitInlinesAndCollectEditTargetNodes(
-                          arrayOfRanges, outArrayOfNodes, aEditSubAction);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "SplitInlinesAndCollectEditTargetNodes() failed");
-    return rv;
-  }
-
-  nsresult rv = HTMLEditorRef().CollectEditTargetNodes(
-      arrayOfRanges, outArrayOfNodes, aEditSubAction);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "CollectEditTargetNodes() failed");
-  return rv;
 }
 
 void HTMLEditRules::MakeTransitionList(

@@ -90,9 +90,8 @@ var Fingerprinting = {
 
   isAllowing(state) {
     return (
-      this.enabled &&
       (state & Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT) !=
-        0
+      0
     );
   },
 
@@ -222,7 +221,6 @@ var Cryptomining = {
 
   isAllowing(state) {
     return (
-      this.enabled &&
       (state & Ci.nsIWebProgressListener.STATE_LOADED_CRYPTOMINING_CONTENT) != 0
     );
   },
