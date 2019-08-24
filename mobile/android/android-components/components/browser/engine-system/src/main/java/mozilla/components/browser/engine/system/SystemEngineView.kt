@@ -208,13 +208,18 @@ class SystemEngineView @JvmOverloads constructor(
                     return WebResourceResponse(null, null, null)
                 }
 
-                if (!request.isForMainFrame &&
-                        getOrCreateUrlMatcher(resources, it).matches(resourceUri, Uri.parse(session?.currentUrl))) {
+                val (matches, stringCategory) = getOrCreateUrlMatcher(resources, it).matches(
+                    resourceUri,
+                    Uri.parse(session?.currentUrl)
+                )
+
+                if (!request.isForMainFrame && matches) {
                     session?.internalNotifyObservers {
+                        val matchedCategories = stringCategory.toTrackingProtectionCategories()
                         onTrackerBlocked(
                             Tracker(
                                 resourceUri.toString(),
-                                emptyList()
+                                matchedCategories
                             )
                         )
                     }
@@ -729,9 +734,18 @@ class SystemEngineView @JvmOverloads constructor(
                 UrlMatcher.SOCIAL to TrackingProtectionPolicy.TrackingCategory.SOCIAL
         )
 
+        private fun String?.toTrackingProtectionCategories(): List<TrackingProtectionPolicy.TrackingCategory> {
+            val category = urlMatcherCategoryMap[this]
+            return if (category != null) {
+                listOf(category)
+            } else {
+                emptyList()
+            }
+        }
+
         @Synchronized
         internal fun getOrCreateUrlMatcher(resources: Resources, policy: TrackingProtectionPolicy): UrlMatcher {
-            val categories = urlMatcherCategoryMap.filterValues { policy.trackingCategories.contains(it) }.keys
+            val categories = urlMatcherCategoryMap.filterValues { policy.contains(it) }.keys
 
             URL_MATCHER?.setCategoriesEnabled(categories) ?: run {
                 URL_MATCHER = UrlMatcher.createMatcher(

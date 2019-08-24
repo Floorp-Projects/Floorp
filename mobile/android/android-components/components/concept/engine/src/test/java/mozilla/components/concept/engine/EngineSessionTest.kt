@@ -688,6 +688,32 @@ class EngineSessionTest {
 
         verifyZeroInteractions(observer)
     }
+
+    @Test
+    fun `trackingProtectionPolicy contains should work with compound categories`() {
+        val recommendedPolicy = TrackingProtectionPolicy.recommended()
+
+        assertTrue(recommendedPolicy.contains(TrackingCategory.RECOMMENDED))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.AD))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.ANALYTICS))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.SOCIAL))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.TEST))
+
+        assertFalse(recommendedPolicy.contains(TrackingCategory.FINGERPRINTING))
+        assertFalse(recommendedPolicy.contains(TrackingCategory.CRYPTOMINING))
+        assertFalse(recommendedPolicy.contains(TrackingCategory.CONTENT))
+
+        val strictPolicy = TrackingProtectionPolicy.strict()
+
+        assertTrue(strictPolicy.contains(TrackingCategory.RECOMMENDED))
+        assertTrue(strictPolicy.contains(TrackingCategory.AD))
+        assertTrue(strictPolicy.contains(TrackingCategory.ANALYTICS))
+        assertTrue(strictPolicy.contains(TrackingCategory.SOCIAL))
+        assertTrue(strictPolicy.contains(TrackingCategory.TEST))
+        assertTrue(strictPolicy.contains(TrackingCategory.FINGERPRINTING))
+        assertTrue(strictPolicy.contains(TrackingCategory.CRYPTOMINING))
+        assertTrue(strictPolicy.contains(TrackingCategory.CONTENT))
+    }
 }
 
 open class DummyEngineSession : EngineSession() {

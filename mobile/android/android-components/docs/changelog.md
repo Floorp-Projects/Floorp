@@ -34,6 +34,9 @@ permalink: /changelog/
 * **concept-engine**
   * Added `WebNotification` data class for the web notifications API.
 
+* **browser-engine-system**
+  * Fixed issue [4191](https://github.com/mozilla-mobile/android-components/issues/4191) where the `recommended()` tracking category was not getting applied for `SystemEngine`.
+
 # 9.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v8.0.0...v9.0.0)
