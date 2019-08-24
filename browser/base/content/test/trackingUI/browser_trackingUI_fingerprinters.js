@@ -99,6 +99,77 @@ async function testIdentityState(hasException) {
   BrowserTestUtils.removeTab(tab);
 }
 
+async function testCategoryItem() {
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, false);
+  let promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
+  });
+  let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
+
+  let categoryItem = document.getElementById(
+    "protections-popup-category-fingerprinters"
+  );
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+
+  promise = waitForContentBlockingEvent();
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+    content.postMessage("fingerprinting", "*");
+  });
+
+  await promise;
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+}
+
 async function testSubview(hasException) {
   fpHistogram.clear();
   let promise = BrowserTestUtils.openNewForegroundTab({
@@ -196,6 +267,8 @@ add_task(async function test() {
 
   await testSubview(false);
   await testSubview(true);
+
+  await testCategoryItem();
 
   Services.prefs.clearUserPref(FP_PROTECTION_PREF);
 });
