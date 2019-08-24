@@ -24,10 +24,6 @@
     }
   },
   "properties": {
-    "layout": {
-      "description": "Different message layouts",
-     "enum": ["tracking-protections"]
-    },
     "published_date": {
       "type": "integer",
       "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
@@ -36,12 +32,6 @@
       "allOf": [
         {"$ref": "#/definitions/localizableText"},
         {"description": "Id of localized string or message override of What's New message title"}
-      ]
-    },
-    "subtitle": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "Id of localized string or message override of What's New message subtitle"}
       ]
     },
     "body": {
@@ -60,10 +50,6 @@
       "description": "Target URL for the What's New message.",
       "type": "string",
       "format": "uri"
-    },
-    "cta_type": {
-      "description": "Type of url open action",
-      "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE"]
     },
     "icon_url": {
       "description": "(optional) URL for the What's New message icon.",

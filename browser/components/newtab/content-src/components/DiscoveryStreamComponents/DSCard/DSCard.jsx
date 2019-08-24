@@ -10,7 +10,6 @@ import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 
-// Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 export const DefaultMeta = ({
   source,
   title,
@@ -19,14 +18,13 @@ export const DefaultMeta = ({
   context_type,
   cta,
   engagement,
-  cta_variant,
 }) => (
   <div className="meta">
     <div className="info-wrap">
       <p className="source clamp">{source}</p>
       <header className="title clamp">{title}</header>
       {excerpt && <p className="excerpt clamp">{excerpt}</p>}
-      {cta_variant === "link" && cta && (
+      {cta && (
         <div role="link" className="cta-link icon icon-arrow" tabIndex="0">
           {cta}
         </div>
@@ -40,7 +38,7 @@ export const DefaultMeta = ({
   </div>
 );
 
-export const CTAButtonMeta = ({
+export const VariantMeta = ({
   source,
   title,
   excerpt,
@@ -149,8 +147,6 @@ export class DSCard extends React.PureComponent {
         <div className="ds-card placeholder" ref={this.setPlaceholderRef} />
       );
     }
-    const isButtonCTA = this.props.cta_variant === "button";
-
     return (
       <div className="ds-card">
         <SafeAnchor
@@ -166,8 +162,8 @@ export class DSCard extends React.PureComponent {
               rawSource={this.props.raw_image_src}
             />
           </div>
-          {isButtonCTA ? (
-            <CTAButtonMeta
+          {this.props.cta_variant && (
+            <VariantMeta
               source={this.props.source}
               title={this.props.title}
               excerpt={this.props.excerpt}
@@ -177,7 +173,8 @@ export class DSCard extends React.PureComponent {
               cta={this.props.cta}
               sponsor={this.props.sponsor}
             />
-          ) : (
+          )}
+          {!this.props.cta_variant && (
             <DefaultMeta
               source={this.props.source}
               title={this.props.title}
@@ -186,7 +183,6 @@ export class DSCard extends React.PureComponent {
               engagement={this.props.engagement}
               context_type={this.props.context_type}
               cta={this.props.cta}
-              cta_variant={this.props.cta_variant}
             />
           )}
           <ImpressionStats

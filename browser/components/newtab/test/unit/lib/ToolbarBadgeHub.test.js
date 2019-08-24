@@ -1,5 +1,6 @@
 import { _ToolbarBadgeHub } from "lib/ToolbarBadgeHub.jsm";
 import { GlobalOverrider } from "test/unit/utils";
+import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
 import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
 import { _ToolbarPanelHub } from "lib/ToolbarPanelHub.jsm";
 
@@ -30,9 +31,10 @@ describe("ToolbarBadgeHub", () => {
     fakeAddImpression = sandbox.stub();
     fakeDispatch = sandbox.stub();
     isBrowserPrivateStub = sandbox.stub();
+    const panelTestMsgs = await PanelTestProvider.getMessages();
     const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
     fxaMessage = onboardingMsgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
-    whatsnewMessage = onboardingMsgs.find(({ id }) =>
+    whatsnewMessage = panelTestMsgs.find(({ id }) =>
       id.includes("WHATS_NEW_BADGE_")
     );
     fakeElement = {

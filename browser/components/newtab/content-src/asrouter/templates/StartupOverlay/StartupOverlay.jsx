@@ -33,20 +33,12 @@ export class StartupOverlay extends React.PureComponent {
     setTimeout(() => {
       this.setState({ show: true });
     }, 10);
-    // Hide the page content from screen readers while the modal is open
-    this.props.document
-      .getElementById("root")
-      .setAttribute("aria-hidden", "true");
   }
 
   removeOverlay() {
     window.removeEventListener("visibilitychange", this.removeOverlay);
     document.body.classList.remove("hide-main", "fxa");
     this.setState({ show: false });
-    // Re-enable the document for screen readers
-    this.props.document
-      .getElementById("root")
-      .setAttribute("aria-hidden", "false");
 
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.

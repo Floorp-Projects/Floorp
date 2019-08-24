@@ -948,13 +948,12 @@ describe("Reducers", () => {
       });
       assert.isTrue(state.feeds.loaded);
     });
-    it("should set spoc_endpoint and spocs_per_domain with DISCOVERY_STREAM_SPOCS_ENDPOINT", () => {
+    it("should set spoc_endpoint with DISCOVERY_STREAM_SPOCS_ENDPOINT", () => {
       const state = DiscoveryStream(undefined, {
         type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
-        data: { url: "foo.com", spocs_per_domain: 2 },
+        data: "foo.com",
       });
       assert.equal(state.spocs.spocs_endpoint, "foo.com");
-      assert.equal(state.spocs.spocs_per_domain, 2);
     });
     it("should set spocs with DISCOVERY_STREAM_SPOCS_UPDATE", () => {
       const data = {
@@ -967,7 +966,6 @@ describe("Reducers", () => {
       });
       assert.deepEqual(state.spocs, {
         spocs_endpoint: "",
-        spocs_per_domain: 1,
         data: [1, 2, 3],
         lastUpdated: 123,
         loaded: true,

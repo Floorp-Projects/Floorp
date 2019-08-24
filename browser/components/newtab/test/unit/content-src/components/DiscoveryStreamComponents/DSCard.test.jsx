@@ -2,7 +2,7 @@ import {
   DSCard,
   DefaultMeta,
   PlaceholderDSCard,
-  CTAButtonMeta,
+  VariantMeta,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
 import {
   DSContextFooter,
@@ -177,54 +177,48 @@ describe("<DSCard>", () => {
       assert.notOk(meta.find(".cta-link").exists());
     });
 
-    it("should not render cta-link by default when item has cta and cta_variant not link", () => {
+    it("should render cta-link by default when item has cta", () => {
       wrapper.setProps({ cta: "test" });
-      const meta = wrapper.find(DefaultMeta);
-      assert.notOk(meta.find(".cta-link").exists());
-    });
-
-    it("should render cta-link by default when item has cta and cta_variant as link", () => {
-      wrapper.setProps({ cta: "test", cta_variant: "link" });
       const meta = wrapper.find(DefaultMeta);
       assert.equal(meta.find(".cta-link").text(), "test");
     });
 
     it("should not render cta-button for non spoc content", () => {
-      wrapper.setProps({ cta: "test", cta_variant: "button" });
-      const meta = wrapper.find(CTAButtonMeta);
+      wrapper.setProps({ cta: "test", cta_variant: true });
+      const meta = wrapper.find(VariantMeta);
       assert.lengthOf(meta.find(".cta-button"), 0);
     });
 
-    it("should render cta-button when item has cta and cta_variant is button and is spoc", () => {
+    it("should render cta-button when item has cta and cta button variant is true and is spoc", () => {
       wrapper.setProps({
         cta: "test",
-        cta_variant: "button",
+        cta_variant: true,
         context: "Sponsored by Foo",
       });
-      const meta = wrapper.find(CTAButtonMeta);
+      const meta = wrapper.find(VariantMeta);
       assert.equal(meta.find(".cta-button").text(), "test");
     });
 
-    it("should not render Sponsored by label in footer for spoc item with cta_variant button", () => {
+    it("should not render Sponsored by label in footer for spoc item with cta button variant", () => {
       wrapper.setProps({
         cta: "test",
         context: "Sponsored by test",
-        cta_variant: "button",
+        cta_variant: true,
       });
 
-      assert.ok(wrapper.find(CTAButtonMeta).exists());
+      assert.ok(wrapper.find(VariantMeta).exists());
       assert.notOk(wrapper.find(DSContextFooter).exists());
     });
 
-    it("should render sponsor text on top for spoc item and cta button variant", () => {
+    it("should render sponsor text on top for spoc item and cta_variant true", () => {
       wrapper.setProps({
         sponsor: "Test",
         context: "Sponsored by test",
-        cta_variant: "button",
+        cta_variant: true,
       });
 
-      assert.ok(wrapper.find(CTAButtonMeta).exists());
-      const meta = wrapper.find(CTAButtonMeta);
+      assert.ok(wrapper.find(VariantMeta).exists());
+      const meta = wrapper.find(VariantMeta);
       assert.equal(meta.find(".source").text(), "Test · Sponsored");
     });
   });

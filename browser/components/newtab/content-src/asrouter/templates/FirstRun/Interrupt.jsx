@@ -31,7 +31,6 @@ export class Interrupt extends React.PureComponent {
           >
             <ReturnToAMO
               {...message}
-              document={this.props.document}
               UISurface="NEWTAB_OVERLAY"
               onBlock={onDismiss}
               onAction={executeAction}
@@ -42,7 +41,6 @@ export class Interrupt extends React.PureComponent {
       case "fxa_overlay":
         return (
           <StartupOverlay
-            document={this.props.document}
             onBlock={onDismiss}
             dispatch={dispatch}
             fxa_endpoint={fxaEndpoint}
