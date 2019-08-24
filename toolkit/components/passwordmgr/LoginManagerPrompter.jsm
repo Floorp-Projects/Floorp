@@ -1209,6 +1209,13 @@ LoginManagerPrompter.prototype = {
       } else {
         this.log("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
+        // notify that this auto-saved login been merged
+        if (loginToRemove && loginToRemove.guid == autoSavedLoginGuid) {
+          Services.obs.notifyObservers(
+            loginToRemove,
+            "passwordmgr-autosaved-login-merged"
+          );
+        }
       }
 
       if (loginToRemove) {

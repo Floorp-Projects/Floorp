@@ -622,6 +622,8 @@ const listeners = {
     "update-error": ["UpdateListener"],
     "gmp-plugin-crash": ["PluginManager"],
     "plugin-crashed": ["PluginManager"],
+    "passwordmgr-storage-changed": ["LoginManagerParent"],
+    "passwordmgr-autosaved-login-merged": ["LoginManagerParent"],
   },
 
   ppmm: {
