@@ -13,6 +13,7 @@ Services.scriptloader.loadSubScript(
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
     waitForRecording: true,
+    disableLogging: true,
   });
   const { threadFront, toolbox } = dbg;
 

@@ -27,8 +27,12 @@ async function attachDebugger(tab) {
 
 async function attachRecordingDebugger(
   url,
-  { waitForRecording } = { waitForRecording: false }
+  { waitForRecording, disableLogging } = {}
 ) {
+  if (!disableLogging) {
+    await pushPref("devtools.recordreplay.logging", true);
+  }
+
   const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
   gBrowser.selectedTab = tab;
   openTrustedLinkIn(EXAMPLE_URL + url, "current");
