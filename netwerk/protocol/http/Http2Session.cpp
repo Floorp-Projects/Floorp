@@ -3382,6 +3382,8 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       streamCleanupCode = NS_ERROR_NET_RESET;
       mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
       mInputFrameDataStream->Transaction()->DisableSpdy();
+      mInputFrameDataStream->Transaction()
+          ->MakeNonSticky();  // actully allow restart by unsticking
     } else {
       streamCleanupCode = mInputFrameDataStream->RecvdData()
                               ? NS_ERROR_NET_PARTIAL_TRANSFER
