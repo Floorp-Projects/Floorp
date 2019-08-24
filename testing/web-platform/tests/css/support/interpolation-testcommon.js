@@ -259,12 +259,12 @@
         interpolationMethod.interpolate(property, from, to, expectation.at, target);
       };
       target.measure = function() {
-        var actualValue = getComputedStyle(target).getPropertyValue(property);
+        var expectedValue = getComputedStyle(expectedTargetContainer.target).getPropertyValue(property);
         test(function() {
           assert_equals(
-            normalizeValue(actualValue),
-            normalizeValue(getComputedStyle(expectedTargetContainer.target).getPropertyValue(property)));
-        }, `${testText} at (${expectation.at}) is [${sanitizeUrls(actualValue)}]`);
+            normalizeValue(getComputedStyle(target).getPropertyValue(property)),
+            normalizeValue(expectedValue));
+        }, `${testText} at (${expectation.at}) should be [${sanitizeUrls(expectedValue)}]`);
       };
       return target;
     });
