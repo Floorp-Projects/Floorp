@@ -2711,6 +2711,9 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 // used for a window is determined in the window's frameViewClassForStyleMask:
 // method, so this is where we make sure that we have swizzled the method on
 // all encountered classes.
+// We also override the _wantsFloatingTitlebar method to return NO in order to
+// avoid some glitches in the titlebar that are caused by the way we mess with
+// the window.
 + (Class)frameViewClassForStyleMask:(NSUInteger)styleMask {
   Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
 
@@ -2746,18 +2749,11 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
                                 @selector(FrameView__fullScreenButtonOrigin));
     }
-    if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-      // When we're not using CoreAnimation, we need to override the
-      // _wantsFloatingTitlebar method to return NO, because the "floating
-      // titlebar" overlaps in a glitchy way with the NSOpenGLContext when we're
-      // drawing in the titlebar. These glitches do not appear when we use a
-      // CoreAnimation layer instead of an NSView-attached NSOpenGLContext.
-      IMP _wantsFloatingTitlebar =
-          class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
-      if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
-        nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
-                                  @selector(FrameView__wantsFloatingTitlebar));
-      }
+    IMP _wantsFloatingTitlebar =
+        class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
+    if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
+                                @selector(FrameView__wantsFloatingTitlebar));
     }
     [gSwizzledFrameViewClasses addObject:frameViewClass];
   }
