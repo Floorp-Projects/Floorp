@@ -3142,7 +3142,9 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
     this.props.sendUserActionTelemetry({
       event: "IMPRESSION",
       id: this.props.UISurface
-    });
+    }); // Hide the page content from screen readers while the modal is open
+
+    this.props.document.getElementById("root").setAttribute("aria-hidden", "true");
   }
 
   onClickAddExtension() {
@@ -3159,7 +3161,9 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
     this.props.sendUserActionTelemetry({
       event: "BLOCK",
       id: this.props.UISurface
-    });
+    }); // Re-enable the document for screen readers
+
+    this.props.document.getElementById("root").setAttribute("aria-hidden", "false");
   }
 
   renderText() {
@@ -3247,7 +3251,9 @@ class StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCo
       this.setState({
         show: true
       });
-    }, 10);
+    }, 10); // Hide the page content from screen readers while the modal is open
+
+    this.props.document.getElementById("root").setAttribute("aria-hidden", "true");
   }
 
   removeOverlay() {
@@ -3255,7 +3261,9 @@ class StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCo
     document.body.classList.remove("hide-main", "fxa");
     this.setState({
       show: false
-    });
+    }); // Re-enable the document for screen readers
+
+    this.props.document.getElementById("root").setAttribute("aria-hidden", "false");
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.
       this.props.onBlock();
@@ -7931,6 +7939,7 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
 
 
 
+ // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 
 const DefaultMeta = ({
   source,
@@ -7939,7 +7948,8 @@ const DefaultMeta = ({
   context,
   context_type,
   cta,
-  engagement
+  engagement,
+  cta_variant
 }) => external_React_default.a.createElement("div", {
   className: "meta"
 }, external_React_default.a.createElement("div", {
@@ -7950,7 +7960,7 @@ const DefaultMeta = ({
   className: "title clamp"
 }, title), excerpt && external_React_default.a.createElement("p", {
   className: "excerpt clamp"
-}, excerpt), cta && external_React_default.a.createElement("div", {
+}, excerpt), cta_variant === "link" && cta && external_React_default.a.createElement("div", {
   role: "link",
   className: "cta-link icon icon-arrow",
   tabIndex: "0"
@@ -7959,7 +7969,7 @@ const DefaultMeta = ({
   context: context,
   engagement: engagement
 }));
-const VariantMeta = ({
+const CTAButtonMeta = ({
   source,
   title,
   excerpt,
@@ -8059,6 +8069,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       });
     }
 
+    const isButtonCTA = this.props.cta_variant === "button";
     return external_React_default.a.createElement("div", {
       className: "ds-card"
     }, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
@@ -8072,7 +8083,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       extraClassNames: "img",
       source: this.props.image_src,
       rawSource: this.props.raw_image_src
-    })), this.props.cta_variant && external_React_default.a.createElement(VariantMeta, {
+    })), isButtonCTA ? external_React_default.a.createElement(CTAButtonMeta, {
       source: this.props.source,
       title: this.props.title,
       excerpt: this.props.excerpt,
@@ -8081,14 +8092,15 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       engagement: this.props.engagement,
       cta: this.props.cta,
       sponsor: this.props.sponsor
-    }), !this.props.cta_variant && external_React_default.a.createElement(DefaultMeta, {
+    }) : external_React_default.a.createElement(DefaultMeta, {
       source: this.props.source,
       title: this.props.title,
       excerpt: this.props.excerpt,
       context: this.props.context,
       engagement: this.props.engagement,
       context_type: this.props.context_type,
-      cta: this.props.cta
+      cta: this.props.cta,
+      cta_variant: this.props.cta_variant
     }), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
       campaignId: this.props.campaignId,
       rows: [{
@@ -8323,6 +8335,30 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
       className: "link",
       url: this.props.link_url
     }, this.props.link_text)));
+  }
+
+}
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+class DSTextPromo_DSTextPromo extends external_React_default.a.PureComponent {
+  render() {
+    return external_React_default.a.createElement("div", {
+      className: "ds-text-promo"
+    }, external_React_default.a.createElement("img", {
+      src: this.props.image,
+      alt: this.props.alt_text
+    }), external_React_default.a.createElement("div", {
+      className: "text"
+    }, external_React_default.a.createElement("h3", null, `${this.props.header}\u2003`, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
+      className: "ds-chevron-link",
+      url: this.props.cta_url
+    }, this.props.cta_text)), external_React_default.a.createElement("p", {
+      className: "subtitle"
+    }, this.props.subtitle)));
   }
 
 }
@@ -9036,6 +9072,7 @@ const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state
 
 
 
+
 const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
 let rickRollCache = []; // Cache of random probability values for a spoc position
@@ -9118,6 +9155,16 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
       case "TopSites":
         return external_React_default.a.createElement(TopSites_TopSites_TopSites, {
           header: component.header
+        });
+
+      case "TextPromo":
+        return external_React_default.a.createElement(DSTextPromo_DSTextPromo, {
+          image: component.properties.image_src,
+          alt_text: component.properties.alt_text,
+          header: component.properties.excerpt,
+          cta_text: component.properties.cta_text,
+          cta_url: component.properties.cta_url,
+          subtitle: component.properties.context
         });
 
       case "Message":
@@ -12823,6 +12870,7 @@ const INITIAL_STATE = {
     },
     spocs: {
       spocs_endpoint: "",
+      spocs_per_domain: 1,
       lastUpdated: null,
       data: {},
       // {spocs: []}
@@ -13439,7 +13487,8 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case Actions["actionTypes"].DISCOVERY_STREAM_SPOCS_ENDPOINT:
       return { ...prevState,
         spocs: { ...INITIAL_STATE.DiscoveryStream.spocs,
-          spocs_endpoint: action.data || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint
+          spocs_endpoint: action.data.url || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
+          spocs_per_domain: action.data.spocs_per_domain || INITIAL_STATE.DiscoveryStream.spocs.spocs_per_domain
         }
       };
 
@@ -13626,6 +13675,7 @@ class Interrupt_Interrupt extends external_React_default.a.PureComponent {
             amo_html: message.content.text
           })
         }, external_React_default.a.createElement(ReturnToAMO["ReturnToAMO"], _extends({}, message, {
+          document: this.props.document,
           UISurface: "NEWTAB_OVERLAY",
           onBlock: onDismiss,
           onAction: executeAction,
@@ -13634,6 +13684,7 @@ class Interrupt_Interrupt extends external_React_default.a.PureComponent {
 
       case "fxa_overlay":
         return external_React_default.a.createElement(StartupOverlay["StartupOverlay"], {
+          document: this.props.document,
           onBlock: onDismiss,
           dispatch: dispatch,
           fxa_endpoint: fxaEndpoint

@@ -45,7 +45,7 @@ this.DownloadsManager = class DownloadsManager {
         DownloadsViewUI.getSizeWithUnits(download) ||
         DownloadsCommon.strings.sizeUnknown,
       referrer: download.source.referrerInfo
-        ? download.source.referrerInfo.originalReferrer
+        ? download.source.referrerInfo.originalReferrer.spec
         : null,
       date_added: download.endTime,
     };
