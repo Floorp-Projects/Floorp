@@ -150,9 +150,6 @@ var view = {
   },
   setCellValue(row, col, value) {},
   setCellText(row, col, value) {},
-  performAction(action) {},
-  performActionOnRow(action, row) {},
-  performActionOnCell(action, row, col) {},
   isSeparator(index) {
     return false;
   },
