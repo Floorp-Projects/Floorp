@@ -282,12 +282,18 @@
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
+#protections-popup-info-button > image {
+  fill-opacity: 1;
+}
+
 #protections-popup-info-button:hover {
-  outline-color: var(--toolbarbutton-hover-background);
+  outline-color: rgba(12, 12, 13, 0.2);
+  background-color: rgba(12, 12, 13, 0.2);
 }
 
 #protections-popup-info-button:not(:hover)[checked] {
-  outline-color: var(--toolbarbutton-active-background);
+  outline-color: rgba(12, 12, 13, 0.3);
+  background-color: rgba(12, 12, 13, 0.3);
 }
 
 #identity-popup-permissions-content > description,
