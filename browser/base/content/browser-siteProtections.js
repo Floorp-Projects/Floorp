@@ -1906,16 +1906,20 @@ var gProtectionsHandler = {
     this.maybeUpdateEarliestRecordedDateTooltip();
   },
 
-  disableForCurrentPage() {
+  disableForCurrentPage(shouldReload = true) {
     ContentBlockingAllowList.add(gBrowser.selectedBrowser);
-    PanelMultiView.hidePopup(this._protectionsPopup);
-    BrowserReload();
+    if (shouldReload) {
+      PanelMultiView.hidePopup(this._protectionsPopup);
+      BrowserReload();
+    }
   },
 
-  enableForCurrentPage() {
+  enableForCurrentPage(shouldReload = true) {
     ContentBlockingAllowList.remove(gBrowser.selectedBrowser);
-    PanelMultiView.hidePopup(this._protectionsPopup);
-    BrowserReload();
+    if (shouldReload) {
+      PanelMultiView.hidePopup(this._protectionsPopup);
+      BrowserReload();
+    }
   },
 
   async onTPSwitchCommand(event) {
@@ -1954,15 +1958,28 @@ var gProtectionsHandler = {
     this._previousURI = gBrowser.currentURI.spec;
     this._previousOuterWindowID = gBrowser.selectedBrowser.outerWindowID;
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     if (newExceptionState) {
-      this.disableForCurrentPage();
+      this.disableForCurrentPage(false);
       this.recordClick("etp_toggle_off");
     } else {
-      this.enableForCurrentPage();
+      this.enableForCurrentPage(false);
       this.recordClick("etp_toggle_on");
     }
+
+    // We need to flush the TP state change immediately without waiting the
+    // 500ms delay if the Tab get switched out.
+    let targetTab = gBrowser.selectedTab;
+    let onTabSelectHandler;
+    let tabSelectPromise = new Promise(resolve => {
+      onTabSelectHandler = () => resolve();
+      gBrowser.tabContainer.addEventListener("TabSelect", onTabSelectHandler);
+    });
+    let timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
+
+    await Promise.race([tabSelectPromise, timeoutPromise]);
+    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelectHandler);
+    PanelMultiView.hidePopup(this._protectionsPopup);
+    gBrowser.reloadTab(targetTab);
 
     delete this._TPSwitchCommanding;
   },

@@ -562,3 +562,61 @@ add_task(async function testSubViewTelemetry() {
     });
   }
 });
+
+/**
+ * A test to make sure the TP state won't apply incorrectly if we quickly switch
+ * tab after toggling the TP switch.
+ */
+add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
+  const FIRST_TEST_SITE = "https://example.com/";
+  const SECOND_TEST_SITE = "https://example.org/";
+
+  // First, clear the tracking database.
+  await TrackingDBService.clearAll();
+
+  // Open two tabs with different origins.
+  let tabOne = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    FIRST_TEST_SITE
+  );
+  let tabTwo = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    SECOND_TEST_SITE
+  );
+
+  // Open the protection panel of the second tab.
+  await openProtectionsPanel();
+
+  // A promise to check the reload happens on the second tab.
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tabTwo.linkedBrowser,
+    false,
+    SECOND_TEST_SITE
+  );
+
+  // Toggle the TP state and switch tab without waiting it to be finished.
+  gProtectionsHandler._protectionsPopupTPSwitch.click();
+  gBrowser.selectedTab = tabOne;
+
+  // Wait for the second tab to be reloaded.
+  await browserLoadedPromise;
+
+  // Check that the first tab is still with ETP enabled.
+  ok(
+    !ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
+    "The tracking protection icon state is still enabled."
+  );
+
+  // Check the ETP is disabled on the second origin.
+  gBrowser.selectedTab = tabTwo;
+  ok(
+    ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
+    "The tracking protection icon state has been changed to disabled."
+  );
+
+  BrowserTestUtils.removeTab(tabOne);
+  BrowserTestUtils.removeTab(tabTwo);
+
+  // Finally, clear the tracking database.
+  await TrackingDBService.clearAll();
+});
