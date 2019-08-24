@@ -473,6 +473,7 @@ class _ToolbarPanelHub {
     const toggleMessage = () => {
       container.toggleAttribute("disabled");
       infoButton.toggleAttribute("checked");
+      panelContainer.toggleAttribute("infoMessageShowing");
     };
     if (!container.childElementCount) {
       const message = await this._getMessages({
