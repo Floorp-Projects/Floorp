@@ -184,21 +184,4 @@ interface TreeView
    */
   [Throws]
   void setCellText(long row, TreeColumn column, DOMString value);
-
-  /**
-   * A command API that can be used to invoke commands on the selection.  The tree
-   * will automatically invoke this method when certain keys are pressed.  For example,
-   * when the DEL key is pressed, performAction will be called with the "delete" string.
-   */
-  void performAction(DOMString action);
-
-  /**
-   * A command API that can be used to invoke commands on a specific row.
-   */
-  void performActionOnRow(DOMString action, long row);
-
-  /**
-   * A command API that can be used to invoke commands on a specific cell.
-   */
-  void performActionOnCell(DOMString action, long row, TreeColumn column);
 };

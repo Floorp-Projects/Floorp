@@ -1046,20 +1046,6 @@ nsCertTree::SetCellText(int32_t row, nsTreeColumn* col,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCertTree::PerformAction(const char16_t* action) { return NS_OK; }
-
-NS_IMETHODIMP
-nsCertTree::PerformActionOnRow(const char16_t* action, int32_t row) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertTree::PerformActionOnCell(const char16_t* action, int32_t row,
-                                nsTreeColumn* col) {
-  return NS_OK;
-}
-
 #ifdef DEBUG_CERT_TREE
 void nsCertTree::dumpMap() {
   for (int i = 0; i < mNumOrgs; i++) {

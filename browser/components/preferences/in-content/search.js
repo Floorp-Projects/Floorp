@@ -792,7 +792,4 @@ EngineView.prototype = {
         });
     }
   },
-  performAction(action) {},
-  performActionOnRow(action, index) {},
-  performActionOnCell(action, index, column) {},
 };

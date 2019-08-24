@@ -464,8 +464,6 @@ var treeView = {
   cycleHeader(column) {},
   cycleCell(idx, column) {},
   selectionChanged() {},
-  performAction(action) {},
-  performActionOnCell(action, index, column) {},
   getColumnProperties(column) {
     return "";
   },

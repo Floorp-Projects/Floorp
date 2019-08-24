@@ -5,12 +5,6 @@
 page-info-window =
     .style = width: 600px; min-height: 550px;
 
-copy =
-    .key = C
-menu-copy =
-    .label = Copy
-    .accesskey = C
-
 select-all =
     .key = A
 menu-select-all =

@@ -83,19 +83,6 @@ pageInfoTreeView.prototype = {
     this.data = [];
   },
 
-  handleCopy(row) {
-    return row < 0 || this.copycol < 0
-      ? ""
-      : this.data[row][this.copycol] || "";
-  },
-
-  performActionOnRow(action, row) {
-    if (action == "copy") {
-      var data = this.handleCopy(row);
-      this.tree.treeBody.parentNode.setAttribute("copybuffer", data);
-    }
-  },
-
   onPageMediaSort(columnname) {
     var tree = document.getElementById(this.treeid);
     var treecol = tree.columns.getNamedColumn(columnname);
@@ -170,8 +157,6 @@ pageInfoTreeView.prototype = {
   isEditable(row, column) {
     return false;
   },
-  performAction(action) {},
-  performActionOnCell(action, row, column) {},
 };
 
 // mmm, yummy. global variables.
@@ -283,19 +268,6 @@ const nsIPermissionManager = Ci.nsIPermissionManager;
 
 const nsICertificateDialogs = Ci.nsICertificateDialogs;
 const CERTIFICATEDIALOGS_CONTRACTID = "@mozilla.org/nsCertificateDialogs;1";
-
-// clipboard helper
-function getClipboardHelper() {
-  try {
-    return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
-      Ci.nsIClipboardHelper
-    );
-  } catch (e) {
-    // do nothing, later code will handle the error
-    return null;
-  }
-}
-const gClipboardHelper = getClipboardHelper();
 
 // namespaces, don't need all of these yet...
 const XLinkNS = "http://www.w3.org/1999/xlink";
@@ -1186,40 +1158,6 @@ function formatDate(datestr, unknown) {
     timeStyle: "long",
   });
   return dateTimeFormatter.format(date);
-}
-
-function doCopy() {
-  if (!gClipboardHelper) {
-    return;
-  }
-
-  var elem = document.commandDispatcher.focusedElement;
-
-  if (elem && elem.localName == "tree") {
-    var view = elem.view;
-    var selection = view.selection;
-    var text = [],
-      tmp = "";
-    var min = {},
-      max = {};
-
-    var count = selection.getRangeCount();
-
-    for (var i = 0; i < count; i++) {
-      selection.getRangeAt(i, min, max);
-
-      for (var row = min.value; row <= max.value; row++) {
-        view.performActionOnRow("copy", row);
-
-        tmp = elem.getAttribute("copybuffer");
-        if (tmp) {
-          text.push(tmp);
-        }
-        elem.removeAttribute("copybuffer");
-      }
-    }
-    gClipboardHelper.copyString(text.join("\n"));
-  }
 }
 
 function doSelectAllMedia() {
