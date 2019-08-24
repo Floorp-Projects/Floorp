@@ -24,6 +24,10 @@ export class ReturnToAMO extends React.PureComponent {
       event: "IMPRESSION",
       id: this.props.UISurface,
     });
+    // Hide the page content from screen readers while the modal is open
+    this.props.document
+      .getElementById("root")
+      .setAttribute("aria-hidden", "true");
   }
 
   onClickAddExtension() {
@@ -41,6 +45,10 @@ export class ReturnToAMO extends React.PureComponent {
       event: "BLOCK",
       id: this.props.UISurface,
     });
+    // Re-enable the document for screen readers
+    this.props.document
+      .getElementById("root")
+      .setAttribute("aria-hidden", "false");
   }
 
   renderText() {

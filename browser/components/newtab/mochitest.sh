@@ -13,7 +13,7 @@ cd /mozilla-central && hg pull && hg update -C
 cd /activity-stream && npm install . && npm run buildmc
 
 # Build latest m-c with Activity Stream changes
-cd /mozilla-central && ./mach build \
+cd /mozilla-central && rm -rf ./objdir-frontend && ./mach build \
   && ./mach lint browser/components/newtab \
   && ./mach lint -l codespell browser/locales/en-US/browser/newtab \
   && ./mach test browser/components/newtab/test/browser --headless \
