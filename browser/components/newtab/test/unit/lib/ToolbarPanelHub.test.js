@@ -20,6 +20,9 @@ describe("ToolbarPanelHub", () => {
   let waitForInitializedStub;
   let isBrowserPrivateStub;
   let fakeDispatch;
+  let getEarliestRecordedDateStub;
+  let getEventsByDateRangeStub;
+  let handleUserActionStub;
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
@@ -58,6 +61,10 @@ describe("ToolbarPanelHub", () => {
       },
     };
     fakeWindow = {
+      // eslint-disable-next-line object-shorthand
+      DocumentFragment: function() {
+        return fakeElementById;
+      },
       document: fakeDocument,
       browser: {
         ownerDocument: fakeDocument,
@@ -94,6 +101,16 @@ describe("ToolbarPanelHub", () => {
     globals.set("PrivateBrowsingUtils", {
       isBrowserPrivate: isBrowserPrivateStub,
     });
+    getEarliestRecordedDateStub = sandbox.stub();
+    getEventsByDateRangeStub = sandbox.stub();
+    globals.set("TrackingDBService", {
+      getEarliestRecordedDate: getEarliestRecordedDateStub.returns(
+        // A random date that's not the current timestamp
+        new Date() - 500
+      ),
+      getEventsByDateRange: getEventsByDateRangeStub.returns([]),
+    });
+    handleUserActionStub = sandbox.stub();
   });
   afterEach(() => {
     instance.uninit();
@@ -242,6 +259,7 @@ describe("ToolbarPanelHub", () => {
       instance.init(waitForInitializedStub, {
         getMessages: getMessagesStub,
         dispatch: fakeDispatch,
+        handleUserAction: handleUserActionStub,
       });
     });
     it("should render messages to the panel on renderMessages()", async () => {
@@ -250,32 +268,50 @@ describe("ToolbarPanelHub", () => {
       );
       messages[0].content.link_text = { string_id: "link_text_id" };
 
-      getMessagesStub.returns([messages[0], messages[2], messages[1]]);
+      getMessagesStub.returns(messages);
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
       for (let message of messages) {
-        assert.ok(
-          createdElements.find(
-            el =>
-              el.tagName === "h2" && el.textContent === message.content.title
-          )
-        );
-        assert.ok(
-          createdElements.find(
-            el => el.tagName === "p" && el.textContent === message.content.body
-          )
-        );
+        assert.ok(createdElements.find(el => el.tagName === "h2"));
+        if (message.content.layout === "tracking-protections") {
+          assert.ok(createdElements.find(el => el.tagName === "h4"));
+        }
+        assert.ok(createdElements.find(el => el.tagName === "p"));
       }
       // Call the click handler to make coverage happy.
       eventListeners.click();
-      assert.calledOnce(fakeWindow.ownerGlobal.openLinkIn);
+      assert.calledOnce(handleUserActionStub);
+    });
+    it("should sort based on order field value", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m =>
+          m.template === "whatsnew_panel_message" &&
+          m.content.published_date === 1560969794394
+      );
+
+      messages.forEach(m => (m.content.title = m.order));
+
+      getMessagesStub.returns(messages);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      // Select the title elements that are supposed to be set to the same
+      // value as the `order` field of the message
+      const titleEls = createdElements
+        .filter(
+          el =>
+            el.classList.add.firstCall &&
+            el.classList.add.firstCall.args[0] === "whatsNew-message-title"
+        )
+        .map(el => el.textContent);
+      assert.deepEqual(titleEls, [1, 2, 3]);
     });
     it("should accept string for image attributes", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(
-        m => m.template === "whatsnew_panel_message"
+        m => m.id === "WHATS_NEW_70_1"
       );
-      getMessagesStub.returns([messages[0], messages[2], messages[1]]);
+      getMessagesStub.returns(messages);
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
@@ -289,19 +325,55 @@ describe("ToolbarPanelHub", () => {
     });
     it("should accept fluent ids for image attributes", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(
-        m => m.template === "whatsnew_panel_message"
+        m => m.id === "WHATS_NEW_70_1"
       );
       messages[0].content.icon_alt = { string_id: "foo" };
-      getMessagesStub.returns([messages[0], messages[2], messages[1]]);
+      getMessagesStub.returns(messages);
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
       const imageEl = createdElements.find(el => el.tagName === "img");
-      assert.calledOnce(fakeDocument.l10n.setAttributes);
       assert.calledWithExactly(fakeDocument.l10n.setAttributes, imageEl, "foo");
     });
+    it("should accept fluent ids for elements attributes", async () => {
+      const [message] = (await PanelTestProvider.getMessages()).filter(
+        m =>
+          m.template === "whatsnew_panel_message" &&
+          m.content.layout === "tracking-protections"
+      );
+      getMessagesStub.returns([message]);
+      instance.state.contentArguments = { foo: "foo", bar: "bar" };
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      const subtitle = createdElements.find(el => el.tagName === "h4");
+      assert.calledWithExactly(
+        fakeDocument.l10n.setAttributes,
+        subtitle,
+        message.content.subtitle.string_id,
+        instance.state.contentArguments
+      );
+    });
+    it("should correctly compute blocker trackers and date", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.template === "whatsnew_panel_message"
+      );
+      getMessagesStub.returns(messages);
+      getEventsByDateRangeStub.returns([
+        { getResultByName: sandbox.stub().returns(2) },
+        { getResultByName: sandbox.stub().returns(3) },
+      ]);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      assert.calledWithExactly(
+        fakeDocument.l10n.setAttributes,
+        sinon.match.object,
+        sinon.match.string,
+        { blockedCount: "5", earliestDate: getEarliestRecordedDateStub() }
+      );
+    });
     it("should only render unique dates (no duplicates)", async () => {
-      instance._createDateElement = sandbox.stub();
       const messages = (await PanelTestProvider.getMessages()).filter(
         m => m.template === "whatsnew_panel_message"
       );
@@ -312,7 +384,13 @@ describe("ToolbarPanelHub", () => {
 
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
-      assert.callCount(instance._createDateElement, uniqueDates.length);
+      const dateElements = createdElements.filter(
+        el =>
+          el.tagName === "p" &&
+          el.classList.add.firstCall &&
+          el.classList.add.firstCall.args[0] === "whatsNew-message-date"
+      );
+      assert.lengthOf(dateElements, uniqueDates.length);
     });
     it("should listen for panelhidden and remove the toolbar button", async () => {
       getMessagesStub.returns([]);
@@ -492,6 +570,7 @@ describe("ToolbarPanelHub", () => {
         dispatch: fakeDispatch,
         getMessages: () =>
           onboardingMsgs.find(msg => msg.template === "protections_panel"),
+        handleUserAction: handleUserActionStub,
       });
     });
     it("should remember it showed", async () => {
@@ -522,7 +601,17 @@ describe("ToolbarPanelHub", () => {
 
       eventListeners.click();
 
-      assert.calledOnce(fakeWindow.ownerGlobal.openLinkIn);
+      assert.calledOnce(handleUserActionStub);
+      assert.calledWithExactly(handleUserActionStub, {
+        target: fakeWindow,
+        data: {
+          type: "OPEN_URL",
+          data: {
+            args: sinon.match.string,
+            where: "tabshifted",
+          },
+        },
+      });
     });
   });
 });

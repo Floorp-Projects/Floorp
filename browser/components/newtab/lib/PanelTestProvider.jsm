@@ -92,6 +92,7 @@ const MESSAGES = () => [
   {
     id: "WHATS_NEW_70_1",
     template: "whatsnew_panel_message",
+    order: 3,
     content: {
       published_date: 1560969794394,
       title: "Protection Is Our Focus",
@@ -101,6 +102,7 @@ const MESSAGES = () => [
       body:
         "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       cta_url: "https://blog.mozilla.org/",
+      cta_type: "OPEN_URL",
     },
     targeting: `firefoxVersion > 69`,
     trigger: { id: "whatsNewPanelOpened" },
@@ -108,6 +110,7 @@ const MESSAGES = () => [
   {
     id: "WHATS_NEW_70_2",
     template: "whatsnew_panel_message",
+    order: 1,
     content: {
       published_date: 1560969794394,
       title: "Another thing new in Firefox 70",
@@ -115,6 +118,7 @@ const MESSAGES = () => [
         "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       link_text: "Learn more on our blog",
       cta_url: "https://blog.mozilla.org/",
+      cta_type: "OPEN_URL",
     },
     targeting: `firefoxVersion > 69`,
     trigger: { id: "whatsNewPanelOpened" },
@@ -122,6 +126,7 @@ const MESSAGES = () => [
   {
     id: "WHATS_NEW_69_1",
     template: "whatsnew_panel_message",
+    order: 1,
     content: {
       published_date: 1557346235089,
       title: "Something new in Firefox 69",
@@ -129,8 +134,29 @@ const MESSAGES = () => [
         "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       link_text: "Learn more on our blog",
       cta_url: "https://blog.mozilla.org/",
+      cta_type: "OPEN_URL",
     },
     targeting: `firefoxVersion > 68`,
+    trigger: { id: "whatsNewPanelOpened" },
+  },
+  {
+    id: "WHATS_NEW_70_3",
+    template: "whatsnew_panel_message",
+    order: 2,
+    content: {
+      published_date: 1560969794394,
+      layout: "tracking-protections",
+      title: { string_id: "cfr-whatsnew-tracking-blocked-title" },
+      subtitle: { string_id: "cfr-whatsnew-tracking-blocked-subtitle" },
+      icon_url:
+        "resource://activity-stream/data/content/assets/protection-report-icon.png",
+      icon_alt: "Protection Report icon",
+      body: { string_id: "cfr-whatsnew-tracking-protect-body" },
+      link_text: { string_id: "cfr-whatsnew-tracking-blocked-link-text" },
+      cta_url: "protections",
+      cta_type: "OPEN_ABOUT_PAGE",
+    },
+    targeting: `firefoxVersion > 69 && totalBlockedCount > 0`,
     trigger: { id: "whatsNewPanelOpened" },
   },
 ];

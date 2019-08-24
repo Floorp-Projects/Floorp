@@ -742,6 +742,7 @@ class _ASRouter {
     ToolbarPanelHub.init(this.waitForInitialized, {
       getMessages: this.handleMessageRequest,
       dispatch: this.dispatch,
+      handleUserAction: this.handleUserAction,
     });
 
     this._loadLocalProviders();
@@ -1531,6 +1532,7 @@ class _ASRouter {
   handleMessageRequest({
     triggerId,
     triggerParam,
+    triggerContext,
     template,
     provider,
     returnAll = false,
@@ -1552,13 +1554,21 @@ class _ASRouter {
     if (returnAll) {
       return this._findAllMessages(
         msgs,
-        triggerId && { id: triggerId, param: triggerParam }
+        triggerId && {
+          id: triggerId,
+          param: triggerParam,
+          context: triggerContext,
+        }
       );
     }
 
     return this._findMessage(
       msgs,
-      triggerId && { id: triggerId, param: triggerParam }
+      triggerId && {
+        id: triggerId,
+        param: triggerParam,
+        context: triggerContext,
+      }
     );
   }
 
@@ -1903,6 +1913,7 @@ class _ASRouter {
     const message = await this.handleMessageRequest({
       triggerId: trigger.id,
       triggerParam: trigger.param,
+      triggerContext: trigger.context,
     });
 
     await this.setState({ lastMessageId: message ? message.id : null });
