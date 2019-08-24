@@ -7,6 +7,8 @@ describe("<ReturnToAMO>", () => {
   let onReady;
   let sandbox;
   let wrapper;
+  let dummyNode;
+  let fakeDocument;
   let sendUserActionTelemetryStub;
   let content;
   beforeEach(() => {
@@ -17,6 +19,19 @@ describe("<ReturnToAMO>", () => {
     content = {
       primary_button: {},
       secondary_button: {},
+    };
+    dummyNode = document.createElement("body");
+    sandbox.stub(dummyNode, "querySelector").returns(dummyNode);
+    fakeDocument = {
+      get activeElement() {
+        return dummyNode;
+      },
+      get body() {
+        return dummyNode;
+      },
+      getElementById() {
+        return dummyNode;
+      },
     };
   });
 
@@ -30,6 +45,7 @@ describe("<ReturnToAMO>", () => {
 
       wrapper = mount(
         <ReturnToAMO
+          document={fakeDocument}
           onReady={onReady}
           dispatch={dispatch}
           content={content}
@@ -52,6 +68,7 @@ describe("<ReturnToAMO>", () => {
     beforeEach(() => {
       wrapper = mount(
         <ReturnToAMO
+          document={fakeDocument}
           onReady={onReady}
           dispatch={dispatch}
           content={content}
