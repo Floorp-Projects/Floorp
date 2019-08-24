@@ -173,6 +173,77 @@ async function testSubview(hasException) {
   BrowserTestUtils.removeTab(tab);
 }
 
+async function testCategoryItem() {
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, false);
+  let promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
+  });
+  let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
+
+  let categoryItem = document.getElementById(
+    "protections-popup-category-cryptominers"
+  );
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    categoryItem.classList.contains("notFound"),
+    "Category marked as not found"
+  );
+
+  promise = waitForContentBlockingEvent();
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+    content.postMessage("cryptomining", "*");
+  });
+
+  await promise;
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, true);
+  ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, false);
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(
+    !categoryItem.classList.contains("notFound"),
+    "Category not marked as not found"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+}
+
 function testTelemetry(pagesVisited, pagesWithBlockableContent, hasException) {
   let results = cmHistogram.snapshot();
   Assert.equal(
@@ -196,6 +267,8 @@ add_task(async function test() {
 
   await testSubview(false);
   await testSubview(true);
+
+  await testCategoryItem();
 
   Services.prefs.clearUserPref(CM_PROTECTION_PREF);
 });
