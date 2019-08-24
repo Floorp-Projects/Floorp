@@ -186,6 +186,10 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   nsAHttpSegmentWriter* mSegmentWriter;
 
   nsresult mFilterReadCode;
+  int32_t mFilterReadAmount;
+  // Set only when we are calling PR_Write from inside OnReadSegment.  Prevents
+  // calling back to OnReadSegment from inside FilterOutput.
+  bool mInOnReadSegment;
   bool mForce;
   nsresult mReadSegmentReturnValue;
   // Before Close() is called this is NS_ERROR_UNEXPECTED, in Close() we either
