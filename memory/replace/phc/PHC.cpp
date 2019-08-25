@@ -91,6 +91,7 @@
 #include "mozilla/XorShift128PlusRNG.h"
 
 using namespace mozilla;
+using namespace mozilla::recordreplay;
 
 //---------------------------------------------------------------------------
 // Utilities
@@ -326,16 +327,16 @@ class GAtomic {
   // The current time. Relaxed semantics because it's primarily used for
   // determining if an allocation can be recycled yet and therefore it doesn't
   // need to be exact.
-  static Atomic<Time, Relaxed> sNow;
+  static Atomic<Time, Relaxed, Behavior::DontPreserve> sNow;
 
   // Delay until the next attempt at a page allocation. See the comment in
   // MaybePageAlloc() for an explanation of why it is a signed integer, and why
   // it uses ReleaseAcquire semantics.
-  static Atomic<Delay, ReleaseAcquire> sAllocDelay;
+  static Atomic<Delay, ReleaseAcquire, Behavior::DontPreserve> sAllocDelay;
 };
 
-Atomic<Time, Relaxed> GAtomic::sNow;
-Atomic<Delay, ReleaseAcquire> GAtomic::sAllocDelay;
+Atomic<Time, Relaxed, Behavior::DontPreserve> GAtomic::sNow;
+Atomic<Delay, ReleaseAcquire, Behavior::DontPreserve> GAtomic::sAllocDelay;
 
 // Shared, immutable global state. Initialized by replace_init() and never
 // changed after that. replace_init() runs early enough that no synchronization
