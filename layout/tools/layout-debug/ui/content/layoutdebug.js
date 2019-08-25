@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var gArgs;
 var gBrowser;
 var gURLBar;
 var gDebugger;
@@ -170,6 +171,17 @@ nsLDBBrowserContentListener.prototype = {
       this.setButtonEnabled(this.mStopButton, false);
       this.mStatusText.value = gURLBar.value + " loaded";
       this.mLoading = false;
+      if (gArgs.autoclose && gBrowser.currentURI.spec != "about:blank") {
+        // We check for about:blank just to avoid one or two STATE_STOP
+        // notifications that occur before the loadURI() call completes.
+        // This does mean that --autoclose doesn't work when the URL on
+        // the command line is about:blank (or not specified), but that's
+        // not a big deal.
+        setTimeout(
+          () => Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit),
+          gArgs.delay * 1000
+        );
+      }
     }
   },
 
@@ -213,6 +225,26 @@ nsLDBBrowserContentListener.prototype = {
   mLoading: false,
 };
 
+function parseArguments() {
+  let args = {
+    url: null,
+    autoclose: false,
+    delay: 0,
+  };
+  if (window.arguments) {
+    args.url = window.arguments[0];
+    for (let i = 1; i < window.arguments.length; ++i) {
+      if (/^autoclose=(.*)$/.test(window.arguments[i])) {
+        args.autoclose = true;
+        args.delay = +RegExp.$1;
+      } else {
+        throw `Unknown option ${window.arguments[i]}`;
+      }
+    }
+  }
+  return args;
+}
+
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
   gURLBar = document.getElementById("urlbar");
@@ -229,8 +261,9 @@ function OnLDBLoad() {
     return null;
   };
 
-  if (window.arguments && window.arguments[0]) {
-    loadURI(window.arguments[0]);
+  gArgs = parseArguments();
+  if (gArgs.url) {
+    loadURI(gArgs.url);
   }
 }
 
