@@ -818,7 +818,12 @@ void CompositorOGL::UnregisterIOSurface(IOSurfacePtr aSurface) {
 #endif
 
 already_AddRefed<CompositingRenderTargetOGL>
-CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer) {
+CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
+                                          IntRegion& aInvalidRegion) {
+  if (aInvalidRegion.IsEmpty()) {
+    return nullptr;
+  }
+
 #ifdef XP_MACOSX
   NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
   MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
@@ -840,10 +845,24 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer) {
     return nullptr;
   }
 
+  IntRect layerRect = nativeLayer->GetRect();
+  IntRegion invalidRelativeToLayer =
+      aInvalidRegion.MovedBy(-layerRect.TopLeft());
+  nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
+  aInvalidRegion = invalidRelativeToLayer.MovedBy(layerRect.TopLeft());
+
   auto match = mRegisteredIOSurfaceRenderTargets.find((IOSurfacePtr)surf.get());
   MOZ_RELEASE_ASSERT(match != mRegisteredIOSurfaceRenderTargets.end(),
                      "IOSurface has not been registered with this Compositor");
-  return do_AddRef(match->second);
+  RefPtr<CompositingRenderTargetOGL> rt = match->second;
+
+  // Clip the render target to the invalid rect. This conserves memory bandwidth
+  // and power.
+  IntRect invalidRect = aInvalidRegion.GetBounds();
+  rt->SetClipRect(invalidRect == layerRect ? Nothing() : Some(invalidRect));
+
+  return rt.forget();
 #else
   MOZ_CRASH("Unexpected native layer on this platform");
 #endif
@@ -911,7 +930,9 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
       rt = CreateRenderTarget(rect, INIT_MODE_CLEAR);
     }
   } else if (aNativeLayer) {
-    rt = RenderTargetForNativeLayer(aNativeLayer);
+    IntRegion layerInvalid;
+    layerInvalid.And(aInvalidRegion, rect);
+    rt = RenderTargetForNativeLayer(aNativeLayer, layerInvalid);
     mCurrentNativeLayer = aNativeLayer;
   } else {
     MOZ_RELEASE_ASSERT(mCanRenderToDefaultFramebuffer);
@@ -949,7 +970,26 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
                           mClearColor.a);
 #endif  // defined(MOZ_WIDGET_ANDROID)
-  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+
+  if (const Maybe<IntRect>& rtClip = mCurrentRenderTarget->GetClipRect()) {
+    // We need to apply a scissor rect during the clear. And since clears with
+    // scissor rects are usually treated differently by the GPU than regular
+    // clears, let's try to clear as little as possible in order to conserve
+    // memory bandwidth.
+    IntRegion clearRegion;
+    clearRegion.Sub(*rtClip, aOpaqueRegion);
+    if (!clearRegion.IsEmpty()) {
+      IntRect clearRect = clearRegion.GetBounds();
+      ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST,
+                                           true);
+      ScopedScissorRect autoScissorRect(mGLContext, clearRect.x,
+                                        FlipY(clearRect.YMost()),
+                                        clearRect.Width(), clearRect.Height());
+      mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+    }
+  } else {
+    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+  }
 }
 
 void CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect,
@@ -1299,6 +1339,10 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     maskBounds = maskTransform.As2D().TransformBounds(maskBounds);
 
     clipRect = clipRect.Intersect(RoundedOut(maskBounds) - offset);
+  }
+
+  if (Maybe<IntRect> rtClip = mCurrentRenderTarget->GetClipRect()) {
+    clipRect = clipRect.Intersect(*rtClip);
   }
 
   // aClipRect is in destination coordinate space (after all
@@ -1857,6 +1901,21 @@ void CompositorOGL::EndFrame() {
     }
   }
 #endif
+
+  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    EffectChain effectChain;
+    effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
+    // If we're clipping the render target to the invalid rect, then the
+    // current render target is still clipped, so just fill the bounds.
+    IntRect rect = mCurrentRenderTarget->GetRect();
+    DrawQuad(Rect(rect), rect - rect.TopLeft(), effectChain, 1.0, Matrix4x4(),
+             Rect(rect));
+  }
+
+  mCurrentRenderTarget->SetClipRect(Nothing());
 
   mFrameInProgress = false;
 
