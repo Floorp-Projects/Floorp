@@ -3981,9 +3981,12 @@ nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
 
   *aHandled = true;
 
-  rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // MakeList() creates AutoSelectionRestorer.
@@ -4448,9 +4451,12 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
@@ -4483,7 +4489,8 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
       // unlist this listitem
       bool bOutOfList;
       do {
-        rv = PopListItem(MOZ_KnownLive(*curNode->AsContent()), &bOutOfList);
+        nsresult rv =
+            PopListItem(MOZ_KnownLive(*curNode->AsContent()), &bOutOfList);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4491,7 +4498,7 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
           !bOutOfList);  // keep popping it out until it's not in a list anymore
     } else if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
-      rv = RemoveListStructure(MOZ_KnownLive(*curNode->AsElement()));
+      nsresult rv = RemoveListStructure(MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4548,19 +4555,23 @@ nsresult HTMLEditRules::WillMakeBasicBlock(const nsAString& aBlockType,
 nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  nsresult rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
   AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-               arrayOfNodes, EditSubAction::eCreateOrRemoveBlock,
-               HTMLEditor::CollectNonEditableNodes::Yes);
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+              arrayOfNodes, EditSubAction::eCreateOrRemoveBlock,
+              HTMLEditor::CollectNonEditableNodes::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4776,9 +4787,12 @@ nsresult HTMLEditRules::WillCSSIndent(bool* aCancel, bool* aHandled) {
   *aCancel = false;
   *aHandled = true;
 
-  rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // IndentAroundSelectionWithCSS() creates AutoSelectionRestorer.
@@ -5078,9 +5092,12 @@ nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
   *aCancel = false;
   *aHandled = true;
 
-  rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // IndentAroundSelectionWithHTML() creates AutoSelectionRestorer.
@@ -5403,9 +5420,12 @@ nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // OutdentAroundSelection() creates AutoSelectionRestorer.  Therefore,
@@ -5447,7 +5467,7 @@ nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
       afterRememberedLeftBQ.AdvanceOffset();
       IgnoredErrorResult error;
       SelectionRefPtr()->Collapse(afterRememberedLeftBQ, error);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
@@ -6087,9 +6107,12 @@ nsresult HTMLEditRules::WillAlign(const nsAString& aAlignType, bool* aCancel,
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   *aHandled = true;
@@ -6854,19 +6877,14 @@ nsresult HTMLEditRules::ExpandSelectionForDeletion() {
   return error.StealNSResult();
 }
 
-nsresult HTMLEditRules::NormalizeSelection() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // NormalizeSelection() tweaks non-collapsed selections to be more "natural".
-  // Idea here is to adjust selection endpoint so that they do not cross breaks
-  // or block boundaries unless something editable beyond that boundary is also
-  // selected.  This adjustment makes it much easier for the various block
-  // operations to determine what nodes to act on.
-
-  // don't need to touch collapsed selections
-  if (SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
-  }
+  // This tweaks selections to be more "natural".
+  // Idea here is to adjust edges of selection ranges so that they do not cross
+  // breaks or block boundaries unless something editable beyond that boundary
+  // is also selected.  This adjustment makes it much easier for the various
+  // block operations to determine what nodes to act on.
 
   // We don't need to mess with cell selections, and we assume multirange
   // selections are those.
@@ -6897,7 +6915,7 @@ nsresult HTMLEditRules::NormalizeSelection() {
   WSType wsType;
 
   // let the whitespace code do the heavy lifting
-  WSRunObject wsEndObj(&HTMLEditorRef(), endPoint);
+  WSRunObject wsEndObj(this, endPoint);
   // Is there any intervening visible whitespace?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   wsEndObj.PriorVisibleNode(endPoint, &wsType);
@@ -6906,15 +6924,14 @@ nsresult HTMLEditRules::NormalizeSelection() {
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
-      nsINode* child =
-          HTMLEditorRef().GetRightmostChild(wsEndObj.mStartReasonNode, true);
+      nsINode* child = GetRightmostChild(wsEndObj.mStartReasonNode, true);
       if (child) {
         newEndPoint.SetAfter(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::thisBlock) {
       // endpoint is just after start of this block
-      nsINode* child = HTMLEditorRef().GetPreviousEditableHTMLNode(endPoint);
+      nsINode* child = GetPreviousEditableHTMLNode(endPoint);
       if (child) {
         newEndPoint.SetAfter(child);
       }
@@ -6926,7 +6943,7 @@ nsresult HTMLEditRules::NormalizeSelection() {
   }
 
   // similar dealio for start of range
-  WSRunObject wsStartObj(&HTMLEditorRef(), startPoint);
+  WSRunObject wsStartObj(this, startPoint);
   // Is there any intervening visible whitespace?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   wsStartObj.NextVisibleNode(startPoint, &wsType);
@@ -6935,15 +6952,14 @@ nsresult HTMLEditRules::NormalizeSelection() {
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
-      nsINode* child =
-          HTMLEditorRef().GetLeftmostChild(wsStartObj.mEndReasonNode, true);
+      nsINode* child = GetLeftmostChild(wsStartObj.mEndReasonNode, true);
       if (child) {
         newStartPoint.Set(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::thisBlock) {
       // startpoint is just before end of this block
-      nsINode* child = HTMLEditorRef().GetNextEditableHTMLNode(startPoint);
+      nsINode* child = GetNextEditableHTMLNode(startPoint);
       if (child) {
         newStartPoint.Set(child);
       }
@@ -6954,7 +6970,7 @@ nsresult HTMLEditRules::NormalizeSelection() {
     }
   }
 
-  // There is a demented possiblity we have to check for.  We might have a very
+  // There is a demented possibility we have to check for.  We might have a very
   // strange selection that is not collapsed and yet does not contain any
   // editable content, and satisfies some of the above conditions that cause
   // tweaking.  In this case we don't want to tweak the selection into a block
@@ -6980,7 +6996,7 @@ nsresult HTMLEditRules::NormalizeSelection() {
   ErrorResult error;
   MOZ_KnownLive(SelectionRefPtr())
       ->SetBaseAndExtentInLimiter(newStartPoint, newEndPoint, error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10823,9 +10839,12 @@ nsresult HTMLEditRules::WillAbsolutePosition(bool* aCancel, bool* aHandled) {
     return NS_OK;
   }
 
-  rv = NormalizeSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = PrepareToMakeElementAbsolutePosition(
