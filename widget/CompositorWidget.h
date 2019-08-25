@@ -128,14 +128,6 @@ class CompositorWidget {
   }
 
   /**
-   * Called before the LayerManager draws the layer tree.
-   *
-   * Always called from the compositing thread.
-   */
-  virtual void DrawWindowUnderlay(WidgetRenderingContext* aContext,
-                                  LayoutDeviceIntRect aRect) {}
-
-  /**
    * Called after the LayerManager draws the layer tree
    *
    * Always called from the compositing thread.
