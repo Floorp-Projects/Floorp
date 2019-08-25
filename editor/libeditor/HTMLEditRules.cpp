@@ -4029,7 +4029,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
   bool bOnlyBreaks = true;
   for (auto& curNode : arrayOfNodes) {
     // if curNode is not a Break or empty inline, we're done
-    if (!TextEditUtils::IsBreak(curNode) && !IsEmptyInline(curNode)) {
+    if (!TextEditUtils::IsBreak(curNode) &&
+        !HTMLEditorRef().IsEmptyInineNode(curNode)) {
       bOnlyBreaks = false;
       break;
     }
@@ -4159,7 +4160,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // If an empty inline container, delete it, but still remember the previous
     // item.
     if (HTMLEditorRef().IsEditable(curNode) &&
-        (TextEditUtils::IsBreak(curNode) || IsEmptyInline(curNode))) {
+        (TextEditUtils::IsBreak(curNode) ||
+         HTMLEditorRef().IsEmptyInineNode(curNode))) {
       nsresult rv =
           MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
       if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -4576,8 +4578,10 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
     return rv;
   }
 
-  // If nothing visible in list, make an empty block
-  if (ListIsEmptyLine(arrayOfNodes)) {
+  // If there is no visible and editable nodes in the edit targets, make an
+  // empty block.
+  // XXX Isn't this odd if there are only non-editable visible nodes?
+  if (HTMLEditorRef().IsEmptyOneHardLine(arrayOfNodes)) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -4845,8 +4849,10 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
     }
   }
 
-  // if nothing visible in list, make an empty block
-  if (ListIsEmptyLine(arrayOfNodes)) {
+  // If there is no visible and editable nodes in the edit targets, make an
+  // empty block.
+  // XXX Isn't this odd if there are only non-editable visible nodes?
+  if (HTMLEditorRef().IsEmptyOneHardLine(arrayOfNodes)) {
     // get selection location
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
@@ -5137,8 +5143,10 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     return rv;
   }
 
-  // if nothing visible in list, make an empty block
-  if (ListIsEmptyLine(arrayOfNodes)) {
+  // If there is no visible and editable nodes in the edit targets, make an
+  // empty block.
+  // XXX Isn't this odd if there are only non-editable visible nodes?
+  if (HTMLEditorRef().IsEmptyOneHardLine(arrayOfNodes)) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -10023,49 +10031,6 @@ nsresult HTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult) {
   return NS_OK;
 }
 
-bool HTMLEditRules::IsEmptyInline(nsINode& aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (HTMLEditor::NodeIsInlineStatic(aNode) &&
-      HTMLEditorRef().IsContainer(&aNode)) {
-    bool isEmpty = true;
-    HTMLEditorRef().IsEmptyNode(&aNode, &isEmpty);
-    return isEmpty;
-  }
-  return false;
-}
-
-bool HTMLEditRules::ListIsEmptyLine(
-    nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // We have a list of nodes which we are candidates for being moved into a
-  // new block.  Determine if it's anything more than a blank line.  Look for
-  // editable content above and beyond one single BR.
-  if (NS_WARN_IF(!aArrayOfNodes.Length())) {
-    return true;
-  }
-
-  int32_t brCount = 0;
-  for (auto& node : aArrayOfNodes) {
-    if (!HTMLEditorRef().IsEditable(node)) {
-      continue;
-    }
-    if (TextEditUtils::IsBreak(node)) {
-      // First break doesn't count
-      if (brCount) {
-        return false;
-      }
-      brCount++;
-    } else if (IsEmptyInline(node)) {
-      // Empty inline, keep looking
-    } else {
-      return false;
-    }
-  }
-  return true;
-}
-
 nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -10887,8 +10852,10 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
     return rv;
   }
 
-  // If nothing visible in list, make an empty block
-  if (ListIsEmptyLine(arrayOfNodes)) {
+  // If there is no visible and editable nodes in the edit targets, make an
+  // empty block.
+  // XXX Isn't this odd if there are only non-editable visible nodes?
+  if (HTMLEditorRef().IsEmptyOneHardLine(arrayOfNodes)) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
