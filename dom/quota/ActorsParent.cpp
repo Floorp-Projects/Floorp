@@ -5571,6 +5571,8 @@ nsresult QuotaManager::MaybeRemoveLocalStorageData() {
     return rv;
   }
 
+  InvalidateQuotaCache();
+
   // Finally remove the ls archive, so we don't have to check all origin
   // directories next time this method is called.
   rv = lsArchiveFile->Remove(false);
