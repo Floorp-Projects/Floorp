@@ -49,11 +49,6 @@ InProcessCompositorWidget::GetNativeLayerRoot() {
   return mWidget->GetNativeLayerRoot();
 }
 
-void InProcessCompositorWidget::DrawWindowUnderlay(
-    WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
-  mWidget->DrawWindowUnderlay(aContext, aRect);
-}
-
 void InProcessCompositorWidget::DrawWindowOverlay(
     WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
   mWidget->DrawWindowOverlay(aContext, aRect);
