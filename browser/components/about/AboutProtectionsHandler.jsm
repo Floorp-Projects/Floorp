@@ -15,20 +15,12 @@ const { RemotePages } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
+  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -213,7 +205,7 @@ var AboutProtectionsHandler = {
         // password is set.
         if (!LoginHelper.isMasterPasswordSet()) {
           const logins = await LoginHelper.getAllUserFacingLogins();
-          potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
+          potentiallyBreachedLogins = await LoginBreaches.getPotentialBreachesByLoginGUID(
             logins
           );
         }
