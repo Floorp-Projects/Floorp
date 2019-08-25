@@ -20,6 +20,7 @@ class InProcessCompositorWidget : public CompositorWidget {
   virtual bool PreRender(WidgetRenderingContext* aManager) override;
   virtual void PostRender(WidgetRenderingContext* aManager) override;
   virtual void DoCompositorCleanup() override;
+  virtual RefPtr<layers::NativeLayerRoot> GetNativeLayerRoot() override;
   virtual void DrawWindowUnderlay(WidgetRenderingContext* aContext,
                                   LayoutDeviceIntRect aRect) override;
   virtual void DrawWindowOverlay(WidgetRenderingContext* aContext,

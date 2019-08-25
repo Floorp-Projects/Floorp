@@ -13,6 +13,7 @@
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/CompositorOptions.h"
+#include "mozilla/layers/NativeLayer.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
@@ -449,6 +450,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   }
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) {}
   virtual void DoCompositorCleanup() {}
+  virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() {
+    return nullptr;
+  }
   virtual void DrawWindowUnderlay(
       mozilla::widget::WidgetRenderingContext* aContext,
       LayoutDeviceIntRect aRect) {}
