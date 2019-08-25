@@ -1022,10 +1022,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     return true;
   }
 
-  // Allow widget to render a custom background.
-  mCompositor->GetWidget()->DrawWindowUnderlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
-
   RefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
     previousTarget = PushGroupForLayerEffects();
