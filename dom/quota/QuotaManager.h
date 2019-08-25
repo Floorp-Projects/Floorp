@@ -210,6 +210,10 @@ class QuotaManager final : public BackgroundThreadObject {
     LockedRemoveQuotaForOrigin(aPersistenceType, aGroup, aOrigin);
   }
 
+  nsresult LoadQuota();
+
+  void UnloadQuota();
+
   already_AddRefed<QuotaObject> GetQuotaObject(
       PersistenceType aPersistenceType, const nsACString& aGroup,
       const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
@@ -328,6 +332,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
+  void ShutdownStorage();
+
   nsresult EnsureOriginDirectory(nsIFile* aDirectory, bool* aCreated);
 
   nsresult AboutToClearOrigins(
@@ -338,8 +344,6 @@ class QuotaManager final : public BackgroundThreadObject {
   void OriginClearCompleted(PersistenceType aPersistenceType,
                             const nsACString& aOrigin,
                             const Nullable<Client::Type>& aClientType);
-
-  void ResetOrClearCompleted();
 
   void StartIdleMaintenance() {
     AssertIsOnOwningThread();
@@ -483,6 +487,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult UpgradeStorageFrom2_1To2_2(mozIStorageConnection* aConnection);
 
+  nsresult UpgradeStorageFrom2_2To2_3(mozIStorageConnection* aConnection);
+
   nsresult MaybeRemoveLocalStorageData();
 
   nsresult MaybeRemoveLocalStorageDirectories();
@@ -534,6 +540,14 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static void ShutdownTimerCallback(nsITimer* aTimer, void* aClosure);
 
+  // Thread on which IO is performed.
+  nsCOMPtr<nsIThread> mIOThread;
+
+  nsCOMPtr<mozIStorageConnection> mStorageConnection;
+
+  // A timer that gets activated at shutdown to ensure we close all storages.
+  nsCOMPtr<nsITimer> mShutdownTimer;
+
   mozilla::Mutex mQuotaMutex;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
@@ -547,12 +561,6 @@ class QuotaManager final : public BackgroundThreadObject {
   // Directory lock tables that are used to update origin access time.
   DirectoryLockTable mTemporaryDirectoryLockTable;
   DirectoryLockTable mDefaultDirectoryLockTable;
-
-  // Thread on which IO is performed.
-  nsCOMPtr<nsIThread> mIOThread;
-
-  // A timer that gets activated at shutdown to ensure we close all storages.
-  nsCOMPtr<nsITimer> mShutdownTimer;
 
   // A list of all successfully initialized persistent origins. This list isn't
   // protected by any mutex but it is only ever touched on the IO thread.
@@ -580,8 +588,7 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   bool mTemporaryStorageInitialized;
-
-  bool mStorageInitialized;
+  bool mCacheUsable;
 };
 
 END_QUOTA_NAMESPACE

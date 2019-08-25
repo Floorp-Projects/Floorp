@@ -64,6 +64,21 @@ inline PersistenceType PersistenceTypeFromText(const nsACString& aText) {
   MOZ_CRASH("Should never get here!");
 }
 
+inline nsresult PersistenceTypeFromInt32(int32_t aInt,
+                                         PersistenceType& aPersistenceType) {
+  static_assert(
+      PERSISTENCE_TYPE_PERSISTENT == 0 && PERSISTENCE_TYPE_TEMPORARY == 1 &&
+          PERSISTENCE_TYPE_DEFAULT == 2 && PERSISTENCE_TYPE_INVALID == 3,
+      "Incorrect enum values!");
+
+  if (aInt < PERSISTENCE_TYPE_PERSISTENT || aInt > PERSISTENCE_TYPE_DEFAULT) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aPersistenceType = static_cast<PersistenceType>(aInt);
+  return NS_OK;
+}
+
 inline nsresult NullablePersistenceTypeFromText(
     const nsACString& aText, Nullable<PersistenceType>* aPersistenceType) {
   if (aText.IsVoid()) {

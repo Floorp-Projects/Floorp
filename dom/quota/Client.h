@@ -65,6 +65,10 @@ class Client {
 
   static Type TypeFromText(const nsACString& aText);
 
+  static char TypeToPrefix(Type aType);
+
+  static bool TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&);
+
   static bool IsDeprecatedClient(const nsAString& aText) {
     return aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME);
   }
