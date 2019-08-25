@@ -10,10 +10,13 @@ var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteTabs;
 var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteSubframes;
+var gWritingProfile = false;
+var gWrittenProfile = false;
 
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -177,10 +180,13 @@ nsLDBBrowserContentListener.prototype = {
         // This does mean that --autoclose doesn't work when the URL on
         // the command line is about:blank (or not specified), but that's
         // not a big deal.
-        setTimeout(
-          () => Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit),
-          gArgs.delay * 1000
-        );
+        setTimeout(function() {
+          if (gArgs.profile && Services.profiler) {
+            dumpProfile();
+          } else {
+            Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+          }
+        }, gArgs.delay * 1000);
       }
     }
   },
@@ -234,11 +240,15 @@ function parseArguments() {
   if (window.arguments) {
     args.url = window.arguments[0];
     for (let i = 1; i < window.arguments.length; ++i) {
-      if (/^autoclose=(.*)$/.test(window.arguments[i])) {
+      let arg = window.arguments[i];
+      if (/^autoclose=(.*)$/.test(arg)) {
         args.autoclose = true;
         args.delay = +RegExp.$1;
+      } else if (/^profile=(.*)$/.test(arg)) {
+        args.profile = true;
+        args.profileFilename = RegExp.$1;
       } else {
-        throw `Unknown option ${window.arguments[i]}`;
+        throw `Unknown option ${arg}`;
       }
     }
   }
@@ -262,6 +272,29 @@ function OnLDBLoad() {
   };
 
   gArgs = parseArguments();
+
+  if (gArgs.profile) {
+    if (Services.profiler) {
+      let env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
+      if (!env.exists("MOZ_PROFILER_SYMBOLICATE")) {
+        dump(
+          "Warning: MOZ_PROFILER_SYMBOLICATE environment variable not set; " +
+            "profile will not be symbolicated.\n"
+        );
+      }
+      Services.profiler.StartProfiler(
+        1 << 20,
+        1,
+        ["default"],
+        ["GeckoMain", "Compositor", "Renderer", "RenderBackend", "StyleThread"]
+      );
+    } else {
+      dump("Cannot profile Layout Debugger; profiler was not compiled in.\n");
+    }
+  }
+
   if (gArgs.url) {
     loadURI(gArgs.url);
   }
@@ -281,6 +314,43 @@ function checkPersistentMenus() {
   checkPersistentMenu("motionEventDumping");
   checkPersistentMenu("crossingEventDumping");
   checkPersistentMenu("reflowCounts");
+}
+
+function dumpProfile() {
+  gWritingProfile = true;
+
+  let cwd = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
+  let filename = OS.Path.join(cwd, gArgs.profileFilename);
+
+  dump(`Writing profile to ${filename}...\n`);
+
+  Services.profiler.dumpProfileToFileAsync(filename).then(function() {
+    gWritingProfile = false;
+    gWrittenProfile = true;
+    dump(`done\n`);
+    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+  });
+}
+
+function OnLDBBeforeUnload(event) {
+  if (gArgs.profile && Services.profiler) {
+    if (gWrittenProfile) {
+      // We've finished writing the profile.  Allow the window to close.
+      return;
+    }
+
+    event.preventDefault();
+
+    if (gWritingProfile) {
+      // Wait for the profile to finish being written out.
+      return;
+    }
+
+    // The dumpProfileToFileAsync call can block for a while, so run it off a
+    // timeout to avoid annoying the window manager if we're doing this in
+    // response to clicking the window's close button.
+    setTimeout(dumpProfile, 0);
+  }
 }
 
 function OnLDBUnload() {
