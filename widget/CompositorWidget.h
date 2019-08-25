@@ -124,6 +124,12 @@ class CompositorWidget {
    */
   virtual void DoCompositorCleanup() {}
 
+  /**
+   * Called before the first composite. If the result is non-null, one or more
+   * native layers will be placed on the window and used for compositing.
+   * When native layers are used, StartRemoteDrawing(InRegion) and
+   * EndRemoteDrawing(InRegion) will not be called.
+   */
   virtual RefPtr<layers::NativeLayerRoot> GetNativeLayerRoot() {
     return nullptr;
   }
@@ -147,8 +153,9 @@ class CompositorWidget {
   /**
    * Return a DrawTarget for the window which can be composited into.
    *
+   * Only called if GetNativeLayerRoot() returns nullptr.
    * Called by BasicCompositor on the compositor thread for OMTC drawing
-   * before each composition.
+   * before each composition (unless there's a native layer root).
    *
    * The window may specify its buffer mode. If unspecified, it is assumed
    * to require double-buffering.
@@ -164,7 +171,7 @@ class CompositorWidget {
    * StartRemoteDrawing reaches the screen.
    *
    * Called by BasicCompositor on the compositor thread for OMTC drawing
-   * after each composition.
+   * after each composition for which StartRemoteDrawing(InRegion) was called.
    */
   virtual void EndRemoteDrawing() {}
   virtual void EndRemoteDrawingInRegion(
