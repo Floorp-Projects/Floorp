@@ -1523,6 +1523,13 @@ class HTMLEditor final : public TextEditor,
   Element* GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
       nsINode& aNode);
 
+  /**
+   * Try to get parent list element at `Selection`.  This returns first find
+   * parent list element of common ancestor of ranges (looking for it from
+   * first range to last range).
+   */
+  Element* GetParentListElementAtSelection() const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

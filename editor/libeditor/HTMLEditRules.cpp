@@ -888,9 +888,13 @@ nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv =
-      GetListActionNodes(arrayOfNodes, EntireList::no, TouchContent::no);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+      arrayOfNodes, EditSubAction::eCreateOrChangeList);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = GetListActionNodes(arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -942,9 +946,13 @@ nsresult HTMLEditRules::GetListItemState(bool* aMixed, bool* aLI, bool* aDT,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv =
-      GetListActionNodes(arrayOfNodes, EntireList::no, TouchContent::no);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
+      arrayOfNodes, EditSubAction::eCreateOrChangeList);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = GetListActionNodes(arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4000,12 +4008,26 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
                                  nsAtom& aItemType) {
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
 
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv = GetListActionNodes(
-      arrayOfNodes, aEntireList ? EntireList::yes : EntireList::no,
-      TouchContent::yes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  Element* parentListElement =
+      aEntireList ? HTMLEditorRef().GetParentListElementAtSelection() : nullptr;
+  if (parentListElement) {
+    arrayOfNodes.AppendElement(OwningNonNull<nsINode>(*parentListElement));
+  } else {
+    {
+      AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+                  arrayOfNodes, EditSubAction::eCreateOrChangeList);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    nsresult rv = GetListActionNodes(arrayOfNodes);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // check if all our nodes are <br>s, or empty inlines
@@ -4024,7 +4046,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // if only breaks, delete them
     if (bOnlyBreaks) {
       for (auto& node : arrayOfNodes) {
-        rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*node);
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*node);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4141,7 +4164,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // item.
     if (HTMLEditorRef().IsEditable(curNode) &&
         (TextEditUtils::IsBreak(curNode) || IsEmptyInline(curNode))) {
-      rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4161,8 +4185,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         // whole list and then RemoveContainerWithTransaction() on the list.
         // ConvertListType first: that routine handles converting the list
         // item types, if needed.
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .MoveNodeToEndWithTransaction(*curNode, *curList);
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .MoveNodeToEndWithTransaction(*curNode, *curList);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4234,8 +4258,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           }
         }
         // move list item to new list
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .MoveNodeToEndWithTransaction(*curNode, *curList);
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .MoveNodeToEndWithTransaction(*curNode, *curList);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4261,8 +4285,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           curList = atCurNode.GetContainerAsElement();
         } else if (atCurNode.GetContainer() != curList) {
           // move list item to new list
-          rv = MOZ_KnownLive(HTMLEditorRef())
-                   .MoveNodeToEndWithTransaction(*curNode, *curList);
+          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                            .MoveNodeToEndWithTransaction(*curNode, *curList);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -4287,9 +4311,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         return NS_ERROR_FAILURE;
       }
       if (aBulletType && !aBulletType->IsEmpty()) {
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .SetAttributeWithTransaction(*curElement, *nsGkAtoms::type,
-                                              *aBulletType);
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .SetAttributeWithTransaction(
+                              *curElement, *nsGkAtoms::type, *aBulletType);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4297,8 +4321,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           return rv;
         }
       } else {
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RemoveAttributeWithTransaction(*curElement, *nsGkAtoms::type);
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef())
+                .RemoveAttributeWithTransaction(*curElement, *nsGkAtoms::type);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4314,9 +4339,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     if (curNode->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
       HTMLEditorRef().CollectChildren(*curNode, arrayOfNodes, i + 1);
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .RemoveContainerWithTransaction(
-                   MOZ_KnownLive(*curNode->AsElement()));
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .RemoveContainerWithTransaction(
+                            MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4359,8 +4384,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
       if (HTMLEditor::NodeIsInlineStatic(curNode) && prevListItem) {
         // this is a continuation of some inline nodes that belong together in
         // the same list item.  use prevListItem
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .MoveNodeToEndWithTransaction(*curNode, *prevListItem);
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef())
+                .MoveNodeToEndWithTransaction(*curNode, *prevListItem);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4402,8 +4428,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     if (listItem) {
       // if we made a new list item, deal with it: tuck the listItem into the
       // end of the active list
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .MoveNodeToEndWithTransaction(*listItem, *curList);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .MoveNodeToEndWithTransaction(*listItem, *curList);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4433,8 +4459,18 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
 
   AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
 
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetListActionNodes(arrayOfNodes, EntireList::no, TouchContent::yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  {
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+                arrayOfNodes, EditSubAction::eCreateOrChangeList);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  rv = GetListActionNodes(arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7576,54 +7612,24 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
   }
 }
 
+Element* HTMLEditor::GetParentListElementAtSelection() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); ++i) {
+    nsRange* range = SelectionRefPtr()->GetRangeAt(i);
+    for (nsINode* parent = range->GetCommonAncestor(); parent;
+         parent = parent->GetParentNode()) {
+      if (HTMLEditUtils::IsList(parent)) {
+        return parent->AsElement();
+      }
+    }
+  }
+  return nullptr;
+}
+
 nsresult HTMLEditRules::GetListActionNodes(
-    nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes, EntireList aEntireList,
-    TouchContent aTouchContent) const {
+    nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  // Added this in so that ui code can ask to change an entire list, even if
-  // selection is only in part of it.  used by list item dialog.
-  if (aEntireList == EntireList::yes) {
-    uint32_t rangeCount = SelectionRefPtr()->RangeCount();
-    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-      RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(rangeIdx);
-      for (nsCOMPtr<nsINode> parent = range->GetCommonAncestor(); parent;
-           parent = parent->GetParentNode()) {
-        if (HTMLEditUtils::IsList(parent)) {
-          aOutArrayOfNodes.AppendElement(*parent);
-          break;
-        }
-      }
-    }
-    // If we didn't find any nodes this way, then try the normal way.  Perhaps
-    // the selection spans multiple lists but with no common list parent.
-    if (!aOutArrayOfNodes.IsEmpty()) {
-      return NS_OK;
-    }
-  }
-
-  {
-    // We don't like other people messing with our selection!
-    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
-
-    // contruct a list of nodes to act on.
-    if (aTouchContent == TouchContent::yes) {
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef())
-              .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-                  aOutArrayOfNodes, EditSubAction::eCreateOrChangeList);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      nsresult rv =
-          HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
-              aOutArrayOfNodes, EditSubAction::eCreateOrChangeList);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-  }
 
   // Pre-process our list of nodes
   for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
