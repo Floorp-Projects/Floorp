@@ -62,6 +62,9 @@ def phc_default(milestone, target, replace_malloc_default, replace_malloc):
         return False
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
+    #
+    # XXX: PHC is implemented but not yet enabled on Mac. Bug 1576515 is about
+    #      enabling it on Mac, but it is blocked by bug 1035892.
     return (target.os == 'GNU' and target.kernel == 'Linux' and
             target.bitness == 64) or \
            (target.kernel == 'WINNT' and target.bitness == 64)
