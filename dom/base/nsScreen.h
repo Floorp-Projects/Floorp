@@ -46,11 +46,11 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
   }
 
   int32_t GetWidth(ErrorResult& aRv) {
-    nsRect rect;
     if (IsDeviceSizePageSize()) {
       if (IsInRDMPane()) {
-        GetRDMScreenSize(rect);
-        return rect.Width();
+        mozilla::CSSIntSize size;
+        GetRDMScreenSize(size);
+        return size.width;
       }
 
       if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
@@ -60,16 +60,17 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
       }
     }
 
+    nsRect rect;
     aRv = GetRect(rect);
     return rect.Width();
   }
 
   int32_t GetHeight(ErrorResult& aRv) {
-    nsRect rect;
     if (IsDeviceSizePageSize()) {
       if (IsInRDMPane()) {
-        GetRDMScreenSize(rect);
-        return rect.Height();
+        mozilla::CSSIntSize size;
+        GetRDMScreenSize(size);
+        return size.height;
       }
 
       if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
@@ -79,6 +80,7 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
       }
     }
 
+    nsRect rect;
     aRv = GetRect(rect);
     return rect.Height();
   }
@@ -146,7 +148,7 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
   nsresult GetWindowInnerRect(nsRect& aRect);
-  nsresult GetRDMScreenSize(nsRect& aRect);
+  nsresult GetRDMScreenSize(mozilla::CSSIntSize& aSize);
 
  private:
   explicit nsScreen(nsPIDOMWindowInner* aWindow);

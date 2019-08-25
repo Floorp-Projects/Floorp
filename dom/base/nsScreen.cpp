@@ -116,7 +116,12 @@ nsresult nsScreen::GetAvailRect(nsRect& aRect) {
   // Here we manipulate the value of aRect to represent the screen avail size,
   // if in RDM.
   if (IsInRDMPane()) {
-    return GetRDMScreenSize(aRect);
+    mozilla::CSSIntSize size;
+    if (NS_SUCCEEDED(GetRDMScreenSize(size))) {
+      aRect.SetRect(0, 0, size.width, size.height);
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
   }
 
   nsDeviceContext* context = GetDeviceContext();
@@ -145,9 +150,7 @@ nsresult nsScreen::GetAvailRect(nsRect& aRect) {
   return NS_OK;
 }
 
-nsresult nsScreen::GetRDMScreenSize(nsRect& aRect) {
-  GetWindowInnerRect(aRect);
-
+nsresult nsScreen::GetRDMScreenSize(mozilla::CSSIntSize& aSize) {
   // GetOwner(), GetDocShell(), and GetPresContext() can potentially return
   // nullptr, so to be safe let's make sure we check these before proceeding.
   nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
@@ -156,11 +159,11 @@ nsresult nsScreen::GetRDMScreenSize(nsRect& aRect) {
     if (docShell) {
       RefPtr<nsPresContext> presContext = docShell->GetPresContext();
       if (presContext) {
+        nsRect rect;
+        GetWindowInnerRect(rect);
         float zoom = presContext->GetDeviceFullZoom();
-        int32_t width = std::round(aRect.Width() * zoom);
-        int32_t height = std::round(aRect.Height() * zoom);
-        aRect.SetHeight(height);
-        aRect.SetWidth(width);
+        aSize.width = std::round(rect.Width() * zoom);
+        aSize.height = std::round(rect.Height() * zoom);
         return NS_OK;
       }
     }
