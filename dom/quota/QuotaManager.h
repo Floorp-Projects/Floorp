@@ -430,6 +430,8 @@ class QuotaManager final : public BackgroundThreadObject {
   static bool ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
                           OriginAttributes* aAttrs);
 
+  static void InvalidateQuotaCache();
+
  private:
   QuotaManager();
 
