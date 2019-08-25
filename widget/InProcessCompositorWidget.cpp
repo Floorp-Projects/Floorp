@@ -44,10 +44,6 @@ void InProcessCompositorWidget::PostRender(WidgetRenderingContext* aContext) {
   mWidget->PostRender(aContext);
 }
 
-void InProcessCompositorWidget::DoCompositorCleanup() {
-  mWidget->DoCompositorCleanup();
-}
-
 RefPtr<layers::NativeLayerRoot>
 InProcessCompositorWidget::GetNativeLayerRoot() {
   return mWidget->GetNativeLayerRoot();

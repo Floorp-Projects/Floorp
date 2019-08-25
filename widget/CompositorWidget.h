@@ -118,13 +118,6 @@ class CompositorWidget {
   virtual void PostRender(WidgetRenderingContext* aContext) {}
 
   /**
-   * Called on the same thread as PreRender/PostRender during destruction.
-   * This method gives the widget a chance to do any cleanup for state that it
-   * created during PreRender / PostRender.
-   */
-  virtual void DoCompositorCleanup() {}
-
-  /**
    * Called before the first composite. If the result is non-null, one or more
    * native layers will be placed on the window and used for compositing.
    * When native layers are used, StartRemoteDrawing(InRegion) and
