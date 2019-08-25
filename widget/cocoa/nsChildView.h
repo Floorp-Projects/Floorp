@@ -498,6 +498,7 @@ class nsChildView final : public nsBaseWidget {
   bool PreRenderImpl(mozilla::widget::WidgetRenderingContext* aContext);
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual void DoCompositorCleanup() override;
+  virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
   virtual void DrawWindowOverlay(mozilla::widget::WidgetRenderingContext* aManager,
                                  LayoutDeviceIntRect aRect) override;
 
