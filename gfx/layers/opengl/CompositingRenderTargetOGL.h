@@ -142,6 +142,9 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
+  void SetClipRect(const Maybe<gfx::IntRect>& aRect) { mClipRect = aRect; }
+  const Maybe<gfx::IntRect>& GetClipRect() const { return mClipRect; }
+
 #ifdef MOZ_DUMP_PAINTING
   already_AddRefed<gfx::DataSourceSurface> Dump(
       Compositor* aCompositor) override;
@@ -164,6 +167,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
    */
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<GLContext> mGL;
+  Maybe<gfx::IntRect> mClipRect;
   GLuint mTextureHandle;
   GLuint mFBO;
 };
