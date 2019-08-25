@@ -46,40 +46,12 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
   }
 
   int32_t GetWidth(ErrorResult& aRv) {
-    if (IsDeviceSizePageSize()) {
-      if (IsInRDMPane()) {
-        mozilla::CSSIntSize size;
-        GetRDMScreenSize(size);
-        return size.width;
-      }
-
-      if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-        int32_t innerWidth = 0;
-        aRv = owner->GetInnerWidth(&innerWidth);
-        return innerWidth;
-      }
-    }
-
     nsRect rect;
     aRv = GetRect(rect);
     return rect.Width();
   }
 
   int32_t GetHeight(ErrorResult& aRv) {
-    if (IsDeviceSizePageSize()) {
-      if (IsInRDMPane()) {
-        mozilla::CSSIntSize size;
-        GetRDMScreenSize(size);
-        return size.height;
-      }
-
-      if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-        int32_t innerHeight = 0;
-        aRv = owner->GetInnerHeight(&innerHeight);
-        return innerHeight;
-      }
-    }
-
     nsRect rect;
     aRv = GetRect(rect);
     return rect.Height();
@@ -148,17 +120,14 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
   nsresult GetWindowInnerRect(nsRect& aRect);
-  nsresult GetRDMScreenSize(mozilla::CSSIntSize& aSize);
 
  private:
   explicit nsScreen(nsPIDOMWindowInner* aWindow);
   virtual ~nsScreen();
 
-  bool IsDeviceSizePageSize();
-
   bool ShouldResistFingerprinting() const;
 
-  bool IsInRDMPane() const;
+  mozilla::dom::Document* TopContentDocumentInRDMPane() const;
 
   RefPtr<mozilla::dom::ScreenOrientation> mScreenOrientation;
 };
