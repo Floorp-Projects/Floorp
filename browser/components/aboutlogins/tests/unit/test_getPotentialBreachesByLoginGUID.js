@@ -1,18 +1,21 @@
 /**
- * Test LoginHelper.getBreachesForLogins
+ * Test LoginBreaches.getPotentialBreachesByLoginGUID
  */
 
 "use strict";
 
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { AboutLoginsParent } = ChromeUtils.import(
-  "resource:///modules/AboutLoginsParent.jsm"
+const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
+  Ci.nsIObserver
 );
 
 ChromeUtils.defineModuleGetter(
   this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
+  "LoginBreaches",
+  "resource:///modules/LoginBreaches.jsm"
 );
 
 const TEST_BREACHES = [
@@ -59,7 +62,7 @@ const NOT_BREACHED_LOGIN = LoginTestUtils.testData.formLogin({
   formActionOrigin: "https://www.example.com",
   username: "username",
   password: "password",
-  timePasswordChanged: Date.now(),
+  timePasswordChanged: new Date("2018-12-15").getTime(),
 });
 const BREACHED_LOGIN = LoginTestUtils.testData.formLogin({
   origin: "https://www.breached.com",
@@ -98,10 +101,10 @@ const LOGIN_WITH_NON_STANDARD_URI = LoginTestUtils.testData.formLogin({
   timePasswordChanged: new Date("2018-12-15").getTime(),
 });
 
-add_task(async function test_getBreachesForLogins_notBreachedLogin() {
+add_task(async function test_notBreachedLogin() {
   Services.logins.addLogin(NOT_BREACHED_LOGIN);
 
-  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN],
     TEST_BREACHES
   );
@@ -112,10 +115,10 @@ add_task(async function test_getBreachesForLogins_notBreachedLogin() {
   );
 });
 
-add_task(async function test_getBreachesForLogins_breachedLogin() {
+add_task(async function test_breachedLogin() {
   Services.logins.addLogin(BREACHED_LOGIN);
 
-  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
     TEST_BREACHES
   );
@@ -126,10 +129,10 @@ add_task(async function test_getBreachesForLogins_breachedLogin() {
   );
 });
 
-add_task(async function test_getBreachesForLogins_notBreachedSubdomain() {
+add_task(async function test_notBreachedSubdomain() {
   Services.logins.addLogin(NOT_BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN, NOT_BREACHED_SUBDOMAIN_LOGIN],
     TEST_BREACHES
   );
@@ -140,10 +143,10 @@ add_task(async function test_getBreachesForLogins_notBreachedSubdomain() {
   );
 });
 
-add_task(async function test_getBreachesForLogins_breachedSubdomain() {
+add_task(async function test_breachedSubdomain() {
   Services.logins.addLogin(BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_SUBDOMAIN_LOGIN, BREACHED_SUBDOMAIN_LOGIN],
     TEST_BREACHES
   );
@@ -154,49 +157,58 @@ add_task(async function test_getBreachesForLogins_breachedSubdomain() {
   );
 });
 
-add_task(
-  async function test_getBreachesForLogins_breachedSiteWithoutPasswords() {
-    Services.logins.addLogin(LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS);
+add_task(async function test_breachedSiteWithoutPasswords() {
+  Services.logins.addLogin(LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS);
 
-    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-      [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
-      TEST_BREACHES
-    );
-    Assert.strictEqual(
-      breachesByLoginGUID.size,
-      0,
-      "Should be 0 breached login: " +
-        LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS.origin
-    );
-  }
-);
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
+    [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
+    TEST_BREACHES
+  );
+  Assert.strictEqual(
+    breachesByLoginGUID.size,
+    0,
+    "Should be 0 breached login: " +
+      LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS.origin
+  );
+});
 
-add_task(
-  async function test_getBreachesForLogins_breachAlertHiddenAfterDismissal() {
-    BREACHED_LOGIN.guid = "{d2de5ac1-4de6-e544-a7af-1f75abcba92b}";
+add_task(async function test_breachAlertHiddenAfterDismissal() {
+  BREACHED_LOGIN.guid = "{d2de5ac1-4de6-e544-a7af-1f75abcba92b}";
 
-    await Services.logins.initializationPromise;
-    const storageJSON =
-      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+  await Services.logins.initializationPromise;
+  const storageJSON = Services.logins.wrappedJSObject._storage.wrappedJSObject;
 
-    storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
+  storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
 
-    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-      [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
-      TEST_BREACHES
-    );
-    Assert.strictEqual(
-      breachesByLoginGUID.size,
-      0,
-      "Should be 0 breached logins after dismissal: " + BREACHED_LOGIN.origin
-    );
-  }
-);
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
+    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+    TEST_BREACHES
+  );
+  Assert.strictEqual(
+    breachesByLoginGUID.size,
+    0,
+    "Should be 0 breached logins after dismissal: " + BREACHED_LOGIN.origin
+  );
 
-add_task(async function test_getBreachesForLogins_newBreachAfterDismissal() {
+  info("Clear login storage");
+  Services.logins.removeAllLogins();
+
+  const breachesByLoginGUID2 = await LoginBreaches.getPotentialBreachesByLoginGUID(
+    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+    TEST_BREACHES
+  );
+  Assert.strictEqual(
+    breachesByLoginGUID2.size,
+    1,
+    "Breached login should re-appear after clearing storage: " +
+      BREACHED_LOGIN.origin
+  );
+});
+
+add_task(async function test_newBreachAfterDismissal() {
   TEST_BREACHES[0].AddedDate = new Date().toISOString();
 
-  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
     TEST_BREACHES
   );
@@ -209,19 +221,17 @@ add_task(async function test_getBreachesForLogins_newBreachAfterDismissal() {
   );
 });
 
-add_task(
-  async function test_getBreachesForLogins_ExceptionsThrownByNonStandardURIsAreCaught() {
-    Services.logins.addLogin(LOGIN_WITH_NON_STANDARD_URI);
+add_task(async function test_ExceptionsThrownByNonStandardURIsAreCaught() {
+  Services.logins.addLogin(LOGIN_WITH_NON_STANDARD_URI);
 
-    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-      [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],
-      TEST_BREACHES
-    );
+  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
+    [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],
+    TEST_BREACHES
+  );
 
-    Assert.strictEqual(
-      breachesByLoginGUID.size,
-      1,
-      "Exceptions thrown by logins with non-standard URIs should be caught."
-    );
-  }
-);
+  Assert.strictEqual(
+    breachesByLoginGUID.size,
+    1,
+    "Exceptions thrown by logins with non-standard URIs should be caught."
+  );
+});
