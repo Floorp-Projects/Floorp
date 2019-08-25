@@ -568,6 +568,8 @@ class nsChildView final : public nsBaseWidget {
 
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
+  virtual LayoutDeviceIntRegion GetOpaqueWidgetRegion() override;
+
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
