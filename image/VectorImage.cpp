@@ -1283,7 +1283,8 @@ VectorImage::RequestDiscard() {
     mProgressTracker->OnDiscard();
   }
 
-  if (Document* doc = mSVGDocumentWrapper->GetDocument()) {
+  if (Document* doc =
+          mSVGDocumentWrapper ? mSVGDocumentWrapper->GetDocument() : nullptr) {
     doc->ReportUseCounters();
   }
 
