@@ -38,6 +38,9 @@ class InProcessCompositorWidget : public CompositorWidget {
   virtual bool InitCompositor(layers::Compositor* aCompositor) override;
   virtual LayoutDeviceIntSize GetClientSize() override;
   virtual uint32_t GetGLFrameBufferFormat() override;
+#ifdef XP_MACOSX
+  virtual LayoutDeviceIntRegion GetOpaqueWidgetRegion() override;
+#endif
   virtual void ObserveVsync(VsyncObserver* aObserver) override;
   virtual uintptr_t GetWidgetKey() override;
 

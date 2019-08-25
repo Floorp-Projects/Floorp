@@ -1590,6 +1590,11 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset() {
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
 
+LayoutDeviceIntRegion nsChildView::GetOpaqueWidgetRegion() {
+  auto opaqueRegion = mOpaqueRegion.Lock();
+  return *opaqueRegion;
+}
+
 nsresult nsChildView::SetTitle(const nsAString& title) {
   // child views don't have titles
   return NS_OK;
