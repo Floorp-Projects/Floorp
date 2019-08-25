@@ -786,12 +786,8 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult NormalizeSelection();
 
-  enum class TouchContent { no, yes };
-  enum class EntireList { no, yes };
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult
-  GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                     EntireList aEntireList, TouchContent aTouchContent) const;
+  GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
                                   bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT
