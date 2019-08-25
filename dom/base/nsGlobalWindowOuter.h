@@ -888,6 +888,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                     mozilla::dom::CallerType aCallerType,
                     mozilla::ErrorResult& aError);
   nsRect GetInnerScreenRect();
+  static Maybe<mozilla::CSSIntSize> GetRDMDeviceSize(const Document& aDocument);
 
   bool IsFrame();
 
