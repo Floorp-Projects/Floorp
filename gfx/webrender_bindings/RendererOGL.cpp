@@ -79,7 +79,6 @@ RendererOGL::~RendererOGL() {
     mNativeLayerForEntireWindow = nullptr;
     mNativeLayerRoot = nullptr;
   }
-  mCompositor->GetWidget()->DoCompositorCleanup();
   wr_renderer_delete(mRenderer);
 }
 
