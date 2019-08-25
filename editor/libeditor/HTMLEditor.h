@@ -1549,6 +1549,52 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
 
+  /**
+   * IsEmptyInline() returns true if aNode is an inline node and it does not
+   * have meaningful content.
+   */
+  bool IsEmptyInineNode(nsINode& aNode) const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+
+    if (!HTMLEditor::NodeIsInlineStatic(aNode) || !IsContainer(&aNode)) {
+      return false;
+    }
+    bool isEmpty = true;
+    IsEmptyNode(&aNode, &isEmpty);
+    return isEmpty;
+  }
+
+  /**
+   * IsEmptyOneHardLine() returns true if aArrayOfNodes does not represent
+   * 2 or more lines and have meaningful content.
+   */
+  bool IsEmptyOneHardLine(
+      nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes) const {
+    if (NS_WARN_IF(!aArrayOfNodes.Length())) {
+      return true;
+    }
+
+    bool brElementHasFound = false;
+    for (auto& node : aArrayOfNodes) {
+      if (!IsEditable(node)) {
+        continue;
+      }
+      if (node->IsHTMLElement(nsGkAtoms::br)) {
+        // If there are 2 or more `<br>` elements, it's not empty line since
+        // there may be only one `<br>` element in a hard line.
+        if (brElementHasFound) {
+          return false;
+        }
+        brElementHasFound = true;
+        continue;
+      }
+      if (!IsEmptyInineNode(node)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
