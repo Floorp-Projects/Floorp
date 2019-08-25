@@ -777,15 +777,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult ExpandSelectionForDeletion();
 
-  /**
-   * NormalizeSelection() adjust Selection if it's not collapsed and there is
-   * only one range.  If range start and/or end point is <br> node or something
-   * non-editable point, they should be moved to nearest text node or something
-   * where the other methods easier to handle edit action.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult NormalizeSelection();
-
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
                                   bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT

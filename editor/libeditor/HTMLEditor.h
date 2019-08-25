@@ -1540,6 +1540,15 @@ class HTMLEditor final : public TextEditor,
    */
   Element* GetParentListElementAtSelection() const;
 
+  /**
+   * MaybeExtendSelectionToHardLineEdgesForBlockEditAction() adjust Selection if
+   * there is only one range.  If range start and/or end point is <br> node or
+   * something non-editable point, they should be moved to nearest text node or
+   * something where the other methods easier to handle edit action.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
