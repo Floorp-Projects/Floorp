@@ -1841,6 +1841,14 @@
   value: false
   mirror: always
 
+
+# Should we try to load origin information from the cache?
+# See bug 1563023 for more details.
+- name: dom.quotaManager.loadQuotaFromCache
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Preference that users can set to override temporary storage smart limit
 # calculation.
 - name: dom.quotaManager.temporaryStorage.fixedLimit

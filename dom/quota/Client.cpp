@@ -12,6 +12,11 @@ namespace quota {
 
 namespace {
 
+const char kIDBPrefix = 'I';
+const char kDOMCachePrefix = 'C';
+const char kSDBPrefix = 'S';
+const char kLSPrefix = 'L';
+
 template <Client::Type type>
 struct ClientTypeTraits;
 
@@ -22,10 +27,14 @@ struct ClientTypeTraits<Client::Type::IDB> {
     aData.AssignLiteral(IDB_DIRECTORY_NAME);
   }
 
+  static void To(char& aData) { aData = kIDBPrefix; }
+
   template <typename T>
   static bool From(const T& aData) {
     return aData.EqualsLiteral(IDB_DIRECTORY_NAME);
   }
+
+  static bool From(char aData) { return aData == kIDBPrefix; }
 };
 
 template <>
@@ -35,10 +44,14 @@ struct ClientTypeTraits<Client::Type::DOMCACHE> {
     aData.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
   }
 
+  static void To(char& aData) { aData = kDOMCachePrefix; }
+
   template <typename T>
   static bool From(const T& aData) {
     return aData.EqualsLiteral(DOMCACHE_DIRECTORY_NAME);
   }
+
+  static bool From(char aData) { return aData == kDOMCachePrefix; }
 };
 
 template <>
@@ -48,10 +61,14 @@ struct ClientTypeTraits<Client::Type::SDB> {
     aData.AssignLiteral(SDB_DIRECTORY_NAME);
   }
 
+  static void To(char& aData) { aData = kSDBPrefix; }
+
   template <typename T>
   static bool From(const T& aData) {
     return aData.EqualsLiteral(SDB_DIRECTORY_NAME);
   }
+
+  static bool From(char aData) { return aData == kSDBPrefix; }
 };
 
 template <>
@@ -61,10 +78,14 @@ struct ClientTypeTraits<Client::Type::LS> {
     aData.AssignLiteral(LS_DIRECTORY_NAME);
   }
 
+  static void To(char& aData) { aData = kLSPrefix; }
+
   template <typename T>
   static bool From(const T& aData) {
     return aData.EqualsLiteral(LS_DIRECTORY_NAME);
   }
+
+  static bool From(char aData) { return aData == kLSPrefix; }
 };
 
 template <typename T>
@@ -169,6 +190,25 @@ Client::Type Client::TypeFromText(const nsACString& aText) {
     BadType();
   }
   return type;
+}
+
+// static
+char Client::TypeToPrefix(Type aType) {
+  char prefix;
+  if (!TypeTo_impl(aType, prefix)) {
+    BadType();
+  }
+  return prefix;
+}
+
+// static
+bool Client::TypeFromPrefix(char aPrefix, Type& aType, const fallible_t&) {
+  Type type;
+  if (!TypeFrom_impl(aPrefix, type)) {
+    return false;
+  }
+  aType = type;
+  return true;
 }
 
 }  // namespace quota
