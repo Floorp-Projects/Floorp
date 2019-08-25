@@ -786,8 +786,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult NormalizeSelection();
 
-  MOZ_MUST_USE nsresult
-  GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
                                   bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT

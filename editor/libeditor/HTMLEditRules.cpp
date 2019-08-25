@@ -86,6 +86,7 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
     case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eMergeBlockContents:
     case EditSubAction::eRemoveList:
     case EditSubAction::eCreateOrChangeDefinitionList:
     case EditSubAction::eInsertElement:
@@ -895,10 +896,6 @@ nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = GetListActionNodes(arrayOfNodes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
   // Examine list type for nodes in selection.
   for (const auto& curNode : arrayOfNodes) {
@@ -951,10 +948,6 @@ nsresult HTMLEditRules::GetListItemState(bool* aMixed, bool* aLI, bool* aDT,
   nsresult rv = HTMLEditorRef().CollectEditTargetNodesInExtendedSelectionRanges(
       arrayOfNodes, EditSubAction::eCreateOrChangeList,
       HTMLEditor::CollectNonEditableNodes::No);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  rv = GetListActionNodes(arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3734,7 +3727,7 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
   nsresult rv = MOZ_KnownLive(HTMLEditorRef())
                     .SplitInlinesAndCollectEditTargetNodesInOneHardLine(
                         EditorDOMPoint(&aRightBlock, aRightOffset),
-                        arrayOfNodes, EditSubAction::eCreateOrChangeList,
+                        arrayOfNodes, EditSubAction::eMergeBlockContents,
                         HTMLEditor::CollectNonEditableNodes::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
@@ -4018,18 +4011,12 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
   if (parentListElement) {
     arrayOfNodes.AppendElement(OwningNonNull<nsINode>(*parentListElement));
   } else {
-    {
-      AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef())
-              .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-                  arrayOfNodes, EditSubAction::eCreateOrChangeList,
-                  HTMLEditor::CollectNonEditableNodes::No);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-    nsresult rv = GetListActionNodes(arrayOfNodes);
+    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+                arrayOfNodes, EditSubAction::eCreateOrChangeList,
+                HTMLEditor::CollectNonEditableNodes::No);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4479,10 +4466,6 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
-  rv = GetListActionNodes(arrayOfNodes);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   // Remove all non-editable nodes.  Leave them be.
@@ -7521,7 +7504,7 @@ nsresult HTMLEditor::CollectEditTargetNodes(
     nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
     EditSubAction aEditSubAction,
-    CollectNonEditableNodes aCollectNonEditableNodes) const {
+    CollectNonEditableNodes aCollectNonEditableNodes) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Gather up a list of all the nodes
@@ -7572,6 +7555,48 @@ nsresult HTMLEditor::CollectEditTargetNodes(
         }
       }
       break;
+    case EditSubAction::eCreateOrChangeList: {
+      for (size_t i = aOutArrayOfNodes.Length(); i > 0; i--) {
+        // Scan for table elements.  If we find table elements other than
+        // table, replace it with a list of any editable non-table content
+        // because if a selection range starts from end in a table-cell and
+        // ends at or starts from outside the `<table>`, we need to make
+        // lists in each selected table-cells.
+        OwningNonNull<nsINode> node = aOutArrayOfNodes[i - 1];
+        if (HTMLEditUtils::IsTableElementButNotTable(node)) {
+          // XXX aCollectNonEditableNodes is ignored here.  Maybe a bug.
+          aOutArrayOfNodes.RemoveElementAt(i - 1);
+          CollectChildren(node, aOutArrayOfNodes, i - 1,
+                          CollectListChildren::No, CollectTableChildren::Yes,
+                          CollectNonEditableNodes::Yes);
+        }
+      }
+      // If there is only one node in the array, and it is a `<div>`,
+      // `<blockquote>` or a list element, then look inside of it until we
+      // find inner list or content.
+      if (aOutArrayOfNodes.Length() != 1) {
+        break;
+      }
+      Element* deepestDivBlockquoteOrListElement =
+          GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+              aOutArrayOfNodes[0]);
+      if (!deepestDivBlockquoteOrListElement) {
+        break;
+      }
+      if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
+              nsGkAtoms::div, nsGkAtoms::blockquote)) {
+        aOutArrayOfNodes.Clear();
+        // XXX Before we're called, non-editable nodes are ignored.  However,
+        //     we may append non-editable nodes here.
+        CollectChildren(*deepestDivBlockquoteOrListElement, aOutArrayOfNodes, 0,
+                        CollectListChildren::No, CollectTableChildren::No,
+                        CollectNonEditableNodes::Yes);
+        break;
+      }
+      aOutArrayOfNodes.ReplaceElementAt(
+          0, OwningNonNull<nsINode>(*deepestDivBlockquoteOrListElement));
+      break;
+    }
     case EditSubAction::eOutdent:
     case EditSubAction::eIndent:
     case EditSubAction::eSetPositionToAbsolute:
@@ -7612,6 +7637,7 @@ nsresult HTMLEditor::MaybeSplitElementsAtEveryBRElement(
   // only for operations that might care, like making lists or paragraphs
   switch (aEditSubAction) {
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eMergeBlockContents:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eSetOrClearAlignment:
     case EditSubAction::eSetPositionToAbsolute:
@@ -7652,58 +7678,6 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
     }
   }
   return nullptr;
-}
-
-nsresult HTMLEditRules::GetListActionNodes(
-    nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // Pre-process our list of nodes
-  for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
-    OwningNonNull<nsINode> testNode = aOutArrayOfNodes[i];
-
-    // Scan for table elements and divs.  If we find table elements other than
-    // table, replace it with a list of any editable non-table content.
-    if (HTMLEditUtils::IsTableElementButNotTable(testNode)) {
-      // XXX Before we're called, non-editable nodes are ignored.  However,
-      //     we may append non-editable nodes in table elements here.
-      aOutArrayOfNodes.RemoveElementAt(i);
-      HTMLEditorRef().CollectChildren(*testNode, aOutArrayOfNodes, i,
-                                      HTMLEditor::CollectListChildren::No,
-                                      HTMLEditor::CollectTableChildren::Yes,
-                                      HTMLEditor::CollectNonEditableNodes::Yes);
-    }
-  }
-
-  // If there is only one node in the array, and it is a list, div, or
-  // blockquote, then look inside of it until we find inner list or content.
-  if (aOutArrayOfNodes.Length() != 1) {
-    return NS_OK;
-  }
-
-  Element* deepestDivBlockquoteOrListElement =
-      HTMLEditorRef().GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-          aOutArrayOfNodes[0]);
-  if (!deepestDivBlockquoteOrListElement) {
-    return NS_OK;
-  }
-
-  if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
-          nsGkAtoms::div, nsGkAtoms::blockquote)) {
-    aOutArrayOfNodes.Clear();
-    // XXX Before we're called, non-editable nodes are ignored.  However,
-    //     we may append non-editable nodes here.
-    HTMLEditorRef().CollectChildren(*deepestDivBlockquoteOrListElement,
-                                    aOutArrayOfNodes, 0,
-                                    HTMLEditor::CollectListChildren::No,
-                                    HTMLEditor::CollectTableChildren::No,
-                                    HTMLEditor::CollectNonEditableNodes::Yes);
-    return NS_OK;
-  }
-
-  aOutArrayOfNodes.ReplaceElementAt(
-      0, OwningNonNull<nsINode>(*deepestDivBlockquoteOrListElement));
-  return NS_OK;
 }
 
 Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(

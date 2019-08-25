@@ -436,6 +436,11 @@ enum class EditSubAction : int32_t {
   // move its descendants to where the block was.
   eCreateOrRemoveBlock,
 
+  // eMergeBlockContents is not an actual sub-action, but this is used by
+  // HTMLEditor::MoveBlock() to request special handling in
+  // HTMLEditor::SplitInlinesAndCollectEditTargetNodesInOneHardLine().
+  eMergeBlockContents,
+
   // eRemoveList removes specific type of list but keep its content.
   eRemoveList,
 
