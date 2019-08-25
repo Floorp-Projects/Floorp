@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_COMPOSITOROGL_H
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "gfx2DGlue.h"
@@ -35,6 +36,14 @@
 #include "nsThreadUtils.h"    // for nsRunnable
 #include "nsXULAppAPI.h"      // for XRE_GetProcessType
 #include "nscore.h"           // for NS_IMETHOD
+
+#ifdef XP_MACOSX
+// This file uses IOSurfacePtr instead of IOSurfaceRef because IOSurfaceRef is
+// hard to forward declare, and including <IOSurface/IOSurface.h> brings in
+// MacTypes.h which defines Point and Rect which cause name lookup trouble.
+struct DummyIOSurface;
+typedef DummyIOSurface* IOSurfacePtr;
+#endif
 
 class nsIWidget;
 
@@ -269,6 +278,11 @@ class CompositorOGL final : public Compositor {
   void RegisterTextureSource(TextureSource* aTextureSource);
   void UnregisterTextureSource(TextureSource* aTextureSource);
 
+#ifdef XP_MACOSX
+  void RegisterIOSurface(IOSurfacePtr aSurface);
+  void UnregisterIOSurface(IOSurfacePtr aSurface);
+#endif
+
  private:
   template <typename Geometry>
   void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,
@@ -476,6 +490,18 @@ class CompositorOGL final : public Compositor {
   gfx::IntSize mViewportSize;
 
   ShaderProgramOGL* mCurrentProgram;
+
+#ifdef XP_MACOSX
+  struct IOSurfaceRefHasher {
+    std::size_t operator()(const IOSurfacePtr& aSurface) const {
+      return HashGeneric(reinterpret_cast<uintptr_t>(aSurface));
+    }
+  };
+
+  std::unordered_map<IOSurfacePtr, RefPtr<CompositingRenderTargetOGL>,
+                     IOSurfaceRefHasher>
+      mRegisteredIOSurfaceRenderTargets;
+#endif
 };
 
 }  // namespace layers
