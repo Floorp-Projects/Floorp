@@ -206,6 +206,11 @@ CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
       mDestroyed(false),
       mViewportSize(0, 0),
       mCurrentProgram(nullptr) {
+  if (aWidget->GetNativeLayerRoot()) {
+    // We can only render into native layers, our GLContext won't have a usable
+    // default framebuffer.
+    mCanRenderToDefaultFramebuffer = false;
+  }
 #ifdef XP_DARWIN
   TextureSync::RegisterTextureSourceProvider(this);
 #endif
@@ -898,12 +903,24 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
-  RefPtr<CompositingRenderTargetOGL> rt =
-      aNativeLayer ? RenderTargetForNativeLayer(aNativeLayer)
-                   : CompositingRenderTargetOGL::RenderTargetForWindow(
-                         this, IntSize(width, height));
+  RefPtr<CompositingRenderTarget> rt;
+  if (mTarget) {
+    if (mCanRenderToDefaultFramebuffer) {
+      rt = CompositingRenderTargetOGL::RenderTargetForWindow(this, rect.Size());
+    } else {
+      rt = CreateRenderTarget(rect, INIT_MODE_CLEAR);
+    }
+  } else if (aNativeLayer) {
+    rt = RenderTargetForNativeLayer(aNativeLayer);
+    mCurrentNativeLayer = aNativeLayer;
+  } else {
+    MOZ_RELEASE_ASSERT(mCanRenderToDefaultFramebuffer);
+    rt = CompositingRenderTargetOGL::RenderTargetForWindow(this, rect.Size());
+  }
+
   if (!rt) {
     *aRenderBoundsOut = IntRect();
+    mCurrentNativeLayer = nullptr;
     return;
   }
 
@@ -912,7 +929,6 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   SetRenderTarget(rt);
   mWindowRenderTarget = mCurrentRenderTarget;
-  mCurrentNativeLayer = aNativeLayer;
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);

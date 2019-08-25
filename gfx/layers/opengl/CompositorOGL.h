@@ -302,6 +302,7 @@ class CompositorOGL final : public Compositor {
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
+  bool mCanRenderToDefaultFramebuffer = true;
 
 #ifdef XP_DARWIN
   nsTArray<RefPtr<BufferTextureHost>> mMaybeUnlockBeforeNextComposition;
