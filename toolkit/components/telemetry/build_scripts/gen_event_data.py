@@ -138,13 +138,14 @@ def generate_JSON_definitions(output, *filenames):
            We only support a single file.
     """
     # Load the event data.
-    if len(filenames) > 1:
-        raise Exception('We don\'t support loading from more than one file.')
-    try:
-        events = parse_events.load_events(filenames[0], True)
-    except ParserError as ex:
-        print("\nError processing events:\n" + str(ex) + "\n")
-        sys.exit(1)
+    events = []
+    for filename in filenames:
+        try:
+            batch = parse_events.load_events(filename, True)
+            events.extend(batch)
+        except ParserError as ex:
+            print("\nError processing %s:\n%s\n" % (filename, str(ex)), file=sys.stderr)
+            sys.exit(1)
 
     event_definitions = OrderedDict()
     for event in events:
@@ -170,13 +171,14 @@ def generate_JSON_definitions(output, *filenames):
 
 def main(output, *filenames):
     # Load the event data.
-    if len(filenames) > 1:
-        raise Exception('We don\'t support loading from more than one file.')
-    try:
-        events = parse_events.load_events(filenames[0], True)
-    except ParserError as ex:
-        print("\nError processing events:\n" + str(ex) + "\n")
-        sys.exit(1)
+    events = []
+    for filename in filenames:
+        try:
+            batch = parse_events.load_events(filename, True)
+            events.extend(batch)
+        except ParserError as ex:
+            print("\nError processing %s:\n%s\n" % (filename, str(ex)), file=sys.stderr)
+            sys.exit(1)
 
     # Write the scalar data file.
     print(banner, file=output)
