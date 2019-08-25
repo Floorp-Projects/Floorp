@@ -22,7 +22,7 @@ class RenderCompositorOGL : public RenderCompositor {
                       RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositorOGL();
 
-  bool BeginFrame() override;
+  bool BeginFrame(layers::NativeLayer* aNativeLayer) override;
   void EndFrame() override;
   bool WaitForGPU() override;
   void Pause() override;
@@ -38,6 +38,11 @@ class RenderCompositorOGL : public RenderCompositor {
   void InsertFrameDoneSync();
 
   RefPtr<gl::GLContext> mGL;
+
+  // The native layer that we're currently rendering to, if any.
+  // Non-null only between BeginFrame and EndFrame if BeginFrame has been called
+  // with a non-null aNativeLayer.
+  RefPtr<layers::NativeLayer> mCurrentNativeLayer;
 
   // Used to apply back-pressure in WaitForGPU().
   GLsync mPreviousFrameDoneSync;

@@ -27,6 +27,11 @@
 #include <algorithm>
 #include "ImageContainer.h"
 
+#ifdef XP_MACOSX
+#  include "mozilla/gfx/MacIOSurface.h"
+#  include "mozilla/layers/NativeLayerCA.h"
+#endif
+
 namespace mozilla {
 using namespace mozilla::gfx;
 
@@ -884,7 +889,7 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
 void BasicCompositor::BeginFrame(
     const nsIntRegion& aInvalidRegion, const gfx::IntRect* aClipRectIn,
     const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    gfx::IntRect* aClipRectOut /* = nullptr */,
+    NativeLayer* aNativeLayer, gfx::IntRect* aClipRectOut /* = nullptr */,
     gfx::IntRect* aRenderBoundsOut /* = nullptr */) {
   if (mIsPendingEndRemoteDrawing) {
     // Force to end previous remote drawing.
@@ -926,6 +931,31 @@ void BasicCompositor::BeginFrame(
     mDrawTarget = mTarget;
     mDrawTargetBounds = mTargetBounds;
     bufferMode = BufferMode::BUFFER_NONE;
+  } else if (aNativeLayer) {
+#ifdef XP_MACOSX
+    if (mInvalidRect.IsEmpty()) {
+      return;
+    }
+    NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
+    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+    nativeLayer->SetSurfaceIsFlipped(false);
+    CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
+    if (!surf) {
+      return;
+    }
+    nativeLayer->InvalidateRegionThroughoutSwapchain(mInvalidRegion);
+    mInvalidRegion = nativeLayer->CurrentSurfaceInvalidRegion();
+    mInvalidRect = mInvalidRegion.GetBounds();
+    MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
+    mCurrentNativeLayer = aNativeLayer;
+    mCurrentIOSurface = new MacIOSurface(std::move(surf));
+    mCurrentIOSurface->Lock(false);
+    mDrawTarget = mCurrentIOSurface->GetAsDrawTargetLocked(BackendType::SKIA);
+    mDrawTargetBounds = IntRect(IntPoint(0, 0), mDrawTarget->GetSize());
+    bufferMode = BufferMode::BUFFER_NONE;
+#else
+    MOZ_CRASH("Unexpected native layer on this platform");
+#endif
   } else {
     LayoutDeviceIntRegion invalidRegion =
         LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion);
@@ -967,7 +997,7 @@ void BasicCompositor::BeginFrame(
       CreateRenderTargetForWindow(mInvalidRect, clearRegion, bufferMode);
 
   if (!target) {
-    if (!mTarget) {
+    if (!mTarget && !aNativeLayer) {
       mWidget->EndRemoteDrawingInRegion(
           mDrawTarget,
           LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion));
@@ -1037,7 +1067,22 @@ void BasicCompositor::EndFrame() {
   // Reset the translation that was applied in CreateRenderTargetForWindow.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
-  TryToEndRemoteDrawing();
+  if (mCurrentNativeLayer) {
+#ifdef XP_MACOSX
+    NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
+    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+    mDrawTarget = nullptr;
+    mRenderTarget = nullptr;
+    mCurrentIOSurface->Unlock(false);
+    mCurrentIOSurface = nullptr;
+    nativeLayer->NotifySurfaceReady();
+    mCurrentNativeLayer = nullptr;
+#else
+    MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+  } else {
+    TryToEndRemoteDrawing();
+  }
 }
 
 void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {

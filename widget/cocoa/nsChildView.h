@@ -397,6 +397,7 @@ class nsChildView final : public nsBaseWidget {
   virtual int32_t RoundsWidgetCoordinatesTo() override;
 
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
+  void EnsureContentLayerForMainThreadPainting();
 
   virtual void* GetNativeData(uint32_t aDataType) override;
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
@@ -497,7 +498,6 @@ class nsChildView final : public nsBaseWidget {
   virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   bool PreRenderImpl(mozilla::widget::WidgetRenderingContext* aContext);
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
-  virtual void DoCompositorCleanup() override;
   virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
   virtual void DrawWindowOverlay(mozilla::widget::WidgetRenderingContext* aManager,
                                  LayoutDeviceIntRect aRect) override;
@@ -708,15 +708,12 @@ class nsChildView final : public nsBaseWidget {
 
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
 
-  // The CoreAnimation layer that contains the rendering from Gecko. This is a
-  // sublayer of mNativeLayerRoot's underlying wrapper layer.
+  // In BasicLayers mode, this is the CoreAnimation layer that contains the
+  // rendering from Gecko. It is a sublayer of mNativeLayerRoot's underlying
+  // wrapper layer.
+  // Lazily created by EnsureContentLayerForMainThreadPainting().
   // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
   RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
-
-  // Used in BasicCompositor OMTC mode.
-  // Non-null between calls to PreRender(Impl) and PostRender,
-  // if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
-  RefPtr<MacIOSurface> mBasicCompositorIOSurface;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;

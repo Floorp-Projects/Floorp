@@ -1098,8 +1098,11 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const IntRect* aClipRectIn,
                                  const IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
+                                 NativeLayer* aNativeLayer,
                                  IntRect* aClipRectOut,
                                  IntRect* aRenderBoundsOut) {
+  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
+
   // Don't composite if we are minimised. Other than for the sake of efficency,
   // this is important because resizing our buffers when mimised will fail and
   // cause a crash when we're restored.

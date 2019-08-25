@@ -143,6 +143,9 @@ class CompositorOGL final : public Compositor {
     return result;
   }
 
+  already_AddRefed<CompositingRenderTargetOGL> RenderTargetForNativeLayer(
+      NativeLayer* aNativeLayer);
+
   already_AddRefed<CompositingRenderTarget> CreateRenderTarget(
       const gfx::IntRect& aRect, SurfaceInitMode aInit) override;
 
@@ -348,7 +351,7 @@ class CompositorOGL final : public Compositor {
   void BeginFrame(const nsIntRegion& aInvalidRegion,
                   const gfx::IntRect* aClipRectIn,
                   const gfx::IntRect& aRenderBounds,
-                  const nsIntRegion& aOpaqueRegion,
+                  const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer,
                   gfx::IntRect* aClipRectOut = nullptr,
                   gfx::IntRect* aRenderBoundsOut = nullptr) override;
 
@@ -452,6 +455,11 @@ class CompositorOGL final : public Compositor {
   GLint FlipY(GLint y) const { return mViewportSize.height - y; }
 
   RefPtr<CompositorTexturePoolOGL> mTexturePool;
+
+  // The native layer that we're currently rendering to, if any.
+  // Non-null only between BeginFrame and EndFrame if BeginFrame has been called
+  // with a non-null aNativeLayer.
+  RefPtr<NativeLayer> mCurrentNativeLayer;
 
 #ifdef MOZ_WIDGET_GTK
   // Hold TextureSources which own device data that have to be deleted before
