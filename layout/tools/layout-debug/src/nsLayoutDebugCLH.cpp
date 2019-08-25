@@ -99,10 +99,12 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine) {
   nsString url;
   bool autoclose = false;
   double delay = 0.0;
+  bool captureProfile = false;
+  nsString profileFilename;
 
-  rv =
-      HandleFlagWithOptionalArgument(aCmdLine, NS_LITERAL_STRING("layoutdebug"),
-                                     EmptyString(), url, flagPresent);
+  rv = HandleFlagWithOptionalArgument(
+      aCmdLine, NS_LITERAL_STRING("layoutdebug"),
+      NS_LITERAL_STRING("about:blank"), url, flagPresent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!flagPresent) {
@@ -113,25 +115,37 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine) {
                                       0.0, delay, autoclose);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = HandleFlagWithOptionalArgument(
+      aCmdLine, NS_LITERAL_STRING("capture-profile"),
+      NS_LITERAL_STRING("profile.json"), profileFilename, captureProfile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIMutableArray> argsArray = nsArray::Create();
 
-  if (!url.IsEmpty()) {
-    nsCOMPtr<nsIURI> uri;
-    nsAutoCString resolvedSpec;
+  nsCOMPtr<nsIURI> uri;
+  nsAutoCString resolvedSpec;
 
-    rv = aCmdLine->ResolveURI(url, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = aCmdLine->ResolveURI(url, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uri->GetSpec(resolvedSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = uri->GetSpec(resolvedSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = AppendArg(argsArray, NS_ConvertUTF8toUTF16(resolvedSpec));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = AppendArg(argsArray, NS_ConvertUTF8toUTF16(resolvedSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (autoclose) {
     nsString arg;
     arg.AppendPrintf("autoclose=%f", delay);
+
+    rv = AppendArg(argsArray, arg);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (captureProfile) {
+    nsString arg;
+    arg.AppendLiteral("profile=");
+    arg.Append(profileFilename);
 
     rv = AppendArg(argsArray, arg);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -154,6 +168,10 @@ nsLayoutDebugCLH::GetHelpInfo(nsACString& aResult) {
       "  --layoutdebug [<url>] Start with Layout Debugger\n"
       "  --autoclose [<seconds>] Automatically close the Layout Debugger once\n"
       "                     the page has loaded, after delaying the specified\n"
-      "                     number of seconds (which defaults to 0).\n");
+      "                     number of seconds (which defaults to 0).\n"
+      "  --capture-profile [<filename>] Capture a profile of the Layout\n"
+      "                     Debugger using the Gecko Profiler, and save the\n"
+      "                     profile to the specified file (which defaults to\n"
+      "                     profile.json).\n");
   return NS_OK;
 }
