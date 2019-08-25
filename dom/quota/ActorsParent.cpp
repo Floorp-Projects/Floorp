@@ -1840,6 +1840,7 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
 
 namespace {
 
+bool gInvalidateQuotaCache = false;
 StaticAutoPtr<nsString> gBaseDirPath;
 StaticAutoPtr<nsCString> gBuildId;
 
@@ -6480,6 +6481,15 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
   }
 
+  if (cacheUsable && gInvalidateQuotaCache) {
+    rv = InvalidateCache(connection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    gInvalidateQuotaCache = false;
+  }
+
   mStorageConnection = connection;
   mCacheUsable = cacheUsable;
 
@@ -7173,6 +7183,11 @@ bool QuotaManager::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
   }
 
   return true;
+}
+
+// static
+void QuotaManager::InvalidateQuotaCache() {
+  gInvalidateQuotaCache = true;
 }
 
 uint64_t QuotaManager::LockedCollectOriginsForEviction(
