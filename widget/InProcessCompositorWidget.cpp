@@ -48,6 +48,11 @@ void InProcessCompositorWidget::DoCompositorCleanup() {
   mWidget->DoCompositorCleanup();
 }
 
+RefPtr<layers::NativeLayerRoot>
+InProcessCompositorWidget::GetNativeLayerRoot() {
+  return mWidget->GetNativeLayerRoot();
+}
+
 void InProcessCompositorWidget::DrawWindowUnderlay(
     WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
   mWidget->DrawWindowUnderlay(aContext, aRect);
