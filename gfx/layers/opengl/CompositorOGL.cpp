@@ -58,6 +58,11 @@
 #  include "GeneratedJNIWrappers.h"
 #endif
 
+#ifdef XP_MACOSX
+#  include "GLContextCGL.h"
+#  include "mozilla/layers/NativeLayerCA.h"
+#endif
+
 #include "GeckoProfiler.h"
 
 namespace mozilla {
@@ -748,11 +753,57 @@ void CompositorOGL::ClearRect(const gfx::Rect& aRect) {
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
 
+#ifdef XP_MACOSX
+class SurfaceRegistryWrapperAroundGLContextCGL
+    : public layers::IOSurfaceRegistry {
+ public:
+  explicit SurfaceRegistryWrapperAroundGLContextCGL(gl::GLContextCGL* aContext)
+      : mContext(aContext) {}
+  void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->RegisterIOSurface(aSurface.get());
+  }
+  void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->UnregisterIOSurface(aSurface.get());
+  }
+  RefPtr<gl::GLContextCGL> mContext;
+};
+#endif
+
+already_AddRefed<CompositingRenderTargetOGL>
+CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer) {
+#ifdef XP_MACOSX
+  NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
+  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+  nativeLayer->SetSurfaceIsFlipped(true);
+  auto glContextCGL = GLContextCGL::Cast(mGLContext);
+  MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
+  RefPtr<layers::IOSurfaceRegistry> currentRegistry =
+      nativeLayer->GetSurfaceRegistry();
+  if (!currentRegistry) {
+    nativeLayer->SetSurfaceRegistry(
+        MakeAndAddRef<SurfaceRegistryWrapperAroundGLContextCGL>(glContextCGL));
+  } else {
+    MOZ_RELEASE_ASSERT(static_cast<SurfaceRegistryWrapperAroundGLContextCGL*>(
+                           currentRegistry.get())
+                           ->mContext == glContextCGL);
+  }
+  CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
+  if (!surf) {
+    return nullptr;
+  }
+  glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
+  return CompositingRenderTargetOGL::RenderTargetForWindow(
+      this, nativeLayer->GetRect().Size());
+#else
+  MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+}
+
 void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                                const IntRect* aClipRectIn,
                                const IntRect& aRenderBounds,
                                const nsIntRegion& aOpaqueRegion,
-                               IntRect* aClipRectOut,
+                               NativeLayer* aNativeLayer, IntRect* aClipRectOut,
                                IntRect* aRenderBoundsOut) {
   AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
@@ -777,9 +828,6 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   // We can't draw anything to something with no area
   // so just return
   if (width == 0 || height == 0) return;
-
-  // We're about to actually draw a frame.
-  mFrameInProgress = true;
 
   // If the widget size changed, we have to force a MakeCurrent
   // to make sure that GL sees the updated widget size.
@@ -806,10 +854,20 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   RefPtr<CompositingRenderTargetOGL> rt =
-      CompositingRenderTargetOGL::RenderTargetForWindow(this,
-                                                        IntSize(width, height));
+      aNativeLayer ? RenderTargetForNativeLayer(aNativeLayer)
+                   : CompositingRenderTargetOGL::RenderTargetForWindow(
+                         this, IntSize(width, height));
+  if (!rt) {
+    *aRenderBoundsOut = IntRect();
+    return;
+  }
+
+  // We're about to actually draw a frame.
+  mFrameInProgress = true;
+
   SetRenderTarget(rt);
   mWindowRenderTarget = mCurrentRenderTarget;
+  mCurrentNativeLayer = aNativeLayer;
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);
@@ -1740,6 +1798,17 @@ void CompositorOGL::EndFrame() {
 #endif
 
   mFrameInProgress = false;
+
+  if (mCurrentNativeLayer) {
+#ifdef XP_MACOSX
+    NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
+    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+    nativeLayer->NotifySurfaceReady();
+    mCurrentNativeLayer = nullptr;
+#else
+    MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+  }
 
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
