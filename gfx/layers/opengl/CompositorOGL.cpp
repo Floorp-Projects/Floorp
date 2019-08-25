@@ -754,19 +754,62 @@ void CompositorOGL::ClearRect(const gfx::Rect& aRect) {
 }
 
 #ifdef XP_MACOSX
-class SurfaceRegistryWrapperAroundGLContextCGL
+class SurfaceRegistryWrapperAroundCompositorOGL
     : public layers::IOSurfaceRegistry {
  public:
-  explicit SurfaceRegistryWrapperAroundGLContextCGL(gl::GLContextCGL* aContext)
-      : mContext(aContext) {}
+  explicit SurfaceRegistryWrapperAroundCompositorOGL(CompositorOGL* aCompositor)
+      : mCompositor(aCompositor) {}
   void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mContext->RegisterIOSurface(aSurface.get());
+    mCompositor->RegisterIOSurface((IOSurfacePtr)aSurface.get());
   }
   void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mContext->UnregisterIOSurface(aSurface.get());
+    mCompositor->UnregisterIOSurface((IOSurfacePtr)aSurface.get());
   }
-  RefPtr<gl::GLContextCGL> mContext;
+  RefPtr<CompositorOGL> mCompositor;
 };
+
+void CompositorOGL::RegisterIOSurface(IOSurfacePtr aSurface) {
+  MOZ_RELEASE_ASSERT(mRegisteredIOSurfaceRenderTargets.find(aSurface) ==
+                         mRegisteredIOSurfaceRenderTargets.end(),
+                     "double-registering IOSurface");
+
+  IOSurfaceRef surface = (IOSurfaceRef)aSurface;
+  auto glContextCGL = GLContextCGL::Cast(mGLContext);
+  MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
+
+  IntSize size(IOSurfaceGetWidth(surface), IOSurfaceGetHeight(surface));
+
+  mGLContext->MakeCurrent();
+  GLuint tex = mGLContext->CreateTexture();
+  {
+    const ScopedBindTexture bindTex(mGLContext, tex,
+                                    LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+    CGLTexImageIOSurface2D(glContextCGL->GetCGLContext(),
+                           LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_RGBA,
+                           size.width, size.height, LOCAL_GL_BGRA,
+                           LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, surface, 0);
+  }
+
+  GLuint fbo = mGLContext->CreateFramebuffer();
+  {
+    const ScopedBindFramebuffer bindFB(mGLContext, fbo);
+    mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                      LOCAL_GL_COLOR_ATTACHMENT0,
+                                      LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex, 0);
+  }
+
+  RefPtr<CompositingRenderTargetOGL> rt =
+      new CompositingRenderTargetOGL(this, gfx::IntPoint(), tex, fbo);
+  rt->Initialize(size, size, LOCAL_GL_TEXTURE_RECTANGLE_ARB, INIT_MODE_NONE);
+
+  mRegisteredIOSurfaceRenderTargets.insert({aSurface, rt});
+}
+
+void CompositorOGL::UnregisterIOSurface(IOSurfacePtr aSurface) {
+  size_t removeCount = mRegisteredIOSurfaceRenderTargets.erase(aSurface);
+  MOZ_RELEASE_ASSERT(removeCount == 1,
+                     "Unregistering IOSurface that's not registered");
+}
 #endif
 
 already_AddRefed<CompositingRenderTargetOGL>
@@ -781,19 +824,21 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer) {
       nativeLayer->GetSurfaceRegistry();
   if (!currentRegistry) {
     nativeLayer->SetSurfaceRegistry(
-        MakeAndAddRef<SurfaceRegistryWrapperAroundGLContextCGL>(glContextCGL));
+        MakeAndAddRef<SurfaceRegistryWrapperAroundCompositorOGL>(this));
   } else {
-    MOZ_RELEASE_ASSERT(static_cast<SurfaceRegistryWrapperAroundGLContextCGL*>(
+    MOZ_RELEASE_ASSERT(static_cast<SurfaceRegistryWrapperAroundCompositorOGL*>(
                            currentRegistry.get())
-                           ->mContext == glContextCGL);
+                           ->mCompositor == this);
   }
   CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
   if (!surf) {
     return nullptr;
   }
-  glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
-  return CompositingRenderTargetOGL::RenderTargetForWindow(
-      this, nativeLayer->GetRect().Size());
+
+  auto match = mRegisteredIOSurfaceRenderTargets.find((IOSurfacePtr)surf.get());
+  MOZ_RELEASE_ASSERT(match != mRegisteredIOSurfaceRenderTargets.end(),
+                     "IOSurface has not been registered with this Compositor");
+  return do_AddRef(match->second);
 #else
   MOZ_CRASH("Unexpected native layer on this platform");
 #endif
