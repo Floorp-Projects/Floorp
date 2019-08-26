@@ -154,6 +154,11 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
   mTextRenderer = new TextRenderer();
   mDiagnostics = MakeUnique<Diagnostics>();
   MOZ_ASSERT(aCompositor);
+  mNativeLayerRoot = aCompositor->GetWidget()->GetNativeLayerRoot();
+  if (mNativeLayerRoot) {
+    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
+    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
+  }
 
 #ifdef USE_SKIA
   mPaintCounter = nullptr;
@@ -172,6 +177,11 @@ void LayerManagerComposite::Destroy() {
     mRoot = nullptr;
     mClonedLayerTreeProperties = nullptr;
     mProfilerScreenshotGrabber.Destroy();
+    if (mNativeLayerRoot) {
+      mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
+      mNativeLayerForEntireWindow = nullptr;
+      mNativeLayerRoot = nullptr;
+    }
     mDestroyed = true;
 
 #ifdef USE_SKIA
@@ -971,16 +981,26 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     mCompositor->SetClearColorToDefault();
   }
 #endif
+
+  if (mNativeLayerForEntireWindow) {
+    mNativeLayerForEntireWindow->SetRect(bounds);
+#ifdef XP_MACOSX
+    mNativeLayerForEntireWindow->SetOpaqueRegion(
+        mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
+#endif
+  }
+
   if (mRoot->GetClipRect()) {
     clipRect = *mRoot->GetClipRect();
     IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(),
                  clipRect.Height());
     mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion,
-                            nullptr, &actualBounds);
+                            mNativeLayerForEntireWindow, nullptr,
+                            &actualBounds);
   } else {
     gfx::IntRect rect;
     mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion,
-                            &rect, &actualBounds);
+                            mNativeLayerForEntireWindow, &rect, &actualBounds);
     clipRect =
         ParentLayerIntRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
   }
@@ -1001,10 +1021,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
     return true;
   }
-
-  // Allow widget to render a custom background.
-  mCompositor->GetWidget()->DrawWindowUnderlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
   RefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
@@ -1224,8 +1240,8 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
   IntRect rect, actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), &rect,
-                          &actualBounds);
+  mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), nullptr,
+                          &rect, &actualBounds);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer

@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/NativeLayer.h"
 
 class nsIWidget;
 class nsBaseWidget;
@@ -117,19 +118,14 @@ class CompositorWidget {
   virtual void PostRender(WidgetRenderingContext* aContext) {}
 
   /**
-   * Called on the same thread as PreRender/PostRender during destruction.
-   * This method gives the widget a chance to do any cleanup for state that it
-   * created during PreRender / PostRender.
+   * Called before the first composite. If the result is non-null, one or more
+   * native layers will be placed on the window and used for compositing.
+   * When native layers are used, StartRemoteDrawing(InRegion) and
+   * EndRemoteDrawing(InRegion) will not be called.
    */
-  virtual void DoCompositorCleanup() {}
-
-  /**
-   * Called before the LayerManager draws the layer tree.
-   *
-   * Always called from the compositing thread.
-   */
-  virtual void DrawWindowUnderlay(WidgetRenderingContext* aContext,
-                                  LayoutDeviceIntRect aRect) {}
+  virtual RefPtr<layers::NativeLayerRoot> GetNativeLayerRoot() {
+    return nullptr;
+  }
 
   /**
    * Called after the LayerManager draws the layer tree
@@ -142,8 +138,9 @@ class CompositorWidget {
   /**
    * Return a DrawTarget for the window which can be composited into.
    *
+   * Only called if GetNativeLayerRoot() returns nullptr.
    * Called by BasicCompositor on the compositor thread for OMTC drawing
-   * before each composition.
+   * before each composition (unless there's a native layer root).
    *
    * The window may specify its buffer mode. If unspecified, it is assumed
    * to require double-buffering.
@@ -159,7 +156,7 @@ class CompositorWidget {
    * StartRemoteDrawing reaches the screen.
    *
    * Called by BasicCompositor on the compositor thread for OMTC drawing
-   * after each composition.
+   * after each composition for which StartRemoteDrawing(InRegion) was called.
    */
   virtual void EndRemoteDrawing() {}
   virtual void EndRemoteDrawingInRegion(
@@ -246,6 +243,24 @@ class CompositorWidget {
    * after each composition to back buffer.
    */
   virtual already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing();
+
+#ifdef XP_MACOSX
+  /**
+   * Return the opaque region of the widget. This is racy and can only be used
+   * on macOS, where the widget works around the raciness.
+   * Bug 1576491 tracks fixing this properly.
+   * The problem with this method is that it can return values "from the future"
+   * - the compositor might be working on frame N but the widget will return its
+   * opaque region from frame N + 1.
+   * It is believed that this won't lead to visible glitches on macOS due to the
+   * SuspendAsyncCATransactions call when the vibrant region changes or when the
+   * window resizes. Whenever the compositor uses an opaque region that's a
+   * frame ahead, the result it renders won't be shown on the screen; instead,
+   * the next composite will happen with the correct display list, and that's
+   * what's shown on the screen once the FlushRendering call completes.
+   */
+  virtual LayoutDeviceIntRegion GetOpaqueWidgetRegion() { return {}; }
+#endif
 
   /**
    * Observe or unobserve vsync.

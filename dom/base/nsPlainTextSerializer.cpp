@@ -54,6 +54,8 @@ static const int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
 static const char16_t kNBSP = 160;
 static const char16_t kSPACE = ' ';
 
+constexpr int32_t kNoFlags = 0;
+
 static int32_t HeaderLevel(nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
 static int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n);
@@ -81,8 +83,46 @@ nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer) {
   return NS_OK;
 }
 
+// @param aFlags As defined in nsIDocumentEncoder.idl.
+static void DetermineLineBreak(const int32_t aFlags, nsAString& aLineBreak) {
+  // Set the line break character:
+  if ((aFlags & nsIDocumentEncoder::OutputCRLineBreak) &&
+      (aFlags & nsIDocumentEncoder::OutputLFLineBreak)) {
+    // Windows
+    aLineBreak.AssignLiteral(u"\r\n");
+  } else if (aFlags & nsIDocumentEncoder::OutputCRLineBreak) {
+    // Mac
+    aLineBreak.AssignLiteral(u"\r");
+  } else if (aFlags & nsIDocumentEncoder::OutputLFLineBreak) {
+    // Unix/DOM
+    aLineBreak.AssignLiteral(u"\n");
+  } else {
+    // Platform/default
+    aLineBreak.AssignLiteral(NS_ULINEBREAK);
+  }
+}
+
+nsPlainTextSerializer::CurrentLineContent::CurrentLineContent(
+    const int32_t aFlags)
+    : mFlags(aFlags) {
+  DetermineLineBreak(mFlags, mLineBreak);
+}
+
+void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps() {
+  if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
+    // First, replace all nbsp characters with spaces,
+    // which the unicode encoder won't do for us.
+    mValue.ReplaceChar(kNBSP, kSPACE);
+  }
+}
+
+void nsPlainTextSerializer::CurrentLineContent::AppendLineBreak() {
+  mValue.Append(mLineBreak);
+}
+
 nsPlainTextSerializer::nsPlainTextSerializer()
-    : mFloatingLines(-1),
+    : mCurrentLineContent{kNoFlags},
+      mFloatingLines(-1),
       mLineBreakDue(false),
       kSpace(NS_LITERAL_STRING(" "))  // Init of "constant"
 {
@@ -136,7 +176,7 @@ nsPlainTextSerializer::~nsPlainTextSerializer() {
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
+nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
                             const Encoding* aEncoding, bool aIsCopying,
                             bool aIsWholeDocument,
                             bool* aNeedsPreformatScanning) {
@@ -164,22 +204,6 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
     mLineBreaker = nsContentUtils::LineBreaker();
   }
 
-  // Set the line break character:
-  if ((mSettings.mFlags & nsIDocumentEncoder::OutputCRLineBreak) &&
-      (mSettings.mFlags & nsIDocumentEncoder::OutputLFLineBreak)) {
-    // Windows
-    mLineBreak.AssignLiteral("\r\n");
-  } else if (mSettings.mFlags & nsIDocumentEncoder::OutputCRLineBreak) {
-    // Mac
-    mLineBreak.Assign(char16_t('\r'));
-  } else if (mSettings.mFlags & nsIDocumentEncoder::OutputLFLineBreak) {
-    // Unix/DOM
-    mLineBreak.Assign(char16_t('\n'));
-  } else {
-    // Platform/default
-    mLineBreak.AssignLiteral(NS_LINEBREAK);
-  }
-
   mLineBreakDue = false;
   mFloatingLines = -1;
 
@@ -202,6 +226,8 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
 
   // XXX We should let the caller decide whether to do this or not
   mSettings.mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
+
+  mCurrentLineContent = CurrentLineContent{mSettings.mFlags};
 
   return NS_OK;
 }
@@ -317,7 +343,7 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
     }
 
     // Pass in a newline
-    DoAddText(true, mLineBreak);
+    DoAddText();
 
     start = offset + 1;
     offset = textstr.FindCharInSet("\n\r", start);
@@ -951,6 +977,8 @@ bool nsPlainTextSerializer::MustSuppressLeaf() {
   return false;
 }
 
+void nsPlainTextSerializer::DoAddText() { DoAddText(true, EmptyString()); }
+
 void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
                                       const nsAString& aText) {
   // If we don't want any output, just return
@@ -1092,20 +1120,11 @@ void nsPlainTextSerializer::FlushLine() {
       OutputQuotesAndIndent();  // XXX: Should we always do this? Bug?
     }
 
-    MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
+    mCurrentLineContent.MaybeReplaceNbsps();
     Output(mCurrentLineContent.mValue);
-    mAtFirstColumn = mAtFirstColumn && mCurrentLineContent.mValue.IsEmpty();
+    mAtFirstColumn = false;
     mCurrentLineContent.mValue.Truncate();
     mCurrentLineContent.mWidth = 0;
-  }
-}
-
-void nsPlainTextSerializer::MaybeReplaceNbspsForOutput(
-    nsString& aString) const {
-  if (!(mSettings.mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
-    // First, replace all nbsp characters with spaces,
-    // which the unicode encoder won't do for us.
-    aString.ReplaceChar(kNBSP, kSPACE);
   }
 }
 
@@ -1361,8 +1380,8 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     OutputQuotesAndIndent(stripTrailingSpaces);
   }
 
-  mCurrentLineContent.mValue.Append(mLineBreak);
-  MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
+  mCurrentLineContent.MaybeReplaceNbsps();
+  mCurrentLineContent.AppendLineBreak();
   Output(mCurrentLineContent.mValue);
   mCurrentLineContent.mValue.Truncate();
   mCurrentLineContent.mWidth = 0;
@@ -1396,7 +1415,6 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
       quotes.Append(char16_t(' '));
     }
     stringToOutput = quotes;
-    mAtFirstColumn = false;
   }
 
   // Indent if necessary
@@ -1408,12 +1426,10 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
     nsAutoString spaces;
     for (int i = 0; i < indentwidth; ++i) spaces.Append(char16_t(' '));
     stringToOutput += spaces;
-    mAtFirstColumn = false;
   }
 
   if (!mInIndentString.IsEmpty()) {
     stringToOutput += mInIndentString;
-    mAtFirstColumn = false;
     mInIndentString.Truncate();
   }
 
@@ -1427,6 +1443,7 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
 
   if (!stringToOutput.IsEmpty()) {
     Output(stringToOutput);
+    mAtFirstColumn = false;
   }
 }
 
@@ -1559,11 +1576,12 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         OutputQuotesAndIndent();
       }
 
-      MaybeReplaceNbspsForOutput(mCurrentLineContent.mValue);
-      Output(mCurrentLineContent.mValue);
+      mCurrentLineContent.MaybeReplaceNbsps();
       if (outputLineBreak) {
-        Output(mLineBreak);
+        mCurrentLineContent.AppendLineBreak();
       }
+      Output(mCurrentLineContent.mValue);
+
       mAtFirstColumn = atFirstColumn;
     }
 

@@ -13,6 +13,10 @@
 #include "mozilla/gfx/Triangle.h"
 #include "mozilla/gfx/Polygon.h"
 
+#ifdef XP_MACOSX
+class MacIOSurface;
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -115,7 +119,7 @@ class BasicCompositor : public Compositor {
   void BeginFrame(const nsIntRegion& aInvalidRegion,
                   const gfx::IntRect* aClipRectIn,
                   const gfx::IntRect& aRenderBounds,
-                  const nsIntRegion& aOpaqueRegion,
+                  const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer,
                   gfx::IntRect* aClipRectOut = nullptr,
                   gfx::IntRect* aRenderBoundsOut = nullptr) override;
   void NormalDrawingDone() override;
@@ -188,6 +192,17 @@ class BasicCompositor : public Compositor {
 
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
+
+  // The native layer that we're currently rendering to, if any.
+  // Non-null only between BeginFrame and EndFrame if BeginFrame has been called
+  // with a non-null aNativeLayer and mTarget is null.
+  RefPtr<NativeLayer> mCurrentNativeLayer;
+
+#ifdef XP_MACOSX
+  // The MacIOSurface that we're currently rendering to, if any.
+  // Non-null in the same cases as mCurrentNativeLayer.
+  RefPtr<MacIOSurface> mCurrentIOSurface;
+#endif
 
   gfx::IntRect mInvalidRect;
   gfx::IntRegion mInvalidRegion;

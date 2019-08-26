@@ -279,7 +279,7 @@ interface nsIDocumentEncoder : nsISupports
 
   /**
    *  Set a wrap column.  This may have no effect in some types of encoders.
-   * @param aWrapColumn Column to which to wrap.
+   * @param aWrapColumn Column to which to wrap. If 0, wrapping is disabled.
    */
   void setWrapColumn(in unsigned long aWrapColumn);
 

@@ -465,6 +465,8 @@ class LayerManagerComposite final : public HostLayerManager {
   RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
   CompositorScreenshotGrabber mProfilerScreenshotGrabber;
   RefPtr<TextRenderer> mTextRenderer;
+  RefPtr<NativeLayerRoot> mNativeLayerRoot;
+  RefPtr<NativeLayer> mNativeLayerForEntireWindow;
 
 #ifdef USE_SKIA
   /**
