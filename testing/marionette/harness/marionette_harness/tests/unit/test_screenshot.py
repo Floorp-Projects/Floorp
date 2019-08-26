@@ -165,23 +165,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.switch_to_window(self.start_window)
 
     @skip_if_mobile("Fennec doesn't support other chrome windows")
-    def test_capture_flags(self):
-        dialog = self.open_dialog()
-        self.marionette.switch_to_window(dialog)
-
-        textbox = self.marionette.find_element(By.ID, "text-box")
-        textbox.send_keys("")
-        screenshot_focus = self.marionette.screenshot()
-
-        self.marionette.execute_script("arguments[0].blur();", script_args=[textbox])
-        screenshot_no_focus = self.marionette.screenshot()
-
-        self.marionette.close_chrome_window()
-        self.marionette.switch_to_window(self.start_window)
-
-        self.assertNotEqual(screenshot_focus, screenshot_no_focus)
-
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_full_area(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -273,19 +256,6 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertEqual(self.scale(self.get_element_dimensions(el)),
                          self.get_image_dimensions(screenshot))
         self.assertGreater(self.page_y_offset, 0)
-
-    @unittest.skipIf(sys.platform.startswith("win"), "Bug 1330560")
-    def test_capture_flags(self):
-        self.marionette.navigate(input)
-
-        textbox = self.marionette.find_element(By.ID, "text-input")
-        textbox.send_keys("")
-        screenshot_focus = self.marionette.screenshot()
-
-        self.marionette.execute_script("arguments[0].blur();", script_args=[textbox])
-        screenshot_no_focus = self.marionette.screenshot()
-
-        self.assertNotEqual(screenshot_focus, screenshot_no_focus)
 
     def test_capture_html_document_element(self):
         self.marionette.navigate(long)
