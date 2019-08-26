@@ -7,8 +7,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/TestUtils.jsm"
 );
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const server = createHttpServer();
 const gServerUrl = `http://localhost:${server.identity.primaryPort}`;
 
