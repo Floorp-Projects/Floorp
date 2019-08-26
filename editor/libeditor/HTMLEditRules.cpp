@@ -5822,22 +5822,20 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
 }
 
 SplitRangeOffFromNodeResult
-HTMLEditRules::SplitRangeOffFromBlockAndRemoveMiddleContainer(
+HTMLEditor::SplitRangeOffFromBlockAndRemoveMiddleContainer(
     Element& aBlockElement, nsIContent& aStartOfRange,
     nsIContent& aEndOfRange) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   SplitRangeOffFromNodeResult splitResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
+      SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
   if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
     return splitResult;
   }
   NS_WARNING_ASSERTION(splitResult.Succeeded(),
                        "Failed to split the range off from the block element");
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .RemoveBlockContainerWithTransaction(aBlockElement);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = RemoveBlockContainerWithTransaction(aBlockElement);
+  if (NS_WARN_IF(Destroyed())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8790,8 +8788,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Process any partial progress saved
       if (curBlock) {
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                *curBlock, *firstNode, *lastNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                    *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
@@ -8821,8 +8820,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Process any partial progress saved
       if (curBlock) {
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                *curBlock, *firstNode, *lastNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                    *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
@@ -8853,8 +8853,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
         // handle it now.  We need to remove the portion of curBlock that
         // contains [firstNode - lastNode].
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                *curBlock, *firstNode, *lastNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                    *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
@@ -8876,8 +8877,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Some node that is already sans block style.  Skip over it and process
       // any partial progress saved.
       SplitRangeOffFromNodeResult removeMiddleContainerResult =
-          SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock, *firstNode,
-                                                         *lastNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                  *curBlock, *firstNode, *lastNode);
       if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
         return removeMiddleContainerResult.Rv();
       }
@@ -8888,8 +8890,9 @@ nsresult HTMLEditRules::RemoveBlockStyle(
   // Process any partial progress saved
   if (curBlock) {
     SplitRangeOffFromNodeResult removeMiddleContainerResult =
-        SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock, *firstNode,
-                                                       *lastNode);
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                *curBlock, *firstNode, *lastNode);
     if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
       return removeMiddleContainerResult.Rv();
     }
