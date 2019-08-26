@@ -61,9 +61,10 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   mozilla::ipc::IPCResult RecvRedirectToRealChannel(
       const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
       const Maybe<ReplacementChannelConfigInit>& aInit,
-      const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
-      nsIURI* aOriginalURI, const uint32_t& aRedirectMode,
-      const uint32_t& aRedirectFlags,
+      const Maybe<LoadInfoArgs>& aLoadInfo,
+      nsTArray<DocumentChannelRedirect>&& aRedirects,
+      const uint64_t& aChannelId, nsIURI* aOriginalURI,
+      const uint32_t& aRedirectMode, const uint32_t& aRedirectFlags,
       const Maybe<uint32_t>& aContentDisposition,
       const Maybe<nsString>& aContentDispositionFilename,
       RedirectToRealChannelResolver&& aResolve);
@@ -85,6 +86,10 @@ class DocumentChannelChild final : public PDocumentChannelChild,
 
   void DoFailedAsyncOpen(const nsresult& aStatusCode);
 
+  const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
+    return mRedirects;
+  }
+
   friend class NeckoTargetChannelEvent<DocumentChannelChild>;
 
  private:
@@ -94,6 +99,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
 
   RefPtr<ChannelEventQueue> mEventQueue;
   nsCOMPtr<nsIChildChannel> mRedirectChannel;
+  nsTArray<DocumentChannelRedirect> mRedirects;
 
   // Classified channel's matched information
   nsCString mMatchedList;

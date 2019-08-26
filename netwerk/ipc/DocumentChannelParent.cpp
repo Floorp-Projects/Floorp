@@ -493,7 +493,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
   // If there were redirect(s), then we want this switch to be recorded as a
   // real one, since we have a new URI.
   uint32_t redirectFlags = 0;
-  if (!mDidUpstreamRedirect) {
+  if (mRedirects.IsEmpty()) {
     redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
   }
 
@@ -543,7 +543,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
   } else {
     RefPtr<DocumentChannelParent> channel = this;
     SendRedirectToRealChannel(mRedirectChannelId, uri, newLoadFlags, config,
-                              loadInfoArgs, channelId, originalURI,
+                              loadInfoArgs, mRedirects, channelId, originalURI,
                               redirectMode, redirectFlags, contentDisposition,
                               contentDispositionFilename)
         ->Then(
@@ -766,7 +766,18 @@ DocumentChannelParent::AsyncOnChannelRedirect(
     aCallback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
   } else {
-    mDidUpstreamRedirect = true;
+    nsCOMPtr<nsIURI> oldURI;
+    aOldChannel->GetURI(getter_AddRefs(oldURI));
+    uint32_t responseStatus = 0;
+    bool isPost = false;
+    if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel)) {
+      Unused << httpChannel->GetResponseStatus(&responseStatus);
+      nsAutoCString method;
+      Unused << httpChannel->GetRequestMethod(method);
+      isPost = method.EqualsLiteral("POST");
+    }
+    mRedirects.AppendElement(
+        DocumentChannelRedirect{oldURI, aFlags, responseStatus, isPost});
   }
 
   if (!CanSend()) {
