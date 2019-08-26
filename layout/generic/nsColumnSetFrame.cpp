@@ -634,6 +634,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   bool reflowNext = false;
 
   while (child) {
+    const bool isMeasuringFeasibleContentBSize =
+        aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1;
+
     // Try to skip reflowing the child. We can't skip if the child is dirty. We
     // also can't skip if the next column is dirty, because the next column's
     // first line(s) might be pullable back to this column. We can't skip if
@@ -644,12 +647,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // content from its next sibling. (Note that it might be the last
     // column, but not be the last child because the desired number of columns
     // has changed.)
-    bool skipIncremental = !aReflowInput.ShouldReflowAllKids() &&
-                           !NS_SUBTREE_DIRTY(child) &&
-                           child->GetNextSibling() &&
-                           !(aUnboundedLastColumn &&
-                             columnCount == aConfig.mBalanceColCount - 1) &&
-                           !NS_SUBTREE_DIRTY(child->GetNextSibling());
+    bool skipIncremental =
+        !aReflowInput.ShouldReflowAllKids() && !NS_SUBTREE_DIRTY(child) &&
+        child->GetNextSibling() && !isMeasuringFeasibleContentBSize &&
+        !NS_SUBTREE_DIRTY(child->GetNextSibling());
+
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
     //
@@ -721,7 +723,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                      ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
-      if (aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1) {
+      if (isMeasuringFeasibleContentBSize) {
         availSize.BSize(wm) = GetAvailableContentBSize(aReflowInput);
 
         COLUMN_SET_LOG(
