@@ -3283,12 +3283,6 @@ void AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitInfo,
 #endif
 
 bool CallerSubsumes(JSObject* aObject) {
-  // Remote object proxies are not CCWs, so unwrapping them does not get you
-  // their "real" principal, but we want to treat them like cross-origin objects
-  // when considering them as WebIDL arguments, for consistency.
-  if (IsRemoteObjectProxy(aObject)) {
-    return false;
-  }
   nsIPrincipal* objPrin =
       nsContentUtils::ObjectPrincipal(js::UncheckedUnwrap(aObject));
   return nsContentUtils::SubjectPrincipal()->Subsumes(objPrin);
