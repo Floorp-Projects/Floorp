@@ -206,6 +206,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       CheckNextInFlowParenthood(aFrame, aParentReflowInput.mFrame);
   mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = false;
   mFlags.mIsColumnBalancing = false;
+  mFlags.mColumnSetWrapperHasNoBSizeLeft = false;
   mFlags.mIsFlexContainerMeasuringBSize = false;
   mFlags.mDummyParentReflowInput = false;
   mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
