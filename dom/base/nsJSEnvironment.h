@@ -28,10 +28,6 @@ class Maybe;
 struct CycleCollectorResults;
 }  // namespace mozilla
 
-// The amount of time we wait between a request to GC (due to leaving
-// a page) and doing the actual GC.
-#define NS_GC_DELAY 4000  // ms
-
 #define NS_MAJOR_FORGET_SKIPPABLE_CALLS 5
 
 class nsJSContext : public nsIScriptContext {
@@ -102,7 +98,7 @@ class nsJSContext : public nsIScriptContext {
                                          JS::GCReason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
-  static void PokeGC(JS::GCReason aReason, JSObject* aObj, int aDelay = 0);
+  static void PokeGC(JS::GCReason aReason, JSObject* aObj, uint32_t aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkingGC();
