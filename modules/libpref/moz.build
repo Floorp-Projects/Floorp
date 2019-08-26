@@ -81,7 +81,8 @@ pref_groups = [
 ]
 if CONFIG['OS_TARGET'] == 'Android':
     pref_groups += [
-        'consoleservice'
+        'android',
+        'consoleservice',
     ]
 if CONFIG['FUZZING']:
     pref_groups += [
