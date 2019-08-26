@@ -25,9 +25,9 @@ class ManifestItemIcon extends PureComponent {
     const { icon } = this.props;
 
     return tr(
-      { className: "manifest-view__row" },
-      th({ className: "manifest-view__col-label", scope: "row" }, icon.size),
-      td({ className: "manifest-view__col-value" }, icon.src)
+      { className: "manifest__row" },
+      th({ className: "manifest__col-label", scope: "row" }, icon.size),
+      td({ className: "manifest__col-value" }, icon.src)
     );
   }
 }

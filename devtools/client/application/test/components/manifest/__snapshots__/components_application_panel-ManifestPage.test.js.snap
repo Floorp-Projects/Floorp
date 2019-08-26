@@ -5,7 +5,7 @@ exports[`ManifestPage renders the expected snapshot 1`] = `
   className="app-page "
 >
   <Connect(ManifestLoader) />
-  <ManifestView
+  <Manifest
     icons={
       Array [
         Object {

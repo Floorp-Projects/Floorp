@@ -26,15 +26,15 @@ class ManifestItemWarning extends PureComponent {
     const { warning } = this.props;
 
     return tr(
-      { className: "manifest-view__row manifest-view__row-error" },
+      { className: "manifest__row manifest__row-error" },
       th(
-        { className: "manifest-view__col-label", scope: "row" },
+        { className: "manifest__col-label", scope: "row" },
         img({
           src: "chrome://global/skin/icons/warning.svg",
           alt: "Warning icon",
         })
       ),
-      td({ className: "manifest-view__col-value" }, warning.warn)
+      td({ className: "manifest__col-value" }, warning.warn)
     );
   }
 }
