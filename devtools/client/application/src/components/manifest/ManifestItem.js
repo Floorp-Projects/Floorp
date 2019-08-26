@@ -13,25 +13,33 @@ const {
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
- * This component
+ * This component displays a key-value data pair from a manifest
  */
-class ManifestItemText extends PureComponent {
+class ManifestItem extends PureComponent {
   static get propTypes() {
     return {
-      name: PropTypes.string.isRequired,
-      val: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      children: PropTypes.node,
     };
   }
-  render() {
-    const { name, val } = this.props;
 
+  render() {
+    const { children, label } = this.props;
     return tr(
-      { className: "manifest__row" },
-      th({ className: "manifest__col-label", scope: "row" }, name),
-      td({ className: "manifest__col-value" }, val)
+      {
+        className: "manifest__row",
+      },
+      th(
+        {
+          className: "manifest__col-label",
+          scope: "row",
+        },
+        label
+      ),
+      td({ className: "manifest__col-value" }, children)
     );
   }
 }
 
 // Exports
-module.exports = ManifestItemText;
+module.exports = ManifestItem;

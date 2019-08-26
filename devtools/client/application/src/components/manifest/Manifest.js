@@ -11,18 +11,16 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const {
   article,
-  caption,
   h1,
-  table,
-  tbody,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
+const { l10n } = require("../../modules/l10n");
 
-const ManifestItemIcon = createFactory(require("./ManifestItemIcon"));
-const ManifestItemText = createFactory(require("./ManifestItemText"));
+const ManifestItem = createFactory(require("./ManifestItem"));
 const ManifestItemWarning = createFactory(require("./ManifestItemWarning"));
+const ManifestSection = createFactory(require("./ManifestSection"));
 
 /**
  * Displays a canonical manifest, splitted in different sections
@@ -30,14 +28,21 @@ const ManifestItemWarning = createFactory(require("./ManifestItemWarning"));
 class Manifest extends PureComponent {
   static get propTypes() {
     return {
-      identity: PropTypes.object.isRequired,
-      warnings: PropTypes.array.isRequired,
       icons: PropTypes.array.isRequired,
-      presentation: PropTypes.object.isRequired,
+      identity: PropTypes.array.isRequired,
+      presentation: PropTypes.array.isRequired,
+      warnings: PropTypes.array.isRequired,
     };
   }
+
   render() {
     const { identity, warnings, icons, presentation } = this.props;
+
+    const manifestMembers = [
+      { localizationId: "manifest-item-identity", items: identity },
+      { localizationId: "manifest-item-presentation", items: presentation },
+      { localizationId: "manifest-item-icons", items: icons },
+    ];
 
     return article(
       {},
@@ -47,58 +52,31 @@ class Manifest extends PureComponent {
         },
         h1({ className: "app-page__title" })
       ),
-      table(
-        { className: "manifest", key: "errors-and-warnings" },
-        Localized(
-          { id: "manifest-item-warnings" },
-          caption({ className: "manifest__title" })
-        ),
-        tbody(
-          {},
-          warnings.map((warning, index) =>
-            ManifestItemWarning({ warning, key: `warning-${index}` })
-          )
+      // TODO: this probably should not be a table, but a list. Review markup
+      //       in https://bugzilla.mozilla.org/show_bug.cgi?id=1575872
+      ManifestSection(
+        {
+          key: `manifest-section-0`,
+          title: l10n.getString("manifest-item-warnings"),
+        },
+        warnings.map((warning, index) =>
+          ManifestItemWarning({ warning, key: `warning-${index}` })
         )
       ),
-      table(
-        { className: "manifest", key: "identity" },
-        Localized(
-          { id: "manifest-item-identity" },
-          caption({ className: "manifest__title" })
-        ),
-        tbody(
-          {},
-          Object.entries(identity).map(([key, value]) =>
-            ManifestItemText({ name: key, val: value, key: `${key}` })
-          )
-        )
-      ),
-      table(
-        { className: "manifest", key: "presentation" },
-        Localized(
-          { id: "manifest-item-presentation" },
-          caption({ className: "manifest__title" })
-        ),
-        tbody(
-          {},
-          Object.entries(presentation).map(([key, value]) =>
-            ManifestItemText({ name: key, val: value, key: `${key}` })
-          )
-        )
-      ),
-      table(
-        { className: "manifest", key: "icons" },
-        Localized(
-          { id: "manifest-item-icons" },
-          caption({ className: "manifest__title" })
-        ),
-        tbody(
-          {},
-          icons.map((icon, index) =>
-            ManifestItemIcon({ icon, key: `warning-${index}` })
-          )
-        )
-      )
+      manifestMembers.map(({ localizationId, items }, index) => {
+        return ManifestSection(
+          {
+            key: `manifest-section-${index + 1}`,
+            title: l10n.getString(localizationId),
+          },
+          // TODO: handle different data types for values (colors, images…)
+          //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1575529
+          items.map(item => {
+            const { key, value } = item;
+            return ManifestItem({ label: key, key: key }, value);
+          })
+        );
+      })
     );
   }
 }

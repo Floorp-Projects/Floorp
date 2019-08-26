@@ -82,10 +82,22 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
   },
 ];
 
+// props for a simple manifest
+const MANIFEST_SIMPLE = {
+  icons: [{ key: "1x1", value: "something.png" }],
+  identity: [{ key: "name", value: "foo" }],
+  presentation: [
+    { key: "lorem", value: "ipsum" },
+    { key: "foo", value: "bar" },
+  ],
+  warnings: [{ warn: "This is a warning" }],
+};
+
 module.exports = {
   EMPTY_WORKER_LIST,
   SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   SINGLE_WORKER_DIFFERENT_DOMAIN_LIST,
+  MANIFEST_SIMPLE,
   MULTIPLE_WORKER_LIST,
   MULTIPLE_WORKER_MIXED_DOMAINS_LIST,
 };
