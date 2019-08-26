@@ -26,6 +26,9 @@
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowOuter.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 
 //
