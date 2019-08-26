@@ -263,9 +263,10 @@ nsresult EventStateManager::UpdateUserActivityTimer() {
   }
 
   if (gUserInteractionTimer) {
-    gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
-                                            NS_USER_INTERACTION_INTERVAL,
-                                            nsITimer::TYPE_ONE_SHOT);
+    gUserInteractionTimer->InitWithCallback(
+        gUserInteractionTimerCallback,
+        StaticPrefs::dom_events_user_interaction_interval(),
+        nsITimer::TYPE_ONE_SHOT);
   }
   return NS_OK;
 }
