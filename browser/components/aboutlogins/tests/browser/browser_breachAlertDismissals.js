@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { LoginBreaches } = ChromeUtils.import(
-  "resource:///modules/LoginBreaches.jsm"
-);
-
 const TEST_BREACHES = [
   {
     AddedDate: "2019-12-20T23:56:26Z",
@@ -35,7 +31,7 @@ add_task(async function setup() {
 add_task(async function test_show_login() {
   let browser = gBrowser.selectedBrowser;
   TEST_LOGIN3.timePasswordChanged = 12345;
-  let testBreaches = await LoginBreaches.getPotentialBreachesByLoginGUID(
+  let testBreaches = await LoginHelper.getBreachesForLogins(
     [TEST_LOGIN3],
     TEST_BREACHES
   );

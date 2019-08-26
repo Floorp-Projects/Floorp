@@ -519,7 +519,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
-  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
@@ -991,8 +990,6 @@ BrowserGlue.prototype = {
               "migrateMatchBucketsPrefForUI66-done"
             );
           });
-        } else if (data == "add-breaches-sync-handler") {
-          this._addBreachesSyncHandler();
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -2206,28 +2203,11 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       RemoteSettings.init();
-      this._addBreachesSyncHandler();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
       RemoteSecuritySettings.init();
     });
-  },
-
-  _addBreachesSyncHandler() {
-    if (
-      Services.prefs.getBoolPref(
-        "signon.management.page.breach-alerts.enabled",
-        false
-      )
-    ) {
-      RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).on(
-        "sync",
-        async event => {
-          await LoginBreaches.update(event.data.current);
-        }
-      );
-    }
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {
