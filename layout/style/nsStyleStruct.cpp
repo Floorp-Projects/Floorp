@@ -606,9 +606,10 @@ nsChangeHint nsStyleList::CalcDifference(
   if (!DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage)) {
     return NS_STYLE_HINT_REFLOW;
   }
-  if (!mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
-    if (mImageRegion.width != aNewData.mImageRegion.width ||
-        mImageRegion.height != aNewData.mImageRegion.height) {
+  if (mImageRegion != aNewData.mImageRegion) {
+    nsRect region = GetImageRegion();
+    nsRect newRegion = aNewData.GetImageRegion();
+    if (region.width != newRegion.width || region.height != newRegion.height) {
       return NS_STYLE_HINT_REFLOW;
     }
     return NS_STYLE_HINT_VISUAL;
@@ -3730,9 +3731,8 @@ nsChangeHint nsStyleUIReset::CalcDifference(
 //
 
 nsStyleEffects::nsStyleEffects(const Document&)
-    : mClip(0, 0, 0, 0),
+    : mClip(StyleClipRectOrAuto::Auto()),
       mOpacity(1.0f),
-      mClipFlags(NS_STYLE_CLIP_AUTO),
       mMixBlendMode(NS_STYLE_BLEND_NORMAL) {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
@@ -3743,12 +3743,27 @@ nsStyleEffects::nsStyleEffects(const nsStyleEffects& aSource)
       mBackdropFilters(aSource.mBackdropFilters),
       mClip(aSource.mClip),
       mOpacity(aSource.mOpacity),
-      mClipFlags(aSource.mClipFlags),
       mMixBlendMode(aSource.mMixBlendMode) {
   MOZ_COUNT_CTOR(nsStyleEffects);
 }
 
 nsStyleEffects::~nsStyleEffects() { MOZ_COUNT_DTOR(nsStyleEffects); }
+
+static bool AnyAutonessChanged(const StyleClipRectOrAuto& aOld,
+                               const StyleClipRectOrAuto& aNew) {
+  if (aOld.IsAuto() != aNew.IsAuto()) {
+    return true;
+  }
+  if (aOld.IsAuto()) {
+    return false;
+  }
+  auto& oldRect = aOld.AsRect();
+  auto& newRect = aNew.AsRect();
+  return oldRect.top.IsAuto() != newRect.top.IsAuto() ||
+         oldRect.right.IsAuto() != newRect.right.IsAuto() ||
+         oldRect.bottom.IsAuto() != newRect.bottom.IsAuto() ||
+         oldRect.left.IsAuto() != newRect.left.IsAuto();
+}
 
 nsChangeHint nsStyleEffects::CalcDifference(
     const nsStyleEffects& aNewData) const {
@@ -3763,11 +3778,9 @@ nsChangeHint nsStyleEffects::CalcDifference(
             nsChangeHint_RepaintFrame;
   }
 
-  if (mClipFlags != aNewData.mClipFlags) {
+  if (AnyAutonessChanged(mClip, aNewData.mClip)) {
     hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
-  }
-
-  if (!mClip.IsEqualInterior(aNewData.mClip)) {
+  } else if (mClip != aNewData.mClip) {
     // If the clip has changed, we just need to update overflow areas. DLBI
     // will handle the invalidation.
     hint |= nsChangeHint_UpdateOverflow | nsChangeHint_SchedulePaint;
@@ -3810,10 +3823,6 @@ nsChangeHint nsStyleEffects::CalcDifference(
 
   if (mBackdropFilters != aNewData.mBackdropFilters) {
     hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
-  }
-
-  if (!hint && !mClip.IsEqualEdges(aNewData.mClip)) {
-    hint |= nsChangeHint_NeutralChange;
   }
 
   return hint;

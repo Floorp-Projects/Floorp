@@ -523,6 +523,7 @@ cbindgen-types = [
     { gecko = "StyleTextEmphasisStyle", servo = "values::computed::text::TextEmphasisStyle" },
     { gecko = "StyleVariantAlternatesList", servo = "values::specified::font::VariantAlternatesList" },
     { gecko = "StyleSVGPaintOrder", servo = "values::specified::svg::SVGPaintOrder" },
+    { gecko = "StyleClipRectOrAuto", servo = "values::computed::ClipRectOrAuto" },
 ]
 
 mapped-generic-types = [
