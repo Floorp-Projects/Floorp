@@ -191,6 +191,8 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
 
   RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
 
+  nsTArray<DocumentChannelRedirect> mRedirects;
+
   // Corresponding redirect channel registrar Id for the final channel that
   // we want to use when redirecting the child, or doing a process switch.
   // 0 means redirection is not started.
@@ -207,8 +209,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   // helper from being installed, but we need to restore the value
   // later.
   bool mOldApplyConversion = false;
-  // Set to true if we went through a redirect.
-  bool mDidUpstreamRedirect = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelParent,

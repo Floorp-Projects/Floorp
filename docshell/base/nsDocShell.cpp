@@ -6364,41 +6364,63 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     return;
   }
 
-  // Below a URI visit is saved (see AddURIVisit method doc).
-  // The visit chain looks something like:
-  //   ...
-  //   Site N - 1
-  //                =>  Site N
-  //   (redirect to =>) Site N + 1 (we are here!)
+  // DocumentChannel only reports a single redirect via the normal
+  // confirmation mechanism (when they replace themselves with a real
+  // channel), but can have had an arbitrary number
+  // of redirects handled in the parent process.
+  // Query the full redirect chain directly, so that we can add history
+  // entries for them.
+  if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aOldChannel)) {
+    nsCOMPtr<nsIURI> previousURI;
+    uint32_t previousFlags = 0;
+    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
 
-  // Get N - 1 and transition type
-  nsCOMPtr<nsIURI> previousURI;
-  uint32_t previousFlags = 0;
-  ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
-
-  if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
-      ChannelIsPost(aOldChannel)) {
-    // 1. Internal redirects are ignored because they are specific to the
-    //    channel implementation.
-    // 2. POSTs are not saved by global history.
-    //
-    // Regardless, we need to propagate the previous visit to the new
-    // channel.
+    for (auto redirect : docChannel->GetRedirectChain()) {
+      if (!redirect.isPost()) {
+        AddURIVisit(redirect.uri(), previousURI, previousFlags,
+                    redirect.responseStatus());
+        previousURI = redirect.uri();
+        previousFlags = redirect.redirectFlags();
+      }
+    }
     SaveLastVisit(aNewChannel, previousURI, previousFlags);
   } else {
-    // Get the HTTP response code, if available.
-    uint32_t responseStatus = 0;
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
-    if (httpChannel) {
-      Unused << httpChannel->GetResponseStatus(&responseStatus);
+    // Below a URI visit is saved (see AddURIVisit method doc).
+    // The visit chain looks something like:
+    //   ...
+    //   Site N - 1
+    //                =>  Site N
+    //   (redirect to =>) Site N + 1 (we are here!)
+
+    // Get N - 1 and transition type
+    nsCOMPtr<nsIURI> previousURI;
+    uint32_t previousFlags = 0;
+    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
+
+    if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
+        ChannelIsPost(aOldChannel)) {
+      // 1. Internal redirects are ignored because they are specific to the
+      //    channel implementation.
+      // 2. POSTs are not saved by global history.
+      //
+      // Regardless, we need to propagate the previous visit to the new
+      // channel.
+      SaveLastVisit(aNewChannel, previousURI, previousFlags);
+    } else {
+      // Get the HTTP response code, if available.
+      uint32_t responseStatus = 0;
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
+      if (httpChannel) {
+        Unused << httpChannel->GetResponseStatus(&responseStatus);
+      }
+
+      // Add visit N -1 => N
+      AddURIVisit(oldURI, previousURI, previousFlags, responseStatus);
+
+      // Since N + 1 could be the final destination, we will not save N => N + 1
+      // here.  OnNewURI will do that, so we will cache it.
+      SaveLastVisit(aNewChannel, oldURI, aRedirectFlags);
     }
-
-    // Add visit N -1 => N
-    AddURIVisit(oldURI, previousURI, previousFlags, responseStatus);
-
-    // Since N + 1 could be the final destination, we will not save N => N + 1
-    // here.  OnNewURI will do that, so we will cache it.
-    SaveLastVisit(aNewChannel, oldURI, aRedirectFlags);
   }
 
   // check if the new load should go through the application cache.
