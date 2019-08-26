@@ -23,7 +23,7 @@
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Telemetry.h"
@@ -72,7 +72,6 @@ NS_IMPL_ISUPPORTS(nsNetworkLinkService, nsINetworkLinkService, nsIObserver)
 nsNetworkLinkService::nsNetworkLinkService()
     : mLinkUp(true),
       mStatusKnown(false),
-      mAllowChangedEvent(true),
       mReachability(nullptr),
       mCFRunLoop(nullptr),
       mRunLoopSource(nullptr),
@@ -407,8 +406,6 @@ nsresult nsNetworkLinkService::Init(void) {
   rv = observerService->AddObserver(this, "xpcom-shutdown", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Preferences::AddBoolVarCache(&mAllowChangedEvent, NETWORK_NOTIFY_CHANGED_PREF, true);
-
   // If the network reachability API can reach 0.0.0.0 without
   // requiring a connection, there is a network interface available.
   struct sockaddr_in addr;
@@ -553,7 +550,7 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
 
   const char* event;
   if (aNetworkChanged) {
-    if (!mAllowChangedEvent) {
+    if (!StaticPrefs::network_notify_changed()) {
       return;
     }
     event = NS_NETWORK_LINK_DATA_CHANGED;
