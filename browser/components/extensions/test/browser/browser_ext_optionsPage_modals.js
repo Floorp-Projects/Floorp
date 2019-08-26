@@ -74,16 +74,9 @@ add_task(async function test_tab_options_modals() {
 
   const optionsBrowser = getInlineOptionsBrowser(gBrowser.selectedBrowser);
 
-  let stack;
-
-  // For remote extensions, the stack that contains the tabmodalprompt elements
-  // is the parent of the extensions options_ui browser element, otherwise it would
-  // be the parent of the currently selected tabbrowser's browser.
-  if (optionsBrowser.isRemoteBrowser) {
-    stack = optionsBrowser.parentNode;
-  } else {
-    stack = gBrowser.selectedBrowser.parentNode;
-  }
+  // The stack that contains the tabmodalprompt elements is the parent of
+  // the extensions options_ui browser element.
+  let stack = optionsBrowser.parentNode;
 
   let dialogs = stack.querySelectorAll("tabmodalprompt");
   Assert.equal(
