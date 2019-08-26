@@ -91,7 +91,6 @@
     <!-- Security SubView -->
     <panelview id="identity-popup-securityView"
                role="document"
-               title="&identity.securityView.label2;"
                descriptionheightworkaround="true">
       <vbox class="identity-popup-security-content">
         <vbox class="identity-popup-security-connection">
