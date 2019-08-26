@@ -6064,6 +6064,18 @@
   value: true
   mirror: always
 
+# Single TRR request timeout, in milliseconds
+- name: network.trr.request_timeout_ms
+  type: uint32_t
+  value: 1500
+  mirror: always
+
+# Single TRR request timeout, in milliseconds for mode 3
+- name: network.trr.request_timeout_mode_trronly_ms
+  type: uint32_t
+  value: 30000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
