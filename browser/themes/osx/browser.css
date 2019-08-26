@@ -267,11 +267,6 @@
 
 %include ../shared/identity-block/identity-block.inc.css
 
-#identity-box:not(:active):-moz-focusring,
-#tracking-protection-icon-container:not(:active):-moz-focusring {
-  border-inline-end-style: none;
-}
-
 #wrapper-urlbar-container[place="palette"] {
   max-width: 20em;
 }
