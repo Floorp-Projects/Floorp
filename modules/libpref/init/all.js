@@ -285,16 +285,6 @@ pref("dom.serviceWorkers.update_delay", 1000);
 // Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
 pref("dom.serviceWorkers.testUpdateOverOneDay", false);
 
-// If this is true, TextEventDispatcher dispatches keydown and keyup events
-// even during composition (keypress events are never fired during composition
-// even if this is true).
-pref("dom.keyboardevent.dispatch_during_composition", true);
-
-// If this is true, TextEventDispatcher dispatches keypress event with setting
-// WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
-// cause inputting printable character.
-pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
-
 // Blacklist of domains of web apps which are not aware of strict keypress
 // dispatching behavior.  This is comma separated list.  If you need to match
 // all sub-domains, you can specify it as "*.example.com".  Additionally, you

@@ -807,8 +807,6 @@ pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https:
 
 pref("media.openUnsupportedTypeWithExternalApp", true);
 
-pref("dom.keyboardevent.dispatch_during_composition", true);
-
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);
 
