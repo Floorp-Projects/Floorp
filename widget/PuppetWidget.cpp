@@ -19,6 +19,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -76,9 +77,6 @@ static bool MightNeedIMEFocus(const nsWidgetInitData* aInitData) {
 // Arbitrary, fungible.
 const size_t PuppetWidget::kMaxDimension = 4000;
 
-static bool gRemoteDesktopBehaviorEnabled = false;
-static bool gRemoteDesktopBehaviorInitialized = false;
-
 NS_IMPL_ISUPPORTS_INHERITED(PuppetWidget, nsBaseWidget,
                             TextEventDispatcherListener)
 
@@ -96,12 +94,6 @@ PuppetWidget::PuppetWidget(BrowserChild* aBrowserChild)
       mIgnoreCompositionEvents(false) {
   // Setting 'Unknown' means "not yet cached".
   mInputContext.mIMEState.mEnabled = IMEState::UNKNOWN;
-
-  if (!gRemoteDesktopBehaviorInitialized) {
-    Preferences::AddBoolVarCache(&gRemoteDesktopBehaviorEnabled,
-                                 "browser.tabs.remote.desktopbehavior", false);
-    gRemoteDesktopBehaviorInitialized = true;
-  }
 }
 
 PuppetWidget::~PuppetWidget() { Destroy(); }
@@ -1072,7 +1064,8 @@ void PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
 bool PuppetWidget::NeedsPaint() {
   // e10s popups are handled by the parent process, so never should be painted
   // here
-  if (XRE_IsContentProcess() && gRemoteDesktopBehaviorEnabled &&
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::browser_tabs_remote_desktopbehavior() &&
       mWindowType == eWindowType_popup) {
     NS_WARNING("Trying to paint an e10s popup in the child process!");
     return false;
