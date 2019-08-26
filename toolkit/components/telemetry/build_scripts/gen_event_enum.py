@@ -34,14 +34,14 @@ file_footer = """\
 
 def main(output, *filenames):
     # Load the events first.
-    events = []
-    for filename in filenames:
-        try:
-            batch = parse_events.load_events(filename, True)
-            events.extend(batch)
-        except ParserError as ex:
-            print("\nError processing %s:\n%s\n" % (filename, str(ex)), file=sys.stderr)
-            sys.exit(1)
+    if len(filenames) > 1:
+        raise Exception('We don\'t support loading from more than one file.')
+
+    try:
+        events = parse_events.load_events(filenames[0], True)
+    except ParserError as ex:
+        print("\nError processing events:\n" + str(ex) + "\n")
+        sys.exit(1)
 
     grouped = dict()
     index = 0

@@ -59,103 +59,16 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Location, mInnerWindow)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Location)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Location)
 
-already_AddRefed<nsDocShellLoadState> Location::CheckURL(
-    nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  if (NS_WARN_IF(!docShell)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
+BrowsingContext* Location::GetBrowsingContext() {
+  if (nsCOMPtr<nsIDocShell> docShell = GetDocShell()) {
+    return docShell->GetBrowsingContext();
   }
+  return nullptr;
+}
 
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-  nsCOMPtr<nsIURI> sourceURI;
-  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
-
-  // Get security manager.
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (NS_WARN_IF(!ssm)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  // Check to see if URI is allowed.
-  nsresult rv = ssm->CheckLoadURIWithPrincipal(
-      &aSubjectPrincipal, aURI, nsIScriptSecurityManager::STANDARD);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    aRv.ThrowTypeError<MSG_URL_NOT_LOADABLE>(NS_ConvertUTF8toUTF16(spec));
-    return nullptr;
-  }
-
-  // Make the load's referrer reflect changes to the document's URI caused by
-  // push/replaceState, if possible.  First, get the document corresponding to
-  // fp.  If the document's original URI (i.e. its URI before
-  // push/replaceState) matches the principal's URI, use the document's
-  // current URI as the referrer.  If they don't match, use the principal's
-  // URI.
-  //
-  // The triggering principal for this load should be the principal of the
-  // incumbent document (which matches where the referrer information is
-  // coming from) when there is an incumbent document, and the subject
-  // principal otherwise.  Note that the URI in the triggering principal
-  // may not match the referrer URI in various cases, notably including
-  // the cases when the incumbent document's document URI was modified
-  // after the document was loaded.
-
-  nsCOMPtr<nsPIDOMWindowInner> incumbent =
-      do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
-  nsCOMPtr<Document> doc = incumbent ? incumbent->GetDoc() : nullptr;
-
-  if (doc) {
-    nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
-    docOriginalURI = doc->GetOriginalURI();
-    docCurrentURI = doc->GetDocumentURI();
-    rv = doc->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return nullptr;
-    }
-
-    triggeringPrincipal = doc->NodePrincipal();
-    referrerPolicy = doc->GetReferrerPolicy();
-
-    bool urisEqual = false;
-    if (docOriginalURI && docCurrentURI && principalURI) {
-      principalURI->Equals(docOriginalURI, &urisEqual);
-    }
-    if (urisEqual) {
-      sourceURI = docCurrentURI;
-    } else {
-      // Use principalURI as long as it is not an NullPrincipalURI.  We
-      // could add a method such as GetReferrerURI to principals to make this
-      // cleaner, but given that we need to start using Source Browsing
-      // Context for referrer (see Bug 960639) this may be wasted effort at
-      // this stage.
-      if (principalURI && !principalURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME)) {
-        sourceURI = principalURI;
-      }
-    }
-  } else {
-    // No document; just use our subject principal as the triggering principal.
-    triggeringPrincipal = &aSubjectPrincipal;
-  }
-
-  // Create load info
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
-
-  loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  if (doc) {
-    loadState->SetCsp(doc->GetCsp());
-  }
-
-  if (sourceURI) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(sourceURI, referrerPolicy);
-    loadState->SetReferrerInfo(referrerInfo);
-  }
-
-  return loadState.forget();
+already_AddRefed<nsIDocShell> Location::GetDocShell() {
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  return docShell.forget();
 }
 
 nsresult Location::GetURI(nsIURI** aURI, bool aGetInnermostURI) {
@@ -195,39 +108,6 @@ nsresult Location::GetURI(nsIURI** aURI, bool aGetInnermostURI) {
   nsCOMPtr<nsIURIFixup> urifixup(components::URIFixup::Service());
 
   return urifixup->CreateExposableURI(uri, aURI);
-}
-
-void Location::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv, bool aReplace) {
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  if (docShell) {
-    RefPtr<nsDocShellLoadState> loadState =
-        CheckURL(aURI, aSubjectPrincipal, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    if (aReplace) {
-      loadState->SetLoadType(LOAD_STOP_CONTENT_AND_REPLACE);
-    } else {
-      loadState->SetLoadType(LOAD_STOP_CONTENT);
-    }
-
-    // Get the incumbent script's browsing context to set as source.
-    nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
-        do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
-    if (sourceWindow) {
-      loadState->SetSourceDocShell(sourceWindow->GetDocShell());
-    }
-
-    loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
-    loadState->SetFirstParty(true);
-
-    nsresult rv = docShell->LoadURI(loadState);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-    }
-  }
 }
 
 void Location::GetHash(nsAString& aHash, nsIPrincipal& aSubjectPrincipal,
@@ -396,69 +276,6 @@ nsresult Location::GetHref(nsAString& aHref) {
 
   AppendUTF8toUTF16(uriString, aHref);
   return NS_OK;
-}
-
-void Location::SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-                       ErrorResult& aRv) {
-  DoSetHref(aHref, aSubjectPrincipal, false, aRv);
-}
-
-void Location::DoSetHref(const nsAString& aHref,
-                         nsIPrincipal& aSubjectPrincipal, bool aReplace,
-                         ErrorResult& aRv) {
-  // Get the source of the caller
-  nsCOMPtr<nsIURI> base = GetSourceBaseURL();
-  SetHrefWithBase(aHref, base, aSubjectPrincipal, aReplace, aRv);
-}
-
-void Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                               nsIPrincipal& aSubjectPrincipal, bool aReplace,
-                               ErrorResult& aRv) {
-  nsresult result;
-  nsCOMPtr<nsIURI> newUri;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-
-  if (Document* doc = GetEntryDocument()) {
-    result = NS_NewURI(getter_AddRefs(newUri), aHref,
-                       doc->GetDocumentCharacterSet(), aBase);
-  } else {
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, nullptr, aBase);
-  }
-
-  if (newUri) {
-    /* Check with the scriptContext if it is currently processing a script tag.
-     * If so, this must be a <script> tag with a location.href in it.
-     * we want to do a replace load, in such a situation.
-     * In other cases, for example if a event handler or a JS timer
-     * had a location.href in it, we want to do a normal load,
-     * so that the new url will be appended to Session History.
-     * This solution is tricky. Hopefully it isn't going to bite
-     * anywhere else. This is part of solution for bug # 39938, 72197
-     */
-    bool inScriptTag = false;
-    nsIScriptContext* scriptContext = nullptr;
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetEntryGlobal());
-    if (win) {
-      scriptContext = nsGlobalWindowInner::Cast(win)->GetContextInternal();
-    }
-
-    if (scriptContext) {
-      if (scriptContext->GetProcessingScriptTag()) {
-        // Now check to make sure that the script is running in our window,
-        // since we only want to replace if the location is set by a
-        // <script> tag in the same window.  See bug 178729.
-        nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
-            docShell ? docShell->GetScriptGlobalObject() : nullptr;
-        inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
-      }
-    }
-
-    SetURI(newUri, aSubjectPrincipal, aRv, aReplace || inScriptTag);
-    return;
-  }
-
-  aRv.Throw(result);
 }
 
 void Location::GetOrigin(nsAString& aOrigin, nsIPrincipal& aSubjectPrincipal,
@@ -773,11 +590,6 @@ void Location::Reload(bool aForceget, ErrorResult& aRv) {
   }
 }
 
-void Location::Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
-                       ErrorResult& aRv) {
-  DoSetHref(aUrl, aSubjectPrincipal, true, aRv);
-}
-
 void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aRv) {
   if (!CallerSubsumes(&aSubjectPrincipal)) {
@@ -786,26 +598,6 @@ void Location::Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
   }
 
   DoSetHref(aUrl, aSubjectPrincipal, false, aRv);
-}
-
-nsIURI* Location::GetSourceBaseURL() {
-  Document* doc = GetEntryDocument();
-  // If there's no entry document, we either have no Script Entry Point or one
-  // that isn't a DOM Window.  This doesn't generally happen with the DOM, but
-  // can sometimes happen with extension code in certain IPC configurations.  If
-  // this happens, try falling back on the current document associated with the
-  // docshell. If that fails, just return null and hope that the caller passed
-  // an absolute URI.
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  if (!doc && docShell) {
-    nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
-        do_QueryInterface(docShell->GetScriptGlobalObject());
-    if (docShellWin) {
-      doc = docShellWin->GetDoc();
-    }
-  }
-  NS_ENSURE_TRUE(doc, nullptr);
-  return doc->GetBaseURI();
 }
 
 bool Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal) {
