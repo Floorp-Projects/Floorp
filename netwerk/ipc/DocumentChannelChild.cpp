@@ -113,6 +113,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
      return mStatus;
   }
 
+  gHttpHandler->OnOpeningDocumentRequest(this);
+
   DocumentChannelCreationArgs args;
 
   SerializeURI(topWindowURI, args.topWindowURI());
