@@ -28,6 +28,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 ### Process
 
 * [Release checklist]({{ site.baseurl }}/contributing/release-checklist)
+* [Versioning and release process]({{ site.baseurl }}/contributing/versioning)
 
 ### Presentations
 
