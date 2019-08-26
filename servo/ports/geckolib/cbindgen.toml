@@ -48,6 +48,8 @@ bitflags = true
 derive_helper_methods = true
 derive_const_casts = true
 derive_tagged_enum_destructor = true
+derive_tagged_enum_copy_constructor = true
+private_default_tagged_enum_constructor = true
 cast_assert_name = "MOZ_ASSERT"
 
 [export]
@@ -331,15 +333,6 @@ renaming_overrides_prefixing = true
   inline bool IsNone() const;
 """
 
-"Quotes" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleQuotes() {}
- public:
-"""
-
 # TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE
 # or MOZ_MUST_USE on the functions.
 "Owned" = """
@@ -519,45 +512,10 @@ renaming_overrides_prefixing = true
   bool HasPercent() const;
 """
 
-"GenericTransformOperation" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericTransformOperation() {}
- public:
-"""
-
-"GenericUrlOrNone" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericUrlOrNone() {}
- public:
-"""
 "Angle" = """
   inline static StyleAngle Zero();
   inline float ToDegrees() const;
   inline double ToRadians() const;
-"""
-
-"OffsetPath" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleOffsetPath() {}
- public:
-"""
-
-"TextOverflowSide" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleTextOverflowSide() {}
- public:
 """
 
 "TextOverflow" = """
@@ -618,15 +576,6 @@ renaming_overrides_prefixing = true
   bool IsOpaque() const;
 """
 
-"GridTemplateAreas" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGridTemplateAreas() {}
- public:
-"""
-
 "GenericGridLine" = """
   // Returns the `auto` value.
   inline StyleGenericGridLine();
@@ -636,75 +585,21 @@ renaming_overrides_prefixing = true
 """
 
 "GenericTrackBreadth" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericTrackBreadth() {}
- public:
   inline bool HasPercent() const;
 """
 
 "GenericTrackSize" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericTrackSize() {}
- public:
   // Implemented in nsGridContainerFrame.cpp
   inline const StyleGenericTrackBreadth<L>& GetMin() const;
   inline const StyleGenericTrackBreadth<L>& GetMax() const;
 """
 
-"GenericSVGPaintKind" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericSVGPaintKind() {}
- public:
-"""
-
-"GenericSVGPaintFallback" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericSVGPaintFallback() {}
- public:
-"""
-
 "GenericGridTemplateComponent" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleGenericGridTemplateComponent() {}
- public:
   inline Maybe<size_t> RepeatAutoIndex() const;
   inline const StyleGenericTrackRepeat<L, I>* GetRepeatAutoValue() const;
   inline bool HasRepeatAuto() const;
   inline Span<const StyleOwnedSlice<StyleCustomIdent>> LineNameLists(bool aIsSubgrid) const;
   inline Span<const StyleGenericTrackListValue<L, I>> TrackListValues() const;
-"""
-
-"TextEmphasisStyle" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleTextEmphasisStyle() {}
- public:
-"""
-
-"VariantAlternates" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleVariantAlternates() {}
- public:
 """
 
 "GenericClipRect" = """
