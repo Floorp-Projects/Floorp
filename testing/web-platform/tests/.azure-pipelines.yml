@@ -247,9 +247,8 @@ jobs:
   condition: |
     or(eq(variables['Build.Reason'], 'Schedule'),
        and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_dev']))
-  # There are 12 agents in the pool, but use more jobs so that each takes <1h.
   strategy:
-    parallel: 20
+    parallel: 10 # chosen to make runtime ~2h
   timeoutInMinutes: 360
   pool:
     name: 'Hosted Windows Client'
@@ -283,9 +282,8 @@ jobs:
   condition: |
     or(eq(variables['Build.Reason'], 'Schedule'),
        and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_canary']))
-  # There are 12 agents in the pool, but use more jobs so that each takes <1h.
   strategy:
-    parallel: 20
+    parallel: 10 # chosen to make runtime ~2h
   timeoutInMinutes: 360
   pool:
     name: 'Hosted Windows Client'
