@@ -7,8 +7,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHttpAuthManager"
 );
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const proxy = createHttpServer();
 const proxyToken = "this_is_my_pass";
 
