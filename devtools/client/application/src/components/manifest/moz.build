@@ -3,12 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-	'ManifestItemIcon.js',
-	'ManifestItemText.js',
+    'Manifest.js',
+    'ManifestEmpty.js',
+    'ManifestItem.css',
+    'ManifestItem.js',
+	'ManifestItemWarning.css',
 	'ManifestItemWarning.js',
     'ManifestLoader.js',
     'ManifestPage.js',
-    'ManifestView.css',
-    'ManifestView.js',
-    'ManifestViewEmpty.js'
+    'ManifestSection.css',
+    'ManifestSection.js',
 )

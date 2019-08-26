@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Manifest renders the expected snapshot 1`] = `
+<article>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestSection
+    key="manifest-section-0"
+    title="manifest-item-warnings"
+  >
+    <ManifestItemWarning
+      key="warning-0"
+      warning={
+        Object {
+          "warn": "This is a warning",
+        }
+      }
+    />
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <ManifestItem
+      key="name"
+      label="name"
+    >
+      foo
+    </ManifestItem>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <ManifestItem
+      key="lorem"
+      label="lorem"
+    >
+      ipsum
+    </ManifestItem>
+    <ManifestItem
+      key="foo"
+      label="foo"
+    >
+      bar
+    </ManifestItem>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <ManifestItem
+      key="1x1"
+      label="1x1"
+    >
+      something.png
+    </ManifestItem>
+  </ManifestSection>
+</article>
+`;

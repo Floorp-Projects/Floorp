@@ -14,27 +14,35 @@ const {
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
- * This component
+ * A Manifest warning validation message
  */
 class ManifestItemWarning extends PureComponent {
+  // TODO: this probably should not be a table, but a list. It might also make
+  // more sense to rename to ManifestIssue. Address in:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1575872
+
   static get propTypes() {
+    // TODO: pass multiple props instead of just a single object
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1575872
     return {
       warning: PropTypes.object.isRequired,
     };
   }
+
   render() {
     const { warning } = this.props;
-
     return tr(
-      { className: "manifest-view__row manifest-view__row-error" },
+      { className: "manifest-warning" },
       th(
-        { className: "manifest-view__col-label", scope: "row" },
+        { scope: "row" },
         img({
-          src: "chrome://global/skin/icons/warning.svg",
+          // TODO: Add a localized string in
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1575872
           alt: "Warning icon",
+          src: "chrome://global/skin/icons/warning.svg",
         })
       ),
-      td({ className: "manifest-view__col-value" }, warning.warn)
+      td({}, warning.warn)
     );
   }
 }

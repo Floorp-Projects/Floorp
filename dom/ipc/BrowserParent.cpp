@@ -719,6 +719,10 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
     // If this was a crash, tell our nsFrameLoader to fire crash events.
     if (why == AbnormalShutdown) {
       frameLoader->MaybeNotifyCrashed(mBrowsingContext, GetIPCChannel());
+
+      if (!mBrowsingContext->IsTopContent()) {
+        OnSubFrameCrashed();
+      }
     }
   }
 
@@ -3870,6 +3874,61 @@ FakeChannel::OnAuthCancelled(nsISupports* aContext, bool userCancel) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+void BrowserParent::OnSubFrameCrashed() {
+  if (mBrowsingContext->IsDiscarded()) {
+    return;
+  }
+
+  auto processId = Manager()->ChildID();
+  BrowsingContext* parent = mBrowsingContext->GetParent();
+  ContentParent* embedderProcess = parent->Canonical()->GetContentParent();
+  if (!embedderProcess) {
+    return;
+  }
+
+  ContentParent* manager = Manager();
+  // Set the owner process of a browsing context belonging to a
+  // crashed process to the parent context's process, since
+  // we'll be showing the crashed page in that process.
+  mBrowsingContext->SetOwnerProcessId(embedderProcess->ChildID());
+
+  // Find all same process sub tree nodes and detach them, cache all
+  // other nodes in the sub tree.
+  mBrowsingContext->PostOrderWalk([&](auto* aContext) {
+    // Post-order means bottom up in our case, which means that all
+    // same-process, i.e. crashing process have already been detached, and
+    // all others should only be cached and torn down regulalarly.
+
+    aContext->Group()->EachOtherParent(manager, [&](auto* aParent) {
+      Unused << aParent->SendCacheBrowsingContextChildren(aContext);
+    });
+    aContext->CacheChildren(/* aFromIPC */ true);
+
+    // We will never detach the root node of the subtree since
+    // we've changed the owner process to be different from
+    // processId.
+    if (aContext->Canonical()->IsOwnedByProcess(processId)) {
+      // Hold a reference to `context` until the response comes back to
+      // ensure it doesn't die while messages relating to this context are
+      // in-flight.
+      RefPtr<BrowsingContext> context = aContext;
+      auto resolve = [context](bool) {};
+      auto reject = [context](ResponseRejectReason) {};
+      aContext->Group()->EachOtherParent(manager, [&](auto* aParent) {
+        aParent->SendDetachBrowsingContext(aContext->Id(), resolve, reject);
+      });
+
+      aContext->Detach(/* aFromIPC */ true);
+    }
+  });
+
+  MOZ_DIAGNOSTIC_ASSERT(!mBrowsingContext->GetChildren().Length());
+  // Tell the browser bridge to show the subframe crashed page.
+  if (GetBrowserBridgeParent()) {
+    Unused << GetBrowserBridgeParent()->SendSubFrameCrashed(mBrowsingContext);
+  }
 }
 
 }  // namespace dom

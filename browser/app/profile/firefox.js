@@ -1565,12 +1565,10 @@ pref("media.gmp-provider.enabled", true);
 
 // Enable blocking access to storage from tracking resources by default.
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
-#ifdef EARLY_BETA_OR_EARLIER
-  // Enable fingerprinting blocking by default only in nightly and early beta.
-  pref("privacy.trackingprotection.fingerprinting.enabled", true);
-#endif
 
-// Enable cryptomining blocking by default for all channels, only on desktop.
+// Enable fingerprinting and cryptomining blocking by default for all channels,
+// only on desktop.
+pref("privacy.trackingprotection.fingerprinting.enabled", true);
 pref("privacy.trackingprotection.cryptomining.enabled", true);
 
 pref("browser.contentblocking.database.enabled", true);

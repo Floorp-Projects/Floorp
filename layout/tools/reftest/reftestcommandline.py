@@ -464,6 +464,11 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           default=True,
                           help="Do not display verbose diagnostics about the remote device.")
 
+        self.add_argument("--no-install",
+                          action="store_true",
+                          default=False,
+                          help="Skip the installation of the APK.")
+
     def validate_remote(self, options, automation):
         if options.remoteWebServer is None:
             options.remoteWebServer = self.get_ip()

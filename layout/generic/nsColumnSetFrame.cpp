@@ -634,6 +634,9 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   bool reflowNext = false;
 
   while (child) {
+    const bool isMeasuringFeasibleContentBSize =
+        aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1;
+
     // Try to skip reflowing the child. We can't skip if the child is dirty. We
     // also can't skip if the next column is dirty, because the next column's
     // first line(s) might be pullable back to this column. We can't skip if
@@ -644,12 +647,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // content from its next sibling. (Note that it might be the last
     // column, but not be the last child because the desired number of columns
     // has changed.)
-    bool skipIncremental = !aReflowInput.ShouldReflowAllKids() &&
-                           !NS_SUBTREE_DIRTY(child) &&
-                           child->GetNextSibling() &&
-                           !(aUnboundedLastColumn &&
-                             columnCount == aConfig.mBalanceColCount - 1) &&
-                           !NS_SUBTREE_DIRTY(child->GetNextSibling());
+    bool skipIncremental =
+        !aReflowInput.ShouldReflowAllKids() && !NS_SUBTREE_DIRTY(child) &&
+        child->GetNextSibling() && !isMeasuringFeasibleContentBSize &&
+        !NS_SUBTREE_DIRTY(child->GetNextSibling());
+
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
     //
@@ -721,8 +723,10 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                      ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
-      if (aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1) {
-        availSize.BSize(wm) = GetAvailableContentBSize(aReflowInput);
+      if (isMeasuringFeasibleContentBSize) {
+        availSize.BSize(wm) = StaticPrefs::layout_css_column_span_enabled()
+                                  ? NS_UNCONSTRAINEDSIZE
+                                  : GetAvailableContentBSize(aReflowInput);
 
         COLUMN_SET_LOG(
             "%s: Measuring content block-size, change available block-size "
@@ -1077,6 +1081,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     } else {
       aConfig.mKnownInfeasibleBSize =
           std::max(aConfig.mKnownInfeasibleBSize, mLastBalanceBSize);
+
       // If a column didn't fit in its available block-size, then its current
       // block-size must be the minimum block-size for unbreakable content in
       // the column, and therefore no smaller block-size can be feasible.
@@ -1088,6 +1093,11 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
         // mMaxBSize is feasible.
         aConfig.mKnownFeasibleBSize =
             std::min(aConfig.mKnownFeasibleBSize, aColData.mMaxBSize);
+
+        NS_ASSERTION(!StaticPrefs::layout_css_column_span_enabled() ||
+                         mLastFrameStatus.IsComplete(),
+                     "Last column should be complete if the available "
+                     "block-size is unconstrained!");
       }
     }
 
@@ -1164,26 +1174,35 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {
       aConfig.mColMaxBSize = availableContentBSize;
       if (mLastBalanceBSize == availableContentBSize) {
-        if (StaticPrefs::layout_css_column_span_enabled() &&
-            aUnboundedLastColumn &&
-            !aReflowInput.mCBReflowInput->mFrame->HasAnyStateBits(
-                NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
-          // If we are end up here, we have a constrained available content
-          // block size and cannot fit all the content during the very first
-          // balancing iteration. We may need to give up balancing and reflow
-          // again.
-          //
-          // Note that we do this only for the top-level column container
-          // because we don't want a nested column container to create overflow
-          // columns immediately if its content doesn't fit, and change its
-          // completeness from incomplete to complete. That is because 1) the
-          // top-level one might do column balancing, and it can enlarge the
-          // available block-size so that the nested one could fit its content
-          // in next balancing iteration; or 2) the top-level container is
-          // filling columns sequentially, and may have more inline-size to
-          // create more column boxes for the nested column containers'
-          // next-in-flow frames.
-          aConfig = ChooseColumnStrategy(aReflowInput, true);
+        if (StaticPrefs::layout_css_column_span_enabled()) {
+          // If we end up here, we have a constrained available content
+          // block-size, and our last column's block-size exceeds it. Also, if
+          // this is the first balancing iteration, the last column is given
+          // unconstrained available block-size, so it has a fully complete
+          // reflow status. Therefore, we always want to reflow again at the
+          // available content block-size to get a valid layout and a correct
+          // reflow status (likely an *incomplete* status) so that our column
+          // container can be fragmented if needed.
+
+          if (aReflowInput.mFlags.mColumnSetWrapperHasNoBSizeLeft) {
+            // If our column container has a constrained block-size (either in a
+            // paginated context or in a nested column container), and is going
+            // to consume all its computed block-size in this fragment, then our
+            // column container has no block-size left to contain our
+            // next-in-flows. We have to give up balancing, and create our
+            // own overflow columns.
+            //
+            // We don't want to create overflow columns immediately when our
+            // content doesn't fit since this changes our reflow status from
+            // incomplete to complete. Valid reasons include 1) the outer column
+            // container might do column balancing, and it can enlarge the
+            // available content block-size so that the nested one could fit its
+            // content in next balancing iteration; or 2) the outer column
+            // container is filling columns sequentially, and may have more
+            // inline-size to create more column boxes for the nested column
+            // container's next-in-flows.
+            aConfig = ChooseColumnStrategy(aReflowInput, true);
+          }
         } else {
           skip = true;
         }

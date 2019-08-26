@@ -10,17 +10,20 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ResultExtensions.h"
 
 #include "MainThreadUtils.h"
+#include "nsCRT.h"
 #include "nsEffectiveTLDService.h"
+#include "nsIFile.h"
 #include "nsIIDNService.h"
-#include "nsNetUtil.h"
-#include "prnetdb.h"
+#include "nsIObserverService.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "prnetdb.h"
 
 namespace etld_dafsa {
 
@@ -32,16 +35,21 @@ namespace etld_dafsa {
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
-                  nsIMemoryReporter)
+                  nsIMemoryReporter, nsIObserver)
 
 // ----------------------------------------------------------------------
 
 static nsEffectiveTLDService* gService = nullptr;
 
 nsEffectiveTLDService::nsEffectiveTLDService()
-    : mIDNService(), mGraph(etld_dafsa::kDafsa) {}
+    : mIDNService(), mGraphLock("nsEffectiveTLDService::mGraph") {
+  mGraph.emplace(etld_dafsa::kDafsa);
+}
 
 nsresult nsEffectiveTLDService::Init() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->AddObserver(this, "public-suffix-list-updated", false);
+
   if (gService) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
@@ -53,6 +61,39 @@ nsresult nsEffectiveTLDService::Init() {
   gService = this;
   RegisterWeakMemoryReporter(this);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEffectiveTLDService::Observe(nsISupports* aSubject,
+                                             const char* aTopic,
+                                             const char16_t* aData) {
+  /**
+   * Signal sent from netwerk/dns/PublicSuffixList.jsm
+   * aSubject is the nsIFile object for dafsa.bin
+   * aData is the absolute path to the dafsa.bin file (not used)
+   */
+  if (aSubject && (nsCRT::strcmp(aTopic, "public-suffix-list-updated") == 0)) {
+    nsCOMPtr<nsIFile> mDafsaBinFile(do_QueryInterface(aSubject));
+    NS_ENSURE_TRUE(mDafsaBinFile, NS_ERROR_ILLEGAL_VALUE);
+
+    AutoWriteLock lock(mGraphLock);
+    // Reset mGraph with kDafsa in case reassigning to mDafsaMap fails
+    mGraph.reset();
+    mGraph.emplace(etld_dafsa::kDafsa);
+
+    mDafsaMap.reset();
+    mMruTable.Clear();
+
+    MOZ_TRY(mDafsaMap.init(mDafsaBinFile));
+
+    size_t size = mDafsaMap.size();
+    const uint8_t* remoteDafsaPtr = mDafsaMap.get<uint8_t>().get();
+
+    auto remoteDafsa = mozilla::MakeSpan(remoteDafsaPtr, size);
+
+    mGraph.reset();
+    mGraph.emplace(remoteDafsa);
+  }
   return NS_OK;
 }
 
@@ -254,8 +295,8 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
   // Default value of *eTLD is currDomain as set in the while loop below
   const char* eTLD = nullptr;
   while (true) {
-    // sanity check the string we're about to look up: it should not begin with
-    // a '.'; this would mean the hostname began with a '.' or had an
+    // sanity check the string we're about to look up: it should not begin
+    // with a '.'; this would mean the hostname began with a '.' or had an
     // embedded '..' sequence.
     if (*currDomain == '.') {
       // Update the MRU table if in use.
@@ -267,8 +308,12 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
       return NS_ERROR_INVALID_ARG;
     }
 
-    // Perform the lookup.
-    const int result = mGraph.Lookup(Substring(currDomain, end));
+    int result;
+    {
+      AutoReadLock lock(mGraphLock);
+      // Perform the lookup.
+      result = mGraph->Lookup(Substring(currDomain, end));
+    }
     if (result != Dafsa::kKeyNotFound) {
       if (result == kWildcardRule && prevDomain) {
         // wildcard rules imply an eTLD one level inferior to the match.
@@ -286,6 +331,7 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
         break;
       }
     }
+
     if (!nextDot) {
       // we've hit the top domain level; use it by default.
       eTLD = currDomain;

@@ -1384,6 +1384,20 @@ devtools.main:
     extra_keys:
       runtime_id: Random id generated to track events related to a single runtime
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  select_ws_frame:
+    objects: ["netmonitor"]
+    bug_numbers: [1555638]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+      - "fennec"
+      - "geckoview"
+    record_in_processes: ["main"]
+    description: User has selected a WebSocket frame.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   sidepanel_changed:
     objects: ["inspector", "netmonitor"]
     bug_numbers: [1463083, 1463169]

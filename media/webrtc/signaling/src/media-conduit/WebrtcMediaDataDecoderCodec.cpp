@@ -149,9 +149,11 @@ int32_t WebrtcMediaDataDecoder::RegisterDecodeCompleteCallback(
 }
 
 int32_t WebrtcMediaDataDecoder::Release() {
-  RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
-  decoder->Flush()->Then(mTaskQueue, __func__,
-                         [decoder]() { decoder->Shutdown(); });
+  if (mDecoder) {
+    RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+    decoder->Flush()->Then(mTaskQueue, __func__,
+                           [decoder]() { decoder->Shutdown(); });
+  }
 
   mNeedKeyframe = true;
   mError = NS_OK;

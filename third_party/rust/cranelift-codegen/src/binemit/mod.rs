@@ -9,7 +9,8 @@ mod shrink;
 mod stackmap;
 
 pub use self::memorysink::{
-    MemoryCodeSink, NullStackmapSink, NullTrapSink, RelocSink, StackmapSink, TrapSink,
+    MemoryCodeSink, NullRelocSink, NullStackmapSink, NullTrapSink, RelocSink, StackmapSink,
+    TrapSink,
 };
 pub use self::relaxation::relax_branches;
 pub use self::shrink::shrink_instructions;
@@ -32,7 +33,7 @@ pub type CodeOffset = u32;
 pub type Addend = i64;
 
 /// Relocation kinds for every ISA
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub enum Reloc {
     /// absolute 4-byte

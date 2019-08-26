@@ -4538,14 +4538,13 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyTabDestroying(
   return IPC_OK();
 }
 
-mozilla::docshell::POfflineCacheUpdateParent*
+already_AddRefed<mozilla::docshell::POfflineCacheUpdateParent>
 ContentParent::AllocPOfflineCacheUpdateParent(
     const URIParams& aManifestURI, const URIParams& aDocumentURI,
     const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument) {
   RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
       new mozilla::docshell::OfflineCacheUpdateParent();
-  // Use this reference as the IPDL reference.
-  return update.forget().take();
+  return update.forget();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPOfflineCacheUpdateConstructor(
@@ -4565,14 +4564,6 @@ mozilla::ipc::IPCResult ContentParent::RecvPOfflineCacheUpdateConstructor(
   }
 
   return IPC_OK();
-}
-
-bool ContentParent::DeallocPOfflineCacheUpdateParent(
-    POfflineCacheUpdateParent* aActor) {
-  // Reclaim the IPDL reference.
-  RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update = dont_AddRef(
-      static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor));
-  return true;
 }
 
 PWebrtcGlobalParent* ContentParent::AllocPWebrtcGlobalParent() {
