@@ -1494,7 +1494,7 @@ static bool AssumeThemePartAndStateAreTransparent(int32_t aPart,
 // the system default resolution.
 static inline double GetThemeDpiScaleFactor(nsIFrame* aFrame) {
   if (WinUtils::IsPerMonitorDPIAware() ||
-      nsIWidget::DefaultScaleOverride() > 0.0) {
+      StaticPrefs::layout_css_devPixelsPerPx() > 0.0) {
     nsIWidget* rootWidget = aFrame->PresContext()->GetRootWidget();
     if (rootWidget) {
       double systemScale = WinUtils::SystemScaleFactor();
