@@ -138,6 +138,9 @@ const EVENTS = {
 
   // When throttling is set on the backend.
   THROTTLING_CHANGED: "NetMonitor:ThrottlingChanged",
+
+  // When a long string is resolved
+  LONGSTRING_RESOLVED: "NetMonitor:LongStringResolved",
 };
 
 const UPDATE_PROPS = [
