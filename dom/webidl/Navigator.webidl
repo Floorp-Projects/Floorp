@@ -194,6 +194,12 @@ partial interface Navigator {
   boolean javaEnabled();
 };
 
+// Addon manager bits
+partial interface Navigator {
+  [Throws, Func="mozilla::AddonManagerWebAPI::IsAPIEnabled"]
+  readonly attribute AddonManager mozAddonManager;
+};
+
 // NetworkInformation
 partial interface Navigator {
   [Throws, Pref="dom.netinfo.enabled"]
