@@ -178,6 +178,19 @@
   value: false
   mirror: always
 
+#ifdef ANDROID
+  #---------------------------------------------------------------------------
+  # Prefs starting with "android."
+  #---------------------------------------------------------------------------
+
+  # On Android, we want an opaque background to be visible under the page,
+  # so layout should not force a default background.
+-   name: android.widget_paints_background
+    type: bool
+    value: true
+    mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "apz."
 # The apz prefs are explained in AsyncPanZoomController.cpp

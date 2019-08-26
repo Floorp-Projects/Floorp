@@ -15,6 +15,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RWLock.h"
+#include "mozilla/StaticPrefs_android.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TypeTraits.h"
@@ -2189,16 +2190,7 @@ nsresult nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 }
 
 bool nsWindow::WidgetPaintsBackground() {
-  static bool sWidgetPaintsBackground = true;
-  static bool sWidgetPaintsBackgroundPrefCached = false;
-
-  if (!sWidgetPaintsBackgroundPrefCached) {
-    sWidgetPaintsBackgroundPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(
-        &sWidgetPaintsBackground, "android.widget_paints_background", true);
-  }
-
-  return sWidgetPaintsBackground;
+  return StaticPrefs::android_widget_paints_background();
 }
 
 bool nsWindow::NeedsPaint() {
