@@ -405,26 +405,18 @@ class Compositor : public TextureSourceProvider {
    * sufficient.
    *
    * aClipRectIn is the clip rect for the window in window space (optional).
-   * aTransform is the transform from user space to window space.
    * aRenderBounds bounding rect for rendering, in user space.
-   *
-   * If aClipRectIn is null, this method sets *aClipRectOut to the clip rect
-   * actually used for rendering (if aClipRectIn is non-null, we will use that
-   * for the clip rect).
+   * aOpaqueRegion is the area that contains opaque content.
    *
    * If aRenderBoundsOut is non-null, it will be set to the render bounds
    * actually used by the compositor in window space. If aRenderBoundsOut
    * is returned empty, composition should be aborted.
-   *
-   * If aOpaque is true, then all of aInvalidRegion will be drawn to with
-   * opaque content.
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::IntRect* aClipRectIn,
                           const gfx::IntRect& aRenderBounds,
                           const nsIntRegion& aOpaqueRegion,
                           NativeLayer* aNativeLayer,
-                          gfx::IntRect* aClipRectOut = nullptr,
                           gfx::IntRect* aRenderBoundsOut = nullptr) = 0;
 
   /**

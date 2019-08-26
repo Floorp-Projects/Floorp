@@ -995,14 +995,11 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(),
                  clipRect.Height());
     mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, nullptr,
-                            &actualBounds);
+                            mNativeLayerForEntireWindow, &actualBounds);
   } else {
-    gfx::IntRect rect;
     mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, &rect, &actualBounds);
-    clipRect =
-        ParentLayerIntRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
+                            mNativeLayerForEntireWindow, &actualBounds);
+    clipRect = ParentLayerIntRect::FromUnknownRect(actualBounds);
   }
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
@@ -1238,10 +1235,10 @@ void LayerManagerComposite::RenderToPresentationSurface() {
 
   nsIntRegion invalid;
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
-  IntRect rect, actualBounds;
+  IntRect actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
   mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), nullptr,
-                          &rect, &actualBounds);
+                          &actualBounds);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer
