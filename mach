@@ -36,7 +36,6 @@ py2commands="
     devtools-css-db
     doc
     doctor
-    dxr
     empty-makefiles
     environment
     eslint
@@ -46,7 +45,6 @@ py2commands="
     geckodriver
     geckodriver-test
     geckoview-junit
-    google
     gradle
     gtest
     ide
@@ -63,7 +61,6 @@ py2commands="
     mach-completion
     mach-debug-commands
     marionette-test
-    mdn
     mochitest
     mozbuild-reference
     mozharness
@@ -90,8 +87,6 @@ py2commands="
     run-android
     run-desktop
     rusttests
-    search
-    searchfox
     settings
     show-log
     static-analysis
