@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* The prefs in this file are shipped with the GRE and should apply to all
- * embedding situations. Application-specific preferences belong somewhere else,
- * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
- *
- * NOTE: Not all prefs should be defined in this (or any other) data file.
- * Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
- * Those prefs should *not* appear in this file.
- *
- * For the syntax used by this file, consult the comments at the top of
- * modules/libpref/parser/src/lib.rs.
- *
- * Please indent all prefs defined within #ifdef/#ifndef conditions. This
- * improves readability, particular for conditional blocks that exceed a single
- * screen.
- */
+// The prefs in this file are shipped with the GRE and should apply to all
+// embedding situations. Application-specific preferences belong somewhere
+// else, such as browser/app/profile/firefox.js or
+// mobile/android/app/mobile.js.
+//
+// NOTE: Not all prefs should be defined in this (or any other) data file.
+// Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
+// Those prefs should *not* appear in this file.
+//
+// For the syntax used by this file, consult the comments at the top of
+// modules/libpref/parser/src/lib.rs.
+//
+// Please indent all prefs defined within #ifdef/#ifndef conditions. This
+// improves readability, particular for conditional blocks that exceed a single
+// screen.
 
 pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 4);
