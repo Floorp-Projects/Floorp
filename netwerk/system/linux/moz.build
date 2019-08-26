@@ -6,7 +6,7 @@
 
 if CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [
-        'nsNetworkLinkService.cpp',
+        'nsNotifyAddrListener_Linux.cpp',
     ]
 
 FINAL_LIBRARY = 'xul'

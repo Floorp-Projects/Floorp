@@ -3,19 +3,28 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef NSNOTIFYADDRLISTENER_H_
-#define NSNOTIFYADDRLISTENER_H_
+#ifndef NSNOTIFYADDRLISTENER_LINUX_H_
+#define NSNOTIFYADDRLISTENER_LINUX_H_
 
-#include <windows.h>
-#include <winsock2.h>
-#include <iptypes.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
 #include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
-#include "mozilla/TimeStamp.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
+#include "nsITimer.h"
+#include "nsClassHashtable.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -29,16 +38,14 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   NS_DECL_NSIOBSERVER
 
   nsNotifyAddrListener();
-
   nsresult Init(void);
-  void CheckLinkStatus(void);
 
- protected:
+ private:
   class ChangeEvent : public mozilla::Runnable {
    public:
     NS_DECL_NSIRUNNABLE
     ChangeEvent(nsINetworkLinkService* aService, const char* aEventID)
-        : Runnable("nsNotifyAddrListener::ChangeEvent"),
+        : mozilla::Runnable("nsNotifyAddrListener::ChangeEvent"),
           mService(aService),
           mEventID(aEventID) {}
 
@@ -47,58 +54,51 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
     const char* mEventID;
   };
 
-  bool mLinkUp;
-  bool mStatusKnown;
-  bool mCheckAttempted;
-
+  // Called when xpcom-shutdown-threads is received.
   nsresult Shutdown(void);
-  nsresult SendEvent(const char* aEventID);
 
-  DWORD CheckAdaptersAddresses(void);
-
-  // Checks for an Internet Connection Sharing (ICS) gateway.
-  bool CheckICSGateway(PIP_ADAPTER_ADDRESSES aAdapter);
-  bool CheckICSStatus(PWCHAR aAdapterName);
-
-  nsCOMPtr<nsIThread> mThread;
-
- private:
-  // Returns the new timeout period for coalescing (or INFINITE)
-  DWORD nextCoalesceWaitTime();
-
-  // Called for every detected network change
+  // Called when a network change was detected
   nsresult NetworkChanged();
 
-  // Figure out the current network identification
+  // Sends the network event.
+  nsresult SendEvent(const char* aEventID);
+
+  // Figure out the current "network identification"
   void calculateNetworkId(void);
-  bool findMac(char* gateway);
 
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
 
-  HANDLE mCheckEvent;
+  // Checks if there's a network "link"
+  void checkLink(void);
 
-  // set true when mCheckEvent means shutdown
-  bool mShutdown;
+  // Deals with incoming NETLINK messages.
+  void OnNetlinkMessage(int NetlinkSocket);
 
-  // This is a checksum of various meta data for all network interfaces
-  // considered UP at last check.
-  ULONG mIPInterfaceChecksum;
+  nsCOMPtr<nsIThread> mThread;
 
-  // start time of the checking
-  mozilla::TimeStamp mStartTime;
+  // The network is up.
+  bool mLinkUp;
+
+  // The network's up/down status is known.
+  bool mStatusKnown;
+
+  // A pipe to signal shutdown with.
+  int mShutdownPipe[2];
 
   // Network changed events are enabled
   bool mAllowChangedEvent;
-
-  // Check for IPv6 network changes
-  bool mIPv6Changes;
 
   // Flag set while coalescing change events
   bool mCoalescingActive;
 
   // Time stamp for first event during coalescing
   mozilla::TimeStamp mChangeTime;
+
+  // Seen Ip addresses. For Ipv6 addresses some time router renews their
+  // lifetime and we should not detect this as a network link change, so we
+  // keep info about all seen addresses.
+  nsClassHashtable<nsCStringHashKey, struct ifaddrmsg> mAddressInfo;
 };
 
-#endif /* NSNOTIFYADDRLISTENER_H_ */
+#endif /* NSNOTIFYADDRLISTENER_LINUX_H_ */

@@ -61,7 +61,6 @@
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
-#include "mozilla/StaticPrefs_network.h"
 
 #ifdef MOZ_WIDGET_GTK
 #  include "nsGIOProtocolHandler.h"
@@ -84,6 +83,7 @@ using mozilla::dom::ServiceWorkerDescriptor;
 // but the old names are still used to preserve backward compatibility.
 #define NECKO_BUFFER_CACHE_COUNT_PREF "network.buffer.cache.count"
 #define NECKO_BUFFER_CACHE_SIZE_PREF "network.buffer.cache.size"
+#define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 #define NETWORK_CAPTIVE_PORTAL_PREF "network.captive-portal-service.enabled"
 #define WEBRTC_PREF_PREFIX "media.peerconnection."
 #define NETWORK_DNS_PREF "network.dns."
@@ -202,6 +202,7 @@ nsIOService::nsIOService()
       mHttpHandlerAlreadyShutingDown(false),
       mNetworkLinkServiceInitialized(false),
       mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY),
+      mNetworkNotifyChanged(true),
       mTotalRequests(0),
       mCacheWon(0),
       mNetWon(0),
@@ -216,6 +217,7 @@ static const char* gCallbackPrefs[] = {
     MANAGE_OFFLINE_STATUS_PREF,
     NECKO_BUFFER_CACHE_COUNT_PREF,
     NECKO_BUFFER_CACHE_SIZE_PREF,
+    NETWORK_NOTIFY_CHANGED_PREF,
     NETWORK_CAPTIVE_PORTAL_PREF,
     nullptr,
 };
@@ -1265,6 +1267,14 @@ void nsIOService::PrefsChanged(const char* pref) {
                          "network segment size is not a power of 2!");
   }
 
+  if (!pref || strcmp(pref, NETWORK_NOTIFY_CHANGED_PREF) == 0) {
+    bool allow;
+    nsresult rv = Preferences::GetBool(NETWORK_NOTIFY_CHANGED_PREF, &allow);
+    if (NS_SUCCEEDED(rv)) {
+      mNetworkNotifyChanged = allow;
+    }
+  }
+
   if (!pref || strcmp(pref, NETWORK_CAPTIVE_PORTAL_PREF) == 0) {
     nsresult rv = Preferences::GetBool(NETWORK_CAPTIVE_PORTAL_PREF,
                                        &gCaptivePortalEnabled);
@@ -1336,7 +1346,7 @@ nsIOService::NotifyWakeup() {
 
   NS_ASSERTION(observerService, "The observer service should not be null");
 
-  if (observerService && StaticPrefs::network_notify_changed()) {
+  if (observerService && mNetworkNotifyChanged) {
     (void)observerService->NotifyObservers(nullptr, NS_NETWORK_LINK_TOPIC,
                                            (u"" NS_NETWORK_LINK_DATA_CHANGED));
   }

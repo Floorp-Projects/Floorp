@@ -34,7 +34,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
-#include "mozilla/StaticPrefs_network.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ScopeExit.h"
@@ -115,6 +115,8 @@ nsNotifyAddrListener::nsNotifyAddrListener()
       mCheckEvent(nullptr),
       mShutdown(false),
       mIPInterfaceChecksum(0),
+      mAllowChangedEvent(true),
+      mIPv6Changes(false),
       mCoalescingActive(false) {
   InitIphlpapi();
 }
@@ -274,8 +276,7 @@ nsNotifyAddrListener::Run() {
 
   DWORD waitTime = INFINITE;
 
-  if (!sNotifyIpInterfaceChange || !sCancelMibChangeNotify2 ||
-      !StaticPrefs::network_notify_IPv6()) {
+  if (!sNotifyIpInterfaceChange || !sCancelMibChangeNotify2 || !mIPv6Changes) {
     // For Windows versions which are older than Vista which lack
     // NotifyIpInterfaceChange. Note this means no IPv6 support.
     HANDLE ev = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -348,6 +349,10 @@ nsresult nsNotifyAddrListener::Init(void) {
   nsresult rv =
       observerService->AddObserver(this, "xpcom-shutdown-threads", false);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  Preferences::AddBoolVarCache(&mAllowChangedEvent, NETWORK_NOTIFY_CHANGED_PREF,
+                               true);
+  Preferences::AddBoolVarCache(&mIPv6Changes, NETWORK_NOTIFY_IPV6_PREF, false);
 
   mCheckEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   NS_ENSURE_TRUE(mCheckEvent, NS_ERROR_OUT_OF_MEMORY);
@@ -644,8 +649,7 @@ void nsNotifyAddrListener::CheckLinkStatus(void) {
 
       // Network is online. Topology has changed. Always send CHANGED
       // before UP - if allowed to and having cooled down.
-      if (StaticPrefs::network_notify_changed() &&
-          (since.ToMilliseconds() > 2000)) {
+      if (mAllowChangedEvent && (since.ToMilliseconds() > 2000)) {
         NetworkChanged();
       }
     }

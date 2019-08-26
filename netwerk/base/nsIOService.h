@@ -216,6 +216,8 @@ class nsIOService final : public nsIIOService,
 
   nsTArray<int32_t> mRestrictedPortList;
 
+  bool mNetworkNotifyChanged;
+
   static bool sIsDataURIUniqueOpaqueOrigin;
   static bool sBlockToplevelDataUriNavigations;
 
