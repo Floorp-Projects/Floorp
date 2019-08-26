@@ -3,51 +3,55 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 footer {
-  position: fixed;
-  margin-inline-start: 0;
-  bottom: 40px;
-}
-
-.footer-content {
   background-color: var(--in-content-box-background);
+  border-radius: 4px;
   box-shadow: var(--shadow-10);
-  max-width: 700px;
   position: relative;
+  padding-block: 8px;
+  padding-inline: 40px;
   display: flex;
-  flex-flow: row nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  padding-inline-start: 40px;
-  padding-inline-end: 80px;
 }
 
-.footer-content > p {
-  font-size: 15px;
-  margin: 0;
+p {
+  display: inline-block;
   line-height: 1.5;
-  padding-inline-end: 40px;
+  padding-inline-end: 70px;
+  margin: 0;
+  margin-inline-end: auto;
 }
 
-.footer-content button {
-  background-color: transparent;
+.buttons {
+  display: inline-block;
+  margin-inline-end: auto;
+}
+
+button {
+  background-color: transparent !important; /* override common.css */
   padding: 0;
-}
-
-.footer-content button:hover {
   cursor: pointer;
-  background-color: transparent;
+  vertical-align: middle;
 }
 
-.footer-content button img {
+.app-store {
+  margin-inline-start: 0;
+}
+
+button:not(.close) img {
   width: auto;
-  height: 40px;
   display: block;
 }
 
-.footer-content button + button img {
+.app-store img {
+  height: 40px;
+}
+
+.play-store img {
   height: 60px;
 }
 
-.footer-content .close {
+.close {
   -moz-context-properties: fill, fill-opacity;
   background-image: url("chrome://global/skin/icons/close.svg");
   background-repeat: no-repeat;
