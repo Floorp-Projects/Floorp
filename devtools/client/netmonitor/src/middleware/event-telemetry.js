@@ -13,6 +13,7 @@ const {
   SELECT_DETAILS_PANEL_TAB,
   SEND_CUSTOM_REQUEST,
   ENABLE_PERSISTENT_LOGS,
+  WS_SELECT_FRAME,
 } = require("../constants");
 
 const {
@@ -84,11 +85,19 @@ function eventTelemetryMiddleware(connector, telemetry) {
       });
     }
 
-    // Record telemetry event when log persistence changes
+    // Record telemetry event when log persistence changes.
     if (action.type == ENABLE_PERSISTENT_LOGS) {
       persistenceChange({
         telemetry,
         state,
+        sessionId,
+      });
+    }
+
+    // Record telemetry event when WS frame is selected.
+    if (action.type == WS_SELECT_FRAME) {
+      selectWSFrame({
+        telemetry,
         sessionId,
       });
     }
@@ -187,6 +196,16 @@ function persistenceChange({ telemetry, state, sessionId }) {
       session_id: sessionId,
     }
   );
+}
+
+/**
+ * This helper function is executed when a WS frame is selected.
+ * It's responsible for recording "select_ws_frame" telemetry event.
+ */
+function selectWSFrame({ telemetry, sessionId }) {
+  telemetry.recordEvent("select_ws_frame", "netmonitor", null, {
+    session_id: sessionId,
+  });
 }
 
 module.exports = eventTelemetryMiddleware;

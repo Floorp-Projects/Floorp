@@ -2166,10 +2166,6 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
-  // The socket transport in the chrome process now holds a logical ref to us
-  // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
-  AddRef();
-
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event
   // target.
@@ -2932,10 +2928,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   // from the parent could arrive quickly and be delivered to the wrong event
   // target.
   SetEventTarget();
-
-  // The socket transport in the chrome process now holds a logical ref to us
-  // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
-  AddRef();
 
   PBrowserOrId browser = cc->GetBrowserOrId(browserChild);
   if (!gNeckoChild->SendPHttpChannelConstructor(

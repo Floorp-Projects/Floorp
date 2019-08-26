@@ -673,6 +673,8 @@ load 1308876-1.html
 load 1316649.html
 load 1343552-1.html
 load 1343552-2.html
+load 1346454-1.html
+load 1346454-2.html
 load 1349650.html
 asserts-if(browserIsRemote,0-5) load 1349816-1.html # bug 1350352
 load 1350372.html
@@ -731,12 +733,17 @@ load 1544060-1.html
 load 1544060-2.html
 load 1542441.html
 pref(layout.css.grid-template-subgrid-value.enabled,true) load 1553824.html
-load 1346454-1.html
-load 1346454-2.html
+pref(layout.css.column-span.enabled,true) load 1554824.html
 load 1555142.html
 load 1562105.html
+pref(layout.css.column-span.enabled,true) load 1563131.html
 pref(layout.css.column-span.enabled,true) load 1568001-1.html
 pref(layout.css.column-span.enabled,true) load 1568001-2.html
+pref(layout.css.column-span.enabled,true) load 1571239.html
 load 1571460.html
+pref(layout.css.column-span.enabled,true) load 1571598.html
 pref(layout.css.column-span.enabled,true) load 1571897.html
+pref(layout.css.column-span.enabled,true) load 1572901.html
+pref(layout.css.column-span.enabled,true) load 1573216.html
 load 1574552.html
+pref(layout.css.column-span.enabled,true) load 1574993.html

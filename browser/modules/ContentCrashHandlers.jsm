@@ -4,11 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "SubframeCrashHandler",
-  "TabCrashHandler",
-  "UnsubmittedCrashHandler",
-];
+var EXPORTED_SYMBOLS = ["TabCrashHandler", "UnsubmittedCrashHandler"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -616,16 +612,6 @@ var TabCrashHandler = {
     }
 
     return this.childMap.get(this.browserMap.get(browser));
-  },
-};
-
-var SubframeCrashHandler = {
-  onSubframeCrash(browsingContext) {
-    // A subframe has crashed. We have to inform the parent frame so that it
-    // can show suitable UI.
-    let parentWg = browsingContext.parent.currentWindowGlobal;
-    let actor = parentWg.getActor("SubframeCrash");
-    actor.sendAsyncMessage("SubframeCrashed", { id: browsingContext.id });
   },
 };
 

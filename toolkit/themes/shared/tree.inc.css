@@ -199,3 +199,8 @@ html|input.tree-input {
   margin-inline-start: -4px;
   padding: 1px;
 }
+
+.scrollbar-topmost {
+  position: relative;
+  z-index: 2147483647;
+}

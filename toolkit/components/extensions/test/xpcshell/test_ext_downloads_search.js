@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );

@@ -7,17 +7,19 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-const ManifestViewEmpty = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestViewEmpty")
+const Manifest = createFactory(
+  require("devtools/client/application/src/components/manifest/Manifest")
 );
 
-/**
- * Test for ManifestPage.js component
+const { MANIFEST_SIMPLE } = require("../fixtures/data/constants");
+
+/*
+ * Test for Manifest component
  */
 
-describe("ManifestViewEmpty", () => {
+describe("Manifest", () => {
   it("renders the expected snapshot", () => {
-    const wrapper = shallow(ManifestViewEmpty({}));
+    const wrapper = shallow(Manifest(MANIFEST_SIMPLE));
     expect(wrapper).toMatchSnapshot();
   });
 });
