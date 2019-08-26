@@ -29,7 +29,6 @@ SUPPORTED_PRODUCTS = {
     'fennec': 'Fennec',
     'geckoview': 'Geckoview',
     'geckoview_streaming': 'GeckoviewStreaming',
-    'thunderbird': 'Thunderbird',
 }
 
 SUPPORTED_OPERATING_SYSTEMS = [
