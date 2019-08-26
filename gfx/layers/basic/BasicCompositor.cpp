@@ -887,7 +887,7 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
 }
 
 void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const IntRect* aClipRectIn,
+                                 const Maybe<IntRect>& aClipRect,
                                  const IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
                                  NativeLayer* aNativeLayer,
@@ -1036,17 +1036,13 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = rect;
   }
 
-  if (aClipRectIn) {
-    mRenderTarget->mDrawTarget->PushClipRect(Rect(*aClipRectIn));
-  } else {
-    mRenderTarget->mDrawTarget->PushClipRect(Rect(rect));
-  }
+  mRenderTarget->mDrawTarget->PushClipRect(Rect(aClipRect.valueOr(rect)));
 }
 
 void BasicCompositor::EndFrame() {
   Compositor::EndFrame();
 
-  // Pop aClipRectIn/bounds rect
+  // Pop aClipRect/bounds rect
   mRenderTarget->mDrawTarget->PopClip();
 
   if (StaticPrefs::nglayout_debug_widget_update_flashing()) {

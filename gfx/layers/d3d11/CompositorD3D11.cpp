@@ -1095,7 +1095,7 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
 }
 
 void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const IntRect* aClipRectIn,
+                                 const Maybe<IntRect>& aClipRect,
                                  const IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
                                  NativeLayer* aNativeLayer,
@@ -1148,8 +1148,8 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   IntRect invalidRect = invalidRegionSafe.GetBounds();
 
   IntRect clipRect = invalidRect;
-  if (aClipRectIn) {
-    clipRect.IntersectRect(clipRect, *aClipRectIn);
+  if (aClipRect) {
+    clipRect.IntersectRect(clipRect, *aClipRect);
   }
 
   if (clipRect.IsEmpty()) {
