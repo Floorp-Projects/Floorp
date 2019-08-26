@@ -4725,7 +4725,8 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
     }
   } else if (&blockType == nsGkAtoms::normal ||
              &blockType == nsGkAtoms::_empty) {
-    rv = RemoveBlockStyle(arrayOfNodes);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .RemoveBlockContainerElements(arrayOfNodes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8773,9 +8774,9 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::RemoveBlockStyle(
+nsresult HTMLEditor::RemoveBlockContainerElements(
     nsTArray<OwningNonNull<nsINode>>& aNodeArray) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Intent of this routine is to be used for converting to/from headers,
   // paragraphs, pre, and address.  Those blocks that pretty much just contain
@@ -8788,22 +8789,20 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Process any partial progress saved
       if (curBlock) {
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                    *curBlock, *firstNode, *lastNode);
+            SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
       }
-      if (!HTMLEditorRef().IsEditable(curNode)) {
+      if (!IsEditable(curNode)) {
         continue;
       }
       // Remove current block
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .RemoveBlockContainerWithTransaction(
-                            MOZ_KnownLive(*curNode->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      nsresult rv = RemoveBlockContainerWithTransaction(
+          MOZ_KnownLive(*curNode->AsElement()));
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8820,21 +8819,20 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Process any partial progress saved
       if (curBlock) {
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                    *curBlock, *firstNode, *lastNode);
+            SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
       }
-      if (!HTMLEditorRef().IsEditable(curNode)) {
+      if (!IsEditable(curNode)) {
         continue;
       }
       // Recursion time
       AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
       HTMLEditor::GetChildNodesOf(*curNode, childNodes);
-      nsresult rv = RemoveBlockStyle(childNodes);
+      nsresult rv = RemoveBlockContainerElements(childNodes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8853,18 +8851,17 @@ nsresult HTMLEditRules::RemoveBlockStyle(
         // handle it now.  We need to remove the portion of curBlock that
         // contains [firstNode - lastNode].
         SplitRangeOffFromNodeResult removeMiddleContainerResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                    *curBlock, *firstNode, *lastNode);
+            SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                *curBlock, *firstNode, *lastNode);
         if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
           return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
         // Fall out and handle curNode
       }
-      curBlock = HTMLEditorRef().GetBlockNodeParent(curNode);
+      curBlock = GetBlockNodeParent(curNode);
       if (!curBlock || !HTMLEditUtils::IsFormatNode(curBlock) ||
-          !HTMLEditorRef().IsEditable(curBlock)) {
+          !IsEditable(curBlock)) {
         // Not a block kind that we care about.
         curBlock = nullptr;
       } else {
@@ -8877,9 +8874,8 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       // Some node that is already sans block style.  Skip over it and process
       // any partial progress saved.
       SplitRangeOffFromNodeResult removeMiddleContainerResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                  *curBlock, *firstNode, *lastNode);
+          SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock, *firstNode,
+                                                         *lastNode);
       if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
         return removeMiddleContainerResult.Rv();
       }
@@ -8890,9 +8886,8 @@ nsresult HTMLEditRules::RemoveBlockStyle(
   // Process any partial progress saved
   if (curBlock) {
     SplitRangeOffFromNodeResult removeMiddleContainerResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SplitRangeOffFromBlockAndRemoveMiddleContainer(
-                *curBlock, *firstNode, *lastNode);
+        SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock, *firstNode,
+                                                       *lastNode);
     if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
       return removeMiddleContainerResult.Rv();
     }
