@@ -122,6 +122,9 @@ class WebPlatformTestsCreator(Creator):
     template_body_reftest_wait = """<script src="/common/reftest-wait.js"></script>
 """
 
+    template_js = ""
+    template_js_long_timeout = "//META: timeout=long\n"
+
     upstream_path = os.path.join("testing", "web-platform", "tests")
     local_path = os.path.join("testing", "web-platform", "mozilla", "tests")
 
@@ -177,21 +180,27 @@ testing/web-platform/mozilla/tests for Gecko-only tests""" % self.test)
         args = {"documentElement": "<html class=reftest-wait>\n"
                 if self.kwargs["wait"] else ""}
 
-        template = self.template_prefix % args
-        if self.kwargs["long_timeout"]:
-            template += self.template_long_timeout
-
-        if self.reftest:
-            if not reference:
-                args = {"match": "match" if not self.kwargs["mismatch"] else "mismatch",
-                        "ref": self.ref_url(self.kwargs["ref"]) if self.kwargs["ref"] else '""'}
-                template += self.template_body_reftest % args
-                if self.kwargs["wait"]:
-                    template += self.template_body_reftest_wait
-            else:
-                template += "<title></title>"
+        if self.test.rsplit(".", 1)[1] == "js":
+            template = self.template_js
+            if self.kwargs["long_timeout"]:
+                template += self.template_js_long_timeout
         else:
-            template += self.template_body_th
+            template = self.template_prefix % args
+            if self.kwargs["long_timeout"]:
+                template += self.template_long_timeout
+
+            if self.reftest:
+                if not reference:
+                    args = {"match": "match" if not self.kwargs["mismatch"] else "mismatch",
+                            "ref": (self.ref_url(self.kwargs["ref"])
+                                    if self.kwargs["ref"] else '""')}
+                    template += self.template_body_reftest % args
+                    if self.kwargs["wait"]:
+                        template += self.template_body_reftest_wait
+                else:
+                    template += "<title></title>"
+            else:
+                template += self.template_body_th
 
         return template
 
