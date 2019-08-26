@@ -12,6 +12,7 @@
 #include "mozilla/Tuple.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/LocationBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
@@ -466,23 +467,22 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
    * process. It forwards all operations to its BrowsingContext and aggregates
    * its refcount to that BrowsingContext.
    */
-  class LocationProxy {
+  class LocationProxy final : public LocationBase {
    public:
     MozExternalRefCountType AddRef() { return GetBrowsingContext()->AddRef(); }
     MozExternalRefCountType Release() {
       return GetBrowsingContext()->Release();
     }
 
-    void SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aError);
-    void Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aError);
-
-   private:
+   protected:
     friend class RemoteLocationProxy;
-    BrowsingContext* GetBrowsingContext() {
+    BrowsingContext* GetBrowsingContext() override {
       return reinterpret_cast<BrowsingContext*>(
           uintptr_t(this) - offsetof(BrowsingContext, mLocation));
+    }
+
+    already_AddRefed<nsIDocShell> GetDocShell() override {
+      return nullptr;
     }
   };
 
