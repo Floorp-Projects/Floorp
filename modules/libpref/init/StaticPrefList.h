@@ -2013,7 +2013,7 @@ VARCACHE_PREF(
   Live,
   "dom.script_loader.external_scripts.utf8_parsing.enabled",
   dom_script_loader_external_scripts_utf8_parsing_enabled,
-  bool, true
+  bool, NOT_IN_RELEASE_OR_BETA_VALUE
 )
 
 #ifdef NIGHTLY_BUILD
@@ -2550,7 +2550,7 @@ VARCACHE_PREF(
   Live,
   "dom.worker.script_loader.utf8_parsing.enabled",
   dom_worker_script_loader_utf8_parsing_enabled,
-  RelaxedAtomicBool, true
+  RelaxedAtomicBool, NOT_IN_RELEASE_OR_BETA_VALUE
 )
 
 VARCACHE_PREF(
