@@ -109,15 +109,14 @@ def write_scalar_tables(scalars, output):
 
 
 def parse_scalar_definitions(filenames):
-    scalars = []
-    for filename in filenames:
-        try:
-            batch = parse_scalars.load_scalars(filename)
-            scalars.extend(batch)
-        except ParserError as ex:
-            print("\nError processing %s:\n%s\n" % (filename, str(ex)), file=sys.stderr)
-            sys.exit(1)
-    return scalars
+    if len(filenames) > 1:
+        raise Exception('We don\'t support loading from more than one file.')
+
+    try:
+        return parse_scalars.load_scalars(filenames[0])
+    except ParserError as ex:
+        print("\nError processing scalars:\n" + str(ex) + "\n")
+        sys.exit(1)
 
 
 def generate_JSON_definitions(output, *filenames):

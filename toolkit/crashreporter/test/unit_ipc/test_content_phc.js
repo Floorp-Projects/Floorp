@@ -23,8 +23,9 @@ function run_test() {
       Assert.equal(extra.PHCUsableSize, 32);
 
       // These are strings holding comma-separated lists of decimal addresses.
-      Assert.ok(/^(\d+,)+\d+$/.test(extra.PHCAllocStack));
-      Assert.ok(/^(\d+,)+\d+$/.test(extra.PHCFreeStack));
+      // Sometimes on Mac they have a single entry.
+      Assert.ok(/^(\d+,)*\d+$/.test(extra.PHCAllocStack));
+      Assert.ok(/^(\d+,)*\d+$/.test(extra.PHCFreeStack));
     }
   );
 }

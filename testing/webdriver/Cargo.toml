@@ -11,7 +11,7 @@ license = "MPL-2.0"
 
 [dependencies]
 base64 = "0.10"
-cookie = { version = "0.11", default-features = false }
+cookie = { version = "0.12", default-features = false }
 http = "0.1"
 log = "0.4"
 regex = "1.0"

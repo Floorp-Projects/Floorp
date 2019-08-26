@@ -361,7 +361,9 @@ nsChildView::~nsChildView() {
   NS_WARNING_ASSERTION(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    mNativeLayerRoot->RemoveLayer(mContentLayer);  // safe if already removed
+    if (mContentLayer) {
+      mNativeLayerRoot->RemoveLayer(mContentLayer);  // safe if already removed
+    }
   }
 
   DestroyCompositor();
@@ -425,9 +427,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     mNativeLayerRoot = NativeLayerRootCA::CreateForCALayer([mView rootCALayer]);
     mNativeLayerRoot->SetBackingScale(scaleFactor);
-    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer();
-    mNativeLayerRoot->AppendLayer(contentLayer);
-    mContentLayer = contentLayer->AsNativeLayerCA();
   }
 
   // If this view was created in a Gecko view hierarchy, the initial state
@@ -1299,6 +1298,7 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    EnsureContentLayerForMainThreadPainting();
     mContentLayer->InvalidateRegionThroughoutSwapchain(aRect.ToUnknownRect());
     [mView markLayerForDisplay];
   } else {
@@ -1502,7 +1502,19 @@ bool nsChildView::PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
   return result;
 }
 
+void nsChildView::EnsureContentLayerForMainThreadPainting() {
+  if (!mContentLayer) {
+    // The content layer gets created on demand for BasicLayers windows. We do
+    // not create it during widget creation because, for non-BasicLayers windows,
+    // the compositing layer manager will create any layers it needs.
+    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer();
+    mNativeLayerRoot->AppendLayer(contentLayer);
+    mContentLayer = contentLayer->AsNativeLayerCA();
+  }
+}
+
 void nsChildView::PaintWindowInContentLayer() {
+  EnsureContentLayerForMainThreadPainting();
   mContentLayer->SetRect(GetBounds().ToUnknownRect());
   {
     auto opaqueRegion = mOpaqueRegion.Lock();
@@ -1528,13 +1540,13 @@ void nsChildView::HandleMainThreadCATransaction() {
     PaintWindowInContentLayer();
   } else {
     // Trigger a synchronous OMTC composite. This will call NextSurface and
-    // NotifySurfaceReady on the compositor thread to update mContentLayer's
-    // surface, and the main thread (this thread) will wait inside PaintWindow
+    // NotifySurfaceReady on the compositor thread to update mNativeLayerRoot's
+    // contents, and the main thread (this thread) will wait inside PaintWindow
     // during that time.
     PaintWindow(LayoutDeviceIntRegion(GetBounds()));
   }
 
-  // Apply the changes from mContentLayer to its underlying CALayer. Now is a
+  // Apply the changes inside mNativeLayerRoot to the underlying CALayers. Now is a
   // good time to call this because we know we're currently inside a main thread
   // CATransaction.
   {
@@ -1588,6 +1600,11 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset() {
   return CocoaPointsToDevPixels(origin);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
+}
+
+LayoutDeviceIntRegion nsChildView::GetOpaqueWidgetRegion() {
+  auto opaqueRegion = mOpaqueRegion.Lock();
+  return *opaqueRegion;
 }
 
 nsresult nsChildView::SetTitle(const nsAString& title) {
@@ -1980,61 +1997,11 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
   return true;
 }
 
-class SurfaceRegistryWrapperAroundGLContextCGL : public layers::IOSurfaceRegistry {
- public:
-  explicit SurfaceRegistryWrapperAroundGLContextCGL(gl::GLContextCGL* aContext)
-      : mContext(aContext) {}
-  void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mContext->RegisterIOSurface(aSurface.get());
-  }
-  void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mContext->UnregisterIOSurface(aSurface.get());
-  }
-  RefPtr<gl::GLContextCGL> mContext;
-};
-
 bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
   UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   gl::GLContext* gl = manager ? manager->gl() : aContext->mGL;
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    if (gl) {
-      auto glContextCGL = GLContextCGL::Cast(gl);
-      mContentLayer->SetRect(GetBounds().ToUnknownRect());
-      {
-        auto opaqueRegion = mOpaqueRegion.Lock();
-        mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
-      }
-      mContentLayer->SetSurfaceIsFlipped(true);
-      RefPtr<layers::IOSurfaceRegistry> currentRegistry = mContentLayer->GetSurfaceRegistry();
-      if (!currentRegistry) {
-        mContentLayer->SetSurfaceRegistry(
-            MakeAndAddRef<SurfaceRegistryWrapperAroundGLContextCGL>(glContextCGL));
-      } else {
-        MOZ_RELEASE_ASSERT(
-            static_cast<SurfaceRegistryWrapperAroundGLContextCGL*>(currentRegistry.get())
-                ->mContext == glContextCGL);
-      }
-      CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
-      if (!surf) {
-        return false;
-      }
-      glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
-      return true;
-    }
-    // We're using BasicCompositor.
-    MOZ_RELEASE_ASSERT(!mBasicCompositorIOSurface);
-    mContentLayer->SetRect(GetBounds().ToUnknownRect());
-    {
-      auto opaqueRegion = mOpaqueRegion.Lock();
-      mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
-    }
-    mContentLayer->SetSurfaceIsFlipped(false);
-    CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
-    if (!surf) {
-      return false;
-    }
-    mBasicCompositorIOSurface = new MacIOSurface(std::move(surf));
     return true;
   }
 
@@ -2056,8 +2023,6 @@ bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
 
 void nsChildView::PostRender(WidgetRenderingContext* aContext) {
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    mContentLayer->NotifySurfaceReady();
-
     auto compositingState = mCompositingState.Lock();
     if (compositingState->mAsyncCATransactionsSuspended) {
       // We should not trigger a CATransactions on this thread. Instead, let the
@@ -2080,11 +2045,7 @@ void nsChildView::PostRender(WidgetRenderingContext* aContext) {
   mViewTearDownLock.Unlock();
 }
 
-void nsChildView::DoCompositorCleanup() {
-  if (mContentLayer) {
-    mContentLayer->SetSurfaceRegistry(nullptr);
-  }
-}
+RefPtr<layers::NativeLayerRoot> nsChildView::GetNativeLayerRoot() { return mNativeLayerRoot; }
 
 void nsChildView::DrawWindowOverlay(WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
   mozilla::UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
@@ -2605,18 +2566,9 @@ void nsChildView::UpdateBoundsFromView() {
 
 already_AddRefed<gfx::DrawTarget> nsChildView::StartRemoteDrawingInRegion(
     LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {
-  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    MOZ_RELEASE_ASSERT(mBasicCompositorIOSurface,
-                       "Should have been set up by nsChildView::PreRender");
-
-    mContentLayer->InvalidateRegionThroughoutSwapchain(aInvalidRegion.ToUnknownRegion());
-    aInvalidRegion =
-        LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion());
-    *aBufferMode = BufferMode::BUFFER_NONE;
-    mBasicCompositorIOSurface->Lock(false);
-    return mBasicCompositorIOSurface->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
-  }
-
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup(),
+                     "Not expecting calls to StartRemoteDrawingInRegion when using CoreAnimation "
+                     "because we return something non-null from GetNativeLayerRoot()");
   MOZ_RELEASE_ASSERT(mGLPresenter);
 
   LayoutDeviceIntRegion dirtyRegion(aInvalidRegion);
@@ -2638,18 +2590,12 @@ already_AddRefed<gfx::DrawTarget> nsChildView::StartRemoteDrawingInRegion(
 }
 
 void nsChildView::EndRemoteDrawing() {
-  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
-    MOZ_RELEASE_ASSERT(mBasicCompositorIOSurface);
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup(),
+                     "Not expecting calls to EndRemoteDrawing when using CoreAnimation "
+                     "because we return something non-null from GetNativeLayerRoot()");
 
-    // The DrawTarget we returned from StartRemoteDrawingInRegion, which
-    // referred to pixels in mBasicCompositorIOSurface, is no longer in use.
-    // We can unlock the surface and release our reference to it.
-    mBasicCompositorIOSurface->Unlock(false);
-    mBasicCompositorIOSurface = nullptr;
-  } else {
-    mBasicCompositorImage->EndUpdate();
-    DoRemoteComposition(mBounds);
-  }
+  mBasicCompositorImage->EndUpdate();
+  DoRemoteComposition(mBounds);
 }
 
 void nsChildView::CleanupRemoteDrawing() {
@@ -2695,6 +2641,25 @@ void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
 }
 - (NSView*)hitTest:(NSPoint)aPoint {
   return nil;
+}
+- (NSRect)_opaqueRectForWindowMoveWhenInTitlebar {
+  // In NSWindows that use NSFullSizeContentViewWindowMask, NSViews which
+  // overlap the titlebar do not disable window dragging in the overlapping
+  // areas even if they return NO from mouseDownCanMoveWindow. This can have
+  // unfortunate effects: For example, dragging tabs in a browser window would
+  // move the window if those tabs are in the titlebar.
+  // macOS does not seem to offer a documented way to opt-out of the forced
+  // window dragging in the titlebar.
+  // Overriding _opaqueRectForWindowMoveWhenInTitlebar is an undocumented way
+  // of opting out of this behavior. This method was added in 10.11 and is used
+  // by some NSControl subclasses to prevent window dragging in the titlebar.
+  // The function which assembles the draggable area of the window calls
+  // _opaqueRect for the content area and _opaqueRectForWindowMoveWhenInTitlebar
+  // for the titlebar area, on all visible NSViews. The default implementation
+  // of _opaqueRect returns [self visibleRect], and the default implementation
+  // of _opaqueRectForWindowMoveWhenInTitlebar returns NSZeroRect unless it's
+  // overridden.
+  return [self visibleRect];
 }
 @end
 

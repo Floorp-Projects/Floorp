@@ -111,9 +111,6 @@ devtools/client/shared/components/reps/
 
 # Ignore devtools preferences files
 devtools/client/preferences/
-devtools/client/webide/preferences/
-devtools/shared/preferences/
-devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools generated code
 devtools/shared/css/generated/properties-db.js
