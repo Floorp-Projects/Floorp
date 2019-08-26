@@ -986,18 +986,12 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   }
 
   IntRect actualBounds;
-  IntRect clipRect;
-  if (mRoot->GetClipRect()) {
-    clipRect = mRoot->GetClipRect()->ToUnknownRect();
-    mCompositor->BeginFrame(aInvalidRegion, &clipRect, mRenderBounds,
-                            aOpaqueRegion, mNativeLayerForEntireWindow,
-                            &actualBounds);
-  } else {
-    mCompositor->BeginFrame(aInvalidRegion, nullptr, mRenderBounds,
-                            aOpaqueRegion, mNativeLayerForEntireWindow,
-                            &actualBounds);
-    clipRect = actualBounds;
-  }
+  Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
+      [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
+  mCompositor->BeginFrame(
+      aInvalidRegion, rootLayerClip ? &*rootLayerClip : nullptr, mRenderBounds,
+      aOpaqueRegion, mNativeLayerForEntireWindow, &actualBounds);
+  IntRect clipRect = rootLayerClip.valueOr(actualBounds);
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
   ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
