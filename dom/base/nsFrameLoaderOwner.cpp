@@ -12,6 +12,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
@@ -90,7 +91,22 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     return;
   }
 
-  if (aOptions.mPendingSwitchID.WasPassed()) {
+  if (aOptions.mError.WasPassed()) {
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), "about:blank");
+    if (NS_WARN_IF(rv.Failed())) {
+      return;
+    }
+
+    nsDocShell* docShell = mFrameLoader->GetDocShell(rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return;
+    }
+    bool displayed = false;
+    docShell->DisplayLoadError(static_cast<nsresult>(aOptions.mError.Value()),
+                               uri, u"about:blank", nullptr, &displayed);
+
+  } else if (aOptions.mPendingSwitchID.WasPassed()) {
     mFrameLoader->ResumeLoad(aOptions.mPendingSwitchID.Value());
   } else {
     mFrameLoader->LoadFrame(false);

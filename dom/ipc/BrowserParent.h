@@ -826,6 +826,8 @@ class BrowserParent final : public PBrowserParent,
 
   static void PopFocus(BrowserParent* aBrowserParent);
 
+  void OnSubFrameCrashed();
+
  public:
   static void PopFocusAll();
 

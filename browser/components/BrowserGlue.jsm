@@ -128,18 +128,6 @@ let ACTORS = {
 
     allFrames: true,
   },
-
-  SubframeCrash: {
-    parent: {
-      moduleURI: "resource:///actors/SubframeCrashParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource:///actors/SubframeCrashChild.jsm",
-    },
-
-    allFrames: true,
-  },
 };
 
 let LEGACY_ACTORS = {

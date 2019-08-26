@@ -46,8 +46,6 @@ FINAL_TARGET_FILES.actors += [
     'PromptParent.jsm',
     'RFPHelperChild.jsm',
     'SearchTelemetryChild.jsm',
-    'SubframeCrashChild.jsm',
-    'SubframeCrashParent.jsm',
     'SwitchDocumentDirectionChild.jsm',
     'URIFixupChild.jsm',
     'WebRTCChild.jsm',
