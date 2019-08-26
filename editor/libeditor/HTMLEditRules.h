@@ -428,8 +428,9 @@ class HTMLEditRules : public TextEditRules {
    *                            RemoveBlockContainerElements() will be called.
    *                            If nsGkAtoms::blockquote,
    *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.  Otherwise, ApplyBlockStyle() will
-   *                            be called.
+   *                            called.  Otherwise,
+   *                            CreateOrChangeBlockContainerElement() will be
+   *                            called.
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MakeBasicBlock(nsAtom& aBlockType);
@@ -754,26 +755,6 @@ class HTMLEditRules : public TextEditRules {
    */
   void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);
-
-  /**
-   * ApplyBlockStyle() formats all nodes in aNodeArray with block elements
-   * whose name is aBlockTag.
-   * If aNodeArray has an inline element, a block element is created and the
-   * inline element and following inline elements are moved into the new block
-   * element.
-   * If aNodeArray has <br> elements, they'll be removed from the DOM tree and
-   * new block element will be created when there are some remaining inline
-   * elements.
-   * If aNodeArray has a block element, this calls itself with children of
-   * the block element.  Then, new block element will be created when there
-   * are some remaining inline elements.
-   *
-   * @param aNodeArray      Must be descendants of a node.
-   * @param aBlockTag       The element name of new block elements.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult ApplyBlockStyle(
-      nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
