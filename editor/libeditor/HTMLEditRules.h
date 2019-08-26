@@ -426,9 +426,10 @@ class HTMLEditRules : public TextEditRules {
    * @param aBlockType          New block tag name.
    *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
    *                            RemoveBlockStyle() will be called.
-   *                            If nsGkAtoms::blockquote, MakeBlockquote()
-   *                            will be called.
-   *                            Otherwise, ApplyBlockStyle() will be called.
+   *                            If nsGkAtoms::blockquote,
+   *                            MoveNodesIntoNewBlockquoteElement() will be
+   *                            called.  Otherwise, ApplyBlockStyle() will
+   *                            be called.
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MakeBasicBlock(nsAtom& aBlockType);
@@ -821,19 +822,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult ApplyBlockStyle(
       nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
-
-  /**
-   * MakeBlockquote() inserts at least one <blockquote> element and moves
-   * nodes in aNodeArray into new <blockquote> elements.  If aNodeArray
-   * includes a table related element except <table>, this calls itself
-   * recursively to insert <blockquote> into the cell.
-   *
-   * @param aNodeArray          Nodes which will be moved into created
-   *                            <blockquote> elements.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult
-  MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which

@@ -4718,7 +4718,8 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
   // whatever is approriate.  Woohoo!  Note: blockquote is handled a little
   // differently.
   if (&blockType == nsGkAtoms::blockquote) {
-    rv = MakeBlockquote(arrayOfNodes);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .MoveNodesIntoNewBlockquoteElement(arrayOfNodes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8697,9 +8698,9 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeBlockquote(
+nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
     nsTArray<OwningNonNull<nsINode>>& aNodeArray) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // The idea here is to put the nodes into a minimal number of blockquotes.
   // When the user blockquotes something, they expect one blockquote.  That
@@ -8722,7 +8723,7 @@ nsresult HTMLEditRules::MakeBlockquote(
       // Recursion time
       AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
       HTMLEditor::GetChildNodesOf(*curNode, childNodes);
-      nsresult rv = MakeBlockquote(childNodes);
+      nsresult rv = MoveNodesIntoNewBlockquoteElement(childNodes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8743,31 +8744,30 @@ nsresult HTMLEditRules::MakeBlockquote(
     // If no curBlock, make one
     if (!curBlock) {
       SplitNodeResult splitNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeSplitAncestorsForInsertWithTransaction(
-                  *nsGkAtoms::blockquote, EditorDOMPoint(curNode));
+          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                      EditorDOMPoint(curNode));
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
-      curBlock = MOZ_KnownLive(HTMLEditorRef())
-                     .CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                                splitNodeResult.SplitPoint());
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      // XXX Perhaps, we should insert the new `<blockquote>` element after
+      //     moving all nodes into it since the movement does not cause
+      //     running mutation event listeners.
+      curBlock = CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                           splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!curBlock)) {
         return NS_ERROR_FAILURE;
       }
       // remember our new block for postprocessing
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-          curBlock;
+      TopLevelEditSubActionDataRef().mNewBlockElement = curBlock;
       // note: doesn't matter if we set mNewBlockElement multiple times.
     }
 
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MoveNodeToEndWithTransaction(
-                          MOZ_KnownLive(*curNode->AsContent()), *curBlock);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    nsresult rv = MoveNodeToEndWithTransaction(
+        MOZ_KnownLive(*curNode->AsContent()), *curBlock);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
