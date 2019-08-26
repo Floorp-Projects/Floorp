@@ -12,6 +12,7 @@
 #define mozilla_dom_ScriptLoadHandler_h
 
 #include "nsIIncrementalStreamLoader.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace dom {
@@ -97,6 +98,9 @@ class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
 
   // Unicode decoder for charset.
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
+
+  // Used to compute the DOM_SCRIPT_LOAD_INCREMENTAL_AVG_TRANSFER_RATE telemetry.
+  TimeStamp mFirstOnIncrementalData;
 };
 
 }  // namespace dom
