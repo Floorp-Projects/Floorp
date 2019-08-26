@@ -74,11 +74,11 @@
         },
         "awscli": {
             "hashes": [
-                "sha256:07d6651259438aa3f0a5efdaac2a333443bae43c6e2470f1aee1ebde9bf2888c",
-                "sha256:ed36aab89b8b70dce0bf8e6ade87b0d1a53d8cc44976d1a150f1f3cd3ad975a1"
+                "sha256:823f8e751a80f7f03e73ea6695f9b1cfdabc8274b7f935868f91519ed99697ab",
+                "sha256:e0859f6816687554084593e789bd95a505a740c39fc7053502deb4fece75c8f4"
             ],
             "index": "pypi",
-            "version": "==1.16.220"
+            "version": "==1.16.225"
         },
         "backports.lzma": {
             "hashes": [
@@ -88,10 +88,10 @@
         },
         "botocore": {
             "hashes": [
-                "sha256:0db52327f8d2891cca4c86dfc5cb3b4821d37b84c34804c26b82e775668490f5",
-                "sha256:7983b7624b3f71648a7101fbcb437e3d599b4f79b754e89220e574482a2f8298"
+                "sha256:786573c94cd3ea1ec58de0102f0924c24bf23d6dfcd5232714c27807a59f6a2d",
+                "sha256:ae74ede86f5fd3e3c5cb63f066c9dbb21df12af79ceeb068e1bcb04b076dbb78"
             ],
-            "version": "==1.12.210"
+            "version": "==1.12.215"
         },
         "certifi": {
             "hashes": [
@@ -190,11 +190,11 @@
         },
         "docutils": {
             "hashes": [
-                "sha256:02aec4bd92ab067f6ff27a38a38a41173bf01bed8f89157768c1573f53e474a6",
-                "sha256:51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274",
-                "sha256:7a4bd47eaf6596e1295ecb11361139febe29b084a87bf005bf899f9a42edc3c6"
+                "sha256:6c4f696463b79f1fb8ba0c594b63840ebd41f059e92b31957c46b74a4599b6d0",
+                "sha256:9e4d7ecfc600058e07ba661411a2b7de2fd0fafa17d1a7f7361cd47b1175c827",
+                "sha256:a2aeea129088da402665e92e0b25b04b073c04b2dce4ab65caaa38b7ce2e1a99"
             ],
-            "version": "==0.14"
+            "version": "==0.15.2"
         },
         "frozendict": {
             "hashes": [
@@ -407,11 +407,11 @@
         },
         "taskcluster": {
             "hashes": [
-                "sha256:079c90de5ebb397816f46453ae5d529ee147c6efe49e69574e0885f29ecdc9c3",
-                "sha256:4bfde00e4edf81454ff1c2988df1f7f3c4df5527a2d0f70e098c56d576b2b2c9",
-                "sha256:b24701e7e43e19f2c82850b445ab00634bb08d4ae786f3f19f8970d7a8ffecd8"
+                "sha256:8242d215a03036c4c5ed3b6b3eed8324e09588c778347405bd7475274a159396",
+                "sha256:826953853e606a80f078250f2459de49f6b75bde89745184c1e5d4e012993e9e",
+                "sha256:c382b8edd78443e9c2c756c62bdec38a59833d6cf34313e430e044e1e3a25da9"
             ],
-            "version": "==16.1.0"
+            "version": "==16.2.0"
         },
         "taskcluster-urls": {
             "hashes": [
