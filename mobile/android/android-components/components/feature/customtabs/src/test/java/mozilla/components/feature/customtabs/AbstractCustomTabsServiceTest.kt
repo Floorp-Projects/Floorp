@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.customtabs
 
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
@@ -31,6 +32,8 @@ class AbstractCustomTabsServiceTest {
         val customTabsService = object : AbstractCustomTabsService() {
             override val engine: Engine
                 get() = mock()
+
+            override fun getPackageManager(): PackageManager = mock()
         }
 
         val customTabsServiceStub = customTabsService.onBind(mock())

@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.annotation.ColorInt
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsSessionToken
 
 /**
  * Holds configuration data for a Custom Tab.
@@ -22,22 +23,25 @@ import androidx.browser.customtabs.CustomTabsIntent
  * @property exitAnimations Bundle containing custom exit animations for the tab.
  * @property navigationBarColor Background color for the navigation bar.
  * @property titleVisible Whether the title should be shown in the custom tab.
+ * @property sessionToken The token associated with the custom tab.
  */
 data class CustomTabConfig(
     val id: String,
     @ColorInt val toolbarColor: Int?,
-    val closeButtonIcon: Bitmap?,
-    val enableUrlbarHiding: Boolean,
-    val actionButtonConfig: CustomTabActionButtonConfig?,
-    val showShareMenuItem: Boolean,
+    val closeButtonIcon: Bitmap? = null,
+    val enableUrlbarHiding: Boolean = false,
+    val actionButtonConfig: CustomTabActionButtonConfig? = null,
+    val showShareMenuItem: Boolean = false,
     val menuItems: List<CustomTabMenuItem> = emptyList(),
     val exitAnimations: Bundle? = null,
     @ColorInt val navigationBarColor: Int? = null,
-    val titleVisible: Boolean = false
+    val titleVisible: Boolean = false,
+    val sessionToken: CustomTabsSessionToken? = null
 ) {
 
     companion object {
         const val EXTRA_NAVIGATION_BAR_COLOR = "androidx.browser.customtabs.extra.NAVIGATION_BAR_COLOR"
+        const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS = "android.support.customtabs.extra.ADDITIONAL_TRUSTED_ORIGINS"
     }
 }
 

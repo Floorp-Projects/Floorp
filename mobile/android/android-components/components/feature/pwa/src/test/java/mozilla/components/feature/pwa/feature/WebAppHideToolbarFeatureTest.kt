@@ -9,14 +9,13 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.never
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -39,9 +38,6 @@ class WebAppHideToolbarFeatureTest {
         val session: Session = mock()
         `when`(sessionManager.findSessionById("id")).thenReturn(session)
 
-        WebAppHideToolbarFeature(sessionManager, mock(), "id", emptyList()).start()
-        verify(session, never()).register(any())
-
         val feature = WebAppHideToolbarFeature(sessionManager, mock(), "id", listOf(mock()))
 
         feature.start()
@@ -52,7 +48,7 @@ class WebAppHideToolbarFeatureTest {
     }
 
     @Test
-    fun `hides toolbar if URL is in origin`() {
+    fun `onUrlChanged hides toolbar if URL is in origin`() {
         val trusted = listOf("https://mozilla.com".toUri(), "https://m.mozilla.com".toUri())
         val toolbar = View(testContext)
         val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
@@ -71,7 +67,7 @@ class WebAppHideToolbarFeatureTest {
     }
 
     @Test
-    fun `hides toolbar if URL is in scope`() {
+    fun `onUrlChanged hides toolbar if URL is in scope`() {
         val trusted = listOf("https://mozilla.github.io/my-app/".toUri())
         val toolbar = View(testContext)
         val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
@@ -90,7 +86,7 @@ class WebAppHideToolbarFeatureTest {
     }
 
     @Test
-    fun `hides toolbar if URL is in ambiguous scope`() {
+    fun `onUrlChanged hides toolbar if URL is in ambiguous scope`() {
         val trusted = listOf("https://mozilla.github.io/prefix".toUri())
         val toolbar = View(testContext)
         val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
@@ -99,6 +95,63 @@ class WebAppHideToolbarFeatureTest {
         assertEquals(View.GONE, toolbar.visibility)
 
         feature.onUrlChanged(mock(), "https://mozilla.github.io/prefix-of/resource.html")
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+
+    @Test
+    fun `onTrustedScopesChange hides toolbar if URL is in origin`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val trusted = listOf("https://mozilla.com".toUri(), "https://m.mozilla.com".toUri())
+        val toolbar = View(testContext)
+        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
+
+        doReturn(session).`when`(sessionManager).findSessionById("id")
+        doReturn("https://mozilla.com/example-page").`when`(session).url
+
+        feature.onTrustedScopesChange(listOf("https://m.mozilla.com".toUri()))
+        assertEquals(View.VISIBLE, toolbar.visibility)
+
+        feature.onTrustedScopesChange(listOf("https://mozilla.com".toUri()))
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+
+    @Test
+    fun `onTrustedScopesChange hides toolbar if URL is in scope`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val trusted = listOf("https://mozilla.github.io/my-app/".toUri())
+        val toolbar = View(testContext)
+        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
+
+        doReturn(session).`when`(sessionManager).findSessionById("id")
+        doReturn("https://mozilla.github.io/my-app/").`when`(session).url
+
+        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/my-app/".toUri()))
+        assertEquals(View.GONE, toolbar.visibility)
+
+        feature.onTrustedScopesChange(listOf("https://firefox.com/out-of-scope/".toUri()))
+        assertEquals(View.VISIBLE, toolbar.visibility)
+
+        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/my-app-almost-in-scope".toUri()))
+        assertEquals(View.VISIBLE, toolbar.visibility)
+    }
+
+    @Test
+    fun `onTrustedScopesChange hides toolbar if URL is in ambiguous scope`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val trusted = listOf("https://mozilla.github.io/prefix".toUri())
+        val toolbar = View(testContext)
+        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
+
+        doReturn(session).`when`(sessionManager).findSessionById("id")
+        doReturn("https://mozilla.github.io/prefix-of/resource.html").`when`(session).url
+
+        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/prefix".toUri()))
+        assertEquals(View.GONE, toolbar.visibility)
+
+        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/prefix-of/".toUri()))
         assertEquals(View.GONE, toolbar.visibility)
     }
 }
