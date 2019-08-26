@@ -10,7 +10,7 @@ Array [
       id="serviceworker-list-header"
     >
       <h1
-        className="application--title"
+        className="app-page__title"
       />
     </Localized>
     <ul>
@@ -56,7 +56,7 @@ Array [
       id="serviceworker-list-header"
     >
       <h1
-        className="application--title"
+        className="app-page__title"
       />
     </Localized>
     <ul>

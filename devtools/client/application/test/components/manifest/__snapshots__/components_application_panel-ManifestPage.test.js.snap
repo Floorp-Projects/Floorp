@@ -6,22 +6,7 @@ exports[`ManifestPage renders the expected snapshot 1`] = `
 >
   <Connect(ManifestLoader) />
   <Manifest
-    icons={
-      Array [
-        Object {
-          "key": "16x16",
-          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-        Object {
-          "key": "32x32",
-          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-        Object {
-          "key": "64x64",
-          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-      ]
-    }
+    icons={Array []}
     identity={
       Array [
         Object {
