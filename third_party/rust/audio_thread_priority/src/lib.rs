@@ -163,14 +163,15 @@ pub extern "C" fn atp_free_handle(handle: *mut atp_handle) -> i32 {
     0
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[cfg(feature = "terminal-logging")]
     use simple_logger;
-    #[test]
+#[test]
     fn it_works() {
-        #[cfg(feature = "terminal-logging")]
+#[cfg(feature = "terminal-logging")]
         simple_logger::init().unwrap();
         {
             assert!(promote_current_thread_to_real_time(0, 0).is_err());
@@ -197,7 +198,7 @@ mod tests {
         }
         {
             match promote_current_thread_to_real_time(512, 44100) {
-                Ok(_) => {}
+                Ok(_) => { }
                 Err(e) => {
                     panic!(e);
                 }
