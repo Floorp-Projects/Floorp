@@ -157,14 +157,25 @@
         <div class="detail-row">
           <label class="detail-cell">
             <span class="origin-label field-label" data-l10n-id="login-item-origin-label"></span>
-            <input type="url" name="origin" class="origin-input" required data-l10n-id="login-item-origin" dir="auto"/>
+            <!-- Default text inputs to readonly to reduce jumping of the field
+                 size on page load since it always starts readonly. -->
+            <input type="url"
+                   name="origin"
+                   class="origin-input"
+                   required
+                   data-l10n-id="login-item-origin"
+                   dir="auto"
+                   readonly/>
           </label>
         </div>
         <div class="detail-row">
           <div class="detail-row-contents">
             <label class="detail-cell">
               <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
-              <input type="text" name="username" data-l10n-id="login-item-username"/>
+              <input type="text"
+                     name="username"
+                     data-l10n-id="login-item-username"
+                     readonly/>
             </label>
             <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
               <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
@@ -177,7 +188,10 @@
             <label class="detail-cell">
               <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
               <div class="reveal-password-wrapper">
-                <input type="password" name="password" required/>
+                <input type="password"
+                       name="password"
+                       required
+                       readonly/>
                 <input type="checkbox"
                        class="reveal-password-checkbox"
                        data-l10n-id="login-item-password-reveal-checkbox"/>
