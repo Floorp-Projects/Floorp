@@ -1398,6 +1398,12 @@
   value: false
   mirror: always
 
+# User interaction timer interval, in ms
+- name: dom.events.user_interaction_interval
+  type: uint32_t
+  value: 5000
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
@@ -3697,6 +3703,30 @@
 - name: javascript.options.experimental.await_fix
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
+- name: javascript.options.gc_delay
+  type: uint32_t
+  value: 4000
+  mirror: always
+
+# The amount of time we wait from the first request to GC to actually doing the first GC, in ms.
+- name: javascript.options.gc_delay.first
+  type: uint32_t
+  value: 10000
+  mirror: always
+
+# Duration of the dom events full gc delay, in ms.
+- name: javascript.options.gc_delay.full
+  type: uint32_t
+  value: 60000
+  mirror: always
+
+# Maximum amount of time that should elapse between incremental GC slices, in ms.
+- name: javascript.options.gc_delay.interslice
+  type: uint32_t
+  value: 100
   mirror: always
 
 # nsJSEnvironmentObserver observes the memory-pressure notifications and
