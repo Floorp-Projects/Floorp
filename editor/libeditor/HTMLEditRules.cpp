@@ -5828,7 +5828,8 @@ HTMLEditRules::SplitRangeOffFromBlockAndRemoveMiddleContainer(
   MOZ_ASSERT(IsEditorDataAvailable());
 
   SplitRangeOffFromNodeResult splitResult =
-      SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
   if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
     return splitResult;
   }
@@ -5846,10 +5847,10 @@ HTMLEditRules::SplitRangeOffFromBlockAndRemoveMiddleContainer(
                                      splitResult.GetRightContent());
 }
 
-SplitRangeOffFromNodeResult HTMLEditRules::SplitRangeOffFromBlock(
+SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
     Element& aBlockElement, nsIContent& aStartOfMiddleElement,
     nsIContent& aEndOfMiddleElement) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // aStartOfMiddleElement and aEndOfMiddleElement must be exclusive
   // descendants of aBlockElement.
@@ -5857,12 +5858,10 @@ SplitRangeOffFromNodeResult HTMLEditRules::SplitRangeOffFromBlock(
   MOZ_ASSERT(EditorUtils::IsDescendantOf(aEndOfMiddleElement, aBlockElement));
 
   // Split at the start.
-  SplitNodeResult splitAtStartResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
-              SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SplitNodeResult splitAtStartResult = SplitNodeDeepWithTransaction(
+      aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
+      SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtStartResult.Succeeded(),
@@ -5872,12 +5871,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::SplitRangeOffFromBlock(
   EditorDOMPoint atAfterEnd(&aEndOfMiddleElement);
   DebugOnly<bool> advanced = atAfterEnd.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced, "Failed to advance offset after the end node");
-  SplitNodeResult splitAtEndResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              aBlockElement, atAfterEnd,
-              SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SplitNodeResult splitAtEndResult = SplitNodeDeepWithTransaction(
+      aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtEndResult.Succeeded(),
@@ -5892,7 +5888,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
   MOZ_ASSERT(IsEditorDataAvailable());
 
   SplitRangeOffFromNodeResult splitResult =
-      SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent, aEndOfOutdent);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent,
+                                  aEndOfOutdent);
   if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }

@@ -45,6 +45,7 @@ class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
+class SplitRangeOffFromNodeResult;
 enum class EditSubAction : int32_t;
 struct PropItem;
 template <class T>
@@ -1615,6 +1616,20 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitNodeResult
   MaybeSplitAncestorsForInsertWithTransaction(
       nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode);
+
+  /**
+   * SplitRangeOffFromBlock() splits aBlockElement at two points, before
+   * aStartOfMiddleElement and after aEndOfMiddleElement.  If they are very
+   * start or very end of aBlcok, this won't create empty block.
+   *
+   * @param aBlockElement           A block element which will be split.
+   * @param aStartOfMiddleElement   Start node of middle block element.
+   * @param aEndOfMiddleElement     End node of middle block element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffFromNodeResult
+  SplitRangeOffFromBlock(Element& aBlockElement,
+                         nsIContent& aStartOfMiddleElement,
+                         nsIContent& aEndOfMiddleElement);
 
   /**
    * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
