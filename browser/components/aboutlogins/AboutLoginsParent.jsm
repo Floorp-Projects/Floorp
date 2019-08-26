@@ -9,37 +9,16 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "MigrationUtils",
-  "resource:///modules/MigrationUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "UIState",
-  "resource://services-sync/UIState.jsm"
-);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  LoginBreaches: "resource:////modules/LoginBreaches.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("AboutLoginsParent");
@@ -126,9 +105,9 @@ var AboutLoginsParent = {
       case "AboutLogins:DismissBreachAlert": {
         const login = message.data.login;
 
-        await LoginHelper.recordBreachAlertDismissal(login.guid);
+        await LoginBreaches.recordDismissal(login.guid);
         const logins = await this.getAllLogins();
-        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+        const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
           logins
         );
         const messageManager = message.target.messageManager;
@@ -433,7 +412,7 @@ var AboutLoginsParent = {
           );
 
           if (BREACH_ALERTS_ENABLED) {
-            const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+            const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
               logins
             );
             messageManager.sendAsyncMessage(
