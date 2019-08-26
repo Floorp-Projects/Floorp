@@ -23,10 +23,11 @@ const Localized = createFactory(FluentReact.Localized);
 const ManifestItemIcon = createFactory(require("./ManifestItemIcon"));
 const ManifestItemText = createFactory(require("./ManifestItemText"));
 const ManifestItemWarning = createFactory(require("./ManifestItemWarning"));
+
 /**
- * This component
+ * Displays a canonical manifest, splitted in different sections
  */
-class ManifestView extends PureComponent {
+class Manifest extends PureComponent {
   static get propTypes() {
     return {
       identity: PropTypes.object.isRequired,
@@ -47,10 +48,10 @@ class ManifestView extends PureComponent {
         h1({ className: "app-page__title" })
       ),
       table(
-        { className: "manifest-view", key: "errors-and-warnings" },
+        { className: "manifest", key: "errors-and-warnings" },
         Localized(
           { id: "manifest-item-warnings" },
-          caption({ className: "manifest-view__title" })
+          caption({ className: "manifest__title" })
         ),
         tbody(
           {},
@@ -60,10 +61,10 @@ class ManifestView extends PureComponent {
         )
       ),
       table(
-        { className: "manifest-view", key: "identity" },
+        { className: "manifest", key: "identity" },
         Localized(
           { id: "manifest-item-identity" },
-          caption({ className: "manifest-view__title" })
+          caption({ className: "manifest__title" })
         ),
         tbody(
           {},
@@ -73,10 +74,10 @@ class ManifestView extends PureComponent {
         )
       ),
       table(
-        { className: "manifest-view", key: "presentation" },
+        { className: "manifest", key: "presentation" },
         Localized(
           { id: "manifest-item-presentation" },
-          caption({ className: "manifest-view__title" })
+          caption({ className: "manifest__title" })
         ),
         tbody(
           {},
@@ -86,10 +87,10 @@ class ManifestView extends PureComponent {
         )
       ),
       table(
-        { className: "manifest-view", key: "icons" },
+        { className: "manifest", key: "icons" },
         Localized(
           { id: "manifest-item-icons" },
-          caption({ className: "manifest-view__title" })
+          caption({ className: "manifest__title" })
         ),
         tbody(
           {},
@@ -103,4 +104,4 @@ class ManifestView extends PureComponent {
 }
 
 // Exports
-module.exports = ManifestView;
+module.exports = Manifest;

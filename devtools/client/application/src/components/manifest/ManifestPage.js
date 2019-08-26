@@ -14,14 +14,14 @@ const {
 
 const ManifestLoader = createFactory(require("../manifest/ManifestLoader"));
 
-const ManifestView = createFactory(require("./ManifestView"));
-const ManifestViewEmpty = createFactory(require("./ManifestViewEmpty"));
+const Manifest = createFactory(require("./Manifest"));
+const ManifestEmpty = createFactory(require("./ManifestEmpty"));
 
 const { MANIFEST_DATA } = require("../../constants");
 
 class ManifestPage extends PureComponent {
   render() {
-    const isManifestViewEmpty = !MANIFEST_DATA;
+    const isManifestEmpty = !MANIFEST_DATA;
 
     // needs to be replaced with data from ManifestLoader
     const data = {
@@ -42,12 +42,12 @@ class ManifestPage extends PureComponent {
 
     return section(
       {
-        className: `app-page ${isManifestViewEmpty ? "app-page--empty" : ""}`,
+        className: `app-page ${isManifestEmpty ? "app-page--empty" : ""}`,
       },
       ManifestLoader({}),
-      isManifestViewEmpty
-        ? ManifestViewEmpty({})
-        : ManifestView({
+      isManifestEmpty
+        ? ManifestEmpty({})
+        : Manifest({
             identity: data.identity,
             warnings: data.warnings,
             icons: data.icons,

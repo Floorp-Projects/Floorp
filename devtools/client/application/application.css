@@ -11,7 +11,7 @@
 * Components
 */
 @import "resource://devtools/client/application/src/components/App.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestView.css";
+@import "resource://devtools/client/application/src/components/manifest/Manifest.css";
 @import "resource://devtools/client/application/src/components/routing/PageSwitcher.css";
 @import "resource://devtools/client/application/src/components/service-workers/Worker.css";
 @import "resource://devtools/client/application/src/components/service-workers/WorkerList.css";
