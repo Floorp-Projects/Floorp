@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.32.1"
+version = "0.37.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
-exclude = ["fuzz/**/*", "tests/**/*"]
+exclude = ["fuzz/**/*", "tests/**/*", "testsuite/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
 keywords = ["parser", "WebAssembly", "wasm"]
 license = "Apache-2.0 WITH LLVM-exception"
@@ -30,9 +30,13 @@ optional = true
 [dev-dependencies.criterion]
 version = "0.2"
 
+[dev-dependencies.wabt]
+version = "0.9.1"
+
 [features]
 core = ["hashbrown"]
 default = ["std"]
+deterministic = []
 std = []
 [badges.travis-ci]
 repository = "yurydelendik/wasmparser.rs"
