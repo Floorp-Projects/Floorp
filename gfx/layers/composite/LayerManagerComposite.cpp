@@ -965,9 +965,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  ParentLayerIntRect clipRect;
-  IntRect actualBounds;
-
   CompositorBench(mCompositor, mRenderBounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
@@ -988,17 +985,18 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif
   }
 
+  IntRect actualBounds;
+  IntRect clipRect;
   if (mRoot->GetClipRect()) {
-    clipRect = *mRoot->GetClipRect();
-    IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(),
-                 clipRect.Height());
-    mCompositor->BeginFrame(aInvalidRegion, &rect, mRenderBounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, &actualBounds);
+    clipRect = mRoot->GetClipRect()->ToUnknownRect();
+    mCompositor->BeginFrame(aInvalidRegion, &clipRect, mRenderBounds,
+                            aOpaqueRegion, mNativeLayerForEntireWindow,
+                            &actualBounds);
   } else {
     mCompositor->BeginFrame(aInvalidRegion, nullptr, mRenderBounds,
                             aOpaqueRegion, mNativeLayerForEntireWindow,
                             &actualBounds);
-    clipRect = ParentLayerIntRect::FromUnknownRect(actualBounds);
+    clipRect = actualBounds;
   }
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
@@ -1028,8 +1026,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // Render our layers.
   {
     Diagnostics::Record record(mRenderStartTime);
-    RootLayer()->Prepare(ViewAs<RenderTargetPixel>(
-        clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
+    RootLayer()->Prepare(RenderTargetIntRect::FromUnknownRect(clipRect));
     if (record.Recording()) {
       mDiagnostics->RecordPrepareTime(record.Duration());
     }
@@ -1037,7 +1034,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // Execute draw commands.
   {
     Diagnostics::Record record;
-    RootLayer()->RenderLayer(clipRect.ToUnknownRect(), Nothing());
+    RootLayer()->RenderLayer(clipRect, Nothing());
     if (record.Recording()) {
       mDiagnostics->RecordCompositeTime(record.Duration());
     }
@@ -1053,8 +1050,8 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   if (mTwoPassTmpTarget) {
     MOZ_ASSERT(haveLayerEffects);
-    PopGroupForLayerEffects(previousTarget, clipRect.ToUnknownRect(),
-                            grayscaleVal, invertVal, contrastVal);
+    PopGroupForLayerEffects(previousTarget, clipRect, grayscaleVal, invertVal,
+                            contrastVal);
   }
 
   // Allow widget to render a custom foreground.
