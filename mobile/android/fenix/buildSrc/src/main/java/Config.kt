@@ -109,8 +109,8 @@ object Config {
 
         when {
             base < 0 -> throw RuntimeException("Cannot calculate versionCode. Hours underflow.")
-            base > pow(2.0, 17.0) -> throw RuntimeException("Cannot calculate versionCode. Hours overflow.")
-            base > (pow(2.0, 17.0) - (366 * 24)) ->
+            base > 0x20000 /* 2^17 */ -> throw RuntimeException("Cannot calculate versionCode. Hours overflow.")
+            base > 0x20000 - (366 * 24) ->
                 // You have one year to update the version scheme...
                 throw RuntimeException("Running out of low order bits calculating versionCode.")
         }
