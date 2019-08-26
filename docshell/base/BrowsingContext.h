@@ -249,14 +249,12 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   BrowsingContext* FindWithName(const nsAString& aName,
                                 BrowsingContext& aRequestingContext);
 
-
   // Find a browsing context in this context's list of
   // children. Doesn't consider the special names, '_self', '_parent',
   // '_top', or '_blank'. Performs access control with regard to
   // 'this'.
   BrowsingContext* FindChildWithName(const nsAString& aName,
                                      BrowsingContext& aRequestingContext);
-
 
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
@@ -288,12 +286,20 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   const Children& GetChildren() { return mChildren; }
 
   // Perform a pre-order walk of this BrowsingContext subtree.
-  template <typename Func>
-  void PreOrderWalk(Func&& aCallback) {
+  void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
     aCallback(this);
     for (auto& child : GetChildren()) {
       child->PreOrderWalk(aCallback);
     }
+  }
+
+  // Perform an post-order walk of this BrowsingContext subtree.
+  void PostOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
+    for (auto& child : GetChildren()) {
+      child->PostOrderWalk(aCallback);
+    }
+
+    aCallback(this);
   }
 
   // Window APIs that are cross-origin-accessible (from the HTML spec).
