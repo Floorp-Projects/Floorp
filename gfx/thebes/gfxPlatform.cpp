@@ -756,7 +756,7 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 #undef REPORT_DATA_STORE
 
 static const char* const WR_ROLLOUT_PREF = "gfx.webrender.all.qualified";
-static const bool WR_ROLLOUT_PREF_DEFAULTVALUE = true;
+static const bool WR_ROLLOUT_PREF_DEFAULTVALUE = false;
 static const char* const WR_ROLLOUT_DEFAULT_PREF =
     "gfx.webrender.all.qualified.default";
 static const bool WR_ROLLOUT_DEFAULT_PREF_DEFAULTVALUE = false;
