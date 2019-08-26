@@ -2102,3 +2102,4 @@ skip-if(!asyncPan) == 1544895.html 1544895-ref.html
 fuzzy-if(!webrender||!winWidget,254-255,464-1613) fuzzy-if(geckoview&&webrender,253-253,1392-1397) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
 fuzzy-if(winWidget&&webrender,0-31,0-3) fuzzy-if(geckoview&&webrender,0-93,0-16) == 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html
 test-pref(plain_text.wrap_long_lines,false) != 1565129.txt 1565129.txt
+== 1576553-1.html 1576553-1-ref.html
