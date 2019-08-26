@@ -660,7 +660,7 @@ case "$target" in
         LIBS="$LIBS -luuid -lusp10 -lgdi32 -lwinmm -lwsock32 -luserenv -lsecur32"
         MOZ_FIX_LINK_PATHS=
 
-        MOZ_OPTIMIZE_FLAGS="-O1"
+        MOZ_OPTIMIZE_FLAGS="-O2"
 
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
