@@ -13,6 +13,7 @@ import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
@@ -156,12 +157,25 @@ class GeckoEngine(
                 defaultSettings?.automaticLanguageAdjustment = value
             }
 
+        override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
+            arrayOf(SafeBrowsingPolicy.RECOMMENDED)
+            set(value) {
+                val safeBrowsingCategories = value.sumBy { it.id }
+                val trackingCategories =
+                    trackingProtectionPolicy?.trackingCategories?.sumBy { it.id }
+                        ?: SafeBrowsingPolicy.NONE.id
+
+                runtime.settings.contentBlocking.categories =
+                    safeBrowsingCategories + trackingCategories
+                field = value
+            }
+
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
                 value?.let { policy ->
 
                     val trackingCategories = policy.trackingCategories.sumBy { it.id } +
-                        policy.safeBrowsingCategories.sumBy { it.id }
+                        safeBrowsingPolicy.sumBy { it.id }
 
                     runtime.settings.contentBlocking.categories = trackingCategories
                     runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id

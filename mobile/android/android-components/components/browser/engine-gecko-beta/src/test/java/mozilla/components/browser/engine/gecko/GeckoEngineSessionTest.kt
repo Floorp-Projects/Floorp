@@ -15,7 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.SafeBrowsingCategory
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -844,7 +844,7 @@ class GeckoEngineSessionTest {
         })
 
         val allPolicy = TrackingProtectionPolicy.select(
-            arrayOf(TrackingProtectionPolicy.TrackingCategory.AD))
+            arrayOf(TrackingCategory.AD))
         val regularOnlyPolicy = TrackingProtectionPolicy.select(
             trackingCategories = arrayOf(TrackingCategory.AD)
         ).forRegularSessionsOnly()
@@ -889,6 +889,15 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun safeBrowsingCategoriesAreAligned() {
+        assertEquals(ContentBlocking.SB_MALWARE, SafeBrowsingPolicy.MALWARE.id)
+        assertEquals(ContentBlocking.SB_UNWANTED, SafeBrowsingPolicy.UNWANTED.id)
+        assertEquals(ContentBlocking.SB_HARMFUL, SafeBrowsingPolicy.HARMFUL.id)
+        assertEquals(ContentBlocking.SB_PHISHING, SafeBrowsingPolicy.PHISHING.id)
+        assertEquals(ContentBlocking.SB_ALL, SafeBrowsingPolicy.RECOMMENDED.id)
+    }
+
+    @Test
     fun trackingProtectionCategoriesAreAligned() {
         assertEquals(TrackingCategory.AD.id, ContentBlocking.AT_AD)
         assertEquals(TrackingCategory.ANALYTICS.id, ContentBlocking.AT_ANALYTIC)
@@ -898,30 +907,14 @@ class GeckoEngineSessionTest {
         assertEquals(TrackingCategory.CRYPTOMINING.id, ContentBlocking.AT_CRYPTOMINING)
         assertEquals(TrackingCategory.FINGERPRINTING.id, ContentBlocking.AT_FINGERPRINTING)
 
-        assertEquals(SafeBrowsingCategory.RECOMMENDED.id, ContentBlocking.SB_ALL)
-        assertEquals(SafeBrowsingCategory.HARMFUL.id, ContentBlocking.SB_HARMFUL)
-        assertEquals(SafeBrowsingCategory.MALWARE.id, ContentBlocking.SB_MALWARE)
-        assertEquals(SafeBrowsingCategory.PHISHING.id, ContentBlocking.SB_PHISHING)
-        assertEquals(SafeBrowsingCategory.UNWANTED.id, ContentBlocking.SB_UNWANTED)
-
         assertEquals(
             TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id },
             ContentBlocking.AT_STRICT
         )
 
         assertEquals(
-            TrackingProtectionPolicy.strict().safeBrowsingCategories.sumBy { it.id },
-            ContentBlocking.SB_ALL
-        )
-
-        assertEquals(
             TrackingProtectionPolicy.recommended().trackingCategories.sumBy { it.id },
             ContentBlocking.AT_DEFAULT
-        )
-
-        assertEquals(
-            TrackingProtectionPolicy.recommended().safeBrowsingCategories.sumBy { it.id },
-            ContentBlocking.SB_ALL
         )
 
         assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL.id, ContentBlocking.COOKIE_ACCEPT_ALL)
