@@ -154,6 +154,21 @@ linux64-rust-macos-1.35:
             '--target', 'x86_64-apple-darwin',
         ]
 
+linux64-rust-cross-1.37:
+    description: "rust repack with macos and windows cross support"
+    treeherder:
+        symbol: TL(rust-cross)
+    run:
+        arguments: [
+            '--channel', '1.37.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+        ]
+
 linux64-rust-macos-1.36:
     description: "rust repack with macos-cross support"
     treeherder:
