@@ -868,12 +868,11 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
 #endif
 }
 
-void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
-                               const Maybe<IntRect>& aClipRect,
-                               const IntRect& aRenderBounds,
-                               const nsIntRegion& aOpaqueRegion,
-                               NativeLayer* aNativeLayer,
-                               IntRect* aRenderBoundsOut) {
+Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
+                                         const Maybe<IntRect>& aClipRect,
+                                         const IntRect& aRenderBounds,
+                                         const nsIntRegion& aOpaqueRegion,
+                                         NativeLayer* aNativeLayer) {
   AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
   MOZ_ASSERT(!mFrameInProgress,
@@ -886,14 +885,10 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     rect = aRenderBounds;
   }
 
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = rect;
-  }
-
   // We can't draw anything to something with no area
   // so just return
   if (rect.IsZeroArea()) {
-    return;
+    return Nothing();
   }
 
   // If the widget size changed, we have to force a MakeCurrent
@@ -937,9 +932,8 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (!rt) {
-    *aRenderBoundsOut = IntRect();
     mCurrentNativeLayer = nullptr;
-    return;
+    return Nothing();
   }
 
   // We're about to actually draw a frame.
@@ -983,6 +977,8 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   } else {
     mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
   }
+
+  return Some(rect);
 }
 
 void CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect,

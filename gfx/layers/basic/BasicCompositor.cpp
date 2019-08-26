@@ -886,12 +886,10 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
   return true;
 }
 
-void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const Maybe<IntRect>& aClipRect,
-                                 const IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer,
-                                 IntRect* aRenderBoundsOut /* = nullptr */) {
+Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    NativeLayer* aNativeLayer) {
   if (mIsPendingEndRemoteDrawing) {
     // Force to end previous remote drawing.
     TryToEndRemoteDrawing(/* aForceToEnd */ true);
@@ -918,10 +916,6 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mInvalidRect = mInvalidRegion.GetBounds();
 
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = IntRect();
-  }
-
   BufferMode bufferMode = BufferMode::BUFFERED;
   if (mTarget) {
     MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
@@ -935,14 +929,14 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   } else if (aNativeLayer) {
 #ifdef XP_MACOSX
     if (mInvalidRect.IsEmpty()) {
-      return;
+      return Nothing();
     }
     NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
     MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
     nativeLayer->SetSurfaceIsFlipped(false);
     CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
     if (!surf) {
-      return;
+      return Nothing();
     }
     nativeLayer->InvalidateRegionThroughoutSwapchain(mInvalidRegion);
     mInvalidRegion = nativeLayer->CurrentSurfaceInvalidRegion();
@@ -963,13 +957,13 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     mDrawTarget =
         mWidget->StartRemoteDrawingInRegion(invalidRegion, &bufferMode);
     if (!mDrawTarget) {
-      return;
+      return Nothing();
     }
     mInvalidRegion = invalidRegion.ToUnknownRegion();
     mInvalidRect = mInvalidRegion.GetBounds();
     if (mInvalidRect.IsEmpty()) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, invalidRegion);
-      return;
+      return Nothing();
     }
 
     // The DrawTarget returned by StartRemoteDrawingInRegion can cover different
@@ -1003,7 +997,7 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
           mDrawTarget,
           LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion));
     }
-    return;
+    return Nothing();
   }
   SetRenderTarget(target);
 
@@ -1032,11 +1026,9 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
                          mInvalidRegion.ToUnknownRegion());
 
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = rect;
-  }
-
   mRenderTarget->mDrawTarget->PushClipRect(Rect(aClipRect.valueOr(rect)));
+
+  return Some(rect);
 }
 
 void BasicCompositor::EndFrame() {

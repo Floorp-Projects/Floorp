@@ -985,19 +985,12 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif
   }
 
-  IntRect bounds;
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
-  mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
-                          aOpaqueRegion, mNativeLayerForEntireWindow, &bounds);
-  IntRect clipRect = rootLayerClip.valueOr(bounds);
-#if defined(MOZ_WIDGET_ANDROID)
-  ScreenCoord offset = GetContentShiftForToolbar();
-  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
-                                            ScreenPoint(0.0f, offset));
-#endif
-
-  if (bounds.IsEmpty()) {
+  Maybe<IntRect> maybeBounds =
+      mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
+                              aOpaqueRegion, mNativeLayerForEntireWindow);
+  if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
 
@@ -1008,6 +1001,14 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
     return true;
   }
+
+  IntRect bounds = *maybeBounds;
+  IntRect clipRect = rootLayerClip.valueOr(bounds);
+#if defined(MOZ_WIDGET_ANDROID)
+  ScreenCoord offset = GetContentShiftForToolbar();
+  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
+                                            ScreenPoint(0.0f, offset));
+#endif
 
   RefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
@@ -1223,10 +1224,9 @@ void LayerManagerComposite::RenderToPresentationSurface() {
 
   nsIntRegion invalid;
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
-  IntRect actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(), nullptr,
-                          &actualBounds);
+  Unused << mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(),
+                                    nullptr);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer
