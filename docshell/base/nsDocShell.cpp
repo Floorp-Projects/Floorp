@@ -10689,15 +10689,19 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   }
   // TODO: more attributes need to be updated on the LoadInfo (bug 1561706)
 
+  // Let the client channel helper know if we are using DocumentChannel,
+  // since redirects get handled in the parent process in that case.
+  RefPtr<net::DocumentChannelChild> docChannel = do_QueryObject(aChannel);
+
   // Since we are loading a document we need to make sure the proper reserved
   // and initial client data is stored on the nsILoadInfo.  The
   // ClientChannelHelper does this and ensures that it is propagated properly
   // on redirects.  We pass no reserved client here so that the helper will
   // create the reserved ClientSource if necessary.
   Maybe<ClientInfo> noReservedClient;
-  rv = AddClientChannelHelper(aChannel, std::move(noReservedClient),
-                              GetInitialClientInfo(),
-                              win->EventTargetFor(TaskCategory::Other));
+  rv = AddClientChannelHelper(
+      aChannel, std::move(noReservedClient), GetInitialClientInfo(),
+      win->EventTargetFor(TaskCategory::Other), !!docChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aURILoader->OpenURI(aChannel, aOpenFlags, this);
