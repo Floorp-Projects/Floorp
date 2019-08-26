@@ -4,12 +4,12 @@
 
 package org.mozilla.fenix.browser
 
+import GeckoProvider
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.IntentReceiverActivity
-import org.mozilla.fenix.ext.components
 
 /**
  * This activity is used for performance testing with Raptor/tp6:
@@ -20,7 +20,7 @@ class BrowserPerformanceTestActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        components.core.testConfig = SafeIntent(intent).extras
+        GeckoProvider.testConfig = SafeIntent(intent).extras
 
         val intent = Intent(intent)
 

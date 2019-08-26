@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.components
 
+import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
-import android.os.Bundle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -27,14 +27,11 @@ import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.session.HistoryDelegate
-import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.geckoview.GeckoRuntime
-import org.mozilla.geckoview.GeckoRuntimeSettings
 import java.util.concurrent.TimeUnit
 
 /**
@@ -42,30 +39,6 @@ import java.util.concurrent.TimeUnit
  */
 @Mockable
 class Core(private val context: Context) {
-
-    protected val runtime by lazy {
-        val builder = GeckoRuntimeSettings.Builder()
-
-        testConfig?.let {
-            builder.extras(it)
-                .remoteDebuggingEnabled(true)
-        }
-
-        val runtimeSettings = builder
-            .crashHandler(CrashHandlerService::class.java)
-            .useContentProcessHint(true)
-            .build()
-
-        if (!Settings.getInstance(context).shouldUseAutoSize) {
-            runtimeSettings.automaticFontSizeAdjustment = false
-            val fontSize = Settings.getInstance(context).fontSizeFactor
-            runtimeSettings.fontSizeFactor = fontSize
-        }
-
-        GeckoRuntime.create(context, runtimeSettings)
-    }
-
-    var testConfig: Bundle? = null
 
     /**
      * The browser engine component initialized based on the build
@@ -83,14 +56,14 @@ class Core(private val context: Context) {
             suspendMediaWhenInactive = !FeatureFlags.mediaIntegration
         )
 
-        GeckoEngine(context, defaultSettings, runtime)
+        GeckoEngine(context, defaultSettings, GeckoProvider.getOrCreateRuntime(context))
     }
 
     /**
      * [Client] implementation to be used for code depending on `concept-fetch``
      */
     val client: Client by lazy {
-        GeckoViewFetchClient(context, runtime)
+        GeckoViewFetchClient(context, GeckoProvider.getOrCreateRuntime(context))
     }
 
     val sessionStorage: SessionStorage by lazy {
