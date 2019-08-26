@@ -2,7 +2,7 @@
 
 # LoadUrlFlags
 
-`class LoadUrlFlags` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L315)
+`class LoadUrlFlags` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L318)
 
 Describes a combination of flags provided to the engine when loading a URL.
 

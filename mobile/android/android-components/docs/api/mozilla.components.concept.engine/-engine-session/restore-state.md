@@ -2,7 +2,7 @@
 
 # restoreState
 
-`abstract fun restoreState(state: `[`EngineSessionState`](../-engine-session-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L405)
+`abstract fun restoreState(state: `[`EngineSessionState`](../-engine-session-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L408)
 
 Restores the engine state as provided by [saveState](save-state.md).
 

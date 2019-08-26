@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicyForSessionTypes
 
-`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L280)
+`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L283)
 
 Subtype of [TrackingProtectionPolicy](../-tracking-protection-policy/index.md) to control the type of session this policy
 should be applied to. By default, a policy will be applied to all sessions.
@@ -28,5 +28,6 @@ should be applied to. By default, a policy will be applied to all sessions.
 
 | Name | Summary |
 |---|---|
+| [contains](../-tracking-protection-policy/contains.md) | `fun contains(category: `[`TrackingCategory`](../-tracking-protection-policy/-tracking-category/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [equals](../-tracking-protection-policy/equals.md) | `open fun equals(other: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [hashCode](../-tracking-protection-policy/hash-code.md) | `open fun hashCode(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
