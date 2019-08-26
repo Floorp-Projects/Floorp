@@ -85,12 +85,17 @@ var AboutLoginsParent = {
 
   // Listeners are added in BrowserGlue.jsm
   async receiveMessage(message) {
-    // Only respond to messages sent from about:logins.
-    if (
-      message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
-      message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN
-    ) {
-      return;
+    // Only respond to messages sent from a privlegedabout process. Ideally
+    // we would also check the contentPrincipal.originNoSuffix but this
+    // check has been removed due to bug 1576722.
+    if (message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE) {
+      throw new Error(
+        `AboutLoginsParent: Received ${
+          message.name
+        } message the remote type didn't match expectations: ${
+          message.target.remoteType
+        } == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
+      );
     }
 
     switch (message.name) {
