@@ -1916,6 +1916,7 @@ LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize&
   // This is the same thing the windows widget does, but we probably should fix
   // that, see bug 1445738.
   NSUInteger styleMask = [mWindow styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:styleMask];
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
   return r.Size();
@@ -2932,6 +2933,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aFrameRect;
   }
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   return [NSWindow contentRectForFrameRect:aFrameRect styleMask:styleMask];
 }
 
@@ -2940,6 +2942,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aChildViewRect;
   }
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   return [NSWindow frameRectForContentRect:aChildViewRect styleMask:styleMask];
 }
 
@@ -3228,6 +3231,16 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // rect.
   NSRect frameRect = [NSWindow frameRectForContentRect:aChildViewRect styleMask:aStyle];
 
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup() && nsCocoaFeatures::OnYosemiteOrLater()) {
+    // Always size the content view to the full frame size of the window.
+    // We cannot use this window mask on 10.9, because it was added in 10.10.
+    // We also cannot use it when our CoreAnimation pref is disabled: This flag forces CoreAnimation
+    // on for the entire window, which causes glitches in combination with our non-CoreAnimation
+    // drawing. (Specifically, on macOS versions up until at least 10.14.0, layer-backed
+    // NSOpenGLViews have extremely glitchy resizing behavior.)
+    aStyle |= NSFullSizeContentViewWindowMask;
+  }
+
   // -[NSWindow initWithContentRect:styleMask:backing:defer:] calls
   // [self frameRectForContentRect:styleMask:] to convert the supplied content
   // rect to the window's frame rect. We've overridden that method to be a
@@ -3284,6 +3297,9 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 // Override methods that translate between content rect and frame rect.
+// These overrides are only needed on 10.9 or when the CoreAnimation pref is
+// is false; otherwise we use NSFullSizeContentViewMask and get this behavior
+// for free.
 - (NSRect)contentRectForFrameRect:(NSRect)aRect {
   return aRect;
 }
@@ -3303,16 +3319,20 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 - (void)setContentView:(NSView*)aView {
   [super setContentView:aView];
 
-  // Now move the contentView to the bottommost layer so that it's guaranteed
-  // to be under the window buttons.
-  NSView* frameView = [aView superview];
-  [aView removeFromSuperview];
-  if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
-    // 10.10 prints a warning when we call addSubview on the frame view, so we
-    // silence the warning by calling a private method instead.
-    [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
-  } else {
-    [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
+  if (!([self styleMask] & NSFullSizeContentViewWindowMask)) {
+    // Move the contentView to the bottommost layer so that it's guaranteed
+    // to be under the window buttons.
+    // When the window uses the NSFullSizeContentViewMask, this manual
+    // adjustment is not necessary.
+    NSView* frameView = [aView superview];
+    [aView removeFromSuperview];
+    if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
+      // 10.10 prints a warning when we call addSubview on the frame view, so we
+      // silence the warning by calling a private method instead.
+      [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
+    } else {
+      [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
+    }
   }
 }
 
@@ -3342,6 +3362,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // titlebarHeight of zero.
   NSRect frameRect = [self frame];
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:styleMask];
   return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
