@@ -846,9 +846,6 @@ case "$target" in
             CFLAGS="$CFLAGS -mstackrealign"
             CXXFLAGS="$CXXFLAGS -mstackrealign"
             LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
-            if test -z "$CLANG_CC"; then
-                LDFLAGS="$LDFLAGS -Wl,--enable-stdcall-fixup"
-            fi
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
             LDFLAGS="$LDFLAGS -SAFESEH"

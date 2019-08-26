@@ -28,6 +28,7 @@
         titlemenuseparator=" - "
         windowtype="mozapp:layoutdebug"
         onload="OnLDBLoad();"
+        onclose="OnLDBBeforeUnload(event);"
         onunload="OnLDBUnload();"
         width="1024" height="768"
         screenX="4" screenY="4"

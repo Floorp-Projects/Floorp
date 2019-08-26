@@ -224,6 +224,12 @@ interface nsIDNSService : nsISupports
     void clearCache(in boolean aTrrToo);
 
     /**
+     * The method is used only for test purpose. We use this to recheck if
+     * parental control is enabled or not.
+     */
+    void reloadParentalControlEnabled();
+
+    /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;
