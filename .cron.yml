@@ -78,7 +78,6 @@ jobs:
       run-on-projects:
           - mozilla-central
           - mozilla-beta
-          - mozilla-release
       when:
           by-project:
               mozilla-central: [{hour: 10, minute: 0}]
