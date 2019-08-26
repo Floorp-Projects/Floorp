@@ -26,6 +26,12 @@ void ClientHandleParent::ActorDestroy(ActorDestroyReason aReason) {
   if (mSource) {
     mSource->DetachHandle(this);
     mSource = nullptr;
+  } else {
+    mService->StopWaitingForSource(this, mClientId);
+  }
+
+  if (mSourcePromise) {
+    mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
   }
 }
 
@@ -53,9 +59,11 @@ ClientHandleParent::ClientHandleParent()
 ClientHandleParent::~ClientHandleParent() { MOZ_DIAGNOSTIC_ASSERT(!mSource); }
 
 void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
+  mClientId = aClientInfo.id();
+  mPrincipalInfo = aClientInfo.principalInfo();
   mSource = mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo());
   if (!mSource) {
-    Unused << Send__delete__(this);
+    mService->WaitForSource(this, aClientInfo.id());
     return;
   }
 
@@ -63,6 +71,33 @@ void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
 }
 
 ClientSourceParent* ClientHandleParent::GetSource() const { return mSource; }
+
+RefPtr<SourcePromise> ClientHandleParent::EnsureSource() {
+  if (mSource) {
+    return SourcePromise::CreateAndResolve(mSource, __func__);
+  }
+
+  mSourcePromise = new SourcePromise::Private(__func__);
+  return mSourcePromise;
+}
+
+void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
+  MOZ_ASSERT(aSource->Info().Id() == mClientId);
+  if (!ClientMatchPrincipalInfo(aSource->Info().PrincipalInfo(),
+                                mPrincipalInfo)) {
+    if (mSourcePromise) {
+      mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
+    }
+    Unused << Send__delete__(this);
+    return;
+  }
+
+  mSource = aSource;
+  mSource->AttachHandle(this);
+  if (mSourcePromise) {
+    mSourcePromise->Resolve(aSource, __func__);
+  }
+}
 
 }  // namespace dom
 }  // namespace mozilla

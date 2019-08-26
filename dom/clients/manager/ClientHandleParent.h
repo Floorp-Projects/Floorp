@@ -14,9 +14,20 @@ namespace dom {
 class ClientManagerService;
 class ClientSourceParent;
 
+typedef MozPromise<ClientSourceParent*, nsresult, /* IsExclusive = */ false>
+    SourcePromise;
+
 class ClientHandleParent final : public PClientHandleParent {
   RefPtr<ClientManagerService> mService;
   ClientSourceParent* mSource;
+
+  nsID mClientId;
+  PrincipalInfo mPrincipalInfo;
+
+  // A promise for HandleOps that want to access our ClientSourceParent.
+  // Resolved once FoundSource is called and we have a ClientSourceParent
+  // available.
+  RefPtr<SourcePromise::Private> mSourcePromise;
 
   // PClientHandleParent interface
   mozilla::ipc::IPCResult RecvTeardown() override;
@@ -38,7 +49,11 @@ class ClientHandleParent final : public PClientHandleParent {
 
   void Init(const IPCClientInfo& aClientInfo);
 
+  void FoundSource(ClientSourceParent* aSource);
+
   ClientSourceParent* GetSource() const;
+
+  RefPtr<SourcePromise> EnsureSource();
 };
 
 }  // namespace dom

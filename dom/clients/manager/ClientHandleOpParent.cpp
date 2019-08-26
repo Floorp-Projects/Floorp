@@ -20,59 +20,71 @@ ClientSourceParent* ClientHandleOpParent::GetSource() const {
 
 void ClientHandleOpParent::ActorDestroy(ActorDestroyReason aReason) {
   mPromiseRequestHolder.DisconnectIfExists();
+  mSourcePromiseRequestHolder.DisconnectIfExists();
 }
 
 void ClientHandleOpParent::Init(const ClientOpConstructorArgs& aArgs) {
-  ClientSourceParent* source = GetSource();
-  if (!source) {
-    Unused << PClientHandleOpParent::Send__delete__(this,
-                                                    NS_ERROR_DOM_ABORT_ERR);
-    return;
-  }
+  auto handle = static_cast<ClientHandleParent*>(Manager());
+  handle->EnsureSource()
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [=](ClientSourceParent* source) {
+            mSourcePromiseRequestHolder.Complete();
+            RefPtr<ClientOpPromise> p;
 
-  RefPtr<ClientOpPromise> p;
+            // ClientPostMessageArgs can contain PBlob actors.  This means we
+            // can't just forward the args from one PBackground manager to
+            // another.  Instead, unpack the structured clone data and repack
+            // it into a new set of arguments.
+            if (aArgs.type() ==
+                ClientOpConstructorArgs::TClientPostMessageArgs) {
+              const ClientPostMessageArgs& orig =
+                  aArgs.get_ClientPostMessageArgs();
 
-  // ClientPostMessageArgs can contain PBlob actors.  This means we
-  // can't just forward the args from one PBackground manager to
-  // another.  Instead, unpack the structured clone data and repack
-  // it into a new set of arguments.
-  if (aArgs.type() == ClientOpConstructorArgs::TClientPostMessageArgs) {
-    const ClientPostMessageArgs& orig = aArgs.get_ClientPostMessageArgs();
+              ClientPostMessageArgs rebuild;
+              rebuild.serviceWorker() = orig.serviceWorker();
 
-    ClientPostMessageArgs rebuild;
-    rebuild.serviceWorker() = orig.serviceWorker();
+              StructuredCloneData data;
+              data.BorrowFromClonedMessageDataForBackgroundParent(
+                  orig.clonedData());
+              if (!data.BuildClonedMessageDataForBackgroundParent(
+                      source->Manager()->Manager(), rebuild.clonedData())) {
+                Unused << PClientHandleOpParent::Send__delete__(
+                    this, NS_ERROR_DOM_ABORT_ERR);
+                return;
+              }
 
-    StructuredCloneData data;
-    data.BorrowFromClonedMessageDataForBackgroundParent(orig.clonedData());
-    if (!data.BuildClonedMessageDataForBackgroundParent(
-            source->Manager()->Manager(), rebuild.clonedData())) {
-      Unused << PClientHandleOpParent::Send__delete__(this,
-                                                      NS_ERROR_DOM_ABORT_ERR);
-      return;
-    }
+              p = source->StartOp(rebuild);
+            }
 
-    p = source->StartOp(rebuild);
-  }
+            // Other argument types can just be forwarded straight through.
+            else {
+              p = source->StartOp(aArgs);
+            }
 
-  // Other argument types can just be forwarded straight through.
-  else {
-    p = source->StartOp(aArgs);
-  }
-
-  // Capturing 'this' is safe here because we disconnect the promise in
-  // ActorDestroy() which ensures neither lambda is called if the actor
-  // is destroyed before the source operation completes.
-  p->Then(
-       GetCurrentThreadSerialEventTarget(), __func__,
-       [this](const ClientOpResult& aResult) {
-         mPromiseRequestHolder.Complete();
-         Unused << PClientHandleOpParent::Send__delete__(this, aResult);
-       },
-       [this](nsresult aRv) {
-         mPromiseRequestHolder.Complete();
-         Unused << PClientHandleOpParent::Send__delete__(this, aRv);
-       })
-      ->Track(mPromiseRequestHolder);
+            // Capturing 'this' is safe here because we disconnect the promise
+            // in ActorDestroy() which ensures neither lambda is called if the
+            // actor is destroyed before the source operation completes.
+            p->Then(
+                 GetCurrentThreadSerialEventTarget(), __func__,
+                 [this](const ClientOpResult& aResult) {
+                   mPromiseRequestHolder.Complete();
+                   Unused << PClientHandleOpParent::Send__delete__(this,
+                                                                   aResult);
+                 },
+                 [this](nsresult aRv) {
+                   mPromiseRequestHolder.Complete();
+                   Unused << PClientHandleOpParent::Send__delete__(this, aRv);
+                 })
+                ->Track(mPromiseRequestHolder);
+          },
+          [=](nsresult failure) {
+            mSourcePromiseRequestHolder.Complete();
+            Unused << PClientHandleOpParent::Send__delete__(
+                this, NS_ERROR_DOM_ABORT_ERR);
+            return;
+          })
+      ->Track(mSourcePromiseRequestHolder);
 }
 
 }  // namespace dom

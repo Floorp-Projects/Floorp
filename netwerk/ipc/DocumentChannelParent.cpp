@@ -424,12 +424,14 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
   // clears the principal to inherit, which fails tests (probably because this
   // 'redirect' is usually just an implementation detail). It's also http only,
   // and aChannel can be anything that we redirected to.
-  nsCOMPtr<nsILoadInfo> redirectLoadInfo;
-  aChannel->GetLoadInfo(getter_AddRefs(redirectLoadInfo));
+  nsCOMPtr<nsILoadInfo> channelLoadInfo;
+  aChannel->GetLoadInfo(getter_AddRefs(channelLoadInfo));
+
   nsCOMPtr<nsIPrincipal> principalToInherit;
-  redirectLoadInfo->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
+  channelLoadInfo->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
 
   RefPtr<nsHttpChannel> baseChannel = do_QueryObject(aChannel);
+  nsCOMPtr<nsILoadInfo> redirectLoadInfo;
   if (baseChannel) {
     redirectLoadInfo = baseChannel->CloneLoadInfoForRedirect(
         uri, nsIChannelEventSink::REDIRECT_INTERNAL);
@@ -442,7 +444,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
     }
   } else {
     redirectLoadInfo =
-        static_cast<mozilla::net::LoadInfo*>(redirectLoadInfo.get())->Clone();
+        static_cast<mozilla::net::LoadInfo*>(channelLoadInfo.get())->Clone();
 
     nsCOMPtr<nsIPrincipal> uriPrincipal;
     nsIScriptSecurityManager* sm = nsContentUtils::GetSecurityManager();
@@ -452,6 +454,18 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
         new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
 
     redirectLoadInfo->AppendRedirectHistoryEntry(entry, true);
+  }
+
+  if (!aDestinationProcess) {
+    // When we're switching into a new process, the destination
+    // docshell will create a new initial client source which conflicts
+    // with this. We should probably use this one, but need to update
+    // docshell to understand that.
+    const Maybe<ClientInfo>& reservedClientInfo =
+        channelLoadInfo->GetReservedClientInfo();
+    if (reservedClientInfo) {
+      redirectLoadInfo->SetReservedClientInfo(*reservedClientInfo);
+    }
   }
 
   // Register the new channel and obtain id for it
