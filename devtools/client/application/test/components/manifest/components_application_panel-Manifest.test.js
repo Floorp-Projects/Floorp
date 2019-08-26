@@ -11,39 +11,15 @@ const Manifest = createFactory(
   require("devtools/client/application/src/components/manifest/Manifest")
 );
 
-const { MANIFEST_DATA } = require("../../../src/constants");
+const { MANIFEST_SIMPLE } = require("../fixtures/data/constants");
 
-// needs to move to reducer
-const data = {
-  warnings: MANIFEST_DATA.moz_validation,
-  icons: MANIFEST_DATA.icons,
-  identity: {
-    name: MANIFEST_DATA.name,
-    short_name: MANIFEST_DATA.short_name,
-  },
-  presentation: {
-    display: MANIFEST_DATA.display,
-    orientation: MANIFEST_DATA.orientation,
-    start_url: MANIFEST_DATA.start_url,
-    theme_color: MANIFEST_DATA.theme_color,
-    background_color: MANIFEST_DATA.background_color,
-  },
-};
-
-/**
+/*
  * Test for Manifest component
  */
 
 describe("Manifest", () => {
   it("renders the expected snapshot", () => {
-    const wrapper = shallow(
-      Manifest({
-        identity: data.identity,
-        warnings: data.warnings,
-        icons: data.icons,
-        presentation: data.presentation,
-      })
-    );
+    const wrapper = shallow(Manifest(MANIFEST_SIMPLE));
     expect(wrapper).toMatchSnapshot();
   });
 });
