@@ -74,7 +74,9 @@ android {
             applicationIdSuffix ".firefox"
             manifestPlaceholders = [
                 // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
-                // its sharedUserId for all eternity. Shipping an app update without sharedUserId can have
+                // its sharedUserId for all eternity. See:
+                // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                // Shipping an app update without sharedUserId can have
                 // fatal consequences. For example see:
                 //  - https://issuetracker.google.com/issues/36924841
                 //  - https://issuetracker.google.com/issues/36905922
