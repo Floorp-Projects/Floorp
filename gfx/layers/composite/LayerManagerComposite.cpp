@@ -1037,8 +1037,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   if (!mRegionToClear.IsEmpty()) {
     for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& r = iter.Get();
-      mCompositor->ClearRect(Rect(r.X(), r.Y(), r.Width(), r.Height()));
+      mCompositor->ClearRect(Rect(iter.Get()));
     }
   }
 
