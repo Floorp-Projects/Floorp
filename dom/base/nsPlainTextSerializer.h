@@ -116,11 +116,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // Inlined functions
   inline bool MayWrap() const {
     return mWrapColumn &&
-           ((mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) ||
-            (mSettings.mFlags & nsIDocumentEncoder::OutputWrap));
+           ((mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) ||
+            (mSettings.GetFlags() & nsIDocumentEncoder::OutputWrap));
   }
   inline bool MayBreakLines() const {
-    return !(mSettings.mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
+    return !(mSettings.GetFlags() &
+             nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
@@ -149,7 +150,26 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   uint32_t mHeadLevel;
   bool mAtFirstColumn;
 
-  struct Settings {
+  class Settings {
+   public:
+    // May adapt the flags.
+    //
+    // @param aFlags As defined in nsIDocumentEncoder.idl.
+    void Init(int32_t aFlags);
+
+    // Pref: converter.html2txt.structs.
+    bool GetStructs() const { return mStructs; }
+
+    // Pref: converter.html2txt.header_strategy.
+    int32_t GetHeaderStrategy() const { return mHeaderStrategy; }
+
+    // @return As defined in nsIDocumentEncoder.idl.
+    int32_t GetFlags() const { return mFlags; }
+
+    // Whether the output should include ruby annotations.
+    bool GetWithRubyAnnotation() const { return mWithRubyAnnotation; }
+
+   private:
     // Pref: converter.html2txt.structs.
     bool mStructs = true;
 
