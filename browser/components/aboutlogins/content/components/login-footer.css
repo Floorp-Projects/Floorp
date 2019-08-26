@@ -3,55 +3,51 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 footer {
-  background-color: var(--in-content-box-background);
-  border-radius: 4px;
-  box-shadow: var(--shadow-10);
-  position: relative;
-  padding-block: 8px;
-  padding-inline: 40px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-p {
-  display: inline-block;
-  line-height: 1.5;
-  padding-inline-end: 70px;
-  margin: 0;
-  margin-inline-end: auto;
-}
-
-.buttons {
-  display: inline-block;
-  margin-inline-end: auto;
-}
-
-button {
-  background-color: transparent !important; /* override common.css */
-  padding: 0;
-  cursor: pointer;
-  vertical-align: middle;
-}
-
-.app-store {
+  position: fixed;
   margin-inline-start: 0;
+  bottom: 40px;
 }
 
-button:not(.close) img {
+.footer-content {
+  background-color: var(--in-content-box-background);
+  box-shadow: var(--shadow-10);
+  max-width: 700px;
+  position: relative;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding-inline-start: 40px;
+  padding-inline-end: 80px;
+}
+
+.footer-content > p {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.5;
+  padding-inline-end: 40px;
+}
+
+.footer-content button {
+  background-color: transparent;
+  padding: 0;
+}
+
+.footer-content button:hover {
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.footer-content button img {
   width: auto;
+  height: 40px;
   display: block;
 }
 
-.app-store img {
-  height: 40px;
-}
-
-.play-store img {
+.footer-content button + button img {
   height: 60px;
 }
 
-.close {
+.footer-content .close {
   -moz-context-properties: fill, fill-opacity;
   background-image: url("chrome://global/skin/icons/close.svg");
   background-repeat: no-repeat;
