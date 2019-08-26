@@ -13,25 +13,12 @@
 "use strict";
 
 const EXPORTED_SYMBOLS = ["LoginHelper"];
-const REMOTE_SETTINGS_BREACHES_COLLECTION = "fxmonitor-breaches";
 
 // Globals
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "RemoteSettings",
-  "resource://services-settings/remote-settings.js"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "RemoteSettingsClient",
-  "resource://services-settings/RemoteSettingsClient.jsm"
 );
 
 /**
@@ -1112,79 +1099,6 @@ this.LoginHelper = {
       throw e;
     }
   },
-
-  async recordBreachAlertDismissal(loginGuid) {
-    await Services.logins.initializationPromise;
-    const storageJSON =
-      Services.logins.wrappedJSObject._storage.wrappedJSObject;
-
-    return storageJSON.recordBreachAlertDismissal(loginGuid);
-  },
-
-  async getBreachesForLogins(logins, breaches = null) {
-    const breachesByLoginGUID = new Map();
-    if (!breaches) {
-      try {
-        breaches = await RemoteSettings(
-          REMOTE_SETTINGS_BREACHES_COLLECTION
-        ).get();
-      } catch (ex) {
-        if (ex instanceof RemoteSettingsClient.UnknownCollectionError) {
-          log.warn(
-            "Could not get Remote Settings collection.",
-            REMOTE_SETTINGS_BREACHES_COLLECTION,
-            ex
-          );
-          return breachesByLoginGUID;
-        }
-        throw ex;
-      }
-    }
-    const BREACH_ALERT_URL = Services.prefs.getStringPref(
-      "signon.management.page.breachAlertUrl"
-    );
-    const baseBreachAlertURL = new URL(BREACH_ALERT_URL);
-
-    await Services.logins.initializationPromise;
-    const storageJSON =
-      Services.logins.wrappedJSObject._storage.wrappedJSObject;
-    const dismissedBreachAlertsByLoginGUID = storageJSON.getBreachAlertDismissalsByLoginGUID();
-
-    // Determine potentially breached logins by checking their origin and the last time
-    // they were changed. It's important to note here that we are NOT considering the
-    // username and password of that login.
-    for (const login of logins) {
-      const loginURI = Services.io.newURI(login.origin);
-      let loginHost;
-      try {
-        // nsIURI.host can throw if the URI scheme doesn't have a host.
-        loginHost = loginURI.host;
-      } catch (ex) {
-        continue;
-      }
-      for (const breach of breaches) {
-        if (!breach.Domain) {
-          continue;
-        }
-        const breachDate = new Date(breach.BreachDate).getTime();
-        const breachAddedDate = new Date(breach.AddedDate).getTime();
-        if (
-          Services.eTLD.hasRootDomain(loginHost, breach.Domain) &&
-          breach.hasOwnProperty("DataClasses") &&
-          breach.DataClasses.includes("Passwords") &&
-          login.timePasswordChanged < breachDate &&
-          (!dismissedBreachAlertsByLoginGUID[login.guid] ||
-            dismissedBreachAlertsByLoginGUID[login.guid]
-              .timeBreachAlertDismissed < breachAddedDate)
-        ) {
-          let breachAlertURL = new URL(breach.Name, baseBreachAlertURL);
-          breach.breachAlertURL = breachAlertURL.href;
-          breachesByLoginGUID.set(login.guid, breach);
-        }
-      }
-    }
-    return breachesByLoginGUID;
-  },
 };
 
 LoginHelper.init();
@@ -1196,6 +1110,5 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let logger = LoginHelper.createLogger("LoginHelper");
-  return logger;
+  return LoginHelper.createLogger("LoginHelper");
 });
