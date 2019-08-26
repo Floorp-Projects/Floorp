@@ -4,11 +4,17 @@
 
 :host {
   padding: 40px;
+  display: flex;
+  flex-direction: column;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
   --success-color: #00c100;
+}
+
+form {
+  flex-grow: 1;
 }
 
 :host([data-editing]) .edit-button,
