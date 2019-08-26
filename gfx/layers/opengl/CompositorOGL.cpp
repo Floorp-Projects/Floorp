@@ -869,7 +869,7 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
 }
 
 void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
-                               const IntRect* aClipRectIn,
+                               const Maybe<IntRect>& aClipRect,
                                const IntRect& aRenderBounds,
                                const nsIntRegion& aOpaqueRegion,
                                NativeLayer* aNativeLayer,

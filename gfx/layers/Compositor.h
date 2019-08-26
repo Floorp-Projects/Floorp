@@ -404,7 +404,7 @@ class Compositor : public TextureSourceProvider {
    * compositors where the performance for compositing the entire window is
    * sufficient.
    *
-   * aClipRectIn is the clip rect for the window in window space (optional).
+   * aClipRect is the clip rect for the window in window space (optional).
    * aRenderBounds bounding rect for rendering, in user space.
    * aOpaqueRegion is the area that contains opaque content.
    *
@@ -413,7 +413,7 @@ class Compositor : public TextureSourceProvider {
    * is returned empty, composition should be aborted.
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const gfx::IntRect* aClipRectIn,
+                          const Maybe<gfx::IntRect>& aClipRect,
                           const gfx::IntRect& aRenderBounds,
                           const nsIntRegion& aOpaqueRegion,
                           NativeLayer* aNativeLayer,
