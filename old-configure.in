@@ -651,8 +651,6 @@ case "$target" in
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
         CPP="$CPP -mwindows"
-        CFLAGS="$CFLAGS -mms-bitfields"
-        CXXFLAGS="$CXXFLAGS -mms-bitfields"
         DSO_LDOPTS='-shared'
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
