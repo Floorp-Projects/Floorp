@@ -966,11 +966,9 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   }
 
   ParentLayerIntRect clipRect;
-  IntRect bounds(mRenderBounds.X(), mRenderBounds.Y(), mRenderBounds.Width(),
-                 mRenderBounds.Height());
   IntRect actualBounds;
 
-  CompositorBench(mCompositor, bounds);
+  CompositorBench(mCompositor, mRenderBounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
 #if defined(MOZ_WIDGET_ANDROID)
@@ -983,7 +981,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif
 
   if (mNativeLayerForEntireWindow) {
-    mNativeLayerForEntireWindow->SetRect(bounds);
+    mNativeLayerForEntireWindow->SetRect(mRenderBounds);
 #ifdef XP_MACOSX
     mNativeLayerForEntireWindow->SetOpaqueRegion(
         mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
@@ -994,11 +992,12 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     clipRect = *mRoot->GetClipRect();
     IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(),
                  clipRect.Height());
-    mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion,
+    mCompositor->BeginFrame(aInvalidRegion, &rect, mRenderBounds, aOpaqueRegion,
                             mNativeLayerForEntireWindow, &actualBounds);
   } else {
-    mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, &actualBounds);
+    mCompositor->BeginFrame(aInvalidRegion, nullptr, mRenderBounds,
+                            aOpaqueRegion, mNativeLayerForEntireWindow,
+                            &actualBounds);
     clipRect = ParentLayerIntRect::FromUnknownRect(actualBounds);
   }
 #if defined(MOZ_WIDGET_ANDROID)
