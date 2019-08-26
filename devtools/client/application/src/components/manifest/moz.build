@@ -6,9 +6,9 @@ DevToolsModules(
     'Manifest.css',
     'Manifest.js',
     'ManifestEmpty.js',
-	'ManifestItemIcon.js',
-	'ManifestItemText.js',
+    'ManifestItem.js',
 	'ManifestItemWarning.js',
     'ManifestLoader.js',
     'ManifestPage.js',
+    'ManifestSection.js',
 )

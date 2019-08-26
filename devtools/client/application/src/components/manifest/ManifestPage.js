@@ -17,28 +17,55 @@ const ManifestLoader = createFactory(require("../manifest/ManifestLoader"));
 const Manifest = createFactory(require("./Manifest"));
 const ManifestEmpty = createFactory(require("./ManifestEmpty"));
 
-const { MANIFEST_DATA } = require("../../constants");
-
 class ManifestPage extends PureComponent {
   render() {
-    const isManifestEmpty = !MANIFEST_DATA;
-
-    // needs to be replaced with data from ManifestLoader
+    // TODO: needs to be replaced with data from Redux
     const data = {
-      warnings: MANIFEST_DATA.moz_validation,
-      icons: MANIFEST_DATA.icons,
-      identity: {
-        name: MANIFEST_DATA.name,
-        short_name: MANIFEST_DATA.short_name,
-      },
-      presentation: {
-        display: MANIFEST_DATA.display,
-        orientation: MANIFEST_DATA.orientation,
-        start_url: MANIFEST_DATA.start_url,
-        theme_color: MANIFEST_DATA.theme_color,
-        background_color: MANIFEST_DATA.background_color,
-      },
+      warnings: [
+        { warn: "Icons item at index 0 is invalid." },
+        {
+          warn:
+            "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
+        },
+      ],
+      icons: [
+        {
+          key: "16x16",
+          value:
+            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
+        },
+        {
+          key: "32x32",
+          value:
+            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
+        },
+        {
+          key: "64x64",
+          value:
+            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
+        },
+      ],
+      identity: [
+        {
+          key: "name",
+          value:
+            "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
+        },
+        {
+          key: "short_name",
+          value: "Na",
+        },
+      ],
+      presentation: [
+        { key: "display", value: "browser" },
+        { key: "orientation", value: "landscape" },
+        { key: "start_url", value: "root" },
+        { key: "theme_color", value: "#345" },
+        { key: "background_color", value: "#F9D" },
+      ],
     };
+
+    const isManifestEmpty = !data;
 
     return section(
       {

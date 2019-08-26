@@ -9,36 +9,54 @@ exports[`ManifestPage renders the expected snapshot 1`] = `
     icons={
       Array [
         Object {
-          "size": "16x16",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
+          "key": "16x16",
+          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
         },
         Object {
-          "size": "32x32",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
+          "key": "32x32",
+          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
         },
         Object {
-          "size": "64x64",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
+          "key": "64x64",
+          "value": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
         },
       ]
     }
     identity={
-      Object {
-        "name": "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
-        "short_name": "Na",
-      }
+      Array [
+        Object {
+          "key": "name",
+          "value": "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
+        },
+        Object {
+          "key": "short_name",
+          "value": "Na",
+        },
+      ]
     }
     presentation={
-      Object {
-        "background_color": "#F9D",
-        "display": "browser",
-        "orientation": "landscape",
-        "start_url": "root",
-        "theme_color": "#345",
-      }
+      Array [
+        Object {
+          "key": "display",
+          "value": "browser",
+        },
+        Object {
+          "key": "orientation",
+          "value": "landscape",
+        },
+        Object {
+          "key": "start_url",
+          "value": "root",
+        },
+        Object {
+          "key": "theme_color",
+          "value": "#345",
+        },
+        Object {
+          "key": "background_color",
+          "value": "#F9D",
+        },
+      ]
     }
     warnings={
       Array [

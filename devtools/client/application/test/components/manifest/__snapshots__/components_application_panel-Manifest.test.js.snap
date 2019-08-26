@@ -9,142 +9,57 @@ exports[`Manifest renders the expected snapshot 1`] = `
       className="app-page__title"
     />
   </Localized>
-  <table
-    className="manifest"
-    key="errors-and-warnings"
+  <ManifestSection
+    key="manifest-section-0"
+    title="manifest-item-warnings"
   >
-    <Localized
-      id="manifest-item-warnings"
-    >
-      <caption
-        className="manifest__title"
-      />
-    </Localized>
-    <tbody>
-      <ManifestItemWarning
-        key="warning-0"
-        warning={
-          Object {
-            "warn": "Icons item at index 0 is invalid.",
-          }
+    <ManifestItemWarning
+      key="warning-0"
+      warning={
+        Object {
+          "warn": "This is a warning",
         }
-      />
-      <ManifestItemWarning
-        key="warning-1"
-        warning={
-          Object {
-            "warn": "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
-          }
-        }
-      />
-    </tbody>
-  </table>
-  <table
-    className="manifest"
-    key="identity"
+      }
+    />
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
   >
-    <Localized
-      id="manifest-item-identity"
+    <ManifestItem
+      key="name"
+      label="name"
     >
-      <caption
-        className="manifest__title"
-      />
-    </Localized>
-    <tbody>
-      <ManifestItemText
-        key="name"
-        name="name"
-        val="Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong"
-      />
-      <ManifestItemText
-        key="short_name"
-        name="short_name"
-        val="Na"
-      />
-    </tbody>
-  </table>
-  <table
-    className="manifest"
-    key="presentation"
+      foo
+    </ManifestItem>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
   >
-    <Localized
-      id="manifest-item-presentation"
+    <ManifestItem
+      key="lorem"
+      label="lorem"
     >
-      <caption
-        className="manifest__title"
-      />
-    </Localized>
-    <tbody>
-      <ManifestItemText
-        key="display"
-        name="display"
-        val="browser"
-      />
-      <ManifestItemText
-        key="orientation"
-        name="orientation"
-        val="landscape"
-      />
-      <ManifestItemText
-        key="start_url"
-        name="start_url"
-        val="root"
-      />
-      <ManifestItemText
-        key="theme_color"
-        name="theme_color"
-        val="#345"
-      />
-      <ManifestItemText
-        key="background_color"
-        name="background_color"
-        val="#F9D"
-      />
-    </tbody>
-  </table>
-  <table
-    className="manifest"
-    key="icons"
+      ipsum
+    </ManifestItem>
+    <ManifestItem
+      key="foo"
+      label="foo"
+    >
+      bar
+    </ManifestItem>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
   >
-    <Localized
-      id="manifest-item-icons"
+    <ManifestItem
+      key="1x1"
+      label="1x1"
     >
-      <caption
-        className="manifest__title"
-      />
-    </Localized>
-    <tbody>
-      <ManifestItemIcon
-        icon={
-          Object {
-            "size": "16x16",
-            "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-            "type": "type/png",
-          }
-        }
-        key="warning-0"
-      />
-      <ManifestItemIcon
-        icon={
-          Object {
-            "size": "32x32",
-            "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-            "type": "type/png",
-          }
-        }
-        key="warning-1"
-      />
-      <ManifestItemIcon
-        icon={
-          Object {
-            "size": "64x64",
-            "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-            "type": "type/png",
-          }
-        }
-        key="warning-2"
-      />
-    </tbody>
-  </table>
+      something.png
+    </ManifestItem>
+  </ManifestSection>
 </article>
 `;

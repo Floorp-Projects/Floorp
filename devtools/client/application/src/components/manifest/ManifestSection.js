@@ -7,30 +7,32 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const {
-  tr,
-  td,
-  th,
+  caption,
+  table,
+  tbody,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
- * This component
+ * Displays a section of a manifest in the form of a captioned table.
  */
-class ManifestItemIcon extends PureComponent {
+class ManifestSection extends PureComponent {
   static get propTypes() {
     return {
-      icon: PropTypes.object.isRequired,
+      children: PropTypes.node,
+      title: PropTypes.string.isRequired,
     };
   }
-  render() {
-    const { icon } = this.props;
 
-    return tr(
-      { className: "manifest__row" },
-      th({ className: "manifest__col-label", scope: "row" }, icon.size),
-      td({ className: "manifest__col-value" }, icon.src)
+  render() {
+    const { children, title } = this.props;
+
+    return table(
+      { className: "manifest" },
+      caption({ className: "manifest__title" }, title),
+      tbody({}, children)
     );
   }
 }
 
 // Exports
-module.exports = ManifestItemIcon;
+module.exports = ManifestSection;
