@@ -5,7 +5,7 @@
 package org.mozilla.fenix.share
 
 import mozilla.components.concept.sync.Device
-import org.mozilla.fenix.share.listadapters.Application
+import org.mozilla.fenix.share.listadapters.AppShareOption
 
 /**
  * Interactor for the share screen.
@@ -31,7 +31,7 @@ class ShareInteractor : ShareCloseInteractor, ShareToAccountDevicesInteractor, S
         TODO("not yet!? implemented")
     }
 
-    override fun onShareToApp(appToShareTo: Application) {
+    override fun onShareToApp(appToShareTo: AppShareOption) {
         TODO("not yet!? implemented")
     }
 }

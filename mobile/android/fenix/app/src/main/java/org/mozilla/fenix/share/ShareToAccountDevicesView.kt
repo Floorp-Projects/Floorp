@@ -7,8 +7,11 @@ package org.mozilla.fenix.share
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.share_to_account_devices.*
 import mozilla.components.concept.sync.Device
 import org.mozilla.fenix.R
+import org.mozilla.fenix.share.listadapters.AccountDevicesShareAdapter
+import org.mozilla.fenix.share.listadapters.SyncShareOption
 
 /**
  * Callbacks for possible user interactions on the [ShareToAccountDevicesView]
@@ -27,5 +30,13 @@ class ShareToAccountDevicesView(
     init {
         LayoutInflater.from(containerView.context)
             .inflate(R.layout.share_to_account_devices, containerView, true)
+
+        devicesList.adapter = AccountDevicesShareAdapter(interactor)
+    }
+
+    fun setSharetargets(targets: List<SyncShareOption>) {
+        with(devicesList.adapter as AccountDevicesShareAdapter) {
+            updateData(targets)
+        }
     }
 }
