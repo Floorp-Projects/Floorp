@@ -24,7 +24,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/CraneStation/Cranelift"]
 git = "https://github.com/CraneStation/Cranelift"
-rev = "72b97fcb398537c6bb3ab73c45c428652321cbb6"
+rev = "164f91a1f473e582e18e48d056c51787d9a1c24d"
 replace-with = "vendored-sources"
 
 [source."https://github.com/ChunMinChang/coreaudio-sys"]
