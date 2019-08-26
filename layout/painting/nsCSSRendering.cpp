@@ -3820,12 +3820,7 @@ static uint32_t CountAllGlyphs(
     const gfxTextRun* aTextRun,
     const gfxTextRun::CompressedGlyph* aCompressedGlyph, uint32_t aStringStart,
     uint32_t aStringEnd) {
-  bool hasDetailed = aTextRun->HasDetailedGlyphs();
   uint32_t totalGlyphCount = 0;
-
-  if (!hasDetailed) {
-    return aStringEnd - aStringStart;
-  }
 
   for (const gfxTextRun::CompressedGlyph* cg = aCompressedGlyph + aStringStart;
        cg < aCompressedGlyph + aStringEnd; ++cg) {
@@ -3884,8 +3879,6 @@ static sk_sp<const SkTextBlob> CreateTextBlob(
   SkTextBlobBuilder builder;
   const SkTextBlobBuilder::RunBuffer& run = builder.allocRunPos(aFont, len);
 
-  bool hasDetailed = aTextRun->HasDetailedGlyphs();
-
   // RTL text should be read in by glyph starting at aStringEnd - 1 down until
   // aStringStart.
   bool isRTL = aTextRun->IsRightToLeft();
@@ -3907,7 +3900,7 @@ static sk_sp<const SkTextBlob> CreateTextBlob(
       AddSimpleGlyph(run, aCompressedGlyph[currIndex], i, aAppUnitsPerDevPixel,
                      aTextPos);
       i++;
-    } else if (hasDetailed) {
+    } else {
       // if it's detailed, potentially add multiple into run.glyphs
       uint32_t count = aCompressedGlyph[currIndex].GetGlyphCount();
       if (count > 0) {
@@ -3931,6 +3924,8 @@ static sk_sp<const SkTextBlob> CreateTextBlob(
     }
     currIndex += step;
   }
+
+  MOZ_ASSERT(i == len, "glyph count error!");
 
   return builder.make();
 }
