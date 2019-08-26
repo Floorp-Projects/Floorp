@@ -391,6 +391,23 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
   return result;
 }
 
+void RunConsoleReportingRunnable(already_AddRefed<nsIRunnable>&& aRunnable) {
+  if (StaticPrefs::privacy_restrict3rdpartystorage_console_lazy()) {
+    nsresult rv = NS_DispatchToCurrentThreadQueue(std::move(aRunnable),
+                                                  kMaxConsoleOutputDelayMs,
+                                                  EventQueuePriority::Idle);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  } else {
+    nsCOMPtr<nsIRunnable> runnable(std::move(aRunnable));
+    nsresult rv = runnable->Run();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
+}
+
 void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                              uint32_t aRejectedReason) {
   MOZ_ASSERT(aWindow && aURI);
@@ -424,61 +441,58 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
 
   nsCOMPtr<nsIURI> uri(aURI);
 
-  nsresult rv = NS_DispatchToCurrentThreadQueue(
-      NS_NewRunnableFunction(
-          "ReportBlockingToConsoleDelayed",
-          [doc, sourceLine, lineNumber, columnNumber, uri, aRejectedReason]() {
-            const char* message = nullptr;
-            nsAutoCString category;
-            switch (aRejectedReason) {
-              case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
-                message = "CookieBlockedByPermission";
-                category = NS_LITERAL_CSTRING("cookieBlockedPermission");
-                break;
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "ReportBlockingToConsoleDelayed",
+      [doc, sourceLine, lineNumber, columnNumber, uri, aRejectedReason]() {
+        const char* message = nullptr;
+        nsAutoCString category;
+        switch (aRejectedReason) {
+          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
+            message = "CookieBlockedByPermission";
+            category = NS_LITERAL_CSTRING("cookieBlockedPermission");
+            break;
 
-              case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
-                message = "CookieBlockedTracker";
-                category = NS_LITERAL_CSTRING("cookieBlockedTracker");
-                break;
+          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
+            message = "CookieBlockedTracker";
+            category = NS_LITERAL_CSTRING("cookieBlockedTracker");
+            break;
 
-              case nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL:
-                message = "CookieBlockedAll";
-                category = NS_LITERAL_CSTRING("cookieBlockedAll");
-                break;
+          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL:
+            message = "CookieBlockedAll";
+            category = NS_LITERAL_CSTRING("cookieBlockedAll");
+            break;
 
-              case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
-                message = "CookieBlockedForeign";
-                category = NS_LITERAL_CSTRING("cookieBlockedForeign");
-                break;
+          case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
+            message = "CookieBlockedForeign";
+            category = NS_LITERAL_CSTRING("cookieBlockedForeign");
+            break;
 
-              default:
-                return;
-            }
+          default:
+            return;
+        }
 
-            MOZ_ASSERT(message);
+        MOZ_ASSERT(message);
 
-            // Strip the URL of any possible username/password and make it ready
-            // to be presented in the UI.
-            nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-            NS_ENSURE_TRUE_VOID(urifixup);
-            nsCOMPtr<nsIURI> exposableURI;
-            nsresult rv =
-                urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
-            NS_ENSURE_SUCCESS_VOID(rv);
+        // Strip the URL of any possible username/password and make it ready
+        // to be presented in the UI.
+        nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+        NS_ENSURE_TRUE_VOID(urifixup);
+        nsCOMPtr<nsIURI> exposableURI;
+        nsresult rv =
+            urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
+        NS_ENSURE_SUCCESS_VOID(rv);
 
-            AutoTArray<nsString, 1> params;
-            CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
-                            *params.AppendElement());
+        AutoTArray<nsString, 1> params;
+        CopyUTF8toUTF16(exposableURI->GetSpecOrDefault(),
+                        *params.AppendElement());
 
-            nsContentUtils::ReportToConsole(
-                nsIScriptError::warningFlag, category, doc,
-                nsContentUtils::eNECKO_PROPERTIES, message, params, nullptr,
-                sourceLine, lineNumber, columnNumber);
-          }),
-      kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category,
+                                        doc, nsContentUtils::eNECKO_PROPERTIES,
+                                        message, params, nullptr, sourceLine,
+                                        lineNumber, columnNumber);
+      });
+
+  RunConsoleReportingRunnable(runnable.forget());
 }
 
 void ReportUnblockingToConsole(
@@ -511,58 +525,54 @@ void ReportUnblockingToConsole(
     nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
   }
 
-  nsresult rv = NS_DispatchToCurrentThreadQueue(
-      NS_NewRunnableFunction(
-          "ReportUnblockingToConsoleDelayed",
-          [doc, principal, trackingOrigin, grantedOrigin, sourceLine,
-           lineNumber, columnNumber, aReason]() {
-            nsAutoString origin;
-            nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return;
-            }
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "ReportUnblockingToConsoleDelayed",
+      [doc, principal, trackingOrigin, grantedOrigin, sourceLine, lineNumber,
+       columnNumber, aReason]() {
+        nsAutoString origin;
+        nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
 
-            // Not adding grantedOrigin yet because we may not want it later.
-            AutoTArray<nsString, 3> params = {origin, trackingOrigin};
-            const char* messageWithDifferentOrigin = nullptr;
-            const char* messageWithSameOrigin = nullptr;
+        // Not adding grantedOrigin yet because we may not want it later.
+        AutoTArray<nsString, 3> params = {origin, trackingOrigin};
+        const char* messageWithDifferentOrigin = nullptr;
+        const char* messageWithSameOrigin = nullptr;
 
-            switch (aReason) {
-              case AntiTrackingCommon::eStorageAccessAPI:
-                messageWithDifferentOrigin =
-                    "CookieAllowedForOriginOnTrackerByStorageAccessAPI";
-                messageWithSameOrigin =
-                    "CookieAllowedForTrackerByStorageAccessAPI";
-                break;
+        switch (aReason) {
+          case AntiTrackingCommon::eStorageAccessAPI:
+            messageWithDifferentOrigin =
+                "CookieAllowedForOriginOnTrackerByStorageAccessAPI";
+            messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
+            break;
 
-              case AntiTrackingCommon::eOpenerAfterUserInteraction:
-                MOZ_FALLTHROUGH;
-              case AntiTrackingCommon::eOpener:
-                messageWithDifferentOrigin =
-                    "CookieAllowedForOriginOnTrackerByHeuristic";
-                messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
-                break;
-            }
+          case AntiTrackingCommon::eOpenerAfterUserInteraction:
+            MOZ_FALLTHROUGH;
+          case AntiTrackingCommon::eOpener:
+            messageWithDifferentOrigin =
+                "CookieAllowedForOriginOnTrackerByHeuristic";
+            messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
+            break;
+        }
 
-            if (trackingOrigin == grantedOrigin) {
-              nsContentUtils::ReportToConsole(
-                  nsIScriptError::warningFlag,
-                  NS_LITERAL_CSTRING("Content Blocking"), doc,
-                  nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin,
-                  params, nullptr, sourceLine, lineNumber, columnNumber);
-            } else {
-              params.AppendElement(grantedOrigin);
-              nsContentUtils::ReportToConsole(
-                  nsIScriptError::warningFlag,
-                  NS_LITERAL_CSTRING("Content Blocking"), doc,
-                  nsContentUtils::eNECKO_PROPERTIES, messageWithDifferentOrigin,
-                  params, nullptr, sourceLine, lineNumber, columnNumber);
-            }
-          }),
-      kMaxConsoleOutputDelayMs, EventQueuePriority::Idle);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+        if (trackingOrigin == grantedOrigin) {
+          nsContentUtils::ReportToConsole(
+              nsIScriptError::warningFlag,
+              NS_LITERAL_CSTRING("Content Blocking"), doc,
+              nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin, params,
+              nullptr, sourceLine, lineNumber, columnNumber);
+        } else {
+          params.AppendElement(grantedOrigin);
+          nsContentUtils::ReportToConsole(
+              nsIScriptError::warningFlag,
+              NS_LITERAL_CSTRING("Content Blocking"), doc,
+              nsContentUtils::eNECKO_PROPERTIES, messageWithDifferentOrigin,
+              params, nullptr, sourceLine, lineNumber, columnNumber);
+        }
+      });
+
+  RunConsoleReportingRunnable(runnable.forget());
 }
 
 already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
