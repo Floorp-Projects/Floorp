@@ -46,6 +46,10 @@ cargo build
 banner "Rust unit tests"
 cargo test --all
 
+# Run only tests with "deterministic" feature.
+banner "Rust deterministic unit tests"
+cargo test --features "deterministic"
+
 # Make sure the documentation builds.
 banner "Rust documentation: $topdir/target/doc/wasmparser/index.html"
 cargo doc

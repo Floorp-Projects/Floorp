@@ -14,40 +14,51 @@ const {
 
 const ManifestLoader = createFactory(require("../manifest/ManifestLoader"));
 
-const ManifestView = createFactory(require("./ManifestView"));
-const ManifestViewEmpty = createFactory(require("./ManifestViewEmpty"));
-
-const { MANIFEST_DATA } = require("../../constants");
+const Manifest = createFactory(require("./Manifest"));
+const ManifestEmpty = createFactory(require("./ManifestEmpty"));
 
 class ManifestPage extends PureComponent {
   render() {
-    const isManifestViewEmpty = !MANIFEST_DATA;
-
-    // needs to be replaced with data from ManifestLoader
+    // TODO: needs to be replaced with data from Redux
     const data = {
-      warnings: MANIFEST_DATA.moz_validation,
-      icons: MANIFEST_DATA.icons,
-      identity: {
-        name: MANIFEST_DATA.name,
-        short_name: MANIFEST_DATA.short_name,
-      },
-      presentation: {
-        display: MANIFEST_DATA.display,
-        orientation: MANIFEST_DATA.orientation,
-        start_url: MANIFEST_DATA.start_url,
-        theme_color: MANIFEST_DATA.theme_color,
-        background_color: MANIFEST_DATA.background_color,
-      },
+      warnings: [
+        { warn: "Icons item at index 0 is invalid." },
+        {
+          warn:
+            "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
+        },
+      ],
+      icons: [],
+      identity: [
+        {
+          key: "name",
+          value:
+            "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
+        },
+        {
+          key: "short_name",
+          value: "Na",
+        },
+      ],
+      presentation: [
+        { key: "display", value: "browser" },
+        { key: "orientation", value: "landscape" },
+        { key: "start_url", value: "root" },
+        { key: "theme_color", value: "#345" },
+        { key: "background_color", value: "#F9D" },
+      ],
     };
+
+    const isManifestEmpty = !data;
 
     return section(
       {
-        className: `app-page ${isManifestViewEmpty ? "app-page--empty" : ""}`,
+        className: `app-page ${isManifestEmpty ? "app-page--empty" : ""}`,
       },
       ManifestLoader({}),
-      isManifestViewEmpty
-        ? ManifestViewEmpty({})
-        : ManifestView({
+      isManifestEmpty
+        ? ManifestEmpty({})
+        : Manifest({
             identity: data.identity,
             warnings: data.warnings,
             icons: data.icons,

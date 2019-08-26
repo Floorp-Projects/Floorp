@@ -416,6 +416,23 @@ impl<'a> BinaryReader<'a> {
         Ok(b)
     }
 
+    pub fn read_var_u8(&mut self) -> Result<u32> {
+        // Optimization for single byte i32.
+        let byte = self.read_u8()?;
+        if (byte & 0x80) == 0 {
+            return Ok(byte);
+        }
+
+        let result = (self.read_u8()? << 7) | (byte & 0x7F);
+        if result >= 0x100 {
+            return Err(BinaryReaderError {
+                message: "Invalid var_u8",
+                offset: self.original_position() - 1,
+            });
+        }
+        Ok(result)
+    }
+
     pub fn read_var_u32(&mut self) -> Result<u32> {
         // Optimization for single byte i32.
         let byte = self.read_u8()?;
@@ -518,20 +535,35 @@ impl<'a> BinaryReader<'a> {
     }
 
     pub fn read_var_s33(&mut self) -> Result<i64> {
-        // Note: this is not quite spec compliant, in that it doesn't enforce
-        // that the number is encoded in ceil(N / 7) bytes. We should make a
-        // generic-over-N decoding function and replace all the various
-        // `read_var_{i,s}NN` methods with calls to instantiations of that.
-
-        let n = self.read_var_i64()?;
-        if n > (1 << 33 - 1) {
-            Err(BinaryReaderError {
-                message: "Invalid var_s33",
-                offset: self.original_position() - 1,
-            })
-        } else {
-            Ok(n)
+        // Optimization for single byte.
+        let byte = self.read_u8()?;
+        if (byte & 0x80) == 0 {
+            return Ok(((byte as i8) << 1) as i64 >> 1);
         }
+
+        let mut result = (byte & 0x7F) as i64;
+        let mut shift = 7;
+        loop {
+            let byte = self.read_u8()?;
+            result |= ((byte & 0x7F) as i64) << shift;
+            if shift >= 25 {
+                let continuation_bit = (byte & 0x80) != 0;
+                let sign_and_unused_bit = (byte << 1) as i8 >> (33 - shift);
+                if continuation_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
+                    return Err(BinaryReaderError {
+                        message: "Invalid var_i33",
+                        offset: self.original_position() - 1,
+                    });
+                }
+                return Ok(result);
+            }
+            shift += 7;
+            if (byte & 0x80) == 0 {
+                break;
+            }
+        }
+        let ashift = 64 - shift;
+        Ok((result << ashift) >> ashift)
     }
 
     pub fn read_var_i64(&mut self) -> Result<i64> {
@@ -607,6 +639,9 @@ impl<'a> BinaryReader<'a> {
             },
             0x02 => Operator::I64Wait {
                 memarg: self.read_memarg_of_align(3)?,
+            },
+            0x03 => Operator::Fence {
+                flags: self.read_u8()? as u8,
             },
             0x10 => Operator::I32AtomicLoad {
                 memarg: self.read_memarg_of_align(2)?,
@@ -1236,7 +1271,7 @@ impl<'a> BinaryReader<'a> {
     }
 
     fn read_0xfd_operator(&mut self) -> Result<Operator<'a>> {
-        let code = self.read_u8()? as u8;
+        let code = self.read_var_u8()? as u8;
         Ok(match code {
             0x00 => Operator::V128Load {
                 memarg: self.read_memarg()?,
@@ -1247,13 +1282,6 @@ impl<'a> BinaryReader<'a> {
             0x02 => Operator::V128Const {
                 value: self.read_v128()?,
             },
-            0x03 => {
-                let mut lanes = [0 as SIMDLaneIndex; 16];
-                for i in 0..16 {
-                    lanes[i] = self.read_lane_index(32)?
-                }
-                Operator::V8x16Shuffle { lanes }
-            }
             0x04 => Operator::I8x16Splat,
             0x05 => Operator::I8x16ExtractLaneS {
                 lane: self.read_lane_index(16)?,
@@ -1418,14 +1446,26 @@ impl<'a> BinaryReader<'a> {
             0xb0 => Operator::F32x4ConvertUI32x4,
             0xb1 => Operator::F64x2ConvertSI64x2,
             0xb2 => Operator::F64x2ConvertUI64x2,
-            0xc0 => Operator::V8x16Shuffle1,
-            0xc1 => {
+            0xc0 => Operator::V8x16Swizzle,
+            0x03 | 0xc1 => {
                 let mut lanes = [0 as SIMDLaneIndex; 16];
                 for i in 0..16 {
                     lanes[i] = self.read_lane_index(32)?
                 }
-                Operator::V8x16Shuffle2Imm { lanes }
+                Operator::V8x16Shuffle { lanes }
             }
+            0xc2 => Operator::I8x16LoadSplat {
+                memarg: self.read_memarg_of_align(0)?,
+            },
+            0xc3 => Operator::I16x8LoadSplat {
+                memarg: self.read_memarg_of_align(1)?,
+            },
+            0xc4 => Operator::I32x4LoadSplat {
+                memarg: self.read_memarg_of_align(2)?,
+            },
+            0xc5 => Operator::I64x2LoadSplat {
+                memarg: self.read_memarg_of_align(3)?,
+            },
             _ => {
                 return Err(BinaryReaderError {
                     message: "Unknown 0xfd opcode",

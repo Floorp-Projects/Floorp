@@ -3538,9 +3538,10 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
     }
 
     // Construct the reflow input for the block.
-    Maybe<ReflowInput> blockReflowInput;
+    Maybe<ReflowInput> childReflowInput;
     Maybe<LogicalSize> cbSize;
     LogicalSize availSize = availSpace.Size(wm);
+    bool columnSetWrapperHasNoBSizeLeft = false;
     if (Style()->GetPseudoType() == PseudoStyleType::columnContent) {
       // Calculate the multicol containing block's block size so that the
       // children with percentage block size get correct percentage basis.
@@ -3593,21 +3594,26 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
           // BlockReflowInput::ComputeBlockAvailSpace().
           const nscoord availContentBSize = std::max(
               0, contentBSize - (aState.mBCoord - aState.ContentBStart()));
-          availSize.BSize(wm) =
-              std::min(availSize.BSize(wm), availContentBSize);
+          if (availSize.BSize(wm) >= availContentBSize) {
+            availSize.BSize(wm) = availContentBSize;
+            columnSetWrapperHasNoBSizeLeft = true;
+          }
         }
       }
     }
 
-    blockReflowInput.emplace(aState.mPresContext, aState.mReflowInput, frame,
+    childReflowInput.emplace(aState.mPresContext, aState.mReflowInput, frame,
                              availSize.ConvertTo(frame->GetWritingMode(), wm),
                              cbSize);
 
+    childReflowInput->mFlags.mColumnSetWrapperHasNoBSizeLeft =
+        columnSetWrapperHasNoBSizeLeft;
+
     if (aLine->MovedFragments()) {
       // We only need to set this the first reflow, since if we reflow
-      // again (and replace blockReflowInput) we'll be reflowing it
+      // again (and replace childReflowInput) we'll be reflowing it
       // again in the same fragment as the previous time.
-      blockReflowInput->mFlags.mMovedBlockFragments = true;
+      childReflowInput->mFlags.mMovedBlockFragments = true;
     }
 
     nsFloatManager::SavedState floatManagerState;
@@ -3633,16 +3639,16 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       }
 
       if (mayNeedRetry) {
-        blockReflowInput->mDiscoveredClearance = &clearanceFrame;
+        childReflowInput->mDiscoveredClearance = &clearanceFrame;
       } else if (!applyBStartMargin) {
-        blockReflowInput->mDiscoveredClearance =
+        childReflowInput->mDiscoveredClearance =
             aState.mReflowInput.mDiscoveredClearance;
       }
 
       frameReflowStatus.Reset();
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
                       clearance, aState.IsAdjacentWithTop(), aLine.get(),
-                      *blockReflowInput, frameReflowStatus, aState);
+                      *childReflowInput, frameReflowStatus, aState);
 
       // Now the block has a height.  Using that height, get the
       // available space again and call ComputeBlockAvailSpace again.
@@ -3727,8 +3733,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
         clearance = 0;
       }
 
-      blockReflowInput.reset();
-      blockReflowInput.emplace(
+      childReflowInput.reset();
+      childReflowInput.emplace(
           aState.mPresContext, aState.mReflowInput, frame,
           availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
     } while (true);
@@ -3742,7 +3748,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
     aState.mPrevChild = frame;
 
-    if (blockReflowInput->WillReflowAgainForClearance()) {
+    if (childReflowInput->WillReflowAgainForClearance()) {
       // If an ancestor of ours is going to reflow for clearance, we
       // need to avoid calling PlaceBlock, because it unsets dirty bits
       // on the child block (both itself, and through its call to
@@ -3780,7 +3786,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       nsCollapsingMargin collapsedBEndMargin;
       nsOverflowAreas overflowAreas;
       *aKeepReflowGoing =
-          brc.PlaceBlock(*blockReflowInput, forceFit, aLine.get(),
+          brc.PlaceBlock(*childReflowInput, forceFit, aLine.get(),
                          collapsedBEndMargin, overflowAreas, frameReflowStatus);
       if (!frameReflowStatus.IsFullyComplete() &&
           ShouldAvoidBreakInside(aState.mReflowInput)) {

@@ -2,9 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// Error that occurs when the test ends while handling alarms.onAlarm.
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 add_task(async function test_duplicate_alarm_name_replaces_alarm() {
   function backgroundScript() {
     let count = 0;

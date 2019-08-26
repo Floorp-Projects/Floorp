@@ -175,6 +175,27 @@ nsPlainTextSerializer::~nsPlainTextSerializer() {
   NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
 
+void nsPlainTextSerializer::Settings::Init(const int32_t aFlags) {
+  mFlags = aFlags;
+
+  if (mFlags & nsIDocumentEncoder::OutputFormatted) {
+    // Get some prefs that controls how we do formatted output
+    mStructs = Preferences::GetBool(PREF_STRUCTS, mStructs);
+
+    mHeaderStrategy =
+        Preferences::GetInt(PREF_HEADER_STRATEGY, mHeaderStrategy);
+  }
+
+  // The pref is default inited to false in libpref, but we use true
+  // as fallback value because we don't want to affect behavior in
+  // other places which use this serializer currently.
+  mWithRubyAnnotation =
+      gAlwaysIncludeRuby || (mFlags & nsIDocumentEncoder::OutputRubyAnnotation);
+
+  // XXX We should let the caller decide whether to do this or not
+  mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
+}
+
 NS_IMETHODIMP
 nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
                             const Encoding* aEncoding, bool aIsCopying,
@@ -196,7 +217,7 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
 #endif
 
   *aNeedsPreformatScanning = true;
-  mSettings.mFlags = aFlags;
+  mSettings.Init(aFlags);
   mWrapColumn = aWrapColumn;
 
   // Only create a linebreaker if we will handle wrapping.
@@ -209,25 +230,7 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
 
   mPreformattedBlockBoundary = false;
 
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) {
-    // Get some prefs that controls how we do formatted output
-    mSettings.mStructs = Preferences::GetBool(PREF_STRUCTS, mSettings.mStructs);
-
-    mSettings.mHeaderStrategy =
-        Preferences::GetInt(PREF_HEADER_STRATEGY, mSettings.mHeaderStrategy);
-  }
-
-  // The pref is default inited to false in libpref, but we use true
-  // as fallback value because we don't want to affect behavior in
-  // other places which use this serializer currently.
-  mSettings.mWithRubyAnnotation =
-      gAlwaysIncludeRuby ||
-      (mSettings.mFlags & nsIDocumentEncoder::OutputRubyAnnotation);
-
-  // XXX We should let the caller decide whether to do this or not
-  mSettings.mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
-
-  mCurrentLineContent = CurrentLineContent{mSettings.mFlags};
+  mCurrentLineContent = CurrentLineContent{mSettings.GetFlags()};
 
   return NS_OK;
 }
@@ -264,7 +267,7 @@ bool nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack) {
 }
 
 bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) {
-  if (mSettings.mWithRubyAnnotation) {
+  if (mSettings.GetWithRubyAnnotation()) {
     return false;
   }
 
@@ -470,7 +473,8 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     return NS_OK;
   }
 
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+  if (mSettings.GetFlags() &
+      nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
     if (mPreformattedBlockBoundary && DoOutput()) {
       // Should always end a line, but get no more whitespace
       if (mFloatingLines < 0) mFloatingLines = 0;
@@ -479,7 +483,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     mPreformattedBlockBoundary = false;
   }
 
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputRaw) {
+  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputRaw) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
@@ -515,9 +519,9 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
 
   // Check if this tag's content that should not be output
   if ((aTag == nsGkAtoms::noscript &&
-       !(mSettings.mFlags & nsIDocumentEncoder::OutputNoScriptContent)) ||
+       !(mSettings.GetFlags() & nsIDocumentEncoder::OutputNoScriptContent)) ||
       ((aTag == nsGkAtoms::iframe || aTag == nsGkAtoms::noframes) &&
-       !(mSettings.mFlags & nsIDocumentEncoder::OutputNoFramesContent))) {
+       !(mSettings.GetFlags() & nsIDocumentEncoder::OutputNoFramesContent))) {
     // Ignore everything that follows the current tag in
     // question until a matching end tag is encountered.
     mIgnoreAboveIndex = mTagStackIndex - 1;
@@ -622,7 +626,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     mULCount++;
   } else if (aTag == nsGkAtoms::ol) {
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
-    if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) {
+    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
       // Must end the current line before we change indention
       if (mOLStackIndex < OLStackSize) {
         nsAutoString startAttr;
@@ -639,7 +643,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     }
     mIndent += kIndentSizeList;  // see ul
   } else if (aTag == nsGkAtoms::li &&
-             (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)) {
+             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
     if (mTagStackIndex > 1 && IsInOL()) {
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
@@ -694,7 +698,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
   }
 
   //////////////////////////////////////////////////////////////
-  if (!(mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)) {
+  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
     return NS_OK;
   }
   //////////////////////////////////////////////////////////////
@@ -708,7 +712,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
       aTag == nsGkAtoms::h4 || aTag == nsGkAtoms::h5 || aTag == nsGkAtoms::h6) {
     EnsureVerticalSpace(2);
-    if (mSettings.mHeaderStrategy == 2) {  // numbered
+    if (mSettings.GetHeaderStrategy() == 2) {  // numbered
       mIndent += kIndentSizeHeaders;
       // Caching
       int32_t level = HeaderLevel(aTag);
@@ -729,7 +733,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
       }
       leadup.Append(char16_t(' '));
       Write(leadup);
-    } else if (mSettings.mHeaderStrategy == 1) {  // indent increasingly
+    } else if (mSettings.GetHeaderStrategy() == 1) {  // indent increasingly
       mIndent += kIndentSizeHeaders;
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
@@ -742,22 +746,22 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
         !url.IsEmpty()) {
       mURL = url;
     }
-  } else if (aTag == nsGkAtoms::sup && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::sup && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("^"));
-  } else if (aTag == nsGkAtoms::sub && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::sub && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
-  } else if (aTag == nsGkAtoms::code && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::code && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("|"));
   } else if ((aTag == nsGkAtoms::strong || aTag == nsGkAtoms::b) &&
-             mSettings.mStructs && !currentNodeIsConverted) {
+             mSettings.GetStructs() && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("*"));
   } else if ((aTag == nsGkAtoms::em || aTag == nsGkAtoms::i) &&
-             mSettings.mStructs && !currentNodeIsConverted) {
+             mSettings.GetStructs() && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("/"));
-  } else if (aTag == nsGkAtoms::u && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::u && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
@@ -782,7 +786,8 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     return NS_OK;
   }
 
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+  if (mSettings.GetFlags() &
+      nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
     if (DoOutput() && IsElementPreformatted() &&
         IsCssBlockLevelElement(mElement)) {
       // If we're closing a preformatted block element, output a line break
@@ -791,7 +796,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     }
   }
 
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputRaw) {
+  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputRaw) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
@@ -820,7 +825,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     // but in preformatted areas like text fields,
     // we can't emit newlines that weren't there.
     // So add the newline only in the case of formatted output.
-    if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) {
+    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
       EnsureVerticalSpace(0);
     } else {
       FlushLine();
@@ -841,7 +846,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     if (mFloatingLines < 0) mFloatingLines = 0;
     mLineBreakDue = true;
   } else if (((aTag == nsGkAtoms::li) || (aTag == nsGkAtoms::dt)) &&
-             (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)) {
+             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
     // Items that should always end a line, but get no more whitespace
     if (mFloatingLines < 0) mFloatingLines = 0;
     mLineBreakDue = true;
@@ -899,16 +904,16 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
     // how to know?
-    if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)
+    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
       EnsureVerticalSpace(1);
-    else {
+    } else {
       if (mFloatingLines < 0) mFloatingLines = 0;
       mLineBreakDue = true;
     }
   }
 
   //////////////////////////////////////////////////////////////
-  if (!(mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)) {
+  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
     return NS_OK;
   }
   //////////////////////////////////////////////////////////////
@@ -921,10 +926,10 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
 
   if (aTag == nsGkAtoms::h1 || aTag == nsGkAtoms::h2 || aTag == nsGkAtoms::h3 ||
       aTag == nsGkAtoms::h4 || aTag == nsGkAtoms::h5 || aTag == nsGkAtoms::h6) {
-    if (mSettings.mHeaderStrategy) { /*numbered or indent increasingly*/
+    if (mSettings.GetHeaderStrategy()) { /*numbered or indent increasingly*/
       mIndent -= kIndentSizeHeaders;
     }
-    if (mSettings.mHeaderStrategy == 1 /*indent increasingly*/) {
+    if (mSettings.GetHeaderStrategy() == 1 /*indent increasingly*/) {
       for (int32_t i = HeaderLevel(aTag); i > 1; i--) {
         // for h(x), run x-1 times
         mIndent -= kIndentIncrementHeaders;
@@ -940,18 +945,18 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     Write(temp);
     mURL.Truncate();
   } else if ((aTag == nsGkAtoms::sup || aTag == nsGkAtoms::sub) &&
-             mSettings.mStructs && !currentNodeIsConverted) {
+             mSettings.GetStructs() && !currentNodeIsConverted) {
     Write(kSpace);
-  } else if (aTag == nsGkAtoms::code && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::code && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("|"));
   } else if ((aTag == nsGkAtoms::strong || aTag == nsGkAtoms::b) &&
-             mSettings.mStructs && !currentNodeIsConverted) {
+             mSettings.GetStructs() && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("*"));
   } else if ((aTag == nsGkAtoms::em || aTag == nsGkAtoms::i) &&
-             mSettings.mStructs && !currentNodeIsConverted) {
+             mSettings.GetStructs() && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("/"));
-  } else if (aTag == nsGkAtoms::u && mSettings.mStructs &&
+  } else if (aTag == nsGkAtoms::u && mSettings.GetStructs() &&
              !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
@@ -1004,7 +1009,7 @@ void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
     // Otherwise, either we're collapsing to minimal text, or we're
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
-    if ((mSettings.mFlags & nsIDocumentEncoder::OutputPreformatted) ||
+    if ((mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted) ||
         (mPreFormattedMail && !mWrapColumn) || IsElementPreformatted()) {
       EnsureVerticalSpace(mEmptyLines + 1);
     } else if (!mInWhitespace) {
@@ -1049,7 +1054,7 @@ nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
       EnsureVerticalSpace(mEmptyLines + 1);
     }
   } else if (aTag == nsGkAtoms::hr &&
-             (mSettings.mFlags & nsIDocumentEncoder::OutputFormatted)) {
+             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
     EnsureVerticalSpace(0);
 
     // Make a line of dashes as wide as the wrap width
@@ -1160,7 +1165,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
       return;
     }
 
-    if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
       if (IsSpaceStuffable(aLineFragment) &&
           mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
       ) {
@@ -1289,7 +1294,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
         EndLine(true, breakBySpace);
         mCurrentLineContent.mValue.Truncate();
         // Space stuff new line?
-        if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+        if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
           if (!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get()) &&
               mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
           ) {
@@ -1333,7 +1338,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
    * "- -- ", the OpenPGP dash-escaped signature separator in inline
    * signed messages according to the OpenPGP standard (RFC 2440).
    */
-  if (!(mSettings.mFlags & nsIDocumentEncoder::OutputPreformatted) &&
+  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted) &&
       (aSoftlinebreak ||
        !(mCurrentLineContent.mValue.EqualsLiteral("-- ") ||
          mCurrentLineContent.mValue.EqualsLiteral("- -- ")))) {
@@ -1346,7 +1351,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   }
 
   if (aSoftlinebreak &&
-      (mSettings.mFlags & nsIDocumentEncoder::OutputFormatFlowed) &&
+      (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) &&
       (mIndent == 0)) {
     // Add the soft part of the soft linebreak (RFC 2646 4.1)
     // We only do this when there is no indentation since format=flowed
@@ -1354,7 +1359,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
 
     // If breaker character is ASCII space with RFC 3676 support (delsp=yes),
     // add twice space.
-    if ((mSettings.mFlags & nsIDocumentEncoder::OutputFormatDelSp) &&
+    if ((mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatDelSp) &&
         aBreakBySpace)
       mCurrentLineContent.mValue.AppendLiteral("  ");
     else
@@ -1472,7 +1477,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
   // For Flowed text change nbsp-ses to spaces at end of lines to allow them
   // to be cut off along with usual spaces if required. (bug #125928)
-  if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
     for (int32_t i = totLen - 1; i >= 0; i--) {
       char16_t c = str[i];
       if ('\n' == c || '\r' == c || ' ' == c || '\t' == c) continue;
@@ -1561,7 +1566,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
 
       mCurrentLineContent.mValue.Truncate();
-      if (mSettings.mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+      if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
         if ((outputLineBreak || !spacesOnly) &&  // bugs 261467,125928
             !IsQuotedLine(stringpart) && !stringpart.EqualsLiteral("-- ") &&
             !stringpart.EqualsLiteral("- -- "))
@@ -1633,7 +1638,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
       // If we're already in whitespace and not preformatted, just skip it:
       if (mInWhitespace && (nextpos == bol) && !mPreFormattedMail &&
-          !(mSettings.mFlags & nsIDocumentEncoder::OutputPreformatted)) {
+          !(mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted)) {
         // Skip whitespace
         bol++;
         continue;
@@ -1652,7 +1657,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
       offsetIntoBuffer = str.get() + bol;
       if (mPreFormattedMail ||
-          (mSettings.mFlags & nsIDocumentEncoder::OutputPreformatted)) {
+          (mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted)) {
         // Preserve the real whitespace character
         nextpos++;
         AddToLine(offsetIntoBuffer, nextpos - bol);

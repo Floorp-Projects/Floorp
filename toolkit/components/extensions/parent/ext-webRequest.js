@@ -110,7 +110,7 @@ function registerEvent(
 
   let listenerDetails = {
     addonId: extension.id,
-    extension: extension.policy,
+    policy: extension.policy,
     blockingAllowed,
   };
   WebRequest[eventName].addListener(listener, filter2, info2, listenerDetails);
@@ -170,7 +170,7 @@ this.webRequest = class extends ExtensionAPI {
         getSecurityInfo: function(requestId, options = {}) {
           return WebRequest.getSecurityInfo({
             id: requestId,
-            extension: context.extension.policy,
+            policy: context.extension.policy,
             remoteTab: context.xulBrowser.frameLoader.remoteTab,
             options,
           });

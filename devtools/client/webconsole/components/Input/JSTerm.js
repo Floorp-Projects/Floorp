@@ -558,7 +558,7 @@ class JSTerm extends Component {
    * Execute a string. Execution happens asynchronously in the content process.
    */
   _execute() {
-    const executeString = this._getValue();
+    const executeString = this.getSelectedText() || this._getValue();
     if (!executeString) {
       return;
     }

@@ -14,7 +14,7 @@ namespace net {
 /* Used to facilitate http redirects to file:// - see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1345094
  */
-async protocol PFileChannel
+async refcounted protocol PFileChannel
 {
   manager PNecko;
 
