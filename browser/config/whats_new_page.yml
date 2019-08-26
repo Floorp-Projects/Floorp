@@ -19,43 +19,33 @@
       versions: ["<{version.major_number}.0"]
       locales:
           - be
-          - bs
-          - cak
           - cs
           - cy
           - da
           - de
-          - el
           - en-CA
           - en-GB
           - en-US
           - es-AR
-          - es-CL
-          - es-ES
+          - es-ES (will be delivered today)
           - es-MX
           - fr
           - fy-NL
-          - gn
           - hu
           - ia
           - id
           - it
           - ka
+          - lt
           - nl
           - nn-NO
           - pl
           - pt-BR
-          - pt-PT
-          - rm
-          - ro
           - ru
           - sk
           - sl
-          - sq
           - sv-SE
-          - th
           - tr
-          - uk
           - vi
           - zh-CN
           - zh-TW
