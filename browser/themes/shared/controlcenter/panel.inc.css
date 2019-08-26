@@ -1071,6 +1071,10 @@ description#identity-popup-content-verifier,
   transition: padding .2s ease;
 }
 
+:root[lwt-popup-brighttext] .protections-popup-tp-switch:not([enabled]) {
+  background-color: #737373;
+}
+
 .protections-popup-tp-switch::before {
   position: relative;
   display: block;
