@@ -158,8 +158,6 @@ histogram_files = [
     '/dom/base/UseCounters.conf',
     '/dom/base/nsDeprecatedOperationList.h',
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES']:
-    histogram_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES'])
 
 data = GENERATED_FILES['TelemetryHistogramData.inc']
 data.script = 'build_scripts/gen_histogram_data.py'
@@ -177,8 +175,6 @@ data.inputs = histogram_files
 scalar_files = [
     'Scalars.yaml',
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES']:
-    scalar_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES'])
 
 scalar_data = GENERATED_FILES['TelemetryScalarData.h']
 scalar_data.script = 'build_scripts/gen_scalar_data.py'
@@ -201,8 +197,6 @@ FINAL_TARGET_FILES += ['!ScalarArtifactDefinitions.json']
 event_files = [
     'Events.yaml',
 ]
-if CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES']:
-    event_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES'])
 
 event_data = GENERATED_FILES['TelemetryEventData.h']
 event_data.script = 'build_scripts/gen_event_data.py'

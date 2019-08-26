@@ -1916,6 +1916,7 @@ LayoutDeviceIntSize nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize&
   // This is the same thing the windows widget does, but we probably should fix
   // that, see bug 1445738.
   NSUInteger styleMask = [mWindow styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   NSRect inflatedRect = [NSWindow frameRectForContentRect:rect styleMask:styleMask];
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
   return r.Size();
@@ -2627,6 +2628,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 - (NSPoint)FrameView__closeButtonOrigin;
 - (NSPoint)FrameView__fullScreenButtonOrigin;
 - (BOOL)FrameView__wantsFloatingTitlebar;
+- (CGFloat)FrameView__titlebarHeight;
 @end
 
 @implementation NSView (FrameViewMethodSwizzling)
@@ -2650,6 +2652,25 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 
 - (BOOL)FrameView__wantsFloatingTitlebar {
   return NO;
+}
+
+- (CGFloat)FrameView__titlebarHeight {
+  CGFloat height = [self FrameView__titlebarHeight];
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    // Make sure that the titlebar height includes our shifted buttons.
+    // The following coordinates are in window space, with the origin being at the bottom left
+    // corner of the window.
+    ToolbarWindow* win = (ToolbarWindow*)[self window];
+    CGFloat frameHeight = [self frame].size.height;
+    NSPoint pointAboveWindow = {0.0, frameHeight};
+    CGFloat windowButtonY = [win windowButtonsPositionWithDefaultPosition:pointAboveWindow].y;
+    CGFloat fullScreenButtonY =
+        [win fullScreenButtonPositionWithDefaultPosition:pointAboveWindow].y;
+    CGFloat maxDistanceFromWindowTopToButtonBottom =
+        std::max(frameHeight - windowButtonY, frameHeight - fullScreenButtonY);
+    height = std::max(height, maxDistanceFromWindowTopToButtonBottom);
+  }
+  return height;
 }
 
 @end
@@ -2730,6 +2751,8 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       class_getMethodImplementation([NSView class], @selector(FrameView__fullScreenButtonOrigin));
   static IMP our_wantsFloatingTitlebar =
       class_getMethodImplementation([NSView class], @selector(FrameView__wantsFloatingTitlebar));
+  static IMP our_titlebarHeight =
+      class_getMethodImplementation([NSView class], @selector(FrameView__titlebarHeight));
 
   if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
     // Either of these methods might be implemented in both a subclass of
@@ -2749,23 +2772,26 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
                                 @selector(FrameView__fullScreenButtonOrigin));
     }
-    // Override the _wantsFloatingTitlebar method to return NO, because it works around multiple
-    // problems:
-    // When we're not using CoreAnimation, the "floating titlebar" overlaps in a glitchy way with
-    // the NSOpenGLContext when we're drawing in the titlebar. These glitches do not happen when we
-    // use CoreAnimation.
-    // An additional problem appears in builds that link against the 10.14 SDK: In windows where
-    // _wantsFloatingTitlebar returns YES, the root NSView contains an additional view that provides
-    // a window background. This confuses our setContentView override which will place the content
-    // view *below* that background view, effectively hiding the content view completely.
-    // The floating titlebar view also slightly clips the bottom of the window buttons which we
-    // forcefully move down with our override of _closeButtonOrigin.
-    // See bug 1576391 for the removal of the _wantsFloatingTitlebar override.
-    IMP _wantsFloatingTitlebar =
-        class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
-    if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
-      nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
-                                @selector(FrameView__wantsFloatingTitlebar));
+
+    if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+      // Override _titlebarHeight so that the floating titlebar doesn't clip the bottom of the
+      // window buttons which we move down with our override of _closeButtonOrigin.
+      IMP _titlebarHeight =
+          class_getMethodImplementation(frameViewClass, @selector(_titlebarHeight));
+      if (_titlebarHeight && _titlebarHeight != our_titlebarHeight) {
+        nsToolkit::SwizzleMethods(frameViewClass, @selector(_titlebarHeight),
+                                  @selector(FrameView__titlebarHeight));
+      }
+    } else {
+      // If CoreAnimation is not enabled, override the _wantsFloatingTitlebar method to return NO,
+      // in order to avoid titlebar glitches when in that configuration. These glitches do not
+      // appear when CoreAnimation is enabled.
+      IMP _wantsFloatingTitlebar =
+          class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
+      if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
+        nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
+                                  @selector(FrameView__wantsFloatingTitlebar));
+      }
     }
 
     [gSwizzledFrameViewClasses addObject:frameViewClass];
@@ -2932,6 +2958,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aFrameRect;
   }
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   return [NSWindow contentRectForFrameRect:aFrameRect styleMask:styleMask];
 }
 
@@ -2940,6 +2967,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     return aChildViewRect;
   }
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   return [NSWindow frameRectForContentRect:aChildViewRect styleMask:styleMask];
 }
 
@@ -3040,39 +3068,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   NSView* frameView = [[self contentView] superview];
   if ([frameView respondsToSelector:@selector(_tileTitlebarAndRedisplay:)]) {
     [frameView _tileTitlebarAndRedisplay:NO];
-  }
-}
-
-// Override methods that translate between content rect and frame rect.
-- (NSRect)contentRectForFrameRect:(NSRect)aRect {
-  return aRect;
-}
-
-- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  return aRect;
-}
-
-- (NSRect)frameRectForContentRect:(NSRect)aRect {
-  return aRect;
-}
-
-- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  return aRect;
-}
-
-- (void)setContentView:(NSView*)aView {
-  [super setContentView:aView];
-
-  // Now move the contentView to the bottommost layer so that it's guaranteed
-  // to be under the window buttons.
-  NSView* frameView = [aView superview];
-  [aView removeFromSuperview];
-  if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
-    // 10.10 prints a warning when we call addSubview on the frame view, so we
-    // silence the warning by calling a private method instead.
-    [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
-  } else {
-    [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
   }
 }
 
@@ -3261,6 +3256,16 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // rect.
   NSRect frameRect = [NSWindow frameRectForContentRect:aChildViewRect styleMask:aStyle];
 
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup() && nsCocoaFeatures::OnYosemiteOrLater()) {
+    // Always size the content view to the full frame size of the window.
+    // We cannot use this window mask on 10.9, because it was added in 10.10.
+    // We also cannot use it when our CoreAnimation pref is disabled: This flag forces CoreAnimation
+    // on for the entire window, which causes glitches in combination with our non-CoreAnimation
+    // drawing. (Specifically, on macOS versions up until at least 10.14.0, layer-backed
+    // NSOpenGLViews have extremely glitchy resizing behavior.)
+    aStyle |= NSFullSizeContentViewWindowMask;
+  }
+
   // -[NSWindow initWithContentRect:styleMask:backing:defer:] calls
   // [self frameRectForContentRect:styleMask:] to convert the supplied content
   // rect to the window's frame rect. We've overridden that method to be a
@@ -3316,6 +3321,46 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   }
 }
 
+// Override methods that translate between content rect and frame rect.
+// These overrides are only needed on 10.9 or when the CoreAnimation pref is
+// is false; otherwise we use NSFullSizeContentViewMask and get this behavior
+// for free.
+- (NSRect)contentRectForFrameRect:(NSRect)aRect {
+  return aRect;
+}
+
+- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
+  return aRect;
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect {
+  return aRect;
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
+  return aRect;
+}
+
+- (void)setContentView:(NSView*)aView {
+  [super setContentView:aView];
+
+  if (!([self styleMask] & NSFullSizeContentViewWindowMask)) {
+    // Move the contentView to the bottommost layer so that it's guaranteed
+    // to be under the window buttons.
+    // When the window uses the NSFullSizeContentViewMask, this manual
+    // adjustment is not necessary.
+    NSView* frameView = [aView superview];
+    [aView removeFromSuperview];
+    if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
+      // 10.10 prints a warning when we call addSubview on the frame view, so we
+      // silence the warning by calling a private method instead.
+      [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
+    } else {
+      [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
+    }
+  }
+}
+
 - (void)windowMainStateChanged {
   [self setTitlebarNeedsDisplay];
   [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
@@ -3342,6 +3387,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // titlebarHeight of zero.
   NSRect frameRect = [self frame];
   NSUInteger styleMask = [self styleMask];
+  styleMask &= ~NSFullSizeContentViewWindowMask;
   NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:styleMask];
   return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
