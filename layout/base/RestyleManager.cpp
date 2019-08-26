@@ -722,6 +722,11 @@ static bool RecomputePosition(nsIFrame* aFrame) {
 
   // For relative positioning, we can simply update the frame rect
   if (display->IsRelativelyPositionedStyle()) {
+    if (aFrame->IsGridItem()) {
+      // A grid item's CB is its grid area, not the parent frame content area
+      // as is assumed below.
+      return false;
+    }
     // Move the frame
     if (display->mPosition == NS_STYLE_POSITION_STICKY) {
       // Update sticky positioning for an entire element at once, starting with
