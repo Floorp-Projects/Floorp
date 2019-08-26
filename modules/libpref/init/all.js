@@ -2635,13 +2635,6 @@ pref("services.blocklist.gfx.signer", "remote-settings.content-signature.mozilla
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none. Mac settings in macprefs.js
 pref("ui.key.accelKey", 17);
 pref("ui.key.menuAccessKey", 18);
-pref("ui.key.generalAccessKey", -1);
-
-// If generalAccessKey is -1, use the following two prefs instead.
-// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta, 16 for Win
-// (values can be combined, e.g. 5 for Alt+Shift)
-pref("ui.key.chromeAccess", 4);
-pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 
@@ -3923,17 +3916,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
   pref("ui.key.menuAccessKey", 0);
   pref("ui.key.accelKey", 224);
-  // (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
-  // suggests to use command on mac, but this really sucks (imagine someone having a "q"
-  // as an access key and not letting you quit the app!). As a result, we've made a
-  // command decision 1 day before tree lockdown to change it to the control key.
-  pref("ui.key.generalAccessKey", -1);
-
-  // If generalAccessKey is -1, use the following two prefs instead.
-  // Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta (Cmd)
-  // (values can be combined, e.g. 3 for Ctrl+Shift)
-  pref("ui.key.chromeAccess", 2);
-  pref("ui.key.contentAccess", 6);
 
   // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
   pref("ui.panel.default_level_parent", false);

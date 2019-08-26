@@ -6676,6 +6676,37 @@
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------
 
+- name: ui.key.generalAccessKey
+  type: int32_t
+  value: -1
+  mirror: always
+
+# Only used if generalAccessKey is -1.
+- name: ui.key.chromeAccess
+  type: int32_t
+#ifdef XP_MACOSX
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 =  ctrl+shift, 8 = Meta
+  value: 2
+#else
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
+  # 8 = Meta, 16 = Win
+  value: 4
+#endif
+  mirror: always
+
+# Only used if generalAccessKey is -1.
+- name: ui.key.contentAccess
+  type: int32_t
+#ifdef XP_MACOSX
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 = ctrl+shift, 8 = Meta
+  value: 6
+#else
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
+  # 8 = Meta, 16 = Win
+  value: 5
+#endif
+  mirror: always
+
 # If the user puts a finger down on an element and we think the user might be
 # executing a pan gesture, how long do we wait before tentatively deciding the
 # gesture is actually a tap and activating the target element?
