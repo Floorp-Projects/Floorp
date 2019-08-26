@@ -783,16 +783,14 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
-nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
-                                  nsDocShellLoadState* aLoadState) {
+void BrowsingContext::LoadURI(BrowsingContext* aAccessor,
+                              nsDocShellLoadState* aLoadState) {
   MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
   MOZ_DIAGNOSTIC_ASSERT(!aAccessor || !aAccessor->IsDiscarded());
 
   if (mDocShell) {
-    return mDocShell->LoadURI(aLoadState);
-  }
-
-  if (!aAccessor && XRE_IsParentProcess()) {
+    mDocShell->LoadURI(aLoadState);
+  } else if (!aAccessor && XRE_IsParentProcess()) {
     Unused << Canonical()->GetCurrentWindowGlobal()->SendLoadURIInChild(
         aLoadState);
   } else {
@@ -806,7 +804,6 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
       wgc->SendLoadURI(this, aLoadState);
     }
   }
-  return NS_OK;
 }
 
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
@@ -1038,6 +1035,28 @@ already_AddRefed<BrowsingContext> BrowsingContext::IPCInitializer::GetOpener() {
     MOZ_RELEASE_ASSERT(opener);
   }
   return opener.forget();
+}
+
+void BrowsingContext::LocationProxy::SetHref(const nsAString& aHref,
+                                             nsIPrincipal& aSubjectPrincipal,
+                                             ErrorResult& aError) {
+  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
+  if (!win || !win->GetLocation()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  win->GetLocation()->SetHref(aHref, aSubjectPrincipal, aError);
+}
+
+void BrowsingContext::LocationProxy::Replace(const nsAString& aUrl,
+                                             nsIPrincipal& aSubjectPrincipal,
+                                             ErrorResult& aError) {
+  nsPIDOMWindowOuter* win = GetBrowsingContext()->GetDOMWindow();
+  if (!win || !win->GetLocation()) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  win->GetLocation()->Replace(aUrl, aSubjectPrincipal, aError);
 }
 
 void BrowsingContext::StartDelayedAutoplayMediaComponents() {

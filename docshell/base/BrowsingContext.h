@@ -12,7 +12,6 @@
 #include "mozilla/Tuple.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/LocationBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
@@ -184,7 +183,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Triggers a load in the process which currently owns this BrowsingContext.
   // aAccessor is the context which initiated the load, and may be null only for
   // in-process BrowsingContexts.
-  nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState);
+  void LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
@@ -467,22 +466,23 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
    * process. It forwards all operations to its BrowsingContext and aggregates
    * its refcount to that BrowsingContext.
    */
-  class LocationProxy final : public LocationBase {
+  class LocationProxy {
    public:
     MozExternalRefCountType AddRef() { return GetBrowsingContext()->AddRef(); }
     MozExternalRefCountType Release() {
       return GetBrowsingContext()->Release();
     }
 
-   protected:
+    void SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
+                 ErrorResult& aError);
+    void Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
+                 ErrorResult& aError);
+
+   private:
     friend class RemoteLocationProxy;
-    BrowsingContext* GetBrowsingContext() override {
+    BrowsingContext* GetBrowsingContext() {
       return reinterpret_cast<BrowsingContext*>(
           uintptr_t(this) - offsetof(BrowsingContext, mLocation));
-    }
-
-    already_AddRefed<nsIDocShell> GetDocShell() override {
-      return nullptr;
     }
   };
 
