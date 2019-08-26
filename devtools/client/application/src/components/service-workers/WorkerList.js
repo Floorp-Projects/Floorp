@@ -44,7 +44,7 @@ class WorkerList extends PureComponent {
         Localized(
           { id: "serviceworker-list-header" },
           h1({
-            className: "application--title",
+            className: "app-page__title",
           })
         ),
         ul(
