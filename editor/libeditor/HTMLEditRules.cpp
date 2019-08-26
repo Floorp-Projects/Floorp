@@ -4071,8 +4071,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     }
 
     SplitNodeResult splitAtSelectionStartResult =
-        MaybeSplitAncestorsForInsertWithTransaction(aListType,
-                                                    atStartOfSelection);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(aListType,
+                                                         atStartOfSelection);
     if (NS_WARN_IF(splitAtSelectionStartResult.Failed())) {
       return splitAtSelectionStartResult.Rv();
     }
@@ -4356,7 +4357,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // need to make a list to put things in if we haven't already,
     if (!curList) {
       SplitNodeResult splitCurNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(aListType, atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(aListType,
+                                                           atCurNode);
       if (NS_WARN_IF(splitCurNodeResult.Failed())) {
         return splitCurNodeResult.Rv();
       }
@@ -4670,8 +4673,9 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
     }
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(blockType,
-                                                    pointToInsertBlock);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(blockType,
+                                                         pointToInsertBlock);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -4866,8 +4870,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
 
     // make sure we can put a block here
     SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                    atStartOfSelection);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                         atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -4989,8 +4994,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atCurNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(
+                    MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5042,8 +5048,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
       }
 
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                      atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                           atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -5159,8 +5166,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
 
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                    atStartOfSelection);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                         atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -5275,8 +5283,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atCurNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(
+                    MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5339,8 +5348,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atListItem);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(
+                    MOZ_KnownLive(*containerName), atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5386,8 +5396,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
       }
 
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                      atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(
+                  *nsGkAtoms::blockquote, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -6210,8 +6221,9 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     }
 
     SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                    atStartOfSelection);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                         atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -6381,8 +6393,9 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       }
 
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                      atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                           atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -8730,8 +8743,9 @@ nsresult HTMLEditRules::MakeBlockquote(
     // If no curBlock, make one
     if (!curBlock) {
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                      EditorDOMPoint(curNode));
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(
+                  *nsGkAtoms::blockquote, EditorDOMPoint(curNode));
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -8962,7 +8976,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
 
       // Make sure we can put a block here
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
+                                                           atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -9015,7 +9031,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // The break is the first (or even only) node we encountered.  Create a
       // block for it.
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
+                                                           atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -9074,7 +9092,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // If no curBlock, make one
       if (!curBlock) {
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
+                                                             atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -9134,16 +9154,16 @@ nsresult HTMLEditRules::ApplyBlockStyle(
   return NS_OK;
 }
 
-SplitNodeResult HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
+SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
     nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aStartOfDeepestRightNode.IsSet())) {
     return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
 
-  RefPtr<Element> host = HTMLEditorRef().GetActiveEditingHost();
+  RefPtr<Element> host = GetActiveEditingHost();
   if (NS_WARN_IF(!host)) {
     return SplitNodeResult(NS_ERROR_FAILURE);
   }
@@ -9165,7 +9185,7 @@ SplitNodeResult HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
-    if (HTMLEditorRef().CanContainTag(*pointToInsert.GetContainer(), aTag)) {
+    if (CanContainTag(*pointToInsert.GetContainer(), aTag)) {
       // Found an ancestor node which can contain the element.
       break;
     }
@@ -9180,13 +9200,10 @@ SplitNodeResult HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
     return SplitNodeResult(aStartOfDeepestRightNode);
   }
 
-  SplitNodeResult splitNodeResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              MOZ_KnownLive(*pointToInsert.GetChild()),
-              aStartOfDeepestRightNode,
-              SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
+      MOZ_KnownLive(*pointToInsert.GetChild()), aStartOfDeepestRightNode,
+      SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
@@ -10868,8 +10885,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
 
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                    atStartOfSelection);
+        MOZ_KnownLive(HTMLEditorRef())
+            .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                         atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -10943,8 +10961,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atCurNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(
+                    MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -11015,8 +11034,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atListItem);
+            MOZ_KnownLive(HTMLEditorRef())
+                .MaybeSplitAncestorsForInsertWithTransaction(
+                    MOZ_KnownLive(*containerName), atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -11067,8 +11087,9 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
         continue;
       }
       SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                      atCurNode);
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                           atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
