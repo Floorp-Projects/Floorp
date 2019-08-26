@@ -171,6 +171,7 @@ include = [
   "VariantAlternatesList",
   "PaintOrder",
   "SVGPaintOrder",
+  "ClipRectOrAuto",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -704,4 +705,9 @@ renaming_overrides_prefixing = true
   // initializing the fields properly.
   StyleVariantAlternates() {}
  public:
+"""
+
+"GenericClipRect" = """
+  // Get the layout rect, replacing auto right / bottom values for aAutoSize.
+  inline nsRect ToLayoutRect(nscoord aAutoSize = NS_MAXSIZE) const;
 """

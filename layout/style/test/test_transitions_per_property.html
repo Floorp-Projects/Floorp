@@ -2498,16 +2498,8 @@ function test_rect_transition(prop) {
                        "rect(3px, 13px, 10px, 5px)",
                        "rect(0px, 4px, 4px, 2px)");
   div.style.setProperty(prop, "rect(0px, 6px, 4px, auto)", "");
-  if (prop == "clip") {
-    is(cs.getPropertyValue(prop), "rect(0px, 6px, 4px, auto)",
-       "rect-valued property " + prop + ": can't interpolate auto components");
-  } else {
-    is(prop, "-moz-image-region");
-    // Bug 1390067: -moz-image-region should behave just like clip does.
-    todo_is(cs.getPropertyValue(prop), "rect(0px, 6px, 4px, auto)",
-            "rect-valued property " + prop +
-            ": can't interpolate auto components");
-  }
+  is(cs.getPropertyValue(prop), "rect(0px, 6px, 4px, auto)",
+     "rect-valued property " + prop + ": can't interpolate auto components");
   div.style.setProperty(prop, "rect(0px, 6px, 4px, 2px)", "");
   div.style.setProperty(prop, "auto", "");
   is(cs.getPropertyValue(prop), "auto",
