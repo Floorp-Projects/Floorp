@@ -18,7 +18,6 @@ use std::fmt::Write;
 use std::iter;
 use std::os::raw::c_void;
 use std::ptr;
-use style::profiler_label;
 use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::author_styles::AuthorStyles;
 use style::context::ThreadLocalStyleContext;
@@ -48,16 +47,6 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
-use style::gecko_bindings::structs::{Element as RawGeckoElement, nsINode as RawGeckoNode};
-use style::gecko_bindings::structs::{
-    RawServoStyleSet, RawServoAuthorStyles, RawServoDeclarationBlock,
-    RawServoMediaList, RawServoCounterStyleRule, RawServoAnimationValue,
-    RawServoSupportsRule, RawServoKeyframesRule, ServoCssRules,
-    RawServoStyleSheetContents, RawServoPageRule, RawServoNamespaceRule,
-    RawServoMozDocumentRule, RawServoKeyframe, RawServoMediaRule,
-    RawServoImportRule, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoSharedMemoryBuilder
-};
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
@@ -70,7 +59,6 @@ use style::gecko_bindings::structs::nsTArray;
 use style::gecko_bindings::structs::nsTimingFunction;
 use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::structs::AtomArray;
-use style::gecko_bindings::structs::PseudoStyleType;
 use style::gecko_bindings::structs::CallerType;
 use style::gecko_bindings::structs::CompositeOperation;
 use style::gecko_bindings::structs::DeclarationBlockMutationClosure;
@@ -80,6 +68,7 @@ use style::gecko_bindings::structs::LoaderReusableStyleSheets;
 use style::gecko_bindings::structs::MallocSizeOf as GeckoMallocSizeOf;
 use style::gecko_bindings::structs::OriginFlags;
 use style::gecko_bindings::structs::PropertyValuePair;
+use style::gecko_bindings::structs::PseudoStyleType;
 use style::gecko_bindings::structs::RawServoSelectorList;
 use style::gecko_bindings::structs::RawServoSourceSizeList;
 use style::gecko_bindings::structs::RawServoStyleRule;
@@ -93,13 +82,25 @@ use style::gecko_bindings::structs::SheetParsingMode;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::StyleSheet as DomStyleSheet;
 use style::gecko_bindings::structs::URLExtraData;
+use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeckoElement};
+use style::gecko_bindings::structs::{
+    RawServoAnimationValue, RawServoAuthorStyles, RawServoCounterStyleRule,
+    RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
+    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoMediaList,
+    RawServoMediaRule, RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule,
+    RawServoSharedMemoryBuilder, RawServoStyleSet, RawServoStyleSheetContents,
+    RawServoSupportsRule, ServoCssRules,
+};
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
-use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, HasBoxFFI, Strong, Owned, OwnedOrNull};
+use style::gecko_bindings::sugar::ownership::{
+    HasBoxFFI, HasSimpleFFI, Owned, OwnedOrNull, Strong,
+};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
+use style::profiler_label;
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
@@ -650,7 +651,8 @@ pub extern "C" fn Servo_AnimationCompose(
     let underlying_value = if need_underlying_value {
         let previous_composed_value = value_map.get(&property).cloned();
         previous_composed_value.or_else(|| {
-            let raw_base_style = unsafe { Gecko_AnimationGetBaseStyle(base_values, css_property).as_ref() };
+            let raw_base_style =
+                unsafe { Gecko_AnimationGetBaseStyle(base_values, css_property).as_ref() };
             AnimationValue::arc_from_borrowed(&raw_base_style)
                 .map(|v| &**v)
                 .cloned()
@@ -840,17 +842,23 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Rotate(r: &computed::Rotate) -> Strong<RawServoAnimationValue> {
+pub unsafe extern "C" fn Servo_AnimationValue_Rotate(
+    r: &computed::Rotate,
+) -> Strong<RawServoAnimationValue> {
     Arc::new(AnimationValue::Rotate(r.clone())).into_strong()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Translate(t: &computed::Translate) -> Strong<RawServoAnimationValue> {
+pub unsafe extern "C" fn Servo_AnimationValue_Translate(
+    t: &computed::Translate,
+) -> Strong<RawServoAnimationValue> {
     Arc::new(AnimationValue::Translate(t.clone())).into_strong()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Scale(s: &computed::Scale) -> Strong<RawServoAnimationValue> {
+pub unsafe extern "C" fn Servo_AnimationValue_Scale(
+    s: &computed::Scale,
+) -> Strong<RawServoAnimationValue> {
     Arc::new(AnimationValue::Scale(s.clone())).into_strong()
 }
 
@@ -862,9 +870,10 @@ pub unsafe extern "C" fn Servo_AnimationValue_Transform(
     use style::values::generics::transform::Transform;
 
     let slice = std::slice::from_raw_parts(list, len);
-    Arc::new(AnimationValue::Transform(
-        Transform(slice.iter().cloned().collect())
-    )).into_strong()
+    Arc::new(AnimationValue::Transform(Transform(
+        slice.iter().cloned().collect(),
+    )))
+    .into_strong()
 }
 
 #[no_mangle]
@@ -927,7 +936,9 @@ pub extern "C" fn Servo_AnimationValueMap_Create() -> Owned<structs::RawServoAni
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValueMap_Drop(value_map: *mut structs::RawServoAnimationValueMap) {
+pub unsafe extern "C" fn Servo_AnimationValueMap_Drop(
+    value_map: *mut structs::RawServoAnimationValueMap,
+) {
     AnimationValueMap::drop_ffi(value_map)
 }
 
@@ -942,11 +953,9 @@ pub extern "C" fn Servo_AnimationValueMap_GetValue(
     };
     let value_map = AnimationValueMap::from_ffi_mut(raw_value_map);
 
-    value_map
-        .get(&property)
-        .map_or(Strong::null(), |value| {
-            Arc::new(value.clone()).into_strong()
-        })
+    value_map.get(&property).map_or(Strong::null(), |value| {
+        Arc::new(value.clone()).into_strong()
+    })
 }
 
 #[no_mangle]
@@ -1290,9 +1299,7 @@ pub extern "C" fn Servo_Element_IsDisplayContents(element: &RawGeckoElement) -> 
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Element_IsPrimaryStyleReusedViaRuleNode(
-    element: &RawGeckoElement,
-) -> bool {
+pub extern "C" fn Servo_Element_IsPrimaryStyleReusedViaRuleNode(element: &RawGeckoElement) -> bool {
     let element = GeckoElement(element);
     let data = element
         .borrow_data()
@@ -1677,7 +1684,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetSheetAt(
     index: usize,
 ) -> *const DomStyleSheet {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    data.stylist.sheet_at(origin, index).map_or(ptr::null(), |s| s.raw())
+    data.stylist
+        .sheet_at(origin, index)
+        .map_or(ptr::null(), |s| s.raw())
 }
 
 #[no_mangle]
@@ -1734,9 +1743,7 @@ pub extern "C" fn Servo_StyleSet_SetAuthorStyleDisabled(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_HasRules(
-    raw_contents: &RawServoStyleSheetContents,
-) -> bool {
+pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &RawServoStyleSheetContents) -> bool {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     !StylesheetContents::as_arc(&raw_contents)
@@ -1856,10 +1863,7 @@ where
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_CssRules_ListTypes(
-    rules: &ServoCssRules,
-    result: &mut nsTArray<usize>,
-) {
+pub extern "C" fn Servo_CssRules_ListTypes(rules: &ServoCssRules, result: &mut nsTArray<usize>) {
     read_locked_arc(rules, |rules: &CssRules| {
         result.assign_from_iter_pod(rules.0.iter().map(|rule| rule.rule_type() as usize));
     })
@@ -2130,10 +2134,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorTextAtIndex(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleRule_GetSelectorCount(
-    rule: &RawServoStyleRule,
-    count: *mut u32,
-) {
+pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &RawServoStyleRule, count: *mut u32) {
     read_locked_arc(rule, |rule: &StyleRule| {
         *unsafe { count.as_mut().unwrap() } = rule.selectors.0.len() as u32;
     })
@@ -2327,29 +2328,21 @@ pub unsafe extern "C" fn Servo_SelectorList_QueryAll(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ImportRule_GetHref(
-    rule: &RawServoImportRule,
-    result: *mut nsAString,
-) {
+pub extern "C" fn Servo_ImportRule_GetHref(rule: &RawServoImportRule, result: *mut nsAString) {
     read_locked_arc(rule, |rule: &ImportRule| {
         write!(unsafe { &mut *result }, "{}", rule.url.as_str()).unwrap();
     })
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ImportRule_GetSheet(
-    rule: &RawServoImportRule,
-) -> *const DomStyleSheet {
+pub extern "C" fn Servo_ImportRule_GetSheet(rule: &RawServoImportRule) -> *const DomStyleSheet {
     read_locked_arc(rule, |rule: &ImportRule| {
         rule.stylesheet.as_sheet().unwrap().raw() as *const DomStyleSheet
     })
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ImportRule_SetSheet(
-    rule: &RawServoImportRule,
-    sheet: *mut DomStyleSheet,
-) {
+pub extern "C" fn Servo_ImportRule_SetSheet(rule: &RawServoImportRule, sheet: *mut DomStyleSheet) {
     write_locked_arc(rule, |rule: &mut ImportRule| {
         let sheet = unsafe { GeckoStyleSheet::new(sheet) };
         rule.stylesheet = ImportSheet::new(sheet);
@@ -2357,10 +2350,7 @@ pub extern "C" fn Servo_ImportRule_SetSheet(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Keyframe_GetKeyText(
-    keyframe: &RawServoKeyframe,
-    result: *mut nsAString,
-) {
+pub extern "C" fn Servo_Keyframe_GetKeyText(keyframe: &RawServoKeyframe, result: *mut nsAString) {
     read_locked_arc(keyframe, |keyframe: &Keyframe| {
         keyframe
             .selector
@@ -2489,18 +2479,14 @@ pub extern "C" fn Servo_KeyframesRule_DeleteRule(rule: &RawServoKeyframesRule, i
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_MediaRule_GetMedia(
-    rule: &RawServoMediaRule,
-) -> Strong<RawServoMediaList> {
+pub extern "C" fn Servo_MediaRule_GetMedia(rule: &RawServoMediaRule) -> Strong<RawServoMediaList> {
     read_locked_arc(rule, |rule: &MediaRule| {
         rule.media_queries.clone().into_strong()
     })
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_NamespaceRule_GetPrefix(
-    rule: &RawServoNamespaceRule,
-) -> *mut nsAtom {
+pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &RawServoNamespaceRule) -> *mut nsAtom {
     read_locked_arc(rule, |rule: &NamespaceRule| {
         rule.prefix.as_ref().unwrap_or(&atom!("")).as_ptr()
     })
@@ -3004,7 +2990,7 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetGeneration(
 fn symbol_to_string(s: &counter_style::Symbol) -> nsString {
     match *s {
         counter_style::Symbol::String(ref s) => nsString::from(&**s),
-        counter_style::Symbol::Ident(ref i) => nsString::from(i.0.as_slice())
+        counter_style::Symbol::Ident(ref i) => nsString::from(i.0.as_slice()),
     }
 }
 
@@ -3149,12 +3135,14 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
 ) {
     read_locked_arc(rule, |rule: &CounterStyleRule| {
         *symbols = match rule.additive_symbols() {
-            Some(s) => s.0.iter().map(|s| {
-                AdditiveSymbol {
-                    weight: s.weight.value(),
-                    symbol: symbol_to_string(&s.symbol),
-                }
-            }).collect(),
+            Some(s) => {
+                s.0.iter()
+                    .map(|s| AdditiveSymbol {
+                        weight: s.weight.value(),
+                        symbol: symbol_to_string(&s.symbol),
+                    })
+                    .collect()
+            },
             None => style::OwnedSlice::default(),
         };
     })
@@ -3192,9 +3180,7 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
-    rule: &RawServoCounterStyleRule,
-) -> u8 {
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(rule: &RawServoCounterStyleRule) -> u8 {
     use style::counter_style::System;
     read_locked_arc(rule, |rule: &CounterStyleRule| {
         match *rule.resolved_system() {
@@ -3521,10 +3507,7 @@ pub extern "C" fn Servo_ComputedValues_ResolveXULTreePseudoStyle(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_SetExplicitStyle(
-    element: &RawGeckoElement,
-    style: &ComputedValues,
-) {
+pub extern "C" fn Servo_SetExplicitStyle(element: &RawGeckoElement, style: &ComputedValues) {
     let element = GeckoElement(element);
     debug!("Servo_SetExplicitStyle: {:?}", element);
     // We only support this API for initial styling. There's no reason it couldn't
@@ -3745,7 +3728,8 @@ fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
     println_stderr!("  Properties:");
     for p in properties.iter() {
         let mut v = String::new();
-        cv.get_longhand_property_value(p, &mut CssWriter::new(&mut v)).unwrap();
+        cv.get_longhand_property_value(p, &mut CssWriter::new(&mut v))
+            .unwrap();
         println_stderr!("    {:?}: {}", p, v);
     }
     println_stderr!("  Rules:");
@@ -3864,8 +3848,7 @@ pub extern "C" fn Servo_ParseProperty(
     quirks_mode: nsCompatibility,
     loader: *mut Loader,
 ) -> Strong<RawServoDeclarationBlock> {
-    let id =
-        get_property_id_from_nscsspropertyid!(property, Strong::null());
+    let id = get_property_id_from_nscsspropertyid!(property, Strong::null());
     let mut declarations = SourcePropertyDeclaration::new();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
     let result = parse_property_into(
@@ -3924,16 +3907,12 @@ pub extern "C" fn Servo_ParseEasing(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_SerializeEasing(
-    easing: &nsTimingFunction,
-    output: *mut nsAString,
-) {
+pub unsafe extern "C" fn Servo_SerializeEasing(easing: &nsTimingFunction, output: *mut nsAString) {
     easing
         .mTiming
         .to_css(&mut CssWriter::new(&mut *output))
         .unwrap();
 }
-
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SerializeBorderRadius(
@@ -4127,9 +4106,7 @@ pub unsafe extern "C" fn Servo_SerializeFontValueForCanvas(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_DeclarationBlock_Count(
-    declarations: &RawServoDeclarationBlock,
-) -> u32 {
+pub extern "C" fn Servo_DeclarationBlock_Count(declarations: &RawServoDeclarationBlock) -> u32 {
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         decls.declarations().len() as u32
     })
@@ -4399,9 +4376,7 @@ pub extern "C" fn Servo_MediaList_Create() -> Strong<RawServoMediaList> {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_MediaList_DeepClone(
-    list: &RawServoMediaList,
-) -> Strong<RawServoMediaList> {
+pub extern "C" fn Servo_MediaList_DeepClone(list: &RawServoMediaList) -> Strong<RawServoMediaList> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     read_locked_arc(list, |list: &MediaList| {
         Arc::new(global_style_data.shared_lock.wrap(list.clone())).into_strong()
@@ -4630,8 +4605,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use num_traits::FromPrimitive;
     use style::properties::longhands;
     use style::properties::PropertyDeclaration;
-    use style::values::generics::font::FontStyle;
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
+    use style::values::generics::font::FontStyle;
     use style::values::specified::BorderStyle;
     use style::values::specified::Display;
     use style::values::specified::{Clear, Float};
@@ -4643,7 +4618,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     {
         T::from_computed_value(&T::ComputedValue::from_u32(value).unwrap())
     }
-
 
     let long = get_longhand_from_id!(property);
     let value = value as u32;
@@ -4712,8 +4686,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetCounterResetListItem(
     declarations: &RawServoDeclarationBlock,
     counter_value: i32,
 ) {
+    use style::properties::PropertyDeclaration;
     use style::values::generics::counters::{CounterPair, CounterSetOrReset};
-    use style::properties::{PropertyDeclaration};
 
     let prop = PropertyDeclaration::CounterReset(CounterSetOrReset::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
@@ -4729,8 +4703,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetCounterSetListItem(
     declarations: &RawServoDeclarationBlock,
     counter_value: i32,
 ) {
+    use style::properties::PropertyDeclaration;
     use style::values::generics::counters::{CounterPair, CounterSetOrReset};
-    use style::properties::{PropertyDeclaration};
 
     let prop = PropertyDeclaration::CounterSet(CounterSetOrReset::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
@@ -4749,11 +4723,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 ) {
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::properties::PropertyDeclaration;
+    use style::values::generics::length::LengthPercentageOrAuto;
     use style::values::generics::length::Size;
     use style::values::generics::NonNegative;
-    use style::values::generics::length::LengthPercentageOrAuto;
+    use style::values::specified::length::LengthPercentage;
     use style::values::specified::length::NonNegativeLengthPercentage;
-    use style::values::specified::length::{LengthPercentage};
     use style::values::specified::length::{NoCalcLength, NonNegativeLength};
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
@@ -4811,11 +4785,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 ) {
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
     use style::properties::PropertyDeclaration;
+    use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::generics::length::{Size, LengthPercentageOrAuto};
+    use style::values::specified::length::LengthPercentage;
     use style::values::specified::length::NoCalcLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::length::LengthPercentage;
 
     let long = get_longhand_from_id!(property);
     let nocalc = match unit {
@@ -4889,8 +4863,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
 ) {
     use style::properties::PropertyDeclaration;
     use style::values::computed::Percentage;
+    use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::generics::length::{Size, LengthPercentageOrAuto};
     use style::values::specified::length::LengthPercentage;
 
     let long = get_longhand_from_id!(property);
@@ -5039,9 +5013,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         None,
     );
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context, CorsMode::None);
-    let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![
-        ImageLayer::Image(Image::Url(url))
-    ].into()));
+    let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(
+        vec![ImageLayer::Image(Image::Url(url))].into(),
+    ));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);
     });
@@ -5118,10 +5092,7 @@ pub unsafe extern "C" fn Servo_NoteExplicitHints(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_TakeChangeHint(
-    element: &RawGeckoElement,
-    was_restyled: *mut bool,
-) -> u32 {
+pub extern "C" fn Servo_TakeChangeHint(element: &RawGeckoElement, was_restyled: *mut bool) -> u32 {
     let was_restyled = unsafe { was_restyled.as_mut().unwrap() };
     let element = GeckoElement(element);
 
@@ -5148,9 +5119,7 @@ pub extern "C" fn Servo_TakeChangeHint(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ResolveStyle(
-    element: &RawGeckoElement,
-) -> Strong<ComputedValues> {
+pub extern "C" fn Servo_ResolveStyle(element: &RawGeckoElement) -> Strong<ComputedValues> {
     let element = GeckoElement(element);
     debug!("Servo_ResolveStyle: {:?}", element);
     let data = element
@@ -5525,7 +5494,9 @@ pub extern "C" fn Servo_GetAnimationValues(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_GetPropertyId(value: &RawServoAnimationValue) -> nsCSSPropertyID {
+pub extern "C" fn Servo_AnimationValue_GetPropertyId(
+    value: &RawServoAnimationValue,
+) -> nsCSSPropertyID {
     let value = AnimationValue::as_arc(&value);
     value.id().to_nscsspropertyid()
 }
@@ -5575,9 +5546,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(
                 None, // No extra custom properties for devtools.
                 default_values,
             );
-            animation.map_or(Strong::null(), |value| {
-                Arc::new(value).into_strong()
-            })
+            animation.map_or(Strong::null(), |value| Arc::new(value).into_strong())
         },
         _ => Strong::null(),
     }
@@ -6275,7 +6244,10 @@ pub extern "C" fn Servo_ComputeColor(
         ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
     });
 
-    match parse_color(&value, reporter.as_ref().map(|r| r as &dyn ParseErrorReporter)) {
+    match parse_color(
+        &value,
+        reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
+    ) {
         Ok(specified_color) => {
             let computed_color = match raw_data {
                 Some(raw_data) => {
@@ -6622,9 +6594,8 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
 
     let rules = &contents.rules;
     let shared_rules: &Arc<Locked<CssRules>> = &*builder.write(rules);
-    (&*shared_rules).with_raw_offset_arc(|arc| {
-        *Locked::<CssRules>::arc_as_borrowed(arc) as *const _
-    })
+    (&*shared_rules)
+        .with_raw_offset_arc(|arc| *Locked::<CssRules>::arc_as_borrowed(arc) as *const _)
 }
 
 #[no_mangle]
@@ -6636,9 +6607,7 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_GetLength(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
-    builder: *mut RawServoSharedMemoryBuilder
-) {
+pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(builder: *mut RawServoSharedMemoryBuilder) {
     SharedMemoryBuilder::drop_ffi(builder)
 }
 
@@ -6647,7 +6616,9 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
 /// Probably temporary, as we move more stuff to cbindgen.
 #[no_mangle]
 #[must_use]
-pub unsafe extern "C" fn Servo_CloneBasicShape(v: &computed::basic_shape::BasicShape) -> *mut computed::basic_shape::BasicShape {
+pub unsafe extern "C" fn Servo_CloneBasicShape(
+    v: &computed::basic_shape::BasicShape,
+) -> *mut computed::basic_shape::BasicShape {
     Box::into_raw(Box::new(v.clone()))
 }
 
@@ -6657,6 +6628,8 @@ pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_LoadData_GetLazy(source: &url::LoadDataSource) -> *const url::LoadData {
+pub unsafe extern "C" fn Servo_LoadData_GetLazy(
+    source: &url::LoadDataSource,
+) -> *const url::LoadData {
     source.get()
 }
