@@ -323,7 +323,7 @@ internal object DeliveryManager {
 }
 
 /**
- * Supported push services.
+ * Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging.
  */
 enum class ServiceType {
     FCM,
@@ -339,7 +339,7 @@ enum class Protocol {
 }
 
 /**
- * The subscription information from Autopush that can be used to send push messages to other devices.
+ * The subscription information from AutoPush that can be used to send push messages to other devices.
  */
 data class AutoPushSubscription(
     val type: PushType,
@@ -349,7 +349,12 @@ data class AutoPushSubscription(
 )
 
 /**
- * Configuration object for initializing the Push Manager.
+ * Configuration object for initializing the Push Manager with an AutoPush server.
+ *
+ * @param senderId The project identifier set by the server. Contact your server ops team to know what value to set.
+ * @param serverHost The sync server address.
+ * @param protocol The socket protocol to use when communicating with the server.
+ * @param serviceType The push services that the AutoPush server supports.
  */
 data class PushConfig(
     val senderId: String,
