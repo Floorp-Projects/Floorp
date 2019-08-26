@@ -24,6 +24,13 @@ using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h
 namespace mozilla {
 namespace net {
 
+struct DocumentChannelRedirect {
+  nsIURI uri;
+  uint32_t redirectFlags;
+  uint32_t responseStatus;
+  bool isPost;
+};
+
 refcounted protocol PDocumentChannel
 {
   manager PNecko;
@@ -60,6 +67,7 @@ child:
                               uint32_t aNewLoadFlags,
                               ReplacementChannelConfigInit? aInit,
                               LoadInfoArgs? aLoadInfo,
+                              DocumentChannelRedirect[] aRedirects,
                               uint64_t aChannelId,
                               nsIURI aOriginalURI,
                               uint32_t aRedirectMode,

@@ -244,7 +244,8 @@ IPCResult DocumentChannelChild::RecvDeleteSelf() {
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
     const Maybe<ReplacementChannelConfigInit>& aInit,
-    const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
+    const Maybe<LoadInfoArgs>& aLoadInfo,
+    nsTArray<DocumentChannelRedirect>&& aRedirects, const uint64_t& aChannelId,
     nsIURI* aOriginalURI, const uint32_t& aRedirectMode,
     const uint32_t& aRedirectFlags, const Maybe<uint32_t>& aContentDisposition,
     const Maybe<nsString>& aContentDispositionFilename,
@@ -264,6 +265,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     return IPC_OK();
   }
 
+  mRedirects = std::move(aRedirects);
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;
