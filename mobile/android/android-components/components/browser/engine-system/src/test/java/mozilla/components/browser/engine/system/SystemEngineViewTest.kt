@@ -69,6 +69,8 @@ import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
+import mozilla.components.concept.engine.content.blocking.Tracker
+import java.io.StringReader
 
 @RunWith(AndroidJUnit4::class)
 class SystemEngineViewTest {
@@ -497,11 +499,111 @@ class SystemEngineViewTest {
         val blockedRequest = mock<WebResourceRequest>()
         whenever(blockedRequest.isForMainFrame).thenReturn(false)
         whenever(blockedRequest.url).thenReturn(Uri.parse("http://blocked.random"))
+
+        var trackerBlocked: Tracker? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlocked(tracker: Tracker) {
+                trackerBlocked = tracker
+            }
+        })
+
         response = webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
         assertNotNull(response)
         assertNull(response!!.data)
         assertNull(response.encoding)
         assertNull(response.mimeType)
+        assertTrue(trackerBlocked!!.trackingCategories.isEmpty())
+    }
+
+    @Test
+    fun `blocked trackers are reported with correct categories`() {
+        val BLOCK_LIST = """{
+      "license": "test-license",
+      "categories": {
+        "Advertising": [
+          {
+            "AdTest1": {
+              "http://www.adtest1.com/": [
+                "adtest1.com"
+              ]
+            }
+          }
+        ],
+        "Analytics": [
+          {
+            "AnalyticsTest": {
+                "http://analyticsTest1.com/": [
+                  "analyticsTest1.com"
+                ]
+            }
+          }
+        ],
+        "Content": [
+          {
+            "ContentTest1": {
+              "http://contenttest1.com/": [
+                "contenttest1.com"
+              ]
+            }
+          }
+        ],
+        "Social": [
+          {
+            "SocialTest1": {
+              "http://www.socialtest1.com/": [
+                "socialtest1.com"
+               ]
+              }
+            }
+        ]
+      }
+        }
+    """
+        SystemEngineView.URL_MATCHER = UrlMatcher.createMatcher(
+            StringReader(BLOCK_LIST),
+            null,
+            StringReader("{}")
+        )
+
+        val engineSession = SystemEngineSession(testContext)
+        val engineView = SystemEngineView(testContext)
+        var trackerBlocked: Tracker? = null
+
+        engineView.render(engineSession)
+        val webViewClient = engineSession.webView.webViewClient
+
+        engineSession.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerBlocked(tracker: Tracker) {
+                trackerBlocked = tracker
+            }
+        })
+
+        val blockedRequest = mock<WebResourceRequest>()
+        whenever(blockedRequest.isForMainFrame).thenReturn(false)
+
+        whenever(blockedRequest.url).thenReturn(Uri.parse("http://www.adtest1.com/"))
+        webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
+
+        assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.AD)
+
+        whenever(blockedRequest.url).thenReturn(Uri.parse("http://analyticsTest1.com/"))
+        webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
+
+        assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.ANALYTICS)
+
+        whenever(blockedRequest.url).thenReturn(Uri.parse("http://contenttest1.com/"))
+        webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
+
+        assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.CONTENT)
+
+        whenever(blockedRequest.url).thenReturn(Uri.parse("http://www.socialtest1.com/"))
+        webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
+
+        assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.SOCIAL)
+
+        SystemEngineView.URL_MATCHER = null
     }
 
     @Test
@@ -921,6 +1023,27 @@ class SystemEngineViewTest {
             )
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.SOCIAL), urlMatcher.enabledCategories)
+    }
+
+    @Test
+    fun `URL matcher supports compounded categories`() {
+        val recommendedPolicy = TrackingProtectionPolicy.recommended()
+        val strictPolicy = TrackingProtectionPolicy.strict()
+        val resources = testContext.resources
+        val recommendedCategories = setOf(
+            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL
+        )
+        val strictCategories = setOf(
+            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT
+        )
+
+        var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, recommendedPolicy)
+
+        assertEquals(recommendedCategories, urlMatcher.enabledCategories)
+
+        urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, strictPolicy)
+
+        assertEquals(strictCategories, urlMatcher.enabledCategories)
     }
 
     @Test

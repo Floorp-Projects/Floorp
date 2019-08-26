@@ -271,6 +271,9 @@ abstract class EngineSession(
 
         override fun hashCode() =
             trackingCategories.sumBy { it.id } + safeBrowsingCategories.sumBy { it.id } + cookiePolicy.id
+
+        fun contains(category: TrackingCategory) =
+            (trackingCategories.sumBy { it.id } and category.id) != 0
     }
 
     /**
