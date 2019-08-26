@@ -261,7 +261,9 @@
 #identity-popup-mainView-panel-header-span,
 #protections-popup-mainView-panel-header-span,
 #protections-popup-toast-panel-tp-on-desc,
-#protections-popup-toast-panel-tp-off-desc {
+#protections-popup-toast-panel-tp-off-desc,
+#protections-popup .panel-header > label > span,
+#identity-popup .panel-header > label > span {
   display: inline-block;
   text-align: center;
   overflow-wrap: break-word;
