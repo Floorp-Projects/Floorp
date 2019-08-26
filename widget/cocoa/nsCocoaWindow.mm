@@ -3043,39 +3043,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   }
 }
 
-// Override methods that translate between content rect and frame rect.
-- (NSRect)contentRectForFrameRect:(NSRect)aRect {
-  return aRect;
-}
-
-- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  return aRect;
-}
-
-- (NSRect)frameRectForContentRect:(NSRect)aRect {
-  return aRect;
-}
-
-- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
-  return aRect;
-}
-
-- (void)setContentView:(NSView*)aView {
-  [super setContentView:aView];
-
-  // Now move the contentView to the bottommost layer so that it's guaranteed
-  // to be under the window buttons.
-  NSView* frameView = [aView superview];
-  [aView removeFromSuperview];
-  if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
-    // 10.10 prints a warning when we call addSubview on the frame view, so we
-    // silence the warning by calling a private method instead.
-    [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
-  } else {
-    [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
-  }
-}
-
 - (NSArray*)titlebarControls {
   MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
 
@@ -3313,6 +3280,39 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     [mTitlebarGradientView removeFromSuperview];
     [mTitlebarGradientView release];
     mTitlebarGradientView = nil;
+  }
+}
+
+// Override methods that translate between content rect and frame rect.
+- (NSRect)contentRectForFrameRect:(NSRect)aRect {
+  return aRect;
+}
+
+- (NSRect)contentRectForFrameRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
+  return aRect;
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect {
+  return aRect;
+}
+
+- (NSRect)frameRectForContentRect:(NSRect)aRect styleMask:(NSUInteger)aMask {
+  return aRect;
+}
+
+- (void)setContentView:(NSView*)aView {
+  [super setContentView:aView];
+
+  // Now move the contentView to the bottommost layer so that it's guaranteed
+  // to be under the window buttons.
+  NSView* frameView = [aView superview];
+  [aView removeFromSuperview];
+  if ([frameView respondsToSelector:@selector(_addKnownSubview:positioned:relativeTo:)]) {
+    // 10.10 prints a warning when we call addSubview on the frame view, so we
+    // silence the warning by calling a private method instead.
+    [frameView _addKnownSubview:aView positioned:NSWindowBelow relativeTo:nil];
+  } else {
+    [frameView addSubview:aView positioned:NSWindowBelow relativeTo:nil];
   }
 }
 
