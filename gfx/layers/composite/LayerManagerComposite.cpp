@@ -988,9 +988,9 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   IntRect actualBounds;
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
-  mCompositor->BeginFrame(
-      aInvalidRegion, rootLayerClip ? &*rootLayerClip : nullptr, mRenderBounds,
-      aOpaqueRegion, mNativeLayerForEntireWindow, &actualBounds);
+  mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
+                          aOpaqueRegion, mNativeLayerForEntireWindow,
+                          &actualBounds);
   IntRect clipRect = rootLayerClip.valueOr(actualBounds);
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
@@ -1227,7 +1227,7 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
   IntRect actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), nullptr,
+  mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(), nullptr,
                           &actualBounds);
 
   // The Java side of Fennec sets a scissor rect that accounts for
