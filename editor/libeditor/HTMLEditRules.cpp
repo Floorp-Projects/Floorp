@@ -4731,7 +4731,8 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
       return rv;
     }
   } else {
-    rv = ApplyBlockStyle(arrayOfNodes, blockType);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .CreateOrChangeBlockContainerElement(arrayOfNodes, blockType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8896,15 +8897,14 @@ nsresult HTMLEditor::RemoveBlockContainerElements(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::ApplyBlockStyle(
+nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
     nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+
   // Intent of this routine is to be used for converting to/from headers,
   // paragraphs, pre, and address.  Those blocks that pretty much just contain
   // inline things...
-  MOZ_ASSERT(IsEditorDataAvailable());
-
   nsCOMPtr<Element> newBlock;
-
   nsCOMPtr<Element> curBlock;
   for (auto& curNode : aNodeArray) {
     if (NS_WARN_IF(!curNode->GetParent())) {
@@ -8920,8 +8920,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
 
     // Is it already the right kind of block, or an uneditable block?
     if (curNode->IsHTMLElement(&aBlockTag) ||
-        (!HTMLEditorRef().IsEditable(curNode) &&
-         HTMLEditor::NodeIsBlockStatic(curNode))) {
+        (!IsEditable(curNode) && HTMLEditor::NodeIsBlockStatic(curNode))) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
       // Do nothing to this block
@@ -8935,10 +8934,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         HTMLEditUtils::IsFormatNode(curNode)) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
-      newBlock = MOZ_KnownLive(HTMLEditorRef())
-                     .ReplaceContainerAndCloneAttributesWithTransaction(
-                         MOZ_KnownLive(*curNode->AsElement()), aBlockTag);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      newBlock = ReplaceContainerAndCloneAttributesWithTransaction(
+          MOZ_KnownLive(*curNode->AsElement()), aBlockTag);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!newBlock)) {
@@ -8963,7 +8961,8 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       AutoTArray<OwningNonNull<nsINode>, 24> childNodes;
       HTMLEditor::GetChildNodesOf(*curNode, childNodes);
       if (!childNodes.IsEmpty()) {
-        nsresult rv = ApplyBlockStyle(childNodes, aBlockTag);
+        nsresult rv =
+            CreateOrChangeBlockContainerElement(childNodes, aBlockTag);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -8972,9 +8971,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
 
       // Make sure we can put a block here
       SplitNodeResult splitNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
-                                                           atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -8987,9 +8984,8 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       }
       EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
       RefPtr<Element> theBlock =
-          MOZ_KnownLive(HTMLEditorRef())
-              .CreateNodeWithTransaction(aBlockTag, splitPoint);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+          CreateNodeWithTransaction(aBlockTag, splitPoint);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!theBlock)) {
@@ -9002,8 +8998,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
       // Remember our new block for postprocessing
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-          std::move(theBlock);
+      TopLevelEditSubActionDataRef().mNewBlockElement = std::move(theBlock);
       continue;
     }
 
@@ -9013,9 +9008,8 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       if (curBlock) {
         // Forget any previous block used for previous inline nodes
         curBlock = nullptr;
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        nsresult rv = DeleteNodeWithTransaction(*curNode);
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9027,9 +9021,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // The break is the first (or even only) node we encountered.  Create a
       // block for it.
       SplitNodeResult splitNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
-                                                           atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -9041,9 +9033,8 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
       EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
-      curBlock = MOZ_KnownLive(HTMLEditorRef())
-                     .CreateNodeWithTransaction(aBlockTag, splitPoint);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      curBlock = CreateNodeWithTransaction(aBlockTag, splitPoint);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!curBlock)) {
@@ -9056,13 +9047,11 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
       // Remember our new block for postprocessing
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-          curBlock;
+      TopLevelEditSubActionDataRef().mNewBlockElement = curBlock;
       // Note: doesn't matter if we set mNewBlockElement multiple times.
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeToEndWithTransaction(
-                            MOZ_KnownLive(*curNode->AsContent()), *curBlock);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      nsresult rv = MoveNodeToEndWithTransaction(
+          MOZ_KnownLive(*curNode->AsContent()), *curBlock);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9079,8 +9068,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // added here if that should change
       //
       // If curNode is a non editable, drop it if we are going to <pre>.
-      if (&aBlockTag == nsGkAtoms::pre &&
-          !HTMLEditorRef().IsEditable(curNode)) {
+      if (&aBlockTag == nsGkAtoms::pre && !IsEditable(curNode)) {
         // Do nothing to this block
         continue;
       }
@@ -9088,9 +9076,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       // If no curBlock, make one
       if (!curBlock) {
         SplitNodeResult splitNodeResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .MaybeSplitAncestorsForInsertWithTransaction(aBlockTag,
-                                                             atCurNode);
+            MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -9102,9 +9088,8 @@ nsresult HTMLEditRules::ApplyBlockStyle(
           return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
         }
         EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
-        curBlock = MOZ_KnownLive(HTMLEditorRef())
-                       .CreateNodeWithTransaction(aBlockTag, splitPoint);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        curBlock = CreateNodeWithTransaction(aBlockTag, splitPoint);
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(!curBlock)) {
@@ -9122,8 +9107,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
         atCurNode.Set(curNode);
 
         // Remember our new block for postprocessing
-        HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-            curBlock;
+        TopLevelEditSubActionDataRef().mNewBlockElement = curBlock;
         // Note: doesn't matter if we set mNewBlockElement multiple times.
       }
 
@@ -9136,10 +9120,9 @@ nsresult HTMLEditRules::ApplyBlockStyle(
 
       // This is a continuation of some inline nodes that belong together in
       // the same block item.  Use curBlock.
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeToEndWithTransaction(
-                            MOZ_KnownLive(*curNode->AsContent()), *curBlock);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      nsresult rv = MoveNodeToEndWithTransaction(
+          MOZ_KnownLive(*curNode->AsContent()), *curBlock);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
