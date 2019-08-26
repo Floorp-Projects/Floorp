@@ -70,12 +70,15 @@ class MochitestCreator(Creator):
         template_file_name = self.templates.get(self.suite)
 
         if template_file_name is None:
+            print("Sorry, `addtest` doesn't currently know how to add {}".format(self.suite))
             return None
 
         template_file_name = template_file_name % {"doc": self.doc}
 
         template_file = os.path.join(mochitest_templates, template_file_name)
         if not os.path.isfile(template_file):
+            print("Sorry, `addtest` doesn't currently know how to add {} with document type {}"
+                  .format(self.suite, self.doc))
             return None
 
         with open(template_file) as f:
