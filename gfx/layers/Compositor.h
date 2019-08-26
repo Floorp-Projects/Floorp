@@ -408,16 +408,14 @@ class Compositor : public TextureSourceProvider {
    * aRenderBounds bounding rect for rendering, in user space.
    * aOpaqueRegion is the area that contains opaque content.
    *
-   * If aRenderBoundsOut is non-null, it will be set to the render bounds
-   * actually used by the compositor in window space. If aRenderBoundsOut
-   * is returned empty, composition should be aborted.
+   * Returns the non-empty render bounds actually used by the compositor in
+   * window space, or Nothing() if composition should be aborted.
    */
-  virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const Maybe<gfx::IntRect>& aClipRect,
-                          const gfx::IntRect& aRenderBounds,
-                          const nsIntRegion& aOpaqueRegion,
-                          NativeLayer* aNativeLayer,
-                          gfx::IntRect* aRenderBoundsOut = nullptr) = 0;
+  virtual Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
+                                         const Maybe<gfx::IntRect>& aClipRect,
+                                         const gfx::IntRect& aRenderBounds,
+                                         const nsIntRegion& aOpaqueRegion,
+                                         NativeLayer* aNativeLayer) = 0;
 
   /**
    * Notification that we've finished issuing draw commands for normal

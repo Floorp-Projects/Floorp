@@ -1094,12 +1094,11 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
   }
 }
 
-void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const Maybe<IntRect>& aClipRect,
-                                 const IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer,
-                                 IntRect* aRenderBoundsOut) {
+Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
+                                           const Maybe<IntRect>& aClipRect,
+                                           const IntRect& aRenderBounds,
+                                           const nsIntRegion& aOpaqueRegion,
+                                           NativeLayer* aNativeLayer) {
   MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
 
   // Don't composite if we are minimised. Other than for the sake of efficency,
@@ -1110,13 +1109,11 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     // We are not going to render, and not going to call EndFrame so we have to
     // read-unlock our textures to prevent them from accumulating.
     ReadUnlockTextures();
-    *aRenderBoundsOut = IntRect();
-    return;
+    return Nothing();
   }
 
   if (mDevice->GetDeviceRemovedReason() != S_OK) {
     ReadUnlockTextures();
-    *aRenderBoundsOut = IntRect();
 
     if (!mAttachments->IsDeviceReset()) {
       gfxCriticalNote << "GFX: D3D11 skip BeginFrame with device-removed.";
@@ -1128,7 +1125,7 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
       }
       mAttachments->SetDeviceReset();
     }
-    return;
+    return Nothing();
   }
 
   LayoutDeviceIntSize oldSize = mSize;
@@ -1154,8 +1151,7 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   if (clipRect.IsEmpty()) {
     CancelFrame();
-    *aRenderBoundsOut = IntRect();
-    return;
+    return Nothing();
   }
 
   PrepareStaticVertexBuffer();
@@ -1170,12 +1166,7 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
       mSize.width <= 0 || mSize.height <= 0) {
     ReadUnlockTextures();
-    *aRenderBoundsOut = IntRect();
-    return;
-  }
-
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = rect;
+    return Nothing();
   }
 
   mCurrentClip = mBackBufferInvalid.GetBounds();
@@ -1195,9 +1186,8 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (mAttachments->mSyncObject) {
     if (!mAttachments->mSyncObject->Synchronize()) {
       // It's timeout here. Since the timeout is related to the driver-removed,
-      // clear the render-bounding size to skip this frame.
-      *aRenderBoundsOut = IntRect();
-      return;
+      // skip this frame.
+      return Nothing();
     }
   }
 
@@ -1209,6 +1199,8 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
     mDiagnostics->Start(pixelsPerFrame);
   }
+
+  return Some(rect);
 }
 
 void CompositorD3D11::NormalDrawingDone() { mDiagnostics->End(); }
