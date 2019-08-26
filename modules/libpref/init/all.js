@@ -1489,17 +1489,6 @@ pref("logging.config.clear_on_startup", true);
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
 
-// Allow the network changed event to get sent when a network topology or
-// setup change is noticed while running.
-pref("network.notify.changed", true);
-
-// Allow network detection of IPv6 related changes (bug 1245059)
-#if defined(XP_WIN)
-  pref("network.notify.IPv6", false);
-#else
-  pref("network.notify.IPv6", true);
-#endif
-
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", false);
