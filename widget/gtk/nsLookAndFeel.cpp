@@ -20,6 +20,7 @@
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
@@ -812,7 +813,7 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
   }
 
   // Scale the font for the current monitor
-  double scaleFactor = nsIWidget::DefaultScaleOverride();
+  double scaleFactor = StaticPrefs::layout_css_devPixelsPerPx();
   if (scaleFactor > 0) {
     aFontStyle.size *=
         widget::ScreenHelperGTK::GetGTKMonitorScaleFactor() / scaleFactor;

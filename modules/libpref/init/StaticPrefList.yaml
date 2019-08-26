@@ -4353,6 +4353,15 @@
   mirror: always
   rust: true
 
+# Set the number of device pixels per CSS pixel. A value <= 0 means choose
+# automatically based on user settings for the platform (e.g., "UI scale factor"
+# on Mac). A positive value is used as-is. This effectively controls the size
+# of a CSS "px". This is only used for windows on the screen, not for printing.
+- name: layout.css.devPixelsPerPx
+  type: AtomicFloat
+  value: -1.0f
+  mirror: always
+
 # text underline offset
 - name: layout.css.text-underline-offset.enabled
   type: bool
