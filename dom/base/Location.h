@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/LocationBase.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsPIDOMWindow.h"
@@ -27,7 +28,9 @@ namespace dom {
 // Location: Script "location" object
 //*****************************************************************************
 
-class Location final : public nsISupports, public nsWrapperCache {
+class Location final : public nsISupports,
+                       public LocationBase,
+                       public nsWrapperCache {
  public:
   typedef BrowsingContext::LocationProxy RemoteProxy;
 
@@ -39,9 +42,6 @@ class Location final : public nsISupports, public nsWrapperCache {
   // WebIDL API:
   void Assign(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aError);
-
-  void Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aError);
 
   void Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aError) {
@@ -62,9 +62,6 @@ class Location final : public nsISupports, public nsWrapperCache {
 
     aError = GetHref(aHref);
   }
-
-  void SetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-               ErrorResult& aError);
 
   void GetOrigin(nsAString& aOrigin, nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aError);
@@ -133,32 +130,15 @@ class Location final : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~Location();
 
+  BrowsingContext* GetBrowsingContext() override;
+  already_AddRefed<nsIDocShell> GetDocShell() override;
+
   // In the case of jar: uris, we sometimes want the place the jar was
   // fetched from as the URI instead of the jar: uri itself.  Pass in
   // true for aGetInnermostURI when that's the case.
   // Note, this method can return NS_OK with a null value for aURL. This happens
   // if the docShell is null.
   nsresult GetURI(nsIURI** aURL, bool aGetInnermostURI = false);
-
-  void SetURI(nsIURI* aURL, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
-              bool aReplace = false);
-  void SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
-                       nsIPrincipal& aSubjectPrincipal, bool aReplace,
-                       ErrorResult& aRv);
-
-  // Helper for Assign/SetHref/Replace
-  void DoSetHref(const nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
-                 bool aReplace, ErrorResult& aRv);
-
-  // Get the base URL we should be using for our relative URL
-  // resolution for SetHref/Assign/Replace.
-  nsIURI* GetSourceBaseURL();
-
-  // Check whether it's OK to load the given url with the given subject
-  // principal, and if so construct the right nsDocShellLoadInfo for the load
-  // and return it.
-  already_AddRefed<nsDocShellLoadState> CheckURL(
-      nsIURI* url, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
   bool CallerSubsumes(nsIPrincipal* aSubjectPrincipal);
 
