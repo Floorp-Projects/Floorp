@@ -21,6 +21,8 @@ export MOZ_PKG_SPECIAL=asan-reporter
 # Need this to add source information into platform.ini
 export MOZILLA_OFFICIAL=1
 
+ac_add_options --with-branding=browser/branding/nightly
+
 # Sandboxing is currently not compatible with the way the ASan reporter works
 ac_add_options --disable-sandbox
 
