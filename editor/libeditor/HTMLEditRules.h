@@ -659,20 +659,6 @@ class HTMLEditRules : public TextEditRules {
                                                  nsIContent& aEndOfRange);
 
   /**
-   * SplitRangeOffFromBlock() splits aBlock at two points, before aStartChild
-   * and after aEndChild.  If they are very start or very end of aBlcok, this
-   * won't create empty block.
-   *
-   * @param aBlockElement           A block element which will be split.
-   * @param aStartOfMiddleElement   Start node of middle block element.
-   * @param aEndOfMiddleElement     End node of middle block element.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE SplitRangeOffFromNodeResult SplitRangeOffFromBlock(
-      Element& aBlockElement, nsIContent& aStartOfMiddleElement,
-      nsIContent& aEndOfMiddleElement);
-
-  /**
    * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and
    * aEndOfOutdent.  This splits the range off from aBlockElement first.
    * Then, removes the middle element if aIsBlockIndentedWithCSS is false.
