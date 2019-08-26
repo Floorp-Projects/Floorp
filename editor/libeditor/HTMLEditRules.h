@@ -425,7 +425,7 @@ class HTMLEditRules : public TextEditRules {
    *
    * @param aBlockType          New block tag name.
    *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockStyle() will be called.
+   *                            RemoveBlockContainerElements() will be called.
    *                            If nsGkAtoms::blockquote,
    *                            MoveNodesIntoNewBlockquoteElement() will be
    *                            called.  Otherwise, ApplyBlockStyle() will
@@ -754,17 +754,6 @@ class HTMLEditRules : public TextEditRules {
    */
   void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);
-
-  /**
-   * RemoveBlockStyle() removes all format blocks, table related element,
-   * etc in aNodeArray.
-   * If aNodeArray has a format node, it will be removed and its contents
-   * will be moved to where it was.
-   * If aNodeArray has a table related element, <li>, <blockquote> or <div>,
-   * it will removed and its contents will be moved to where it was.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
    * ApplyBlockStyle() formats all nodes in aNodeArray with block elements

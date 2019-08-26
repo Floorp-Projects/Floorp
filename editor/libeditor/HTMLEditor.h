@@ -1665,6 +1665,17 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MoveNodesIntoNewBlockquoteElement(
       nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
+  /**
+   * RemoveBlockContainerElements() removes all format blocks, table related
+   * element, etc in aNodeArray from the DOM tree.
+   * If aNodeArray has a format node, it will be removed and its contents
+   * will be moved to where it was.
+   * If aNodeArray has a table related element, <li>, <blockquote> or <div>,
+   * it will be removed and its contents will be moved to where it was.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  RemoveBlockContainerElements(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
