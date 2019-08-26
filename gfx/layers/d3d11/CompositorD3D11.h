@@ -90,14 +90,12 @@ class CompositorD3D11 : public Compositor {
                 const gfx::Rect& aVisibleRect) override;
 
   /**
-   * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
-   * screen dimensions.
+   * Start a new frame.
    */
   void BeginFrame(const nsIntRegion& aInvalidRegion,
                   const gfx::IntRect* aClipRectIn,
                   const gfx::IntRect& aRenderBounds,
                   const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer,
-                  gfx::IntRect* aClipRectOut = nullptr,
                   gfx::IntRect* aRenderBoundsOut = nullptr) override;
 
   void NormalDrawingDone() override;

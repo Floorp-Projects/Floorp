@@ -1099,7 +1099,6 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
                                  NativeLayer* aNativeLayer,
-                                 IntRect* aClipRectOut,
                                  IntRect* aRenderBoundsOut) {
   MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
 
@@ -1175,9 +1174,6 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  if (aClipRectOut) {
-    *aClipRectOut = rect;
-  }
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
   }
