@@ -1136,23 +1136,21 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   EnsureSize();
 
-  IntRect intRect = IntRect(IntPoint(0, 0), mSize.ToUnknownSize());
+  IntRect rect = IntRect(IntPoint(0, 0), mSize.ToUnknownSize());
   // Sometimes the invalid region is larger than we want to draw.
   nsIntRegion invalidRegionSafe;
 
   if (mSize != oldSize) {
-    invalidRegionSafe = intRect;
+    invalidRegionSafe = rect;
   } else {
-    invalidRegionSafe.And(aInvalidRegion, intRect);
+    invalidRegionSafe.And(aInvalidRegion, rect);
   }
 
   IntRect invalidRect = invalidRegionSafe.GetBounds();
 
   IntRect clipRect = invalidRect;
   if (aClipRectIn) {
-    clipRect.IntersectRect(
-        clipRect, IntRect(aClipRectIn->X(), aClipRectIn->Y(),
-                          aClipRectIn->Width(), aClipRectIn->Height()));
+    clipRect.IntersectRect(clipRect, *aClipRectIn);
   }
 
   if (clipRect.IsEmpty()) {
@@ -1178,10 +1176,10 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (aClipRectOut) {
-    *aClipRectOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aClipRectOut = rect;
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aRenderBoundsOut = rect;
   }
 
   mCurrentClip = mBackBufferInvalid.GetBounds();
