@@ -2,40 +2,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.manifest-view {
+.manifest {
   padding: calc(var(--base-unit) * 2) calc(var(--base-unit) * 4);
   border-bottom: 1px solid var(--grey-20);
   display: table;
   width: 100%;
 }
 
-.manifest-view:last-child {
+.manifest:last-child {
   border-bottom: 0;
 }
 
-.manifest-view__title {
+.manifest__title {
 	font-size: var(--title-10-font-size);
   font-weight: var(--title-20-font-weight);
   text-align: left;
   padding: calc(var(--base-unit) * 2) 0;
 }
 
-.manifest-view__row {
+.manifest__row {
   vertical-align: top;
 }
 
-.manifest-view__col-label {
+.manifest__col-label {
 	color: var(--grey-50);
   font-weight: var(--title-30-font-weight);
   width: calc(var(--base-unit) * 28);
   text-align: right;
 }
 
-.manifest-view__col-value {
+.manifest__col-value {
   word-break: break-all;
 }
 
-.manifest-view__row-error .manifest-view__col-label {
+.manifest__row-error .manifest__col-label {
   width: calc(var(--base-unit) * 6);
   text-align: left;
 }

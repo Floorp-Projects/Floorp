@@ -7,8 +7,8 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-const ManifestView = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestView")
+const Manifest = createFactory(
+  require("devtools/client/application/src/components/manifest/Manifest")
 );
 
 const { MANIFEST_DATA } = require("../../../src/constants");
@@ -31,13 +31,13 @@ const data = {
 };
 
 /**
- * Test for ManifestView.js component
+ * Test for Manifest component
  */
 
-describe("ManifestView", () => {
+describe("Manifest", () => {
   it("renders the expected snapshot", () => {
     const wrapper = shallow(
-      ManifestView({
+      Manifest({
         identity: data.identity,
         warnings: data.warnings,
         icons: data.icons,

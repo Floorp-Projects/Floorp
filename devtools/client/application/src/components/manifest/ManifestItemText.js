@@ -26,9 +26,9 @@ class ManifestItemText extends PureComponent {
     const { name, val } = this.props;
 
     return tr(
-      { className: "manifest-view__row" },
-      th({ className: "manifest-view__col-label", scope: "row" }, name),
-      td({ className: "manifest-view__col-value" }, val)
+      { className: "manifest__row" },
+      th({ className: "manifest__col-label", scope: "row" }, name),
+      td({ className: "manifest__col-value" }, val)
     );
   }
 }

@@ -21,10 +21,10 @@ const Localized = createFactory(FluentReact.Localized);
  * This component displays help information when no manifest is found for the
  * current target.
  */
-class ManifestViewEmpty extends PureComponent {
+class ManifestEmpty extends PureComponent {
   render() {
     return article(
-      { className: "manifest-view-empty" },
+      { className: "manifest-empty" },
       Localized(
         {
           id: "manifest-view-header",
@@ -37,4 +37,4 @@ class ManifestViewEmpty extends PureComponent {
 }
 
 // Exports
-module.exports = ManifestViewEmpty;
+module.exports = ManifestEmpty;
