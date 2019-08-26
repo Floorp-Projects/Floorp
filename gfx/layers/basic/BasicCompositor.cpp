@@ -1036,14 +1036,14 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
   }
+  if (aClipRectOut) {
+    *aClipRectOut = rect;
+  }
 
   if (aClipRectIn) {
     mRenderTarget->mDrawTarget->PushClipRect(Rect(*aClipRectIn));
   } else {
     mRenderTarget->mDrawTarget->PushClipRect(Rect(rect));
-    if (aClipRectOut) {
-      *aClipRectOut = rect;
-    }
   }
 }
 

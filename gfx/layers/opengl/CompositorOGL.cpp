@@ -889,6 +889,9 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
   }
+  if (aClipRectOut) {
+    *aClipRectOut = rect;
+  }
 
   // We can't draw anything to something with no area
   // so just return
@@ -947,10 +950,6 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   SetRenderTarget(rt);
   mWindowRenderTarget = mCurrentRenderTarget;
-
-  if (aClipRectOut && !aClipRectIn) {
-    *aClipRectOut = IntRect(IntPoint(), rect.Size());
-  }
 
 #if defined(MOZ_WIDGET_ANDROID)
   if ((mSurfaceOrigin.x > 0) || (mSurfaceOrigin.y > 0)) {
