@@ -50,6 +50,8 @@ let testFunction = function(session, fakeDeviceController, t) {
 xr_session_promise_test(
   immersiveTestName, testFunction, fakeDeviceInitParams, 'immersive-vr');
 xr_session_promise_test(
-  nonImmersiveTestName, testFunction, fakeDeviceInitParams, 'inline');
+  nonImmersiveTestName, testFunction, fakeDeviceInitParams, 'inline', {
+    requiredFeatures: ['local'],
+  });
 
 </script>
