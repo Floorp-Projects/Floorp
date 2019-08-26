@@ -728,24 +728,24 @@ async function testViewportZoomWidthAndHeight(
   }
 
   if (typeof width !== "undefined" || typeof height !== "undefined") {
-    const layoutSize = await spawnViewportTask(ui, {}, function() {
+    const innerSize = await spawnViewportTask(ui, {}, function() {
       return {
-        width: content.screen.width,
-        height: content.screen.height,
+        width: content.innerWidth,
+        height: content.innerHeight,
       };
     });
     if (typeof width !== "undefined") {
       is(
-        layoutSize.width,
+        innerSize.width,
         width,
-        message + " should have expected layout width."
+        message + " should have expected inner width."
       );
     }
     if (typeof height !== "undefined") {
       is(
-        layoutSize.height,
+        innerSize.height,
         height,
-        message + " should have expected layout height."
+        message + " should have expected inner height."
       );
     }
   }

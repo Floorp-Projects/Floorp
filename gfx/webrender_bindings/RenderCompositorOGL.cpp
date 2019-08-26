@@ -11,6 +11,11 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef XP_MACOSX
+#  include "GLContextCGL.h"
+#  include "mozilla/layers/NativeLayerCA.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -55,10 +60,55 @@ RenderCompositorOGL::~RenderCompositorOGL() {
   }
 }
 
-bool RenderCompositorOGL::BeginFrame() {
+#ifdef XP_MACOSX
+class SurfaceRegistryWrapperAroundGLContextCGL
+    : public layers::IOSurfaceRegistry {
+ public:
+  explicit SurfaceRegistryWrapperAroundGLContextCGL(gl::GLContextCGL* aContext)
+      : mContext(aContext) {}
+  void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->RegisterIOSurface(aSurface.get());
+  }
+  void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->UnregisterIOSurface(aSurface.get());
+  }
+  RefPtr<gl::GLContextCGL> mContext;
+};
+#endif
+
+bool RenderCompositorOGL::BeginFrame(layers::NativeLayer* aNativeLayer) {
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
+  }
+
+  if (aNativeLayer) {
+#ifdef XP_MACOSX
+    layers::NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
+    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+    nativeLayer->SetSurfaceIsFlipped(true);
+    auto glContextCGL = gl::GLContextCGL::Cast(mGL);
+    MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
+    RefPtr<layers::IOSurfaceRegistry> currentRegistry =
+        nativeLayer->GetSurfaceRegistry();
+    if (!currentRegistry) {
+      nativeLayer->SetSurfaceRegistry(
+          MakeAndAddRef<SurfaceRegistryWrapperAroundGLContextCGL>(
+              glContextCGL));
+    } else {
+      MOZ_RELEASE_ASSERT(static_cast<SurfaceRegistryWrapperAroundGLContextCGL*>(
+                             currentRegistry.get())
+                             ->mContext == glContextCGL);
+    }
+    CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
+    if (!surf) {
+      return false;
+    }
+    glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
+    mCurrentNativeLayer = aNativeLayer;
+#else
+    MOZ_CRASH("Unexpected native layer on this platform");
+#endif
   }
 
   mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
@@ -68,6 +118,17 @@ bool RenderCompositorOGL::BeginFrame() {
 void RenderCompositorOGL::EndFrame() {
   InsertFrameDoneSync();
   mGL->SwapBuffers();
+
+  if (mCurrentNativeLayer) {
+#ifdef XP_MACOSX
+    layers::NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
+    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+    nativeLayer->NotifySurfaceReady();
+    mCurrentNativeLayer = nullptr;
+#else
+    MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+  }
 }
 
 void RenderCompositorOGL::InsertFrameDoneSync() {

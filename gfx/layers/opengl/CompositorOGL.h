@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_COMPOSITOROGL_H
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "gfx2DGlue.h"
@@ -35,6 +36,14 @@
 #include "nsThreadUtils.h"    // for nsRunnable
 #include "nsXULAppAPI.h"      // for XRE_GetProcessType
 #include "nscore.h"           // for NS_IMETHOD
+
+#ifdef XP_MACOSX
+// This file uses IOSurfacePtr instead of IOSurfaceRef because IOSurfaceRef is
+// hard to forward declare, and including <IOSurface/IOSurface.h> brings in
+// MacTypes.h which defines Point and Rect which cause name lookup trouble.
+struct DummyIOSurface;
+typedef DummyIOSurface* IOSurfacePtr;
+#endif
 
 class nsIWidget;
 
@@ -142,6 +151,13 @@ class CompositorOGL final : public Compositor {
         SupportsPartialTextureUpdate());
     return result;
   }
+
+  // Returns a render target for the native layer.
+  // aInvalidRegion will be mutated to include existing invalid areas in the
+  // layer. aInvalidRegion is in window coordinates, i.e. in the same space
+  // as aNativeLayer->GetRect().
+  already_AddRefed<CompositingRenderTargetOGL> RenderTargetForNativeLayer(
+      NativeLayer* aNativeLayer, gfx::IntRegion& aInvalidRegion);
 
   already_AddRefed<CompositingRenderTarget> CreateRenderTarget(
       const gfx::IntRect& aRect, SurfaceInitMode aInit) override;
@@ -266,6 +282,11 @@ class CompositorOGL final : public Compositor {
   void RegisterTextureSource(TextureSource* aTextureSource);
   void UnregisterTextureSource(TextureSource* aTextureSource);
 
+#ifdef XP_MACOSX
+  void RegisterIOSurface(IOSurfacePtr aSurface);
+  void UnregisterIOSurface(IOSurfacePtr aSurface);
+#endif
+
  private:
   template <typename Geometry>
   void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,
@@ -285,6 +306,7 @@ class CompositorOGL final : public Compositor {
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
+  bool mCanRenderToDefaultFramebuffer = true;
 
 #ifdef XP_DARWIN
   nsTArray<RefPtr<BufferTextureHost>> mMaybeUnlockBeforeNextComposition;
@@ -348,7 +370,7 @@ class CompositorOGL final : public Compositor {
   void BeginFrame(const nsIntRegion& aInvalidRegion,
                   const gfx::IntRect* aClipRectIn,
                   const gfx::IntRect& aRenderBounds,
-                  const nsIntRegion& aOpaqueRegion,
+                  const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer,
                   gfx::IntRect* aClipRectOut = nullptr,
                   gfx::IntRect* aRenderBoundsOut = nullptr) override;
 
@@ -453,6 +475,11 @@ class CompositorOGL final : public Compositor {
 
   RefPtr<CompositorTexturePoolOGL> mTexturePool;
 
+  // The native layer that we're currently rendering to, if any.
+  // Non-null only between BeginFrame and EndFrame if BeginFrame has been called
+  // with a non-null aNativeLayer.
+  RefPtr<NativeLayer> mCurrentNativeLayer;
+
 #ifdef MOZ_WIDGET_GTK
   // Hold TextureSources which own device data that have to be deleted before
   // destroying this CompositorOGL.
@@ -468,6 +495,18 @@ class CompositorOGL final : public Compositor {
   gfx::IntSize mViewportSize;
 
   ShaderProgramOGL* mCurrentProgram;
+
+#ifdef XP_MACOSX
+  struct IOSurfaceRefHasher {
+    std::size_t operator()(const IOSurfacePtr& aSurface) const {
+      return HashGeneric(reinterpret_cast<uintptr_t>(aSurface));
+    }
+  };
+
+  std::unordered_map<IOSurfacePtr, RefPtr<CompositingRenderTargetOGL>,
+                     IOSurfaceRefHasher>
+      mRegisteredIOSurfaceRenderTargets;
+#endif
 };
 
 }  // namespace layers

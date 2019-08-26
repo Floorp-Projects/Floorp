@@ -344,7 +344,10 @@ impl CookieJar {
     /// }
     /// ```
     pub fn iter(&self) -> Iter {
-        Iter { delta_cookies: self.delta_cookies.union(&self.original_cookies) }
+        Iter {
+            delta_cookies: self.delta_cookies.iter()
+                .chain(self.original_cookies.difference(&self.delta_cookies)),
+        }
     }
 
     /// Returns a `PrivateJar` with `self` as its parent jar using the key `key`
@@ -439,12 +442,13 @@ impl<'a> Iterator for Delta<'a> {
     }
 }
 
-use std::collections::hash_set::Union;
+use std::collections::hash_set::Difference;
 use std::collections::hash_map::RandomState;
+use std::iter::Chain;
 
 /// Iterator over all of the cookies in a jar.
 pub struct Iter<'a> {
-    delta_cookies: Union<'a, DeltaCookie, RandomState>,
+    delta_cookies: Chain<HashSetIter<'a, DeltaCookie>, Difference<'a, DeltaCookie, RandomState>>,
 }
 
 impl<'a> Iterator for Iter<'a> {

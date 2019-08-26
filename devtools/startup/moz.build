@@ -6,10 +6,6 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
-DIRS += [
-    'preferences',
-]
-
 # Register the startup components only for 'all' builds.
 if CONFIG['MOZ_DEVTOOLS'] == 'all':
     EXTRA_JS_MODULES += [

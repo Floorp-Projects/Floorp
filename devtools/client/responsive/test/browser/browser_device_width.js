@@ -3,29 +3,45 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const TEST_URL = "data:text/html;charset=utf-8,";
+const TEST_URL =
+  'data:text/html;charset=utf-8,<iframe id="subframe" ' +
+  'width="200" height="200"></iframe>';
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
+  await pushPref("devtools.responsive.metaViewport.enabled", true);
+
   ok(ui, "An instance of the RDM should be attached to the tab.");
-  await setViewportSize(ui, manager, 110, 500);
+  await setViewportSizeAndAwaitReflow(ui, manager, 110, 500);
 
   info("Checking initial width/height properties.");
-  await doInitialChecks(ui);
+  await doInitialChecks(ui, 110);
+
+  info("Checking initial width/height with meta viewport on");
+  await setTouchAndMetaViewportSupport(ui, true);
+  await doInitialChecks(ui, 440);
+  await setTouchAndMetaViewportSupport(ui, false);
 
   info("Changing the RDM size");
-  await setViewportSize(ui, manager, 90, 500);
+  await setViewportSizeAndAwaitReflow(ui, manager, 90, 500);
 
   info("Checking for screen props");
   await checkScreenProps(ui);
 
+  info("Checking for screen props with meta viewport on");
+  await setTouchAndMetaViewportSupport(ui, true);
+  await checkScreenProps(ui);
+  await setTouchAndMetaViewportSupport(ui, false);
+
+  info("Checking for subframe props");
+  await checkSubframeProps(ui);
+
+  info("Checking for subframe props with meta viewport on");
+  await setTouchAndMetaViewportSupport(ui, true);
+  await checkSubframeProps(ui);
+  await setTouchAndMetaViewportSupport(ui, false);
+
   info("Changing the RDM size using input keys");
   await setViewportSizeWithInputKeys(ui);
-
-  info("Setting docShell.deviceSizeIsPageSize to false");
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    const docShell = content.docShell;
-    docShell.deviceSizeIsPageSize = false;
-  });
 
   info("Checking for screen props once again.");
   await checkScreenProps2(ui);
@@ -71,14 +87,14 @@ async function setViewportSizeWithInputKeys(ui) {
   await resized;
 }
 
-async function doInitialChecks(ui) {
+async function doInitialChecks(ui, expectedInnerWidth) {
   const {
     innerWidth,
     matchesMedia,
     outerHeight,
     outerWidth,
   } = await grabContentInfo(ui);
-  is(innerWidth, 110, "initial width should be 110px");
+  is(innerWidth, expectedInnerWidth, "inner width should be as expected");
   is(outerWidth, 110, "device's outerWidth should be 110px");
   is(outerHeight, 500, "device's outerHeight should be 500px");
   isnot(
@@ -107,13 +123,22 @@ async function checkScreenProps(ui) {
 }
 
 async function checkScreenProps2(ui) {
-  const { matchesMedia, screen } = await grabContentInfo(ui);
-  ok(!matchesMedia, "media query should be re-evaluated.");
-  is(
+  const { screen } = await grabContentInfo(ui);
+  isnot(
     window.screen.width,
     screen.width,
-    "screen.width should be the size of the screen."
+    "screen.width should not be the size of the screen."
   );
+}
+
+async function checkSubframeProps(ui) {
+  const { outerWidth, matchesMedia, screen } = await grabContentSubframeInfo(
+    ui
+  );
+  is(outerWidth, 90, "subframe outerWidth should be 90px");
+  ok(matchesMedia, "subframe media query should match");
+  is(screen.width, 90, "subframe screen.width should be the page width");
+  is(screen.height, 500, "subframe screen.height should be the page height");
 }
 
 function grabContentInfo(ui) {
@@ -127,6 +152,23 @@ function grabContentInfo(ui) {
       matchesMedia: content.matchMedia("(max-device-width:100px)").matches,
       outerHeight: content.outerHeight,
       outerWidth: content.outerWidth,
+    };
+  });
+}
+
+function grabContentSubframeInfo(ui) {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+    const subframe = content.document.getElementById("subframe");
+    const win = subframe.contentWindow;
+    return {
+      screen: {
+        width: win.screen.width,
+        height: win.screen.height,
+      },
+      innerWidth: win.innerWidth,
+      matchesMedia: win.matchMedia("(max-device-width:100px)").matches,
+      outerHeight: win.outerHeight,
+      outerWidth: win.outerWidth,
     };
   });
 }

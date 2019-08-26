@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// Most devtools prefs are found in browser/app/profile/firefox.js. The
+// debugger prefs are separate so they can be easily mirrored to the debugger
+// project on GitHub, here:
+// https://github.com/firefox-devtools/debugger/blob/master/assets/panel/prefs.js
+
 // Enable the Debugger
 pref("devtools.debugger.enabled", true);
 pref("devtools.debugger.chrome-debugging-host", "localhost");
