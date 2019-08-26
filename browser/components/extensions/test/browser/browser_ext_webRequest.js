@@ -17,9 +17,7 @@ function createHiddenBrowser(url) {
       let doc = subframe.document;
       let browser = doc.createElementNS(XUL_NS, "browser");
       browser.setAttribute("type", "content");
-      if (Services.appinfo.browserTabsRemoteAutostart) {
-        browser.setAttribute("remote", "true");
-      }
+      browser.setAttribute("remote", "true");
       browser.setAttribute("disableglobalhistory", "true");
       browser.setAttribute("src", url);
 
