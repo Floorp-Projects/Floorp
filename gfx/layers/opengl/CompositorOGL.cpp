@@ -879,37 +879,34 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   MOZ_ASSERT(!mFrameInProgress,
              "frame still in progress (should have called EndFrame");
 
-  gfx::IntRect rect;
+  IntRect rect;
   if (mUseExternalSurfaceSize) {
-    rect = gfx::IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
+    rect = IntRect(IntPoint(), mSurfaceSize);
   } else {
-    rect = gfx::IntRect(aRenderBounds.X(), aRenderBounds.Y(),
-                        aRenderBounds.Width(), aRenderBounds.Height());
+    rect = aRenderBounds;
   }
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
   }
 
-  auto width = rect.Width();
-  auto height = rect.Height();
-
   // We can't draw anything to something with no area
   // so just return
-  if (width == 0 || height == 0) return;
+  if (rect.IsZeroArea()) {
+    return;
+  }
 
   // If the widget size changed, we have to force a MakeCurrent
   // to make sure that GL sees the updated widget size.
-  if (mWidgetSize.width != width || mWidgetSize.height != height) {
+  if (mWidgetSize.ToUnknownSize() != rect.Size()) {
     MakeCurrent(ForceMakeCurrent);
 
-    mWidgetSize.width = width;
-    mWidgetSize.height = height;
+    mWidgetSize = LayoutDeviceIntSize::FromUnknownSize(rect.Size());
   } else {
     MakeCurrent();
   }
 
-  mPixelsPerFrame = width * height;
+  mPixelsPerFrame = rect.Area();
   mPixelsFilled = 0;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -952,7 +949,7 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mWindowRenderTarget = mCurrentRenderTarget;
 
   if (aClipRectOut && !aClipRectIn) {
-    aClipRectOut->SetRect(0, 0, width, height);
+    *aClipRectOut = IntRect(IntPoint(), rect.Size());
   }
 
 #if defined(MOZ_WIDGET_ANDROID)

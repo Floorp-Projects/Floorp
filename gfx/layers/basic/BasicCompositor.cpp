@@ -886,11 +886,13 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
   return true;
 }
 
-void BasicCompositor::BeginFrame(
-    const nsIntRegion& aInvalidRegion, const gfx::IntRect* aClipRectIn,
-    const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    NativeLayer* aNativeLayer, gfx::IntRect* aClipRectOut /* = nullptr */,
-    gfx::IntRect* aRenderBoundsOut /* = nullptr */) {
+void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
+                                 const IntRect* aClipRectIn,
+                                 const IntRect& aRenderBounds,
+                                 const nsIntRegion& aOpaqueRegion,
+                                 NativeLayer* aNativeLayer,
+                                 IntRect* aClipRectOut /* = nullptr */,
+                                 IntRect* aRenderBoundsOut /* = nullptr */) {
   if (mIsPendingEndRemoteDrawing) {
     // Force to end previous remote drawing.
     TryToEndRemoteDrawing(/* aForceToEnd */ true);
