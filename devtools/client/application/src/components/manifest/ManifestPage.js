@@ -28,23 +28,7 @@ class ManifestPage extends PureComponent {
             "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
         },
       ],
-      icons: [
-        {
-          key: "16x16",
-          value:
-            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-        {
-          key: "32x32",
-          value:
-            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-        {
-          key: "64x64",
-          value:
-            "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-        },
-      ],
+      icons: [],
       identity: [
         {
           key: "name",

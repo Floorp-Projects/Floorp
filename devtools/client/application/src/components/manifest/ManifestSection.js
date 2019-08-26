@@ -13,7 +13,7 @@ const {
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
- * Displays a section of a manifest in the form of a captioned table.
+ * A section of a manifest in the form of a captioned table.
  */
 class ManifestSection extends PureComponent {
   static get propTypes() {
@@ -25,10 +25,15 @@ class ManifestSection extends PureComponent {
 
   render() {
     const { children, title } = this.props;
+    const isEmpty = !children || children.length === 0;
 
     return table(
-      { className: "manifest" },
-      caption({ className: "manifest__title" }, title),
+      {
+        className: `manifest-section ${
+          isEmpty ? "manifest-section--empty" : ""
+        }`,
+      },
+      caption({ className: "manifest-section__title" }, title),
       tbody({}, children)
     );
   }

@@ -23,7 +23,7 @@ const ManifestItemWarning = createFactory(require("./ManifestItemWarning"));
 const ManifestSection = createFactory(require("./ManifestSection"));
 
 /**
- * Displays a canonical manifest, splitted in different sections
+ * A canonical manifest, splitted in different sections
  */
 class Manifest extends PureComponent {
   static get propTypes() {
