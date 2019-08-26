@@ -229,7 +229,9 @@ input[type="url"][readOnly]:hover:active {
   background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   background-repeat: no-repeat;
   background-size: contain;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
 }
 
 .login-item-favicon-wrapper.hide-default-favicon {
@@ -243,6 +245,7 @@ input[type="url"][readOnly]:hover:active {
   background-image: url("chrome://global/skin/icons/warning.svg");
   background-repeat: no-repeat;
   background-position: left 10px top 10px;
+  color: #0C0C0D;
   -moz-context-properties: fill;
   fill: var(--red-90);
   box-shadow: 0 2px 8px 0 rgba(12,12,13,0.1);
@@ -278,9 +281,9 @@ a.breach-alert-link {
   min-width: 16px;
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
-  fill: var(--grey-90);
+  fill: currentColor;
   inset-inline-end: 12px;
-  inset-block-start: 12px
+  inset-block-start: 12px;
 }
 
 .dismiss-breach-alert,
@@ -299,11 +302,6 @@ a.breach-alert-link {
 
     .breach-alert {
       box-shadow: 0 2px 8px 0 rgba(249,249,250,0.1);
-      color: #0C0C0D;
-    }
-
-    .login-item-favicon-wrapper {
-      fill: var(--in-content-border-hover);
     }
   }
 }
