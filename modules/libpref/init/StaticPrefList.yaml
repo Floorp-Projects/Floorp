@@ -6718,6 +6718,13 @@
 #endif
   mirror: always
 
+# Negate scroll, true will make the mouse scroll wheel move the screen the
+# same direction as with most desktops or laptops.
+- name: ui.scrolling.negate_wheel_scroll
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
 # If the user puts a finger down on an element and we think the user might be
 # executing a pan gesture, how long do we wait before tentatively deciding the
 # gesture is actually a tap and activating the target element?
