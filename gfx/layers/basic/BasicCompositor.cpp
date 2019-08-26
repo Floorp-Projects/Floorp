@@ -891,7 +891,6 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
                                  NativeLayer* aNativeLayer,
-                                 IntRect* aClipRectOut /* = nullptr */,
                                  IntRect* aRenderBoundsOut /* = nullptr */) {
   if (mIsPendingEndRemoteDrawing) {
     // Force to end previous remote drawing.
@@ -1035,9 +1034,6 @@ void BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
-  }
-  if (aClipRectOut) {
-    *aClipRectOut = rect;
   }
 
   if (aClipRectIn) {

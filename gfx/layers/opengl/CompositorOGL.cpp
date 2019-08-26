@@ -872,7 +872,7 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                                const IntRect* aClipRectIn,
                                const IntRect& aRenderBounds,
                                const nsIntRegion& aOpaqueRegion,
-                               NativeLayer* aNativeLayer, IntRect* aClipRectOut,
+                               NativeLayer* aNativeLayer,
                                IntRect* aRenderBoundsOut) {
   AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
@@ -888,9 +888,6 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
-  }
-  if (aClipRectOut) {
-    *aClipRectOut = rect;
   }
 
   // We can't draw anything to something with no area
