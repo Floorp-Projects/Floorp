@@ -1508,7 +1508,13 @@ class _ASRouter {
     return impressions;
   }
 
-  handleMessageRequest({ triggerId, triggerParam, provider, template }) {
+  handleMessageRequest({
+    triggerId,
+    triggerParam,
+    triggerContext,
+    template,
+    provider,
+  }) {
     const msgs = this._getUnblockedMessages().filter(m => {
       if (provider && m.provider !== provider) {
         return false;
@@ -1525,7 +1531,11 @@ class _ASRouter {
 
     return this._findMessage(
       msgs,
-      triggerId && { id: triggerId, param: triggerParam }
+      triggerId && {
+        id: triggerId,
+        param: triggerParam,
+        context: triggerContext,
+      }
     );
   }
 
@@ -1870,6 +1880,7 @@ class _ASRouter {
     const message = await this.handleMessageRequest({
       triggerId: trigger.id,
       triggerParam: trigger.param,
+      triggerContext: trigger.context,
     });
 
     await this.setState({ lastMessageId: message ? message.id : null });

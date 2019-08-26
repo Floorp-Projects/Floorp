@@ -887,7 +887,11 @@ describe("ASRouter", () => {
       );
     });
     it("should forward trigger param info", async () => {
-      const trigger = { triggerId: "foo", triggerParam: "bar" };
+      const trigger = {
+        triggerId: "foo",
+        triggerParam: "bar",
+        triggerContext: "context",
+      };
       const message1 = {
         id: "1",
         campaign: "foocampaign",
@@ -908,6 +912,7 @@ describe("ASRouter", () => {
       assert.calledWithExactly(stub, sinon.match.array, {
         id: trigger.triggerId,
         param: trigger.triggerParam,
+        context: trigger.triggerContext,
       });
     });
   });
@@ -1581,6 +1586,7 @@ describe("ASRouter", () => {
         assert.deepEqual(Router._findMessage.firstCall.args[1], {
           id: "firstRun",
           param: undefined,
+          context: undefined,
         });
       });
       it("consider the trigger when picking a message", async () => {
