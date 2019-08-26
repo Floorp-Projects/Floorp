@@ -985,20 +985,19 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif
   }
 
-  IntRect actualBounds;
+  IntRect bounds;
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
   mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
-                          aOpaqueRegion, mNativeLayerForEntireWindow,
-                          &actualBounds);
-  IntRect clipRect = rootLayerClip.valueOr(actualBounds);
+                          aOpaqueRegion, mNativeLayerForEntireWindow, &bounds);
+  IntRect clipRect = rootLayerClip.valueOr(bounds);
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
   ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
                                             ScreenPoint(0.0f, offset));
 #endif
 
-  if (actualBounds.IsEmpty()) {
+  if (bounds.IsEmpty()) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
 
@@ -1049,7 +1048,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   // Allow widget to render a custom foreground.
   mCompositor->GetWidget()->DrawWindowOverlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
+      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
 
   mCompositor->NormalDrawingDone();
 
@@ -1079,7 +1078,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   // Debugging
-  RenderDebugOverlay(actualBounds);
+  RenderDebugOverlay(bounds);
 
   {
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
