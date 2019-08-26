@@ -54,7 +54,8 @@ object Config {
 
     /**
      * Generates a versionCode that follows the same rules like legacy Fennec builds.
-     * Adapted from: https://searchfox.org/mozilla-central/source/python/mozbuild/mozbuild/android_version_code.py
+     * Adapted from:
+     * https://searchfox.org/mozilla-central/rev/34cb8d0a2a324043bcfc2c56f37b31abe7fb23a8/python/mozbuild/mozbuild/android_version_code.py
      */
     @JvmStatic
     fun generateFennecVersionCode(abi: String): Int {
@@ -89,10 +90,8 @@ object Config {
         // architecture (x86 or ARM). 64-bit builds have higher version codes so
         // they take precedence over 32-bit builds on devices that support 64-bit.
         //
-        //         The bit labelled 'g' is 1 if the build targets a recent API level, which
-        // is currently always the case, because Firefox no longer ships releases that
-        // are split by API levels. However, we may reintroduce a split in the future,
-        // in which case the release that targets an older API level will
+        //         The bit labelled 'g' is 1 was used for APK splits and is
+        //         nowadays always set to 1 until it serves a new purpose.
         //
         // We throw an explanatory exception when we are within one calendar year of
         // running out of build events.  This gives lots of time to update the version
@@ -132,7 +131,7 @@ object Config {
             version = version or (1 shl 1)
         }
 
-        // 'g' bit is currently always 1, but may depend on `min_sdk` in the future.
+        // 'g' bit is currently always 1 (see comment above)
         version = version or (1 shl 0)
 
         return version
