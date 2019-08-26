@@ -67,9 +67,11 @@ add_task(async function setup() {
   });
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
+  Services.telemetry.clearEvents();
 
   registerCleanupFunction(() => {
     Services.telemetry.canRecordExtended = oldCanRecord;
+    Services.telemetry.clearEvents();
   });
 });
 
