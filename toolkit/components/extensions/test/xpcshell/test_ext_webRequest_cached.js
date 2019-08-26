@@ -1,7 +1,5 @@
 "use strict";
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const BASE_URL = "http://example.com";
 const FETCH_ORIGIN = "http://example.com/data/file_sample.html";
 
