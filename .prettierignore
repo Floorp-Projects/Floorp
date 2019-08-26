@@ -15,10 +15,6 @@ browser/branding/nightly/pref/firefox-branding.js
 browser/branding/official/pref/firefox-branding.js
 browser/branding/unofficial/pref/firefox-branding.js
 devtools/client/preferences/debugger.js
-devtools/client/preferences/devtools-client.js
-devtools/client/webide/preferences/webide.js
-devtools/shared/preferences/devtools-shared.js
-devtools/startup/preferences/devtools-startup.js
 extensions/pref/autoconfig/test/unit/autoconfig.js
 mobile/android/app/geckoview-prefs.js
 mobile/android/app/mobile.js

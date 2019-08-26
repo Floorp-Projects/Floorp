@@ -89,8 +89,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void FlushLine();
   void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
 
-  void MaybeReplaceNbspsForOutput(nsString& aString) const;
-
   void Output(nsString& aString);
   void Write(const nsAString& aString);
 
@@ -110,15 +108,18 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   nsresult DoOpenContainer(nsAtom* aTag);
   nsresult DoCloseContainer(nsAtom* aTag);
   nsresult DoAddLeaf(nsAtom* aTag);
-  void DoAddText(bool aIsWhitespace, const nsAString& aText);
+
+  void DoAddText();
+  // @param aText Ignored if aIsLineBreak is true.
+  void DoAddText(bool aIsLineBreak, const nsAString& aText);
 
   // Inlined functions
-  inline bool MayWrap() {
+  inline bool MayWrap() const {
     return mWrapColumn &&
            ((mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) ||
             (mSettings.mFlags & nsIDocumentEncoder::OutputWrap));
   }
-  inline bool MayBreakLines() {
+  inline bool MayBreakLines() const {
     return !(mSettings.mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
@@ -168,12 +169,26 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   Settings mSettings;
 
-  struct CurrentLineContent {
-    // Excludes indentation and quotes.
+  // Excludes indentation and quotes.
+  class CurrentLineContent {
+   public:
+    // @param aFlags As defined in nsIDocumentEncoder.idl.
+    explicit CurrentLineContent(int32_t aFlags);
+
+    void MaybeReplaceNbsps();
+
+    void AppendLineBreak();
+
     nsString mValue;
 
     // The width of the line as it will appear on the screen (approx.).
     uint32_t mWidth = 0;
+
+   private:
+    // As defined in nsIDocumentEncoder.idl.
+    int32_t mFlags;
+
+    nsString mLineBreak;
   };
 
   CurrentLineContent mCurrentLineContent;
@@ -253,7 +268,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   uint32_t mULCount;
 
-  nsString mLineBreak;
   RefPtr<mozilla::intl::LineBreaker> mLineBreaker;
 
   // Conveniance constant. It would be nice to have it as a const static

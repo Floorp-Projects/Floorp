@@ -44,13 +44,9 @@ void InProcessCompositorWidget::PostRender(WidgetRenderingContext* aContext) {
   mWidget->PostRender(aContext);
 }
 
-void InProcessCompositorWidget::DoCompositorCleanup() {
-  mWidget->DoCompositorCleanup();
-}
-
-void InProcessCompositorWidget::DrawWindowUnderlay(
-    WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
-  mWidget->DrawWindowUnderlay(aContext, aRect);
+RefPtr<layers::NativeLayerRoot>
+InProcessCompositorWidget::GetNativeLayerRoot() {
+  return mWidget->GetNativeLayerRoot();
 }
 
 void InProcessCompositorWidget::DrawWindowOverlay(
@@ -104,6 +100,12 @@ uintptr_t InProcessCompositorWidget::GetWidgetKey() {
 }
 
 nsIWidget* InProcessCompositorWidget::RealWidget() { return mWidget; }
+
+#ifdef XP_MACOSX
+LayoutDeviceIntRegion InProcessCompositorWidget::GetOpaqueWidgetRegion() {
+  return mWidget->GetOpaqueWidgetRegion();
+}
+#endif
 
 void InProcessCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
   if (RefPtr<CompositorVsyncDispatcher> cvd =

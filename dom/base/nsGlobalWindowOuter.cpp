@@ -3574,23 +3574,13 @@ nsIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
     return nsIntSize(size.width, size.height);
   }
 
-  if (mDoc && mDoc->InRDMPane()) {
-    CSSIntSize size;
-    aError = GetInnerSize(size);
-
-    // Obtain the current zoom of the presentation shell. The zoom value will
-    // be used to scale the size of the visual viewport to the device browser's
-    // outer size values. Once RDM no longer relies on the having the page
-    // content being embedded in a <iframe mozbrowser>, we can do away with
-    // this approach and retrieve the size of the frame containing the browser
-    // content.
-    RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
-
-    if (presContext) {
-      float zoom = presContext->GetDeviceFullZoom();
-      int32_t width = std::round(size.width * zoom);
-      int32_t height = std::round(size.height * zoom);
-      return nsIntSize(width, height);
+  // Windows showing documents in RDM panes and any subframes within them
+  // return the simulated device size.
+  if (mDoc) {
+    Maybe<CSSIntSize> deviceSize = GetRDMDeviceSize(*mDoc);
+    if (deviceSize.isSome()) {
+      const CSSIntSize& size = deviceSize.value();
+      return nsIntSize(size.width, size.height);
     }
   }
 
@@ -3730,6 +3720,31 @@ nsRect nsGlobalWindowOuter::GetInnerScreenRect() {
   }
 
   return rootFrame->GetScreenRectInAppUnits();
+}
+
+Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
+    const Document& aDocument) {
+  // RDM device size should reflect the simulated device resolution, and
+  // be independent of any full zoom or resolution zoom applied to the
+  // content. To get this value, we get the unscaled browser child size.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  Maybe<CSSIntSize> deviceSize;
+
+  // Bug 1576256: This does not work for cross-process subframes.
+  const Document* topInProcessContentDoc =
+      aDocument.GetTopLevelContentDocument();
+  if (topInProcessContentDoc && topInProcessContentDoc->InRDMPane()) {
+    nsIDocShell* docShell = topInProcessContentDoc->GetDocShell();
+    if (docShell) {
+      nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild();
+      if (child) {
+        BrowserChild* bc = static_cast<BrowserChild*>(child.get());
+        deviceSize = Some(bc->GetUnscaledInnerSize());
+      }
+    }
+  }
+  return deviceSize;
 }
 
 float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {
@@ -4037,7 +4052,8 @@ already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
     const nsAString& aName) {
   NS_ENSURE_TRUE(mBrowsingContext, nullptr);
 
-  return do_AddRef(mBrowsingContext->FindChildWithName(aName, *mBrowsingContext));
+  return do_AddRef(
+      mBrowsingContext->FindChildWithName(aName, *mBrowsingContext));
 }
 
 bool nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName) {
