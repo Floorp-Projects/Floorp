@@ -1616,6 +1616,18 @@ class HTMLEditor final : public TextEditor,
   MaybeSplitAncestorsForInsertWithTransaction(
       nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode);
 
+  /**
+   * MoveNodesIntoNewBlockquoteElement() inserts at least one <blockquote>
+   * element and moves nodes in aNodeArray into new <blockquote> elements.
+   * If aNodeArray includes a table related element except <table>, this
+   * calls itself recursively to insert <blockquote> into the cell.
+   *
+   * @param aNodeArray          Nodes which will be moved into created
+   *                            <blockquote> elements.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MoveNodesIntoNewBlockquoteElement(
+      nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
