@@ -146,6 +146,7 @@
 #include "InProcessWinCompositorWidget.h"
 #include "InputDeviceUtils.h"
 #include "ScreenHelperWin.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
@@ -7227,7 +7228,7 @@ void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
   if (mWindowType == eWindowType_popup) {
     return;
   }
-  if (DefaultScaleOverride() > 0.0) {
+  if (StaticPrefs::layout_css_devPixelsPerPx() > 0.0) {
     return;
   }
   mDefaultScale = -1.0;  // force recomputation of scale factor

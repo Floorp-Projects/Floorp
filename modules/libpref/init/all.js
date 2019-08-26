@@ -2868,12 +2868,6 @@ pref("layout.css.report_errors", true);
 // interpretation of physical units such as "pt".
 pref("layout.css.dpi", -1);
 
-// Set the number of device pixels per CSS pixel. A value <= 0 means choose
-// automatically based on user settings for the platform (e.g., "UI scale factor"
-// on Mac). A positive value is used as-is. This effectively controls the size
-// of a CSS "px". This is only used for windows on the screen, not for printing.
-pref("layout.css.devPixelsPerPx", "-1.0");
-
 // Set the threshold distance in CSS pixels below which scrolling will snap to
 // an edge, when scroll snapping is set to "proximity".
 pref("layout.css.scroll-snap.proximity-threshold", 200);
