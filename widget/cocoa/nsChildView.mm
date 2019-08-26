@@ -2642,6 +2642,25 @@ void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
 - (NSView*)hitTest:(NSPoint)aPoint {
   return nil;
 }
+- (NSRect)_opaqueRectForWindowMoveWhenInTitlebar {
+  // In NSWindows that use NSFullSizeContentViewWindowMask, NSViews which
+  // overlap the titlebar do not disable window dragging in the overlapping
+  // areas even if they return NO from mouseDownCanMoveWindow. This can have
+  // unfortunate effects: For example, dragging tabs in a browser window would
+  // move the window if those tabs are in the titlebar.
+  // macOS does not seem to offer a documented way to opt-out of the forced
+  // window dragging in the titlebar.
+  // Overriding _opaqueRectForWindowMoveWhenInTitlebar is an undocumented way
+  // of opting out of this behavior. This method was added in 10.11 and is used
+  // by some NSControl subclasses to prevent window dragging in the titlebar.
+  // The function which assembles the draggable area of the window calls
+  // _opaqueRect for the content area and _opaqueRectForWindowMoveWhenInTitlebar
+  // for the titlebar area, on all visible NSViews. The default implementation
+  // of _opaqueRect returns [self visibleRect], and the default implementation
+  // of _opaqueRectForWindowMoveWhenInTitlebar returns NSZeroRect unless it's
+  // overridden.
+  return [self visibleRect];
+}
 @end
 
 void nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) {
