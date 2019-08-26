@@ -21,20 +21,7 @@ type AccordionItem = {
 
 type Props = { items: Array<Object> };
 
-type State = {
-  opened: boolean[],
-  created: boolean[],
-};
-
-class Accordion extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      opened: props.items.map(item => item.opened),
-      created: [],
-    };
-  }
-
+class Accordion extends Component<Props> {
   handleHeaderClick(i: number) {
     const item = this.props.items[i];
     const opened = !item.opened;
