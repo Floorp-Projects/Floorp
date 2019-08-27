@@ -610,7 +610,7 @@ class MozbuildObject(ProcessExecutionMixin):
                                   'Mozilla Build System', msg], ensure_exit_code=False)
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed',
-                     {'error': e.message}, 'Notification center failed: {error}')
+                     {'error': e}, 'Notification center failed: {error}')
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
@@ -880,7 +880,7 @@ class MachCommandBase(MozbuildObject):
             sys.exit(1)
 
         except MozconfigLoadException as e:
-            print(e.message)
+            print(e)
             sys.exit(1)
 
         MozbuildObject.__init__(self, topsrcdir, context.settings,
@@ -895,11 +895,11 @@ class MachCommandBase(MozbuildObject):
             self.mozconfig
 
         except MozconfigFindException as e:
-            print(e.message)
+            print(e)
             sys.exit(1)
 
         except MozconfigLoadException as e:
-            print(e.message)
+            print(e)
             sys.exit(1)
 
         # Always keep a log of the last command, but don't do that for mach
