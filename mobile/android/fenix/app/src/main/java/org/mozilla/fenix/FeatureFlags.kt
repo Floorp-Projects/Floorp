@@ -18,17 +18,6 @@ object FeatureFlags {
     private val all = production or beta or nightly or debug
 
     /**
-     * Send Tab is a feature to lets you send a url/tab from a desktop to device and vice versa.
-     *
-     * NB: flipping this flag back and worth is currently not well supported and may need
-     * hand-holding. Consult with the android-components peers before changing.
-     *
-     * This flag is temporarily also used for the push service that is requires it to.
-     * See: https://github.com/mozilla-mobile/fenix/issues/4063
-     */
-    val sendTabEnabled = all
-
-    /**
      * Pull-to-refresh allows you to pull the web content down far enough to have the page to
      * reload.
      */

@@ -191,7 +191,7 @@ open class FenixApplication : Application() {
         // Sets the PushFeature as the singleton instance for push messages to go to.
         // We need the push feature setup here to deliver messages in the case where the service
         // starts up the app first.
-        if (FeatureFlags.sendTabEnabled && components.backgroundServices.pushConfig != null) {
+        if (components.backgroundServices.pushConfig != null) {
             val push = components.backgroundServices.push
 
             // Install the AutoPush singleton to receive messages.
