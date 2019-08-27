@@ -3,13 +3,184 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# The beginning of this script is both valid shell and valid python,
+# The beginning of this script is both valid POSIX shell and valid Python,
 # such that the script starts with the shell and is reexecuted with
-# the right python.
-'''which' python2.7 > /dev/null && exec python2.7 "$0" "$@" || exec python "$0" "$@"
+# the right Python.
+
+# Embeds a shell script inside a Python triple quote. This pattern is valid
+# shell because `''':'`, `':'` and `:` are all equivalent, and `:` is a no-op.
+''':'
+py2commands="
+    addtest
+    analyze
+    android
+    android-emulator
+    artifact
+    awsy-test
+    bootstrap
+    browsertime
+    build
+    build-backend
+    buildsymbols
+    busted
+    cargo
+    check-spidermonkey
+    clang-format
+    clobber
+    compare-locales
+    compileflags
+    configure
+    cppunittest
+    cramtest
+    crashtest
+    devtools-css-db
+    doc
+    doctor
+    dxr
+    empty-makefiles
+    environment
+    eslint
+    file-info
+    firefox-ui-functional
+    fluent-migration-test
+    geckodriver
+    geckodriver-test
+    geckoview-junit
+    google
+    gradle
+    gtest
+    ide
+    import-pr
+    install
+    install-android
+    install-desktop
+    jsapi-tests
+    jsshell-bench
+    jstestbrowser
+    jstests
+    lint
+    mach-commands
+    mach-completion
+    mach-debug-commands
+    marionette-test
+    mdn
+    mochitest
+    mozbuild-reference
+    mozharness
+    mozregression
+    package
+    package-multi-locale
+    pastebin
+    power
+    prettier-format
+    puppeteer-test
+    python
+    python-safety
+    python-test
+    raptor
+    raptor-test
+    reftest
+    release
+    release-history
+    remote
+    repackage
+    resource-usage
+    robocop
+    run
+    run-android
+    run-desktop
+    rusttests
+    search
+    searchfox
+    settings
+    show-log
+    static-analysis
+    talos-test
+    taskcluster-build-image
+    taskcluster-load-image
+    taskgraph
+    telemetry-tests-client
+    test
+    test-info
+    tps-build
+    try
+    uuid
+    valgrind-test
+    vcs-setup
+    vendor
+    visualmetrics
+    warnings-list
+    warnings-summary
+    watch
+    web-platform-tests
+    web-platform-tests-update
+    webidl-example
+    webidl-parser-test
+    webrtc-gtest
+    wpt
+    wpt-manifest-update
+    wpt-metadata-merge
+    wpt-metadata-summary
+    wpt-serve
+    wpt-unittest
+    wpt-update
+    xpcshell-test
+"
+
+run_py() {
+    # Try to run a specific Python interpreter. Fall back to the system
+    # default Python if the specific interpreter couldn't be found.
+    py_executable="$1"
+    shift
+    if which "$py_executable" > /dev/null
+    then
+        exec "$py_executable" "$0" "$@"
+    elif [ "$py_executable" = "python2.7" ]; then
+        exec python "$0" "$@"
+    else
+        echo "This mach command requires $py_executable, which wasn't found on the system!"
+        exit 1
+    fi
+}
+
+first_arg=$1
+if [ -z "$first_arg" ]; then
+    run_py python3
+fi
+
+case "${first_arg}" in
+    "-"*)
+        # We have global arguments which are tricky to parse from this shell
+        # script. So invoke `mach` with a special --print-command argument to
+        # return the name of the command. This adds extra overhead when using
+        # global arguments, but global arguments are an edge case and this hack
+        # is only needed temporarily for the Python 3 migration. We use Python
+        # 2.7 because using Python 3 hits this error in build tasks:
+        # https://searchfox.org/mozilla-central/rev/c7e8bc4996f9/build/moz.configure/init.configure#319
+        command=`run_py python2.7 --print-command "$@" | tail -n1`
+        ;;
+    *)
+        # In the common case, the first argument is the command.
+        command=${first_arg};
+        ;;
+esac
+
+# Check for the mach subcommand in the Python 2 commands list and run it
+# with the correct interpreter.
+case " $(echo $py2commands) " in
+    *\ $command\ *)
+        run_py python2.7 "$@"
+        ;;
+    *)
+        run_py python3 "$@"
+        ;;
+esac
+
+# Run Python 3 for everything else.
+run_py python3 "$@"
 '''
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import sys
@@ -22,11 +193,15 @@ def ancestors(path):
             break
 
 def load_mach(dir_path, mach_path):
-    import imp
-    with open(mach_path, 'r') as fh:
-        imp.load_module('mach_bootstrap', fh, mach_path,
-                        ('.py', 'r', imp.PY_SOURCE))
-    import mach_bootstrap
+    if sys.version_info < (3, 5):
+        import imp
+        mach_bootstrap = imp.load_source('mach_bootstrap', mach_path)
+    else:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('mach_bootstrap', mach_path)
+        mach_bootstrap = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mach_bootstrap)
+
     return mach_bootstrap.bootstrap(dir_path)
 
 
