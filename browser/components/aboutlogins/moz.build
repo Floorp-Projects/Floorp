@@ -11,7 +11,6 @@ with Files('**'):
 
 EXTRA_JS_MODULES += [
     'AboutLoginsParent.jsm',
-    'LoginBreaches.jsm',
 ]
 
 FINAL_TARGET_FILES.actors += [
