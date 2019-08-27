@@ -2704,8 +2704,7 @@ bool js::SynchronouslyCompressSource(JSContext* cx,
 
 void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                           JS::ScriptSourceInfo* info) const {
-  info->misc += mallocSizeOf(this) + mallocSizeOf(filename_.get()) +
-                mallocSizeOf(introducerFilename_.get());
+  info->misc += mallocSizeOf(this);
   info->numScripts++;
 }
 
@@ -3466,6 +3465,31 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   return true;
 }
 
+// Use the SharedImmutableString map to deduplicate input string. The input
+// string must be null-terminated.
+template <typename SharedT, typename CharT>
+static Maybe<SharedT> GetOrCreateStringZ(
+    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy>&& str) {
+  JSRuntime* rt = cx->zone()->runtimeFromAnyThread();
+  size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
+  auto res =
+      rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
+  if (!res) {
+    ReportOutOfMemory(cx);
+  }
+  return res;
+}
+
+Maybe<SharedImmutableString> ScriptSource::getOrCreateStringZ(
+    JSContext* cx, UniqueChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableString>(cx, std::move(str));
+}
+
+Maybe<SharedImmutableTwoByteString> ScriptSource::getOrCreateStringZ(
+    JSContext* cx, UniqueTwoByteChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, std::move(str));
+}
+
 bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
   UniqueChars owned = DuplicateString(cx, filename);
   if (!owned) {
@@ -3476,8 +3500,8 @@ bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
 
 bool ScriptSource::setFilename(JSContext* cx, UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
-  filename_ = std::move(filename);
-  return true;  // Subsequent patch will need this to be fallible.
+  filename_ = getOrCreateStringZ(cx, std::move(filename));
+  return filename_.isSome();
 }
 
 bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
@@ -3491,8 +3515,8 @@ bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
 bool ScriptSource::setIntroducerFilename(JSContext* cx,
                                          UniqueChars&& filename) {
   MOZ_ASSERT(!introducerFilename_);
-  introducerFilename_ = std::move(filename);
-  return true;  // Subsequent patch will need this to be fallible.
+  introducerFilename_ = getOrCreateStringZ(cx, std::move(filename));
+  return introducerFilename_.isSome();
 }
 
 bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* url) {
@@ -3519,8 +3543,8 @@ bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
     return true;
   }
 
-  displayURL_ = std::move(url);
-  return true;  // Subsequent patch will need this to be fallible.
+  displayURL_ = getOrCreateStringZ(cx, std::move(url));
+  return displayURL_.isSome();
 }
 
 bool ScriptSource::setSourceMapURL(JSContext* cx, const char16_t* url) {
@@ -3537,8 +3561,8 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
     return true;
   }
 
-  sourceMapURL_ = std::move(url);
-  return true;  // Subsequent patch will need this to be fallible.
+  sourceMapURL_ = getOrCreateStringZ(cx, std::move(url));
+  return sourceMapURL_.isSome();
 }
 
 /* static */ mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
