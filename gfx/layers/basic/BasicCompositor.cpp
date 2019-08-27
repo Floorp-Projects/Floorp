@@ -898,11 +898,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
 
   IntRect rect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
 
-  const bool shouldInvalidateWindow =
-      (ShouldRecordFrames() &&
-       (!mFullWindowRenderTarget ||
-        mFullWindowRenderTarget->mDrawTarget->GetSize() !=
-            rect.ToUnknownRect().Size()));
+  const bool shouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
 
   if (shouldInvalidateWindow) {
     mInvalidRegion = rect;
@@ -1001,28 +997,6 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
   }
   SetRenderTarget(target);
 
-  if (ShouldRecordFrames()) {
-    // On some platforms (notably Linux with X11) we do not always have a
-    // full-size draw target. While capturing profiles with screenshots, we need
-    // access to a full-size target so we can record the contents.
-    if (!mFullWindowRenderTarget ||
-        mFullWindowRenderTarget->mDrawTarget->GetSize() != rect.Size()) {
-      // We have either (1) just started recording and not yet allocated a
-      // buffer or (2) are already recording and have resized the window. In
-      // either case, we need a new render target.
-      RefPtr<gfx::DrawTarget> drawTarget =
-          mRenderTarget->mDrawTarget->CreateSimilarDrawTarget(
-              rect.Size(), mRenderTarget->mDrawTarget->GetFormat());
-
-      mFullWindowRenderTarget =
-          new BasicCompositingRenderTarget(drawTarget, rect);
-    }
-  } else if (mFullWindowRenderTarget) {
-    // If we are no longer recording a profile, we can drop the render target
-    // if it exists.
-    mFullWindowRenderTarget = nullptr;
-  }
-
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
                          mInvalidRegion.ToUnknownRegion());
 
@@ -1117,11 +1091,29 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
 }
 
 void BasicCompositor::NormalDrawingDone() {
-  if (!mFullWindowRenderTarget) {
+  // Now is a good time to update mFullWindowRenderTarget.
+
+  if (!ShouldRecordFrames()) {
+    // If we are no longer recording a profile, we can drop the render target if
+    // it exists.
+    mFullWindowRenderTarget = nullptr;
     return;
   }
 
-  // Now is a good time to update mFullWindowRenderTarget.
+  if (NeedToRecreateFullWindowRenderTarget()) {
+    // We have either (1) just started recording and not yet allocated a
+    // buffer or (2) are already recording and have resized the window. In
+    // either case, we need a new render target.
+    IntRect windowRect(IntPoint(0, 0),
+                       mWidget->GetClientSize().ToUnknownSize());
+    RefPtr<gfx::DrawTarget> drawTarget =
+        mRenderTarget->mDrawTarget->CreateSimilarDrawTarget(
+            windowRect.Size(), mRenderTarget->mDrawTarget->GetFormat());
+
+    mFullWindowRenderTarget =
+        new BasicCompositingRenderTarget(drawTarget, windowRect);
+  }
+
   RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
   IntPoint srcOffset = mRenderTarget->GetOrigin();
   for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
@@ -1147,12 +1139,24 @@ void BasicCompositor::FinishPendingComposite() {
   TryToEndRemoteDrawing(/* aForceToEnd */ true);
 }
 
+bool BasicCompositor::NeedToRecreateFullWindowRenderTarget() const {
+  if (!ShouldRecordFrames()) {
+    return false;
+  }
+  if (!mFullWindowRenderTarget) {
+    return true;
+  }
+  IntSize windowSize = mWidget->GetClientSize().ToUnknownSize();
+  return mFullWindowRenderTarget->mDrawTarget->GetSize() != windowSize;
+}
+
 bool BasicCompositor::ShouldRecordFrames() const {
 #ifdef MOZ_GECKO_PROFILER
-  return profiler_feature_active(ProfilerFeature::Screenshots) || mRecordFrames;
-#else
+  if (profiler_feature_active(ProfilerFeature::Screenshots)) {
+    return true;
+  }
+#endif
   return mRecordFrames;
-#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace layers
