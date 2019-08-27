@@ -6866,15 +6866,7 @@ MethodStatus BaselineCompiler::emitBody() {
 }
 
 bool BaselineInterpreterGenerator::emitDebugTrap() {
-  JitRuntime* jrt = cx->runtime()->jitRuntime();
-
-  JitCode* handlerCode =
-      jrt->debugTrapHandler(cx, DebugTrapHandlerKind::Interpreter);
-  if (!handlerCode) {
-    return false;
-  }
-
-  CodeOffset offset = masm.toggledCall(handlerCode, /* enabled = */ false);
+  CodeOffset offset = masm.nopPatchableToCall();
   if (!debugTrapOffsets_.append(offset.offset())) {
     ReportOutOfMemory(cx);
     return false;
@@ -6994,6 +6986,20 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
   restoreInterpreterPCReg();
   masm.jump(&bailoutPrologue_);
+
+  // Emit debug trap handler code (target of patchable call instructions). This
+  // is just a tail call to the debug trap handler trampoline code.
+  {
+    JitRuntime* jrt = cx->runtime()->jitRuntime();
+    JitCode* handlerCode =
+        jrt->debugTrapHandler(cx, DebugTrapHandlerKind::Interpreter);
+    if (!handlerCode) {
+      return false;
+    }
+
+    debugTrapHandlerOffset_ = masm.currentOffset();
+    masm.jump(handlerCode);
+  }
 
   // Emit code for JSOP_UNUSED* ops.
   Label invalidOp;
@@ -7129,7 +7135,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
         bailoutPrologueOffset_.offset(),
         handler.generatorThrowOrReturnCallOffset(),
         profilerEnterFrameToggleOffset_.offset(),
-        profilerExitFrameToggleOffset_.offset(),
+        profilerExitFrameToggleOffset_.offset(), debugTrapHandlerOffset_,
         std::move(handler.debugInstrumentationOffsets()),
         std::move(debugTrapOffsets_), std::move(handler.codeCoverageOffsets()),
         std::move(handler.icReturnOffsets()), handler.callVMOffsets());
