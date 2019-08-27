@@ -8,7 +8,6 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -37,6 +36,11 @@ class BrowserRobot {
     fun verifyPageContent(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.wait(Until.findObject(By.res(expectedText)), TestAssetHelper.waitingTime)
+    }
+
+    fun verifyTabCounter(expectedText: String) {
+        onView(withId(R.id.counter_text))
+            .check((matches(withText(containsString(expectedText)))))
     }
 
     class Transition {
@@ -68,4 +72,4 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
 
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
-private fun tabsCounter() = onView(withContentDescription("Tabs"))
+private fun tabsCounter() = onView(withId(R.id.counter_box))

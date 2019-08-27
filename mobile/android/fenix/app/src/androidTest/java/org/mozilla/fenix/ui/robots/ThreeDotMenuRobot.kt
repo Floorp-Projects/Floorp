@@ -7,7 +7,6 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -33,6 +32,9 @@ class ThreeDotMenuRobot {
     fun verifyForwardButton() = assertForwardButton()
     fun verifyBackButton() = assertBackButton()
     fun verifyRefreshButton() = assertRefreshButton()
+    fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
+    fun verifyShareButton() = assertShareButton()
+    fun verifySaveCollection() = assertSaveCollectionButton()
 
     class Transition {
 
@@ -85,6 +87,14 @@ class ThreeDotMenuRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.wait(Until.findObject(By.text("Close all tabs")), waitingTime)
+            closeAllTabsButton().click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 private fun threeDotMenuRecyclerViewExists() {
@@ -92,24 +102,36 @@ private fun threeDotMenuRecyclerViewExists() {
 }
 private fun settingsButton() = onView(allOf(withText(R.string.settings)))
 private fun assertSettingsButton() = settingsButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun libraryButton() = onView(allOf(withText(R.string.browser_menu_your_library)))
 private fun assertLibraryButton() = libraryButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun helpButton() = onView(allOf(withText(R.string.browser_menu_help)))
 private fun assertHelpButton() = helpButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun forwardButton() = onView(ViewMatchers.withContentDescription("Forward"))
 private fun assertForwardButton() = forwardButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun backButton() = onView(ViewMatchers.withContentDescription("Back"))
 private fun assertBackButton() = backButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun refreshButton() = onView(ViewMatchers.withContentDescription("Refresh"))
 private fun assertRefreshButton() = refreshButton()
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs")))
+private fun assertCloseAllTabsButton() = closeAllTabsButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun shareButton() = onView(allOf(withText("Share tabs")))
+private fun assertShareButton() = shareButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun saveCollectionButton() = onView(allOf(withText("Save to collection")))
+private fun assertSaveCollectionButton() = saveCollectionButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

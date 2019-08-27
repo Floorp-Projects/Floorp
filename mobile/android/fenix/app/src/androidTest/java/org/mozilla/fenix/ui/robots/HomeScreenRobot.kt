@@ -12,6 +12,7 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -72,6 +73,8 @@ class HomeScreenRobot {
     fun verifyShareTabsButton(visible: Boolean = true) = assertShareTabsButton(visible)
     fun verifyCloseTabsButton(visible: Boolean = true) = assertCloseTabsButton(visible)
 
+    fun verifyExistingTabList() = assertExistingTabList()
+
     private fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
         appView.scrollTextIntoView(text)
@@ -109,9 +112,17 @@ class HomeScreenRobot {
             openSearch { }.openBrowser { }.openHomeScreen { }
         }
 
-        fun turnOnPrivateMode() {
+        fun togglePrivateBrowsingMode() {
             onView(ViewMatchers.withResourceName("privateBrowsingButton"))
                 .perform(click())
+        }
+
+        fun openTabsListThreeDotMenu(interact: ThreeDotMenuRobot.() -> Unit): ThreeDotMenuRobot.Transition {
+            mDevice.waitForIdle()
+            tabsListThreeDotButton().perform(click())
+
+            ThreeDotMenuRobot().interact()
+            return ThreeDotMenuRobot.Transition()
         }
     }
 }
@@ -151,7 +162,7 @@ private fun assertOpenTabsHeader() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertAddTabButton() =
-    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("add_tab_button")))
+    onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.add_tab_button), isDisplayed()))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNoTabsOpenedHeader() =
@@ -296,11 +307,17 @@ private fun assertPrivateSessionMessage(visible: Boolean) =
         )
 
 private fun assertShareTabsButton(visible: Boolean) =
-    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("share_tabs_button")))
+    onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.share_tabs_button), isDisplayed()))
         .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
 
 private fun assertCloseTabsButton(visible: Boolean) =
-    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("close_tabs_button")))
+    onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.close_tab_button), isDisplayed()))
         .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
 
 private fun visibleOrGone(visibility: Boolean) = if (visibility) Visibility.VISIBLE else Visibility.GONE
+
+private fun assertExistingTabList() =
+    onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.item_tab)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun tabsListThreeDotButton() = onView(allOf(ViewMatchers.withId(R.id.tabs_overflow_button)))

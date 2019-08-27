@@ -95,7 +95,7 @@ class HomeScreenTest {
     @Test
     fun privateModeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
-        homeScreen { }.turnOnPrivateMode()
+        homeScreen { }.togglePrivateBrowsingMode()
 
         homeScreen {
             verifyHomeScreen()

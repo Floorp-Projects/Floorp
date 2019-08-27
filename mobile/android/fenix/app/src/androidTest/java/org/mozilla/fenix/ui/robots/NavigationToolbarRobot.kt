@@ -8,7 +8,6 @@ package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.ViewMatchers
@@ -44,6 +43,15 @@ class NavigationToolbarRobot {
             ThreeDotMenuRobot().interact()
             return ThreeDotMenuRobot.Transition()
         }
+
+        fun openNewTabAndEnterToBrowser(url: Uri, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.wait(Until.findObject(By.descContains("Add tab")), waitingTime)
+            newTab().click()
+            awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -55,3 +63,4 @@ fun navigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationTo
 private fun urlBar() = onView(ViewMatchers.withId(R.id.toolbar))
 private fun awesomeBar() = onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
 private fun threeDotButton() = onView(ViewMatchers.withContentDescription("Menu"))
+private fun newTab() = onView(ViewMatchers.withContentDescription("Add tab"))
