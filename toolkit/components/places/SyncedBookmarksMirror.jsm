@@ -84,7 +84,7 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 6;
+const MIRROR_SCHEMA_VERSION = 7;
 
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
@@ -1481,6 +1481,10 @@ async function migrateMirrorSchema(db, currentSchemaVersion) {
     await db.execute(`CREATE INDEX mirror.itemKeywords ON items(keyword)
                       WHERE keyword NOT NULL`);
   }
+  if (currentSchemaVersion < 7) {
+    await db.execute(`CREATE INDEX mirror.structurePositions ON
+                      structure(parentGuid, position)`);
+  }
 }
 
 /**
@@ -1547,6 +1551,10 @@ async function initializeMirrorDatabase(db) {
                             ON DELETE CASCADE,
     tag TEXT NOT NULL
   )`);
+
+  await db.execute(
+    `CREATE INDEX mirror.structurePositions ON structure(parentGuid, position)`
+  );
 
   await db.execute(`CREATE INDEX mirror.urlHashes ON urls(hash)`);
 
