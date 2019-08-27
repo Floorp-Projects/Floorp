@@ -473,8 +473,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     return NS_OK;
   }
 
-  if (mSettings.GetFlags() &
-      nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputForPlainTextClipboardCopy)) {
     if (mPreformattedBlockBoundary && DoOutput()) {
       // Should always end a line, but get no more whitespace
       if (mFloatingLines < 0) mFloatingLines = 0;
@@ -483,7 +482,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     mPreformattedBlockBoundary = false;
   }
 
-  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputRaw) {
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputRaw)) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
@@ -519,9 +518,9 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
 
   // Check if this tag's content that should not be output
   if ((aTag == nsGkAtoms::noscript &&
-       !(mSettings.GetFlags() & nsIDocumentEncoder::OutputNoScriptContent)) ||
+       !mSettings.HasFlag(nsIDocumentEncoder::OutputNoScriptContent)) ||
       ((aTag == nsGkAtoms::iframe || aTag == nsGkAtoms::noframes) &&
-       !(mSettings.GetFlags() & nsIDocumentEncoder::OutputNoFramesContent))) {
+       !mSettings.HasFlag(nsIDocumentEncoder::OutputNoFramesContent))) {
     // Ignore everything that follows the current tag in
     // question until a matching end tag is encountered.
     mIgnoreAboveIndex = mTagStackIndex - 1;
@@ -626,7 +625,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     mULCount++;
   } else if (aTag == nsGkAtoms::ol) {
     EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
-    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
       // Must end the current line before we change indention
       if (mOLStackIndex < OLStackSize) {
         nsAutoString startAttr;
@@ -643,7 +642,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     }
     mIndent += kIndentSizeList;  // see ul
   } else if (aTag == nsGkAtoms::li &&
-             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
+             mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     if (mTagStackIndex > 1 && IsInOL()) {
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
@@ -698,7 +697,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
   }
 
   //////////////////////////////////////////////////////////////
-  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
+  if (!mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     return NS_OK;
   }
   //////////////////////////////////////////////////////////////
@@ -786,8 +785,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     return NS_OK;
   }
 
-  if (mSettings.GetFlags() &
-      nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputForPlainTextClipboardCopy)) {
     if (DoOutput() && IsElementPreformatted() &&
         IsCssBlockLevelElement(mElement)) {
       // If we're closing a preformatted block element, output a line break
@@ -796,7 +794,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     }
   }
 
-  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputRaw) {
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputRaw)) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
@@ -825,7 +823,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     // but in preformatted areas like text fields,
     // we can't emit newlines that weren't there.
     // So add the newline only in the case of formatted output.
-    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
       EnsureVerticalSpace(0);
     } else {
       FlushLine();
@@ -846,7 +844,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     if (mFloatingLines < 0) mFloatingLines = 0;
     mLineBreakDue = true;
   } else if (((aTag == nsGkAtoms::li) || (aTag == nsGkAtoms::dt)) &&
-             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
+             mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     // Items that should always end a line, but get no more whitespace
     if (mFloatingLines < 0) mFloatingLines = 0;
     mLineBreakDue = true;
@@ -904,7 +902,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
     // how to know?
-    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) {
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
       EnsureVerticalSpace(1);
     } else {
       if (mFloatingLines < 0) mFloatingLines = 0;
@@ -913,7 +911,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
   }
 
   //////////////////////////////////////////////////////////////
-  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
+  if (!mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     return NS_OK;
   }
   //////////////////////////////////////////////////////////////
@@ -1009,7 +1007,7 @@ void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
     // Otherwise, either we're collapsing to minimal text, or we're
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
-    if ((mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted) ||
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted) ||
         (mPreFormattedMail && !mWrapColumn) || IsElementPreformatted()) {
       EnsureVerticalSpace(mEmptyLines + 1);
     } else if (!mInWhitespace) {
@@ -1054,7 +1052,7 @@ nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
       EnsureVerticalSpace(mEmptyLines + 1);
     }
   } else if (aTag == nsGkAtoms::hr &&
-             (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted)) {
+             mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     EnsureVerticalSpace(0);
 
     // Make a line of dashes as wide as the wrap width
@@ -1165,7 +1163,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
       return;
     }
 
-    if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
       if (IsSpaceStuffable(aLineFragment) &&
           mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
       ) {
@@ -1294,7 +1292,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
         EndLine(true, breakBySpace);
         mCurrentLineContent.mValue.Truncate();
         // Space stuff new line?
-        if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
+        if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
           if (!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get()) &&
               mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
           ) {
@@ -1338,7 +1336,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
    * "- -- ", the OpenPGP dash-escaped signature separator in inline
    * signed messages according to the OpenPGP standard (RFC 2440).
    */
-  if (!(mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted) &&
+  if (!mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted) &&
       (aSoftlinebreak ||
        !(mCurrentLineContent.mValue.EqualsLiteral("-- ") ||
          mCurrentLineContent.mValue.EqualsLiteral("- -- ")))) {
@@ -1351,7 +1349,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   }
 
   if (aSoftlinebreak &&
-      (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) &&
+      mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed) &&
       (mIndent == 0)) {
     // Add the soft part of the soft linebreak (RFC 2646 4.1)
     // We only do this when there is no indentation since format=flowed
@@ -1359,7 +1357,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
 
     // If breaker character is ASCII space with RFC 3676 support (delsp=yes),
     // add twice space.
-    if ((mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatDelSp) &&
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatDelSp) &&
         aBreakBySpace)
       mCurrentLineContent.mValue.AppendLiteral("  ");
     else
@@ -1477,7 +1475,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
   // For Flowed text change nbsp-ses to spaces at end of lines to allow them
   // to be cut off along with usual spaces if required. (bug #125928)
-  if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
     for (int32_t i = totLen - 1; i >= 0; i--) {
       char16_t c = str[i];
       if ('\n' == c || '\r' == c || ' ' == c || '\t' == c) continue;
@@ -1566,7 +1564,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
 
       mCurrentLineContent.mValue.Truncate();
-      if (mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatFlowed) {
+      if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
         if ((outputLineBreak || !spacesOnly) &&  // bugs 261467,125928
             !IsQuotedLine(stringpart) && !stringpart.EqualsLiteral("-- ") &&
             !stringpart.EqualsLiteral("- -- "))
@@ -1638,7 +1636,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
       // If we're already in whitespace and not preformatted, just skip it:
       if (mInWhitespace && (nextpos == bol) && !mPreFormattedMail &&
-          !(mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted)) {
+          !mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted)) {
         // Skip whitespace
         bol++;
         continue;
@@ -1657,7 +1655,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
       offsetIntoBuffer = str.get() + bol;
       if (mPreFormattedMail ||
-          (mSettings.GetFlags() & nsIDocumentEncoder::OutputPreformatted)) {
+          mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted)) {
         // Preserve the real whitespace character
         nextpos++;
         AddToLine(offsetIntoBuffer, nextpos - bol);
