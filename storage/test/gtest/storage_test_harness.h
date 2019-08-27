@@ -58,14 +58,21 @@ already_AddRefed<mozIStorageConnection> getMemoryDatabase() {
   return conn.forget();
 }
 
-already_AddRefed<mozIStorageConnection> getDatabase() {
+already_AddRefed<mozIStorageConnection> getDatabase(
+    nsIFile* aDBFile = nullptr) {
   nsCOMPtr<nsIFile> dbFile;
-  (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                               getter_AddRefs(dbFile));
-  NS_ASSERTION(dbFile, "The directory doesn't exists?!");
+  nsresult rv;
+  if (!aDBFile) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Can't get tmp dir off mainthread.");
+    (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                 getter_AddRefs(dbFile));
+    NS_ASSERTION(dbFile, "The directory doesn't exists?!");
 
-  nsresult rv = dbFile->Append(NS_LITERAL_STRING("storage_test_db.sqlite"));
-  do_check_success(rv);
+    rv = dbFile->Append(NS_LITERAL_STRING("storage_test_db.sqlite"));
+    do_check_success(rv);
+  } else {
+    dbFile = aDBFile;
+  }
 
   nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
