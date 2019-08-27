@@ -100,11 +100,34 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Mode Luring</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Peramban beroperasi dalam mode luring dan tidak dapat terhubung pada item yang diminta.</p>
+      <ul>
+        <li>Apakah komputer terhubung pada jaringan aktif?</li>
+        <li>Tekan “Coba Lagi” untuk berpindah ke mode daring dan memuat ulang laman.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Port dibatasi untuk alasan keamanan</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Alamat yang diminta menspesifikasikan sebuah port (contoh: <q>mozilla.org:80</q> untuk port 80 pada mozilla.org) biasanya digunakan untuk keperluan <em>selain</em> dari penjelajahan Web. Peramban telah membatalkan permintaan untuk perlindungan dan keamanan Anda.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Sambungan diputus</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Tautan jaringan terganggu saat menegosiasikan koneksi. Silakan coba lagi.</p>
+      <ul>
+        <li>Situs bisa saja sedang tidak tersedia sementara atau terlalu sibuk. Coba lagi dalam beberapa saat.</li>
+        <li>Jika Anda tidak dapat memuat laman apapun, cek koneksi data atau Wi-Fi perangkat Anda.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Jenis Berkas Tidak Aman</string>
@@ -130,25 +153,83 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Konten macet</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Laman yang Anda coba lihat tidak dapat ditampilkan karena terdapat gangguan transmisi data.</p>
+      <ul>
+        <li>Silakan hubungi pengguna situs Web untuk mengabarkan masalah ini kepada mereka.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kesalahan Pengodean Isi (Content Encoding)</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Laman yang Anda coba lihat tidak dapat ditampilkan karena menggunakan bentuk kompresi yang tidak valid atau tidak didukung.</p>
+      <ul>
+        <li>Silakan hubungi pengguna situs Web untuk mengabarkan masalah ini kepada mereka.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Alamat Tidak Ditemukan</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Peramban tidak dapat menemukan host server untuk alamat yang disediakan.</p>
+      <ul>
+        <li>Periksa alamat untuk kesalahan pengetikan seperti
+          <strong>ww</strong>.contoh.com alih-alih
+          <strong>www</strong>.contoh.com.</li>
+        <li>Jika Anda tidak dapat memuat laman apapun, periksa koneksi data atau Wi-Fi perangkat Anda.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Alamat Tidak Valid</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Laman yang diberikan tidak dalam format yang dikenali. Periksa ulang bilah lokasi kemudian coba kembali.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Alamat tidak valid</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Alamat Web biasanya ditulis seperti <strong>http://www.example.com/</strong></li>
+        <li>Pastikan Anda menggunakan garis miring depan (contoh: <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protokol Tidak Dikenal</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Alamat menspesifikasi protokol (contoh: <q>wxyz://</q>) yang tidak dikenali peramban, sehingga peramban tidak dapat menghubungi situs dengan baik.</p>
+      <ul>
+        <li>Apakah Anda ingin mengakses layanan multimedia atau non-teks lainnya? Periksa situs untuk persyaratan tambahan.</li>
+        <li>Beberapa protokol mungkin memerlukan perangkat lunak atau plugin pihak ketiga sebelum peramban dapat mengenalinya.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Berkas Tidak Ditemukan</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Apakah objek telah diganti namanya, dibuang, atau dipindahkan?</li>
+        <li>Apa tidak ada kesalahan ejaan, huruf besar, atau <em>kesaalhan keitk</em> lainnya pada penulisan alamat?</li>
+        <li>Apakah Anda memiliki hak akses untuk mengakses objek yang diminta?</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Akses ke berkas ditolak</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Mungkin sudah dihapus, dipindahkan, atau hak akses yang ada mencegah akses terhadap berkas.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Server Proxy Menolak Sambungan</string>
@@ -165,14 +246,38 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Peladen Pewali Tidak Ditemukan</string>
 
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Program peramban diatur untuk menggunakan server proxy, tetapi server proxy tidak bisa ditemukan.</p>
+      <ul>
+        <li>Apakah pengaturan proxy program peramban sudah benar? Periksa lagi pengaturan tersebut dan coba lagi.</li>
+        <li>Apakah komputer tersambung pada jaringan yang berfungsi?</li>
+        <li>Masih bermasalah? Tanyakan pada administrator jaringan Anda atau Penyedia Jasa Layanan Internet (Internet Service Provider).</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Masalah situs malware</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Situs di %1$s telah dilaporkan sebagai situs penyerang dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Masalah situs yang tidak diinginkan</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Situs di %1$s telah dilaporkan melayani perangkat lunak yang tidak diinginkan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Masalah situs berbahaya</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Situs di %1$s telah dilaporkan sebagai situs yang berpotensi membahayakan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Masalah situs tipuan</string>

@@ -17,13 +17,13 @@
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">深邃</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_dark_color_scheme_desc">深邃模式</string>
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">深邃配色</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_sephia">怀旧</string>
+    <string name="mozac_feature_readerview_sephia">纸墨</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_sepia_color_scheme_desc">怀旧模式</string>
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">纸墨配色</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">明亮</string>
     <!-- Accessible description for the color option -->
-    <string name="mozac_feature_readerview_light_color_scheme_desc">明亮模式</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">明亮配色</string>
 </resources>
