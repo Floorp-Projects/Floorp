@@ -574,12 +574,13 @@ class TaskBuilder(object):
 
     def craft_raptor_tp6m_cold_task(self, for_suite):
 
-        def craft_function(signing_task_id, mozharness_task_id, abi, gecko_revision, force_run_on_64_bit_device=False):
+        def craft_function(signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging, force_run_on_64_bit_device=False):
             return self._craft_raptor_task(
                 signing_task_id,
                 mozharness_task_id,
-                abi,
+                variant_apk,
                 gecko_revision,
+                is_staging,
                 name_prefix='raptor tp6m-cold-{}'.format(for_suite),
                 description='Raptor tp6m cold on Fenix',
                 test_name='raptor-tp6m-cold-{}'.format(for_suite),
@@ -588,13 +589,14 @@ class TaskBuilder(object):
             )
         return craft_function
 
-    def craft_raptor_youtube_playback_task(self, signing_task_id, mozharness_task_id, abi, gecko_revision,
-                                           force_run_on_64_bit_device=False):
+    def craft_raptor_youtube_playback_task(self, signing_task_id, mozharness_task_id, variant_apk, gecko_revision,
+                                           is_staging, force_run_on_64_bit_device=False):
         return self._craft_raptor_task(
             signing_task_id,
             mozharness_task_id,
-            abi,
+            variant_apk,
             gecko_revision,
+            is_staging,
             name_prefix='raptor youtube playback',
             description='Raptor YouTube Playback on Fenix',
             test_name='raptor-youtube-playback',
@@ -607,8 +609,9 @@ class TaskBuilder(object):
         self,
         signing_task_id,
         mozharness_task_id,
-        abi,
+        variant_apk,
         gecko_revision,
+        is_staging,
         name_prefix,
         description,
         test_name,
@@ -616,23 +619,22 @@ class TaskBuilder(object):
         group_symbol=None,
         force_run_on_64_bit_device=False,
     ):
-        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or abi == 'aarch64' else 'gecko-t-bitbar-gw-perf-g5'
+        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or variant_apk.abi == 'arm64-v8a' else 'gecko-t-bitbar-gw-perf-g5'
 
         if force_run_on_64_bit_device:
             treeherder_platform = 'android-hw-p2-8-0-arm7-api-16'
-        elif abi == 'arm':
+        elif variant_apk.abi == 'armeabi-v7a':
             treeherder_platform = 'android-hw-g5-7-0-arm7-api-16'
-        elif abi == 'aarch64':
+        elif variant_apk.abi == 'arm64-v8a':
             treeherder_platform = 'android-hw-p2-8-0-android-aarch64'
         else:
-            raise ValueError('Unsupported architecture "{}"'.format(abi))
+            raise ValueError('Unsupported architecture "{}"'.format(variant_apk.abi))
 
         task_name = '{}: forPerformanceTest {}'.format(
             name_prefix, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
         )
 
-        apk_url = '{}/{}/artifacts/{}'.format(_DEFAULT_TASK_URL, signing_task_id,
-                                                        DEFAULT_APK_ARTIFACT_LOCATION)
+        apk_url = '{}/{}/artifacts/{}'.format(_DEFAULT_TASK_URL, signing_task_id, variant_apk.taskcluster_path)
         command = [[
             "/builds/taskcluster/script.py",
             "bash",
@@ -645,7 +647,7 @@ class TaskBuilder(object):
             "--download-symbols=ondemand",
         ]]
         # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
-        if abi == 'arm' and test_name == 'raptor-youtube-playback':
+        if variant_apk.abi == 'armeabi-v7a' and test_name == 'raptor-youtube-playback':
             params_query = '&'.join(ARM_RAPTOR_URL_PARAMS)
             add_extra_params_option = "--test-url-params={}".format(params_query)
             command[0].append(add_extra_params_option)
@@ -656,7 +658,7 @@ class TaskBuilder(object):
             dependencies=[signing_task_id],
             name=task_name,
             description=description,
-            routes=['notify.email.perftest-alerts@mozilla.com.on-failed'],
+            routes=['notify.email.perftest-alerts@mozilla.com.on-failed'] if not is_staging else [],
             payload={
                 "maxRunTime": 2700,
                 "artifacts": [{

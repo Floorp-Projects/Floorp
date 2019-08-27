@@ -14,6 +14,9 @@ class Variant:
         self.build_type = build_type
         self._apks = apks
 
+    def get_apk(self, abi):
+        return [apk for apk in self._apks if apk.abi == abi][0]
+
     def artifacts(self):
         return {
             apk.taskcluster_path: {

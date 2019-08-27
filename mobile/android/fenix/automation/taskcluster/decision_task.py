@@ -101,7 +101,8 @@ def raptor(is_staging):
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant, is_staging)
 
-    for abi in ('aarch64', 'arm'):
+    for abi in ('armeabi-v7a', 'arm64-v8a'):
+        variant_apk = variant.get_apk(abi)
         all_raptor_craft_functions = [
             BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
                 for i in range(1, 28)
@@ -109,7 +110,7 @@ def raptor(is_staging):
                 BUILDER.craft_raptor_youtube_playback_task,
             ]
         for craft_function in all_raptor_craft_functions:
-            args = (signing_task_id, mozharness_task_id, abi, gecko_revision)
+            args = (signing_task_id, mozharness_task_id, variant_apk, gecko_revision, is_staging)
             other_tasks[taskcluster.slugId()] = craft_function(*args)
 
     return (build_tasks, signing_tasks, other_tasks)
