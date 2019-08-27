@@ -22,6 +22,8 @@ namespace mscom {
 
 bool IsCOMInitializedOnCurrentThread();
 bool IsCurrentThreadMTA();
+bool IsCurrentThreadExplicitMTA();
+bool IsCurrentThreadImplicitMTA();
 bool IsProxy(IUnknown* aUnknown);
 bool IsValidGUID(REFGUID aCheckGuid);
 uintptr_t GetContainingModuleHandle();
