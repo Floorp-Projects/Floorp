@@ -4,9 +4,6 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-  content/mozapps/extensions/shortcuts.html                     (content/shortcuts.html)
-  content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
-  content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
 #ifndef MOZ_FENNEC
 * content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
@@ -31,4 +28,6 @@ toolkit.jar:
   content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
   content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
   content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
+  content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
+  content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
 #endif
