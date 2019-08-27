@@ -10,6 +10,7 @@
 #include "nscore.h"
 #include "WinPointerEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/dom/MouseEventBinding.h"
 
@@ -22,18 +23,8 @@ WinPointerEvents::GetPointerTypePtr WinPointerEvents::getPointerType = nullptr;
 WinPointerEvents::GetPointerInfoPtr WinPointerEvents::getPointerInfo = nullptr;
 WinPointerEvents::GetPointerPenInfoPtr WinPointerEvents::getPointerPenInfo =
     nullptr;
-bool WinPointerEvents::sFirePointerEventsByWinPointerMessages = false;
 
-WinPointerEvents::WinPointerEvents() {
-  InitLibrary();
-  static bool addedPointerEventEnabled = false;
-  if (!addedPointerEventEnabled) {
-    Preferences::AddBoolVarCache(
-        &sFirePointerEventsByWinPointerMessages,
-        "dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
-    addedPointerEventEnabled = true;
-  }
-}
+WinPointerEvents::WinPointerEvents() { InitLibrary(); }
 
 /* Load and shutdown */
 void WinPointerEvents::InitLibrary() {
@@ -133,7 +124,7 @@ bool WinPointerEvents::ShouldRollupOnPointerEvent(UINT aMsg, WPARAM aWParam) {
 
 bool WinPointerEvents::ShouldFirePointerEventByWinPointerMessages() {
   MOZ_ASSERT(sLibraryHandle && StaticPrefs::dom_w3c_pointer_events_enabled());
-  return sFirePointerEventsByWinPointerMessages;
+  return StaticPrefs::dom_w3c_pointer_events_dispatch_by_pointer_messages();
 }
 
 WinPointerInfo* WinPointerEvents::GetCachedPointerInfo(UINT aMsg,
@@ -161,7 +152,8 @@ WinPointerInfo* WinPointerEvents::GetCachedPointerInfo(UINT aMsg,
 }
 
 void WinPointerEvents::ConvertAndCachePointerInfo(UINT aMsg, WPARAM aWParam) {
-  MOZ_ASSERT(!sFirePointerEventsByWinPointerMessages);
+  MOZ_ASSERT(
+      !StaticPrefs::dom_w3c_pointer_events_dispatch_by_pointer_messages());
   // Windows doesn't support chorded buttons for pen, so we can simply keep the
   // latest information from pen generated pointer messages and use them when
   // handling mouse messages. Used different pointer info for pointerdown,
@@ -184,7 +176,8 @@ void WinPointerEvents::ConvertAndCachePointerInfo(UINT aMsg, WPARAM aWParam) {
 
 void WinPointerEvents::ConvertAndCachePointerInfo(WPARAM aWParam,
                                                   WinPointerInfo* aInfo) {
-  MOZ_ASSERT(!sFirePointerEventsByWinPointerMessages);
+  MOZ_ASSERT(
+      !StaticPrefs::dom_w3c_pointer_events_dispatch_by_pointer_messages());
   aInfo->pointerId = GetPointerId(aWParam);
   MOZ_ASSERT(GetPointerType(aInfo->pointerId) == PT_PEN);
   POINTER_PEN_INFO penInfo;
