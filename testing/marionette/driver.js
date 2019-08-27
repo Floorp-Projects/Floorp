@@ -3019,7 +3019,7 @@ GeckoDriver.prototype.deleteSession = function() {
  *     string.  If <var>hash</var> is true, hex digest of the SHA-256
  *     hash of the Base64 encoded string.
  */
-GeckoDriver.prototype.takeScreenshot = function(cmd) {
+GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   let win = assert.open(this.getCurrentWindow());
 
   let { id, full, hash, scroll } = cmd.parameters;
@@ -3031,42 +3031,45 @@ GeckoDriver.prototype.takeScreenshot = function(cmd) {
   // Only consider full screenshot if no element has been specified
   full = id ? false : full;
 
+  let rect;
+  let dY = 0;
+
   switch (this.context) {
     case Context.Chrome:
-      let canvas;
-
-      // element or full document element
-      if (id || full) {
-        let node;
-        if (id) {
-          let webEl = WebElement.fromUUID(id, Context.Chrome);
-          node = this.curBrowser.seenEls.get(webEl);
-        } else {
-          node = win.document.documentElement;
-        }
-
-        canvas = capture.element(node);
-
-        // viewport
+      if (id) {
+        let webEl = WebElement.fromUUID(id, this.context);
+        let el = this.curBrowser.seenEls.get(webEl, win);
+        rect = el.getBoundingClientRect();
+      } else if (full) {
+        rect = win.document.documentElement.getBoundingClientRect();
       } else {
-        canvas = capture.viewport(win);
-      }
-
-      switch (format) {
-        case capture.Format.Hash:
-          return capture.toHash(canvas);
-
-        case capture.Format.Base64:
-          return capture.toBase64(canvas);
+        // viewport
+        rect = new win.DOMRect(
+          win.pageXOffset,
+          win.pageYOffset,
+          win.innerWidth,
+          win.innerHeight
+        );
       }
       break;
 
     case Context.Content:
-      return this.listener.takeScreenshot(format, {
-        id,
-        full,
-        scroll,
-      });
+      rect = await this.listener.getScreenshotRect({ id, full, scroll });
+      // Temporarily needed until drawSnapshot() is used
+      dY = win.gNavToolbox.clientHeight;
+      break;
+  }
+
+  let canvas = capture.canvas(win, rect.x, rect.y, rect.width, rect.height, {
+    dY,
+  });
+
+  switch (format) {
+    case capture.Format.Hash:
+      return capture.toHash(canvas);
+
+    case capture.Format.Base64:
+      return capture.toBase64(canvas);
   }
 
   throw new TypeError(`Unknown context: ${this.context}`);
