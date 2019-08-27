@@ -456,7 +456,9 @@ this.tabs = class extends ExtensionAPI {
           queryInfo = Object.assign({}, queryInfo);
 
           if (queryInfo.url !== null) {
-            queryInfo.url = new MatchPatternSet([].concat(queryInfo.url));
+            queryInfo.url = new MatchPatternSet([].concat(queryInfo.url), {
+              restrictSchemes: false,
+            });
           }
           if (queryInfo.title !== null) {
             queryInfo.title = new MatchGlob(queryInfo.title);
