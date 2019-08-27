@@ -41,7 +41,7 @@
 | [mozilla.components.concept.sync.AuthExceptionType](../mozilla.components.concept.sync/-auth-exception-type/index.md) | An auth-related exception type, for use with [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md). |
 | [mozilla.components.support.base.android.view.AutoFitTextureView](../mozilla.components.support.base.android.view/-auto-fit-texture-view/index.md) | A [TextureView](#) that can be adjusted to a specified aspect ratio. |
 | [mozilla.components.feature.push.AutoPushFeature](../mozilla.components.feature.push/-auto-push-feature/index.md) | A implementation of a [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
-| [mozilla.components.feature.push.AutoPushSubscription](../mozilla.components.feature.push/-auto-push-subscription/index.md) | The subscription information from Autopush that can be used to send push messages to other devices. |
+| [mozilla.components.feature.push.AutoPushSubscription](../mozilla.components.feature.push/-auto-push-subscription/index.md) | The subscription information from AutoPush that can be used to send push messages to other devices. |
 | [mozilla.components.browser.session.storage.AutoSave](../mozilla.components.browser.session.storage/-auto-save/index.md) |  |
 | [mozilla.components.concept.toolbar.AutocompleteDelegate](../mozilla.components.concept.toolbar/-autocomplete-delegate/index.md) | Describes an object to which a [AutocompleteResult](../mozilla.components.concept.toolbar/-autocomplete-result/index.md) may be applied. Usually, this will delegate to a specific text view. |
 | [mozilla.components.concept.toolbar.AutocompleteResult](../mozilla.components.concept.toolbar/-autocomplete-result/index.md) | Describes an autocompletion result. |
@@ -408,7 +408,7 @@
 | [mozilla.components.concept.engine.prompt.PromptRequest](../mozilla.components.concept.engine.prompt/-prompt-request/index.md) | Value type that represents a request for showing a native dialog for prompt web content. |
 | [mozilla.components.feature.push.Protocol](../mozilla.components.feature.push/-protocol/index.md) | Supported network protocols. |
 | [mozilla.components.lib.publicsuffixlist.PublicSuffixList](../mozilla.components.lib.publicsuffixlist/-public-suffix-list/index.md) | API for reading and accessing the public suffix list. |
-| [mozilla.components.feature.push.PushConfig](../mozilla.components.feature.push/-push-config/index.md) | Configuration object for initializing the Push Manager. |
+| [mozilla.components.feature.push.PushConfig](../mozilla.components.feature.push/-push-config/index.md) | Configuration object for initializing the Push Manager with an AutoPush server. |
 | [mozilla.components.feature.push.PushConnection](../mozilla.components.feature.push/-push-connection/index.md) | An interface that wraps the [PushAPI](#). |
 | [mozilla.components.concept.push.PushError](../mozilla.components.concept.push/-push-error/index.md) | Various error types. |
 | [mozilla.components.concept.push.PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) | A push notification processor that handles registration and new messages from the [PushService](../mozilla.components.concept.push/-push-service/index.md) provided. Starting Push in the Application's onCreate is recommended. |
@@ -418,6 +418,7 @@
 | [mozilla.components.feature.push.PushType](../mozilla.components.feature.push/-push-type/index.md) | The different kind of message types that a [EncryptedPushMessage](../mozilla.components.concept.push/-encrypted-push-message/index.md) can be: |
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
+| [mozilla.components.service.glean.private.QuantityMetricType](../mozilla.components.service.glean.private/-quantity-metric-type/index.md) | This implements the developer facing API for recording quantity metrics. |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsBar](../mozilla.components.feature.readerview.view/-reader-view-controls-bar/index.md) | A customizable ReaderView control bar implementing [ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md). |
 | [mozilla.components.feature.readerview.view.ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md) | An interface for views that can display ReaderView appearance controls (e.g. font size, font type). |
 | [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use (see [ReaderViewFeature.install](../mozilla.components.feature.readerview/-reader-view-feature/install.md)). |
@@ -466,7 +467,7 @@
 | [org.mozilla.telemetry.measurement.SequenceMeasurement](../org.mozilla.telemetry.measurement/-sequence-measurement/index.md) |  |
 | [mozilla.components.service.fxa.ServerConfig](../mozilla.components.service.fxa/-server-config.md) |  |
 | [mozilla.components.service.sync.logins.ServerPassword](../mozilla.components.service.sync.logins/-server-password.md) | Raw password data that is stored by the storage implementation. |
-| [mozilla.components.feature.push.ServiceType](../mozilla.components.feature.push/-service-type/index.md) | Supported push services. |
+| [mozilla.components.feature.push.ServiceType](../mozilla.components.feature.push/-service-type/index.md) | Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging. |
 | [mozilla.components.browser.engine.servo.ServoEngine](../mozilla.components.browser.engine.servo/-servo-engine/index.md) | Servo-based implementation of the Engine interface. |
 | [mozilla.components.browser.engine.servo.ServoEngineSession](../mozilla.components.browser.engine.servo/-servo-engine-session/index.md) | Servo-based EngineSession implementation. |
 | [mozilla.components.browser.engine.servo.ServoEngineSessionState](../mozilla.components.browser.engine.servo/-servo-engine-session-state/index.md) | No-op implementation of [EngineSessionState](../mozilla.components.concept.engine/-engine-session-state/index.md). |

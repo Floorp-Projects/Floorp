@@ -1,8 +1,11 @@
-[android-components](../../../../index.md) / [mozilla.components.concept.engine](../../../index.md) / [EngineSession](../../index.md) / [TrackingProtectionPolicy](../index.md) / [SafeBrowsingCategory](./index.md)
+[android-components](../../../index.md) / [mozilla.components.concept.engine](../../index.md) / [EngineSession](../index.md) / [SafeBrowsingPolicy](./index.md)
 
-# SafeBrowsingCategory
+# SafeBrowsingPolicy
 
-`enum class SafeBrowsingCategory` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L189)
+`enum class SafeBrowsingPolicy` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L94)
+
+Represents a safe browsing policy, which is indicates with type of site should be alerted
+to user as possible harmful.
 
 ### Enum Values
 

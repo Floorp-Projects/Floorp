@@ -2,7 +2,7 @@
 
 # ANALYTICS
 
-`ANALYTICS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L153)
+`ANALYTICS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L185)
 
 Blocks analytics trackers.
 
