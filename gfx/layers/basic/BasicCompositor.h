@@ -167,7 +167,8 @@ class BasicCompositor : public Compositor {
                    const gfx::Matrix4x4& aTransform,
                    const gfx::Rect& aVisibleRect) override;
 
-  void TryToEndRemoteDrawing(bool aForceToEnd = false);
+  void TryToEndRemoteDrawing();
+  void EndRemoteDrawing();
 
   bool NeedsToDeferEndRemoteDrawing();
 
