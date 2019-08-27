@@ -1151,26 +1151,25 @@ class GetUserMediaStreamRunnable : public Runnable {
       principal = window->GetExtantDoc()->NodePrincipal();
     }
     RefPtr<GenericNonExclusivePromise> firstFramePromise;
-    if (mAudioDevice &&
-        mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
-      // AudioCapture is a special case, here, in the sense that we're not
-      // really using the audio source and the SourceMediaStream, which acts as
-      // placeholders. We re-route a number of streams internally in the MSG and
-      // mix them down instead.
-      NS_WARNING(
-          "MediaCaptureWindowState doesn't handle "
-          "MediaSourceEnum::AudioCapture. This must be fixed with UX "
-          "before shipping.");
-      auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
-          principal, window, NS_LITERAL_STRING("Window audio capture"),
-          msg->CreateAudioCaptureStream(kAudioTrack), mPeerIdentity);
-      audioTrackSource = audioCaptureSource;
-      RefPtr<MediaStreamTrack> track =
-          new dom::AudioStreamTrack(window, audioCaptureSource->InputStream(),
-                                    kAudioTrack, audioCaptureSource);
-      domStream->AddTrackInternal(track);
-    } else {
-      if (mAudioDevice) {
+    if (mAudioDevice) {
+      if (mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
+        // AudioCapture is a special case, here, in the sense that we're not
+        // really using the audio source and the SourceMediaStream, which acts
+        // as placeholders. We re-route a number of streams internally in the
+        // MSG and mix them down instead.
+        NS_WARNING(
+            "MediaCaptureWindowState doesn't handle "
+            "MediaSourceEnum::AudioCapture. This must be fixed with UX "
+            "before shipping.");
+        auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
+            principal, window, NS_LITERAL_STRING("Window audio capture"),
+            msg->CreateAudioCaptureStream(kAudioTrack), mPeerIdentity);
+        audioTrackSource = audioCaptureSource;
+        RefPtr<MediaStreamTrack> track =
+            new dom::AudioStreamTrack(window, audioCaptureSource->InputStream(),
+                                      kAudioTrack, audioCaptureSource);
+        domStream->AddTrackInternal(track);
+      } else {
         nsString audioDeviceName;
         mAudioDevice->GetName(audioDeviceName);
         RefPtr<MediaStream> stream = msg->CreateSourceStream();
@@ -1184,30 +1183,29 @@ class GetUserMediaStreamRunnable : public Runnable {
             GetInvariant(mConstraints.mAudio));
         domStream->AddTrackInternal(track);
       }
-      if (mVideoDevice) {
-        nsString videoDeviceName;
-        mVideoDevice->GetName(videoDeviceName);
-        RefPtr<MediaStream> stream = msg->CreateSourceStream();
-        videoTrackSource = new LocalTrackSource(
-            principal, videoDeviceName, mSourceListener,
-            mVideoDevice->GetMediaSource(), stream, kVideoTrack, mPeerIdentity);
-        MOZ_ASSERT(IsOn(mConstraints.mVideo));
-        RefPtr<MediaStreamTrack> track = new dom::VideoStreamTrack(
-            window, stream, kVideoTrack, videoTrackSource,
-            dom::MediaStreamTrackState::Live,
-            GetInvariant(mConstraints.mVideo));
-        domStream->AddTrackInternal(track);
-        switch (mVideoDevice->GetMediaSource()) {
-          case MediaSourceEnum::Browser:
-          case MediaSourceEnum::Screen:
-          case MediaSourceEnum::Window:
-            // Wait for first frame for screen-sharing devices, to ensure
-            // with and height settings are available immediately, to pass wpt.
-            firstFramePromise = mVideoDevice->mSource->GetFirstFramePromise();
-            break;
-          default:
-            break;
-        }
+    }
+    if (mVideoDevice) {
+      nsString videoDeviceName;
+      mVideoDevice->GetName(videoDeviceName);
+      RefPtr<MediaStream> stream = msg->CreateSourceStream();
+      videoTrackSource = new LocalTrackSource(
+          principal, videoDeviceName, mSourceListener,
+          mVideoDevice->GetMediaSource(), stream, kVideoTrack, mPeerIdentity);
+      MOZ_ASSERT(IsOn(mConstraints.mVideo));
+      RefPtr<MediaStreamTrack> track = new dom::VideoStreamTrack(
+          window, stream, kVideoTrack, videoTrackSource,
+          dom::MediaStreamTrackState::Live, GetInvariant(mConstraints.mVideo));
+      domStream->AddTrackInternal(track);
+      switch (mVideoDevice->GetMediaSource()) {
+        case MediaSourceEnum::Browser:
+        case MediaSourceEnum::Screen:
+        case MediaSourceEnum::Window:
+          // Wait for first frame for screen-sharing devices, to ensure
+          // with and height settings are available immediately, to pass wpt.
+          firstFramePromise = mVideoDevice->mSource->GetFirstFramePromise();
+          break;
+        default:
+          break;
       }
     }
 

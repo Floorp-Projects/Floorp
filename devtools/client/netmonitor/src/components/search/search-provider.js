@@ -69,6 +69,15 @@ const SearchProvider = {
     return ObjectProvider.getType(object);
   },
 
+  getResourceTooltipLabel(object) {
+    const { resource } = object;
+    if (resource.urlDetails && resource.urlDetails.url) {
+      return resource.urlDetails.url;
+    }
+
+    return this.getResourceLabel(object);
+  },
+
   getResourceLabel(object) {
     return (
       getFileName(object.resource.urlDetails.baseNameWithQuery) ||

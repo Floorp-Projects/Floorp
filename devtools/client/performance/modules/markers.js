@@ -30,7 +30,6 @@ const {
  *              adding a new color, be sure to check that there's an entry
  *              for `.marker-color-graphs-{COLORNAME}` for the equivilent
  *              entry in "./devtools/client/themes/performance.css"
- *              https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  * - collapsible: Whether or not this marker can contain other markers it
  *                eclipses, and becomes collapsible to reveal its nestable
  *                children. Defaults to true.

@@ -63,9 +63,10 @@ function onAddSearchQuery(state, action) {
 }
 
 function onAddSearchResult(state, action) {
+  const { resource } = action;
   const results = state.results.slice();
   results.push({
-    resource: action.resource,
+    resource,
     results: action.result,
   });
 
