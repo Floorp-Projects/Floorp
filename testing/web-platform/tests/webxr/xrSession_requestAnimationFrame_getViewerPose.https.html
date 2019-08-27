@@ -16,7 +16,8 @@
 
     let fakeDeviceInitParams = {
       supportsImmersive: true,
-      views: VALID_VIEWS
+      views: VALID_VIEWS,
+      supportedFeatures: ALL_FEATURES
     };
 
     // A valid pose matrix/transform for  when we don't care about specific values
@@ -68,7 +69,7 @@
     };
 
     xr_session_promise_test(nonImmersiveTestName, testFunction,
-      fakeDeviceInitParams, 'inline');
+      fakeDeviceInitParams, 'inline', { 'requiredFeatures': ['local'] });
     xr_session_promise_test(immersiveTestName, testFunction,
       fakeDeviceInitParams, 'immersive-vr');
 
