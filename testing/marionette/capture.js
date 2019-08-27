@@ -37,44 +37,7 @@ capture.Format = {
 };
 
 /**
- * Take a screenshot of a single element.
- *
- * @param {Node} node
- *     The node to take a screenshot of.
- *
- * @return {HTMLCanvasElement}
- *     The canvas element where the element has been painted on.
- */
-capture.element = function(node) {
-  let win = node.ownerGlobal;
-  let rect = node.getBoundingClientRect();
-
-  return capture.canvas(win, rect.left, rect.top, rect.width, rect.height);
-};
-
-/**
- * Take a screenshot of the window's viewport by taking into account
- * the current offsets.
- *
- * @param {DOMWindow} win
- *     The DOM window providing the document element to capture,
- *     and the offsets for the viewport.
- *
- * @return {HTMLCanvasElement}
- *     The canvas element where the viewport has been painted on.
- */
-capture.viewport = function(win) {
-  return capture.canvas(
-    win,
-    win.pageXOffset,
-    win.pageYOffset,
-    win.innerWidth,
-    win.innerHeight
-  );
-};
-
-/**
- * Low-level interface to draw a rectangle off the framebuffer.
+ * Draw a rectangle off the framebuffer.
  *
  * @param {DOMWindow} win
  *     The DOM window used for the framebuffer, and providing the interfaces
@@ -92,6 +55,10 @@ capture.viewport = function(win) {
  * @param {number=} flags
  *     Optional integer representing flags to pass to drawWindow; these
  *     are defined on CanvasRenderingContext2D.
+ * @param {number} dX
+ *     Horizontal offset between the browser window and content area. Defaults to 0.
+ * @param {number} dY
+ *.    Vertical offset between the browser window and content area. Defaults to 0.
  *
  * @return {HTMLCanvasElement}
  *     The canvas on which the selection from the window's framebuffer
@@ -103,7 +70,7 @@ capture.canvas = function(
   top,
   width,
   height,
-  { canvas = null, flags = null } = {}
+  { canvas = null, flags = null, dX = 0, dY = 0 } = {}
 ) {
   const scale = win.devicePixelRatio;
 
@@ -146,7 +113,7 @@ capture.canvas = function(
   }
 
   ctx.scale(scale, scale);
-  ctx.drawWindow(win, left, top, width, height, BG_COLOUR, flags);
+  ctx.drawWindow(win, left + dX, top + dY, width, height, BG_COLOUR, flags);
 
   return canvas;
 };
