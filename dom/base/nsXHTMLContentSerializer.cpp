@@ -410,6 +410,7 @@ bool nsXHTMLContentSerializer::CheckElementStart(Element* aElement,
 }
 
 bool nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
+                                               Element* aOriginalElement,
                                                bool& aForceFormat,
                                                nsAString& aStr) {
   NS_ASSERTION(!mIsHTMLSerializer,
@@ -428,7 +429,8 @@ bool nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
   }
 
   bool dummyFormat;
-  return nsXMLContentSerializer::CheckElementEnd(aElement, dummyFormat, aStr);
+  return nsXMLContentSerializer::CheckElementEnd(aElement, aOriginalElement,
+                                                 dummyFormat, aStr);
 }
 
 bool nsXHTMLContentSerializer::AppendAndTranslateEntities(

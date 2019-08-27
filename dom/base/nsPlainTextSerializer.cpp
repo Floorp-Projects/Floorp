@@ -419,7 +419,9 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendElementEnd(Element* aElement, nsAString& aStr) {
+nsPlainTextSerializer::AppendElementEnd(Element* aElement,
+                                        Element* aOriginalElement,
+                                        nsAString& aStr) {
   NS_ENSURE_ARG(aElement);
 
   mElement = aElement;
