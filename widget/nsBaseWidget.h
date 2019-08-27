@@ -435,12 +435,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
                         const ScreenIntSize& aSize) override{};
 #endif
 
-  /**
-   * Whether context menus should only appear on mouseup instead of mousedown,
-   * on OSes where they normally appear on mousedown (macOS, *nix).
-   */
-  static bool ShowContextMenuAfterMouseUp();
-
  protected:
   // These are methods for CompositorWidgetWrapper, and should only be
   // accessed from that class. Derived widgets can choose which methods to

@@ -13,6 +13,7 @@
 #include "TRRService.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Tokenizer.h"
 
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
@@ -39,7 +40,6 @@ TRRService::TRRService()
     : mInitialized(false),
       mMode(0),
       mTRRBlacklistExpireTime(72 * 3600),
-      mTRRTimeout(3000),
       mLock("trrservice"),
       mConfirmationNS(NS_LITERAL_CSTRING("example.com")),
       mWaitForCaptive(true),
@@ -255,13 +255,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
       mTRRBlacklistExpireTime = secs;
     }
   }
-  if (!name || !strcmp(name, TRR_PREF("request-timeout"))) {
-    // number of milliseconds
-    uint32_t ms;
-    if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("request-timeout"), &ms))) {
-      mTRRTimeout = ms;
-    }
-  }
   if (!name || !strcmp(name, TRR_PREF("early-AAAA"))) {
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("early-AAAA"), &tmp))) {
@@ -343,6 +336,14 @@ nsresult TRRService::GetCredentials(nsCString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateCred;
   return NS_OK;
+}
+
+uint32_t TRRService::GetRequestTimeout() {
+  if (mMode == MODE_TRRONLY) {
+    return StaticPrefs::network_trr_request_timeout_mode_trronly_ms();
+  }
+
+  return StaticPrefs::network_trr_request_timeout_ms();
 }
 
 nsresult TRRService::Start() {

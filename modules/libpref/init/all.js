@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* The prefs in this file are shipped with the GRE and should apply to all
- * embedding situations. Application-specific preferences belong somewhere else,
- * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
- *
- * NOTE: Not all prefs should be defined in this (or any other) data file.
- * Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
- * Those prefs should *not* appear in this file.
- *
- * For the syntax used by this file, consult the comments at the top of
- * modules/libpref/parser/src/lib.rs.
- *
- * Please indent all prefs defined within #ifdef/#ifndef conditions. This
- * improves readability, particular for conditional blocks that exceed a single
- * screen.
- */
+// The prefs in this file are shipped with the GRE and should apply to all
+// embedding situations. Application-specific preferences belong somewhere
+// else, such as browser/app/profile/firefox.js or
+// mobile/android/app/mobile.js.
+//
+// NOTE: Not all prefs should be defined in this (or any other) data file.
+// Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
+// Those prefs should *not* appear in this file.
+//
+// For the syntax used by this file, consult the comments at the top of
+// modules/libpref/parser/src/lib.rs.
+//
+// Please indent all prefs defined within #ifdef/#ifndef conditions. This
+// improves readability, particular for conditional blocks that exceed a single
+// screen.
 
 pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 4);
@@ -285,16 +285,6 @@ pref("dom.serviceWorkers.update_delay", 1000);
 // Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
 pref("dom.serviceWorkers.testUpdateOverOneDay", false);
 
-// If this is true, TextEventDispatcher dispatches keydown and keyup events
-// even during composition (keypress events are never fired during composition
-// even if this is true).
-pref("dom.keyboardevent.dispatch_during_composition", true);
-
-// If this is true, TextEventDispatcher dispatches keypress event with setting
-// WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
-// cause inputting printable character.
-pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
-
 // Blacklist of domains of web apps which are not aware of strict keypress
 // dispatching behavior.  This is comma separated list.  If you need to match
 // all sub-domains, you can specify it as "*.example.com".  Additionally, you
@@ -337,14 +327,10 @@ pref("dom.inputevent.datatransfer.enabled", true);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
-pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
 // 0 = false, 1 = true, 2 = autodetect.
 pref("ui.android.mouse_as_touch", 1);
 
-// Pop up context menu on mouseup instead of mousedown, if that's the OS default.
-// Note: ignored on Windows (context menus always use mouseup)
-pref("ui.context_menus.after_mouseup", false);
 // Duration of timeout of incremental search in menus (ms).  0 means infinite.
 pref("ui.menu.incremental_search.timeout", 1000);
 // If true, all popups won't hide automatically on blur
@@ -1030,7 +1016,6 @@ pref("accessibility.typeaheadfind.enablesound", true);
 #endif
 pref("accessibility.typeaheadfind.matchesCountLimit", 1000);
 pref("findbar.highlightAll", false);
-pref("findbar.modalHighlight", false);
 pref("findbar.entireword", false);
 pref("findbar.iteratorTimeout", 100);
 
@@ -1488,17 +1473,6 @@ pref("logging.config.clear_on_startup", true);
 //   pref("network.security.ports.banned", "1,2,3,4,5");
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
-
-// Allow the network changed event to get sent when a network topology or
-// setup change is noticed while running.
-pref("network.notify.changed", true);
-
-// Allow network detection of IPv6 related changes (bug 1245059)
-#if defined(XP_WIN)
-  pref("network.notify.IPv6", false);
-#else
-  pref("network.notify.IPv6", true);
-#endif
 
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
@@ -2305,20 +2279,12 @@ pref("font.language.group",                 "chrome://global/locale/intl.propert
 // in during composition.  Note that those prefs are ignored if
 // "dom.keyboardevent.dispatch_during_composition" is false.
 #ifdef MOZ_WIDGET_ANDROID
-  // If true, dispatch the keydown and keyup events on any web apps even during
-  // composition.
-  #ifdef EARLY_BETA_OR_EARLIER
-    pref("intl.ime.hack.on_any_apps.fire_key_events_for_composition", true);
-  #else // #ifdef EARLY_BETA_OR_EARLIER
-    pref("intl.ime.hack.on_any_apps.fire_key_events_for_composition", false);
-  #endif // #ifdef EARLY_BETA_OR_EARLIER #else
-  // If true and the above pref is false, dispatch the keydown and keyup events
-  // only on IME-unaware web apps.  So, this supports web apps which listen to
-  // only keydown or keyup event to get a change to do something at every text
-  // input.
+  // If true and intl.ime.hack.on_any_apps.fire_key_events_for_composition is
+  // false, dispatch the keydown and keyup events only on IME-unaware web apps.
+  // So, this supports web apps which listen to only keydown or keyup events
+  // to get a change to do something at every text input.
   pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", true);
-#else // MOZ_WIDGET_ANDROID
-  pref("intl.ime.hack.on_any_apps.fire_key_events_for_composition", false);
+#else
   pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", false);
 #endif // MOZ_WIDGET_ANDROID
 
@@ -2656,13 +2622,6 @@ pref("services.blocklist.gfx.signer", "remote-settings.content-signature.mozilla
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none. Mac settings in macprefs.js
 pref("ui.key.accelKey", 17);
 pref("ui.key.menuAccessKey", 18);
-pref("ui.key.generalAccessKey", -1);
-
-// If generalAccessKey is -1, use the following two prefs instead.
-// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta, 16 for Win
-// (values can be combined, e.g. 5 for Alt+Shift)
-pref("ui.key.chromeAccess", 4);
-pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 
@@ -2903,12 +2862,6 @@ pref("layout.css.report_errors", true);
 // This sets the physical size of a device pixel and thus controls the
 // interpretation of physical units such as "pt".
 pref("layout.css.dpi", -1);
-
-// Set the number of device pixels per CSS pixel. A value <= 0 means choose
-// automatically based on user settings for the platform (e.g., "UI scale factor"
-// on Mac). A positive value is used as-is. This effectively controls the size
-// of a CSS "px". This is only used for windows on the screen, not for printing.
-pref("layout.css.devPixelsPerPx", "-1.0");
 
 // Set the threshold distance in CSS pixels below which scrolling will snap to
 // an edge, when scroll snapping is set to "proximity".
@@ -3944,17 +3897,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
   pref("ui.key.menuAccessKey", 0);
   pref("ui.key.accelKey", 224);
-  // (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
-  // suggests to use command on mac, but this really sucks (imagine someone having a "q"
-  // as an access key and not letting you quit the app!). As a result, we've made a
-  // command decision 1 day before tree lockdown to change it to the control key.
-  pref("ui.key.generalAccessKey", -1);
-
-  // If generalAccessKey is -1, use the following two prefs instead.
-  // Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta (Cmd)
-  // (values can be combined, e.g. 3 for Ctrl+Shift)
-  pref("ui.key.chromeAccess", 2);
-  pref("ui.key.contentAccess", 6);
 
   // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
   pref("ui.panel.default_level_parent", false);
@@ -4850,12 +4792,6 @@ pref("dom.push.http2.retryInterval", 5000);
   pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
-// Control firing WidgetMouseEvent by handling Windows pointer messages or mouse
-// messages.
-#if defined(XP_WIN)
-  pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
-#endif
-
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
 
@@ -5006,8 +4942,6 @@ pref("network.trr.bootstrapAddress", "");
 // TRR blacklist entry expire time (in seconds). Default is one minute.
 // Meant to survive basically a page load.
 pref("network.trr.blacklist-duration", 60);
-// Single TRR request timeout, in milliseconds
-pref("network.trr.request-timeout", 1500);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
 // When true, it only sends AAAA when the system has IPv6 connectivity

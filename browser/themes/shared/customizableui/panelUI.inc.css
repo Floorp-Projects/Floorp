@@ -1791,10 +1791,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   max-width: @menuPanelWidth@;
 }
 
-#PanelUI-whatsNew-content {
-  padding: 0 10px;
-}
-
 #protections-popup-main-header-label {
   margin-inline-start: 30px;
   text-align: center;
@@ -1840,27 +1836,45 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   display: none;
 }
 
+/**
+ * The Applications Menu container has some extra padding that does not
+ * exist when the What's New dropdown is shown directly from the toolbar
+ */
+#PanelUI-whatsNew-content {
+  margin-top: -6px;
+}
+
+#customizationui-widget-multiview #PanelUI-whatsNew-content {
+  margin: 0;
+}
+
 #customizationui-widget-multiview #PanelUI-whatsNew-title {
   display: flex;
-  margin: 0 0 6px;
 }
 
 #PanelUI-whatsNew .whatsNew-message {
-  border-bottom: 1px solid var(--panel-separator-color);
   cursor: pointer;
-  margin: 0 0 6px;
-  padding-bottom: 10px;
+  margin: 0;
+  padding: 0 12px;
+}
+
+#PanelUI-whatsNew .whatsNew-message::before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--panel-separator-color);
 }
 
 #PanelUI-whatsNew .whatsNew-message-date {
   font-size: 11px;
-  margin: 0;
-  opacity: 0.6;
-  padding: 0 6px;
+  margin: 0 -12px;
+  margin-top: -1px; /* Hide the border separator between messages */
+  padding: 6px 16px;
+  background: var(--toolbar-bgcolor);
 }
 
 #PanelUI-whatsNew .whatsNew-message-body {
-  padding: 6px;
+  padding: 6px 6px 18px;
   text-align: inherit;
   text-decoration: none;
   color: inherit;
@@ -1892,6 +1906,19 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   font-weight: 600;
   line-height: 24px;
   margin: 2px 0;
+}
+
+#PanelUI-whatsNew .whatsNew-message-title-large {
+  font-size: 28px;
+  margin: 2px 0;
+  font-weight: 300;
+}
+
+#PanelUI-whatsNew .whatsNew-message-subtitle {
+  margin: 2px 0;
+  font-size: 11px;
+  color: #949494;
+  font-weight: normal;
 }
 
 #PanelUI-whatsNew .whatsNew-message-body p,

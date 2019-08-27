@@ -14,4 +14,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android']
 
 elif CONFIG['OS_ARCH'] == 'Linux':
-    DIRS += ['linux']
+    DIRS += [
+        'linux',
+        'netlink'
+    ]

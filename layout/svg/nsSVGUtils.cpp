@@ -927,38 +927,35 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   const nsStyleEffects* effects = aFrame->StyleEffects();
 
-  if (!(effects->mClipFlags & NS_STYLE_CLIP_RECT)) {
-    NS_ASSERTION(effects->mClipFlags == NS_STYLE_CLIP_AUTO,
-                 "We don't know about this type of clip.");
+  bool clipApplies =
+      disp->mOverflowX == StyleOverflow::Hidden ||
+      disp->mOverflowY == StyleOverflow::Hidden;
+
+  if (!clipApplies || effects->mClip.IsAuto()) {
     return gfxRect(aX, aY, aWidth, aHeight);
   }
 
-  if (disp->mOverflowX == StyleOverflow::Hidden ||
-      disp->mOverflowY == StyleOverflow::Hidden) {
-    nsIntRect clipPxRect = effects->mClip.ToOutsidePixels(
-        aFrame->PresContext()->AppUnitsPerDevPixel());
-    gfxRect clipRect = gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width,
-                               clipPxRect.height);
-
-    if (NS_STYLE_CLIP_RIGHT_AUTO & effects->mClipFlags) {
-      clipRect.width = aWidth - clipRect.X();
-    }
-    if (NS_STYLE_CLIP_BOTTOM_AUTO & effects->mClipFlags) {
-      clipRect.height = aHeight - clipRect.Y();
-    }
-
-    if (disp->mOverflowX != StyleOverflow::Hidden) {
-      clipRect.x = aX;
-      clipRect.width = aWidth;
-    }
-    if (disp->mOverflowY != StyleOverflow::Hidden) {
-      clipRect.y = aY;
-      clipRect.height = aHeight;
-    }
-
-    return clipRect;
+  auto& rect = effects->mClip.AsRect();
+  nsRect coordClipRect = rect.ToLayoutRect();
+  nsIntRect clipPxRect = coordClipRect.ToOutsidePixels(
+      aFrame->PresContext()->AppUnitsPerDevPixel());
+  gfxRect clipRect = gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width,
+                             clipPxRect.height);
+  if (rect.right.IsAuto()) {
+    clipRect.width = aWidth - clipRect.X();
   }
-  return gfxRect(aX, aY, aWidth, aHeight);
+  if (rect.bottom.IsAuto()) {
+    clipRect.height = aHeight - clipRect.Y();
+  }
+  if (disp->mOverflowX != StyleOverflow::Hidden) {
+    clipRect.x = aX;
+    clipRect.width = aWidth;
+  }
+  if (disp->mOverflowY != StyleOverflow::Hidden) {
+    clipRect.y = aY;
+    clipRect.height = aHeight;
+  }
+  return clipRect;
 }
 
 void nsSVGUtils::SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,

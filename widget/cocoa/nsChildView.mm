@@ -98,6 +98,7 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_ui.h"
 
 #include <dlfcn.h>
 
@@ -4404,7 +4405,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return;
 
-  if (!nsBaseWidget::ShowContextMenuAfterMouseUp()) {
+  if (!StaticPrefs::ui_context_menus_after_mouseup()) {
     // Let the superclass do the context menu stuff.
     [super rightMouseDown:theEvent];
   }
@@ -4429,7 +4430,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return;
 
-  if (nsBaseWidget::ShowContextMenuAfterMouseUp()) {
+  if (StaticPrefs::ui_context_menus_after_mouseup()) {
     // Let the superclass do the context menu stuff, but pretend it's rightMouseDown.
     NSEvent* dupeEvent = [NSEvent mouseEventWithType:NSRightMouseDown
                                             location:theEvent.locationInWindow
