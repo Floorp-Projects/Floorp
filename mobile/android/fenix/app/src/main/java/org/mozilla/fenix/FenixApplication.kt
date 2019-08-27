@@ -74,12 +74,14 @@ open class FenixApplication : Application() {
         experimentLoader = loadExperiments()
 
         // Enable the service-experiments component
-        Experiments.initialize(
-            applicationContext,
-            mozilla.components.service.experiments.Configuration(
-                httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
+        if (Settings.getInstance(this).isExperimentationEnabled) {
+            Experiments.initialize(
+                applicationContext,
+                mozilla.components.service.experiments.Configuration(
+                    httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
+                )
             )
-        )
+        }
 
         // When the `fenix-test-2019-08-05` experiment is active, record its branch in Glean
         // telemetry. This will be used to validate that the experiment system correctly enrolls

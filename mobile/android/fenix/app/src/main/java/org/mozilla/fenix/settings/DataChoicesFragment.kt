@@ -63,5 +63,10 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_experimentation))?.apply {
+            isChecked = Settings.getInstance(context).isExperimentationEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 }

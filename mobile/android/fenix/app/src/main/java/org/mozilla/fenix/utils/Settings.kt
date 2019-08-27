@@ -90,6 +90,11 @@ class Settings private constructor(
         default = true
     )
 
+    val isExperimentationEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_experimentation),
+        default = true
+    )
+
     val shouldAutoBounceQuickActionSheet: Boolean
         get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
 

@@ -9,4 +9,9 @@
         android:summary="@string/preferences_usage_data_description"
         android:title="@string/preference_usage_data"
         app:iconSpaceReserved="false" />
+    <androidx.preference.SwitchPreference
+        android:key="@string/pref_key_experimentation"
+        android:summary="@string/preference_experiments_summary"
+        android:title="@string/preference_experiments"
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>
