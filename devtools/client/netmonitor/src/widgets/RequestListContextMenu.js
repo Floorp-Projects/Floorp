@@ -35,6 +35,8 @@ loader.lazyRequireGetter(
   true
 );
 
+const OS = Services.appinfo.OS;
+
 class RequestListContextMenu {
   constructor(props) {
     this.props = props;
@@ -102,23 +104,69 @@ class RequestListContextMenu {
       click: () => this.copyPostData(id, formDataSections, requestPostData),
     });
 
-    copySubmenu.push({
-      id: "request-list-context-copy-as-curl",
-      label: L10N.getStr("netmonitor.context.copyAsCurl"),
-      accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
-      // Menu item will be visible even if data hasn't arrived, so we need to check
-      // *Available property and then fetch data lazily once user triggers the action.
-      visible: !!clickedRequest,
-      click: () =>
-        this.copyAsCurl(
-          id,
-          url,
-          method,
-          httpVersion,
-          requestHeaders,
-          requestPostData
+    if (OS === "WINNT") {
+      copySubmenu.push({
+        id: "request-list-context-copy-as-curl-win",
+        label: L10N.getFormatStr(
+          "netmonitor.context.copyAsCurl.win",
+          L10N.getStr("netmonitor.context.copyAsCurl")
         ),
-    });
+        accesskey: L10N.getStr("netmonitor.context.copyAsCurl.win.accesskey"),
+        // Menu item will be visible even if data hasn't arrived, so we need to check
+        // *Available property and then fetch data lazily once user triggers the action.
+        visible: !!clickedRequest,
+        click: () =>
+          this.copyAsCurl(
+            id,
+            url,
+            method,
+            httpVersion,
+            requestHeaders,
+            requestPostData,
+            "WINNT"
+          ),
+      });
+
+      copySubmenu.push({
+        id: "request-list-context-copy-as-curl-posix",
+        label: L10N.getFormatStr(
+          "netmonitor.context.copyAsCurl.posix",
+          L10N.getStr("netmonitor.context.copyAsCurl")
+        ),
+        accesskey: L10N.getStr("netmonitor.context.copyAsCurl.posix.accesskey"),
+        // Menu item will be visible even if data hasn't arrived, so we need to check
+        // *Available property and then fetch data lazily once user triggers the action.
+        visible: !!clickedRequest,
+        click: () =>
+          this.copyAsCurl(
+            id,
+            url,
+            method,
+            httpVersion,
+            requestHeaders,
+            requestPostData,
+            "Linux"
+          ),
+      });
+    } else {
+      copySubmenu.push({
+        id: "request-list-context-copy-as-curl",
+        label: L10N.getStr("netmonitor.context.copyAsCurl"),
+        accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
+        // Menu item will be visible even if data hasn't arrived, so we need to check
+        // *Available property and then fetch data lazily once user triggers the action.
+        visible: !!clickedRequest,
+        click: () =>
+          this.copyAsCurl(
+            id,
+            url,
+            method,
+            httpVersion,
+            requestHeaders,
+            requestPostData
+          ),
+      });
+    }
 
     copySubmenu.push({
       id: "request-list-context-copy-as-fetch",
@@ -417,7 +465,8 @@ class RequestListContextMenu {
     method,
     httpVersion,
     requestHeaders,
-    requestPostData
+    requestPostData,
+    platform
   ) {
     requestHeaders =
       requestHeaders ||
@@ -435,7 +484,7 @@ class RequestListContextMenu {
       httpVersion,
       postDataText: requestPostData ? requestPostData.postData.text : "",
     };
-    copyString(Curl.generateCommand(data));
+    copyString(Curl.generateCommand(data, platform));
   }
 
   /**
