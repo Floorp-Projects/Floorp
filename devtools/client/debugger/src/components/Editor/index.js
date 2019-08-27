@@ -37,6 +37,7 @@ import {
   getCurrentThread,
   getThreadContext,
   getSkipPausing,
+  getInlinePreview,
 } from "../../selectors";
 
 // Redux actions
@@ -103,6 +104,7 @@ export type Props = {
   symbols: SymbolDeclarations,
   isPaused: boolean,
   skipPausing: boolean,
+  inlinePreviewEnabled: boolean,
 
   // Actions
   openConditionalPanel: typeof actions.openConditionalPanel,
@@ -584,6 +586,7 @@ class Editor extends PureComponent<Props, State> {
       selectedSource,
       conditionalPanelLocation,
       isPaused,
+      inlinePreviewEnabled,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -611,7 +614,7 @@ class Editor extends PureComponent<Props, State> {
         {features.columnBreakpoints ? (
           <ColumnBreakpoints editor={editor} />
         ) : null}
-        {isPaused && features.inlinePreview ? (
+        {isPaused && inlinePreviewEnabled ? (
           <InlinePreviews editor={editor} selectedSource={selectedSource} />
         ) : null}
       </div>
@@ -665,6 +668,7 @@ const mapStateToProps = state => {
     symbols: getSymbols(state, selectedSource),
     isPaused: getIsPaused(state, getCurrentThread(state)),
     skipPausing: getSkipPausing(state),
+    inlinePreviewEnabled: getInlinePreview(state),
   };
 };
 

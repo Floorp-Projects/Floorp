@@ -15,6 +15,7 @@ import {
 } from "../../../utils/source";
 
 import { downloadFile } from "../../../utils/utils";
+import { features } from "../../../utils/prefs";
 
 import { isFulfilled } from "../../../utils/async-value";
 import actions from "../../../actions";
@@ -159,6 +160,14 @@ const downloadFileItem = (
   click: () => downloadFile(selectedContent, getFilename(selectedSource)),
 });
 
+const inlinePreviewItem = (editorActions: EditorItemActions) => ({
+  id: "node-menu-inline-preview",
+  label: features.inlinePreview
+    ? L10N.getStr("inlinePreview.disable.label")
+    : L10N.getStr("inlinePreview.enable.label"),
+  click: () => editorActions.toggleInlinePreview(!features.inlinePreview),
+});
+
 export function editorMenuItems({
   cx,
   editorActions,
@@ -218,6 +227,8 @@ export function editorMenuItems({
     );
   }
 
+  items.push({ type: "separator" }, inlinePreviewItem(editorActions));
+
   return items;
 }
 
@@ -229,6 +240,7 @@ export type EditorItemActions = {
   jumpToMappedLocation: typeof actions.jumpToMappedLocation,
   showSource: typeof actions.showSource,
   toggleBlackBox: typeof actions.toggleBlackBox,
+  toggleInlinePreview: typeof actions.toggleInlinePreview,
 };
 
 export function editorItemActions(dispatch: Function) {
@@ -241,6 +253,7 @@ export function editorItemActions(dispatch: Function) {
       jumpToMappedLocation: actions.jumpToMappedLocation,
       showSource: actions.showSource,
       toggleBlackBox: actions.toggleBlackBox,
+      toggleInlinePreview: actions.toggleInlinePreview,
     },
     dispatch
   );
