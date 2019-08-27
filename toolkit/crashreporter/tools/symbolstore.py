@@ -525,11 +525,8 @@ class Dumper:
             cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
             print(' '.join(cmd), file=sys.stderr)
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            try:
-                module_line = proc.stdout.next()
-            except StopIteration:
-                module_line = ''
+                                    stderr=open(os.devnull, 'wb'))
+            module_line = proc.stdout.next()
             if module_line.startswith("MODULE"):
                 # MODULE os cpu guid debug_file
                 (guid, debug_file) = (module_line.split())[3:5]
@@ -609,19 +606,8 @@ class Dumper:
                 if self.copy_debug and arch_num == 0:
                     self.CopyDebug(file, debug_file, guid,
                                    code_file, code_id)
-            else:
-                # For some reason, we didn't see the MODULE line as the first
-                # line of output.  Let the process finish, and then complain
-                # regardless of the return code.
-                (dumpout, dumperr) = proc.communicate()
-                retcode = proc.returncode
-                message = [
-                    "dump_syms failed to produce the expected output",
-                    "return code: %d" % retcode,
-                    "stdout: %s\n%s" % (module_line, dumpout),
-                    "stderr: %s" % dumperr
-                ]
-                raise RuntimeError('\n----------\n'.join(message))
+        except StopIteration:
+            pass
         except Exception as e:
             print("Unexpected error: %s" % str(e), file=sys.stderr)
             raise
