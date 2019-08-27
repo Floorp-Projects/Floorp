@@ -4792,12 +4792,6 @@ pref("dom.push.http2.retryInterval", 5000);
   pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
-// Control firing WidgetMouseEvent by handling Windows pointer messages or mouse
-// messages.
-#if defined(XP_WIN)
-  pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
-#endif
-
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
 
