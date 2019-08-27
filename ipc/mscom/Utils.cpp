@@ -50,6 +50,30 @@ bool IsCurrentThreadMTA() {
   return aptType == APTTYPE_MTA;
 }
 
+bool IsCurrentThreadExplicitMTA() {
+  APTTYPE aptType;
+  APTTYPEQUALIFIER aptTypeQualifier;
+  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  return aptType == APTTYPE_MTA &&
+         aptTypeQualifier != APTTYPEQUALIFIER_IMPLICIT_MTA;
+}
+
+bool IsCurrentThreadImplicitMTA() {
+  APTTYPE aptType;
+  APTTYPEQUALIFIER aptTypeQualifier;
+  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  return aptType == APTTYPE_MTA &&
+         aptTypeQualifier == APTTYPEQUALIFIER_IMPLICIT_MTA;
+}
+
 bool IsProxy(IUnknown* aUnknown) {
   if (!aUnknown) {
     return false;
