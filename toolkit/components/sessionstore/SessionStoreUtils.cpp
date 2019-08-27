@@ -1076,10 +1076,10 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
 }
 
 /* Read entries in the session storage data contained in a tab's history. */
-static void ReadAllEntriesFromStorage(
-    nsPIDOMWindowOuter* aWindow,
-    nsTHashtable<nsCStringHashKey>& aVisitedOrigins,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
+static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
+                                      nsTArray<nsCString>& aOrigins,
+                                      nsTArray<nsString>& aKeys,
+                                      nsTArray<nsString>& aValues) {
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
   if (!docShell) {
     return;
@@ -1102,7 +1102,7 @@ static void ReadAllEntriesFromStorage(
 
   nsAutoCString origin;
   nsresult rv = principal->GetOrigin(origin);
-  if (NS_FAILED(rv) || aVisitedOrigins.Contains(origin)) {
+  if (NS_FAILED(rv) || aOrigins.Contains(origin)) {
     // Don't read a host twice.
     return;
   }
@@ -1128,79 +1128,60 @@ static void ReadAllEntriesFromStorage(
     return;
   }
 
-  Record<nsString, Record<nsString, nsString>>::EntryType* recordEntry =
-      nullptr;
   for (uint32_t i = 0; i < len; i++) {
-    Record<nsString, nsString>::EntryType entry;
+    nsString key, value;
     mozilla::IgnoredErrorResult res;
-    storage->Key(i, entry.mKey, *principal, res);
+    storage->Key(i, key, *principal, res);
     if (res.Failed()) {
       continue;
     }
 
-    storage->GetItem(entry.mKey, entry.mValue, *principal, res);
+    storage->GetItem(key, value, *principal, res);
     if (res.Failed()) {
       continue;
     }
 
-    if (!recordEntry) {
-      recordEntry = aRetVal.Entries().AppendElement();
-      recordEntry->mKey = NS_ConvertUTF8toUTF16(origin);
-      aVisitedOrigins.PutEntry(origin);
-    }
-    recordEntry->mValue.Entries().AppendElement(std::move(entry));
+    aKeys.AppendElement(key);
+    aValues.AppendElement(value);
+    aOrigins.AppendElement(origin);
   }
 }
 
 /* Collect Collect session storage from current frame and all child frame */
-static void CollectedSessionStorageInternal(
-    JSContext* aCx, BrowsingContext* aBrowsingContext,
-    nsTHashtable<nsCStringHashKey>& aVisitedOrigins,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
+/* static */
+void SessionStoreUtils::CollectedSessionStorage(
+    BrowsingContext* aBrowsingContext, nsTArray<nsCString>& aOrigins,
+    nsTArray<nsString>& aKeys, nsTArray<nsString>& aValues) {
   /* Collect session store from current frame */
   nsPIDOMWindowOuter* window = aBrowsingContext->GetDOMWindow();
   if (!window) {
     return;
   }
-  ReadAllEntriesFromStorage(window, aVisitedOrigins, aRetVal);
+  ReadAllEntriesFromStorage(window, aOrigins, aKeys, aValues);
 
   /* Collect session storage from all child frame */
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   if (!docShell) {
     return;
   }
-  int32_t length;
-  nsresult rv = docShell->GetInProcessChildCount(&length);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  for (int32_t i = 0; i < length; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> item;
-    docShell->GetInProcessChildAt(i, getter_AddRefs(item));
-    if (!item) {
+
+  // This is not going to work for fission. Bug 1572084 for tracking it.
+  for (BrowsingContext* child : aBrowsingContext->GetChildren()) {
+    window = child->GetDOMWindow();
+    if (!window) {
       return;
     }
-    nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(item));
-    if (!childDocShell) {
+    docShell = window->GetDocShell();
+    if (!docShell) {
       return;
     }
     bool isDynamic = false;
-    rv = childDocShell->GetCreatedDynamically(&isDynamic);
+    nsresult rv = docShell->GetCreatedDynamically(&isDynamic);
     if (NS_SUCCEEDED(rv) && isDynamic) {
       continue;
     }
-    CollectedSessionStorageInternal(aCx, childDocShell->GetBrowsingContext(),
-                                    aVisitedOrigins, aRetVal);
+    SessionStoreUtils::CollectedSessionStorage(child, aOrigins, aKeys, aValues);
   }
-}
-
-/* static */
-void SessionStoreUtils::CollectSessionStorage(
-    const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
-    Record<nsString, Record<nsString, nsString>>& aRetVal) {
-  nsTHashtable<nsCStringHashKey> visitedOrigins;
-  CollectedSessionStorageInternal(aGlobal.Context(), aWindow.get(),
-                                  visitedOrigins, aRetVal);
 }
 
 /* static */
@@ -1290,6 +1271,7 @@ static void CollectFrameTreeData(JSContext* aCx,
   SequenceRooter<JSObject*> rooter(aCx, &childrenData);
   uint32_t trailingNullCounter = 0;
 
+  // This is not going to work for fission. Bug 1572084 for tracking it.
   for (auto& child : aBrowsingContext->GetChildren()) {
     NullableRootedDictionary<CollectedData> data(aCx);
     CollectFrameTreeData(aCx, child, data, aFunc);

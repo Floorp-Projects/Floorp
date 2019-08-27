@@ -3857,9 +3857,17 @@ bool BrowserChild::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
     inputs = store->GetInputs(idVals, xPathVals);
   }
 
+  nsTArray<nsCString> origins;
+  nsTArray<nsString> keys, values;
+  bool isFullStorage = false;
+  if (store->IsStorageUpdated()) {
+    isFullStorage = store->GetAndClearStorageChanges(origins, keys, values);
+  }
+
   Unused << SendSessionStoreUpdate(
       docShellCaps, privatedMode, positions, positionDescendants, inputs,
-      idVals, xPathVals, aFlushId, aIsFinal, mSessionStoreListener->GetEpoch());
+      idVals, xPathVals, origins, keys, values, isFullStorage, aFlushId,
+      aIsFinal, mSessionStoreListener->GetEpoch());
   return true;
 }
 

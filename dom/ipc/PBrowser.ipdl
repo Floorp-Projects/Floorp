@@ -620,6 +620,8 @@ parent:
                              nsCString[] aPositions, int32_t[] aPositionDescendants,
                              InputFormData[] aInputs, CollectedInputDataValue[] aIdVals,
                              CollectedInputDataValue[] aXPathVals,
+                             nsCString[] aOrigins, nsString[] aKeys,
+                             nsString[] aValues, bool aIsFullStorage,
                              uint32_t aFlushId, bool aIsFinal, uint32_t aEpoch);
 
 child:
