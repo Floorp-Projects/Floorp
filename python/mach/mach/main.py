@@ -429,6 +429,17 @@ To see more help for a specific command, run:
                                                  ' '.join(e.arguments)))
             return 1
 
+        if not hasattr(args, 'mach_handler'):
+            raise MachError('ArgumentParser result missing mach handler info.')
+
+        handler = getattr(args, 'mach_handler')
+
+        # This is used by the `mach` driver to find the command name amidst
+        # global arguments.
+        if args.print_command:
+            print(handler.name)
+            sys.exit(0)
+
         # Add JSON logging to a file if requested.
         if args.logfile:
             self.log_manager.add_json_handler(args.logfile)
@@ -454,11 +465,6 @@ To see more help for a specific command, run:
             # Argument parsing has already happened, so settings that apply
             # to command line handling (e.g alias, defaults) will be ignored.
             self.load_settings(args.settings_file)
-
-        if not hasattr(args, 'mach_handler'):
-            raise MachError('ArgumentParser result missing mach handler info.')
-
-        handler = getattr(args, 'mach_handler')
 
         # if --disable-tests flag was enabled in the mozconfig used to compile
         # the build, tests will be disabled.
@@ -623,6 +629,8 @@ To see more help for a specific command, run:
         global_group.add_argument('--settings', dest='settings_file',
                                   metavar='FILENAME', default=None,
                                   help='Path to settings file.')
+        global_group.add_argument('--print-command', action='store_true',
+                                  help=argparse.SUPPRESS)
 
         for args, kwargs in self.global_arguments:
             global_group.add_argument(*args, **kwargs)
