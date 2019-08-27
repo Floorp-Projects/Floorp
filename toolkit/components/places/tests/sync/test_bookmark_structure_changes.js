@@ -123,6 +123,7 @@ add_task(async function test_value_structure_conflict() {
   let observer = expectBookmarkChangeNotifications();
   let changesToUpload = await buf.apply({
     remoteTimeSeconds: Date.now() / 1000,
+    notifyInStableOrder: true,
   });
   deepEqual(
     await buf.fetchUnmergedGuids(),
@@ -375,7 +376,9 @@ add_task(async function test_move() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -695,7 +698,9 @@ add_task(async function test_move_into_parent_sibling() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -903,7 +908,9 @@ add_task(async function test_complex_move_with_additions() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(
     await buf.fetchUnmergedGuids(),
     ["folderAAAAAA"],
