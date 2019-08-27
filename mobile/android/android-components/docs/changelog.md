@@ -15,6 +15,10 @@ permalink: /changelog/
 * **browser-icons**
   * Ensures icons are not cached on the disk in private sessions.
 
+* **browser-menu**
+  * Added `startImage` to Highlight of HighlightableMenuItem, which allows changing the startImage in addition to the endImage when highlighted
+  * Highlight properties of HighlightableMenuItem `startImage` and `endImage` are now both optional
+
 * **support-ktx**
   * Added property delegates to work with `SharedPreferences`.
 

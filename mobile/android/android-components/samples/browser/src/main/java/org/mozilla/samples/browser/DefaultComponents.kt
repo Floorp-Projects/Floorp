@@ -133,7 +133,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuToolbar,
                 BrowserMenuHighlightableItem("Highlight", R.drawable.mozac_ic_share, android.R.color.black, highlight =
                 BrowserMenuHighlightableItem.Highlight(
-                    R.drawable.mozac_ic_stop, R.drawable.background_with_ripple, android.R.color.holo_green_dark
+                    R.drawable.mozac_ic_search, R.drawable.mozac_ic_stop,
+                    R.drawable.background_with_ripple,
+                    android.R.color.holo_green_dark
                 )) {
                     Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
                 },

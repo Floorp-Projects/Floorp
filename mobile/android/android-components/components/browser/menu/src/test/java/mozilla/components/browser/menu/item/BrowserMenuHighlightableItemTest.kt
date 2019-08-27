@@ -11,17 +11,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.view.isVisible
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuHighlightableItemTest {
@@ -36,7 +39,11 @@ class BrowserMenuHighlightableItemTest {
             android.R.drawable.ic_menu_report_image,
             android.R.color.black,
             android.R.color.black,
-            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
+            BrowserMenuHighlightableItem.Highlight(
+                    endImageResource = android.R.drawable.ic_menu_report_image,
+                    backgroundResource = R.color.photonRed50,
+                    colorResource = R.color.photonRed50
+            )
         ) {
             onClickWasPress = true
         }
@@ -48,13 +55,20 @@ class BrowserMenuHighlightableItemTest {
     }
 
     @Test
-    fun `browser menu highlightable item  should have the right text, image, and iconTintColorResource`() {
+    fun `browser menu highlightable item should properly handle highlighting`() {
+        var shouldHighlight = false
         val item = BrowserMenuHighlightableItem(
-            "label",
-            android.R.drawable.ic_menu_report_image,
-            android.R.color.black,
-            android.R.color.black,
-            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
+                label = "label",
+                startImageResource = android.R.drawable.ic_menu_report_image,
+                iconTintColorResource = android.R.color.black,
+                textColorResource = android.R.color.black,
+                highlight = BrowserMenuHighlightableItem.Highlight(
+                        startImageResource = android.R.drawable.ic_menu_camera,
+                        endImageResource = android.R.drawable.ic_menu_add,
+                        backgroundResource = R.color.photonRed50,
+                        colorResource = R.color.photonRed50
+                ),
+                isHighlighted = { shouldHighlight }
         )
 
         val view = inflate(item)
@@ -62,15 +76,23 @@ class BrowserMenuHighlightableItemTest {
         val textView = view.findViewById<TextView>(R.id.text)
         assertEquals(textView.text, "label")
 
-        val imageView = view.findViewById<AppCompatImageView>(R.id.image)
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
+        val startImageView = view.findViewById<AppCompatImageView>(R.id.image)
+        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
 
-        assertNotNull(imageView.drawable)
-        assertNotNull(imageView.imageTintList)
-        assertEquals(highlightImageView.visibility, View.VISIBLE)
-        assertNotNull(highlightImageView.drawable)
+        // Highlight should not exist before set
+        assertEquals(android.R.drawable.ic_menu_report_image, Shadows.shadowOf(startImageView.drawable).createdFromResId)
+        assertFalse(highlightImageView.isVisible)
+
+        shouldHighlight = true
+        item.invalidate(view)
+
+        // Highlight should now exist
+        assertTrue(highlightImageView.isVisible)
+        assertNotNull(startImageView.imageTintList)
+        assertEquals(android.R.drawable.ic_menu_camera, Shadows.shadowOf(startImageView.drawable).createdFromResId)
+        assertEquals(android.R.drawable.ic_menu_add, Shadows.shadowOf(highlightImageView.drawable).createdFromResId)
         assertNotNull(highlightImageView.imageTintList)
-        assertNotNull(view.background)
+        assertEquals(R.color.photonRed50, Shadows.shadowOf(view.background).createdFromResId)
     }
 
     @Test
@@ -78,16 +100,20 @@ class BrowserMenuHighlightableItemTest {
         val item = BrowserMenuHighlightableItem(
             "label",
             android.R.drawable.ic_menu_report_image,
-            highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
+            highlight = BrowserMenuHighlightableItem.Highlight(
+                    endImageResource = android.R.drawable.ic_menu_report_image,
+                    backgroundResource = R.color.photonRed50,
+                    colorResource = R.color.photonRed50
+            )
         )
 
         val view = inflate(item)
 
-        val imageView = view.findViewById<AppCompatImageView>(R.id.image)
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
+        val startImageView = view.findViewById<AppCompatImageView>(R.id.image)
+        val endImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
 
-        assertNull(imageView.imageTintList)
-        assertNull(highlightImageView.imageTintList)
+        assertNull(startImageView.imageTintList)
+        assertNull(endImageView.imageTintList)
     }
 
     @Test
@@ -99,8 +125,8 @@ class BrowserMenuHighlightableItemTest {
         )
 
         val view = inflate(item)
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
-        assertEquals(highlightImageView.visibility, View.GONE)
+        val endImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
+        assertEquals(endImageView.visibility, View.GONE)
     }
 
     private fun inflate(item: BrowserMenuHighlightableItem): View {

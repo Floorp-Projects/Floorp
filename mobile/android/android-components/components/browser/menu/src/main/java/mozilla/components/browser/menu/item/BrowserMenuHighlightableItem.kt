@@ -12,14 +12,14 @@ import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 
-private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0)
+private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0)
 
 /**
  * A menu item for displaying text with an image icon and a highlight state which sets the
  * background of the menu item and a second image icon to the right of the text.
  *
  * @param label The visible label of this menu item.
- * @param imageResource ID of a drawable resource to be shown as a leftmost icon.
+ * @param startImageResource ID of a drawable resource to be shown as a leftmost icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
  * @param highlight Highlight object storing the background drawable and additional icon
@@ -29,7 +29,7 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0)
 class BrowserMenuHighlightableItem(
     private val label: String,
     @DrawableRes
-    private val imageResource: Int,
+    private val startImageResource: Int,
     @DrawableRes
     @ColorRes
     private val iconTintColorResource: Int = NO_ID,
@@ -40,7 +40,7 @@ class BrowserMenuHighlightableItem(
     private val listener: () -> Unit = {}
 ) : BrowserMenuImageText(
     label,
-    imageResource,
+    startImageResource,
     iconTintColorResource,
     textColorResource,
     listener
@@ -79,7 +79,7 @@ class BrowserMenuHighlightableItem(
         wasHighlighted = isHighlighted()
         updateHighlight(view, wasHighlighted)
 
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
+        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
         highlightImageView.setTintResource(iconTintColorResource)
     }
 
@@ -92,13 +92,21 @@ class BrowserMenuHighlightableItem(
     }
 
     private fun updateHighlight(view: View, isHighlighted: Boolean) {
-        val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
+        val startImageView = view.findViewById<AppCompatImageView>(R.id.image)
+        val endImageView = view.findViewById<AppCompatImageView>(R.id.end_image)
 
         if (isHighlighted) {
             view.setBackgroundResource(highlight.backgroundResource)
-            with(highlightImageView) {
-                setImageResource(highlight.imageResource)
-                visibility = View.VISIBLE
+            with(startImageView) {
+                if (highlight.startImageResource != NO_ID) {
+                    setImageResource(highlight.startImageResource)
+                }
+            }
+            with(endImageView) {
+                if (highlight.endImageResource != NO_ID) {
+                    setImageResource(highlight.endImageResource)
+                    visibility = View.VISIBLE
+                }
             }
         } else {
             val selectableItemBackground = TypedValue()
@@ -109,7 +117,7 @@ class BrowserMenuHighlightableItem(
             )
 
             view.setBackgroundResource(selectableItemBackground.resourceId)
-            with(highlightImageView) {
+            with(endImageView) {
                 setImageResource(0)
                 visibility = View.GONE
             }
@@ -118,7 +126,9 @@ class BrowserMenuHighlightableItem(
 
     class Highlight(
         @DrawableRes
-        val imageResource: Int,
+        val startImageResource: Int = NO_ID,
+        @DrawableRes
+        val endImageResource: Int = NO_ID,
         @DrawableRes
         val backgroundResource: Int,
         @ColorRes
