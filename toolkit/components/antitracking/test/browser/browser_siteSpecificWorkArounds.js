@@ -3,10 +3,12 @@
 AntiTracking.runTest(
   "localStorage with a tracker that is whitelisted via a pref",
   async _ => {
-    let shouldThrow =
-      SpecialPowers.Services.prefs.getIntPref(
-        "network.cookie.cookieBehavior"
-      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+    let shouldThrow = [
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    ].includes(
+      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
+    );
 
     let hasThrown;
     try {
@@ -32,17 +34,19 @@ AntiTracking.runTest(
   [["urlclassifier.trackingAnnotationSkipURLs", "TRACKING.EXAMPLE.ORG"]],
   false, // run the window.open() test
   false, // run the user interaction test
-  0, // don't expect blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
   false
 ); // run in a normal window
 
 AntiTracking.runTest(
   "localStorage with a tracker that is whitelisted via a fancy pref",
   async _ => {
-    let shouldThrow =
-      SpecialPowers.Services.prefs.getIntPref(
-        "network.cookie.cookieBehavior"
-      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+    let shouldThrow = [
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    ].includes(
+      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
+    );
 
     let hasThrown;
     try {
@@ -73,7 +77,7 @@ AntiTracking.runTest(
   ],
   false, // run the window.open() test
   false, // run the user interaction test
-  0, // don't expect blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
   false
 ); // run in a normal window
 

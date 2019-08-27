@@ -446,6 +446,8 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
       [doc, sourceLine, lineNumber, columnNumber, uri, aRejectedReason]() {
         const char* message = nullptr;
         nsAutoCString category;
+        // When changing this list, please make sure to update the corresponding
+        // code in antitracking_head.js (inside _createTask).
         switch (aRejectedReason) {
           case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
             message = "CookieBlockedByPermission";
