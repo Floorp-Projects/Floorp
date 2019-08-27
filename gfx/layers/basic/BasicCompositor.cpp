@@ -274,8 +274,9 @@ already_AddRefed<CompositingRenderTarget> BasicCompositor::CreateRenderTarget(
     return nullptr;
   }
 
-  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(
-      aRect.Size(), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> target =
+      mRenderTarget->mDrawTarget->CreateSimilarDrawTarget(
+          aRect.Size(), SurfaceFormat::B8G8R8A8);
 
   if (!target) {
     return nullptr;
