@@ -27,7 +27,7 @@ AntiTracking.runTest(
   null, // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  0, // expected blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expected blocking notifications
   false, // private window
   "allow-scripts allow-same-origin allow-popups" // iframe sandbox
 );

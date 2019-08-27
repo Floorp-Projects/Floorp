@@ -24,12 +24,9 @@ AntiTracking.runTest(
     await callRequestStorageAccess();
 
     if (
-      [
-        SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
-        SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-      ].includes(
-        SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-      )
+      SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior"
+      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT
     ) {
       await navigator.serviceWorker
         .register("empty.js")

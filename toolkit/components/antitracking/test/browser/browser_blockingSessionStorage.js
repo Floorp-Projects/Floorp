@@ -3,11 +3,10 @@
 AntiTracking.runTestInNormalAndPrivateMode(
   "sessionStorage",
   async _ => {
-    let shouldThrow = [
-      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    );
+    let shouldThrow =
+      SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior"
+      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
 
     let hasThrown;
     try {
@@ -37,7 +36,8 @@ AntiTracking.runTestInNormalAndPrivateMode(
   },
   [],
   true,
-  true
+  true,
+  0
 );
 
 AntiTracking.runTestInNormalAndPrivateMode(
@@ -46,11 +46,10 @@ AntiTracking.runTestInNormalAndPrivateMode(
     /* import-globals-from storageAccessAPIHelpers.js */
     await noStorageAccessInitially();
 
-    let shouldThrow = [
-      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    );
+    let shouldThrow =
+      SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior"
+      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
 
     let hasThrown;
     try {
