@@ -188,10 +188,7 @@ class BackgroundServices(
                         it.authenticatedAccount()?.deviceConstellation()
                             ?.processRawEventAsync(message)
                     }
-                },
-                ProcessLifecycleOwner.get(),
-                false
-            )
+                })
 
             // Notify observers for subscription changes.
             push.registerForSubscriptions(object : PushSubscriptionObserver {
@@ -209,18 +206,7 @@ class BackgroundServices(
                             )
                     }
                 }
-            }, ProcessLifecycleOwner.get(), false)
-
-            // For all the current Fenix users, we need to remove the current push token and
-            // re-subscribe again on the right push server. We should never do this otherwise!
-            // Should be removed after majority of our users are correctly subscribed.
-            // See: https://github.com/mozilla-mobile/fenix/issues/4218
-            val prefResetSubKey = "reset_broken_push_subscription"
-            if (!preferences.getBoolean(prefResetSubKey, false)) {
-                preferences.edit().putBoolean(prefResetSubKey, true).apply()
-                logger.info("Forcing push registration renewal")
-                push.forceRegistrationRenewal()
-            }
+            })
         }
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }
     }
