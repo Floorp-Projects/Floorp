@@ -6763,6 +6763,11 @@
   value: 10
   mirror: always
 
+- name: ui.use_native_colors
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Prevent system colors from being exposed to CSS or canvas.
 - name: ui.use_standins_for_native_colors
   type: RelaxedAtomicBool
