@@ -7,6 +7,13 @@ const {
   accessibility: {
     AUDIT_TYPE,
     ISSUE_TYPE: {
+      [AUDIT_TYPE.KEYBOARD]: {
+        FOCUSABLE_NO_SEMANTICS,
+        FOCUSABLE_POSITIVE_TABINDEX,
+        INTERACTIVE_NO_ACTION,
+        INTERACTIVE_NOT_FOCUSABLE,
+        NO_FOCUS_VISIBLE,
+      },
       [AUDIT_TYPE.TEXT_LABEL]: {
         AREA_NO_NAME_FROM_ALT,
         DIALOG_NO_NAME,
@@ -150,6 +157,29 @@ for (const key in A11Y_TEXT_LABEL_LINK_IDS) {
   }`;
 }
 exports.A11Y_TEXT_LABEL_LINKS = A11Y_TEXT_LABEL_LINKS;
+
+const A11Y_KEYBOARD_LINK_BASE =
+  "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Keyboard" +
+  "?utm_source=devtools&utm_medium=a11y-panel-checks-keyboard";
+
+const A11Y_KEYBOARD_LINK_IDS = {
+  [FOCUSABLE_NO_SEMANTICS]:
+    "Focusable_elements_should_have_interactive_semantics",
+  [FOCUSABLE_POSITIVE_TABINDEX]:
+    "Avoid_using_tabindex_attribute_greater_than_zero",
+  [INTERACTIVE_NO_ACTION]:
+    "Interactive_elements_must_be_able_to_be_activated_using_a_keyboard",
+  [INTERACTIVE_NOT_FOCUSABLE]: "Interactive_elements_must_be_focusable",
+  [NO_FOCUS_VISIBLE]: "Focusable_element_must_have_focus_styling",
+};
+
+const A11Y_KEYBOARD_LINKS = {};
+for (const key in A11Y_KEYBOARD_LINK_IDS) {
+  A11Y_KEYBOARD_LINKS[key] = `${A11Y_KEYBOARD_LINK_BASE}#${
+    A11Y_KEYBOARD_LINK_IDS[key]
+  }`;
+}
+exports.A11Y_KEYBOARD_LINKS = A11Y_KEYBOARD_LINKS;
 
 // Lists of preference names and keys.
 const PREFS = {
