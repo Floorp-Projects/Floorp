@@ -207,7 +207,7 @@ class TaskBuilder(object):
             name="Upload Release APK to Nimbledroid",
             description='Upload APKs to Nimbledroid for performance measurement and tracking.',
             command=' && '.join([
-                'curl --location "{}/{}/artifacts/public/target.apk" > target.apk'.format(_DEFAULT_TASK_URL, assemble_task_id),
+                'curl --location "{}/{}/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk" > target.apk'.format(_DEFAULT_TASK_URL, assemble_task_id),
                 'python automation/taskcluster/upload_apk_nimbledroid.py',
             ]),
             treeherder={
