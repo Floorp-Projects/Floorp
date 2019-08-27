@@ -66,7 +66,10 @@ packaging_description_schema = schema.extend({
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required('comm-checkout', default=False): bool,
-    }
+    },
+
+    # Override the default priority for the project
+    Optional('priority'): task_description_schema['priority'],
 })
 
 transforms = TransformSequence()
@@ -224,6 +227,9 @@ def make_job_description(config, jobs):
                                                  repack_stub_installer=repack_stub_installer),
         }
 
+        # we may have reduced the priority for partner jobs, otherwise task.py will set it
+        if job.get('priority'):
+            task['priority'] = job['priority']
         if build_platform.startswith('macosx'):
             task['toolchains'] = [
                 'linux64-libdmg',

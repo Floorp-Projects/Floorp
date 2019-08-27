@@ -234,7 +234,10 @@ task_description_schema = Schema({
     Optional('worker'): {
         Required('implementation'): basestring,
         Extra: object,
-    }
+    },
+
+    # Override the default priority for the project
+    Optional('priority'): basestring,
 })
 
 TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherder/' \

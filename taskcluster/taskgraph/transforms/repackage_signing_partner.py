@@ -27,6 +27,7 @@ repackage_signing_description_schema = schema.extend({
     Optional('extra'): object,
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
+    Optional('priority'): task_description_schema['priority'],
 })
 
 transforms.add(check_if_partners_enabled)
@@ -131,5 +132,8 @@ def make_repackage_signing_description(config, jobs):
                 'repack_id': repack_id,
             }
         }
+        # we may have reduced the priority for partner jobs, otherwise task.py will set it
+        if job.get('priority'):
+            task['priority'] = job['priority']
 
         yield task
