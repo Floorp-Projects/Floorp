@@ -1925,7 +1925,6 @@ void Element::UnbindFromTree(bool aNullParent) {
 
 #ifdef MOZ_XUL
   if (nsXULElement* xulElem = nsXULElement::FromNode(this)) {
-    ;
     xulElem->SetXULBindingParent(nullptr);
     clearBindingParent = false;
   }
