@@ -8,8 +8,8 @@
 [scriptable, uuid(387fdc80-0077-4b60-a0d9-d9e80a83ba64)]
 interface nsIMacShellService : nsIShellService
 {
-  const long APPLICATION_KEYCHAIN_ACCESS  = 2;
-  const long APPLICATION_NETWORK          = 3;
-  const long APPLICATION_DESKTOP          = 4;
+  /**
+   * Opens the desktop preferences, e.g. for after setting the background.
+   */
+  void showDesktopPreferences();
 };
-
