@@ -1721,6 +1721,7 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     if (HasID()) {
       AddToIdTable(DoGetID());
     }
+    HandleShadowDOMRelatedInsertionSteps(hadParent);
   }
 
   if (MayHaveStyle() && !IsXULElement()) {
@@ -1801,6 +1802,8 @@ bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
 }
 
 void Element::UnbindFromTree(bool aNullParent) {
+  HandleShadowDOMRelatedRemovalSteps(aNullParent);
+
   const bool detachingFromShadow =
       WillDetachFromShadowOnUnbind(*this, aNullParent);
   // Make sure to only remove from the ID table if our subtree root is actually
@@ -2629,19 +2632,25 @@ nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                const nsAttrValue* aOldValue,
                                nsIPrincipal* aMaybeScriptedPrincipal,
                                bool aNotify) {
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::part) {
-    bool isPart = !!aValue;
-    if (HasPartAttribute() != isPart) {
-      SetHasPartAttribute(isPart);
-      if (ShadowRoot* shadow = GetContainingShadow()) {
-        if (isPart) {
-          shadow->PartAdded(*this);
-        } else {
-          shadow->PartRemoved(*this);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::part) {
+      bool isPart = !!aValue;
+      if (HasPartAttribute() != isPart) {
+        SetHasPartAttribute(isPart);
+        if (ShadowRoot* shadow = GetContainingShadow()) {
+          if (isPart) {
+            shadow->PartAdded(*this);
+          } else {
+            shadow->PartRemoved(*this);
+          }
         }
       }
+      MOZ_ASSERT(HasPartAttribute() == isPart);
+    } else if (aName == nsGkAtoms::slot && GetParent()) {
+      if (ShadowRoot* shadow = GetParent()->GetShadowRoot()) {
+        shadow->MaybeReassignElement(*this);
+      }
     }
-    MOZ_ASSERT(HasPartAttribute() == isPart);
   }
   return NS_OK;
 }
