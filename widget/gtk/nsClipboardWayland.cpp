@@ -195,6 +195,12 @@ void WaylandDataOffer::SetDragStatus(GdkDragAction aAction, uint32_t aTime) {
   uint32_t all_actions = WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY |
                          WL_DATA_DEVICE_MANAGER_DND_ACTION_MOVE;
 
+  /* Default to move D&D action (Bug 1576268).
+   */
+  if (dnd_actions == 0) {
+    all_actions = WL_DATA_DEVICE_MANAGER_DND_ACTION_MOVE;
+  }
+
   wl_data_offer_set_actions(mWaylandDataOffer, all_actions, dnd_actions);
 
   /* Workaround Wayland D&D architecture here. To get the data_device_drop()
