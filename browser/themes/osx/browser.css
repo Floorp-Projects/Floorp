@@ -274,10 +274,6 @@
 
 %include ../shared/identity-block/identity-block.inc.css
 
-#wrapper-urlbar-container[place="palette"] {
-  max-width: 20em;
-}
-
 #pageAction-urlbar-shareURL,
 #pageAction-panel-shareURL {
   list-style-image: url("chrome://browser/skin/share.svg");
