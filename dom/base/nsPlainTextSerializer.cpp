@@ -266,7 +266,7 @@ bool nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack) {
   return returnValue;
 }
 
-bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) {
+bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) const {
   if (mSettings.GetWithRubyAnnotation()) {
     return false;
   }
