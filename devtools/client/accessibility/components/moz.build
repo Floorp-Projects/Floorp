@@ -20,6 +20,7 @@ DevToolsModules(
     'ColorContrastAccessibility.js',
     'ContrastBadge.js',
     'Description.js',
+    'KeyboardCheck.js',
     'LearnMoreLink.js',
     'MainFrame.js',
     'RightSidebar.js',
