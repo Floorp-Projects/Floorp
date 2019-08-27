@@ -3028,20 +3028,24 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   full = typeof full == "undefined" ? true : full;
   scroll = typeof scroll == "undefined" ? true : scroll;
 
-  // Only consider full screenshot if no element has been specified
-  full = id ? false : full;
+  let webEl = id ? WebElement.fromUUID(id, this.context) : null;
 
+  // Only consider full screenshot if no element has been specified
+  full = webEl ? false : full;
+
+  let browsingContext;
   let rect;
-  let dY = 0;
 
   switch (this.context) {
     case Context.Chrome:
+      browsingContext = win.docShell.browsingContext;
+
       if (id) {
-        let webEl = WebElement.fromUUID(id, this.context);
         let el = this.curBrowser.seenEls.get(webEl, win);
         rect = el.getBoundingClientRect();
       } else if (full) {
-        rect = win.document.documentElement.getBoundingClientRect();
+        let clientRect = win.document.documentElement.getBoundingClientRect();
+        rect = new win.DOMRect(0, 0, clientRect.width, clientRect.height);
       } else {
         // viewport
         rect = new win.DOMRect(
@@ -3054,15 +3058,19 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
       break;
 
     case Context.Content:
-      rect = await this.listener.getScreenshotRect({ id, full, scroll });
-      // Temporarily needed until drawSnapshot() is used
-      dY = win.gNavToolbox.clientHeight;
+      browsingContext = this.curBrowser.contentBrowser.browsingContext;
+      rect = await this.listener.getScreenshotRect({ el: webEl, full, scroll });
       break;
   }
 
-  let canvas = capture.canvas(win, rect.x, rect.y, rect.width, rect.height, {
-    dY,
-  });
+  let canvas = await capture.canvas(
+    win,
+    browsingContext,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height
+  );
 
   switch (format) {
     case capture.Format.Hash:

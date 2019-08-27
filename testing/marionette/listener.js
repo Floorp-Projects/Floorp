@@ -1292,7 +1292,7 @@ function getActiveElement() {
  * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
- * @param {WebElement} el
+ * @param {WebElement} webElRef
  *     Reference to the web element to click.
  * @param {number} pageTimeout
  *     Timeout in milliseconds the method has to wait for the page being
@@ -1636,8 +1636,8 @@ function switchToFrame(msg) {
  *
  * Accepted values for |opts|:
  *
- * @param {UUID=} id
- *     Optional web element reference of an element to take a screenshot of.
+ * @param {WebElement} webEl
+ *     Optional element to take a screenshot of.
  * @param {boolean=} full
  *     True to take a screenshot of the entire document element. Is only
  *     considered if <var>id</var> is not defined. Defaults to true.
@@ -1652,18 +1652,16 @@ function switchToFrame(msg) {
  * @return {DOMRect}
  *     The area to take a snapshot from
  */
-function getScreenshotRect({ id, full = true, scroll = true } = {}) {
+function getScreenshotRect({ el, full = true, scroll = true } = {}) {
   let win = curContainer.frame;
 
   let rect;
 
-  if (id) {
-    let webEl = WebElement.fromUUID(id, "content");
-    let el = seenEls.get(webEl, win);
+  if (el) {
     if (scroll) {
       element.scrollIntoView(el);
     }
-    rect = el.getBoundingClientRect();
+    rect = getElementRect(el);
   } else if (full) {
     let clientRect = win.document.documentElement.getBoundingClientRect();
     rect = new DOMRect(0, 0, clientRect.width, clientRect.height);
