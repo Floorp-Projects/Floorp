@@ -19,7 +19,7 @@ add_task(async function() {
   await selectNode("span", inspector);
   const container = await getContainerForSelector("h1", inspector);
 
-  const onHighlight = toolbox.highlighter.once("node-highlight");
+  const onHighlight = inspector.highlighter.once("node-highlight");
   EventUtils.synthesizeMouseAtCenter(
     container.tagLine,
     { type: "mousemove" },
