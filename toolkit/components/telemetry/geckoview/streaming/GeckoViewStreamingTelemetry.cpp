@@ -20,7 +20,7 @@ using mozilla::StaticMutexNotRecorded;
 using mozilla::StaticRefPtr;
 using mozilla::TimeStamp;
 
-// Batches and streams Histogram accumulations to a JNI delegate which will
+// Batches and streams Telemetry samples to a JNI delegate which will
 // (presumably) do something with the data. Expected to be used to route data
 // up to the Android Components layer to be translated into Glean metrics.
 namespace GeckoViewStreamingTelemetry {
@@ -33,8 +33,15 @@ static StaticMutexNotRecorded gMutex;
 // The time the batch began.
 TimeStamp gBatchBegan;
 // The batch of histograms and samples.
-typedef nsDataHashtable<nsCStringHashKey, nsTArray<uint32_t>> Batch;
-Batch gBatch;
+typedef nsDataHashtable<nsCStringHashKey, nsTArray<uint32_t>> HistogramBatch;
+HistogramBatch gBatch;
+// The batches of Scalars and their values.
+typedef nsDataHashtable<nsCStringHashKey, bool> BoolScalarBatch;
+BoolScalarBatch gBoolScalars;
+typedef nsDataHashtable<nsCStringHashKey, nsCString> StringScalarBatch;
+StringScalarBatch gStringScalars;
+typedef nsDataHashtable<nsCStringHashKey, uint32_t> UintScalarBatch;
+UintScalarBatch gUintScalars;
 // The delegate to receive the Histograms' samples.
 StaticRefPtr<StreamingTelemetryDelegate> gDelegate;
 
@@ -48,10 +55,16 @@ void RegisterDelegate(const RefPtr<StreamingTelemetryDelegate>& aDelegate) {
 class SendBatchRunnable : public Runnable {
  public:
   explicit SendBatchRunnable(RefPtr<StreamingTelemetryDelegate> aDelegate,
-                             Batch&& aBatch)
+                             HistogramBatch&& aBatch,
+                             BoolScalarBatch&& aBoolScalars,
+                             StringScalarBatch&& aStringScalars,
+                             UintScalarBatch&& aUintScalars)
       : Runnable("SendBatchRunnable"),
         mDelegate(std::move(aDelegate)),
-        mBatch(std::move(aBatch)) {}
+        mBatch(std::move(aBatch)),
+        mBoolScalars(std::move(aBoolScalars)),
+        mStringScalars(std::move(aStringScalars)),
+        mUintScalars(std::move(aUintScalars)) {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -63,14 +76,36 @@ class SendBatchRunnable : public Runnable {
 
       mDelegate->ReceiveHistogramSamples(histogramName, samples);
     }
-
     mBatch.Clear();
+
+    for (auto iter = mBoolScalars.Iter(); !iter.Done(); iter.Next()) {
+      const nsCString& scalarName = PromiseFlatCString(iter.Key());
+      mDelegate->ReceiveBoolScalarValue(scalarName, iter.Data());
+    }
+    mBoolScalars.Clear();
+
+    for (auto iter = mStringScalars.Iter(); !iter.Done(); iter.Next()) {
+      const nsCString& scalarName = PromiseFlatCString(iter.Key());
+      const nsCString& scalarValue = PromiseFlatCString(iter.Data());
+      mDelegate->ReceiveStringScalarValue(scalarName, scalarValue);
+    }
+    mStringScalars.Clear();
+
+    for (auto iter = mUintScalars.Iter(); !iter.Done(); iter.Next()) {
+      const nsCString& scalarName = PromiseFlatCString(iter.Key());
+      mDelegate->ReceiveUintScalarValue(scalarName, iter.Data());
+    }
+    mUintScalars.Clear();
+
     return NS_OK;
   }
 
  private:
   RefPtr<StreamingTelemetryDelegate> mDelegate;
-  Batch mBatch;
+  HistogramBatch mBatch;
+  BoolScalarBatch mBoolScalars;
+  StringScalarBatch mStringScalars;
+  UintScalarBatch mUintScalars;
 };  // class SendBatchRunnable
 
 // Can be called on any thread.
@@ -85,31 +120,68 @@ void SendBatch(const StaticMutexAutoLock& aLock) {
   }
 
   // To make it so accumulations within the delegation don't deadlock us,
-  // move the batch's contents into the Runner.
-  Batch copy;
-  gBatch.SwapElements(copy);
-  RefPtr<SendBatchRunnable> runnable =
-      new SendBatchRunnable(gDelegate, std::move(copy));
+  // move the batches' contents into the Runner.
+  HistogramBatch histogramCopy;
+  gBatch.SwapElements(histogramCopy);
+  BoolScalarBatch boolScalarCopy;
+  gBoolScalars.SwapElements(boolScalarCopy);
+  StringScalarBatch stringScalarCopy;
+  gStringScalars.SwapElements(stringScalarCopy);
+  UintScalarBatch uintScalarCopy;
+  gUintScalars.SwapElements(uintScalarCopy);
+  RefPtr<SendBatchRunnable> runnable = new SendBatchRunnable(
+      gDelegate, std::move(histogramCopy), std::move(boolScalarCopy),
+      std::move(stringScalarCopy), std::move(uintScalarCopy));
 
   // To make things easier for the delegate, dispatch to the main thread.
   NS_DispatchToMainThread(runnable);
 }
 
 // Can be called on any thread.
-void HistogramAccumulate(const nsCString& aName, uint32_t aValue) {
-  StaticMutexAutoLock lock(gMutex);
-
-  if (gBatch.Count() == 0) {
+void BatchCheck(const StaticMutexAutoLock& aLock) {
+  if (gBatchBegan.IsNull()) {
     gBatchBegan = TimeStamp::Now();
   }
-  nsTArray<uint32_t>& samples = gBatch.GetOrInsert(aName);
-  samples.AppendElement(aValue);
-
   double batchDurationMs = (TimeStamp::Now() - gBatchBegan).ToMilliseconds();
   if (batchDurationMs >
       mozilla::StaticPrefs::toolkit_telemetry_geckoview_batchDurationMS()) {
-    SendBatch(lock);
+    SendBatch(aLock);
+    gBatchBegan = TimeStamp();
   }
+}
+
+// Can be called on any thread.
+void HistogramAccumulate(const nsCString& aName, uint32_t aValue) {
+  StaticMutexAutoLock lock(gMutex);
+
+  nsTArray<uint32_t>& samples = gBatch.GetOrInsert(aName);
+  samples.AppendElement(aValue);
+
+  BatchCheck(lock);
+}
+
+void BoolScalarSet(const nsCString& aName, bool aValue) {
+  StaticMutexAutoLock lock(gMutex);
+
+  gBoolScalars.Put(aName, aValue);
+
+  BatchCheck(lock);
+}
+
+void StringScalarSet(const nsCString& aName, const nsCString& aValue) {
+  StaticMutexAutoLock lock(gMutex);
+
+  gStringScalars.Put(aName, aValue);
+
+  BatchCheck(lock);
+}
+
+void UintScalarSet(const nsCString& aName, uint32_t aValue) {
+  StaticMutexAutoLock lock(gMutex);
+
+  gUintScalars.Put(aName, aValue);
+
+  BatchCheck(lock);
 }
 
 }  // namespace GeckoViewStreamingTelemetry
