@@ -9,16 +9,37 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "MigrationUtils",
+  "resource:///modules/MigrationUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UIState",
+  "resource://services-sync/UIState.jsm"
+);
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  LoginBreaches: "resource:////modules/LoginBreaches.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-  UIState: "resource://services-sync/UIState.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("AboutLoginsParent");
@@ -64,12 +85,17 @@ var AboutLoginsParent = {
 
   // Listeners are added in BrowserGlue.jsm
   async receiveMessage(message) {
-    // Only respond to messages sent from about:logins.
-    if (
-      message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
-      message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN
-    ) {
-      return;
+    // Only respond to messages sent from a privlegedabout process. Ideally
+    // we would also check the contentPrincipal.originNoSuffix but this
+    // check has been removed due to bug 1576722.
+    if (message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE) {
+      throw new Error(
+        `AboutLoginsParent: Received ${
+          message.name
+        } message the remote type didn't match expectations: ${
+          message.target.remoteType
+        } == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
+      );
     }
 
     switch (message.name) {
@@ -100,9 +126,9 @@ var AboutLoginsParent = {
       case "AboutLogins:DismissBreachAlert": {
         const login = message.data.login;
 
-        await LoginBreaches.recordDismissal(login.guid);
+        await LoginHelper.recordBreachAlertDismissal(login.guid);
         const logins = await this.getAllLogins();
-        const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
+        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
           logins
         );
         const messageManager = message.target.messageManager;
@@ -407,7 +433,7 @@ var AboutLoginsParent = {
           );
 
           if (BREACH_ALERTS_ENABLED) {
-            const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
+            const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
               logins
             );
             messageManager.sendAsyncMessage(

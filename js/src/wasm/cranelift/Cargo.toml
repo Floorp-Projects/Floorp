@@ -14,7 +14,7 @@ name = "baldrdash"
 # you should update the following files:
 # - $TOP_LEVEL/Cargo.toml, look for the revision (rev) hashes of both cranelift
 # dependencies (codegen and wasm).
-# - $TOP_LEVEL/.cargo/config.in, look for the revision (rev) field of the
+# - $TOP_LEVEL/.cargo/config, look for the revision (rev) field of the
 # Cranelift source.
 cranelift-codegen = { version = "0.40", default-features = false }
 cranelift-wasm = "0.40"

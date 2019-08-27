@@ -393,6 +393,16 @@ ObjectClient.prototype = {
       },
     }
   ),
+  addWatchpoint: DebuggerClient.requester({
+    type: "addWatchpoint",
+    property: arg(0),
+    label: arg(1),
+    watchpointType: arg(2),
+  }),
+  removeWatchpoint: DebuggerClient.requester({
+    type: "removeWatchpoint",
+    property: arg(0),
+  }),
 };
 
 module.exports = ObjectClient;

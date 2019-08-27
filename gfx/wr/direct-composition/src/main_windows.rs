@@ -194,7 +194,7 @@ struct Notifier {
 }
 
 impl api::RenderNotifier for Notifier {
-    fn clone(&self) -> Box<api::RenderNotifier> {
+    fn clone(&self) -> Box<dyn api::RenderNotifier> {
         Box::new(Clone::clone(self))
     }
 

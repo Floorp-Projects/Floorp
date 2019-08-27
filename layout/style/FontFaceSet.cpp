@@ -205,7 +205,7 @@ void FontFaceSet::ParseFontShorthandForMatching(
     const nsAString& aFont, RefPtr<SharedFontList>& aFamilyList,
     FontWeight& aWeight, FontStretch& aStretch, FontSlantStyle& aStyle,
     ErrorResult& aRv) {
-  StyleComputedFontStyleDescriptor style;
+  auto style = StyleComputedFontStyleDescriptor::Normal();
   float stretch;
   float weight;
 

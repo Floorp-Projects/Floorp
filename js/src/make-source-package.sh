@@ -129,6 +129,7 @@ case $cmd in
 
     ${MKDIR} -p ${tgtpath}/.cargo
     cp -pPR \
+        ${TOPSRCDIR}/.cargo/config \
         ${TOPSRCDIR}/.cargo/config.in \
         ${tgtpath}/.cargo/
 

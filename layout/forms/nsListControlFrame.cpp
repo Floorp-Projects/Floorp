@@ -32,6 +32,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/TextEvents.h"
 #include <algorithm>
 
@@ -120,7 +121,7 @@ nsListControlFrame::~nsListControlFrame() { mComboboxFrame = nullptr; }
 
 static bool ShouldFireDropDownEvent() {
   return (XRE_IsContentProcess() &&
-          Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) ||
+          StaticPrefs::browser_tabs_remote_desktopbehavior()) ||
          Preferences::GetBool("dom.select_popup_in_parent.enabled", false);
 }
 
