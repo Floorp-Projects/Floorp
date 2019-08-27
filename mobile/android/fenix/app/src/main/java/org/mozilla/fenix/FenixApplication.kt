@@ -66,8 +66,6 @@ open class FenixApplication : Application() {
             return
         }
 
-        setupPush()
-
         // Make sure the engine is initialized and ready to use.
         components.core.engine.warmUp()
 
@@ -100,12 +98,7 @@ open class FenixApplication : Application() {
             components.analytics.metrics.start()
         }
 
-        // Sets the PushFeature as the singleton instance for push messages to go to.
-        // We need the push feature setup here to deliver messages in the case where the service
-        // starts up the app first.
-        if (FeatureFlags.sendTabEnabled && components.backgroundServices.pushConfig != null) {
-            PushProcessor.install(components.backgroundServices.push)
-        }
+        setupPush()
     }
 
     private fun registerRxExceptionHandling() {
@@ -184,10 +177,18 @@ open class FenixApplication : Application() {
     }
 
     private fun setupPush() {
-        components
-            .backgroundServices
-            .push
-            .initialize()
+        // Sets the PushFeature as the singleton instance for push messages to go to.
+        // We need the push feature setup here to deliver messages in the case where the service
+        // starts up the app first.
+        if (FeatureFlags.sendTabEnabled && components.backgroundServices.pushConfig != null) {
+            val push = components.backgroundServices.push
+
+            // Install the AutoPush singleton to receive messages.
+            PushProcessor.install(push)
+
+            // Initialize the service. This could potentially be done in a coroutine in the future.
+            push.initialize()
+        }
     }
 
     private fun setupCrashReporting() {
