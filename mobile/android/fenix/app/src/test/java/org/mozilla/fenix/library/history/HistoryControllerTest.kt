@@ -10,20 +10,27 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
-class HistoryInteractorTest {
+class HistoryControllerTest {
+
+    private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
+    private val store: HistoryStore = mockk(relaxed = true)
+    private val state: HistoryState = mockk(relaxed = true)
+
+    @Before
+    fun setUp() {
+        every { store.state } returns state
+    }
 
     @Test
     fun onPressHistoryItemInNormalMode() {
         var historyItemReceived: HistoryItem? = null
-        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-        val store: HistoryStore = mockk()
-        val state: HistoryState = mockk()
-        every { store.state } returns state
+
         every { state.mode } returns HistoryState.Mode.Normal
 
-        val interactor = HistoryInteractor(
+        val controller = DefaultHistoryController(
             store,
             { historyItemReceived = it },
             mockk(),
@@ -31,19 +38,15 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.open(historyItem)
+        controller.handleOpen(historyItem)
         assertEquals(historyItem, historyItemReceived)
     }
 
     @Test
     fun onPressHistoryItemInEditMode() {
-        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-        val store: HistoryStore = mockk(relaxed = true)
-        val state: HistoryState = mockk()
-        every { store.state } returns state
         every { state.mode } returns HistoryState.Mode.Editing(setOf())
 
-        val interactor = HistoryInteractor(
+        val controller = DefaultHistoryController(
             store,
             { },
             mockk(),
@@ -51,7 +54,7 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.select(historyItem)
+        controller.handleSelect(historyItem)
 
         verify {
             store.dispatch(HistoryAction.AddItemForRemoval(historyItem))
@@ -60,13 +63,9 @@ class HistoryInteractorTest {
 
     @Test
     fun onPressSelectedHistoryItemInEditMode() {
-        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-        val store: HistoryStore = mockk(relaxed = true)
-        val state: HistoryState = mockk()
-        every { store.state } returns state
         every { state.mode } returns HistoryState.Mode.Editing(setOf(historyItem))
 
-        val interactor = HistoryInteractor(
+        val controller = DefaultHistoryController(
             store,
             { },
             mockk(),
@@ -74,7 +73,7 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.deselect(historyItem)
+        controller.handleDeselect(historyItem)
 
         verify {
             store.dispatch(HistoryAction.RemoveItemForRemoval(historyItem))
@@ -83,24 +82,18 @@ class HistoryInteractorTest {
 
     @Test
     fun onBackPressedInNormalMode() {
-        val store: HistoryStore = mockk(relaxed = true)
-        val state: HistoryState = mockk()
-        every { store.state } returns state
         every { state.mode } returns HistoryState.Mode.Normal
 
-        val interactor = HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        assertFalse(interactor.onBackPressed())
+        val controller = DefaultHistoryController(store, mockk(), mockk(), mockk(), mockk())
+        assertFalse(controller.handleBackPressed())
     }
 
     @Test
     fun onBackPressedInEditMode() {
-        val store: HistoryStore = mockk(relaxed = true)
-        val state: HistoryState = mockk()
-        every { store.state } returns state
         every { state.mode } returns HistoryState.Mode.Editing(setOf())
 
-        val interactor = HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        assertTrue(interactor.onBackPressed())
+        val controller = DefaultHistoryController(store, mockk(), mockk(), mockk(), mockk())
+        assertTrue(controller.handleBackPressed())
 
         verify {
             store.dispatch(HistoryAction.ExitEditMode)
@@ -110,28 +103,28 @@ class HistoryInteractorTest {
     @Test
     fun onModeSwitched() {
         var menuInvalidated = false
-        val interactor = HistoryInteractor(
+        val controller = DefaultHistoryController(
             mockk(),
             mockk(),
             mockk(),
             { menuInvalidated = true },
             mockk()
         )
-        interactor.onModeSwitched()
+        controller.handleModeSwitched()
         assertEquals(true, menuInvalidated)
     }
 
     @Test
     fun onDeleteAll() {
         var deleteAllDialogShown = false
-        val interactor = HistoryInteractor(
+        val controller = DefaultHistoryController(
             mockk(),
             mockk(),
             { deleteAllDialogShown = true },
             mockk(),
             mockk()
         )
-        interactor.onDeleteAll()
+        controller.handleDeleteAll()
         assertEquals(true, deleteAllDialogShown)
     }
 
@@ -140,15 +133,14 @@ class HistoryInteractorTest {
         var itemsToDelete: Set<HistoryItem>? = null
         val historyItem = HistoryItem(0, "title", "url", 0.toLong())
         val newHistoryItem = HistoryItem(1, "title", "url", 0.toLong())
-        val interactor =
-            HistoryInteractor(
+        val controller = DefaultHistoryController(
                 mockk(),
                 mockk(),
                 mockk(),
                 mockk(),
                 { itemsToDelete = it }
             )
-        interactor.onDeleteSome(setOf(historyItem, newHistoryItem))
+        controller.handleDeleteSome(setOf(historyItem, newHistoryItem))
         assertEquals(itemsToDelete, setOf(historyItem, newHistoryItem))
     }
 }

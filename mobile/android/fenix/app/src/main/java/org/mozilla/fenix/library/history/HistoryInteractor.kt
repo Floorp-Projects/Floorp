@@ -9,42 +9,33 @@ package org.mozilla.fenix.library.history
  * Provides implementations for the HistoryViewInteractor
  */
 class HistoryInteractor(
-    private val store: HistoryStore,
-    private val openToBrowser: (item: HistoryItem) -> Unit,
-    private val displayDeleteAll: () -> Unit,
-    private val invalidateOptionsMenu: () -> Unit,
-    private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
+    private val historyController: HistoryController
 ) : HistoryViewInteractor {
     override fun open(item: HistoryItem) {
-        openToBrowser(item)
+        historyController.handleOpen(item)
     }
 
     override fun select(item: HistoryItem) {
-        store.dispatch(HistoryAction.AddItemForRemoval(item))
+        historyController.handleSelect(item)
     }
 
     override fun deselect(item: HistoryItem) {
-        store.dispatch(HistoryAction.RemoveItemForRemoval(item))
+        historyController.handleDeselect(item)
     }
 
     override fun onBackPressed(): Boolean {
-        return if (store.state.mode is HistoryState.Mode.Editing) {
-            store.dispatch(HistoryAction.ExitEditMode)
-            true
-        } else {
-            false
-        }
+        return historyController.handleBackPressed()
     }
 
     override fun onModeSwitched() {
-        invalidateOptionsMenu.invoke()
+        historyController.handleModeSwitched()
     }
 
     override fun onDeleteAll() {
-        displayDeleteAll.invoke()
+        historyController.handleDeleteAll()
     }
 
     override fun onDeleteSome(items: Set<HistoryItem>) {
-        deleteHistoryItems.invoke(items)
+        historyController.handleDeleteSome(items)
     }
 }

@@ -60,12 +60,15 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
                 )
             )
         }
-        historyInteractor = HistoryInteractor(
+        val historyController: HistoryController = DefaultHistoryController(
             historyStore,
             ::openItem,
             ::displayDeleteAllDialog,
             ::invalidateOptionsMenu,
             ::deleteHistoryItems
+        )
+        historyInteractor = HistoryInteractor(
+            historyController
         )
         historyView = HistoryView(view.historyLayout, historyInteractor)
 
