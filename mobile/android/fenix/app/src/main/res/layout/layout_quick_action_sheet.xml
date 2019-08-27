@@ -2,18 +2,23 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/quick_action_sheet"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?foundation"
-    android:orientation="vertical">
+    android:background="?foundation">
 
     <View
+        android:id="@+id/quick_action_sheet_faded_handle"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?attr/neutralFaded"
-        android:focusable="false" />
+        android:focusable="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/quick_action_sheet_handle"
@@ -22,109 +27,115 @@
         android:background="@null"
         android:contentDescription="@string/quick_action_sheet_handle"
         android:paddingTop="7dp"
-        android:src="@drawable/ic_drawer_pull_tab" />
+        android:src="@drawable/ic_drawer_pull_tab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/quick_action_sheet_faded_handle" />
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/quick_action_buttons_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="12dp"
+        android:background="@null"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/quick_action_sheet_handle">
 
-        <LinearLayout
-            android:id="@+id/quick_action_buttons_layout"
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/quick_action_share"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="12dp"
-            android:background="@null"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/quick_action_icon_share"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_share"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp" />
 
-            <Button
-                android:id="@+id/quick_action_share"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/quick_action_icon_share"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_share"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp" />
+        <Button
+            android:id="@+id/quick_action_downloads"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/library_icon_downloads_circle_background"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_download"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
-            <Button
-                android:id="@+id/quick_action_downloads"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/library_icon_downloads_circle_background"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_download"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp"
-                android:visibility="gone" />
+        <Button
+            android:id="@+id/quick_action_bookmark"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/bookmark_two_state"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_bookmark"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp" />
 
-            <Button
-                android:id="@+id/quick_action_bookmark"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/bookmark_two_state"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_bookmark"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp" />
+        <Button
+            android:id="@+id/quick_action_appearance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/quick_action_icon_appearance"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_read_appearance"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
-            <Button
-                android:id="@+id/quick_action_appearance"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/quick_action_icon_appearance"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_read_appearance"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp"
-                android:visibility="gone" />
+        <Button
+            android:id="@+id/quick_action_open_app_link"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/library_icon_app_links_circle_background"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_open_app_link"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
-            <Button
-                android:id="@+id/quick_action_open_app_link"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/library_icon_app_links_circle_background"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_open_app_link"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp"
-                android:visibility="gone" />
+        <Button
+            android:id="@+id/quick_action_read"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/reader_two_state"
+            android:drawablePadding="5dp"
+            android:text="@string/quick_action_read"
+            android:textAllCaps="false"
+            android:textColor="?primaryText"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
 
-            <Button
-                android:id="@+id/quick_action_read"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/reader_two_state"
-                android:drawablePadding="5dp"
-                android:text="@string/quick_action_read"
-                android:textAllCaps="false"
-                android:textColor="?primaryText"
-                android:textSize="12sp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <View
-            android:id="@+id/overlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:alpha="0.0"
-            android:background="?foundation" />
-    </FrameLayout>
-</LinearLayout>
+    <View
+        android:id="@+id/quick_action_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0.0"
+        android:background="?foundation"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/quick_action_buttons_layout" />
+</androidx.constraintlayout.widget.ConstraintLayout>

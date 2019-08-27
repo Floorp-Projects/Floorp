@@ -2,116 +2,111 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/item_collection"
-        android:layout_width="match_parent"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_collection"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/collection_home_list_row_background"
+    android:clickable="true"
+    android:clipToPadding="false"
+    android:elevation="5dp"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/collection_icon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/collection_home_list_row_background"
-        android:clickable="true"
-        android:clipToPadding="false"
-        android:elevation="5dp"
-        android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground">
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_tab_collection"
+        android:tint="@null"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/collection_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:gravity="start"
+        android:maxLines="1"
+        android:minLines="1"
+        android:textAppearance="@style/Header16TextStyle"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@id/chevron"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/collection_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@tools:sample/lorem/random" />
 
-        <ImageView
-                android:id="@+id/collection_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_tab_collection"
-                android:tint="@null"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/chevron"
+        android:layout_width="10dp"
+        android:layout_height="6dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/ic_chevron"
+        android:contentDescription="@string/tab_menu"
+        app:layout_constraintEnd_toStartOf="@+id/collection_share_button"
+        app:layout_constraintStart_toEndOf="@+id/collection_title"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-                android:id="@+id/collection_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="8dp"
-                android:ellipsize="end"
-                android:gravity="start"
-                android:maxLines="1"
-                android:minLines="1"
-                android:textAppearance="@style/Header16TextStyle"
-                app:layout_constrainedWidth="true"
-                app:layout_constraintEnd_toStartOf="@id/chevron"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintHorizontal_chainStyle="packed"
-                app:layout_constraintStart_toEndOf="@+id/collection_icon"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="@tools:sample/lorem/random" />
+    <TextView
+        android:id="@+id/collection_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:minLines="2"
+        android:textAppearance="@style/SubtitleTextStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/collection_share_button"
+        app:layout_constraintStart_toStartOf="@id/collection_title"
+        app:layout_constraintTop_toBottomOf="@id/collection_title"
+        tools:text="@tools:sample/lorem/random" />
 
-        <ImageView
-                android:id="@+id/chevron"
-                android:layout_width="10dp"
-                android:layout_height="6dp"
-                android:layout_marginTop="24dp"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/ic_chevron"
-                android:contentDescription="@string/tab_menu"
-                app:layout_constraintEnd_toStartOf="@+id/collection_share_button"
-                app:layout_constraintStart_toEndOf="@+id/collection_title"
-                app:layout_constraintTop_toTopOf="parent" />
+    <ImageButton
+        android:id="@+id/collection_share_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/share_button_content_description"
+        android:src="@drawable/ic_hollow_share"
+        app:layout_constraintBottom_toBottomOf="@id/collection_icon"
+        app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
+        app:layout_constraintTop_toTopOf="@id/collection_icon" />
 
-        <TextView
-                android:id="@+id/collection_description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:minLines="2"
-                android:textAppearance="@style/SubtitleTextStyle"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/collection_share_button"
-                app:layout_constraintStart_toStartOf="@id/collection_title"
-                app:layout_constraintTop_toBottomOf="@id/collection_title"
-                tools:text="@tools:sample/lorem/random" />
+    <ImageButton
+        android:id="@+id/collection_overflow_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/collection_menu_button_content_description"
+        android:src="@drawable/ic_menu"
+        app:layout_constraintBottom_toBottomOf="@id/collection_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/collection_icon" />
 
-        <ImageButton
-                android:id="@+id/collection_share_button"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/share_button_content_description"
-                android:src="@drawable/ic_hollow_share"
-                app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
-                app:layout_constraintBottom_toBottomOf="@id/collection_icon"
-                app:layout_constraintTop_toTopOf="@id/collection_icon" />
-
-        <ImageButton
-                android:id="@+id/collection_overflow_button"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/collection_menu_button_content_description"
-                android:src="@drawable/ic_menu"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/collection_icon"
-                app:layout_constraintBottom_toBottomOf="@id/collection_icon"/>
-
-        <View
-                android:id="@+id/selected_border"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:alpha="0"
-                android:background="@drawable/session_border"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+    <View
+        android:id="@+id/selected_border"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0"
+        android:background="@drawable/session_border"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

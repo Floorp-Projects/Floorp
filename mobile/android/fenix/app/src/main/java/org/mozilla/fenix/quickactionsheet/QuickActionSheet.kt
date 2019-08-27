@@ -10,7 +10,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
@@ -29,7 +29,7 @@ class QuickActionSheet @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
     defStyleRes: Int = 0
-) : LinearLayout(context, attrs, defStyle, defStyleRes) {
+) : ConstraintLayout(context, attrs, defStyle, defStyleRes) {
 
     private val scope = MainScope()
 

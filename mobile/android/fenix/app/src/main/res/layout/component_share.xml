@@ -26,103 +26,97 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="?above"
         android:background="@drawable/bottom_sheet_dialog_fragment_background"
+        android:backgroundTint="?above"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/send_tab_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="account_header,account_devices_recyclerview,divider_line" />
+
+        <TextView
+            android:id="@+id/account_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:singleLine="true"
+            android:text="@string/share_device_subheader"
+            android:textAllCaps="true"
+            android:textColor="?secondaryText"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <org.mozilla.fenix.share.AccountDevicesShareRecyclerView
+            android:id="@+id/account_devices_recyclerview"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/account_header" />
 
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/send_tab_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:constraint_referenced_ids="account_header,account_devices_recyclerview,divider_line"/>
+        <View
+            android:id="@+id/divider_line"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="?neutralFaded"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/account_devices_recyclerview" />
 
-            <TextView
-                android:text="@string/share_device_subheader"
-                android:textAllCaps="true"
-                android:singleLine="true"
-                android:textColor="?secondaryText"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/account_header"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/link_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:singleLine="true"
+            android:text="@string/share_link_subheader"
+            android:textAllCaps="true"
+            android:textColor="?secondaryText"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/divider_line" />
 
-            <org.mozilla.fenix.share.AccountDevicesShareRecyclerView
-                android:id="@+id/account_devices_recyclerview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:clipToPadding="false"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/account_header"/>
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="76dp"
+            android:layout_height="37dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/link_header" />
 
-            <View
-                android:id="@+id/divider_line"
-                android:layout_width="fill_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:background="?neutralFaded"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/account_devices_recyclerview"/>
+        <org.mozilla.fenix.share.AppShareRecyclerView
+            android:id="@+id/intent_handler_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/link_header" />
 
-            <TextView
-                android:text="@string/share_link_subheader"
-                android:textAllCaps="true"
-                android:singleLine="true"
-                android:textColor="?secondaryText"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginStart="16dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:id="@+id/link_header"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/divider_line"/>
-
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                android:layout_width="76dp"
-                android:layout_height="37dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                app:layout_constraintTop_toBottomOf="@+id/link_header"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
-
-            <org.mozilla.fenix.share.AppShareRecyclerView
-                android:id="@+id/intent_handler_recyclerview"
-                android:paddingStart="16dp"
-                android:paddingEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:clipToPadding="false"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/link_header"/>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
