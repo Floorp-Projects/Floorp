@@ -142,11 +142,14 @@ class TaskBuilder(object):
         )
 
     def craft_test_pr_task(self, variant):
-        command = 'test{}UnitTest'.format(variant.name)
+        # upload coverage only once, if the variant is arm64
+        test_gradle_command = \
+            '-Pcoverage jacocoGeckoNightlyDebugTestReport && automation/taskcluster/upload_coverage_report.sh'
+
         return self._craft_clean_gradle_task(
             name='test: {}'.format(variant.name),
             description='Building and testing variant {}'.format(variant.name),
-            gradle_task=command,
+            gradle_task=test_gradle_command,
             treeherder={
                 'groupSymbol': variant.build_type,
                 'jobKind': 'test',
