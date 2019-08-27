@@ -723,7 +723,7 @@ body {
   margin-inline-end: 4px;
 }
 
-.accessibility-text-label-check .icon.fail {
+.accessibility-text-label-check .icon.FAIL {
   fill: var(--theme-icon-error-color);
 }
 
