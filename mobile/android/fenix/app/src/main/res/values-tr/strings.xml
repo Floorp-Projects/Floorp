@@ -75,6 +75,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Bağlantıyı panodan al</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Ara</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Web’de ara</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Ayarlar</string>
@@ -206,6 +212,8 @@
     <string name="preference_usage_data">Kullanım verileri ve teknik veriler</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">%1$s tarayıcınızı iyileştirmemize yardımcı olmak için tarayıcınızla ilgili performans, kullanım, donanım ve özelleştirme verilerini Mozilla ile paylaşır</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Deneyler</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Çökme habercisi</string>
     <!-- Preference switch for Mozilla location service -->
@@ -483,6 +491,9 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Kapalı</string>
 
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Sizin için önemli olan şeyleri toplayın. Başlamak için açık sekmeleri yeni bir koleksiyona kaydedin.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Koleksiyonlar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -557,6 +568,8 @@
     <string name="snackbar_tab_deleted">Sekme silindi</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Sekmeler silindi</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Gizli sekmeler silindi</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">GERİ AL</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -599,16 +612,44 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adres</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Geçmiş</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d sayfa</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">Koleksiyonlar</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d koleksiyon</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Çerezler</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Çoğu sitedeki oturumlarınız kapanacak</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Önbelleğe alınmış resim ve dosyalar</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Depolama alanını boşaltır</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Site izinleri</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Gezinti verilerini sil</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Çıkarken gezinti verilerini sil</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Ana menüden &quot;Çık&quot;ı seçtiğinizde gezinti verilerini otomatik olarak siler</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Çık</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Bu işlem tüm gezinti verilerinizi silecektir.</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">Seçili gezinti verilerini silmek istediğinizden emin misiniz?</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s seçili gezinti verilerini silecek.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">İptal</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Sil</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
@@ -630,10 +671,18 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s’dan en iyi şekilde yararlanın.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Bu telefondaki başka bir Firefox tarayıcısına %s olarak giriş yapmışsınız. Bu hesapla giriş yapmak ister misiniz?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Evet, giriş yap</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Giriş yapılıyor…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Firefox’a giriş yap</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Giriş yapma</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync açık</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -702,6 +751,8 @@
     <string name="preference_enhanced_tracking_protection">Gelişmiş izlenme koruması</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Takip edilmeden gezinin</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Verileriniz sizde kalsın. %s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Daha fazla bilgi al</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -710,10 +761,12 @@
     <string name="preference_enhanced_tracking_protection_standard_description">Dengeli koruma ve performans.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sıkı</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Daha güçlü koruma, ama bazı siteler ve içerikler düzgün çalışmayabilir.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">Engelleniyor</string>
+    <string name="enhanced_tracking_protection_blocked">Engellenenler</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">Engellenmiyor</string>
+    <string name="enhanced_tracking_protection_allowed">İzin verilenler</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sosyal medya takipçileri</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
@@ -724,6 +777,8 @@
     <string name="etp_fingerprinters_title">Parmak izi toplayıcılar</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Takip amaçlı içerikler</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Kalkan renk değiştirdiğinde %s bir sitedeki takipçileri engelliyor demektir. Neyin engellendiğini görmek için kalkana dokunun.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bu sitede korumalar AÇIK</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

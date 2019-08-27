@@ -25,11 +25,7 @@
          %1$s elimina tu historial de búsqueda y navegación cuando salís de la aplicación o cerrás todas las pestañas privadas. Si bien esto no te hace anónimo a los sitios web o tu proveedor de servicios de Internet, 
         resulta más fácil mantener privado lo que hacés en línea de cualquier otra persona que use este dispositivo.  \n\n Mitos comunes sobre la navegación
         privada
-    
-     
-        
-        
-    </string>
+  </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
@@ -227,6 +223,10 @@
     <string name="preference_usage_data">Uso y datos técnicos</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Comparte datos de rendimiento, uso, hardware y personalizaciones de tu navegador con Mozilla para ayudarnos a mejorar %1$s</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experimentos</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Permite que Mozilla instale y recopile datos para funciones experimentales</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Informe de fallos</string>
 
@@ -593,6 +593,8 @@
     <string name="snackbar_tab_deleted">Pestaña eliminada</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Pestañas eliminadas</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Pestañas privadas eliminadas</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -636,16 +638,42 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d direcciones</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historial</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d páginas</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">Colecciones</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d colecciones</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Se cerrará la sesión en la mayor parte de los sitios</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Imágenes y archivos en caché</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Libera espacio de almacenamiento</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Permisos del sitio</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Eliminar datos de navegación</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Eliminar datos de navegación al salir</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Elimina automáticamente los datos de navegación cuando seleccionás &quot;Salir&quot; en el menú principal</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Salir</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Esto eliminará todos tus datos de navegación.</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">¿Estás seguro de que querés eliminar los datos de navegación seleccionados?</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s va a eliminar los datos de navegación seleccionados.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Cancelar</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -765,9 +793,9 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Mayor protección, pero puede causar que algunos sitios o contenido no se carguen.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">Bloqueo</string>
+    <string name="enhanced_tracking_protection_blocked">Bloqueado</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">No bloquear</string>
+    <string name="enhanced_tracking_protection_allowed">Permitido</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Rastreadores de redes sociales</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->

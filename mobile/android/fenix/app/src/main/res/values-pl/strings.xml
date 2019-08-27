@@ -219,6 +219,10 @@
     <string name="preference_usage_data">Dane techniczne i o użytkowaniu</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Udostępnia Mozilli dane o wydajności, użytkowaniu, modyfikacjach przeglądarki oraz o sprzęcie, na którym działa, ułatwiając nam ulepszanie programu %1$s</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Eksperymenty</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Pozwala Mozilli instalować i zbierać dane dla funkcji eksperymentalnych</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Zgłaszanie awarii</string>
     <!-- Preference switch for Mozilla location service -->
@@ -574,6 +578,8 @@
     <string name="snackbar_tab_deleted">Usunięto kartę</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Usunięto karty</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Usunięto prywatne karty</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">Cofnij</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -617,16 +623,42 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresy: %d</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historia</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Strony: %d</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">Kolekcje</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">Kolekcje: %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Ciasteczka</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Spowoduje wylogowanie z większości stron</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Obrazy i pliki w pamięci podręcznej</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Zwalnia miejsce na urządzeniu</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Uprawnienia witryn</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Usuń historię przeglądania</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Usuwanie historii przeglądania podczas wyłączania programu</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Automatycznie usuwa historię przeglądania po wybraniu „Zakończ” z głównego menu</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Zakończ</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Spowoduje to usunięcie całej historii przeglądania.</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">Czy na pewno usunąć wybraną historię przeglądania?</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s usunie wybraną historię przeglądania.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Anuluj</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -745,9 +777,9 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Silniejsza ochrona, ale może powodować niepoprawne działanie niektórych stron.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">Blokowanie</string>
+    <string name="enhanced_tracking_protection_blocked">Blokowane</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">Bez blokowania</string>
+    <string name="enhanced_tracking_protection_allowed">Dopuszczone</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Elementy śledzące serwisów społecznościowych</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->

@@ -226,6 +226,10 @@
     <string name="preference_usage_data">使用和技术数据</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">与 Mozilla 分享您使用浏览器的工作性能、使用方式、硬件设备和有关自定义的数据，帮助我们改进 %1$s，让它变得更好</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">实验</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">允许 Mozilla 安装和收集实验性功能的数据</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">崩溃报告器</string>
     <!-- Preference switch for Mozilla location service -->
@@ -603,6 +607,8 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">已删除标签页</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">隐私标签页已删除</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">撤销</string>
 
@@ -650,6 +656,8 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 条地址</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">历史记录</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 页</string>
@@ -660,13 +668,31 @@
     <string name="preferences_delete_browsing_data_collections_subtitle">%d 个收藏集</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">您将退出登录大多数网站</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">缓存的图像和文件</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">释放存储空间</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">站点权限</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">删除浏览数据</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">退出时删除浏览数据</string>
+
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">从主菜单中选择“退出”时，自动删除浏览数据</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">退出</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">这将删除所有浏览数据。</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">您确定要删除选定的浏览数据吗？</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s 将删除选定的浏览数据。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">取消</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -780,6 +806,10 @@
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">更强大的保护，但可能导致某些网站异常。</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">已拦截</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">已允许</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">社交媒体跟踪器</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->

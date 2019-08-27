@@ -223,6 +223,10 @@
     <string name="preference_usage_data">使用與技術資料</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">分享您瀏覽器的效能、使用方式、硬體設備、與自訂功能的資料給 Mozilla 以幫助我們讓 %1$s 變得更好</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">實驗</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">允許 Mozilla 安裝實驗性功能並收集相關資料</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">程式錯誤回報員</string>
     <!-- Preference switch for Mozilla location service -->
@@ -595,6 +599,8 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">已刪除分頁</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">已刪除隱私分頁</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">還原</string>
 
@@ -643,16 +649,42 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 筆網址</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">瀏覽紀錄</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d 頁</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">收藏集</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d 個收藏集</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">您將從大多數網站登出</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">快取圖片與檔案</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">可清理出儲存空間</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">網站權限</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">刪除瀏覽資料</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">離開時刪除瀏覽資料</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">當您點擊主選單當中的「離開」時，自動刪除瀏覽資料</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">離開</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">將刪除您的所有瀏覽資料。</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">您確定要刪除選擇的瀏覽資料嗎？</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s 將刪除選擇的瀏覽資料。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">取消</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -767,9 +799,9 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">保護更強大，但可能會導致某些網站或內容故障。</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">封鎖</string>
+    <string name="enhanced_tracking_protection_blocked">已封鎖</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">不封鎖</string>
+    <string name="enhanced_tracking_protection_allowed">已允許</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">社交媒體追蹤器</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
