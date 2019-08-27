@@ -39,6 +39,7 @@ pref_groups = [
     'dom',
     'editor',
     'extensions',
+    'findbar',
     'fission',
     'font',
     'full_screen_api',
