@@ -7,3 +7,4 @@ These linked pages contain design documents for the DOM implementation in Gecko.
    :maxdepth: 1
 
    Fission
+   workersAndStorage/index
