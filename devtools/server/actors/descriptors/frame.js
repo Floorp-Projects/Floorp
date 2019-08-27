@@ -72,10 +72,14 @@ const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
   },
 
   form() {
+    const url = this._browsingContext.currentWindowGlobal
+      ? this._browsingContext.currentWindowGlobal.documentURI.displaySpec
+      : null;
     return {
       actor: this.actorID,
       id: this.id,
-      parentId: this._browsingContext.parent
+      url,
+      parentID: this._browsingContext.parent
         ? this._browsingContext.parent.id
         : null,
     };
