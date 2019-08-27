@@ -2,7 +2,7 @@
 
 # EngineSession
 
-`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
+`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L28)
 
 Class representing a single engine session.
 
@@ -14,6 +14,7 @@ In browsers usually a session corresponds to a tab.
 |---|---|
 | [LoadUrlFlags](-load-url-flags/index.md) | `class LoadUrlFlags`<br>Describes a combination of flags provided to the engine when loading a URL. |
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe this engine session. |
+| [SafeBrowsingPolicy](-safe-browsing-policy/index.md) | `enum class SafeBrowsingPolicy`<br>Represents a safe browsing policy, which is indicates with type of site should be alerted to user as possible harmful. |
 | [TrackingProtectionPolicy](-tracking-protection-policy/index.md) | `open class TrackingProtectionPolicy`<br>Represents a tracking protection policy, which is a combination of tracker categories that should be blocked. Unless otherwise specified, a [TrackingProtectionPolicy](-tracking-protection-policy/index.md) is applicable to all session types (see [TrackingProtectionPolicyForSessionTypes](-tracking-protection-policy-for-session-types/index.md)). |
 | [TrackingProtectionPolicyForSessionTypes](-tracking-protection-policy-for-session-types/index.md) | `class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)<br>Subtype of [TrackingProtectionPolicy](-tracking-protection-policy/index.md) to control the type of session this policy should be applied to. By default, a policy will be applied to all sessions. |
 

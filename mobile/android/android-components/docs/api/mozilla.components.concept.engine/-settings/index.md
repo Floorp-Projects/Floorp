@@ -2,7 +2,7 @@
 
 # Settings
 
-`abstract class Settings` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L19)
+`abstract class Settings` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L20)
 
 Holds settings of an engine or session. Concrete engine
 implementations define how these settings are applied i.e.
@@ -38,6 +38,7 @@ whether a setting is applied on an engine or session instance.
 | [preferredColorScheme](preferred-color-scheme.md) | `open var preferredColorScheme: `[`PreferredColorScheme`](../../mozilla.components.concept.engine.mediaquery/-preferred-color-scheme/index.md)<br>Setting to alert the content that the user prefers a particular theme. This affects the [@mediaprefers-color-scheme](#) query. |
 | [remoteDebuggingEnabled](remote-debugging-enabled.md) | `open var remoteDebuggingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not remote debugging is enabled. |
 | [requestInterceptor](request-interceptor.md) | `open var requestInterceptor: `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md)`?`<br>Setting to intercept and override requests. |
+| [safeBrowsingPolicy](safe-browsing-policy.md) | `open var safeBrowsingPolicy: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`SafeBrowsingPolicy`](../-engine-session/-safe-browsing-policy/index.md)`>`<br>Setting to control tracking protection. |
 | [supportMultipleWindows](support-multiple-windows.md) | `open var supportMultipleWindows: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not multiple windows are supported. |
 | [suspendMediaWhenInactive](suspend-media-when-inactive.md) | `open var suspendMediaWhenInactive: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether media should be suspended when the session is inactive. |
 | [testingModeEnabled](testing-mode-enabled.md) | `open var testingModeEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not testing mode is enabled. |

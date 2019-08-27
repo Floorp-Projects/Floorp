@@ -2,7 +2,7 @@
 
 # RECOMMENDED
 
-`RECOMMENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L179)
+`RECOMMENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L211)
 
 ### Inherited Properties
 

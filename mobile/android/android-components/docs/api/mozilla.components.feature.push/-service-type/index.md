@@ -4,7 +4,7 @@
 
 `enum class ServiceType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L328)
 
-Supported push services.
+Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging.
 
 ### Enum Values
 

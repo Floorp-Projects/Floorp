@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-icons**
   * Ensures icons are not cached on the disk in private sessions.
 
+* **support-ktx**
+  * Added property delegates to work with `SharedPreferences`.
+
 # 10.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v9.0.0...v10.0.0)
@@ -50,10 +53,11 @@ permalink: /changelog/
   * Fixed issue [4191](https://github.com/mozilla-mobile/android-components/issues/4191) where the `recommended()` tracking category was not getting applied for `SystemEngine`.
 
 * **concept-engine**, **browser-engine-gecko-nightly** and **browser-engine-gecko-beta**:
-  * ⚠️ **This is a breaking change**: `TrackingProtectionPolicy` doesn't have a `safeBrowsingCategories` anymore, now safe browsing is a completely separate setting on the Engine level, to set a to change the default value of `SafeBrowsingPolicy.RECOMMENDED` you have set it through `engine.settings.safeBrowsingPolicy`,
-  * this decouples the tracking protection API and safe browsing from each other, this way you can change the tracking protection policy without affecting your safe browsing policy as described in this issue [#4190](https://github.com/mozilla-mobile/android-components/issues/4190).
-  * ⚠️ **Alert for SystemEngine consumers**: The safe browsing API is not yet supported on this engine, this will be covered on [#4206](https://github.com/mozilla-mobile/android-components/issues/4206), if you use this API you will get a `UnsupportedSettingException`, in the meantime you can use a manifest tag to activate it.
-  ```kotlin
+  * ⚠️ **This is a breaking change**: `TrackingProtectionPolicy` does not have a `safeBrowsingCategories` anymore, Safe Browsing is now a separate setting on the Engine level. To change the default value of `SafeBrowsingPolicy.RECOMMENDED` you have set it through `engine.settings.safeBrowsingPolicy`.
+  * This decouples the tracking protection API and safe browsing from each other so you can change the tracking protection policy without affecting your safe browsing policy as described in this issue [#4190](https://github.com/mozilla-mobile/android-components/issues/4190).
+  * ⚠️ **Alert for SystemEngine consumers**: The Safe Browsing API is not yet supported on this engine, this will be covered on [#4206](https://github.com/mozilla-mobile/android-components/issues/4206). If you use this API you will get a `UnsupportedSettingException`, however you can use a manifest tag to activate it.
+
+  ```xml
     <manifest>
     <application>
         <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing"
@@ -61,7 +65,7 @@ permalink: /changelog/
         ...
      </application>
     </manifest>
-  ```kotlin
+  ```
 
 # 9.0.0
 
