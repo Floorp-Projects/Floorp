@@ -6775,6 +6775,14 @@
   value: false
   mirror: always
 
+# Whether context menus should only appear on mouseup instead of mousedown,
+# on OSes where they normally appear on mousedown (macOS, *nix).
+# Note: ignored on Windows (context menus always use mouseup).
+- name: ui.context_menus.after_mouseup
+  type: bool
+  value: false
+  mirror: always
+
 - name: ui.click_hold_context_menus.delay
   type: RelaxedAtomicInt32
   value: 500
