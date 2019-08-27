@@ -259,10 +259,17 @@
   line-height: 1.745em;
 }
 
-#urlbar:not(.hidden-focus)[focused="true"],
+/* Focus ring. */
+#urlbar:not(.megabar):not(.hidden-focus)[focused="true"],
 #searchbar:focus-within {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);
+}
+
+#urlbar[breakout]:not(.hidden-focus)[focused="true"] {
+  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
+              0 0 0 1px var(--toolbar-field-focus-border-color),
+              0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 %include ../shared/identity-block/identity-block.inc.css
