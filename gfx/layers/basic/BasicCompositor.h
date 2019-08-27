@@ -176,13 +176,15 @@ class BasicCompositor : public Compositor {
    *
    * When this returns true, the BasicCompositor will keep the
    * |mFullWindowRenderTarget| as an up-to-date copy of the entire rendered
-   * window.
+   * window. This copy is maintained in NormalDrawingDone().
    *
    * This will be true when either we are recording a profile with screenshots
    * enabled or the |LayerManagerComposite| has requested us to record frames
    * for the |CompositionRecorder|.
    */
   bool ShouldRecordFrames() const;
+
+  bool NeedToRecreateFullWindowRenderTarget() const;
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
