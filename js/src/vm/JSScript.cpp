@@ -3385,18 +3385,23 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint8(&haveFilename));
 
   if (haveFilename) {
-    const char* fn = ss->filename();
-    MOZ_TRY(xdr->codeCString(&fn));
-    // Note: If the decoder has an option, then the filename is defined by
-    // the CompileOption from the document.
-    MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), ss->filename());
-    if (mode == XDR_DECODE && !xdr->hasOptions() &&
-        !ss->setFilename(xdr->cx(), fn)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
+    XDRTranscodeString<char> chars;
 
-    // Note the content of sources decoded when recording or replaying.
+    if (mode == XDR_ENCODE) {
+      chars.construct<const char*>(ss->filename());
+    }
+    MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
+      // NOTE: If the decoder has an option, then the filename is defined by
+      // the CompileOption from the document.
+      if (!xdr->hasOptions()) {
+        if (!ss->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
+      }
+      MOZ_ASSERT(ss->filename());
+
+      // Note the content of sources decoded when recording or replaying.
       if (!MaybeNoteContentParse(xdr->cx(), ss)) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -3455,9 +3460,12 @@ bool ScriptSource::initFromOptions(JSContext* cx,
     MOZ_ASSERT(options.introductionType != nullptr);
     const char* filename =
         options.filename() ? options.filename() : "<unknown>";
-    filename_ = FormatIntroducedFilename(
+    UniqueChars formatted = FormatIntroducedFilename(
         cx, filename, options.introductionLineno, options.introductionType);
-    if (!filename_) {
+    if (!formatted) {
+      return false;
+    }
+    if (!setFilename(cx, std::move(formatted))) {
       return false;
     }
   } else if (options.filename()) {
@@ -3467,8 +3475,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   }
 
   if (options.introducerFilename()) {
-    introducerFilename_ = DuplicateString(cx, options.introducerFilename());
-    if (!introducerFilename_) {
+    if (!setIntroducerFilename(cx, options.introducerFilename())) {
       return false;
     }
   }
@@ -3477,9 +3484,32 @@ bool ScriptSource::initFromOptions(JSContext* cx,
 }
 
 bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
+  UniqueChars owned = DuplicateString(cx, filename);
+  if (!owned) {
+    return false;
+  }
+  return setFilename(cx, std::move(owned));
+}
+
+bool ScriptSource::setFilename(JSContext* cx, UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
-  filename_ = DuplicateString(cx, filename);
-  return filename_ != nullptr;
+  filename_ = std::move(filename);
+  return true;  // Subsequent patch will need this to be fallible.
+}
+
+bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
+  UniqueChars owned = DuplicateString(cx, filename);
+  if (!owned) {
+    return false;
+  }
+  return setIntroducerFilename(cx, std::move(owned));
+}
+
+bool ScriptSource::setIntroducerFilename(JSContext* cx,
+                                         UniqueChars&& filename) {
+  MOZ_ASSERT(!introducerFilename_);
+  introducerFilename_ = std::move(filename);
+  return true;  // Subsequent patch will need this to be fallible.
 }
 
 bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* displayURL) {
