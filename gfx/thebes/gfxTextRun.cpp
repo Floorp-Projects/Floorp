@@ -631,7 +631,7 @@ void gfxTextRun::Draw(Range aRange, gfx::Point aPt,
     ShrinkToLigatureBoundaries(&ligatureRange);
 
     bool drawPartial =
-        (aParams.drawMode & (DrawMode::GLYPH_FILL | DrawMode::GLYPH_STROKE)) ||
+        (aParams.drawMode & DrawMode::GLYPH_FILL) ||
         (aParams.drawMode == DrawMode::GLYPH_PATH && aParams.callbacks);
     gfx::Point origPt = aPt;
 
