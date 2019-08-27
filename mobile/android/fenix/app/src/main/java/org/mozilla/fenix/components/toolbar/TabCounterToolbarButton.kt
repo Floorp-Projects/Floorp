@@ -12,6 +12,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.sessionsOfType
 import java.lang.ref.WeakReference
 
 /**
@@ -41,7 +42,7 @@ class TabCounterToolbarButton(
 
             addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View?) {
-                    setCount(count)
+                    setCount(sessionManager.sessionsOfType(private = isPrivate).count())
                 }
 
                 override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
@@ -62,9 +63,7 @@ class TabCounterToolbarButton(
     override fun bind(view: View) = Unit
 
     private fun updateCount() {
-        val count = sessionManager.sessions.count {
-            it.private == isPrivate
-        }
+        val count = sessionManager.sessionsOfType(private = isPrivate).count()
 
         reference.get()?.let {
             it.contentDescription = getDescriptionForTabCount(it.context, count)
