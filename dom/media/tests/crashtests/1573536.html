@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+<head>
+    <script>
+      function start () {
+        window.navigator.mediaDevices.getUserMedia({
+          'audio': {
+            'mediaSource': 'audioCapture'
+          },
+          'video': true,
+          'fake': true
+        }).catch(() => Promise.resolve())
+          .then(() => document.documentElement.removeAttribute("class"))
+      }
+
+      window.addEventListener('load', start)
+    </script>
+</head>
+</html>

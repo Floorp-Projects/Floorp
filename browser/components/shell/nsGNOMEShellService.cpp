@@ -19,7 +19,6 @@
 #include "nsIGSettingsService.h"
 #include "nsIStringBundle.h"
 #include "nsIOutputStream.h"
-#include "nsIProcess.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIImageLoadingContent.h"
@@ -500,40 +499,4 @@ nsGNOMEShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGNOMEShellService::OpenApplication(int32_t aApplication) {
-  nsAutoCString scheme;
-  if (aApplication == APPLICATION_MAIL)
-    scheme.AssignLiteral("mailto");
-  else if (aApplication == APPLICATION_NEWS)
-    scheme.AssignLiteral("news");
-  else
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-  if (giovfs) {
-    nsCOMPtr<nsIHandlerApp> handlerApp;
-    giovfs->GetAppForURIScheme(scheme, getter_AddRefs(handlerApp));
-    if (handlerApp) return handlerApp->LaunchWithURI(nullptr, nullptr);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsGNOMEShellService::OpenApplicationWithURI(nsIFile* aApplication,
-                                            const nsACString& aURI) {
-  nsresult rv;
-  nsCOMPtr<nsIProcess> process =
-      do_CreateInstance("@mozilla.org/process/util;1", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = process->Init(aApplication);
-  if (NS_FAILED(rv)) return rv;
-
-  const nsCString spec(aURI);
-  const char* specStr = spec.get();
-  return process->Run(false, &specStr, 1);
 }
