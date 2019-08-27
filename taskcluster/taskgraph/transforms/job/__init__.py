@@ -238,8 +238,7 @@ def use_fetches(config, jobs):
                         extract = artifact.get('extract', True)
 
                     fetch = {
-                        'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path)
-                                if not path.startswith('/') else path[1:],
+                        'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path),
                         'task': '<{dep}>'.format(dep=kind),
                         'extract': extract,
                     }
