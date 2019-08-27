@@ -1016,7 +1016,6 @@ pref("accessibility.typeaheadfind.enablesound", true);
 #endif
 pref("accessibility.typeaheadfind.matchesCountLimit", 1000);
 pref("findbar.highlightAll", false);
-pref("findbar.modalHighlight", false);
 pref("findbar.entireword", false);
 pref("findbar.iteratorTimeout", 100);
 

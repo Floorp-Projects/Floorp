@@ -16,6 +16,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_editor.h"
+#include "mozilla/StaticPrefs_findbar.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -216,7 +217,6 @@ int32_t nsXPLookAndFeel::sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
 int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 bool nsXPLookAndFeel::sInitialized = false;
-bool nsXPLookAndFeel::sFindbarModalHighlight = false;
 bool nsXPLookAndFeel::sIsInPrefersReducedMotionForTest = false;
 bool nsXPLookAndFeel::sPrefersReducedMotionForTest = false;
 
@@ -419,10 +419,6 @@ void nsXPLookAndFeel::Init() {
   for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
     InitColorFromPref(i);
   }
-
-  Preferences::AddBoolVarCache(&sFindbarModalHighlight,
-                               "findbar.modalHighlight",
-                               sFindbarModalHighlight);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
@@ -851,7 +847,7 @@ nsresult nsXPLookAndFeel::GetColorImpl(ColorID aID,
 #endif
 
   if (aID == ColorID::TextSelectBackgroundAttention) {
-    if (sFindbarModalHighlight) {
+    if (StaticPrefs::findbar_modalHighlight()) {
       aResult = NS_RGBA(0, 0, 0, 0);
       return NS_OK;
     }
