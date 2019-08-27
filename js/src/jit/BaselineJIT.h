@@ -504,6 +504,10 @@ class BaselineInterpreter {
   uint32_t profilerEnterToggleOffset_ = 0;
   uint32_t profilerExitToggleOffset_ = 0;
 
+  // Offset of the jump (tail call) to the debug trap handler trampoline code.
+  // When the debugger is enabled, NOPs are patched to calls to this location.
+  uint32_t debugTrapHandlerOffset_ = 0;
+
   // The offsets of toggled jumps for debugger instrumentation.
   using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
   CodeOffsetVector debugInstrumentationOffsets_;
@@ -538,7 +542,7 @@ class BaselineInterpreter {
             uint32_t bailoutPrologueOffset,
             uint32_t generatorThrowOrReturnCallOffset,
             uint32_t profilerEnterToggleOffset,
-            uint32_t profilerExitToggleOffset,
+            uint32_t profilerExitToggleOffset, uint32_t debugTrapHandlerOffset,
             CodeOffsetVector&& debugInstrumentationOffsets,
             CodeOffsetVector&& debugTrapOffsets,
             CodeOffsetVector&& codeCoverageOffsets,
