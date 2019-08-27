@@ -67,9 +67,9 @@ class BasicCompositor : public Compositor {
       const gfx::IntRect& aRect, const CompositingRenderTarget* aSource,
       const gfx::IntPoint& aSourcePoint) override;
 
-  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetForWindow(
-      const gfx::IntRect& aRect, const gfx::IntRegion& aClearRegion,
-      BufferMode aBufferMode);
+  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetAndClear(
+      gfx::DrawTarget* aDrawTarget, const gfx::IntRect& aDrawTargetRect,
+      const gfx::IntRegion& aClearRegion);
 
   already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
