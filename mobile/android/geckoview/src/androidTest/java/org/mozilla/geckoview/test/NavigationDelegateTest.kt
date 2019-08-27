@@ -1240,4 +1240,41 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
+
+    @Test fun setLocationHash() {
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.waitForPageStop()
+
+        sessionRule.session.evaluateJS("location.hash = 'test1';")
+
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest):
+                                       GeckoResult<AllowOrDeny>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("URI should match", url, endsWith("#test1"))
+            }
+        })
+
+        sessionRule.session.evaluateJS("location.hash = 'test2';")
+
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: LoadRequest):
+                                       GeckoResult<AllowOrDeny>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("URI should match", url, endsWith("#test2"))
+            }
+        })
+    }
 }
