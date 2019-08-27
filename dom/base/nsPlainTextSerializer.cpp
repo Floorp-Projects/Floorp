@@ -1507,7 +1507,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
     // Have to put it in before every line.
     while (bol < totLen) {
       const bool outputQuotes = mAtFirstColumn;
-      bool atFirstColumn;
       bool outputLineBreak = false;
       bool spacesOnly = true;
 
@@ -1545,7 +1544,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
           }
         }
         mEmptyLines = -1;
-        atFirstColumn = false;
         bol = totLen;
       } else {
         // There is a newline
@@ -1553,7 +1551,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         mInWhitespace = true;
         outputLineBreak = true;
         mEmptyLines = 0;
-        atFirstColumn = true;
         bol = newline + 1;
         if ('\r' == *iter && bol < totLen && '\n' == *++iter) {
           // There was a CRLF in the input. This used to be illegal and
@@ -1585,7 +1582,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
       Output(mCurrentLineContent.mValue);
 
-      mAtFirstColumn = atFirstColumn;
+      mAtFirstColumn = outputLineBreak;
     }
 
     // Reset mCurrentLineContent.mValue.
