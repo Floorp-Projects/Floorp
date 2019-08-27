@@ -75,7 +75,7 @@ AntiTracking.runTest(
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
+  false, // no blocking notifications
   false, // run in normal window
   "allow-scripts allow-same-origin allow-popups"
 );
@@ -98,7 +98,7 @@ AntiTracking.runTest(
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  0, // no blocking notifications
+  false, // no blocking notifications
   false, // run in normal window
   "allow-scripts allow-same-origin allow-popups allow-storage-access-by-user-activation"
 );
@@ -125,7 +125,7 @@ AntiTracking.runTest(
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
+  0, // no blocking notifications
   true, // run in private window
   null // iframe sandbox
 );
