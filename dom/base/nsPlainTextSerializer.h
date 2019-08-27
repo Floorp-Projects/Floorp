@@ -125,7 +125,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
 
-  inline bool IsQuotedLine(const nsAString& aLine) {
+  static inline bool IsQuotedLine(const nsAString& aLine) {
     return !aLine.IsEmpty() && aLine.First() == char16_t('>');
   }
 
@@ -135,7 +135,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool IsIgnorableRubyAnnotation(nsAtom* aTag);
+  bool IsIgnorableRubyAnnotation(nsAtom* aTag) const;
 
   // @return true, iff the elements' whitespace and newline characters have to
   //         be preserved according to its style or because it's a `<pre>`
