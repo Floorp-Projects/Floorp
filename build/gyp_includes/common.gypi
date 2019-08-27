@@ -1006,51 +1006,6 @@
         ],
       }],  # OS=="ios"
       ['OS=="android"', {
-        # Location of Android NDK.
-        'variables': {
-          'variables': {
-            'variables': {
-              'android_ndk_root%': '<!(/bin/echo -n $ANDROID_NDK_ROOT)',
-            },
-            'android_ndk_root%': '<(android_ndk_root)',
-            'conditions': [
-              ['target_arch == "ia32"', {
-                'android_app_abi%': 'x86',
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-x86',
-              }],
-              ['target_arch == "x64"', {
-                'android_app_abi%': 'x86_64',
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-21/arch-x86_64',
-              }],
-              ['target_arch=="arm"', {
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-arm',
-                'conditions': [
-                  ['armv7==0', {
-                    'android_app_abi%': 'armeabi',
-                  }, {
-                    'android_app_abi%': 'armeabi-v7a',
-                  }],
-                ],
-              }],
-              ['target_arch=="arm64"', {
-                'android_app_abi%': 'arm64-v8a',
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-21/arch-arm64',
-              }],
-            ],
-          },
-          'android_ndk_root%': '<(android_ndk_root)',
-          'android_app_abi%': '<(android_app_abi)',
-          'android_ndk_sysroot%': '<(android_ndk_sysroot)',
-        },
-        'android_ndk_root%': '<(android_ndk_root)',
-        'android_ndk_sysroot': '<(android_ndk_sysroot)',
-        'android_ndk_include': '<(android_ndk_sysroot)/usr/include',
-        'android_ndk_lib': '<(android_ndk_sysroot)/usr/lib',
-        'android_app_abi%': '<(android_app_abi)',
-
-        # Location of the "strip" binary, used by both gyp and scripts.
-        'android_strip%' : '<!(/bin/echo -n <(android_toolchain)/*-strip)',
-
         # Provides an absolute path to PRODUCT_DIR (e.g. out/Release). Used
         # to specify the output directory for Ant in the Android build.
         'ant_build_out': '`cd <(PRODUCT_DIR) && pwd -P`',
@@ -3580,42 +3535,6 @@
           'ENABLE_NEW_NPDEVICE_API',
         ],
       },
-    }],
-    ['clang==1', {
-      'conditions': [
-        ['OS=="android"', {
-          # Android could use the goma with clang.
-          'make_global_settings': [
-            ['CC', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} ${CHROME_SRC}/<(make_clang_dir)/bin/clang)'],
-            ['CXX', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} ${CHROME_SRC}/<(make_clang_dir)/bin/clang++)'],
-            ['LINK', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} ${CHROME_SRC}/<(make_clang_dir)/bin/clang++)'],
-            ['CC.host', '$(CC)'],
-            ['CXX.host', '$(CXX)'],
-            ['LINK.host', '$(LINK)'],
-          ],
-        }, {
-          'make_global_settings': [
-            ['CC', '<(make_clang_dir)/bin/clang'],
-            ['CXX', '<(make_clang_dir)/bin/clang++'],
-            ['LINK', '$(CXX)'],
-            ['CC.host', '$(CC)'],
-            ['CXX.host', '$(CXX)'],
-            ['LINK.host', '$(LINK)'],
-          ],
-        }],
-      ],
-    }],
-    ['OS=="android" and clang==0', {
-      # Hardcode the compiler names in the Makefile so that
-      # it won't depend on the environment at make time.
-      'make_global_settings': [
-        ['CC', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <(android_toolchain)/*-gcc)'],
-        ['CXX', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <(android_toolchain)/*-g++)'],
-        ['LINK', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <(android_toolchain)/*-gcc)'],
-        ['CC.host', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <!(which gcc))'],
-        ['CXX.host', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <!(which g++))'],
-        ['LINK.host', '<!(/bin/echo -n ${ANDROID_GOMA_WRAPPER} <!(which g++))'],
-      ],
     }],
   ],
   'xcode_settings': {
