@@ -26,6 +26,7 @@
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
 #include "nsAtom.h"
+#include "nsPresContext.h"
 #include "nsRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
@@ -44,6 +45,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoCSSParser.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/InspectorFontFace.h"
 
@@ -697,6 +699,17 @@ bool InspectorUtils::IsCustomElementName(GlobalObject&, const nsAString& aName,
 
   RefPtr<nsAtom> nameElt = NS_Atomize(aName);
   return nsContentUtils::IsCustomElementName(nameElt, namespaceID);
+}
+
+/* static */
+bool InspectorUtils::IsElementThemed(GlobalObject&, Element& aElement) {
+  // IsThemed will check if the native theme supports the widget using
+  // ThemeSupportsWidget which in turn will check that the widget is not
+  // already styled by content through nsNativeTheme::IsWidgetStyled. We
+  // assume that if the native theme styles the widget and the author did not
+  // override the appropriate styles, the theme will provide focus styling.
+  nsIFrame* frame = aElement.GetPrimaryFrame(FlushType::Frames);
+  return frame && frame->IsThemed();
 }
 
 }  // namespace dom
