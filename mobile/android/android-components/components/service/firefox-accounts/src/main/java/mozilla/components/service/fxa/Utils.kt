@@ -65,3 +65,20 @@ fun handleFxaExceptions(logger: Logger, operation: String, block: () -> Unit): B
         true
     })
 }
+
+/**
+ * Internally, Rust SyncManager represents engines as strings. Forward-compatibility with new engines
+ * is one of the reasons for this. E.g. during any sync, an engine may appear that we do not know about.
+ * At the public API level, we expose a concrete [SyncEngine] type to allow for more robust integrations.
+ * We do not expose "unknown" engines via our public API, but do handle them internally (by persisting
+ * their enabled/disabled status). Since unknown engines are not exposed to the application, this
+ * conversion only needs to go one-way.
+ */
+
+fun SyncEngine.toNativeString(): String {
+    return when (this) {
+        SyncEngine.History -> "history"
+        SyncEngine.Bookmarks -> "bookmarks"
+        SyncEngine.Passwords -> "passwords"
+    }
+}

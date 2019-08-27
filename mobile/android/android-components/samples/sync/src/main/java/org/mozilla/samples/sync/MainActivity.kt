@@ -37,6 +37,7 @@ import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.log.Log
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
@@ -70,7 +71,7 @@ class MainActivity :
                     type = DeviceType.MOBILE,
                     capabilities = setOf(DeviceCapability.SEND_TAB)
                 ),
-                SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 15L)
+                SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 15L)
         )
     }
 

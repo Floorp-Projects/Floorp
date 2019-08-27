@@ -211,7 +211,7 @@ class FxaAccountManagerTest {
         val dispatcher: TestSyncDispatcher = TestSyncDispatcher(dispatcherRegistry)
 
         private var dispatcherUpdatedCount = 0
-        override fun createDispatcher(stores: Set<String>): SyncDispatcher {
+        override fun createDispatcher(supportedEngines: Set<SyncEngine>): SyncDispatcher {
             return dispatcher
         }
 
@@ -299,7 +299,7 @@ class FxaAccountManagerTest {
         assertEquals(0, syncStatusObserver.onErrorCount)
 
         // No periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf("history"))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
 
         assertNotNull(latestSyncManager)
         assertNotNull(latestSyncManager?.dispatcher)
@@ -309,7 +309,7 @@ class FxaAccountManagerTest {
         verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // With periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf("history"), 60 * 1000L)).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History), 60 * 1000L)).await()
 
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
@@ -354,7 +354,7 @@ class FxaAccountManagerTest {
 
         // With a sync config this time.
         var latestSyncManager: TestSyncManager? = null
-        val syncConfig = SyncConfig(setOf("history"), syncPeriodInMinutes = 120L)
+        val syncConfig = SyncConfig(setOf(SyncEngine.History), syncPeriodInMinutes = 120L)
         val manager = object : TestableFxaAccountManager(
             context = testContext,
             config = ServerConfig.release("dummyId", "http://auth-url/redirect"),
@@ -423,7 +423,7 @@ class FxaAccountManagerTest {
 //        assertEquals(1, syncStatusObserver.onErrorCount)
 
         // Turn off periodic syncing.
-        manager.setSyncConfigAsync(SyncConfig(setOf("history"))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
 
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()

@@ -23,7 +23,9 @@ import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.authErrorRegistry
+import mozilla.components.service.fxa.toNativeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -61,8 +63,8 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(sync
         }
     }
 
-    override fun createDispatcher(stores: Set<String>): SyncDispatcher {
-        return WorkManagerSyncDispatcher(stores)
+    override fun createDispatcher(supportedEngines: Set<SyncEngine>): SyncDispatcher {
+        return WorkManagerSyncDispatcher(supportedEngines)
     }
 
     override fun dispatcherUpdated(dispatcher: SyncDispatcher) {
@@ -108,7 +110,7 @@ object WorkersLiveDataObserver {
 }
 
 class WorkManagerSyncDispatcher(
-    private val stores: Set<String>
+    private val supportedEngines: Set<SyncEngine>
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
     private val logger = Logger("WMSyncDispatcher")
 
@@ -215,7 +217,9 @@ class WorkManagerSyncDispatcher(
     }
 
     private fun getWorkerData(): Data {
-        val dataBuilder = Data.Builder().putStringArray(KEY_DATA_STORES, stores.toTypedArray())
+        val dataBuilder = Data.Builder().putStringArray(
+            KEY_DATA_STORES, supportedEngines.map { it.toNativeString() }.toTypedArray()
+        )
 
         return dataBuilder.build()
     }
@@ -264,8 +268,7 @@ class WorkManagerSyncWorker(
 
         val resultBuilder = Data.Builder()
         syncResult.forEach {
-            val status = it.value.status
-            when (status) {
+            when (val status = it.value.status) {
                 SyncStatus.Ok -> {
                     logger.info("Synchronized store ${it.key}")
                     resultBuilder.putBoolean(it.key, true)

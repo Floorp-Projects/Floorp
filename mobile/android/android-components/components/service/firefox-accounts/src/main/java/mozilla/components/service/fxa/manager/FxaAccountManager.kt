@@ -291,8 +291,8 @@ open class FxaAccountManager(
         val result = CompletableDeferred<Unit>()
 
         // Initialize a new sync manager with the passed-in config.
-        if (config.syncableStores.isEmpty()) {
-            throw IllegalArgumentException("Set of stores can't be empty")
+        if (config.supportedEngines.isEmpty()) {
+            throw IllegalArgumentException("Set of supported engines can't be empty")
         }
 
         syncManager = createSyncManager(config).also { manager ->

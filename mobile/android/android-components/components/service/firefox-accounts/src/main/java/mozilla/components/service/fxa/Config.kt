@@ -33,11 +33,20 @@ data class DeviceConfig(
 /**
  * Configuration for sync.
  *
- * @property syncableStores A set of store names to sync, exposed via [GlobalSyncableStoreProvider].
+ * @property supportedEngines A set of supported sync engines, exposed via [GlobalSyncableStoreProvider].
  * @property syncPeriodInMinutes Optional, how frequently periodic sync should happen. If this is `null`,
  * periodic syncing will be disabled.
  */
 data class SyncConfig(
-    val syncableStores: Set<String>,
+    val supportedEngines: Set<SyncEngine>,
     val syncPeriodInMinutes: Long? = null
 )
+
+/**
+ * Describes possible sync engines that device can support.
+ */
+enum class SyncEngine {
+    History,
+    Bookmarks,
+    Passwords,
+}
