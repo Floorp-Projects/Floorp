@@ -569,10 +569,12 @@ function runDoorhangerUpdateTest(params, steps) {
 
     const { notificationId, button, checkActiveUpdate, pageURLs } = step;
     return (async function() {
-      await BrowserTestUtils.waitForEvent(
-        PanelUI.notificationPanel,
-        "popupshown"
-      );
+      if (!params.popupShown) {
+        await BrowserTestUtils.waitForEvent(
+          PanelUI.notificationPanel,
+          "popupshown"
+        );
+      }
       const shownNotificationId = AppMenuNotifications.activeNotification.id;
       is(
         shownNotificationId,
