@@ -27,3 +27,4 @@ fuzzy-if(skiaContent,0-1,0-40768) == abs-pos-child-sizing.html abs-pos-child-siz
 == fieldset-border-image-2a.html fieldset-border-image-2-ref.html
 == fieldset-border-image-2b.html fieldset-border-image-2-ref.html
 == dynamic-text-indent.html dynamic-text-indent-ref.html
+== fieldset-height-resize-1.html fieldset-height-resize-1-ref.html
