@@ -25,9 +25,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/sessionstore/SessionHistory.jsm"
 );
 
-// A bound to the size of data to store for DOM Storage.
-const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
-
 // This pref controls whether or not we send updates to the parent on a timeout
 // or not, and should only be used for tests or debugging.
 const TIMEOUT_DISABLED_PREF = "browser.sessionstore.debug.no_auto_updates";
@@ -314,144 +311,6 @@ SessionHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
 ]);
 
 /**
- * Listens for changes to the DOMSessionStorage. Whenever new keys are added,
- * existing ones removed or changed, or the storage is cleared we will send a
- * message to the parent process containing up-to-date sessionStorage data.
- *
- * Causes a SessionStore:update message to be sent that contains the current
- * DOMSessionStorage contents. The data is a nested object using host names
- * as keys and per-host DOMSessionStorage data as values.
- */
-class SessionStorageListener extends Handler {
-  constructor(store) {
-    super(store);
-
-    // We don't want to send all the session storage data for all the frames
-    // for every change. So if only a few value changed we send them over as
-    // a "storagechange" event. If however for some reason before we send these
-    // changes we have to send over the entire sessions storage data, we just
-    // reset these changes.
-    this._changes = undefined;
-
-    // The event listener waiting for MozSessionStorageChanged events.
-    this._listener = null;
-
-    Services.obs.addObserver(this, "browser:purge-sessionStorage");
-    this.stateChangeNotifier.addObserver(this);
-    this.resetEventListener();
-  }
-
-  uninit() {
-    Services.obs.removeObserver(this, "browser:purge-sessionStorage");
-  }
-
-  observe() {
-    // Collect data on the next tick so that any other observer
-    // that needs to purge data can do its work first.
-    setTimeoutWithTarget(() => this.collect(), 0, this.mm.tabEventTarget);
-  }
-
-  resetChanges() {
-    this._changes = undefined;
-  }
-
-  resetEventListener() {
-    if (!this._listener) {
-      this._listener = SessionStoreUtils.addDynamicFrameFilteredListener(
-        this.mm,
-        "MozSessionStorageChanged",
-        this,
-        true
-      );
-    }
-  }
-
-  removeEventListener() {
-    SessionStoreUtils.removeDynamicFrameFilteredListener(
-      this.mm,
-      "MozSessionStorageChanged",
-      this._listener,
-      true
-    );
-    this._listener = null;
-  }
-
-  handleEvent(event) {
-    if (!this.mm.docShell) {
-      return;
-    }
-
-    let { content } = this.mm;
-
-    // How much data does DOMSessionStorage contain?
-    let usage = content.windowUtils.getStorageUsage(event.storageArea);
-
-    // Don't store any data if we exceed the limit. Wipe any data we previously
-    // collected so that we don't confuse websites with partial state.
-    if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
-      this.messageQueue.push("storage", () => null);
-      this.removeEventListener();
-      this.resetChanges();
-      return;
-    }
-
-    let { url, key, newValue } = event;
-    let uri = Services.io.newURI(url);
-    let domain = uri.prePath;
-    if (!this._changes) {
-      this._changes = {};
-    }
-    if (!this._changes[domain]) {
-      this._changes[domain] = {};
-    }
-
-    // If the key isn't defined, then .clear() was called, and we send
-    // up null for this domain to indicate that storage has been cleared
-    // for it.
-    if (!key) {
-      this._changes[domain] = null;
-    } else {
-      this._changes[domain][key] = newValue;
-    }
-
-    this.messageQueue.push("storagechange", () => {
-      let tmp = this._changes;
-      // If there were multiple changes we send them merged.
-      // First one will collect all the changes the rest of
-      // these messages will be ignored.
-      this.resetChanges();
-      return tmp;
-    });
-  }
-
-  collect() {
-    if (!this.mm.docShell) {
-      return;
-    }
-
-    let { content } = this.mm;
-
-    // We need the entire session storage, let's reset the pending individual change
-    // messages.
-    this.resetChanges();
-
-    this.messageQueue.push("storage", () => {
-      let data = SessionStoreUtils.collectSessionStorage(content);
-      return Object.keys(data).length ? data : null;
-    });
-  }
-
-  onPageLoadCompleted() {
-    this.collect();
-  }
-
-  onPageLoadStarted() {
-    this.resetEventListener();
-    this.collect();
-  }
-}
-
-/**
  * A message queue that takes collected data and will take care of sending it
  * to the chrome process. It allows flushing using synchronous messages and
  * takes care of any race conditions that might occur because of that. Changes
@@ -715,7 +574,6 @@ class ContentSessionStore {
     this.handlers = [
       new EventListener(this),
       new SessionHistoryListener(this),
-      new SessionStorageListener(this),
       this.stateChangeNotifier,
       this.messageQueue,
     ];

@@ -81,9 +81,10 @@ class SessionStoreUtils {
   static bool RestoreFormData(const GlobalObject& aGlobal, Document& aDocument,
                               const CollectedData& aData);
 
-  static void CollectSessionStorage(
-      const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
-      Record<nsString, Record<nsString, nsString>>& aRetVal);
+  static void CollectedSessionStorage(BrowsingContext* aBrowsingContext,
+                                      nsTArray<nsCString>& aOrigins,
+                                      nsTArray<nsString>& aKeys,
+                                      nsTArray<nsString>& aValues);
 
   static void RestoreSessionStorage(
       const GlobalObject& aGlobal, nsIDocShell* aDocShell,
