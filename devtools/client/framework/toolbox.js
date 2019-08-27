@@ -2883,7 +2883,14 @@ Toolbox.prototype = {
    */
   _refreshHostTitle: function() {
     let title;
-    if (this.target.name && this.target.name != this.target.url) {
+
+    const isOmniscientBrowserToolbox =
+      this.target.isParentProcess &&
+      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
+
+    if (isOmniscientBrowserToolbox) {
+      title = "💥 Omniscient Browser Toolbox 💥";
+    } else if (this.target.name && this.target.name != this.target.url) {
       const url = this.target.isWebExtension
         ? this.target.getExtensionPathName(this.target.url)
         : getUnicodeUrl(this.target.url);

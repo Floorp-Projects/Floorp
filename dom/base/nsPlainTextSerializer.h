@@ -116,17 +116,16 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // Inlined functions
   inline bool MayWrap() const {
     return mWrapColumn &&
-           ((mSettings.GetFlags() & nsIDocumentEncoder::OutputFormatted) ||
-            (mSettings.GetFlags() & nsIDocumentEncoder::OutputWrap));
+           mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted |
+                             nsIDocumentEncoder::OutputWrap);
   }
   inline bool MayBreakLines() const {
-    return !(mSettings.GetFlags() &
-             nsIDocumentEncoder::OutputDisallowLineBreaking);
+    return !mSettings.HasFlag(nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
 
-  inline bool IsQuotedLine(const nsAString& aLine) {
+  static inline bool IsQuotedLine(const nsAString& aLine) {
     return !aLine.IsEmpty() && aLine.First() == char16_t('>');
   }
 
@@ -136,7 +135,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool IsIgnorableRubyAnnotation(nsAtom* aTag);
+  bool IsIgnorableRubyAnnotation(nsAtom* aTag) const;
 
   // @return true, iff the elements' whitespace and newline characters have to
   //         be preserved according to its style or because it's a `<pre>`
@@ -165,6 +164,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
     // @return As defined in nsIDocumentEncoder.idl.
     int32_t GetFlags() const { return mFlags; }
+
+    // @param aFlag As defined in nsIDocumentEncoder.idl. May consist of
+    // multiple bitwise or'd flags.
+    bool HasFlag(int32_t aFlag) const { return mFlags & aFlag; }
 
     // Whether the output should include ruby annotations.
     bool GetWithRubyAnnotation() const { return mWithRubyAnnotation; }

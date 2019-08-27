@@ -23,7 +23,6 @@ def configure_error(message):
 # A wrapper to obtain a process' output and return code.
 # Returns a tuple (retcode, stdout, stderr).
 @imports('os')
-@imports(_from='__builtin__', _import='unicode')
 @imports('subprocess')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.util', _import='system_encoding')
