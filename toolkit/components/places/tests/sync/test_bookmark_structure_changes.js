@@ -911,15 +911,7 @@ add_task(async function test_complex_move_with_additions() {
   );
   deepEqual(
     mergeTelemetryCounts,
-    [
-      { name: "items", count: 10 },
-      { name: "deletes", count: 0 },
-      { name: "dupes", count: 0 },
-      { name: "remoteRevives", count: 0 },
-      { name: "localDeletes", count: 0 },
-      { name: "localRevives", count: 0 },
-      { name: "remoteDeletes", count: 0 },
-    ],
+    [{ name: "items", count: 10 }],
     "Should record telemetry with structure change counts"
   );
 
