@@ -615,6 +615,9 @@ add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
     "The ETP state of the second tab has been changed to disabled."
   );
 
+  // Clean up the state of the allow list for the second tab.
+  ContentBlockingAllowList.remove(tabTwo.linkedBrowser);
+
   BrowserTestUtils.removeTab(tabOne);
   BrowserTestUtils.removeTab(tabTwo);
 
