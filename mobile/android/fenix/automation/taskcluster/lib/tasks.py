@@ -179,7 +179,7 @@ class TaskBuilder(object):
         }
 
         gradle_commands = (
-            './gradlew --no-daemon clean assembleArmDebug assembleArmDebugAndroidTest',
+            './gradlew --no-daemon clean assemble assembleAndroidTest',
         )
 
         test_commands = (
