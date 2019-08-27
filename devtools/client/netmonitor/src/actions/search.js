@@ -111,7 +111,7 @@ function searchResource(resource, query) {
       return;
     }
 
-    dispatch(addSearchResult(resource, result, query));
+    dispatch(addSearchResult(resource, result));
   };
 }
 
