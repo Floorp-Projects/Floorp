@@ -1341,6 +1341,11 @@ class TestInfoCommand(MachCommandBase):
 
         json_report = json.dumps(by_component, indent=2, sort_keys=True)
         if output_file:
+            output_file = os.path.abspath(output_file)
+            output_dir = os.path.dirname(output_file)
+            if not os.path.isdir(output_dir):
+                os.makedirs(output_dir)
+
             with open(output_file, 'w') as f:
                 f.write(json_report)
         else:
