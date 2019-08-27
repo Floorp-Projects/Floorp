@@ -4619,6 +4619,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'geckoview_streaming'
     record_in_processes:
       - 'main'
 
@@ -4634,6 +4635,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'geckoview_streaming'
     record_in_processes:
       - 'main'
 
@@ -4649,6 +4651,7 @@ telemetry.test:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
+      - 'geckoview_streaming'
     record_in_processes:
       - 'main'
 

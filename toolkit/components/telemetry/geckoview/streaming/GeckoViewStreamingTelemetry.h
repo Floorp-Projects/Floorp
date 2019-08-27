@@ -17,16 +17,26 @@ namespace GeckoViewStreamingTelemetry {
 
 void HistogramAccumulate(const nsCString& aName, uint32_t aValue);
 
+void BoolScalarSet(const nsCString& aName, bool aValue);
+void StringScalarSet(const nsCString& aName, const nsCString& aValue);
+void UintScalarSet(const nsCString& aName, uint32_t aValue);
+
 // Classes wishing to receive Streaming Telemetry must implement this interface
 // and register themselves via RegisterDelegate.
 class StreamingTelemetryDelegate
     : public mozilla::RefCounted<StreamingTelemetryDelegate> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(StreamingTelemetryDelegate);
-  // Will be called from time to time on the main thread.
+  virtual ~StreamingTelemetryDelegate() = default;
+
+  // Receive* methods will be called from time to time on the main thread.
   virtual void ReceiveHistogramSamples(const nsCString& aName,
                                        const nsTArray<uint32_t>& aSamples) = 0;
-  virtual ~StreamingTelemetryDelegate() = default;
+  virtual void ReceiveBoolScalarValue(const nsCString& aName, bool aValue) = 0;
+  virtual void ReceiveStringScalarValue(const nsCString& aName,
+                                        const nsCString& aValue) = 0;
+  virtual void ReceiveUintScalarValue(const nsCString& aName,
+                                      uint32_t aValue) = 0;
 };
 
 // Registers the provided StreamingTelemetryDelegate to receive Streaming

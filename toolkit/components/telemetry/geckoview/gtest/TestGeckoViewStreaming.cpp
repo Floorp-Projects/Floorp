@@ -13,6 +13,7 @@ using namespace mozilla;
 using namespace mozilla::Telemetry;
 using namespace TelemetryTestHelpers;
 using GeckoViewStreamingTelemetry::StreamingTelemetryDelegate;
+using mozilla::Telemetry::ScalarID;
 using ::testing::_;
 using ::testing::Eq;
 
@@ -45,6 +46,12 @@ class MockDelegate final : public StreamingTelemetryDelegate {
   MOCK_METHOD2(ReceiveHistogramSamples,
                void(const nsCString& aHistogramName,
                     const nsTArray<uint32_t>& aSamples));
+  MOCK_METHOD2(ReceiveBoolScalarValue,
+               void(const nsCString& aScalarName, bool aValue));
+  MOCK_METHOD2(ReceiveStringScalarValue,
+               void(const nsCString& aScalarName, const nsCString& aValue));
+  MOCK_METHOD2(ReceiveUintScalarValue,
+               void(const nsCString& aScalarName, uint32_t aValue));
 };  // class MockDelegate
 
 TEST_F(TelemetryStreamingFixture, HistogramSamples) {
@@ -135,6 +142,40 @@ TEST_F(TelemetryStreamingFixture, MultipleThreads) {
 
   Preferences::SetInt(kBatchTimeoutPref, 0);
   Telemetry::Accumulate(kTestHgram2, kSample1);
+}
+
+TEST_F(TelemetryTestFixture, StreamingTelemetryStreamScalarValues) {
+  NS_NAMED_LITERAL_CSTRING(kBoolScalarName, "telemetry.test.boolean_kind");
+  NS_NAMED_LITERAL_CSTRING(kStringScalarName, "telemetry.test.string_kind");
+  NS_NAMED_LITERAL_CSTRING(kUintScalarName, "telemetry.test.unsigned_int_kind");
+
+  const bool kBoolScalarValue = true;
+  NS_NAMED_LITERAL_CSTRING(kStringScalarValue, "a string scalar value");
+  const uint32_t kUintScalarValue = 42;
+
+  auto md = MakeRefPtr<MockDelegate>();
+  EXPECT_CALL(
+      *md, ReceiveBoolScalarValue(Eq(kBoolScalarName), Eq(kBoolScalarValue)));
+  EXPECT_CALL(*md, ReceiveStringScalarValue(Eq(kStringScalarName),
+                                            Eq(kStringScalarValue)));
+  EXPECT_CALL(
+      *md, ReceiveUintScalarValue(Eq(kUintScalarName), Eq(kUintScalarValue)));
+
+  GeckoViewStreamingTelemetry::RegisterDelegate(md);
+
+  Preferences::SetBool(kGeckoViewStreamingPref, true);
+  Preferences::SetInt(kBatchTimeoutPref, 5000);
+
+  Telemetry::ScalarSet(ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, kBoolScalarValue);
+  Telemetry::ScalarSet(ScalarID::TELEMETRY_TEST_STRING_KIND,
+                       NS_ConvertUTF8toUTF16(kStringScalarValue));
+  Preferences::SetInt(kBatchTimeoutPref,
+                      0);  // Trigger batch on next accumulation.
+  Telemetry::ScalarSet(ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
+                       kUintScalarValue);
+
+  // Clear delegate so it can be deleted when the batch is done.
+  GeckoViewStreamingTelemetry::RegisterDelegate(nullptr);
 }
 
 }  // namespace
