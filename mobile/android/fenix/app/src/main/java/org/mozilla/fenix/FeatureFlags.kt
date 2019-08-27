@@ -46,5 +46,5 @@ object FeatureFlags {
      *
      * https://github.com/mozilla-mobile/fenix/issues/4431
      */
-    val mediaIntegration = nightly or debug
+    const val mediaIntegration = true
 }
