@@ -2094,6 +2094,7 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
   } else if (aSource.IsHTMLImageElement()) {
     HTMLImageElement* img = &aSource.GetAsHTMLImageElement();
     if (img->IntrinsicState().HasState(NS_EVENT_STATE_BROKEN)) {
+      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return nullptr;
     }
 
