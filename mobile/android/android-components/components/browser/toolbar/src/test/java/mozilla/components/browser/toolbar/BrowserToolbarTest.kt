@@ -634,7 +634,7 @@ class BrowserToolbarTest {
 
     @Test
     fun `BrowserToolbar Button must set padding`() {
-        var button = BrowserToolbar.Button(mock(), "imageResource", visible = { true }) {}
+        var button = BrowserToolbar.Button(mock(), "endImageResource", visible = { true }) {}
         val linearLayout = LinearLayout(testContext)
         var view = button.createView(linearLayout)
         val padding = Padding(0, 0, 0, 0)
@@ -642,20 +642,20 @@ class BrowserToolbarTest {
         assertEquals(view.paddingTop, ACTION_PADDING_DP)
         assertEquals(view.paddingRight, ACTION_PADDING_DP)
         assertEquals(view.paddingBottom, ACTION_PADDING_DP)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(left = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(left = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingLeft, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(top = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(top = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingTop, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(right = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(right = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingRight, 16)
-        button = BrowserToolbar.Button(mock(), "imageResource", padding = padding.copy(bottom = 16)) {}
+        button = BrowserToolbar.Button(mock(), "endImageResource", padding = padding.copy(bottom = 16)) {}
         view = button.createView(linearLayout)
         assertEquals(view.paddingBottom, 16)
         button = BrowserToolbar.Button(
-            mock(), "imageResource",
+            mock(), "endImageResource",
             padding = Padding(16, 20, 24, 28)
         ) {}
         view = button.createView(linearLayout)
@@ -671,7 +671,7 @@ class BrowserToolbarTest {
         var button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             visible = { true },
             selected = false,
@@ -687,7 +687,7 @@ class BrowserToolbarTest {
         button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             visible = { true },
             selected = false,
@@ -704,7 +704,7 @@ class BrowserToolbarTest {
         button = BrowserToolbar.ToggleButton(
             mock(),
             mock(),
-            "imageResource",
+            "endImageResource",
             "",
             selected = false,
             background = 0
