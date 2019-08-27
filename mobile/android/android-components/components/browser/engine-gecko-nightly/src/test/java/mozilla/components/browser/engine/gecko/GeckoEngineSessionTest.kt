@@ -15,8 +15,8 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.SafeBrowsingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -944,6 +944,16 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun safeBrowsingCategoriesAreAligned() {
+        assertEquals(GeckoSafeBrowsing.NONE, SafeBrowsingPolicy.NONE.id)
+        assertEquals(GeckoSafeBrowsing.MALWARE, SafeBrowsingPolicy.MALWARE.id)
+        assertEquals(GeckoSafeBrowsing.UNWANTED, SafeBrowsingPolicy.UNWANTED.id)
+        assertEquals(GeckoSafeBrowsing.HARMFUL, SafeBrowsingPolicy.HARMFUL.id)
+        assertEquals(GeckoSafeBrowsing.PHISHING, SafeBrowsingPolicy.PHISHING.id)
+        assertEquals(GeckoSafeBrowsing.DEFAULT, SafeBrowsingPolicy.RECOMMENDED.id)
+    }
+
+    @Test
     fun trackingProtectionCategoriesAreAligned() {
 
         assertEquals(GeckoAntiTracking.NONE, TrackingCategory.NONE.id)
@@ -956,26 +966,15 @@ class GeckoEngineSessionTest {
         assertEquals(GeckoAntiTracking.DEFAULT, TrackingCategory.RECOMMENDED.id)
         assertEquals(GeckoAntiTracking.STRICT, TrackingCategory.STRICT.id)
 
-        assertEquals(GeckoSafeBrowsing.NONE, SafeBrowsingCategory.NONE.id)
-        assertEquals(GeckoSafeBrowsing.MALWARE, SafeBrowsingCategory.MALWARE.id)
-        assertEquals(GeckoSafeBrowsing.UNWANTED, SafeBrowsingCategory.UNWANTED.id)
-        assertEquals(GeckoSafeBrowsing.HARMFUL, SafeBrowsingCategory.HARMFUL.id)
-        assertEquals(GeckoSafeBrowsing.PHISHING, SafeBrowsingCategory.PHISHING.id)
-        assertEquals(GeckoSafeBrowsing.DEFAULT, SafeBrowsingCategory.RECOMMENDED.id)
-
         val recommendedPolicy = TrackingProtectionPolicy.recommended()
         val strictPolicy = TrackingProtectionPolicy.strict()
         var antiTrackingCategories = strictPolicy.trackingCategories.sumBy { it.id }
-        var antiSafeBrowsing = strictPolicy.safeBrowsingCategories.sumBy { it.id }
 
         assertEquals(GeckoAntiTracking.STRICT, antiTrackingCategories)
-        assertEquals(GeckoSafeBrowsing.DEFAULT, antiSafeBrowsing)
 
         antiTrackingCategories = recommendedPolicy.trackingCategories.sumBy { it.id }
-        antiSafeBrowsing = recommendedPolicy.safeBrowsingCategories.sumBy { it.id }
 
         assertEquals(GeckoAntiTracking.DEFAULT, antiTrackingCategories)
-        assertEquals(GeckoSafeBrowsing.DEFAULT, antiSafeBrowsing)
 
         assertEquals(GeckoCookieBehavior.ACCEPT_ALL, CookiePolicy.ACCEPT_ALL.id)
         assertEquals(

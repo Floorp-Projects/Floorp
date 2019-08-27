@@ -13,6 +13,7 @@ import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
@@ -156,11 +157,18 @@ class GeckoEngine(
                 defaultSettings?.automaticLanguageAdjustment = value
             }
 
+        override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
+            arrayOf(SafeBrowsingPolicy.RECOMMENDED)
+            set(value) {
+                val policy = value.sumBy { it.id }
+                runtime.settings.contentBlocking.setSafeBrowsing(policy)
+                field = value
+            }
+
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
                 value?.let { policy ->
                     runtime.settings.contentBlocking.setAntiTracking(policy.trackingCategories.sumBy { it.id })
-                    runtime.settings.contentBlocking.setSafeBrowsing(policy.safeBrowsingCategories.sumBy { it.id })
                     runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id
                     defaultSettings?.trackingProtectionPolicy = value
                     field = value
@@ -234,6 +242,7 @@ class GeckoEngine(
             this.automaticFontSizeAdjustment = it.automaticFontSizeAdjustment
             this.automaticLanguageAdjustment = it.automaticLanguageAdjustment
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
+            this.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled
             this.userAgentString = it.userAgentString

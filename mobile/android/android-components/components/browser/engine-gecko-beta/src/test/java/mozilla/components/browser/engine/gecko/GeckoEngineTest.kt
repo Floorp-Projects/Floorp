@@ -11,6 +11,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
@@ -139,9 +140,12 @@ class GeckoEngineTest {
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
 
-        val safeStrictBrowsingCategories = TrackingProtectionPolicy.strict().safeBrowsingCategories.sumBy { it.id }
+        val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
         assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
         assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+
+        engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
+        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.PHISHING))
 
         try {
             engine.settings.domStorageEnabled
@@ -192,7 +196,9 @@ class GeckoEngineTest {
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
 
-        val safeStrictBrowsingCategories = TrackingProtectionPolicy.strict().safeBrowsingCategories.sumBy { it.id }
+        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.RECOMMENDED))
+
+        val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
         assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
 
         assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
@@ -410,4 +416,7 @@ class GeckoEngineTest {
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
     }
+
+    private fun ContentBlocking.Settings.contains(vararg safeBrowsingPolicies: SafeBrowsingPolicy) =
+        (safeBrowsingPolicies.sumBy { it.id } and this.categories) != 0
 }

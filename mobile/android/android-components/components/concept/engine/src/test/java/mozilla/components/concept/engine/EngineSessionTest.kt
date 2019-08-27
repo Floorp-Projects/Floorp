@@ -24,7 +24,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.SafeBrowsingCategory
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 
 class EngineSessionTest {
@@ -556,11 +555,6 @@ class EngineSessionTest {
             TrackingCategory.STRICT.id
         )
 
-        assertEquals(
-            strictPolicy.safeBrowsingCategories.sumBy { it.id },
-            SafeBrowsingCategory.RECOMMENDED.id
-        )
-
         assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         val nonePolicy = TrackingProtectionPolicy.none()
@@ -568,11 +562,6 @@ class EngineSessionTest {
         assertEquals(
             nonePolicy.trackingCategories.sumBy { it.id },
             TrackingCategory.NONE.id
-        )
-
-        assertEquals(
-            nonePolicy.safeBrowsingCategories.sumBy { it.id },
-            SafeBrowsingCategory.NONE.id
         )
 
         assertEquals(nonePolicy.cookiePolicy.id, CookiePolicy.ACCEPT_ALL.id)

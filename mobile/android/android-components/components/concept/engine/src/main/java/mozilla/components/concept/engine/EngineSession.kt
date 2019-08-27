@@ -9,7 +9,6 @@ import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.RECOMMENDED
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.RECOMMENDED
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
@@ -88,6 +87,40 @@ abstract class EngineSession(
     abstract val settings: Settings
 
     /**
+     * Represents a safe browsing policy, which is indicates with type of site should be alerted
+     * to user as possible harmful.
+     */
+    @Suppress("MagicNumber")
+    enum class SafeBrowsingPolicy(val id: Int) {
+        NONE(0),
+
+        /**
+         * Blocks malware sites.
+         */
+        MALWARE(1 shl 10),
+
+        /**
+         * Blocks unwanted sites.
+         */
+        UNWANTED(1 shl 11),
+
+        /**
+         * Blocks harmful sites.
+         */
+        HARMFUL(1 shl 12),
+
+        /**
+         * Blocks phishing sites.
+         */
+        PHISHING(1 shl 13),
+
+        /**
+         * Blocks all unsafe sites.
+         */
+        RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id)
+    }
+
+    /**
      * Represents a tracking protection policy, which is a combination of
      * tracker categories that should be blocked. Unless otherwise specified,
      * a [TrackingProtectionPolicy] is applicable to all session types (see
@@ -95,7 +128,6 @@ abstract class EngineSession(
      */
     open class TrackingProtectionPolicy internal constructor(
         val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-        val safeBrowsingCategories: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
         val useForRegularSessions: Boolean = true,
         val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
@@ -185,77 +217,40 @@ abstract class EngineSession(
             STRICT(RECOMMENDED.id + CRYPTOMINING.id + FINGERPRINTING.id + CONTENT.id)
         }
 
-        @Suppress("MagicNumber")
-        enum class SafeBrowsingCategory(val id: Int) {
-            NONE(0),
-
-            /**
-             * Blocks malware sites.
-             */
-            MALWARE(1 shl 10),
-
-            /**
-             * Blocks unwanted sites.
-             */
-            UNWANTED(1 shl 11),
-
-            /**
-             * Blocks harmful sites.
-             */
-            HARMFUL(1 shl 12),
-
-            /**
-             * Blocks phishing sites.
-             */
-            PHISHING(1 shl 13),
-
-            /**
-             * Blocks all unsafe sites.
-             */
-            RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id)
-        }
-
         companion object {
 
             internal val RECOMMENDED = TrackingProtectionPolicy()
 
             fun none() = TrackingProtectionPolicy(
                 trackingCategories = arrayOf(TrackingCategory.NONE),
-                safeBrowsingCategories = arrayOf(SafeBrowsingCategory.NONE),
                 cookiePolicy = ACCEPT_ALL
             )
 
             /**
              * Strict policy.
-             * Combining the [TrackingCategory.STRICT] plus [SafeBrowsingCategory.RECOMMENDED]
-             * With a cookiePolicy of [ACCEPT_NON_TRACKERS].
+             * Combining the [TrackingCategory.STRICT] plus a cookiePolicy of [ACCEPT_NON_TRACKERS]
              * This is the strictest setting and may cause issues on some web sites.
              */
             fun strict() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.STRICT),
-                safeBrowsingCategory = arrayOf(SafeBrowsingCategory.RECOMMENDED),
                 cookiePolicy = ACCEPT_NON_TRACKERS
             )
 
             /**
              * Recommended policy.
-             * Combining the [TrackingCategory.RECOMMENDED] plus [SafeBrowsingCategory.RECOMMENDED].
-             * With a [CookiePolicy] of [ACCEPT_NON_TRACKERS].
+             * Combining the [TrackingCategory.RECOMMENDED] plus a [CookiePolicy] of [ACCEPT_NON_TRACKERS].
              * This is the recommended setting.
              */
             fun recommended() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
-                safeBrowsingCategory = arrayOf(SafeBrowsingCategory.RECOMMENDED),
                 cookiePolicy = ACCEPT_NON_TRACKERS
             )
 
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-                safeBrowsingCategories: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
                 cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
             ) = TrackingProtectionPolicyForSessionTypes(
                 trackingCategories,
-                safeBrowsingCategories,
                 cookiePolicy
             )
         }
@@ -269,8 +264,7 @@ abstract class EngineSession(
             return true
         }
 
-        override fun hashCode() =
-            trackingCategories.sumBy { it.id } + safeBrowsingCategories.sumBy { it.id } + cookiePolicy.id
+        override fun hashCode() = trackingCategories.sumBy { it.id } + cookiePolicy.id
 
         fun contains(category: TrackingCategory) =
             (trackingCategories.sumBy { it.id } and category.id) != 0
@@ -282,11 +276,9 @@ abstract class EngineSession(
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
         trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-        safeBrowsingCategory: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
         cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
     ) : TrackingProtectionPolicy(
         trackingCategories = trackingCategory,
-        safeBrowsingCategories = safeBrowsingCategory,
         cookiePolicy = cookiePolicy
     ) {
         /**
@@ -294,7 +286,6 @@ abstract class EngineSession(
          */
         fun forPrivateSessionsOnly() = TrackingProtectionPolicy(
             trackingCategories = trackingCategories,
-            safeBrowsingCategories = safeBrowsingCategories,
             useForPrivateSessions = true,
             useForRegularSessions = false,
             cookiePolicy = cookiePolicy
@@ -305,7 +296,6 @@ abstract class EngineSession(
          */
         fun forRegularSessionsOnly() = TrackingProtectionPolicy(
             trackingCategories = trackingCategories,
-            safeBrowsingCategories = safeBrowsingCategories,
             useForPrivateSessions = false,
             useForRegularSessions = true,
             cookiePolicy = cookiePolicy
