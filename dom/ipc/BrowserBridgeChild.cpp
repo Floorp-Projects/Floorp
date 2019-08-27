@@ -159,8 +159,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvFireFrameLoadEvent(
   event.mFlags.mCancelable = false;
   EventDispatcher::Dispatch(owner, nullptr, &event, nullptr, &status);
 
-  UnblockOwnerDocsLoadEvent(owner->OwnerDoc());
-
   return IPC_OK();
 }
 
@@ -216,20 +214,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
-
-  // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
-  // been removed before it finishes loading, or its subprocess crashed):
-  if (RefPtr<Element> owner = mFrameLoader->GetOwnerContent()) {
-    UnblockOwnerDocsLoadEvent(owner->OwnerDoc());
-  }
-}
-
-void BrowserBridgeChild::UnblockOwnerDocsLoadEvent(Document* aOwnerDoc) {
-  // XXX bug 1576296: Is it expected that we sometimes don't have a docShell?
-  if (!mHadInitialLoad && aOwnerDoc->GetDocShell()) {
-    mHadInitialLoad = true;
-    nsDocShell::Cast(aOwnerDoc->GetDocShell())->OOPChildLoadDone(this);
-  }
 }
 
 }  // namespace dom
