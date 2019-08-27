@@ -61,32 +61,9 @@ interface nsIShellService : nsISupports
                             in ACString aImageName);
 
   /**
-   * Constants identifying applications that can be opened with
-   * openApplication.
-   */
-  const long APPLICATION_MAIL        = 0;
-  const long APPLICATION_NEWS        = 1;
-
-  /**
-   * Opens the application specified. If more than one application of the
-   * given type is available on the system, the default or "preferred"
-   * application is used.
-   */
-  void openApplication(in long aApplication);
-
-  /**
    * The desktop background color, visible when no background image is
    * used, or if the background image is centered and does not fill the
    * entire screen. A rgb value, where (r << 16 | g << 8 | b)
    */
   attribute unsigned long desktopBackgroundColor;
-
-  /**
-   * Opens an application with a specific URI to load.
-   * @param   application
-   *          The application file (or bundle directory, on OS X)
-   * @param   uri
-   *          The uri to be loaded by the application
-   */
-  void openApplicationWithURI(in nsIFile aApplication, in ACString aURI);
 };

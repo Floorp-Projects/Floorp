@@ -245,6 +245,6 @@ if (AppConstants.platform != "macosx") {
   };
 
   gSetBackground.showDesktopPrefs = function() {
-    this._shell.openApplication(Ci.nsIMacShellService.APPLICATION_DESKTOP);
+    this._shell.QueryInterface(Ci.nsIMacShellService).showDesktopPreferences();
   };
 }

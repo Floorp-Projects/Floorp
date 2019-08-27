@@ -2,11 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+
+import time
+
+import six
 
 from .base import MachError
-import time
 
 INVALID_COMMAND_CONTEXT = r'''
 It looks like you tried to run a mach command from an invalid context. The %s
@@ -133,7 +135,7 @@ class MachRegistrar(object):
         end_time = time.time()
 
         result = result or 0
-        assert isinstance(result, (int, long))
+        assert isinstance(result, six.integer_types)
 
         if context and not debug_command:
             postrun = getattr(context, 'post_dispatch_handler', None)

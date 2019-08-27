@@ -28,11 +28,7 @@ MockShellService.prototype = {
   BACKGROUND_FIT: 5,
   BACKGROUND_SPAN: 6,
   setDesktopBackground(aElement, aPosition) {},
-  APPLICATION_MAIL: 0,
-  APPLICATION_NEWS: 1,
-  openApplication(aApplication) {},
   desktopBackgroundColor: 0,
-  openApplicationWithURI(aApplication, aURI) {},
 };
 
 var mockShellService = new MockObjectRegisterer(
