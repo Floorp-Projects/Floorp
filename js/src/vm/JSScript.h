@@ -1121,7 +1121,8 @@ class ScriptSource {
   uint32_t id() const { return id_; }
 
   // Display URLs
-  MOZ_MUST_USE bool setDisplayURL(JSContext* cx, const char16_t* displayURL);
+  MOZ_MUST_USE bool setDisplayURL(JSContext* cx, const char16_t* url);
+  MOZ_MUST_USE bool setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url);
   bool hasDisplayURL() const { return displayURL_ != nullptr; }
   const char16_t* displayURL() {
     MOZ_ASSERT(hasDisplayURL());
@@ -1129,8 +1130,8 @@ class ScriptSource {
   }
 
   // Source maps
-  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx,
-                                    const char16_t* sourceMapURL);
+  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, const char16_t* url);
+  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url);
   bool hasSourceMapURL() const { return sourceMapURL_ != nullptr; }
   const char16_t* sourceMapURL() {
     MOZ_ASSERT(hasSourceMapURL());
