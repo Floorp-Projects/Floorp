@@ -136,13 +136,22 @@ def make_task_worker(config, jobs):
 
 
 def generate_upstream_artifacts(upstream_task_ref, locales):
+    def locale_path(locale): return ''
+    if locales and locales != ['en-US']:
+        def locale_path(locale): return '{}/'.format(locale)
+        # We assume 'en-US' is not in locales, assert it here
+        assert 'en-US' not in locales, "Expected no en-US in: {}".format(locales)
+    else:
+        # We assume only 'en-US' is in locales, assert it here
+        assert 'en-US' in locales, "Expect en-US in: {}".format(locales)
+        assert len(locales) == 1, "Expect locales to only contain en-US"
+
     return [{
         'taskId': {'task-reference': upstream_task_ref},
         'taskType': 'scriptworker',
         'locale': locale,
         'paths': [
-            # addonscript uploads en-US XPI in the en-US folder
-            'public/build/{}/target.langpack.xpi'.format(locale)
+            'public/build/{}target.langpack.xpi'.format(locale_path(locale))
         ],
     } for locale in locales]
 
