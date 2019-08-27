@@ -20,7 +20,8 @@ data class IconRequest(
     val url: String,
     val size: Size = Size.DEFAULT,
     val resources: List<Resource> = emptyList(),
-    @ColorInt val color: Int? = null
+    @ColorInt val color: Int? = null,
+    val isPrivate: Boolean = false
 ) {
 
     /**
