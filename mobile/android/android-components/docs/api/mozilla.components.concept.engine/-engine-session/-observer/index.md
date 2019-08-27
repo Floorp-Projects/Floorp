@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L35)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L34)
 
 Interface to be implemented by classes that want to observe this engine session.
 

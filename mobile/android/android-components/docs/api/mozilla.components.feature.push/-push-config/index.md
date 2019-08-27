@@ -2,21 +2,31 @@
 
 # PushConfig
 
-`data class PushConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L354)
+`data class PushConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L359)
 
-Configuration object for initializing the Push Manager.
+Configuration object for initializing the Push Manager with an AutoPush server.
+
+### Parameters
+
+`senderId` - The project identifier set by the server. Contact your server ops team to know what value to set.
+
+`serverHost` - The sync server address.
+
+`protocol` - The socket protocol to use when communicating with the server.
+
+`serviceType` - The push services that the AutoPush server supports.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PushConfig(senderId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, serverHost: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "updates.push.services.mozilla.com", protocol: `[`Protocol`](../-protocol/index.md)` = Protocol.HTTPS, serviceType: `[`ServiceType`](../-service-type/index.md)` = ServiceType.FCM)`<br>Configuration object for initializing the Push Manager. |
+| [&lt;init&gt;](-init-.md) | `PushConfig(senderId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, serverHost: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "updates.push.services.mozilla.com", protocol: `[`Protocol`](../-protocol/index.md)` = Protocol.HTTPS, serviceType: `[`ServiceType`](../-service-type/index.md)` = ServiceType.FCM)`<br>Configuration object for initializing the Push Manager with an AutoPush server. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [protocol](protocol.md) | `val protocol: `[`Protocol`](../-protocol/index.md) |
-| [senderId](sender-id.md) | `val senderId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [serverHost](server-host.md) | `val serverHost: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [serviceType](service-type.md) | `val serviceType: `[`ServiceType`](../-service-type/index.md) |
+| [protocol](protocol.md) | `val protocol: `[`Protocol`](../-protocol/index.md)<br>The socket protocol to use when communicating with the server. |
+| [senderId](sender-id.md) | `val senderId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The project identifier set by the server. Contact your server ops team to know what value to set. |
+| [serverHost](server-host.md) | `val serverHost: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The sync server address. |
+| [serviceType](service-type.md) | `val serviceType: `[`ServiceType`](../-service-type/index.md)<br>The push services that the AutoPush server supports. |
