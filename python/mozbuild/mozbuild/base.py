@@ -880,16 +880,7 @@ class MachCommandBase(MozbuildObject):
             sys.exit(1)
 
         except MozconfigLoadException as e:
-            print('Error loading mozconfig: ' + e.path)
-            print('')
             print(e.message)
-            if e.output:
-                print('')
-                print('mozconfig output:')
-                print('')
-                for line in e.output:
-                    print(line)
-
             sys.exit(1)
 
         MozbuildObject.__init__(self, topsrcdir, context.settings,
@@ -908,16 +899,7 @@ class MachCommandBase(MozbuildObject):
             sys.exit(1)
 
         except MozconfigLoadException as e:
-            print('Error loading mozconfig: ' + e.path)
-            print('')
             print(e.message)
-            if e.output:
-                print('')
-                print('mozconfig output:')
-                print('')
-                for line in e.output:
-                    print(line)
-
             sys.exit(1)
 
         # Always keep a log of the last command, but don't do that for mach
