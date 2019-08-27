@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Checks for the AccessibleHighlighter's infobar component and its text label
+// Checks for the AccessibleHighlighter's infobar component and its keyboard
 // audit.
 
 add_task(async function() {
@@ -33,13 +33,12 @@ add_task(async function() {
           accessibility: {
             AUDIT_TYPE,
             ISSUE_TYPE: {
-              [AUDIT_TYPE.TEXT_LABEL]: {
-                DIALOG_NO_NAME,
-                FORM_NO_VISIBLE_NAME,
-                TOOLBAR_NO_NAME,
+              [AUDIT_TYPE.KEYBOARD]: {
+                INTERACTIVE_NO_ACTION,
+                FOCUSABLE_NO_SEMANTICS,
               },
             },
-            SCORES: { BEST_PRACTICES, FAIL, WARNING },
+            SCORES: { FAIL, WARNING },
           },
         } = require("devtools/shared/constants");
 
@@ -51,23 +50,23 @@ add_task(async function() {
          * @param  {Object} audit
          *         Audit information that is passed on highlighter show.
          */
-        function checkTextLabel(infobar, audit) {
+        function checkKeyboard(infobar, audit) {
           const { issue, score } = audit || {};
           let expected = "";
           if (issue) {
             const { ISSUE_TO_INFOBAR_LABEL_MAP } = infobar.audit.reports[
-              AUDIT_TYPE.TEXT_LABEL
+              AUDIT_TYPE.KEYBOARD
             ].constructor;
             expected = L10N.getStr(ISSUE_TO_INFOBAR_LABEL_MAP[issue]);
           }
 
           is(
-            infobar.getTextContent("text-label"),
+            infobar.getTextContent("keyboard"),
             expected,
-            "infobar text label audit text content is correct"
+            "infobar keyboard audit text content is correct"
           );
           if (score) {
-            ok(infobar.getElement("text-label").classList.contains(score));
+            ok(infobar.getElement("keyboard").classList.contains(score));
           }
         }
 
@@ -111,43 +110,34 @@ add_task(async function() {
         const tests = [
           {
             desc:
-              "Infobar is shown with no text label audit content when no audit.",
+              "Infobar is shown with no keyboard audit content when no audit.",
           },
           {
             desc:
-              "Infobar is shown with no text label audit content when audit is null.",
+              "Infobar is shown with no keyboard audit content when audit is null.",
             audit: null,
           },
           {
             desc:
-              "Infobar is shown with no text label audit content when empty " +
-              "text label audit.",
-            audit: { [AUDIT_TYPE.TEXT_LABEL]: null },
+              "Infobar is shown with no keyboard audit content when empty " +
+              "keyboard audit.",
+            audit: { [AUDIT_TYPE.KEYBOARD]: null },
           },
           {
-            desc:
-              "Infobar is shown with text label audit content for an error.",
+            desc: "Infobar is shown with keyboard audit content for an error.",
             audit: {
-              [AUDIT_TYPE.TEXT_LABEL]: { score: FAIL, issue: TOOLBAR_NO_NAME },
-            },
-          },
-          {
-            desc:
-              "Infobar is shown with text label audit content for a warning.",
-            audit: {
-              [AUDIT_TYPE.TEXT_LABEL]: {
-                score: WARNING,
-                issue: FORM_NO_VISIBLE_NAME,
+              [AUDIT_TYPE.KEYBOARD]: {
+                score: FAIL,
+                issue: INTERACTIVE_NO_ACTION,
               },
             },
           },
           {
-            desc:
-              "Infobar is shown with text label audit content for best practices.",
+            desc: "Infobar is shown with keyboard audit content for a warning.",
             audit: {
-              [AUDIT_TYPE.TEXT_LABEL]: {
-                score: BEST_PRACTICES,
-                issue: DIALOG_NO_NAME,
+              [AUDIT_TYPE.KEYBOARD]: {
+                score: WARNING,
+                issue: FOCUSABLE_NO_SEMANTICS,
               },
             },
           },
@@ -158,7 +148,7 @@ add_task(async function() {
 
           info(desc);
           highlighter.show(node, { ...bounds, audit });
-          checkTextLabel(infobar, audit && audit[AUDIT_TYPE.TEXT_LABEL]);
+          checkKeyboard(infobar, audit && audit[AUDIT_TYPE.KEYBOARD]);
           highlighter.hide();
         }
       });
