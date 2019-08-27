@@ -1,7 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TextLabelCheck component: BEST_PRACTICES render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\" class=\\"accessibility-text-label-check\\"><img src=\\"chrome://devtools/skin/images/info.svg\\" class=\\"icon BEST_PRACTICES\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+exports[`TextLabelCheck component: BEST_PRACTICES render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/info.svg\\" class=\\"icon BEST_PRACTICES\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
 
-exports[`TextLabelCheck component: FAIL render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\" class=\\"accessibility-text-label-check\\"><img src=\\"chrome://devtools/skin/images/error.svg\\" class=\\"icon FAIL\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+exports[`TextLabelCheck component: BEST_PRACTICES render 2`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/info.svg\\" class=\\"icon BEST_PRACTICES\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
 
-exports[`TextLabelCheck component: WARNING render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\" class=\\"accessibility-text-label-check\\"><img src=\\"chrome://devtools/skin/images/alert.svg\\" class=\\"icon WARNING\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+exports[`TextLabelCheck component: FAIL render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/error.svg\\" class=\\"icon FAIL\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`TextLabelCheck component: FAIL render 2`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/error.svg\\" class=\\"icon FAIL\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`TextLabelCheck component: WARNING render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/alert.svg\\" class=\\"icon WARNING\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`TextLabelCheck component: WARNING render 2`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/alert.svg\\" class=\\"icon WARNING\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;

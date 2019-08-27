@@ -708,6 +708,10 @@ body {
 }
 
 /* Checks */
+.checks .list li:last-of-type {
+  padding-block-end: 4px;
+}
+
 .accessibility-check code {
   background-color: var(--accessibility-code-background);
   border-radius: 2px;
@@ -715,7 +719,7 @@ body {
   padding: 0 4px;
 }
 
-.accessibility-text-label-check .icon {
+.accessibility-check .icon {
   display: inline;
   -moz-context-properties: fill;
   vertical-align: top;
@@ -723,11 +727,11 @@ body {
   margin-inline-end: 4px;
 }
 
-.accessibility-text-label-check .icon.FAIL {
+.accessibility-check .icon.FAIL {
   fill: var(--theme-icon-error-color);
 }
 
-.accessibility-text-label-check .icon.WARNING {
+.accessibility-check .icon.WARNING {
   fill: var(--theme-icon-warning-color);
 }
 
