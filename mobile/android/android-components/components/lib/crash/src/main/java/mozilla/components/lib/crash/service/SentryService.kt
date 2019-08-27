@@ -31,7 +31,7 @@ class SentryService(
     private val sendEventForNativeCrashes: Boolean = false,
     clientFactory: SentryClientFactory = AndroidSentryClientFactory(context)
 ) : CrashReporterService {
-    private val client: SentryClient = SentryClientFactory.sentryClient(
+    private val client: SentryClient by lazy { SentryClientFactory.sentryClient(
         Uri.parse(dsn).buildUpon()
             .appendQueryParameter("uncaught.handler.enabled", "false")
             .build()
@@ -46,6 +46,7 @@ class SentryService(
         addTag("ac.version", Build.version)
         addTag("ac.git", Build.gitHash)
         addTag("ac.as.build_version", Build.applicationServicesVersion)
+    }
     }
 
     override fun report(crash: Crash.UncaughtExceptionCrash) {
