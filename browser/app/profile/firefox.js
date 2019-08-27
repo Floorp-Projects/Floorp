@@ -3,6 +3,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// Non-static prefs that are specific to desktop Firefox belong in this file
+// (unless there is a compelling and documented reason for them to belong in
+// another file).
+//
 // Please indent all prefs defined within #ifdef/#ifndef conditions. This
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
@@ -159,7 +163,7 @@ pref("app.update.url", "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%B
   pref("app.update.service.enabled", true);
 #endif
 
-#ifdef XP_WIN
+#ifdef MOZ_BITS_DOWNLOAD
   // If set to true, the Update Service will attempt to use Windows BITS to
   // download updates and will fallback to downloading internally if that fails.
   pref("app.update.BITS.enabled", true);
@@ -2041,7 +2045,7 @@ pref("devtools.markup.collapseAttributeLength", 120);
 pref("devtools.markup.beautifyOnCopy", false);
 // Whether or not the DOM mutation breakpoints context menu are enabled in the
 // markup view.
-pref("devtools.markup.mutationBreakpoints.enabled", false);
+pref("devtools.markup.mutationBreakpoints.enabled", true);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");

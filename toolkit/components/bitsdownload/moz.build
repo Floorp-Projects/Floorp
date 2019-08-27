@@ -14,7 +14,7 @@ XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['MOZ_BITS_DOWNLOAD']:
   EXPORTS += [
     'Bits.h'
   ]

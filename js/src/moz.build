@@ -48,9 +48,16 @@ with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
 if not CONFIG['JS_DISABLE_SHELL']:
-    DIRS += ['shell']
+    DIRS += [
+        'rust',
+        'shell',
+    ]
 
-TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
+    TEST_DIRS += [
+        'gdb',
+        'jsapi-tests',
+        'tests',
+    ]
 
 if CONFIG['FUZZING_INTERFACES']:
     TEST_DIRS += [
@@ -408,7 +415,6 @@ DIRS += [
     'frontend',
     'gc',
     'jit',
-    'rust',
     'wasm',
     'zydis',
 ]

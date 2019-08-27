@@ -1625,6 +1625,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const actor = new PauseScopedObjectActor(
       value,
       {
+        thread: this,
         getGripDepth: () => this._gripDepth,
         incrementGripDepth: () => this._gripDepth++,
         decrementGripDepth: () => this._gripDepth--,

@@ -42,7 +42,7 @@ class TRRService : public nsIObserver,
   bool DisableECS() { return mDisableECS; }
   nsresult GetURI(nsCString& result);
   nsresult GetCredentials(nsCString& result);
-  uint32_t GetRequestTimeout() { return mTRRTimeout; }
+  uint32_t GetRequestTimeout();
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb,
@@ -74,7 +74,6 @@ class TRRService : public nsIObserver,
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;
-  Atomic<uint32_t, Relaxed> mTRRTimeout;
 
   Mutex mLock;
 

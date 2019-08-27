@@ -83,18 +83,7 @@ class Configuration(DescriptorProvider):
             # statements!
             if not iface.isExternal():
                 for partialIface in iface.getPartials():
-                    if (partialIface.filename() != iface.filename() and
-                        # Unfortunately, NavigatorProperty does exactly the
-                        # thing we're trying to prevent here.  I'm not sure how
-                        # to deal with that, short of effectively requiring a
-                        # clobber when NavigatorProperty is added/removed and
-                        # whitelisting the things it outputs here as
-                        # restrictively as I can.
-                        (partialIface.identifier.name != "Navigator" or
-                         len(partialIface.members) != 1 or
-                         partialIface.members[0].location != partialIface.location or
-                         partialIface.members[0].identifier.location.filename() !=
-                           "<builtin>")):
+                    if partialIface.filename() != iface.filename():
                         raise TypeError(
                             "The binding build system doesn't really support "
                             "partial interfaces which don't appear in the "
@@ -106,8 +95,7 @@ class Configuration(DescriptorProvider):
                 if not (iface.getExtendedAttribute("ChromeOnly") or
                         iface.getExtendedAttribute("Func") == ["IsChromeOrXBL"] or
                         iface.getExtendedAttribute("Func") == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"] or
-                        not (iface.hasInterfaceObject() or
-                             iface.isNavigatorProperty()) or
+                        not iface.hasInterfaceObject() or
                         isInWebIDLRoot(iface.filename())):
                     raise TypeError(
                         "Interfaces which are exposed to the web may only be "
@@ -242,8 +230,6 @@ class Configuration(DescriptorProvider):
                 getter = lambda x: x.interface.isExternal()
             elif key == 'isJSImplemented':
                 getter = lambda x: x.interface.isJSImplemented()
-            elif key == 'isNavigatorProperty':
-                getter = lambda x: x.interface.isNavigatorProperty()
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: x.interface.isExposedInAnyWorker()
             elif key == 'isExposedInWorkerDebugger':
@@ -574,13 +560,6 @@ class Descriptor(DescriptorProvider):
         else:
             for attribute in ['implicitJSContext']:
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
-
-        if self.interface.identifier.name == 'Navigator':
-            for m in self.interface.members:
-                if m.isAttr() and m.navigatorObjectGetter:
-                    # These getters call ConstructNavigatorObject to construct
-                    # the value, and ConstructNavigatorObject needs a JSContext.
-                    self.extendedAttributes['all'].setdefault(m.identifier.name, []).append('implicitJSContext')
 
         self._binaryNames = desc.get('binaryNames', {})
         self._binaryNames.setdefault('__legacycaller', 'LegacyCall')

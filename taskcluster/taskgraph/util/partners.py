@@ -415,3 +415,20 @@ def get_partners_to_be_published(config):
             if sub_config.get("publish_to_releases"):
                 partners.append((partner, sub_config_name, sub_config['platforms']))
     return partners
+
+
+def apply_partner_priority(config, jobs):
+    priority = None
+    # Reduce the priority of the partner repack jobs because they don't block QE. Meanwhile
+    # leave EME-free jobs alone because they do, and they'll get the branch priority like the rest
+    # of the release. Only bother with this in production, not on staging releases on try.
+    # medium is the same as mozilla-central, see taskcluster/ci/config.yml. ie higher than
+    # integration branches because we don't want to wait a lot for the graph to be done, but
+    # for multiple releases the partner tasks always wait for non-partner.
+    if (config.kind.startswith('release-partner-repack') and
+            config.params.release_level() == "production"):
+        priority = 'medium'
+    for job in jobs:
+        if priority:
+            job['priority'] = priority
+        yield job

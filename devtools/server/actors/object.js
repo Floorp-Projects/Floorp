@@ -71,6 +71,7 @@ const proto = {
   initialize(
     obj,
     {
+      thread,
       createValueGrip: createValueGripHook,
       sources,
       createEnvironmentActor,
@@ -89,6 +90,7 @@ const proto = {
 
     this.conn = conn;
     this.obj = obj;
+    this.thread = thread;
     this.hooks = {
       createValueGrip: createValueGripHook,
       sources,
@@ -98,10 +100,67 @@ const proto = {
       decrementGripDepth,
       getGlobalDebugObject,
     };
+    this._originalDescriptors = new Map();
   },
 
   rawValue: function() {
     return this.obj.unsafeDereference();
+  },
+
+  addWatchpoint(property, label, watchpointType) {
+    if (this._originalDescriptors.has(property)) {
+      return;
+    }
+    const desc = this.obj.getOwnPropertyDescriptor(property);
+
+    //If there is already a setter or getter, don't add watchpoint.
+    if (desc.set || desc.get) {
+      return;
+    }
+
+    this._originalDescriptors.set(property, desc);
+
+    const pauseAndRespond = () => {
+      const frame = this.thread.dbg.getNewestFrame();
+      this.thread._pauseAndRespond(frame, {
+        type: "watchpoint",
+        message: label,
+      });
+    };
+
+    if (watchpointType === "get") {
+      this.obj.defineProperty(property, {
+        configurable: desc.configurable,
+        enumerable: desc.enumerable,
+        set: this.obj.makeDebuggeeValue(v => {
+          desc.value = v;
+        }),
+        get: this.obj.makeDebuggeeValue(() => {
+          pauseAndRespond();
+        }),
+      });
+    }
+
+    if (watchpointType === "set") {
+      this.obj.defineProperty(property, {
+        configurable: desc.configurable,
+        enumerable: desc.enumerable,
+        set: this.obj.makeDebuggeeValue(v => {
+          desc.value = v;
+          pauseAndRespond();
+        }),
+      });
+    }
+  },
+
+  removeWatchpoint(property) {
+    if (!this._originalDescriptors.has(property)) {
+      return;
+    }
+
+    const desc = this._originalDescriptors.get(property);
+    this._originalDescriptors.delete(property);
+    this.obj.defineProperty(property, desc);
   },
 
   /**
@@ -728,10 +787,14 @@ const proto = {
     if ("value" in desc) {
       retval.writable = desc.writable;
       retval.value = this.hooks.createValueGrip(desc.value);
+    } else if (this._originalDescriptors.has(name)) {
+      const value = this._originalDescriptors.get(name).value;
+      retval.value = this.hooks.createValueGrip(value);
     } else {
       if ("get" in desc) {
         retval.get = this.hooks.createValueGrip(desc.get);
       }
+
       if ("set" in desc) {
         retval.set = this.hooks.createValueGrip(desc.set);
       }

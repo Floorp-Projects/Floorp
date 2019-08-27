@@ -15,6 +15,8 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RWLock.h"
+#include "mozilla/StaticPrefs_android.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -363,8 +365,6 @@ class nsWindow::NPZCSupport final
     : public PanZoomController::NativeProvider::Natives<NPZCSupport> {
   using LockedWindowPtr = WindowPtr<NPZCSupport>::Locked;
 
-  static bool sNegateWheelScroll;
-
   WindowPtr<NPZCSupport> mWindow;
   PanZoomController::NativeProvider::WeakRef mNPZC;
   int mPreviousButtons;
@@ -413,13 +413,6 @@ class nsWindow::NPZCSupport final
               const PanZoomController::NativeProvider::LocalRef& aNPZC)
       : mWindow(aPtr, aWindow), mNPZC(aNPZC), mPreviousButtons(0) {
     MOZ_ASSERT(mWindow);
-
-    static bool sInited;
-    if (!sInited) {
-      Preferences::AddBoolVarCache(&sNegateWheelScroll,
-                                   "ui.scrolling.negate_wheel_scroll");
-      sInited = true;
-    }
   }
 
   ~NPZCSupport() {}
@@ -508,7 +501,7 @@ class nsWindow::NPZCSupport final
 
     ScreenPoint origin = ScreenPoint(aX, aY);
 
-    if (sNegateWheelScroll) {
+    if (StaticPrefs::ui_scrolling_negate_wheel_scroll()) {
       aHScroll = -aHScroll;
       aVScroll = -aVScroll;
     }
@@ -778,8 +771,6 @@ class nsWindow::NPZCSupport final
 
 template <>
 const char nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[] = "NPZCSupport";
-
-bool nsWindow::NPZCSupport::sNegateWheelScroll;
 
 NS_IMPL_ISUPPORTS(nsWindow::AndroidView, nsIAndroidEventDispatcher,
                   nsIAndroidView)
@@ -2199,16 +2190,7 @@ nsresult nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 }
 
 bool nsWindow::WidgetPaintsBackground() {
-  static bool sWidgetPaintsBackground = true;
-  static bool sWidgetPaintsBackgroundPrefCached = false;
-
-  if (!sWidgetPaintsBackgroundPrefCached) {
-    sWidgetPaintsBackgroundPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(
-        &sWidgetPaintsBackground, "android.widget_paints_background", true);
-  }
-
-  return sWidgetPaintsBackground;
+  return StaticPrefs::android_widget_paints_background();
 }
 
 bool nsWindow::NeedsPaint() {
