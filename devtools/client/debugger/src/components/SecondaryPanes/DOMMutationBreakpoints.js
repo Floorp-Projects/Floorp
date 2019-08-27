@@ -31,6 +31,7 @@ type Props = {
   unHighlightDomElement: typeof actions.unHighlightDomElement,
   deleteBreakpoint: typeof deleteDOMMutationBreakpoint,
   toggleBreakpoint: typeof toggleDOMMutationBreakpointState,
+  setSkipPausing: typeof actions.setSkipPausing,
 };
 
 const localizationTerms = {
@@ -40,12 +41,22 @@ const localizationTerms = {
 };
 
 class DOMMutationBreakpointsContents extends Component<Props> {
+  handleBreakpoint(breakpointId, shouldEnable) {
+    const { toggleBreakpoint, setSkipPausing } = this.props;
+
+    // The user has enabled a mutation breakpoint so we should no
+    // longer skip pausing
+    if (shouldEnable) {
+      setSkipPausing(false);
+    }
+    toggleBreakpoint(breakpointId, shouldEnable);
+  }
+
   renderItem(breakpoint: DOMMutationBreakpoint) {
     const {
       openElementInInspector,
       highlightDomElement,
       unHighlightDomElement,
-      toggleBreakpoint,
       deleteBreakpoint,
     } = this.props;
     const { enabled, id: breakpointId, nodeFront, mutationType } = breakpoint;
@@ -55,7 +66,7 @@ class DOMMutationBreakpointsContents extends Component<Props> {
         <input
           type="checkbox"
           checked={enabled}
-          onChange={() => toggleBreakpoint(breakpointId, !enabled)}
+          onChange={() => this.handleBreakpoint(breakpointId, !enabled)}
         />
         <div className="dom-mutation-info">
           <div className="dom-mutation-label">
@@ -123,6 +134,7 @@ class DomMutationBreakpoints extends Component<Props> {
         openElementInInspector={this.props.openElementInInspector}
         highlightDomElement={this.props.highlightDomElement}
         unHighlightDomElement={this.props.unHighlightDomElement}
+        setSkipPausing={this.props.setSkipPausing}
       />
     );
   }
@@ -136,5 +148,6 @@ export default connect(
     openElementInInspector: actions.openElementInInspectorCommand,
     highlightDomElement: actions.highlightDomElement,
     unHighlightDomElement: actions.unHighlightDomElement,
+    setSkipPausing: actions.setSkipPausing,
   }
 )(DomMutationBreakpoints);
