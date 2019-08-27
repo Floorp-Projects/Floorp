@@ -137,8 +137,6 @@ class BackgroundServices(
      */
     private val accountObserver = object : AccountObserver {
         override fun onLoggedOut() {
-            pushService.stop()
-
             push.unsubscribeForType(PushType.Services)
 
             context.components.analytics.metrics.track(Event.SyncAuthSignOut)
@@ -147,8 +145,6 @@ class BackgroundServices(
         }
 
         override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-            pushService.start(context)
-
             if (newAccount) {
                 context.components.analytics.metrics.track(Event.FXANewSignup)
                 push.subscribeForType(PushType.Services)
