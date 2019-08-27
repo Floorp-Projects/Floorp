@@ -53,6 +53,20 @@ class GeckoTelemetryDelegate final
         mozilla::jni::LongArray::New(samples->Elements(), samples->Length()));
   }
 
+  void ReceiveBoolScalarValue(const nsCString& aName, bool aValue) override {
+    MOZ_ASSERT_UNREACHABLE("ReceiveBoolScalarValue unimplemented");
+  }
+
+  void ReceiveStringScalarValue(const nsCString& aName,
+                                const nsCString& aValue) override {
+    MOZ_ASSERT_UNREACHABLE("ReceiveStringScalarValue unimplemented");
+  }
+
+  void ReceiveUintScalarValue(const nsCString& aName,
+                              uint32_t aValue) override {
+    MOZ_ASSERT_UNREACHABLE("ReceiveUintScalarValue unimplemented");
+  }
+
   mozilla::java::RuntimeTelemetry::Proxy::GlobalRef mProxy;
 };
 
