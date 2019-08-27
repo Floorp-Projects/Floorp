@@ -291,7 +291,6 @@ struct LazyScriptCreationData {
     }
 
     if (!closedOverBindings.appendAll(COB)) {
-      ReportOutOfMemory(cx);  // closedOverBindings uses SystemAllocPolicy.
       return false;
     }
     return true;
