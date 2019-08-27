@@ -423,6 +423,17 @@ OptionsPanel.prototype = {
       },
     ];
 
+    // In the Nightly Browser Toolbox, display an option to enable the experimental
+    // Omniscient Browser Toolbox.
+    if (this.target.isParentProcess) {
+      prefDefinitions.push({
+        pref: "devtools.browsertoolbox.fission",
+        label: "Enable Omniscient Browser Toolbox (⚠ WIP ⚠, needs restart)",
+        id: "devtools-browsertoolbox-fission",
+        parentId: "context-options",
+      });
+    }
+
     const createPreferenceOption = ({ pref, label, id }) => {
       const inputLabel = this.panelDoc.createElement("label");
       const checkbox = this.panelDoc.createElement("input");
