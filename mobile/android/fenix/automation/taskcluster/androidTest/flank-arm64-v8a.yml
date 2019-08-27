@@ -34,10 +34,10 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: Nexus9 
-     version: 21
-   - model: Nexus9 
-     version: 22
+   - model: sailfish 
+     version: 25
+   - model: sailfish 
+     version: 28
 
 flank:
   project: GOOGLE_PROJECT

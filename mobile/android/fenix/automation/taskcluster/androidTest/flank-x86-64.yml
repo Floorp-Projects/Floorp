@@ -22,8 +22,8 @@ gcloud:
   #results-history-name: tmp_parallel 
 
   # test and app are the only required args
-  app: /APP/PATH
-  test: /TEST/PATH
+  app: /app/path 
+  test: /test/path
 
   auto-google-login: true
   use-orchestrator: true
@@ -34,12 +34,8 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: shamu
-     version: 21
-   - model: sailfish 
+   - model: Nexus6
      version: 25
-   - model: sailfish 
-     version: 28
 
 flank:
   project: GOOGLE_PROJECT
@@ -49,8 +45,3 @@ flank:
   # repeat tests - the amount of times to run the tests.
   # 1 runs the tests once. 10 runs all the tests 10x
   repeat-tests: 1
-  # always run - these tests are inserted at the beginning of every shard
-  # useful if you need to grant permissions or login before other tests run
-  #test-targets-always-run:
-    #- class com.example.app.ExampleUiTest#testPasses
-    # - class org.mozilla.focus.activty.SwitchContextTest#testPasses

@@ -34,10 +34,8 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: Nexus9 
+   - model: shamu
      version: 21
-   - model: Nexus9 
-     version: 22
 
 flank:
   project: GOOGLE_PROJECT

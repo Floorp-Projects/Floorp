@@ -47,9 +47,8 @@ fi
 
 JAVA_BIN="/usr/bin/java"
 PATH_TEST="./automation/taskcluster/androidTest"
+PATH_APK="./app/build/outputs/apk/geckoNightly/debug"
 FLANK_BIN="/build/test-tools/flank.jar"
-FLANK_CONF_ARM="${PATH_TEST}/flank-arm.yml"
-FLANK_CONF_X86="${PATH_TEST}/flank-x86.yml"
 
 echo
 echo "RETRIEVE SERVICE ACCT TOKEN"
@@ -73,18 +72,30 @@ echo
 # and try to download the artifacts. We will exit with the actual error code later.
 set +e
 
-if [[ "${device_type,,}" == "x86" ]]
+APK_APP="${PATH_APK}/app-geckoNightly-${deviceType,,}-debug.apk"
+if [[ "${device_type,,}" == "aarch64" ]]
 then
-    deviceType="X86"
-    flank_template="$FLANK_CONF_X86"
+    flank_template="${PATH_TEST}/flank-aarch64.yml"
+    APK_APP="${PATH_APK}/app-geckoNightly-arm64-v8a-debug.apk"
+elif [[ "${device_type,,}" == "arm" ]]
+then
+    flank_template="${PATH_TEST}/flank-arm.yml"
+    APK_APP="${PATH_APK}/app-geckoNightly-armeabi-v7a-debug.apk"
+elif [[ "${device_type,,}" == "x86_64" ]]
+then
+    flank_template="${PATH_TEST}/flank-x86-64.yml"
+    APK_APP="${PATH_APK}/app-geckoNightly-x86_64-debug.apk"
+elif [[ "${device_type,,}" == "x86" ]]
+then
+    flank_template="${PATH_TEST}/flank-x86.yml"
+    APK_APP="${PATH_APK}/app-geckoNightly-x86-debug.apk"
 else
-    deviceType="Arm"
-    flank_template="$FLANK_CONF_ARM"
+    echo "NOT FOUND"
+    exitcode=1
 fi
 
-APK_APP="./app/build/outputs/apk/${deviceType,,}/debug/app-${deviceType,,}-debug.apk"
-APK_TEST="./app/build/outputs/apk/androidTest/${deviceType,,}/debug/app-${deviceType,,}-debug-androidTest.apk"
-
+APK_TEST="./app/build/outputs/apk/androidTest/debug/app-geckoNightly-debug-androidTest.apk"
+ls -la ./app/build/outputs/apk/androidTest/debug
 
 # function to exit script with exit code from test run.
 # (Only 0 if all test executions passed)

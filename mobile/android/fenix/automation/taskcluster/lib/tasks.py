@@ -180,6 +180,7 @@ class TaskBuilder(object):
         )
 
         test_commands = (
+            'automation/taskcluster/androidTest/ui-test.sh aarch64 -1',
             'automation/taskcluster/androidTest/ui-test.sh arm -1',
         )
 
