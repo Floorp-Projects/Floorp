@@ -44,6 +44,7 @@ const FILTER_LABELS = {
   [FILTERS.NONE]: "accessibility.filter.none",
   [FILTERS.ALL]: "accessibility.filter.all2",
   [FILTERS.CONTRAST]: "accessibility.filter.contrast",
+  [FILTERS.KEYBOARD]: "accessibility.filter.keyboard",
   [FILTERS.TEXT_LABEL]: "accessibility.filter.textLabel",
 };
 
