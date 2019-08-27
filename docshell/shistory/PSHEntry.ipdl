@@ -20,90 +20,90 @@ sync protocol PSHEntry {
 
 parent:
   sync GetURI() returns (nsIURI uri);
-  sync SetURI(nsIURI uri);
+  async SetURI(nsIURI uri);
   sync GetOriginalURI() returns (nsIURI originalUri);
-  sync SetOriginalURI(nsIURI originalUri);
+  async SetOriginalURI(nsIURI originalUri);
   sync GetResultPrincipalURI() returns (nsIURI resultPrincipalUri);
-  sync SetResultPrincipalURI(nsIURI resultPrincipalUri);
+  async SetResultPrincipalURI(nsIURI resultPrincipalUri);
   sync GetLoadReplace() returns (bool loadReplace);
-  sync SetLoadReplace(bool loadReplace);
+  async SetLoadReplace(bool loadReplace);
   sync GetTitle() returns (nsString title);
-  sync SetTitle(nsString title);
+  async SetTitle(nsString title);
   sync GetIsSubFrame() returns (bool isSubFrame);
-  sync SetIsSubFrame(bool isSubFrame);
+  async SetIsSubFrame(bool isSubFrame);
   sync GetReferrerInfo() returns (nsIReferrerInfo referrerInfo);
-  sync SetReferrerInfo(nsIReferrerInfo referrerInfo);
+  async SetReferrerInfo(nsIReferrerInfo referrerInfo);
   sync GetSticky() returns (bool sticky);
-  sync SetSticky(bool sticky);
+  async SetSticky(bool sticky);
   sync GetPostData() returns (nsIInputStream postData);
-  sync SetPostData(nsIInputStream postData);
+  async SetPostData(nsIInputStream postData);
   sync GetParent() returns (MaybeNewPSHEntry parentEntry);
-  sync SetParent(nullable PSHEntry parentEntry);
+  async SetParent(nullable PSHEntry parentEntry);
   sync GetLoadType() returns (uint32_t loadType);
-  sync SetLoadType(uint32_t loadType);
+  async SetLoadType(uint32_t loadType);
   sync GetID() returns (uint32_t id);
-  sync SetID(uint32_t id);
+  async SetID(uint32_t id);
   sync GetCacheKey() returns (uint32_t cacheKey);
-  sync SetCacheKey(uint32_t cacheKey);
+  async SetCacheKey(uint32_t cacheKey);
   sync GetExpirationStatus() returns (bool expirationStatus);
-  sync SetExpirationStatus(bool expirationStatus);
+  async SetExpirationStatus(bool expirationStatus);
   sync GetContentType() returns (nsCString contentType);
-  sync SetContentType(nsCString contentType);
+  async SetContentType(nsCString contentType);
   sync GetURIWasModified() returns (bool uriWasModified);
-  sync SetURIWasModified(bool uriWasModified);
+  async SetURIWasModified(bool uriWasModified);
   sync GetTriggeringPrincipal() returns (nsIPrincipal triggeringPrincipal);
-  sync SetTriggeringPrincipal(nsIPrincipal triggeringPrincipal);
+  async SetTriggeringPrincipal(nsIPrincipal triggeringPrincipal);
   sync GetPrincipalToInherit() returns (nsIPrincipal principalToInherit);
-  sync SetPrincipalToInherit(nsIPrincipal principalToInherit);
+  async SetPrincipalToInherit(nsIPrincipal principalToInherit);
   sync GetStoragePrincipalToInherit()
     returns (nsIPrincipal storagePrincipalToInherit);
-  sync SetStoragePrincipalToInherit(nsIPrincipal storagePrincipalToInherit);
+  async SetStoragePrincipalToInherit(nsIPrincipal storagePrincipalToInherit);
   sync GetCsp() returns (nsIContentSecurityPolicy csp);
-  sync SetCsp(nsIContentSecurityPolicy csp);
+  async SetCsp(nsIContentSecurityPolicy csp);
   sync GetStateData() returns (ClonedMessageData stateData);
-  sync SetStateData(ClonedMessageData stateData);
+  async SetStateData(ClonedMessageData stateData);
   sync GetDocshellID() returns (nsID docshellId);
-  sync SetDocshellID(nsID docshellId);
+  async SetDocshellID(nsID docshellId);
   sync GetIsSrcdocEntry() returns (bool isSrcdocEntry);
   sync GetSrcdocData() returns (nsString srcdocData);
-  sync SetSrcdocData(nsString srcdocData);
+  async SetSrcdocData(nsString srcdocData);
   sync GetBaseURI() returns (nsIURI baseUri);
-  sync SetBaseURI(nsIURI baseUri); 
+  async SetBaseURI(nsIURI baseUri);
   sync GetScrollRestorationIsManual() returns (bool scrollRestorationIsManual);
-  sync SetScrollRestorationIsManual(bool scrollRestorationIsManual);
+  async SetScrollRestorationIsManual(bool scrollRestorationIsManual);
   sync GetLoadedInThisProcess() returns (bool loadedInThisProcess);
   sync GetLastTouched() returns (uint32_t lastTouched);
-  sync SetLastTouched(uint32_t lastTouched);
+  async SetLastTouched(uint32_t lastTouched);
   sync GetChildCount() returns (int32_t childCount);
   sync GetPersist() returns (bool persist);
-  sync SetPersist(bool persist);
-  sync SetScrollPosition(int32_t x, int32_t y);
+  async SetPersist(bool persist);
+  async SetScrollPosition(int32_t x, int32_t y);
   sync GetScrollPosition() returns (int32_t x, int32_t y);
   sync GetViewerBounds() returns (nsIntRect bounds);
-  sync SetViewerBounds(nsIntRect bounds);
-  sync Create(nsIURI URI, nsString title, nsIInputStream inputStream,
-              uint32_t cacheKey, nsCString contentType,
-              nsIPrincipal triggeringPrincipal, nsIPrincipal principalToInherit,
-              nsIPrincipal storagePrincipalToInherit,
-              nsIContentSecurityPolicy csp, nsID docshellID,
-              bool dynamicCreation, nsIURI originalUri, nsIURI resultPrincipalURI,
-              bool loadReplace, nsIReferrerInfo referrerInfo,
-              nsString srcdoc, bool srcdocEntry, nsIURI baseURI,
-              bool saveLayoutState, bool expired);
+  async SetViewerBounds(nsIntRect bounds);
+  async Create(nsIURI URI, nsString title, nsIInputStream inputStream,
+               uint32_t cacheKey, nsCString contentType,
+               nsIPrincipal triggeringPrincipal, nsIPrincipal principalToInherit,
+               nsIPrincipal storagePrincipalToInherit,
+               nsIContentSecurityPolicy csp, nsID docshellID,
+               bool dynamicCreation, nsIURI originalUri, nsIURI resultPrincipalURI,
+               bool loadReplace, nsIReferrerInfo referrerInfo,
+               nsString srcdoc, bool srcdocEntry, nsIURI baseURI,
+               bool saveLayoutState, bool expired);
   sync HasDetachedEditor() returns (bool hasDetachedEditor);
   sync IsDynamicallyAdded() returns (bool isDynamicallyAdded);
   sync HasDynamicallyAddedChild() returns (bool hasDynamicallyAddedChild);
   sync AdoptBFCacheEntry(PSHEntry entry) returns (nsresult result);
-  sync AbandonBFCacheEntry(uint64_t aNewSharedID);
+  async AbandonBFCacheEntry(uint64_t aNewSharedID);
   sync SharesDocumentWith(PSHEntry entry) returns (bool sharesDocumentWith,
                                                    nsresult result);
-  sync SetLoadTypeAsHistory();
+  async SetLoadTypeAsHistory();
   sync AddChild(nullable PSHEntry childEntry, int32_t offset, bool useRemoteSubframes) returns (nsresult result);
   sync RemoveChild(PSHEntry childEntry) returns (nsresult result);
   sync GetChildAt(int32_t index) returns (MaybeNewPSHEntry childEntry);
   sync GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t childOffset) returns (MaybeNewPSHEntry childEntry);
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
-  sync ClearEntry(uint64_t aNewSharedID);
+  async ClearEntry(uint64_t aNewSharedID);
   sync CreateLoadInfo() returns (nsDocShellLoadState loadState);
 
   sync __delete__();
