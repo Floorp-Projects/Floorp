@@ -12,6 +12,7 @@
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/shortcuts.css">
 
     <link rel="localization" href="branding/brand.ftl">
     <link rel="localization" href="toolkit/about/aboutAddons.ftl">
@@ -21,6 +22,7 @@
     <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
     <script src="chrome://mozapps/content/extensions/message-bar.js"></script>
     <script src="chrome://mozapps/content/extensions/abuse-reports.js"></script>
+    <script src="chrome://mozapps/content/extensions/shortcuts.js"></script>
     <script src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
@@ -289,6 +291,46 @@
           </p>
         </div>
       </footer>
+    </template>
+
+    <template id="shortcut-view">
+      <div class="error-message">
+        <img class="error-message-icon" src="chrome://global/skin/arrow/panelarrow-vertical.svg">
+        <div class="error-message-label"></div>
+      </div>
+      <message-bar-stack id="duplicate-warning-messages" reverse max-message-bar-count="5">
+      </message-bar-stack>
+    </template>
+
+    <template id="shortcut-card-template">
+      <div class="card shortcut">
+        <div class="card-heading">
+          <img class="card-heading-icon addon-icon">
+          <span class="addon-name"></span>
+        </div>
+      </div>
+    </template>
+
+    <template id="shortcut-row-template">
+      <div class="shortcut-row">
+        <label class="shortcut-label"></label>
+        <input class="shortcut-input" data-l10n-id="shortcuts-input" type="text" readonly>
+      </div>
+    </template>
+
+    <template id="expand-row-template">
+      <div class="expand-row">
+        <button class="expand-button"></button>
+      </div>
+    </template>
+
+    <template id="shortcuts-no-addons">
+      <div data-l10n-id="shortcuts-no-addons"></div>
+    </template>
+
+    <template id="shortcuts-no-commands-template">
+      <div data-l10n-id="shortcuts-no-commands"></div>
+      <ul class="shortcuts-no-commands-list"></ul>
     </template>
   </body>
 </html>
