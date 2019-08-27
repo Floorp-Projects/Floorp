@@ -163,7 +163,7 @@ function openLayoutView() {
         return promise.resolve();
       };
     }
-    mockHighlighter(data.toolbox);
+    mockHighlighter(data.inspector);
 
     return {
       toolbox: data.toolbox,
