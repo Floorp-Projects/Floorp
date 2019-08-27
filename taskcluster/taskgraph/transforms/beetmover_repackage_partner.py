@@ -49,6 +49,7 @@ beetmover_description_schema = schema.extend({
     Optional('extra'): object,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
+    Optional('priority'): task_description_schema['priority'],
 })
 
 transforms = TransformSequence()
@@ -123,6 +124,10 @@ def make_task_description(config, jobs):
                 'repack_id': repack_id,
             },
         }
+        # we may have reduced the priority for partner jobs, otherwise task.py will set it
+        if job.get('priority'):
+            task['priority'] = job['priority']
+
         yield task
 
 
