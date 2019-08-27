@@ -29,6 +29,8 @@ class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
 
   form(json) {
     this.id = json.id;
+    this.url = json.url;
+    this.parentID = json.parentID;
   }
 
   async _createFrameTarget(form) {
