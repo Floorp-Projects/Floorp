@@ -606,14 +606,13 @@ add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
   // Check that the first tab is still with ETP enabled.
   ok(
     !ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
-    "The tracking protection icon state is still enabled."
+    "The ETP state of the first tab is still enabled."
   );
 
   // Check the ETP is disabled on the second origin.
-  gBrowser.selectedTab = tabTwo;
   ok(
-    ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
-    "The tracking protection icon state has been changed to disabled."
+    ContentBlockingAllowList.includes(tabTwo.linkedBrowser),
+    "The ETP state of the second tab has been changed to disabled."
   );
 
   BrowserTestUtils.removeTab(tabOne);
