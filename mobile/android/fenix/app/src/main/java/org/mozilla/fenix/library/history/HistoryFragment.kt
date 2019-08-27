@@ -40,7 +40,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.share.ShareTab
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     private lateinit var historyStore: HistoryStore
     private lateinit var historyView: HistoryView
