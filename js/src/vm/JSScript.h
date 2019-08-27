@@ -1101,16 +1101,22 @@ class ScriptSource {
       XDRState<mode>* xdr, uint8_t sourceCharSize, uint32_t uncompressedLength);
 
  public:
+  const char* filename() const { return filename_.get(); }
   MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
+  MOZ_MUST_USE bool setFilename(JSContext* cx, UniqueChars&& filename);
+
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.get() : filename_.get();
   }
+  MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx, const char* filename);
+  MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx,
+                                          UniqueChars&& filename);
+
   bool hasIntroductionType() const { return introductionType_; }
   const char* introductionType() const {
     MOZ_ASSERT(hasIntroductionType());
     return introductionType_;
   }
-  const char* filename() const { return filename_.get(); }
 
   uint32_t id() const { return id_; }
 
