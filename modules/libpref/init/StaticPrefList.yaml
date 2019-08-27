@@ -6720,7 +6720,7 @@
   mirror: always
 
 - name: toolkit.telemetry.geckoview.batchDurationMS
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 5000
   mirror: always
 
