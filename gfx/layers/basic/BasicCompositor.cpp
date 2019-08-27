@@ -1027,7 +1027,10 @@ void BasicCompositor::EndFrame() {
   // Reset the translation that was applied in CreateRenderTargetForWindow.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
-  if (mCurrentNativeLayer) {
+  if (mTarget) {
+    mDrawTarget = nullptr;
+    mRenderTarget = nullptr;
+  } else if (mCurrentNativeLayer) {
 #ifdef XP_MACOSX
     NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
     MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
@@ -1050,8 +1053,10 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
     return;
   }
 
+  MOZ_ASSERT_IF(mTarget, aForceToEnd);
+
   // It it is not a good timing for EndRemoteDrawing, defter to call it.
-  if (!aForceToEnd && !mTarget && NeedsToDeferEndRemoteDrawing()) {
+  if (!aForceToEnd && NeedsToDeferEndRemoteDrawing()) {
     mIsPendingEndRemoteDrawing = true;
 
     const uint32_t retryMs = 2;
@@ -1080,10 +1085,8 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
     }
   }
 
-  if (aForceToEnd || !mTarget) {
-    mWidget->EndRemoteDrawingInRegion(
-        mDrawTarget, LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion));
-  }
+  mWidget->EndRemoteDrawingInRegion(
+      mDrawTarget, LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion));
 
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
