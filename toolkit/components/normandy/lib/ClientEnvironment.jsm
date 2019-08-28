@@ -97,12 +97,12 @@ class ClientEnvironment extends ClientEnvironmentBase {
     return (async () => {
       const names = { all: [], active: [], expired: [] };
 
-      for (const experiment of await PreferenceExperiments.getAll()) {
-        names.all.push(experiment.name);
-        if (experiment.expired) {
-          names.expired.push(experiment.name);
+      for (const { slug, expired } of await PreferenceExperiments.getAll()) {
+        names.all.push(slug);
+        if (expired) {
+          names.expired.push(slug);
         } else {
-          names.active.push(experiment.name);
+          names.active.push(slug);
         }
       }
 
