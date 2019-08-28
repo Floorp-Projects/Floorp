@@ -1,9 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function test_vertical_text() {
-  const URI =
-    '<body>a<div style="visibility:hidden;">a</div><select><option>a</option></select><select size=2><option>a</option><option>a</option></select></body>';
+add_task(async function test_skip_invisible() {
+  const URI = `
+    <body>
+      <div>
+        a
+        <div style="visibility:hidden;">a</div>
+        <select>
+          <option>a</option>
+        </select>
+        <select size=2>
+          <option>a</option>
+          <option>a</option>
+        </select>
+        <input placeholder="a">
+      </body>`;
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
