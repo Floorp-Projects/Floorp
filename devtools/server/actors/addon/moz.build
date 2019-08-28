@@ -6,5 +6,4 @@
 
 DevToolsModules(
     'webextension-inspected-window.js',
-    'webextension.js',
 )
