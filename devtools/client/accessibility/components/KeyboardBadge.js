@@ -22,11 +22,10 @@ const {
 loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
 
 /**
- * Component for rendering a badge for text alternative accessibliity check
- * failures association with a given accessibility object in the accessibility
- * tree.
+ * Component for rendering a badge for keyboard accessibliity check failures
+ * association with a given accessibility object in the accessibility tree.
  */
-class TextLabelBadge extends PureComponent {
+class KeyboardBadge extends PureComponent {
   static get propTypes() {
     return {
       error: PropTypes.string,
@@ -41,10 +40,10 @@ class TextLabelBadge extends PureComponent {
     }
 
     return Badge({
-      label: L10N.getStr("accessibility.badge.textLabel"),
-      tooltip: L10N.getStr("accessibility.badge.textLabel.tooltip"),
+      label: L10N.getStr("accessibility.badge.keyboard"),
+      tooltip: L10N.getStr("accessibility.badge.keyboard.tooltip"),
     });
   }
 }
 
-module.exports = TextLabelBadge;
+module.exports = KeyboardBadge;
