@@ -72,11 +72,6 @@ GeckoViewStartup.prototype = {
           ],
         });
 
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewPushController", {
-          module: "resource://gre/modules/GeckoViewPushController.jsm",
-          ged: ["GeckoView:PushEvent", "GeckoView:PushSubscriptionChanged"],
-        });
-
         GeckoViewUtils.addLazyPrefObserver(
           {
             name: "geckoview.console.enabled",
