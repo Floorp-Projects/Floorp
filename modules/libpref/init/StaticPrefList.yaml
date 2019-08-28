@@ -5002,6 +5002,13 @@
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
 
+# Whether to disable deprecated style attributes background, color, fontfamily,
+# fontsize, fontstyle and fontweight.
+- name: mathml.deprecated_style_attributes.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable legacy MathML number values that are not valid CSS numbers
 # (e.g. "1234.")
 - name: mathml.legacy_number_syntax.disabled
