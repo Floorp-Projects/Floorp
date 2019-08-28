@@ -32,7 +32,7 @@ export PATH="${PATH}:${PWD}/ninja/bin:${PWD}/gyp/test-env/Scripts"
 hg_clone https://hg.mozilla.org/projects/nspr nspr default
 
 # Build with gyp.
-./nss/build.sh -g -v "$@"
+./nss/build.sh -g -v --enable-libpkix "$@"
 
 # Package.
 7z a public/build/dist.7z dist

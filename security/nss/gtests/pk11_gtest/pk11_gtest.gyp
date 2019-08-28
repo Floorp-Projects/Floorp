@@ -47,6 +47,7 @@
             '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
             '<(DEPTH)/lib/pki/pki.gyp:nsspki',
             '<(DEPTH)/lib/ssl/ssl.gyp:ssl',
+            '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
           ],
         }, {
           'dependencies': [
