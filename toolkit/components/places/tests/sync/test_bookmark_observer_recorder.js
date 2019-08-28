@@ -411,6 +411,7 @@ add_task(async function test_apply_then_revert() {
   let secondTimeRecords = await buf.apply({
     localTimeSeconds,
     remoteTimeSeconds: now,
+    notifyInStableOrder: true,
   });
   deepEqual(
     await buf.fetchUnmergedGuids(),

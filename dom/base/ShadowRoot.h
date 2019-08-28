@@ -39,7 +39,6 @@ class HTMLInputElement;
 
 class ShadowRoot final : public DocumentFragment,
                          public DocumentOrShadowRoot,
-                         public nsStubMutationObserver,
                          public nsIRadioGroupContainer {
  public:
   NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
@@ -47,15 +46,19 @@ class ShadowRoot final : public DocumentFragment,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot, DocumentFragment)
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   void AddSizeOfExcludingThis(nsWindowSizes&, size_t* aNodeSize) const final;
+
+  // Try to reassign an element to a slot.
+  void MaybeReassignElement(Element&);
+  // Called when an element is inserted as a direct child of our host. Tries to
+  // slot the child in one of our slots.
+  void MaybeSlotHostChild(nsIContent&);
+  // Called when a direct child of our host is removed. Tries to un-slot the
+  // child from the currently-assigned slot, if any.
+  void MaybeUnslotHostChild(nsIContent&);
 
   // Shadow DOM v1
   Element* Host() const {
@@ -107,12 +110,6 @@ class ShadowRoot final : public DocumentFragment,
   }
 
   /**
-   * Try to reassign an element to a slot and returns whether the assignment
-   * changed.
-   */
-  void MaybeReassignElement(Element* aElement);
-
-  /**
    * Represents the insertion point in a slot for a given node.
    */
   struct SlotAssignment {
@@ -131,7 +128,7 @@ class ShadowRoot final : public DocumentFragment,
    * It's the caller's responsibility to actually call InsertAssignedNode /
    * AppendAssignedNode in the slot as needed.
    */
-  SlotAssignment SlotAssignmentFor(nsIContent* aContent);
+  SlotAssignment SlotAssignmentFor(nsIContent&);
 
   /**
    * Explicitly invalidates the style and layout of the flattened-tree subtree

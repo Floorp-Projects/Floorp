@@ -18,6 +18,12 @@ loader.lazyRequireGetter(
   "BrowserConsole",
   "devtools/client/webconsole/browser-console"
 );
+loader.lazyRequireGetter(
+  this,
+  "PREFS",
+  "devtools/client/webconsole/constants",
+  true
+);
 
 const BC_WINDOW_FEATURES =
   "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
@@ -46,12 +52,11 @@ class BrowserConsoleManager {
    *        The target that the browser console will connect to.
    * @param nsIDOMWindow iframeWindow
    *        The window where the browser console UI is already loaded.
-   * @param Boolean fissionSupport
    * @return object
    *         A promise object for the opening of the new BrowserConsole instance.
    */
-  async openBrowserConsole(target, win, fissionSupport = false) {
-    const hud = new BrowserConsole(target, win, win, fissionSupport);
+  async openBrowserConsole(target, win) {
+    const hud = new BrowserConsole(target, win, win);
     this._browserConsole = hud;
     hud.once("destroyed", () => {
       this._browserConsole = null;
@@ -72,11 +77,6 @@ class BrowserConsoleManager {
     if (this._browserConsoleInitializing) {
       return this._browserConsoleInitializing;
     }
-
-    const fissionSupport = Services.prefs.getBoolPref(
-      "devtools.browsertoolbox.fission",
-      false
-    );
 
     async function connect() {
       // The Browser console ends up using the debugger in autocomplete.
@@ -124,6 +124,9 @@ class BrowserConsoleManager {
         win.addEventListener("DOMContentLoaded", resolve, { once: true });
       });
 
+      const fissionSupport = Services.prefs.getBoolPref(
+        PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
+      );
       const title = fissionSupport
         ? `💥 Fission Browser Console 💥`
         : l10n.getStr("browserConsole.title");
@@ -137,11 +140,7 @@ class BrowserConsoleManager {
       const target = await connect();
       await target.attach();
       const win = await openWindow(target);
-      const browserConsole = await this.openBrowserConsole(
-        target,
-        win,
-        fissionSupport
-      );
+      const browserConsole = await this.openBrowserConsole(target, win);
       return browserConsole;
     })();
 

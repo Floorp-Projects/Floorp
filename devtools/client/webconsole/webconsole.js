@@ -59,20 +59,13 @@ class WebConsole {
    *        The window of the web console owner.
    * @param bool isBrowserConsole
    */
-  constructor(
-    toolbox,
-    iframeWindow,
-    chromeWindow,
-    isBrowserConsole = false,
-    fissionSupport = false
-  ) {
+  constructor(toolbox, iframeWindow, chromeWindow, isBrowserConsole = false) {
     this.toolbox = toolbox;
     this.iframeWindow = iframeWindow;
     this.chromeWindow = chromeWindow;
     this.hudId = "hud_" + ++gHudId;
     this.browserWindow = this.chromeWindow.top;
     this.isBrowserConsole = isBrowserConsole;
-    this.fissionSupport = fissionSupport;
 
     const element = this.browserWindow.document.documentElement;
     if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {

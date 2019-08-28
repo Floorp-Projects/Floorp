@@ -52,9 +52,80 @@ add_task(async function test_blocker_state() {
   await barrier.wait();
 
   let state = buf.progress.fetchState();
-  let steps = state.steps;
+  let names = [];
+  for (let s of state.steps) {
+    equal(typeof s.at, "number", `Should report timestamp for ${s.step}`);
+    switch (s.step) {
+      case "fetchLocalTree":
+        greaterOrEqual(
+          s.took,
+          0,
+          "Should report time taken to fetch local tree"
+        );
+        deepEqual(
+          s.counts,
+          [{ name: "items", count: 6 }],
+          "Should report number of items in local tree"
+        );
+        break;
+
+      case "fetchRemoteTree":
+        greaterOrEqual(
+          s.took,
+          0,
+          "Should report time taken to fetch remote tree"
+        );
+        deepEqual(
+          s.counts,
+          [{ name: "items", count: 6 }],
+          "Should report number of items in remote tree"
+        );
+        break;
+
+      case "merge":
+        greaterOrEqual(s.took, 0, "Should report time taken to merge");
+        deepEqual(
+          s.counts,
+          [{ name: "items", count: 6 }],
+          "Should report merge stats"
+        );
+        break;
+
+      case "apply":
+        greaterOrEqual(s.took, 0, "Should report time taken to apply");
+        ok(!("counts" in s), "Should not report counts for applying");
+        break;
+
+      case "notifyObservers":
+        greaterOrEqual(
+          s.took,
+          0,
+          "Should report time taken to notify observers"
+        );
+        ok(!("counts" in s), "Should not report counts for observers");
+        break;
+
+      case "fetchLocalChangeRecords":
+        greaterOrEqual(
+          s.took,
+          0,
+          "Should report time taken to fetch records for upload"
+        );
+        deepEqual(
+          s.counts,
+          [{ name: "items", count: 4 }],
+          "Should report number of records to upload"
+        );
+        break;
+
+      case "finalize":
+        ok(!("took" in s), "Should not report time taken to finalize");
+        ok(!("counts" in s), "Should not report counts for finalizing");
+    }
+    names.push(s.step);
+  }
   deepEqual(
-    steps.map(s => s.step),
+    names,
     [
       "fetchLocalTree",
       "fetchRemoteTree",
