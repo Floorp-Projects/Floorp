@@ -33,13 +33,14 @@ class AdaptiveIconProcessor : IconProcessor {
         icon: Icon,
         desiredSize: DesiredSize
     ): Icon {
-        if (!icon.maskable && SDK_INT < Build.VERSION_CODES.O) {
+        val maskable = resource?.maskable == true
+        if (!maskable && SDK_INT < Build.VERSION_CODES.O) {
             return icon
         }
 
         val originalBitmap = icon.bitmap
 
-        val paddingRatio = if (icon.maskable) {
+        val paddingRatio = if (maskable) {
             MASKABLE_ICON_PADDING_RATIO
         } else {
             TRANSPARENT_ICON_PADDING_RATIO
