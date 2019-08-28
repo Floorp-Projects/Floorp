@@ -23,7 +23,6 @@ partial interface mixin DocumentOrShadowRoot {
   readonly attribute Element? pictureInPictureElement;
 };
 
-[Exposed=Window]
 interface PictureInPictureWindow : EventTarget {
   readonly attribute long width;
   readonly attribute long height;
