@@ -72,7 +72,7 @@ add_task(async function testTempPermissionSubframes() {
       // FIXME(Fission): The load event fires before cross-origin iframes have
       // loaded (bug 1559841).
       if (content.SpecialPowers.useRemoteSubframes) {
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 800; i++) {
           await new Promise(resolve => content.setTimeout(resolve, 0));
         }
       }
