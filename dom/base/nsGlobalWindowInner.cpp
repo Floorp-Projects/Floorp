@@ -3057,7 +3057,7 @@ void nsGlobalWindowInner::SetOpener(JSContext* aCx,
                                     JS::Handle<JS::Value> aOpener,
                                     ErrorResult& aError) {
   if (aOpener.isNull()) {
-    FORWARD_TO_OUTER_VOID(SetOpenerWindow, (nullptr, false));
+    GetBrowsingContext()->SetOpener(nullptr);
     return;
   }
 

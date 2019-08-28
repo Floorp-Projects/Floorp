@@ -951,10 +951,19 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> win(newBC->GetDOMWindow());
+  RefPtr<nsGlobalWindowOuter> win(
+      nsGlobalWindowOuter::Cast(newBC->GetDOMWindow()));
   if (win) {
     if (!aForceNoOpener) {
-      win->SetOpenerWindow(parentWindow, windowIsNew);
+      if (windowIsNew) {
+        // If this is a new window, its opener should have been set when its
+        // BrowsingContext was created. If not, we need to set it ourselves.
+        MOZ_DIAGNOSTIC_ASSERT(newBC->GetOpenerId() ==
+                              (parentBC ? parentBC->Id() : 0));
+        MOZ_DIAGNOSTIC_ASSERT(!!parentBC == newBC->HadOriginalOpener());
+      } else {
+        newBC->SetOpener(parentBC);
+      }
     } else if (parentWindow && parentWindow != win) {
       MOZ_ASSERT(
           win->TabGroup() != parentWindow->TabGroup(),
@@ -1069,7 +1078,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // SetInitialPrincipalToSubject is safe to call multiple times.
     if (win) {
       nsCOMPtr<nsIContentSecurityPolicy> cspToInheritForAboutBlank;
-      nsCOMPtr<mozIDOMWindowProxy> targetOpener = win->GetOpener();
+      nsCOMPtr<mozIDOMWindowProxy> targetOpener = win->GetSameProcessOpener();
       nsCOMPtr<nsIDocShell> openerDocShell(do_GetInterface(targetOpener));
       if (openerDocShell) {
         RefPtr<Document> openerDoc =
@@ -1079,13 +1088,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       win->SetInitialPrincipalToSubject(cspToInheritForAboutBlank);
 
       if (aIsPopupSpam) {
-        auto* globalWin = nsGlobalWindowOuter::Cast(win);
-        MOZ_ASSERT(!globalWin->IsPopupSpamWindow(),
+        MOZ_ASSERT(!win->IsPopupSpamWindow(),
                    "Who marked it as popup spam already???");
-        if (!globalWin->IsPopupSpamWindow()) {  // Make sure we don't mess up
-                                                // our counter even if the above
-                                                // assert fails.
-          globalWin->SetIsPopupSpamWindow(true);
+        if (!win->IsPopupSpamWindow()) {  // Make sure we don't mess up
+                                          // our counter even if the above
+                                          // assert fails.
+          win->SetIsPopupSpamWindow(true);
         }
       }
     }
@@ -1162,7 +1170,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
     if (obsSvc) {
-      obsSvc->NotifyObservers(win, "toplevel-window-ready", nullptr);
+      obsSvc->NotifyObservers(ToSupports(win), "toplevel-window-ready",
+                              nullptr);
     }
   }
 
