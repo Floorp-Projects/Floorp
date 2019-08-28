@@ -167,10 +167,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void FlushIceCtxOperationQueueIfReady();
   void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
   nsresult SetTargetForDefaultLocalAddressLookup();
-  void EnsureIceGathering(bool aDefaultRouteOnly, bool aObfuscateHostAddresses);
+  void EnsureIceGathering(bool aDefaultRouteOnly);
 
   bool GetPrefDefaultAddressOnly() const;
-  bool GetPrefObfuscateHostAddresses() const;
 
   void ConnectSignals();
 
@@ -230,9 +229,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Set to true when the object is going to be released.
   bool mDestroyed;
-
-  // Used to store the mDNS hostnames that we have registered
-  std::set<std::string> mRegisteredMDNSHostnames;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };

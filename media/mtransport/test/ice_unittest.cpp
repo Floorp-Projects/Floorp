@@ -537,7 +537,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering,
-                        default_route_only, false, false),
+                        default_route_only, false),
         NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -984,9 +984,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void CandidateInitialized(NrIceMediaStream* stream,
                             const std::string& raw_candidate,
-                            const std::string& ufrag,
-                            const std::string& mdns_addr,
-                            const std::string& actual_addr) {
+                            const std::string& ufrag) {
     std::string candidate(FilterCandidate(raw_candidate));
     if (candidate.empty()) {
       return;

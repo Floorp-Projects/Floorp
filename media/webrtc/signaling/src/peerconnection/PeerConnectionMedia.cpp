@@ -52,6 +52,7 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
   if (pcm_) {
     pcm_->mStunAddrs = addrs;
     pcm_->mLocalAddrsCompleted = true;
+    pcm_->mStunAddrsRequest = nullptr;
     pcm_->FlushIceCtxOperationQueueIfReady();
     // If parent process returns 0 STUN addresses, change ICE connection
     // state to failed.
@@ -72,29 +73,33 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mSTSThread(mParent->GetSTSThread()),
       mProxyResolveCompleted(false),
       mProxyConfig(nullptr),
-      mStunAddrsRequest(nullptr),
       mLocalAddrsCompleted(false),
       mTargetForDefaultLocalAddressLookupIsSet(false),
-      mDestroyed(false) {
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIEventTarget> target =
-        mParent->GetWindow()
-            ? mParent->GetWindow()->EventTargetFor(TaskCategory::Other)
-            : nullptr;
-
-    mStunAddrsRequest =
-        new net::StunAddrsRequestChild(new StunAddrsHandler(this), target);
-  }
-}
+      mDestroyed(false) {}
 
 PeerConnectionMedia::~PeerConnectionMedia() {
   MOZ_RELEASE_ASSERT(!mMainThread);
 }
 
 void PeerConnectionMedia::InitLocalAddrs() {
-  if (mStunAddrsRequest) {
+  if (XRE_IsContentProcess()) {
+    CSFLogDebug(LOGTAG, "%s: Get stun addresses via IPC",
+                mParentHandle.c_str());
+
+    nsCOMPtr<nsIEventTarget> target =
+        mParent->GetWindow()
+            ? mParent->GetWindow()->EventTargetFor(TaskCategory::Other)
+            : nullptr;
+
+    // We're in the content process, so send a request over IPC for the
+    // stun address discovery.
+    mStunAddrsRequest =
+        new net::StunAddrsRequestChild(new StunAddrsHandler(this), target);
     mStunAddrsRequest->SendGetStunAddrs();
   } else {
+    // No content process, so don't need to hold up the ice event queue
+    // until completion of stun address discovery. We can let the
+    // discovery of stun addresses happen in the same process.
     mLocalAddrsCompleted = true;
   }
 }
@@ -299,18 +304,6 @@ bool PeerConnectionMedia::GetPrefDefaultAddressOnly() const {
   return default_address_only;
 }
 
-bool PeerConnectionMedia::GetPrefObfuscateHostAddresses() const {
-  ASSERT_ON_THREAD(mMainThread);  // will crash on STS thread
-
-  uint64_t winId = mParent->GetWindow()->WindowID();
-
-  bool obfuscate_host_addresses = Preferences::GetBool(
-      "media.peerconnection.ice.obfuscate_host_addresses", false);
-  obfuscate_host_addresses &=
-      !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
-  return obfuscate_host_addresses;
-}
-
 void PeerConnectionMedia::ConnectSignals() {
   mTransportHandler->SignalGatheringStateChange.connect(
       this, &PeerConnectionMedia::IceGatheringStateChange_s);
@@ -362,8 +355,7 @@ void PeerConnectionMedia::GatherIfReady() {
   mQueuedIceCtxOperations.clear();
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
       RefPtr<PeerConnectionMedia>(this),
-      &PeerConnectionMedia::EnsureIceGathering, GetPrefDefaultAddressOnly(),
-      GetPrefObfuscateHostAddresses()));
+      &PeerConnectionMedia::EnsureIceGathering, GetPrefDefaultAddressOnly()));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }
@@ -413,8 +405,7 @@ nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
   return NS_OK;
 }
 
-void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly,
-                                             bool aObfuscateHostAddresses) {
+void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
   if (mProxyConfig) {
     // Note that this could check if PrivacyRequested() is set on the PC and
     // remove "webrtc" from the ALPN list.  But that would only work if the PC
@@ -444,8 +435,7 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly,
     return;
   }
 
-  mTransportHandler->StartIceGathering(aDefaultRouteOnly,
-                                       aObfuscateHostAddresses, mStunAddrs);
+  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mStunAddrs);
 }
 
 void PeerConnectionMedia::SelfDestruct() {
@@ -456,11 +446,6 @@ void PeerConnectionMedia::SelfDestruct() {
   mDestroyed = true;
 
   if (mStunAddrsRequest) {
-    for (auto& hostname : mRegisteredMDNSHostnames) {
-      mStunAddrsRequest->SendUnregisterMDNSHostname(
-          nsCString(hostname.c_str()));
-    }
-    mRegisteredMDNSHostnames.clear();
     mStunAddrsRequest->Cancel();
     mStunAddrsRequest = nullptr;
   }
@@ -671,21 +656,6 @@ void PeerConnectionMedia::OnCandidateFound_m(
   ASSERT_ON_THREAD(mMainThread);
   if (mParent) {
     mParent->OnCandidateFound(aTransportId, aCandidateInfo);
-  }
-
-  if (mStunAddrsRequest && !aCandidateInfo.mMDNSAddress.empty()) {
-    MOZ_ASSERT(!aCandidateInfo.mActualAddress.empty());
-
-    auto itor = mRegisteredMDNSHostnames.find(aCandidateInfo.mMDNSAddress);
-
-    // We'll see the address twice if we're generating both UDP and TCP
-    // candidates.
-    if (itor == mRegisteredMDNSHostnames.end()) {
-      mRegisteredMDNSHostnames.insert(aCandidateInfo.mMDNSAddress);
-      mStunAddrsRequest->SendRegisterMDNSHostname(
-          nsCString(aCandidateInfo.mMDNSAddress.c_str()),
-          nsCString(aCandidateInfo.mActualAddress.c_str()));
-    }
   }
 }
 

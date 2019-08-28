@@ -209,15 +209,14 @@ void MediaTransportHandlerIPC::SetTargetForDefaultLocalAddressLookup(
 // change between Init (ie; when the PC is created) and StartIceGathering
 // (ie; when we set the local description).
 void MediaTransportHandlerIPC::StartIceGathering(
-    bool aDefaultRouteOnly, bool aObfuscateHostAddresses,
+    bool aDefaultRouteOnly,
     // TODO(bug 1522205): It probably makes sense to look this up internally
     const nsTArray<NrIceStunAddr>& aStunAddrs) {
   mInitPromise->Then(
       mCallbackThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
         if (mChild) {
-          mChild->SendStartIceGathering(aDefaultRouteOnly,
-                                        aObfuscateHostAddresses, aStunAddrs);
+          mChild->SendStartIceGathering(aDefaultRouteOnly, aStunAddrs);
         }
       },
       [](const nsCString& aError) {});

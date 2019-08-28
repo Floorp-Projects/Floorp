@@ -18,9 +18,6 @@ async protocol PStunAddrsRequest
 parent:
   async GetStunAddrs();
 
-  async RegisterMDNSHostname(nsCString hostname, nsCString address);
-  async UnregisterMDNSHostname(nsCString hostname);
-
   async __delete__();
 
 child:
