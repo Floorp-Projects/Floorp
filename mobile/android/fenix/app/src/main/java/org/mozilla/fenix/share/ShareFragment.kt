@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import kotlinx.coroutines.Deferred
@@ -27,6 +28,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 
@@ -79,8 +81,17 @@ class ShareFragment : AppCompatDialogFragment() {
         }
 
         val tabs = args.tabs?.toList() ?: listOf(ShareTab(args.url!!, args.title ?: ""))
+        val account = requireComponents.backgroundServices.accountManager.authenticatedAccount()
 
-        shareInteractor = ShareInteractor()
+        shareInteractor = ShareInteractor(
+            DefaultShareController(
+                fragment = this,
+                tabs = tabs,
+                navController = findNavController(),
+                account = account,
+                dismiss = ::dismiss
+            )
+        )
 
         if (isSharingToDevicesAvailable(requireContext().applicationContext)) {
             shareToAccountDevicesView = ShareToAccountDevicesView(view.devicesShareLayout, shareInteractor)

@@ -10,28 +10,30 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 /**
  * Interactor for the share screen.
  */
-class ShareInteractor : ShareCloseInteractor, ShareToAccountDevicesInteractor, ShareToAppsInteractor {
+class ShareInteractor(
+    private val controller: ShareController
+) : ShareCloseInteractor, ShareToAccountDevicesInteractor, ShareToAppsInteractor {
     override fun onShareClosed() {
-        TODO("not yet!? implemented")
+        controller.handleShareClosed()
     }
 
     override fun onSignIn() {
-        TODO("not yet!? implemented")
+        controller.handleSignIn()
     }
 
     override fun onAddNewDevice() {
-        TODO("not yet!? implemented")
+        controller.handleAddNewDevice()
     }
 
     override fun onShareToDevice(device: Device) {
-        TODO("not yet!? implemented")
+        controller.handleShareToDevice(device)
     }
 
     override fun onShareToAllDevices(devices: List<Device>) {
-        TODO("not yet!? implemented")
+        controller.handleShareToAllDevices(devices)
     }
 
     override fun onShareToApp(appToShareTo: AppShareOption) {
-        TODO("not yet!? implemented")
+        controller.handleShareToApp(appToShareTo)
     }
 }
