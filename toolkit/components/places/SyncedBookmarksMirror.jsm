@@ -84,7 +84,7 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 6;
+const MIRROR_SCHEMA_VERSION = 7;
 
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
@@ -147,9 +147,19 @@ class ProgressTracker {
    * @param {String} name A step name from `ProgressTracker.STEPS`. This is
    *        included in shutdown hang crash reports, along with the timestamp
    *        the step was recorded.
+   * @param {Number} [took] The time taken, in milliseconds.
+   * @param {Array} [counts] An array of additional counts to report in the
+   *        shutdown blocker state.
    */
-  step(name) {
-    this.steps.push({ step: name, at: Date.now() });
+  step(name, took = -1, counts = null) {
+    let info = { step: name, at: Date.now() };
+    if (took > -1) {
+      info.took = took;
+    }
+    if (counts) {
+      info.counts = counts;
+    }
+    this.steps.push(info);
   }
 
   /**
@@ -161,7 +171,7 @@ class ProgressTracker {
    *        record in telemetry for this step.
    */
   stepWithTelemetry(name, took, counts = null) {
-    this.step(name);
+    this.step(name, took, counts);
     this.recordStepTelemetry(name, took, counts);
   }
 
@@ -545,6 +555,11 @@ class SyncedBookmarksMirror {
    *         the next set of URLs after the next merge, or all remaining URLs
    *         when Places automatically fixes invalid frecencies on idle;
    *         whichever comes first.
+   * @param  {Boolean} [options.notifyInStableOrder]
+   *         If `true`, fire observer notifications for items in the same folder
+   *         in a stable order. This is disabled by default, to avoid the cost
+   *         of sorting the notifications, but enabled in some tests to simplify
+   *         their checks.
    * @param  {AbortSignal} [options.signal]
    *         An abort signal that can be used to interrupt a merge when its
    *         associated `AbortController` is aborted. If omitted, the merge can
@@ -559,6 +574,7 @@ class SyncedBookmarksMirror {
     remoteTimeSeconds,
     weakUpload,
     maxFrecenciesToRecalculate,
+    notifyInStableOrder,
     signal = null,
   } = {}) {
     // We intentionally don't use `executeBeforeShutdown` in this function,
@@ -578,7 +594,8 @@ class SyncedBookmarksMirror {
         localTimeSeconds,
         remoteTimeSeconds,
         weakUpload,
-        maxFrecenciesToRecalculate
+        maxFrecenciesToRecalculate,
+        notifyInStableOrder
       );
     } finally {
       this.progress.reset();
@@ -592,7 +609,8 @@ class SyncedBookmarksMirror {
     localTimeSeconds,
     remoteTimeSeconds,
     weakUpload,
-    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE
+    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE,
+    notifyInStableOrder = false
   ) {
     let wasMerged = await withTiming("Merging bookmarks in Rust", () =>
       this.merge(signal, localTimeSeconds, remoteTimeSeconds, weakUpload)
@@ -610,6 +628,7 @@ class SyncedBookmarksMirror {
     let observersToNotify = new BookmarkObserverRecorder(this.db, {
       maxFrecenciesToRecalculate,
       signal,
+      notifyInStableOrder,
     });
 
     await withTiming(
@@ -645,23 +664,25 @@ class SyncedBookmarksMirror {
         )
     );
 
-    return withTiming(
+    let { changeRecords } = await withTiming(
       "Fetching records for local items to upload",
       async () => {
         try {
-          let changeRecords = await this.fetchLocalChangeRecords(signal);
-          return changeRecords;
+          let result = await this.fetchLocalChangeRecords(signal);
+          return result;
         } finally {
           await this.db.execute(`DELETE FROM itemsToUpload`);
         }
       },
-      (time, records) =>
+      (time, result) =>
         this.progress.stepWithItemCount(
           ProgressTracker.STEPS.FETCH_LOCAL_CHANGE_RECORDS,
           time,
-          Object.keys(records).length
+          result.count
         )
     );
+
+    return changeRecords;
   }
 
   merge(
@@ -1066,9 +1087,11 @@ class SyncedBookmarksMirror {
    * @param  {AbortSignal} signal
    *         Stops fetching records when the associated `AbortController`
    *         is aborted.
-   * @return {Object.<String, BookmarkChangeRecord>}
-   *         A changeset containing Sync record cleartexts for outgoing items
-   *         and tombstones, keyed by their Sync record IDs.
+   * @return {Object}
+   *         A `{ changeRecords, count }` tuple, where `changeRecords` is a
+   *         changeset containing Sync record cleartexts for outgoing items and
+   *         tombstones, keyed by their Sync record IDs, and `count` is the
+   *         number of records.
    */
   async fetchLocalChangeRecords(signal) {
     let changeRecords = {};
@@ -1299,7 +1322,7 @@ class SyncedBookmarksMirror {
       yieldState
     );
 
-    return changeRecords;
+    return { changeRecords, count: itemRows.length };
   }
 
   /**
@@ -1458,6 +1481,10 @@ async function migrateMirrorSchema(db, currentSchemaVersion) {
     await db.execute(`CREATE INDEX mirror.itemKeywords ON items(keyword)
                       WHERE keyword NOT NULL`);
   }
+  if (currentSchemaVersion < 7) {
+    await db.execute(`CREATE INDEX mirror.structurePositions ON
+                      structure(parentGuid, position)`);
+  }
 }
 
 /**
@@ -1524,6 +1551,10 @@ async function initializeMirrorDatabase(db) {
                             ON DELETE CASCADE,
     tag TEXT NOT NULL
   )`);
+
+  await db.execute(
+    `CREATE INDEX mirror.structurePositions ON structure(parentGuid, position)`
+  );
 
   await db.execute(`CREATE INDEX mirror.urlHashes ON urls(hash)`);
 
@@ -1824,12 +1855,15 @@ async function initializeTempMirrorEntities(db) {
     level INTEGER NOT NULL DEFAULT -1
   ) WITHOUT ROWID`);
 
+  await db.execute(`CREATE INDEX addedItemLevels ON itemsAdded(level)`);
+
   await db.execute(`CREATE TEMP TABLE guidsChanged(
-    itemId INTEGER NOT NULL,
+    itemId INTEGER PRIMARY KEY,
     oldGuid TEXT NOT NULL,
-    level INTEGER NOT NULL DEFAULT -1,
-    PRIMARY KEY(itemId, oldGuid)
-  ) WITHOUT ROWID`);
+    level INTEGER NOT NULL DEFAULT -1
+  )`);
+
+  await db.execute(`CREATE INDEX changedGuidLevels ON guidsChanged(level)`);
 
   await db.execute(`CREATE TEMP TABLE itemsChanged(
     itemId INTEGER PRIMARY KEY,
@@ -1839,6 +1873,8 @@ async function initializeTempMirrorEntities(db) {
     level INTEGER NOT NULL DEFAULT -1
   )`);
 
+  await db.execute(`CREATE INDEX changedItemLevels ON itemsChanged(level)`);
+
   await db.execute(`CREATE TEMP TABLE itemsMoved(
     itemId INTEGER PRIMARY KEY,
     oldParentId INTEGER NOT NULL,
@@ -1847,9 +1883,11 @@ async function initializeTempMirrorEntities(db) {
     level INTEGER NOT NULL DEFAULT -1
   )`);
 
+  await db.execute(`CREATE INDEX movedItemLevels ON itemsMoved(level)`);
+
   await db.execute(`CREATE TEMP TABLE itemsRemoved(
-    guid TEXT PRIMARY KEY,
-    itemId INTEGER NOT NULL,
+    itemId INTEGER PRIMARY KEY,
+    guid TEXT NOT NULL,
     parentId INTEGER NOT NULL,
     position INTEGER NOT NULL,
     type INTEGER NOT NULL,
@@ -1859,7 +1897,11 @@ async function initializeTempMirrorEntities(db) {
        can notify children before parents. */
     level INTEGER NOT NULL DEFAULT -1,
     isUntagging BOOLEAN NOT NULL DEFAULT 0
-  ) WITHOUT ROWID`);
+  )`);
+
+  await db.execute(
+    `CREATE INDEX removedItemLevels ON itemsRemoved(level DESC)`
+  );
 
   // Stores locally changed items staged for upload.
   await db.execute(`CREATE TEMP TABLE itemsToUpload(
@@ -1886,6 +1928,10 @@ async function initializeTempMirrorEntities(db) {
                               ON DELETE CASCADE,
     position INTEGER NOT NULL
   ) WITHOUT ROWID`);
+
+  await db.execute(
+    `CREATE INDEX parentsToUpload ON structureToUpload(parentId, position)`
+  );
 
   await db.execute(`CREATE TEMP TABLE tagsToUpload(
     id INTEGER REFERENCES itemsToUpload(id)
@@ -1992,9 +2038,10 @@ async function withTiming(name, func, recordTiming) {
  * the merge.
  */
 class BookmarkObserverRecorder {
-  constructor(db, { maxFrecenciesToRecalculate, signal }) {
+  constructor(db, { maxFrecenciesToRecalculate, notifyInStableOrder, signal }) {
     this.db = db;
     this.maxFrecenciesToRecalculate = maxFrecenciesToRecalculate;
+    this.notifyInStableOrder = notifyInStableOrder;
     this.signal = signal;
     this.placesEvents = [];
     this.itemRemovedNotifications = [];
@@ -2023,6 +2070,12 @@ class BookmarkObserverRecorder {
     await updateFrecencies(this.db, this.maxFrecenciesToRecalculate);
   }
 
+  orderBy(level, parent, position) {
+    return `ORDER BY ${
+      this.notifyInStableOrder ? `${level}, ${parent}, ${position}` : level
+    }`;
+  }
+
   /**
    * Records Places observer notifications for removed, added, moved, and
    * changed items.
@@ -2030,15 +2083,13 @@ class BookmarkObserverRecorder {
   async noteAllChanges() {
     MirrorLog.trace("Recording observer notifications for removed items");
     // `ORDER BY v.level DESC` sorts deleted children before parents, to ensure
-    // that we update caches in the correct order (bug 1297941). We also order
-    // by parent and position so that the notifications are well-ordered for
-    // tests.
+    // that we update caches in the correct order (bug 1297941).
     await this.db.execute(
       `SELECT v.itemId AS id, v.parentId, v.parentGuid, v.position, v.type,
-              h.url, v.guid, v.isUntagging
+              (SELECT h.url FROM moz_places h WHERE h.id = v.placeId) AS url,
+              v.guid, v.isUntagging
        FROM itemsRemoved v
-       LEFT JOIN moz_places h ON h.id = v.placeId
-       ORDER BY v.level DESC, v.parentId, v.position`,
+       ${this.orderBy("v.level", "v.parentId", "v.position")}`,
       null,
       (row, cancel) => {
         if (this.signal.aborted) {
@@ -2071,7 +2122,7 @@ class BookmarkObserverRecorder {
        FROM guidsChanged c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
-       ORDER BY c.level, p.id, b.position`,
+       ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
         if (this.signal.aborted) {
@@ -2098,14 +2149,14 @@ class BookmarkObserverRecorder {
 
     MirrorLog.trace("Recording observer notifications for new items");
     await this.db.execute(
-      `SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
-             IFNULL(b.title, '') AS title, b.dateAdded, b.guid,
-             p.guid AS parentGuid, n.isTagging, n.keywordChanged
+      `SELECT b.id, p.id AS parentId, b.position, b.type,
+              (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url,
+              IFNULL(b.title, '') AS title, b.dateAdded, b.guid,
+              p.guid AS parentGuid, n.isTagging, n.keywordChanged
        FROM itemsAdded n
        JOIN moz_bookmarks b ON b.guid = n.guid
        JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       ORDER BY n.level, p.id, b.position`,
+       ${this.orderBy("n.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
         if (this.signal.aborted) {
@@ -2140,12 +2191,12 @@ class BookmarkObserverRecorder {
     await this.db.execute(
       `SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
               p.guid AS newParentGuid, c.oldParentGuid,
-              b.position AS newPosition, c.oldPosition, h.url
+              b.position AS newPosition, c.oldPosition,
+              (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url
        FROM itemsMoved c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       ORDER BY c.level, newParentId, newPosition`,
+       ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
         if (this.signal.aborted) {
@@ -2178,15 +2229,16 @@ class BookmarkObserverRecorder {
       `SELECT b.id, b.guid, b.lastModified, b.type,
               IFNULL(b.title, '') AS newTitle,
               IFNULL(c.oldTitle, '') AS oldTitle,
-              h.url AS newURL, i.url AS oldURL,
+              (SELECT h.url FROM moz_places h
+               WHERE h.id = b.fk) AS newURL,
+              (SELECT h.url FROM moz_places h
+               WHERE h.id = c.oldPlaceId) AS oldURL,
               p.id AS parentId, p.guid AS parentGuid,
               c.keywordChanged
        FROM itemsChanged c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON h.id = b.fk
-       LEFT JOIN moz_places i ON i.id = c.oldPlaceId
-       ORDER BY c.level, p.id, b.position`,
+       ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
         if (this.signal.aborted) {
@@ -2446,7 +2498,14 @@ async function updateFrecencies(db, limit) {
 }
 
 function bagToNamedCounts(bag, names) {
-  return names.map(name => ({ name, count: bag.getProperty(name) }));
+  let counts = [];
+  for (let name of names) {
+    let count = bag.getProperty(name);
+    if (count > 0) {
+      counts.push({ name, count });
+    }
+  }
+  return counts;
 }
 
 /**
