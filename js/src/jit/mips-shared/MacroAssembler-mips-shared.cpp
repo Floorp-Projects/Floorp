@@ -1482,8 +1482,7 @@ void MacroAssembler::call(JitCode* c) {
   callJitNoProfiler(ScratchRegister);
 }
 
-CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
-  CodeOffset offset(currentOffset());
+CodeOffset MacroAssembler::nopPatchableToCall() {
   // MIPS32   //MIPS64
   as_nop();  // lui      // lui
   as_nop();  // ori      // ori
@@ -1493,8 +1492,7 @@ CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   as_nop();  // jalr
   as_nop();
 #endif
-  append(desc, CodeOffset(currentOffset()));
-  return offset;
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
