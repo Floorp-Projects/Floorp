@@ -846,10 +846,18 @@ function onBlockImage() {
 
   var checkbox = document.getElementById("blockImage");
   var uri = Services.io.newURI(document.getElementById("imageurltext").value);
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    gDocInfo.principal.originAttributes
+  );
   if (checkbox.checked) {
-    permissionManager.add(uri, "image", nsIPermissionManager.DENY_ACTION);
+    permissionManager.addFromPrincipal(
+      principal,
+      "image",
+      nsIPermissionManager.DENY_ACTION
+    );
   } else {
-    permissionManager.remove(uri, "image");
+    permissionManager.removeFromPrincipal(principal, "image");
   }
 }
 
@@ -1095,7 +1103,14 @@ function makeBlockImage(url) {
       document.l10n.setAttributes(checkbox, "media-block-image", {
         website: uri.host,
       });
-      var perm = permissionManager.testPermission(uri, "image");
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        gDocInfo.principal.originAttributes
+      );
+      let perm = permissionManager.testPermissionFromPrincipal(
+        principal,
+        "image"
+      );
       checkbox.checked = perm == nsIPermissionManager.DENY_ACTION;
     } else {
       checkbox.hidden = true;
