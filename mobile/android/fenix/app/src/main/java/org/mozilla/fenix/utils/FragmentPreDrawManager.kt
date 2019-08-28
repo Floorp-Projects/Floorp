@@ -7,7 +7,6 @@ package org.mozilla.fenix.utils
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -23,14 +22,9 @@ class FragmentPreDrawManager(
     fun execute(code: () -> Unit) {
         fragment.view?.doOnPreDraw {
             fragment.viewLifecycleOwner.lifecycleScope.launch {
-                delay(ANIM_SCROLL_DELAY)
                 code()
                 fragment.startPostponedEnterTransition()
             }
         }
-    }
-
-    companion object {
-        private const val ANIM_SCROLL_DELAY = 100L
     }
 }
