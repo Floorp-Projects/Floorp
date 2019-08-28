@@ -18,19 +18,29 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-StunAddrsRequestParent::StunAddrsRequestParent()
-    : mIPCClosed(false), mMDNSService(nullptr) {
+StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
   NS_GetMainThread(getter_AddRefs(mMainThread));
 
   nsresult res;
   mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
   MOZ_ASSERT(mSTSThread);
+
+  // This means that the mDNS service will continue running until shutdown
+  // once started. The StunAddrsRequestParent destructor does not run until
+  // shutdown anyway (see Bug 1569311), so there is not much we can do about
+  // this here. One option would be to add a check if there are no hostnames
+  // registered after UnregisterHostname is called, and if so, stop the mDNS
+  // service at that time (see Bug 1569955.)
+  if (!mSharedMDNSService) {
+    mSharedMDNSService = new MDNSServiceWrapper;
+  }
 }
 
 StunAddrsRequestParent::~StunAddrsRequestParent() {
-  if (mMDNSService) {
-    mdns_service_stop(mMDNSService);
-    mMDNSService = nullptr;
+  ASSERT_ON_THREAD(mMainThread);
+
+  if (mSharedMDNSService) {
+    mSharedMDNSService = nullptr;
   }
 }
 
@@ -57,14 +67,8 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvRegisterMDNSHostname(
     return IPC_OK();
   }
 
-  if (!mMDNSService) {
-    mMDNSService = mdns_service_start();
-  }
-
-  if (mMDNSService) {
-    mdns_service_register_hostname(mMDNSService, aHostname.BeginReading(),
-                                   aAddress.BeginReading());
-  }
+  mSharedMDNSService->RegisterHostname(aHostname.BeginReading(),
+                                       aAddress.BeginReading());
 
   return IPC_OK();
 }
@@ -77,9 +81,7 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvUnregisterMDNSHostname(
     return IPC_OK();
   }
 
-  if (mMDNSService) {
-    mdns_service_unregister_hostname(mMDNSService, aHostname.BeginReading());
-  }
+  mSharedMDNSService->UnregisterHostname(aHostname.BeginReading());
 
   return IPC_OK();
 }
@@ -128,8 +130,43 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
   Unused << SendOnStunAddrsAvailable(addrs);
 }
 
+StaticRefPtr<StunAddrsRequestParent::MDNSServiceWrapper>
+    StunAddrsRequestParent::mSharedMDNSService;
+
 NS_IMPL_ADDREF(StunAddrsRequestParent)
 NS_IMPL_RELEASE(StunAddrsRequestParent)
+
+void StunAddrsRequestParent::MDNSServiceWrapper::RegisterHostname(
+    const char* hostname, const char* address) {
+  StartIfRequired();
+  if (mMDNSService) {
+    mdns_service_register_hostname(mMDNSService, hostname, address);
+  }
+}
+
+void StunAddrsRequestParent::MDNSServiceWrapper::UnregisterHostname(
+    const char* hostname) {
+  StartIfRequired();
+  if (mMDNSService) {
+    mdns_service_unregister_hostname(mMDNSService, hostname);
+  }
+}
+
+StunAddrsRequestParent::MDNSServiceWrapper::~MDNSServiceWrapper() {
+  if (mMDNSService) {
+    mdns_service_stop(mMDNSService);
+    mMDNSService = nullptr;
+  }
+}
+
+void StunAddrsRequestParent::MDNSServiceWrapper::StartIfRequired() {
+  if (!mMDNSService) {
+    mMDNSService = mdns_service_start();
+  }
+}
+
+NS_IMPL_ADDREF(StunAddrsRequestParent::MDNSServiceWrapper)
+NS_IMPL_RELEASE(StunAddrsRequestParent::MDNSServiceWrapper)
 
 }  // namespace net
 }  // namespace mozilla
