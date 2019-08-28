@@ -75,7 +75,8 @@ NS_IMETHODIMP
 nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
                              const Encoding* aEncoding, bool aIsCopying,
                              bool aRewriteEncodingDeclaration,
-                             bool* aNeedsPreformatScanning) {
+                             bool* aNeedsPreformatScanning,
+                             nsAString& aOutput) {
   *aNeedsPreformatScanning = false;
   mPrefixIndex = 0;
   mColPos = 0;
@@ -120,6 +121,7 @@ nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
     mMaxColumn = aWrapColumn;
   }
 
+  mOutput = &aOutput;
   mPreLevel = 0;
   mIsIndentationAddedOnCurrentLine = false;
   return NS_OK;
@@ -182,8 +184,9 @@ nsresult nsXMLContentSerializer::AppendTextData(nsIContent* aNode,
 
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
-                                   int32_t aEndOffset, nsAString& aStr) {
+                                   int32_t aEndOffset) {
   NS_ENSURE_ARG(aText);
+  NS_ENSURE_STATE(mOutput);
 
   nsAutoString data;
   nsresult rv;
@@ -192,14 +195,17 @@ nsXMLContentSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   if (mDoRaw || PreLevel() > 0) {
-    NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoFormat) {
-    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(data, aStr),
+    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(data, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoWrap) {
-    NS_ENSURE_TRUE(AppendToStringWrapped(data, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringWrapped(data, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   } else {
-    NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
 
   return NS_OK;
@@ -208,31 +214,34 @@ nsXMLContentSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
                                            int32_t aStartOffset,
-                                           int32_t aEndOffset,
-                                           nsAString& aStr) {
+                                           int32_t aEndOffset) {
   NS_ENSURE_ARG(aCDATASection);
+  NS_ENSURE_STATE(mOutput);
+
   nsresult rv;
 
   NS_NAMED_LITERAL_STRING(cdata, "<![CDATA[");
 
   if (mDoRaw || PreLevel() > 0) {
-    NS_ENSURE_TRUE(AppendToString(cdata, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(cdata, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoFormat) {
-    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(cdata, aStr),
+    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(cdata, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoWrap) {
-    NS_ENSURE_TRUE(AppendToStringWrapped(cdata, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringWrapped(cdata, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   } else {
-    NS_ENSURE_TRUE(AppendToString(cdata, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(cdata, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
 
   nsAutoString data;
   rv = AppendTextData(aCDATASection, aStartOffset, aEndOffset, data, false);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("]]>"), aStr),
+  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("]]>"), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -241,11 +250,12 @@ nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendProcessingInstruction(ProcessingInstruction* aPI,
                                                     int32_t aStartOffset,
-                                                    int32_t aEndOffset,
-                                                    nsAString& aStr) {
+                                                    int32_t aEndOffset) {
+  NS_ENSURE_STATE(mOutput);
+
   nsAutoString target, data, start;
 
-  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   aPI->GetTarget(target);
 
@@ -257,24 +267,27 @@ nsXMLContentSerializer::AppendProcessingInstruction(ProcessingInstruction* aPI,
                  NS_ERROR_OUT_OF_MEMORY);
 
   if (mDoRaw || PreLevel() > 0) {
-    NS_ENSURE_TRUE(AppendToString(start, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(start, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoFormat) {
     if (mAddSpace) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     }
-    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(start, aStr),
+    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(start, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoWrap) {
-    NS_ENSURE_TRUE(AppendToStringWrapped(start, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringWrapped(start, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   } else {
-    NS_ENSURE_TRUE(AppendToString(start, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(start, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
 
   if (!data.IsEmpty()) {
-    NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("?>"), aStr),
+  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("?>"), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   MaybeFlagNewlineForRootNode(aPI);
@@ -284,7 +297,9 @@ nsXMLContentSerializer::AppendProcessingInstruction(ProcessingInstruction* aPI,
 
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendComment(Comment* aComment, int32_t aStartOffset,
-                                      int32_t aEndOffset, nsAString& aStr) {
+                                      int32_t aEndOffset) {
+  NS_ENSURE_STATE(mOutput);
+
   nsAutoString data;
   aComment->GetData(data);
 
@@ -301,29 +316,32 @@ nsXMLContentSerializer::AppendComment(Comment* aComment, int32_t aStartOffset,
     data.Assign(frag);
   }
 
-  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   NS_NAMED_LITERAL_STRING(startComment, "<!--");
 
   if (mDoRaw || PreLevel() > 0) {
-    NS_ENSURE_TRUE(AppendToString(startComment, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(startComment, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoFormat) {
     if (mAddSpace) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     }
-    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(startComment, aStr),
+    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(startComment, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   } else if (mDoWrap) {
-    NS_ENSURE_TRUE(AppendToStringWrapped(startComment, aStr),
+    NS_ENSURE_TRUE(AppendToStringWrapped(startComment, *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   } else {
-    NS_ENSURE_TRUE(AppendToString(startComment, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(startComment, *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Even if mDoformat, we don't format the content because it
   // could have been preformated by the author
-  NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("-->"), aStr),
+  NS_ENSURE_TRUE(AppendToStringConvertLF(data, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("-->"), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   MaybeFlagNewlineForRootNode(aComment);
@@ -332,42 +350,45 @@ nsXMLContentSerializer::AppendComment(Comment* aComment, int32_t aStartOffset,
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType, nsAString& aStr) {
+nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType) {
+  NS_ENSURE_STATE(mOutput);
+
   nsAutoString name, publicId, systemId;
   aDocType->GetName(name);
   aDocType->GetPublicId(publicId);
   aDocType->GetSystemId(systemId);
 
-  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput), NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), aStr),
+  NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(name, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(name, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
   char16_t quote;
   if (!publicId.IsEmpty()) {
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" PUBLIC "), aStr),
+    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" PUBLIC "), *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
     if (publicId.FindChar(char16_t('"')) == -1) {
       quote = char16_t('"');
     } else {
       quote = char16_t('\'');
     }
-    NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(publicId, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(publicId, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
     if (!systemId.IsEmpty()) {
-      NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr),
+      NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
                      NS_ERROR_OUT_OF_MEMORY);
       if (systemId.FindChar(char16_t('"')) == -1) {
         quote = char16_t('"');
       } else {
         quote = char16_t('\'');
       }
-      NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
-      NS_ENSURE_TRUE(AppendToString(systemId, aStr), NS_ERROR_OUT_OF_MEMORY);
-      NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendToString(systemId, *mOutput),
+                     NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
     }
   } else if (!systemId.IsEmpty()) {
     if (systemId.FindChar(char16_t('"')) == -1) {
@@ -375,14 +396,15 @@ nsXMLContentSerializer::AppendDoctype(DocumentType* aDocType, nsAString& aStr) {
     } else {
       quote = char16_t('\'');
     }
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" SYSTEM "), aStr),
+    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" SYSTEM "), *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(systemId, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(quote, aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(systemId, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(quote, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
   MaybeFlagNewlineForRootNode(aDocType);
 
   return NS_OK;
@@ -820,13 +842,13 @@ bool nsXMLContentSerializer::SerializeAttributes(
 
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendElementStart(Element* aElement,
-                                           Element* aOriginalElement,
-                                           nsAString& aStr) {
+                                           Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   bool forceFormat = false;
   nsresult rv = NS_OK;
-  if (!CheckElementStart(aElement, forceFormat, aStr, rv)) {
+  if (!CheckElementStart(aElement, forceFormat, *mOutput, rv)) {
     // When we go to AppendElementEnd for this element, we're going to
     // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
     // now, so our PreLevel() doesn't get confused.
@@ -850,22 +872,25 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     if (mColPos && lineBreakBeforeOpen) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else {
-      NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput),
+                     NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendIndentation(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else if (mAddSpace) {
-      NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr),
+      NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
                      NS_ERROR_OUT_OF_MEMORY);
       mAddSpace = false;
     }
   } else if (mAddSpace) {
-    NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
     mAddSpace = false;
   } else {
-    NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Always reset to avoid false newlines in case MaybeAddNewlineForRootNode
@@ -877,13 +902,14 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
       ConfirmPrefix(tagPrefix, tagNamespaceURI, aOriginalElement, false);
 
   // Serialize the qualified name of the element
-  NS_ENSURE_TRUE(AppendToString(kLessThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kLessThan, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   if (!tagPrefix.IsEmpty()) {
-    NS_ENSURE_TRUE(AppendToString(tagPrefix, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), aStr),
+    NS_ENSURE_TRUE(AppendToString(tagPrefix, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ENSURE_TRUE(AppendToString(tagLocalName, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(tagLocalName, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   MaybeEnterInPreContent(aElement);
 
@@ -893,18 +919,18 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 
   NS_ENSURE_TRUE(
       SerializeAttributes(aElement, aOriginalElement, tagPrefix,
-                          tagNamespaceURI, name, aStr, skipAttr, addNSAttr),
+                          tagNamespaceURI, name, *mOutput, skipAttr, addNSAttr),
       NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendEndOfElementStart(aElement, aOriginalElement, aStr),
+  NS_ENSURE_TRUE(AppendEndOfElementStart(aElement, aOriginalElement, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
       LineBreakAfterOpen(aElement->GetNameSpaceID(), name)) {
-    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, aStr),
+  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -956,15 +982,15 @@ bool nsXMLContentSerializer::AppendEndOfElementStart(Element* aElement,
 
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendElementEnd(Element* aElement,
-                                         Element* aOriginalElement,
-                                         nsAString& aStr) {
+                                         Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   nsIContent* content = aElement;
 
   bool forceFormat = false, outputElementEnd;
   outputElementEnd =
-      CheckElementEnd(aElement, aOriginalElement, forceFormat, aStr);
+      CheckElementEnd(aElement, aOriginalElement, forceFormat, *mOutput);
 
   nsAtom* name = content->NodeInfo()->NameAtom();
 
@@ -977,7 +1003,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
     PopNameSpaceDeclsFor(aElement);
     MaybeLeaveFromPreContent(content);
     MaybeFlagNewlineForRootNode(aElement);
-    AfterElementEnd(content, aStr);
+    AfterElementEnd(content, *mOutput);
     return NS_OK;
   }
 
@@ -999,28 +1025,31 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
         LineBreakBeforeClose(content->GetNameSpaceID(), name);
 
     if (mColPos && lineBreakBeforeClose) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendIndentation(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else if (mAddSpace) {
-      NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr),
+      NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
                      NS_ERROR_OUT_OF_MEMORY);
       mAddSpace = false;
     }
   } else if (mAddSpace) {
-    NS_ENSURE_TRUE(AppendToString(char16_t(' '), aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(char16_t(' '), *mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
     mAddSpace = false;
   }
 
-  NS_ENSURE_TRUE(AppendToString(kEndTag, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kEndTag, *mOutput), NS_ERROR_OUT_OF_MEMORY);
   if (!tagPrefix.IsEmpty()) {
-    NS_ENSURE_TRUE(AppendToString(tagPrefix, aStr), NS_ERROR_OUT_OF_MEMORY);
-    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), aStr),
+    NS_ENSURE_TRUE(AppendToString(tagPrefix, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(":"), *mOutput),
                    NS_ERROR_OUT_OF_MEMORY);
   }
-  NS_ENSURE_TRUE(AppendToString(tagLocalName, aStr), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(tagLocalName, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   // Keep what follows in sync with the cleanup in the !outputElementEnd case.
   PopNameSpaceDeclsFor(aElement);
@@ -1029,20 +1058,38 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
       LineBreakAfterClose(content->GetNameSpaceID(), name)) {
-    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
   } else {
     MaybeFlagNewlineForRootNode(aElement);
   }
 
-  AfterElementEnd(content, aStr);
+  AfterElementEnd(content, *mOutput);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendDocumentStart(Document* aDocument,
-                                            nsAString& aStr) {
+nsXMLContentSerializer::Finish() {
+  NS_ENSURE_STATE(mOutput);
+
+  mOutput = nullptr;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLContentSerializer::GetOutputLength(uint32_t& aLength) const {
+  NS_ENSURE_STATE(mOutput);
+
+  aLength = mOutput->Length();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLContentSerializer::AppendDocumentStart(Document* aDocument) {
   NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_STATE(mOutput);
 
   nsAutoString version, encoding, standalone;
   aDocument->GetXMLDeclaration(version, encoding, standalone);
@@ -1052,11 +1099,11 @@ nsXMLContentSerializer::AppendDocumentStart(Document* aDocument,
 
   NS_NAMED_LITERAL_STRING(endQuote, "\"");
 
-  aStr += NS_LITERAL_STRING("<?xml version=\"") + version + endQuote;
+  *mOutput += NS_LITERAL_STRING("<?xml version=\"") + version + endQuote;
 
   if (!mCharset.IsEmpty()) {
-    aStr += NS_LITERAL_STRING(" encoding=\"") +
-            NS_ConvertASCIItoUTF16(mCharset) + endQuote;
+    *mOutput += NS_LITERAL_STRING(" encoding=\"") +
+                NS_ConvertASCIItoUTF16(mCharset) + endQuote;
   }
   // Otherwise just don't output an encoding attr.  Not that we expect
   // mCharset to ever be empty.
@@ -1067,10 +1114,10 @@ nsXMLContentSerializer::AppendDocumentStart(Document* aDocument,
 #endif
 
   if (!standalone.IsEmpty()) {
-    aStr += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;
+    *mOutput += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;
   }
 
-  NS_ENSURE_TRUE(aStr.AppendLiteral("?>", mozilla::fallible),
+  NS_ENSURE_TRUE(mOutput->AppendLiteral("?>", mozilla::fallible),
                  NS_ERROR_OUT_OF_MEMORY);
   mAddNewlineForRootNode = true;
 
