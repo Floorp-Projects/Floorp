@@ -116,7 +116,7 @@ class DefaultToolbarMenu(
                     ThemeManager.resolveAttribute(R.attr.primaryText, context),
                 highlight = if (hasAccountProblem) {
                     BrowserMenuHighlightableItem.Highlight(
-                        imageResource = R.drawable.ic_alert,
+                        endImageResource = R.drawable.ic_alert,
                         backgroundResource = R.drawable.sync_error_background_with_ripple,
                         colorResource = R.color.sync_error_background_color
                     )
