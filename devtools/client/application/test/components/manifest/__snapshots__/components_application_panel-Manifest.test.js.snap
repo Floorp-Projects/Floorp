@@ -1,6 +1,69 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Manifest renders the expected snapshot 1`] = `
+exports[`Manifest does not render the issues section when the manifest is valid 1`] = `
+<article>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="name"
+          label="name"
+        >
+          foo
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="lorem"
+          label="lorem"
+        >
+          ipsum
+        </ManifestItem>
+        <ManifestItem
+          key="foo"
+          label="foo"
+        >
+          bar
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
+      <tbody>
+        <ManifestItem
+          key="1x1"
+          label="1x1"
+        >
+          something.png
+        </ManifestItem>
+      </tbody>
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshot for a simple manifest 1`] = `
 <article>
   <Localized
     id="manifest-view-header"
