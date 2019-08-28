@@ -2,7 +2,7 @@
 
 # FLUID_ICON
 
-`FLUID_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L81)
+`FLUID_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L82)
 
 A "fluid" icon.
 

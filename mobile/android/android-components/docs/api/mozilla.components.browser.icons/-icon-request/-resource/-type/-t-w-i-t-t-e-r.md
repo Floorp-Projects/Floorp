@@ -2,7 +2,7 @@
 
 # TWITTER
 
-`TWITTER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L109)
+`TWITTER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L110)
 
 A "Twitter Card" image.
 

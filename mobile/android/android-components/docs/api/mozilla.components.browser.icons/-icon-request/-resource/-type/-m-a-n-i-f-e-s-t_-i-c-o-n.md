@@ -2,7 +2,7 @@
 
 # MANIFEST_ICON
 
-`MANIFEST_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L132)
+`MANIFEST_ICON` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L133)
 
 A Web App Manifest image.
 
