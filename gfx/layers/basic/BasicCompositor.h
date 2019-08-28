@@ -143,8 +143,6 @@ class BasicCompositor : public Compositor {
     return LayersBackend::LAYERS_BASIC;
   }
 
-  gfx::DrawTarget* GetDrawTarget() { return mDrawTarget; }
-
   bool IsPendingComposite() override { return mIsPendingEndRemoteDrawing; }
 
   void FinishPendingComposite() override;
@@ -187,10 +185,10 @@ class BasicCompositor : public Compositor {
 
   bool NeedToRecreateFullWindowRenderTarget() const;
 
-  // The final destination surface
-  RefPtr<gfx::DrawTarget> mDrawTarget;
-  // The bounds that mDrawTarget occupies in window space.
-  gfx::IntRect mDrawTargetBounds;
+  // When rendering to a back buffer, this is the front buffer that the contents
+  // of the back buffer need to be copied to. Only non-null between BeginFrame
+  // and EndRemoteDrawing, and only when using a back buffer.
+  RefPtr<gfx::DrawTarget> mFrontBuffer;
 
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
