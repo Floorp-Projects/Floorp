@@ -33,8 +33,6 @@
   * [Debugging intermittent failures](tests/debugging-intermittents.md)
   * [Performance tests (DAMP)](tests/performance-tests.md)
     * [Writing a new test](tests/writing-perf-tests.md)
-    * [Example](tests/writing-perf-tests-example.md)
-    * [Avanced tips](tests/writing-perf-tests-tips.md)
 * [Files and directories](files/README.md)
   * [Adding New Files](files/adding-files.md)
 * [Tool Architectures](tools/tools.md)
