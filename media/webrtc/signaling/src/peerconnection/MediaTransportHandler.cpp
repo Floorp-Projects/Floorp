@@ -147,7 +147,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
                                NrIceCtx::ConnectionState aState);
   void OnCandidateFound(NrIceMediaStream* aStream,
                         const std::string& aCandidate,
-                        const std::string& aUfrag);
+                        const std::string& aUfrag, const std::string& aMDNSAddr,
+                        const std::string& aActualAddr);
   void OnStateChange(TransportLayer* aLayer, TransportLayer::State);
   void OnRtcpStateChange(TransportLayer* aLayer, TransportLayer::State);
   void PacketReceived(TransportLayer* aLayer, MediaPacket& aPacket);
@@ -1357,9 +1358,10 @@ void MediaTransportHandlerSTS::OnConnectionStateChange(
 }
 
 // The stuff below here will eventually go into the MediaTransportChild class
-void MediaTransportHandlerSTS::OnCandidateFound(NrIceMediaStream* aStream,
-                                                const std::string& aCandidate,
-                                                const std::string& aUfrag) {
+void MediaTransportHandlerSTS::OnCandidateFound(
+    NrIceMediaStream* aStream, const std::string& aCandidate,
+    const std::string& aUfrag, const std::string& aMDNSAddr,
+    const std::string& aActualAddr) {
   CandidateInfo info;
   info.mCandidate = aCandidate;
   MOZ_ASSERT(!aUfrag.empty());
@@ -1383,6 +1385,9 @@ void MediaTransportHandlerSTS::OnCandidateFound(NrIceMediaStream* aStream,
     info.mDefaultHostRtcp = defaultRtcpCandidate.cand_addr.host;
     info.mDefaultPortRtcp = defaultRtcpCandidate.cand_addr.port;
   }
+
+  info.mMDNSAddress = aMDNSAddr;
+  info.mActualAddress = aActualAddr;
 
   OnCandidate(aStream->GetId(), info);
 }
