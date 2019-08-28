@@ -333,8 +333,8 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
    */
   async getAddon({ id }) {
     const addons = await this.listAddons();
-    const webextensionFront = addons.find(addon => addon.id === id);
-    return webextensionFront;
+    const webextensionDescriptorFront = addons.find(addon => addon.id === id);
+    return webextensionDescriptorFront;
   }
 
   /**

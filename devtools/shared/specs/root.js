@@ -65,7 +65,7 @@ const rootSpecPrototype = {
         iconDataURL: Option(0, "boolean"),
       },
       response: {
-        addons: RetVal("array:webExtension"),
+        addons: RetVal("array:webExtensionDescriptor"),
       },
     },
 
