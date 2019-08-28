@@ -340,8 +340,7 @@ class MediaConstraintsHelper {
 
   static const char* FindBadConstraint(
       const NormalizedConstraints& aConstraints,
-      const RefPtr<MediaEngineSource>& aMediaEngineSource,
-      const nsString& aDeviceId, const nsString& aGroupId);
+      const RefPtr<MediaEngineSource>& aMediaEngineSource);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
 };

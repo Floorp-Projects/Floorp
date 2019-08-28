@@ -6,6 +6,7 @@
 include protocol PDNSRequest;
 include protocol PSocketProcessBridge;
 include protocol PProfiler;
+include protocol PProxyConfigLookup;
 include protocol PWebrtcProxyChannel;
 
 include MemoryReportTypes;
@@ -28,6 +29,7 @@ namespace net {
 protocol PSocketProcess
 {
   manages PDNSRequest;
+  manages PProxyConfigLookup;
   manages PWebrtcProxyChannel;
 
 parent:
@@ -45,6 +47,7 @@ parent:
   async PWebrtcProxyChannel(TabId tabId);
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
                     uint32_t flags);
+  async PProxyConfigLookup();
 
 child:
   async PreferenceUpdate(Pref pref);

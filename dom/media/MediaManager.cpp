@@ -848,6 +848,7 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                 ? MediaDeviceKind::Videoinput
                 : MediaDeviceKind::Audioinput),
       mScary(mSource->GetScary()),
+      mIsFake(mSource->IsFake()),
       mType(NS_ConvertUTF8toUTF16(
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(aName),
@@ -866,6 +867,7 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                 ? MediaDeviceKind::Audioinput
                 : MediaDeviceKind::Audiooutput),
       mScary(false),
+      mIsFake(false),
       mType(NS_ConvertUTF8toUTF16(
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(mSinkInfo->Name()),
@@ -886,6 +888,7 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
       mSinkInfo(aOther->mSinkInfo),
       mKind(aOther->mKind),
       mScary(aOther->mScary),
+      mIsFake(aOther->mIsFake),
       mType(aOther->mType),
       mName(aOther->mName),
       mID(aID),
@@ -949,10 +952,24 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
 
-  // Forward request to underlying object to interrogate per-mode capabilities.
-  // Pass in device's origin-specific id for deviceId constraint comparison.
   const nsString& id = aIsChrome ? mRawID : mID;
-  return mSource->GetBestFitnessDistance(aConstraintSets, id, mGroupID);
+  auto type = GetMediaSource();
+  uint64_t distance = 0;
+  if (!aConstraintSets.IsEmpty()) {
+    if (type == MediaSourceEnum::Camera ||
+        type == MediaSourceEnum::Microphone) {
+      distance += uint64_t(MediaConstraintsHelper::FitnessDistance(
+                      Some(id), aConstraintSets[0]->mDeviceId)) +
+                  uint64_t(MediaConstraintsHelper::FitnessDistance(
+                      Some(mGroupID), aConstraintSets[0]->mGroupId));
+    }
+  }
+  if (distance < UINT32_MAX) {
+    // Forward request to underlying object to interrogate per-mode
+    // capabilities.
+    distance += mSource->GetBestFitnessDistance(aConstraintSets);
+  }
+  return std::min<uint64_t>(distance, UINT32_MAX);
 }
 
 NS_IMETHODIMP
@@ -1016,7 +1033,15 @@ nsresult MediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
                                const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Allocate(aConstraints, aPrefs, mID, mGroupID, aPrincipalInfo,
+
+  // Mock failure for automated tests.
+  if (mIsFake && aConstraints.mDeviceId.WasPassed() &&
+      aConstraints.mDeviceId.Value().IsString() &&
+      aConstraints.mDeviceId.Value().GetAsString().EqualsASCII("bad device")) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mSource->Allocate(aConstraints, aPrefs, aPrincipalInfo,
                            aOutBadConstraint);
 }
 
@@ -1039,8 +1064,21 @@ nsresult MediaDevice::Reconfigure(const MediaTrackConstraints& aConstraints,
                                   const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Reconfigure(aConstraints, aPrefs, mID, mGroupID,
-                              aOutBadConstraint);
+  auto type = GetMediaSource();
+  if (type == MediaSourceEnum::Camera || type == MediaSourceEnum::Microphone) {
+    NormalizedConstraints c(aConstraints);
+    if (MediaConstraintsHelper::FitnessDistance(Some(mID), c.mDeviceId) ==
+        UINT32_MAX) {
+      *aOutBadConstraint = "deviceId";
+      return NS_ERROR_INVALID_ARG;
+    }
+    if (MediaConstraintsHelper::FitnessDistance(Some(mGroupID), c.mGroupId) ==
+        UINT32_MAX) {
+      *aOutBadConstraint = "groupId";
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  return mSource->Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
 }
 
 nsresult MediaDevice::FocusOnSelectedSource() {

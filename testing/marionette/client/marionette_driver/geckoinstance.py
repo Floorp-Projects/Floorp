@@ -122,9 +122,6 @@ class GeckoInstance(object):
         # Privacy and Tracking Protection
         "privacy.trackingprotection.enabled": False,
 
-        # Disable the GFX sanity window
-        "sanity-test.running": True,
-
         # Don't do network connections for mitm priming
         "security.certerrors.mitm.priming.enabled": False,
 

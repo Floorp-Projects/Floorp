@@ -143,13 +143,6 @@ function installTemporaryExtension() {
 function pushServiceWorker(id, registrationFront) {
   return async (_, getState) => {
     try {
-      const clientWrapper = getCurrentClient(getState().runtimes);
-      const deviceFront = await clientWrapper.getFront("device");
-
-      // TODO: device description should already have been received, so this
-      // call should be able to be avoided (bug 1557250).
-      const { isParentInterceptEnabled } = await deviceFront.getDescription();
-
       /**
        * Older servers will not define `ServiceWorkerRegistrationFront.push`,
        * and `ServiceWorkerRegistrationFront.push` will only work if the
@@ -160,9 +153,11 @@ function pushServiceWorker(id, registrationFront) {
        * _and_ parent-intercept is stable (which definitely won't happen when
        * the release channel is < FF69).
        */
+      const { isParentInterceptEnabled } = registrationFront.traits;
       if (registrationFront.push && isParentInterceptEnabled) {
         await registrationFront.push();
       } else {
+        const clientWrapper = getCurrentClient(getState().runtimes);
         const workerActor = await clientWrapper.getServiceWorkerFront({ id });
         await workerActor.push();
       }

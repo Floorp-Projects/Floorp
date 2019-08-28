@@ -899,9 +899,16 @@ void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
   }
 
   // Toggle DebugTrapHandler calls.
+
+  uint8_t* debugTrapHandler = codeAtOffset(debugTrapHandlerOffset_);
+
   for (uint32_t offset : debugTrapOffsets_) {
-    CodeLocationLabel trapLocation(code_, CodeOffset(offset));
-    Assembler::ToggleCall(trapLocation, enable);
+    uint8_t* trap = codeAtOffset(offset);
+    if (enable) {
+      MacroAssembler::patchNopToCall(trap, debugTrapHandler);
+    } else {
+      MacroAssembler::patchCallToNop(trap);
+    }
   }
 }
 
@@ -1012,6 +1019,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t generatorThrowOrReturnCallOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
+                               uint32_t debugTrapHandlerOffset,
                                CodeOffsetVector&& debugInstrumentationOffsets,
                                CodeOffsetVector&& debugTrapOffsets,
                                CodeOffsetVector&& codeCoverageOffsets,
@@ -1024,6 +1032,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   generatorThrowOrReturnCallOffset_ = generatorThrowOrReturnCallOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
+  debugTrapHandlerOffset_ = debugTrapHandlerOffset;
   debugInstrumentationOffsets_ = std::move(debugInstrumentationOffsets);
   debugTrapOffsets_ = std::move(debugTrapOffsets);
   codeCoverageOffsets_ = std::move(codeCoverageOffsets);

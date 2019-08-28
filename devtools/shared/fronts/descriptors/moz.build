@@ -7,5 +7,6 @@
 DevToolsModules(
     'frame.js',
     'process.js',
+    'webextension.js',
 )
 
