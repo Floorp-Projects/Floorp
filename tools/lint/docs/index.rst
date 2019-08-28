@@ -30,10 +30,3 @@ like mach, mozreview and taskcluster.
   linters/flake8
   linters/l10n
   linters/rstlinter
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
