@@ -47,8 +47,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer() { mIsHTMLSerializer = true; }
 nsHTMLContentSerializer::~nsHTMLContentSerializer() {}
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendDocumentStart(Document* aDocument,
-                                             nsAString& aStr) {
+nsHTMLContentSerializer::AppendDocumentStart(Document* aDocument) {
   return NS_OK;
 }
 
@@ -139,13 +138,13 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementStart(Element* aElement,
-                                            Element* aOriginalElement,
-                                            nsAString& aStr) {
+                                            Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   bool forceFormat = false;
   nsresult rv = NS_OK;
-  if (!CheckElementStart(aElement, forceFormat, aStr, rv)) {
+  if (!CheckElementStart(aElement, forceFormat, *mOutput, rv)) {
     // When we go to AppendElementEnd for this element, we're going to
     // MaybeLeaveFromPreContent().  So make sure to MaybeEnterInPreContent()
     // now, so our PreLevel() doesn't get confused.
@@ -162,31 +161,33 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     if (mColPos && lineBreakBeforeOpen) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else {
-      NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput),
+                     NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendIndentation(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else if (mAddSpace) {
-      bool result = AppendToString(char16_t(' '), aStr);
+      bool result = AppendToString(char16_t(' '), *mOutput);
       mAddSpace = false;
       NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     }
   } else if (mAddSpace) {
-    bool result = AppendToString(char16_t(' '), aStr);
+    bool result = AppendToString(char16_t(' '), *mOutput);
     mAddSpace = false;
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   } else {
-    NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(*mOutput),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
   // Always reset to avoid false newlines in case MaybeAddNewlineForRootNode
   // wasn't called
   mAddNewlineForRootNode = false;
 
-  NS_ENSURE_TRUE(AppendToString(kLessThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kLessThan, *mOutput), NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr),
+  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   MaybeEnterInPreContent(aElement);
@@ -223,7 +224,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
     if (mIsFirstChildOfOL) {
       // If OL is parent of this LI, serialize attributes in different manner.
-      NS_ENSURE_TRUE(SerializeLIValueAttribute(aElement, aStr),
+      NS_ENSURE_TRUE(SerializeLIValueAttribute(aElement, *mOutput),
                      NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -233,10 +234,11 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
   nsAutoString dummyPrefix;
   NS_ENSURE_TRUE(
       SerializeHTMLAttributes(aElement, aOriginalElement, dummyPrefix,
-                              EmptyString(), name, ns, aStr),
+                              EmptyString(), name, ns, *mOutput),
       NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   if (ns == kNameSpaceID_XHTML &&
       (name == nsGkAtoms::script || name == nsGkAtoms::style ||
@@ -246,10 +248,10 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
       LineBreakAfterOpen(ns, name)) {
-    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, aStr),
+  NS_ENSURE_TRUE(AfterElementStart(aElement, aOriginalElement, *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -257,9 +259,9 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
-                                          Element* aOriginalElement,
-                                          nsAString& aStr) {
+                                          Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   nsAtom* name = aElement->NodeInfo()->NameAtom();
   int32_t ns = aElement->GetNameSpaceID();
@@ -311,32 +313,33 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     bool lineBreakBeforeClose = LineBreakBeforeClose(ns, name);
 
     if (mColPos && lineBreakBeforeClose) {
-      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(AppendIndentation(*mOutput), NS_ERROR_OUT_OF_MEMORY);
     } else if (mAddSpace) {
-      bool result = AppendToString(char16_t(' '), aStr);
+      bool result = AppendToString(char16_t(' '), *mOutput);
       mAddSpace = false;
       NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     }
   } else if (mAddSpace) {
-    bool result = AppendToString(char16_t(' '), aStr);
+    bool result = AppendToString(char16_t(' '), *mOutput);
     mAddSpace = false;
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(AppendToString(kEndTag, aStr), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr),
+  NS_ENSURE_TRUE(AppendToString(kEndTag, *mOutput), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), *mOutput),
                  NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, *mOutput),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   // Keep this cleanup in sync with the IsContainer() early return above.
   MaybeLeaveFromPreContent(aElement);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
       LineBreakAfterClose(ns, name)) {
-    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(AppendNewLineToString(*mOutput), NS_ERROR_OUT_OF_MEMORY);
   } else {
     MaybeFlagNewlineForRootNode(aElement);
   }

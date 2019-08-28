@@ -126,7 +126,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
       mLineBreakDue(false),
       kSpace(NS_LITERAL_STRING(" "))  // Init of "constant"
 {
-  mOutputString = nullptr;
+  mOutput = nullptr;
   mHeadLevel = 0;
   mAtFirstColumn = true;
   mIndent = 0;
@@ -200,7 +200,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
                             const Encoding* aEncoding, bool aIsCopying,
                             bool aIsWholeDocument,
-                            bool* aNeedsPreformatScanning) {
+                            bool* aNeedsPreformatScanning, nsAString& aOutput) {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
   if (aFlags & nsIDocumentEncoder::OutputFormatFlowed) {
@@ -215,7 +215,7 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
         "Can't do formatted and preformatted output at the same time!");
   }
 #endif
-
+  mOutput = &aOutput;
   *aNeedsPreformatScanning = true;
   mSettings.Init(aFlags);
   mWrapColumn = aWrapColumn;
@@ -290,7 +290,9 @@ static bool IsIgnorableScriptOrStyle(Element* aElement) {
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
-                                  int32_t aEndOffset, nsAString& aStr) {
+                                  int32_t aEndOffset) {
+  NS_ENSURE_STATE(mOutput);
+
   if (mIgnoreAboveIndex != (uint32_t)kNotFound) {
     return NS_OK;
   }
@@ -333,8 +335,6 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
     EditorUtils::MaskString(textstr, content->AsText(), 0, aStartOffset);
   }
 
-  mOutputString = &aStr;
-
   // We have to split the string across newlines
   // to match parser behavior
   int32_t start = 0;
@@ -361,16 +361,14 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
     }
   }
 
-  mOutputString = nullptr;
-
   return rv;
 }
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendCDATASection(nsIContent* aCDATASection,
                                           int32_t aStartOffset,
-                                          int32_t aEndOffset, nsAString& aStr) {
-  return AppendText(aCDATASection, aStartOffset, aEndOffset, aStr);
+                                          int32_t aEndOffset) {
+  return AppendText(aCDATASection, aStartOffset, aEndOffset);
 }
 
 NS_IMETHODIMP
@@ -389,9 +387,9 @@ nsPlainTextSerializer::ForgetElementForPreformat(Element* aElement) {
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementStart(Element* aElement,
-                                          Element* aOriginalElement,
-                                          nsAString& aStr) {
+                                          Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   mElement = aElement;
 
@@ -400,8 +398,6 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
 
   bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
-  mOutputString = &aStr;
-
   if (isContainer) {
     rv = DoOpenContainer(id);
   } else {
@@ -409,7 +405,6 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
   }
 
   mElement = nullptr;
-  mOutputString = nullptr;
 
   if (id == nsGkAtoms::head) {
     ++mHeadLevel;
@@ -420,9 +415,9 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementEnd(Element* aElement,
-                                        Element* aOriginalElement,
-                                        nsAString& aStr) {
+                                        Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_STATE(mOutput);
 
   mElement = aElement;
 
@@ -431,15 +426,12 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
 
   bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
-  mOutputString = &aStr;
-
   rv = NS_OK;
   if (isContainer) {
     rv = DoCloseContainer(id);
   }
 
   mElement = nullptr;
-  mOutputString = nullptr;
 
   if (id == nsGkAtoms::head) {
     NS_ASSERTION(mHeadLevel != 0, "mHeadLevel being decremented below 0");
@@ -450,16 +442,31 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::Flush(nsAString& aStr) {
-  mOutputString = &aStr;
+nsPlainTextSerializer::FlushAndFinish() {
   FlushLine();
-  mOutputString = nullptr;
+  return Finish();
+}
+
+NS_IMETHODIMP
+nsPlainTextSerializer::Finish() {
+  NS_ENSURE_STATE(mOutput);
+
+  mOutput = nullptr;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendDocumentStart(Document* aDocument,
-                                           nsAString& aStr) {
+nsPlainTextSerializer::GetOutputLength(uint32_t& aLength) const {
+  NS_ENSURE_STATE(mOutput);
+
+  aLength = mOutput->Length();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlainTextSerializer::AppendDocumentStart(Document* aDocument) {
   return NS_OK;
 }
 
@@ -1134,7 +1141,9 @@ void nsPlainTextSerializer::FlushLine() {
 }
 
 void nsPlainTextSerializer::Output(nsString& aString) {
-  mOutputString->Append(aString);
+  MOZ_ASSERT(mOutput);
+
+  mOutput->Append(aString);
 }
 
 static bool IsSpaceStuffable(const char16_t* s) {

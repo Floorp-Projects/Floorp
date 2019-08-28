@@ -33,13 +33,12 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const mozilla::Encoding* aEncoding, bool aIsCopying,
                   bool aRewriteEncodingDeclaration,
-                  bool* aNeedsPreformatScanning) override;
+                  bool* aNeedsPreformatScanning, nsAString& aOutput) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) override;
+                        int32_t aEndOffset) override;
 
-  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
-                                 nsAString& aStr) override;
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) override;
 
  protected:
   virtual bool CheckElementStart(mozilla::dom::Element* aElement,
