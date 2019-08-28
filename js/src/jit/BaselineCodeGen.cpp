@@ -6909,7 +6909,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
   // Jump to table[op].
   {
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    CodeOffset label = masm.moveNearAddressWithPatch(scratch2);
     if (!tableLabels_.append(label)) {
       return false;
     }
@@ -6950,7 +6950,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
     // Load the opcode, jump to table[op].
     masm.load8ZeroExtend(Address(InterpreterPCRegAtDispatch, 0), scratch1);
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    CodeOffset label = masm.moveNearAddressWithPatch(scratch2);
     if (!tableLabels_.append(label)) {
       return false;
     }
@@ -7110,10 +7110,10 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
     }
 
     // Patch loads now that we know the tableswitch base address.
+    CodeLocationLabel tableLoc(code, CodeOffset(tableOffset_));
     for (CodeOffset off : tableLabels_) {
-      Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, off),
-                                         ImmPtr(code->raw() + tableOffset_),
-                                         ImmPtr((void*)-1));
+      MacroAssembler::patchNearAddressMove(CodeLocationLabel(code, off),
+                                           tableLoc);
     }
 
 #ifdef JS_ION_PERF

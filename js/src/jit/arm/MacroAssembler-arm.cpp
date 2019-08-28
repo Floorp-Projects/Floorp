@@ -5745,6 +5745,15 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
   }
 }
 
+CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {
+  return movWithPatch(ImmPtr(nullptr), dest);
+}
+
+void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
+                                          CodeLocationLabel target) {
+  PatchDataWithValueCheck(loc, ImmPtr(target.raw()), ImmPtr(nullptr));
+}
+
 // ========================================================================
 // Spectre Mitigations.
 
