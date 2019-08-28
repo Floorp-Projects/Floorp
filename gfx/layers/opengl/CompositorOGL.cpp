@@ -1295,7 +1295,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
-  mPixelsFilled += destRect.Width() * destRect.Height();
+  mPixelsFilled += destRect.Area();
 
   // Do a simple culling if this rect is out of target buffer.
   // Inflate a small size to avoid some numerical imprecision issue.
