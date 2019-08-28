@@ -72,9 +72,10 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
 
       const newestWorker = activeWorker || waitingWorker || installingWorker;
 
-      const isNewE10sImplementation = swm.isParentInterceptEnabled();
+      const isParentInterceptEnabled = swm.isParentInterceptEnabled();
       const isMultiE10sWithOldImplementation =
-        Services.appinfo.browserTabsRemoteAutostart && !isNewE10sImplementation;
+        Services.appinfo.browserTabsRemoteAutostart &&
+        !isParentInterceptEnabled;
       return {
         actor: this.actorID,
         scope: registration.scope,
@@ -87,6 +88,9 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
         // - In non-e10s or new implementaion: check if we have an active worker
         active: isMultiE10sWithOldImplementation ? true : !!activeWorker,
         lastUpdateTime: registration.lastUpdateTime,
+        traits: {
+          isParentInterceptEnabled,
+        },
       };
     },
 

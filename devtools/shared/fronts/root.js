@@ -9,7 +9,6 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(
@@ -29,13 +28,6 @@ loader.lazyRequireGetter(
   "ContentProcessTargetFront",
   "devtools/shared/fronts/targets/content-process",
   true
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "swm",
-  "@mozilla.org/serviceworkers/manager;1",
-  "nsIServiceWorkerManager"
 );
 
 class RootFront extends FrontClassWithSpec(rootSpec) {
@@ -135,16 +127,6 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       });
     });
 
-    /**
-     * FIXME (bug 1557170): Make this compatible with remote debugging.
-     *
-     * Getting the value from `ServiceWorkerManager.isParentInterceptEnabled`
-     * may not return the same value as what exists on a remote server.
-     * Unfortunately, calling `DeviceFront.getDescription()` here to read the
-     * dom.serviceWorkers.parent_intercept pref causes test failures.
-     */
-    const isParentInterceptEnabled = swm.isParentInterceptEnabled();
-
     workers.forEach(front => {
       const worker = {
         id: front.id,
@@ -165,6 +147,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
              * >= FF69 _and_ parent-intercept is stable (which definitely won't
              * happen when the release channel is < FF69).
              */
+            const { isParentInterceptEnabled } = r.registrationFront.traits;
             if (!r.newestWorkerId || !isParentInterceptEnabled) {
               return r.scope === front.scope;
             }
