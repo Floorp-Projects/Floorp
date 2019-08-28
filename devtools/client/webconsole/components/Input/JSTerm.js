@@ -95,11 +95,14 @@ class JSTerm extends Component {
       autocompleteData: PropTypes.object.isRequired,
       // Toggle the editor mode.
       editorToggle: PropTypes.func.isRequired,
+      // Dismiss the editor onboarding UI.
+      editorOnboardingDismiss: PropTypes.func.isRequired,
       // Is the editor feature enabled
       editorFeatureEnabled: PropTypes.bool,
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
+      showEditorOnboarding: PropTypes.bool,
       autocomplete: PropTypes.bool,
     };
   }
@@ -470,10 +473,10 @@ class JSTerm extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    // XXX: For now, everything is handled in an imperative way and we
-    // only want React to do the initial rendering of the component.
-    // This should be modified when the actual refactoring will take place.
-    return false;
+    return (
+      this.props.showEditorOnboarding !== nextProps.showEditorOnboarding ||
+      this.props.editorMode !== nextProps.editorMode
+    );
   }
 
   /**
@@ -1045,6 +1048,59 @@ class JSTerm extends Component {
     this.webConsoleUI = null;
   }
 
+  renderOpenEditorButton() {
+    if (!this.props.editorFeatureEnabled || this.props.editorMode) {
+      return null;
+    }
+
+    return dom.button({
+      className: "devtools-button webconsole-input-openEditorButton",
+      title: l10n.getFormatStr("webconsole.input.openEditorButton.tooltip2", [
+        isMacOS ? "Cmd + B" : "Ctrl + B",
+      ]),
+      onClick: this.props.editorToggle,
+    });
+  }
+
+  renderEditorOnboarding() {
+    if (!this.props.editorFeatureEnabled || !this.props.showEditorOnboarding) {
+      return null;
+    }
+
+    // We deliberately use getStr, and not getFormatStr, because we want keyboard
+    // shortcuts to be wrapped in their own span.
+    const label = l10n.getStr("webconsole.input.editor.onboarding.label");
+    let [prefix, suffix] = label.split("%1$S");
+    suffix = suffix.split("%2$S");
+
+    const enterString = l10n.getStr("webconsole.enterKey");
+
+    return dom.header(
+      { className: "editor-onboarding" },
+      dom.img({
+        className: "editor-onboarding-fox",
+        src: "chrome://devtools/skin/images/fox-smiling.svg",
+      }),
+      dom.p(
+        {},
+        prefix,
+        dom.span({ className: "editor-onboarding-shortcut" }, enterString),
+        suffix[0],
+        dom.span({ className: "editor-onboarding-shortcut" }, [
+          isMacOS ? `Cmd+${enterString}` : `Ctrl+${enterString}`,
+        ]),
+        suffix[1]
+      ),
+      dom.button(
+        {
+          className: "editor-onboarding-dismiss-button",
+          onClick: () => this.props.editorOnboardingDismiss(),
+        },
+        l10n.getStr("webconsole.input.editor.onboarding.dissmis.label")
+      )
+    );
+  }
+
   render() {
     if (
       this.props.webConsoleUI.isBrowserConsole &&
@@ -1052,17 +1108,6 @@ class JSTerm extends Component {
     ) {
       return null;
     }
-
-    const openEditorButton = this.props.editorFeatureEnabled
-      ? dom.button({
-          className: "devtools-button webconsole-input-openEditorButton",
-          title: l10n.getFormatStr(
-            "webconsole.input.openEditorButton.tooltip",
-            [isMacOS ? "Cmd + B" : "Ctrl + B"]
-          ),
-          onClick: this.props.editorToggle,
-        })
-      : undefined;
 
     return dom.div(
       {
@@ -1075,7 +1120,8 @@ class JSTerm extends Component {
           this.node = node;
         },
       },
-      openEditorButton
+      this.renderOpenEditorButton(),
+      this.renderEditorOnboarding()
     );
   }
 }
@@ -1087,6 +1133,7 @@ function mapStateToProps(state) {
     history: getHistory(state),
     getValueFromHistory: direction => getHistoryValue(state, direction),
     autocompleteData: getAutocompleteState(state),
+    showEditorOnboarding: state.ui.showEditorOnboarding,
   };
 }
 
@@ -1100,6 +1147,7 @@ function mapDispatchToProps(dispatch) {
     evaluateExpression: expression =>
       dispatch(actions.evaluateExpression(expression)),
     editorToggle: () => dispatch(actions.editorToggle()),
+    editorOnboardingDismiss: () => dispatch(actions.editorOnboardingDismiss()),
   };
 }
 
