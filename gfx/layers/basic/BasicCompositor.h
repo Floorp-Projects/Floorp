@@ -204,7 +204,6 @@ class BasicCompositor : public Compositor {
   RefPtr<MacIOSurface> mCurrentIOSurface;
 #endif
 
-  gfx::IntRect mInvalidRect;
   gfx::IntRegion mInvalidRegion;
 
   uint32_t mMaxTextureSize;
