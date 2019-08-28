@@ -223,6 +223,20 @@ linux64-rust-android-1.37:
         ]
         toolchain-alias: linux64-rust-android
 
+linux64-rust-windows-1.37:
+    description: "rust repack with windows-cross support"
+    treeherder:
+        symbol: TL(rust-win)
+    run:
+        arguments: [
+            '--channel', '1.37.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-alias: linux64-rust-windows
+
 win64-rust-1.28:
     treeherder:
         symbol: TW64(rust-1.28)
