@@ -4,7 +4,7 @@
 == 347496-1.xhtml 347496-1-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.legacy_number_syntax.disabled,false) pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
+pref(mathml.deprecated_style_attributes.disabled,false) pref(mathml.legacy_number_syntax.disabled,false) pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
 == 370692-1.xhtml 370692-1-ref.xhtml
@@ -287,9 +287,9 @@ fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu
 fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
 fails-if(Android&&!webrender) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
-== mathvariant-3.html mathvariant-3-ref.html
+pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
-== mathvariant-5.html mathvariant-5-ref.html
+pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
 == dtls-2.html dtls-2-ref.html
 == dtls-3.html dtls-3-ref.html
