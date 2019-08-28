@@ -167,9 +167,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void FlushIceCtxOperationQueueIfReady();
   void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
   nsresult SetTargetForDefaultLocalAddressLookup();
-  void EnsureIceGathering(bool aDefaultRouteOnly);
+  void EnsureIceGathering(bool aDefaultRouteOnly, bool aObfuscateHostAddresses);
 
   bool GetPrefDefaultAddressOnly() const;
+  bool GetPrefObfuscateHostAddresses() const;
 
   void ConnectSignals();
 

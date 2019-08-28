@@ -276,7 +276,8 @@ NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
       policy_(policy),
       nat_(nullptr),
       proxy_config_(nullptr),
-      proxy_only_(false) {}
+      proxy_only_(false),
+      obfuscate_host_addresses_(false) {}
 
 /* static */
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name, bool allow_loopback,
@@ -863,8 +864,11 @@ void NrIceCtx::SetCtxFlags(bool default_route_only, bool proxy_only) {
   }
 }
 
-nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
+nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only,
+                                  bool obfuscate_host_addresses) {
   ASSERT_ON_THREAD(sts_target_);
+
+  obfuscate_host_addresses_ = obfuscate_host_addresses;
 
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
@@ -1042,7 +1046,7 @@ void NrIceCtx::SetGatheringState(GatheringState state) {
 void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
                                          std::string* mdns_address,
                                          std::string* actual_address) {
-  if (candidate->type == HOST) {
+  if (candidate->type == HOST && obfuscate_host_addresses_) {
     int r;
     char addr[64];
     if ((r = nr_transport_addr_get_addrstring(&candidate->addr, addr,
