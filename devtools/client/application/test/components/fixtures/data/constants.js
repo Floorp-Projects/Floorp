@@ -93,10 +93,22 @@ const MANIFEST_SIMPLE = {
   validation: [{ level: "warning", message: "This is a warning" }],
 };
 
+// props for a manifest with no validation issues
+const MANIFEST_NO_ISSUES = {
+  icons: [{ key: "1x1", value: "something.png" }],
+  identity: [{ key: "name", value: "foo" }],
+  presentation: [
+    { key: "lorem", value: "ipsum" },
+    { key: "foo", value: "bar" },
+  ],
+  validation: [],
+};
+
 module.exports = {
   EMPTY_WORKER_LIST,
   SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   SINGLE_WORKER_DIFFERENT_DOMAIN_LIST,
+  MANIFEST_NO_ISSUES,
   MANIFEST_SIMPLE,
   MULTIPLE_WORKER_LIST,
   MULTIPLE_WORKER_MIXED_DOMAINS_LIST,

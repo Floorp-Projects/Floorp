@@ -43,7 +43,10 @@ class ManifestIssueList extends PureComponent {
 
     return groups.map((list, listIndex) => {
       return ul(
-        { className: "manifest-issues", key: `issuelist-${listIndex}` },
+        {
+          className: "manifest-issues js-manifest-issues",
+          key: `issuelist-${listIndex}`,
+        },
         list.map((issue, issueIndex) =>
           ManifestIssue({
             className: "manifest-issues__item",
