@@ -55,6 +55,7 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
 }
 
+ext.gleanGenerateMarkdownDocs = true
 apply from: '../../../components/service/glean/scripts/sdk_generator.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

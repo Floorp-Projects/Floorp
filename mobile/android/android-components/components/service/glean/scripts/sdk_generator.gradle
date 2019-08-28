@@ -21,7 +21,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 // so that it will be shared between all libraries that use Glean.  This is
 // important because it is approximately 300MB in installed size.
 
-String GLEAN_PARSER_VERSION = "1.3.0"
+String GLEAN_PARSER_VERSION = "1.4.0"
 // The version of Miniconda is explicitly specified.
 // Miniconda3-4.5.12 is known to not work on Windows.
 String MINICONDA_VERSION = "4.5.11"
@@ -170,6 +170,18 @@ if (project.ext.has("allowMetricsFromAAR")) {
     }
 }
 
+def gleanTaskNamePrefix = "generateMetricsSourceFor"
+
+// A shared function to get the Python command line executable.
+ext.gleanGetPythonCommand = {
+    // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        return new File(GLEAN_MINICONDA_DIR, "python")
+    }
+
+    return new File(GLEAN_MINICONDA_DIR, "bin/python")
+}
+
 // Generate the Metrics API
 ext.gleanGenerateMetricsAPI = {
     variant ->
@@ -183,7 +195,7 @@ ext.gleanGenerateMetricsAPI = {
     def originalPackageName = buildConfigProvider.get().getBuildConfigPackageName()
 
     def fullNamespace = "${originalPackageName}.GleanMetrics"
-    def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
+    def generateKotlinAPI = task("$gleanTaskNamePrefix${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Kotlin code for the Metrics API"
 
         if (project.ext.has("allowMetricsFromAAR")) {
@@ -199,12 +211,7 @@ ext.gleanGenerateMetricsAPI = {
         outputs.dir sourceOutputDir
 
         workingDir  rootDir
-        // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            commandLine new File(GLEAN_MINICONDA_DIR, "python")
-        } else {
-            commandLine new File(GLEAN_MINICONDA_DIR, "bin/python")
-        }
+        commandLine gleanGetPythonCommand()
 
         def gleanNamespace = "mozilla.components.service.glean"
         if (project.ext.has("gleanNamespace")) {
@@ -270,6 +277,53 @@ ext.gleanGenerateMetricsAPI = {
         // The added directory doesn't appear in the paths listed by the
         // `sourceSets` task, for reasons unknown.
         variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+    }
+}
+
+// Generate the Metrics docs, if requested.
+if (project.ext.has("gleanGenerateMarkdownDocs")) {
+    task gleanGenerateMetricsDocs(type: Exec) {
+        description = "Generate the Markdown docs for the collected metrics"
+
+        outputs.dir "$projectDir/docs"
+        workingDir rootDir
+        commandLine gleanGetPythonCommand()
+
+        args "-c"
+        args runPythonScript
+        args "glean_parser"
+        args GLEAN_PARSER_VERSION
+        args "translate"
+        args "-f"
+        args "markdown"
+        args "-o"
+        args "$projectDir/docs"
+        args "$projectDir/metrics.yaml"
+        args "$projectDir/pings.yaml"
+
+        doFirst {
+            inputs.files.forEach{ file ->
+                project.logger.lifecycle("Glean SDK - generating docs for ${file.path} in $projectDir/docs")
+            }
+        }
+
+        // Only show the output if something went wrong.
+        ignoreExitValue = true
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = standardOutput
+        doLast {
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+            }
+        }
+    }
+
+    // Attach the docs generation task to the code generation task, to make sure
+    // we generate docs, if we're asked for it.
+    tasks.whenTaskAdded { task ->
+        if (task.name.startsWith(gleanTaskNamePrefix)) {
+            task.dependsOn(gleanGenerateMetricsDocs)
+        }
     }
 }
 
