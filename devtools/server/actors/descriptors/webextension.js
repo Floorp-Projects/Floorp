@@ -16,7 +16,9 @@ const protocol = require("devtools/shared/protocol");
 const {
   webExtensionDescriptorSpec,
 } = require("devtools/shared/specs/descriptors/webextension");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const {
+  connectToFrame,
+} = require("devtools/server/connectors/frame-connector");
 
 loader.lazyImporter(
   this,
@@ -125,7 +127,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         this
       );
 
-      this._form = await DebuggerServer.connectToFrame(
+      this._form = await connectToFrame(
         this.conn,
         this._browser,
         this._extensionFrameDisconnect,

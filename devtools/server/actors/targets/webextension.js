@@ -76,7 +76,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  *        The connection to the client.
  * @param {nsIMessageSender} chromeGlobal.
  *        The chromeGlobal where this actor has been injected by the
- *        DebuggerServer.connectToFrame method.
+ *        frame-connector.js connectToFrame method.
  * @param {string} prefix
  *        the custom RDP prefix to use.
  * @param {string} addonId
