@@ -938,14 +938,8 @@ var gIdentityHandler = {
     // "Clear Site Data" button if the site is storing local data.
     this._clearSiteDataFooter.hidden = true;
     if (this._uriHasHost) {
-      let host = this._uri.host;
-      SiteDataManager.updateSites().then(async () => {
-        let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
-        let siteData = await SiteDataManager.getSites(baseDomain);
-
-        if (siteData && siteData.length) {
-          this._clearSiteDataFooter.hidden = false;
-        }
+      SiteDataManager.hasSiteData(this._uri.asciiHost).then(hasData => {
+        this._clearSiteDataFooter.hidden = !hasData;
       });
     }
 
