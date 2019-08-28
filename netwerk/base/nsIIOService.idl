@@ -190,6 +190,14 @@ interface nsIIOService : nsISupports
     boolean hostnameIsLocalIPAddress(in nsIURI aURI);
 
     /**
+     * Checks if a URI host is a shared IPv4 address literal.
+     *
+     * @param nsIURI the URI that contains the hostname to check
+     * @return true if the URI hostname is a shared IP address
+     */
+    boolean hostnameIsSharedIPAddress(in nsIURI aURI);
+
+    /**
      * While this is set, IOService will monitor an nsINetworkLinkService
      * (if available) and set its offline status to "true" whenever
      * isLinkUp is false.
