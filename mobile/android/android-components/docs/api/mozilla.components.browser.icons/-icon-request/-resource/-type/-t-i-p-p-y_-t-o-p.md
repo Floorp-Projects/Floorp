@@ -2,7 +2,7 @@
 
 # TIPPY_TOP
 
-`TIPPY_TOP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L125)
+`TIPPY_TOP` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L126)
 
 An icon found in Mozilla's "tippy top" list.
 
