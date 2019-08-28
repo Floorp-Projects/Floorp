@@ -709,7 +709,7 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
     if (dcount < 0.0) {
       dcount = 0.0;
     }
-    count = dcount > INT64_MAX ? -1 : int64_t(dcount);
+    count = dcount < double(1ULL << 63) ? int64_t(dcount) : -1;
   }
 
   Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
