@@ -129,7 +129,6 @@ devtools.jar:
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
     skin/images/webconsole/navigation.svg (themes/images/webconsole/navigation.svg)
     skin/images/webconsole/return.svg (themes/images/webconsole/return.svg)
-    skin/images/webconsole/run.svg (themes/images/webconsole/run.svg)
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
     skin/animation.css (themes/animation.css)
     skin/perf.css (themes/perf.css)

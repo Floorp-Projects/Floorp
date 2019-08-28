@@ -1789,7 +1789,7 @@ pref("signon.management.page.feedbackURL",
      "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");
 // The utm_creative value is appended within the code (specific to the location on
 // where it is clicked). Be sure that if these two prefs are updated, that
-// the utm_creative param be last.
+// the utm_creative param be last. 
 pref("signon.management.page.mobileAndroidURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dmozilla.lockbox&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=");
 pref("signon.management.page.mobileAppleURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fitunes.apple.com%2Fapp%2Fid1314000270%3Fmt%3D8&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=");
 pref("signon.management.page.breachAlertUrl",
@@ -2256,12 +2256,9 @@ pref("devtools.webconsole.timestampMessages", false);
 // Saved editor mode state in the console.
 pref("devtools.webconsole.input.editor", false);
 
-// Editor width for webconsole and browserconsole.
+// Editor width for webconsole and browserconsole
 pref("devtools.webconsole.input.editorWidth", 0);
 pref("devtools.browserconsole.input.editorWidth", 0);
-
-// Display an onboarding UI for the Editor mode.
-pref("devtools.webconsole.input.editorOnboarding", true);
 
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);

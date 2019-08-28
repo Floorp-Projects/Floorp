@@ -20,9 +20,9 @@ add_task(async function() {
     false,
     "Editor is disabled when pref is set to false"
   );
-  const openEditorButton = getInlineOpenEditorButton(hud);
+  let openEditorButton = getInlineOpenEditorButton(hud);
   ok(openEditorButton, "button is rendered in the inline input");
-  const rect = openEditorButton.getBoundingClientRect();
+  let rect = openEditorButton.getBoundingClientRect();
   ok(rect.width > 0 && rect.height > 0, "Button is visible");
 
   await closeConsole();
@@ -37,7 +37,9 @@ add_task(async function() {
     true,
     "Editor is enabled when pref is set to true"
   );
-  is(getInlineOpenEditorButton(hud), null, "Button is hidden in editor mode");
+  openEditorButton = getInlineOpenEditorButton(hud);
+  rect = openEditorButton.getBoundingClientRect();
+  ok(rect.width === 0 && rect.height === 0, "Button is hidden in editor mode");
 
   await toggleLayout(hud);
   getInlineOpenEditorButton(hud).click();
