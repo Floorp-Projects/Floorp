@@ -11,8 +11,9 @@
 * Components
 */
 @import "resource://devtools/client/application/src/components/App.css";
+@import "resource://devtools/client/application/src/components/manifest/ManifestIssue.css";
+@import "resource://devtools/client/application/src/components/manifest/ManifestIssueList.css";
 @import "resource://devtools/client/application/src/components/manifest/ManifestItem.css";
-@import "resource://devtools/client/application/src/components/manifest/ManifestItemWarning.css";
 @import "resource://devtools/client/application/src/components/manifest/ManifestSection.css";
 @import "resource://devtools/client/application/src/components/routing/PageSwitcher.css";
 @import "resource://devtools/client/application/src/components/service-workers/Worker.css";

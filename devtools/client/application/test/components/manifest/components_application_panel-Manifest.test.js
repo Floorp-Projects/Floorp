@@ -11,15 +11,28 @@ const Manifest = createFactory(
   require("devtools/client/application/src/components/manifest/Manifest")
 );
 
-const { MANIFEST_SIMPLE } = require("../fixtures/data/constants");
+const {
+  MANIFEST_NO_ISSUES,
+  MANIFEST_SIMPLE,
+} = require("../fixtures/data/constants");
 
 /*
  * Test for Manifest component
  */
 
 describe("Manifest", () => {
-  it("renders the expected snapshot", () => {
+  it("renders the expected snapshot for a simple manifest", () => {
     const wrapper = shallow(Manifest(MANIFEST_SIMPLE));
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("does not render the issues section when the manifest is valid", () => {
+    const wrapper = shallow(Manifest(MANIFEST_NO_ISSUES));
+    expect(wrapper).toMatchSnapshot();
+
+    const sections = wrapper.find("ManifestSection");
+    expect(sections).toHaveLength(3);
+    expect(sections.get(0).props.title).not.toBe("manifest-item-warnings");
+    expect(sections.contains("ManifestIssueList")).toBe(false);
   });
 });

@@ -107,7 +107,7 @@ add_task(async function() {
     (Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl") + " + B";
   is(
     closeButton.title,
-    `Close Editor (${closeKeyShortcut})`,
+    `Switch back to inline mode (${closeKeyShortcut})`,
     "Close button has expected title"
   );
   closeButton.click();

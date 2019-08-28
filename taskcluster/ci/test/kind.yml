@@ -38,6 +38,7 @@ jobs-from:
     - raptor-fennec.yml
     - raptor-fennec64.yml
     - raptor-gve.yml
+    - raptor-refbrow.yml
     - reftest.yml
     - talos.yml
     - web-platform.yml

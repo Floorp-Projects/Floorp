@@ -1313,8 +1313,34 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(
-      aWindow->GetBrowsingContext()->Top()->GetDOMWindow());
+  BrowsingContext* topBC = aWindow->GetBrowsingContext()->Top();
+  nsGlobalWindowOuter* topWindow = nullptr;
+  if (topBC->IsInProcess()) {
+    topWindow = nsGlobalWindowOuter::Cast(topBC->GetDOMWindow());
+  } else {
+    // For out-of-process top frames, we need to be able to access three things
+    // from the top BrowsingContext in order to be able to port this code to
+    // Fission successfully:
+    //   * The principal of the top BrowsingContext.
+    //   * The CookieSettings of the top BrowsingContext.
+    //   * The HasStorageAccessGranted() API on BrowsingContext.
+    // For now, if we face an out-of-process top frame, instead of failing here,
+    // we revert back to looking at the in-process top frame.  This is of course
+    // the wrong thing to do, but we seem to have a number of tests in the tree
+    // which are depending on this incorrect behaviour.  This path is intended
+    // to temporarily keep those tests working...
+    nsGlobalWindowOuter* outerWindow =
+        nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+    if (!outerWindow) {
+      LOG(("Our window has no outer window"));
+      return false;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
+        outerWindow->GetInProcessTop();
+    topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
+  }
+
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window"));
     return false;

@@ -103,17 +103,6 @@ const size_t gStackSize = 8192;
 #  undef CompareString
 #endif
 
-#define NS_SHRINK_GC_BUFFERS_DELAY 4000  // ms
-
-// The amount of time we wait from the first request to GC to actually
-// doing the first GC.
-#define NS_FIRST_GC_DELAY 10000  // ms
-
-#define NS_FULL_GC_DELAY 60000  // ms
-
-// Maximum amount of time that should elapse between incremental GC slices
-#define NS_INTERSLICE_GC_DELAY 100  // ms
-
 // The amount of time we wait between a request to CC (after GC ran)
 // and doing the actual CC.
 #define NS_CC_DELAY 6000  // ms
@@ -1560,9 +1549,6 @@ void nsJSContext::BeginCycleCollectionCallback() {
       [] { return sShuttingDown; }, TaskCategory::GarbageCollection);
 }
 
-static_assert(NS_GC_DELAY > kMaxICCDuration,
-              "A max duration ICC shouldn't reduce GC delay to 0");
-
 // static
 void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1581,8 +1567,12 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
 
   if (NeedsGCAfterCC()) {
+    MOZ_ASSERT(StaticPrefs::javascript_options_gc_delay() > kMaxICCDuration,
+               "A max duration ICC shouldn't reduce GC delay to 0");
+
     PokeGC(JS::GCReason::CC_WAITING, nullptr,
-           NS_GC_DELAY - std::min(ccNowDuration, kMaxICCDuration));
+           StaticPrefs::javascript_options_gc_delay() -
+               std::min(ccNowDuration, kMaxICCDuration));
   }
 
   // Log information about the CC via telemetry, JSON and the console.
@@ -1786,7 +1776,8 @@ void GCTimerFired(nsITimer* aTimer, void* aClosure) {
       [aClosure](TimeStamp aDeadline) {
         return InterSliceGCRunnerFired(aDeadline, aClosure);
       },
-      "GCTimerFired::InterSliceGCRunnerFired", NS_INTERSLICE_GC_DELAY,
+      "GCTimerFired::InterSliceGCRunnerFired",
+      StaticPrefs::javascript_options_gc_delay_interslice(),
       sActiveIntersliceGCBudget, true, [] { return sShuttingDown; },
       TaskCategory::GarbageCollection);
 }
@@ -1984,7 +1975,8 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
   // Only try to trigger collectors more often if user hasn't interacted with
   // the page for awhile.
   if ((currentTime - lastEventTime) >
-      (NS_USER_INTERACTION_INTERVAL * PR_USEC_PER_MSEC)) {
+      (StaticPrefs::dom_events_user_interaction_interval() *
+       PR_USEC_PER_MSEC)) {
     Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
     // Try to not delay the next RefreshDriver tick, so give a reasonable
     // deadline for collectors.
@@ -1995,7 +1987,8 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
 }
 
 // static
-void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj, int aDelay) {
+void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
+                         uint32_t aDelay) {
   if (sShuttingDown) {
     return;
   }
@@ -2031,7 +2024,9 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj, int aDelay) {
 
   NS_NewTimerWithFuncCallback(
       &sGCTimer, GCTimerFired, reinterpret_cast<void*>(aReason),
-      aDelay ? aDelay : (first ? NS_FIRST_GC_DELAY : NS_GC_DELAY),
+      aDelay ? aDelay
+             : (first ? StaticPrefs::javascript_options_gc_delay_first()
+                      : StaticPrefs::javascript_options_gc_delay()),
       nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "GCTimerFired",
       SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
 
@@ -2227,7 +2222,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       if (aDesc.isZone_) {
         if (!sFullGCTimer && !sShuttingDown) {
           NS_NewTimerWithFuncCallback(
-              &sFullGCTimer, FullGCTimerFired, nullptr, NS_FULL_GC_DELAY,
+              &sFullGCTimer, FullGCTimerFired, nullptr,
+              StaticPrefs::javascript_options_gc_delay_full(),
               nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "FullGCTimerFired",
               SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
         }
@@ -2266,8 +2262,9 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
               return InterSliceGCRunnerFired(aDeadline, nullptr);
             },
             "DOMGCSliceCallback::InterSliceGCRunnerFired",
-            NS_INTERSLICE_GC_DELAY, sActiveIntersliceGCBudget, true,
-            [] { return sShuttingDown; }, TaskCategory::GarbageCollection);
+            StaticPrefs::javascript_options_gc_delay_interslice(),
+            sActiveIntersliceGCBudget, true, [] { return sShuttingDown; },
+            TaskCategory::GarbageCollection);
       }
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {

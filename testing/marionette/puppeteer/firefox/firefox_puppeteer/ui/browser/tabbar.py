@@ -36,7 +36,7 @@ class TabBar(UIBaseLib):
 
         :returns: Reference to the new tab button.
         """
-        return self.toolbar.find_element(By.CLASS_NAME, 'tabs-newtab-button')
+        return self.toolbar.find_element(By.ID, 'tabs-newtab-button')
 
     @property
     def tabs(self):

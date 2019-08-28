@@ -261,6 +261,7 @@ class TryOptionSyntax(object):
             'only_chunks': set([..chunk numbers..]), # to limit only to certain chunks
         }
         """
+        self.full_task_graph = full_task_graph
         self.graph_config = graph_config
         self.jobs = []
         self.build_types = []
@@ -615,21 +616,30 @@ class TryOptionSyntax(object):
                 # Platforms can be forced by syntax like "-u xpcshell[Windows 8]"
                 return platform in test['platforms']
             elif tier != 1:
-                # Require tier 2/3 tests to be specifically enabled if there
-                # are other platforms that run this test suite as tier 1
+                # Run Tier 2/3 tests if their build task is Tier 2/3 OR if there is
+                # no tier 1 test of that name.
+                build_task = self.full_task_graph.tasks[task.dependencies['build']]
+                build_task_tier = build_task.task['extra']['treeherder']['tier']
+
                 name = attr('unittest_try_name')
                 test_tiers = self.test_tiers.get(name)
-                if 1 not in test_tiers:
-                    logger.debug("not skipping tier {} test without explicit inclusion: {}; "
+
+                if tier <= build_task_tier:
+                    logger.debug("not skipping tier {} test {} because build task {} "
+                                 "is tier {}"
+                                 .format(tier, task.label, build_task.label,
+                                         build_task_tier))
+                    return True
+                elif 1 not in test_tiers:
+                    logger.debug("not skipping tier {} test {} without explicit inclusion; "
                                  "it is configured to run on tiers {}"
                                  .format(tier, task.label, test_tiers))
                     return True
                 else:
-                    logger.debug(
-                        "skipping mixed tier {} (of {}) test without explicit inclusion: {}"
-                        .format(tier, test_tiers, task.label))
+                    logger.debug("skipping tier {} test {} because build task {} is "
+                                 "tier {} and there is a higher-tier test of the same name"
+                                 .format(tier, task.label, build_task.label, build_task_tier))
                     return False
-
             elif run_by_default:
                 return check_run_on_projects()
             else:

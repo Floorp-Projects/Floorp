@@ -20,8 +20,6 @@
 #include "Units.h"
 #include "WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 
-#define NS_USER_INTERACTION_INTERVAL 5000  // ms
-
 class nsFrameLoader;
 class nsIContent;
 class nsIDocShell;

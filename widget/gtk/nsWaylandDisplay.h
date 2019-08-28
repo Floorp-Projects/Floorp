@@ -15,7 +15,6 @@
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "mozilla/StaticMutex.h"
 
-#include <drm_fourcc.h>
 #include <xf86drm.h>
 #include "mozilla/widget/gbm.h"
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
@@ -72,6 +71,8 @@ class nsWaylandDisplay {
   int GetGbmDeviceFd();
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
   GbmFormat* GetGbmFormat(bool aHasAlpha);
+  GbmFormat* GetExactGbmFormat(int aFormat);
+
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
   static bool IsDMABufEnabled();
@@ -109,8 +110,8 @@ wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay = nullptr);
 typedef struct gbm_device* (*CreateDeviceFunc)(int);
 typedef struct gbm_bo* (*CreateFunc)(struct gbm_device*, uint32_t, uint32_t,
                                      uint32_t, uint32_t);
-typedef struct gbm_bo* (*CreateFunc)(struct gbm_device*, uint32_t, uint32_t,
-                                     uint32_t, uint32_t);
+typedef struct gbm_bo* (*ImportFunc)(struct gbm_device*, uint32_t, void*,
+                                     uint32_t);
 typedef struct gbm_bo* (*CreateWithModifiersFunc)(struct gbm_device*, uint32_t,
                                                   uint32_t, uint32_t,
                                                   const uint64_t*,
@@ -126,7 +127,8 @@ typedef int (*GetPlaneCountFunc)(struct gbm_bo*);
 typedef union gbm_bo_handle (*GetHandleForPlaneFunc)(struct gbm_bo*, int);
 typedef uint32_t (*GetStrideForPlaneFunc)(struct gbm_bo*, int);
 typedef uint32_t (*GetOffsetFunc)(struct gbm_bo*, int);
-
+typedef int (*DeviceIsFormatSupportedFunc)(struct gbm_device*, uint32_t,
+                                           uint32_t);
 typedef int (*DrmPrimeHandleToFDFunc)(int, uint32_t, uint32_t, int*);
 
 class nsGbmLib {
@@ -140,6 +142,10 @@ class nsGbmLib {
                                uint32_t height, uint32_t format,
                                uint32_t flags) {
     return sCreate(gbm, width, height, format, flags);
+  }
+  static struct gbm_bo* Import(struct gbm_device* gbm, uint32_t type,
+                               void* buffer, uint32_t usage) {
+    return sImport(gbm, type, buffer, usage);
   }
   static void Destroy(struct gbm_bo* bo) { sDestroy(bo); }
   static uint32_t GetStride(struct gbm_bo* bo) { return sGetStride(bo); }
@@ -168,6 +174,10 @@ class nsGbmLib {
   static uint32_t GetOffset(struct gbm_bo* bo, int plane) {
     return sGetOffset(bo, plane);
   }
+  static int DeviceIsFormatSupported(struct gbm_device* gbm, uint32_t format,
+                                     uint32_t usage) {
+    return sDeviceIsFormatSupported(gbm, format, usage);
+  }
 
   static int DrmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags,
                                 int* prime_fd) {
@@ -177,6 +187,7 @@ class nsGbmLib {
  private:
   static CreateDeviceFunc sCreateDevice;
   static CreateFunc sCreate;
+  static ImportFunc sImport;
   static CreateWithModifiersFunc sCreateWithModifiers;
   static GetModifierFunc sGetModifier;
   static GetStrideFunc sGetStride;
@@ -188,6 +199,7 @@ class nsGbmLib {
   static GetHandleForPlaneFunc sGetHandleForPlane;
   static GetStrideForPlaneFunc sGetStrideForPlane;
   static GetOffsetFunc sGetOffset;
+  static DeviceIsFormatSupportedFunc sDeviceIsFormatSupported;
   static DrmPrimeHandleToFDFunc sDrmPrimeHandleToFD;
 
   static void* sGbmLibHandle;
