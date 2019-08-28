@@ -1054,4 +1054,16 @@ void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
   AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
 }
 
+CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {
+  return leaRipRelative(dest);
+}
+
+void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
+                                          CodeLocationLabel target) {
+  ptrdiff_t off = target - loc;
+  MOZ_ASSERT(off > ptrdiff_t(INT32_MIN));
+  MOZ_ASSERT(off < ptrdiff_t(INT32_MAX));
+  PatchWrite_Imm32(loc, Imm32(off));
+}
+
 //}}} check_macroassembler_style
