@@ -961,16 +961,17 @@ nsresult ContentChild::ProvideWindowCommon(
   // parent. Otherwise, the parent could send messages to us before we have a
   // proper TabGroup for that actor.
   RefPtr<TabGroup> tabGroup;
+  RefPtr<BrowsingContext> openerBC;
   if (aTabOpener && !aForceNoOpener) {
     // The new actor will use the same tab group as the opener.
     tabGroup = aTabOpener->TabGroup();
+    if (aParent) {
+      openerBC = nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext();
+    }
   } else {
     tabGroup = new TabGroup();
   }
 
-  RefPtr<BrowsingContext> openerBC =
-      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
-              : nullptr;
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
