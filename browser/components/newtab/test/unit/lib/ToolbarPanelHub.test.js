@@ -587,14 +587,14 @@ describe("ToolbarPanelHub", () => {
 
       await fakeInsert();
 
-      assert.calledTwice(fakeElementById.toggleAttribute);
+      assert.calledThrice(fakeElementById.toggleAttribute);
     });
     it("should toggle again when popup hides", async () => {
       fakeElementById.addEventListener.callsArg(1);
 
       await fakeInsert();
 
-      assert.callCount(fakeElementById.toggleAttribute, 4);
+      assert.callCount(fakeElementById.toggleAttribute, 6);
     });
     it("should open link on click", async () => {
       await fakeInsert();
