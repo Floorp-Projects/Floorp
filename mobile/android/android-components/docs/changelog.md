@@ -22,6 +22,19 @@ permalink: /changelog/
 * **support-ktx**
   * Added property delegates to work with `SharedPreferences`.
 
+# 10.0.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v10.0.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v10.0.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v10.0.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v10.0.1/buildSrc/src/main/java/Config.kt)
+
+* **browser-menu**
+  * Added `startImage` to Highlight of HighlightableMenuItem, which allows changing the startImage in addition to the endImage when highlighted
+  * Highlight properties of HighlightableMenuItem `startImage` and `endImage` are now both optional
+
+* Imported latest state of translations.
+
 # 10.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v9.0.0...v10.0.0)
