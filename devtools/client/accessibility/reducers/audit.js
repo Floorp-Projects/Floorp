@@ -62,11 +62,10 @@ function audit(state = getInitialState(), action) {
           [filter]: isToggledToActive,
         };
 
-        if (
-          isToggledToActive &&
-          !filters[FILTERS.ALL] &&
-          Object.values(AUDIT_TYPE).every(filterKey => filters[filterKey])
-        ) {
+        const allAuditTypesActive = Object.values(AUDIT_TYPE)
+          .filter(filterKey => filters.hasOwnProperty(filterKey))
+          .every(filterKey => filters[filterKey]);
+        if (isToggledToActive && !filters[FILTERS.ALL] && allAuditTypesActive) {
           filters[FILTERS.ALL] = true;
         } else if (!isToggledToActive && filters[FILTERS.ALL]) {
           filters[FILTERS.ALL] = false;
