@@ -36,14 +36,14 @@ async function test_connect_addon(oopMode) {
   await client.connect();
 
   // List addons and assertions on the expected addon actor.
-  const addonFront = await client.mainRoot.getAddon({ id: extension.id });
-  ok(addonFront, "The expected webextension addon actor has been found");
+  const addonDescriptor = await client.mainRoot.getAddon({ id: extension.id });
+  ok(addonDescriptor, "The expected webextension addon actor has been found");
 
-  const addonTarget = await addonFront.connect();
+  const addonTarget = await addonDescriptor.getTarget();
   ok(addonTarget, "The expected webextension target addon actor has been found");
 
   // Connect to the target addon actor and wait for the updated list of frames.
-  is(addonTarget.targetForm.isOOP, oopMode,
+  is(addonDescriptor.targetForm.isOOP, oopMode,
      "Got the expected oop mode in the webextension actor form");
   const frames = await waitForFramesUpdated(addonTarget);
   const backgroundPageFrame = frames.filter((frame) => {

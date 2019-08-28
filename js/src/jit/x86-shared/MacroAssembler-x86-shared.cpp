@@ -595,12 +595,9 @@ void MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
   Assembler::patchFarJump(farJump, targetOffset);
 }
 
-CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
-  CodeOffset offset(currentOffset());
+CodeOffset MacroAssembler::nopPatchableToCall() {
   masm.nop_five();
-  append(desc, CodeOffset(currentOffset()));
-  MOZ_ASSERT_IF(!oom(), size() - offset.offset() == ToggledCallSize(nullptr));
-  return offset;
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssembler::patchNopToCall(uint8_t* callsite, uint8_t* target) {

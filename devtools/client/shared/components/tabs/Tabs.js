@@ -425,7 +425,11 @@ define(function(require, exports, module) {
     }
 
     render() {
-      return dom.div({ className: "tab-panel" }, this.props.children);
+      const { className } = this.props;
+      return dom.div(
+        { className: `tab-panel ${className || ""}` },
+        this.props.children
+      );
     }
   }
 

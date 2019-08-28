@@ -1243,4 +1243,13 @@ void MacroAssembler::convertInt64ToFloat32(Register64 input,
 
 void MacroAssembler::PushBoxed(FloatRegister reg) { Push(reg); }
 
+CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {
+  return movWithPatch(ImmPtr(nullptr), dest);
+}
+
+void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
+                                          CodeLocationLabel target) {
+  PatchDataWithValueCheck(loc, ImmPtr(target.raw()), ImmPtr(nullptr));
+}
+
 //}}} check_macroassembler_style

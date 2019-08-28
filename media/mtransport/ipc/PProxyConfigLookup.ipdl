@@ -3,13 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PSocketProcess;
 
 namespace mozilla {
 namespace net {
 
 protocol PProxyConfigLookup
 {
-  manager PNecko;
+  manager PNecko or PSocketProcess;
 
 child:
   async __delete__(bool aProxied);
