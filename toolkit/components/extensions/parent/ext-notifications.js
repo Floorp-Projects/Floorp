@@ -154,7 +154,7 @@ this.notifications = class extends ExtensionAPI {
           name: "notifications.onClicked",
           register: fire => {
             let listener = (event, notificationId) => {
-              fire.async(notificationId, true);
+              fire.async(notificationId);
             };
 
             notificationsMap.on("clicked", listener);
@@ -169,7 +169,7 @@ this.notifications = class extends ExtensionAPI {
           name: "notifications.onShown",
           register: fire => {
             let listener = (event, notificationId) => {
-              fire.async(notificationId, true);
+              fire.async(notificationId);
             };
 
             notificationsMap.on("shown", listener);

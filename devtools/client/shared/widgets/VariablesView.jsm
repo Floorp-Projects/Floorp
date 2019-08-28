@@ -2908,6 +2908,7 @@ Variable.prototype = extend(Scope.prototype, {
 
       let nodeFront = this._nodeFront;
       if (!nodeFront) {
+        // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
         nodeFront = await this.toolbox.walker.gripToNodeFront(this._valueGrip);
       }
 
@@ -2931,15 +2932,18 @@ Variable.prototype = extend(Scope.prototype, {
    * linked to the toolbox's inspector, then highlight the corresponding node
    */
   highlightDomNode: async function() {
-    if (this.toolbox) {
-      await this.toolbox.initInspector();
-      if (!this._nodeFront) {
-        this.nodeFront = await this.toolbox.walker.gripToNodeFront(
-          this._valueGrip
-        );
-      }
-      await this.toolbox.highlighter.highlight(this._nodeFront);
+    if (!this.toolbox) {
+      return;
     }
+
+    if (!this._nodeFront) {
+      // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+      const walkerFront = (await this.toolbox.target.getFront("inspector"))
+        .walker;
+      this.nodeFront = await walkerFront.gripToNodeFront(this._valueGrip);
+    }
+
+    await this.nodeFront.highlighterFront.highlight(this._nodeFront);
   },
 
   /**
@@ -2947,9 +2951,11 @@ Variable.prototype = extend(Scope.prototype, {
    * @see highlightDomNode
    */
   unhighlightDomNode: function() {
-    if (this.toolbox) {
-      this.toolbox.highlighter.unhighlight();
+    if (!this.toolbox) {
+      return;
     }
+
+    this.nodeFront.highlighterFront.unhighlight();
   },
 
   /**

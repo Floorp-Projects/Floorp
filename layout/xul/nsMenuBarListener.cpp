@@ -419,7 +419,7 @@ nsresult nsMenuBarListener::KeyDown(Event* aKeyEvent) {
     bool defaultPrevented = aKeyEvent->DefaultPrevented();
 
     // No other modifiers can be down.
-    // Especially CTRL.  CTRL+ALT == AltGR, and we'll fuck up on non-US
+    // Especially CTRL.  CTRL+ALT == AltGR, and we'll break on non-US
     // enhanced 102-key keyboards if we don't check this.
     bool isAccessKeyDownEvent =
         ((theChar == (uint32_t)mAccessKey) &&

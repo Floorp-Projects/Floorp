@@ -50,6 +50,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "signon.management.page.breach-alerts.enabled",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "FXA_ENABLED",
+  "identity.fxaccounts.enabled",
+  false
+);
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
@@ -287,9 +293,11 @@ var AboutLoginsParent = {
         try {
           messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
 
-          let syncState = this.getSyncState();
-          messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
-          this.updatePasswordSyncNotificationState();
+          if (FXA_ENABLED) {
+            let syncState = this.getSyncState();
+            messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
+            this.updatePasswordSyncNotificationState();
+          }
 
           // App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
           // This array mirrors the file names from the App store directory (./content/third-party/app-store)

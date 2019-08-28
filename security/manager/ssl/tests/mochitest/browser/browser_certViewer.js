@@ -216,7 +216,7 @@ add_task(async function testRevoked() {
 add_task(async function testInvalid() {
   // This certificate has a keyUsage extension asserting cRLSign and
   // keyCertSign, but it doesn't have a basicConstraints extension. This
-  // shouldn't be valid for any usage. Sadly, we give a pretty lame error
+  // shouldn't be valid for any usage. Sadly, we give a pretty bad error
   // message in this case.
   let cert = await readCertificate("invalid.pem", ",,");
   for (let isNewCertViewer of [true, false]) {
