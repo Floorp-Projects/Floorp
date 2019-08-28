@@ -38,11 +38,6 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
-loader.lazyRequireGetter(
-  this,
-  "NodePicker",
-  "devtools/client/inspector/node-picker"
-);
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
@@ -143,6 +138,11 @@ loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
+  "NodePicker",
+  "devtools/client/inspector/node-picker"
 );
 
 loader.lazyGetter(this, "domNodeConstants", () => {
@@ -347,6 +347,20 @@ Toolbox.prototype = {
   _prefs: {
     LAST_TOOL: "devtools.toolbox.selectedTool",
     SIDE_ENABLED: "devtools.toolbox.sideEnabled",
+  },
+
+  get nodePicker() {
+    if (!this._nodePicker) {
+      this._nodePicker = new NodePicker(this.target, this.selection);
+      this._nodePicker.on("picker-starting", this._onPickerStarting);
+      this._nodePicker.on("picker-started", this._onPickerStarted);
+      this._nodePicker.on("picker-stopped", this._onPickerStopped);
+      this._nodePicker.on("picker-node-canceled", this._onPickerCanceled);
+      this._nodePicker.on("picker-node-picked", this._onPickerPicked);
+      this._nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
+    }
+
+    return this._nodePicker;
   },
 
   get store() {
@@ -1753,9 +1767,6 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
-      if (!this.inspectorFront) {
-        await this.initInspector();
-      }
       this.nodePicker.togglePicker(focus);
     }
   },
@@ -3317,14 +3328,6 @@ Toolbox.prototype = {
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
         this._inspector = await this.target.getFront("inspector");
-        this.nodePicker = new NodePicker(this.target, this.selection);
-
-        this.nodePicker.on("picker-starting", this._onPickerStarting);
-        this.nodePicker.on("picker-started", this._onPickerStarted);
-        this.nodePicker.on("picker-stopped", this._onPickerStopped);
-        this.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
-        this.nodePicker.on("picker-node-picked", this._onPickerPicked);
-        this.nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
         registerWalkerListeners(this.store, this._inspector.walker);
       }.bind(this)();
     }
