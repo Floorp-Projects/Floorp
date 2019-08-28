@@ -16,4 +16,8 @@ void mdns_service_stop(MDNSService* serv);
 
 void mdns_service_unregister_hostname(MDNSService* serv, const char* hostname);
 
+const char* mdns_service_generate_uuid();
+
+void mdns_service_free_uuid(const char* uuid);
+
 }  // extern "C"
