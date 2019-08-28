@@ -110,7 +110,7 @@ def make_task_description(config, jobs):
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        signing_task_ref = 'langpack-copy'
+        signing_task_ref = '<langpack-copy>'
 
         platform = job["attributes"]["build_platform"]
         locale = job["attributes"]["chunk_locales"]
