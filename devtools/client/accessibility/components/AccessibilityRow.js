@@ -85,7 +85,6 @@ class AccessibilityRow extends Component {
       accessibilityWalker: PropTypes.object,
       scrollContentNodeIntoView: PropTypes.bool.isRequired,
       supports: PropTypes.object,
-      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -154,13 +153,12 @@ class AccessibilityRow extends Component {
       dispatch,
       member: { object },
       supports,
-      getDOMWalker,
     } = this.props;
-    const domWalker = await getDOMWalker();
-    if (!domWalker || !object.actorID) {
+    if (!object.actorID) {
       return;
     }
 
+    const domWalker = (await object.targetFront.getFront("inspector")).walker;
     dispatch(updateDetails(domWalker, object, supports));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, object);
   }
@@ -194,13 +192,14 @@ class AccessibilityRow extends Component {
    *          Promise that resolves when the node is scrolled into view if
    *          possible.
    */
-  async scrollNodeIntoViewIfNeeded({ actorID }) {
-    const domWalker = await this.props.getDOMWalker();
-    if (!domWalker || !actorID) {
+  async scrollNodeIntoViewIfNeeded(accessible) {
+    if (!accessible.actorID) {
       return;
     }
 
-    const node = await domWalker.getNodeFromActor(actorID, [
+    const domWalker = (await accessible.targetFront.getFront("inspector"))
+      .walker;
+    const node = await domWalker.getNodeFromActor(accessible.actorID, [
       "rawAccessible",
       "DOMNode",
     ]);
