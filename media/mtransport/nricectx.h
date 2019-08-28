@@ -376,6 +376,10 @@ class NrIceCtx {
   // Set the state
   void SetGatheringState(GatheringState state);
 
+  void GenerateObfuscatedAddress(nr_ice_candidate* candidate,
+                                 std::string* mdns_address,
+                                 std::string* actual_address);
+
   ConnectionState connection_state_;
   GatheringState gathering_state_;
   const std::string name_;
@@ -391,6 +395,7 @@ class NrIceCtx {
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
   bool proxy_only_;
+  std::map<std::string, std::string> obfuscated_host_addresses_;
 };
 
 }  // namespace mozilla

@@ -57,6 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIEventTarget.h"
+#include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -427,9 +428,13 @@ void NrIceCtx::trickle_cb(void* arg, nr_ice_ctx* ice_ctx,
   }
 
   if (!candidate) {
-    s->SignalCandidate(s, "", stream->ufrag);
+    s->SignalCandidate(s, "", stream->ufrag, "", "");
     return;
   }
+
+  std::string actual_addr;
+  std::string mdns_addr;
+  ctx->GenerateObfuscatedAddress(candidate, &mdns_addr, &actual_addr);
 
   // Format the candidate.
   char candidate_str[NR_ICE_MAX_ATTRIBUTE_SIZE];
@@ -441,7 +446,7 @@ void NrIceCtx::trickle_cb(void* arg, nr_ice_ctx* ice_ctx,
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << ctx->name_ << "): trickling candidate "
                                  << candidate_str);
 
-  s->SignalCandidate(s, candidate_str, stream->ufrag);
+  s->SignalCandidate(s, candidate_str, stream->ufrag, mdns_addr, actual_addr);
 }
 
 void NrIceCtx::InitializeGlobals(bool allow_loopback, bool tcp_enabled,
@@ -860,6 +865,7 @@ void NrIceCtx::SetCtxFlags(bool default_route_only, bool proxy_only) {
 
 nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   ASSERT_ON_THREAD(sts_target_);
+
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   SetCtxFlags(default_route_only, proxy_only);
@@ -1031,6 +1037,52 @@ void NrIceCtx::SetGatheringState(GatheringState state) {
   gathering_state_ = state;
 
   SignalGatheringStateChange(this, state);
+}
+
+void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
+                                         std::string* mdns_address,
+                                         std::string* actual_address) {
+  if (candidate->type == HOST) {
+    int r;
+    char addr[64];
+    if ((r = nr_transport_addr_get_addrstring(&candidate->addr, addr,
+                                              sizeof(addr)))) {
+      return;
+    }
+
+    *actual_address = addr;
+
+    const auto& iter = obfuscated_host_addresses_.find(*actual_address);
+    if (iter != obfuscated_host_addresses_.end()) {
+      *mdns_address = iter->second;
+    } else {
+      nsresult rv;
+      nsCOMPtr<nsIUUIDGenerator> uuidgen =
+          do_GetService("@mozilla.org/uuid-generator;1", &rv);
+
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      nsID id;
+      rv = uuidgen->GenerateUUIDInPlace(&id);
+
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      char chars[NSID_LENGTH];
+      id.ToProvidedString(chars);
+
+      std::ostringstream o;
+      chars[NSID_LENGTH - 2] = 0;  // trim trailing } from uuid
+      o << &chars[1] << ".local";  // trim leading { from uuid
+      *mdns_address = o.str();
+
+      obfuscated_host_addresses_[*actual_address] = *mdns_address;
+    }
+    candidate->mdns_addr = r_strdup(mdns_address->c_str());
+  }
 }
 
 }  // namespace mozilla
