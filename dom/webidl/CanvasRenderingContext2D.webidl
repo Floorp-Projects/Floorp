@@ -52,7 +52,8 @@ interface CanvasRenderingContext2D {
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
-  [Deprecated="PrefixedImageSmoothingEnabled"]
+  [Deprecated="PrefixedImageSmoothingEnabled",
+   BinaryName="imageSmoothingEnabled"]
   attribute boolean mozImageSmoothingEnabled;
 
   // Show the caret if appropriate when drawing
