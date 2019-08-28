@@ -80,6 +80,7 @@ export default class LoginItem extends HTMLElement {
     this._form.addEventListener("submit", this);
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
+    this._originInput.addEventListener("auxclick", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -166,6 +167,12 @@ export default class LoginItem extends HTMLElement {
       }
       case "AboutLoginsShowBlankLogin": {
         this.confirmPendingChangesOnEvent(event, {});
+        break;
+      }
+      case "auxclick": {
+        if (event.button == 1) {
+          this._handleOriginClick();
+        }
         break;
       }
       case "blur": {
@@ -276,18 +283,8 @@ export default class LoginItem extends HTMLElement {
           recordTelemetryEvent({ object: "existing_login", method: "edit" });
           return;
         }
-        if (classList.contains("origin-input") && !this.readOnly) {
-          document.dispatchEvent(
-            new CustomEvent("AboutLoginsOpenSite", {
-              bubbles: true,
-              detail: this._login,
-            })
-          );
-
-          recordTelemetryEvent({
-            object: "existing_login",
-            method: "open_site",
-          });
+        if (classList.contains("origin-input")) {
+          this._handleOriginClick();
         }
         break;
       }
@@ -496,6 +493,17 @@ export default class LoginItem extends HTMLElement {
     this._login = {};
     this._toggleEditing(false);
     this.render();
+  }
+
+  _handleOriginClick() {
+    document.dispatchEvent(
+      new CustomEvent("AboutLoginsOpenSite", {
+        bubbles: true,
+        detail: this._login,
+      })
+    );
+
+    recordTelemetryEvent({ object: "existing_login", method: "open_site" });
   }
 
   /**
