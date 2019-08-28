@@ -30,7 +30,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["webExtension"],
     spec: "devtools/shared/specs/addon/webextension",
-    front: null,
+    front: "devtools/shared/fronts/addon/webextension",
   },
   {
     types: ["webExtensionInspectedWindow"],
