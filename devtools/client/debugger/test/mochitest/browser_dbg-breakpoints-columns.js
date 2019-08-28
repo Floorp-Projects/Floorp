@@ -23,6 +23,24 @@ async function enableSecondBreakpoint(dbg) {
   await waitForAllElements(dbg, "breakpointItems", 2);
 }
 
+// disable active column bp with shift-click.
+async function shiftClickDisable(dbg) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  debugger;
+  shiftClickElement(dbg, "columnBreakpoints");
+  bpMarkers = findAllElements(dbg, "columnBreakpoints");
+  debugger;
+  assertClass(bpMarkers[0], "disabled");
+}
+
+// re-enable disabled column bp with shift-click.
+async function shiftClickEnable(dbg) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  shiftClickElement(dbg, "columnBreakpoints");
+  bpMarkers = findAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[0], "active");
+}
+
 async function setConditionalBreakpoint(dbg, index, condition) {
   let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
   rightClickEl(dbg, bpMarkers[index]);
@@ -84,21 +102,27 @@ add_task(async function() {
   info("2. Click on the second breakpoint on line 32");
   await enableSecondBreakpoint(dbg);
 
-  info("3. Add a condition to the first breakpoint");
+  info("3. Disable second breakpoint using shift-click");
+  await shiftClickDisable(dbg);
+
+  info("4. Re-enable second breakpoint using shift-click");
+  await shiftClickEnable(dbg);
+
+  info("5. Add a condition to the first breakpoint");
   await setConditionalBreakpoint(dbg, 0, "foo");
 
-  info("4. Add a log to the first breakpoint");
+  info("6. Add a log to the first breakpoint");
   await setLogPoint(dbg, 0, "bar");
 
-  info("5. Disable the first breakpoint");
+  info("7. Disable the first breakpoint");
   await disableBreakpoint(dbg, 0);
 
-  info("6. Remove the first breakpoint");
+  info("8. Remove the first breakpoint");
   await removeFirstBreakpoint(dbg);
 
-  info("7. Add a condition to the second breakpoint");
+  info("9. Add a condition to the second breakpoint");
   await setConditionalBreakpoint(dbg, 1, "foo2");
 
-  info("8. test removing the breakpoints by clicking in the gutter");
+  info("10. Test removing the breakpoints by clicking in the gutter");
   await removeAllBreakpoints(dbg, 32, 0);
 });
