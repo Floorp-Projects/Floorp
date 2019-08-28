@@ -4301,13 +4301,11 @@ void MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
   *u32 = (targetOffset - addOffset) - 8;
 }
 
-CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
+CodeOffset MacroAssembler::nopPatchableToCall() {
   AutoForbidPoolsAndNops afp(this,
                              /* max number of instructions in scope = */ 1);
-  CodeOffset offset(currentOffset());
   ma_nop();
-  append(desc, CodeOffset(currentOffset()));
-  return offset;
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
