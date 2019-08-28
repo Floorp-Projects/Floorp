@@ -33,7 +33,7 @@ function experimentFactory(attrs) {
       name: "fakename",
       branch: "fakebranch",
       expired: false,
-      lastSeen: new Date().toJSON(),
+      lastSeen: NOW.toJSON(),
       experimentType: "exp",
     },
     attrs,
@@ -43,12 +43,14 @@ function experimentFactory(attrs) {
   );
 }
 
+const NOW = new Date();
+
 const mockV1Data = {
   hypothetical_experiment: {
     name: "hypothetical_experiment",
     branch: "hypo_1",
     expired: false,
-    lastSeen: new Date().toJSON(),
+    lastSeen: NOW.toJSON(),
     preferenceName: "some.pref",
     preferenceValue: 2,
     preferenceType: "integer",
@@ -60,7 +62,7 @@ const mockV1Data = {
     name: "another_experiment",
     branch: "another_4",
     expired: true,
-    lastSeen: new Date().toJSON(),
+    lastSeen: NOW.toJSON(),
     preferenceName: "another.pref",
     preferenceValue: true,
     preferenceType: "boolean",
@@ -71,13 +73,41 @@ const mockV1Data = {
 };
 
 const mockV2Data = {
-  __version: 2,
   experiments: {
     hypothetical_experiment: {
       name: "hypothetical_experiment",
       branch: "hypo_1",
       expired: false,
-      lastSeen: mockV1Data.hypothetical_experiment.lastSeen,
+      lastSeen: NOW.toJSON(),
+      preferenceName: "some.pref",
+      preferenceValue: 2,
+      preferenceType: "integer",
+      previousPreferenceValue: 1,
+      preferenceBranchType: "user",
+      experimentType: "exp",
+    },
+    another_experiment: {
+      name: "another_experiment",
+      branch: "another_4",
+      expired: true,
+      lastSeen: NOW.toJSON(),
+      preferenceName: "another.pref",
+      preferenceValue: true,
+      preferenceType: "boolean",
+      previousPreferenceValue: false,
+      preferenceBranchType: "default",
+      experimentType: "exp",
+    },
+  },
+};
+
+const mockV3Data = {
+  experiments: {
+    hypothetical_experiment: {
+      name: "hypothetical_experiment",
+      branch: "hypo_1",
+      expired: false,
+      lastSeen: NOW.toJSON(),
       preferences: {
         "some.pref": {
           preferenceValue: 2,
@@ -92,7 +122,7 @@ const mockV2Data = {
       name: "another_experiment",
       branch: "another_4",
       expired: true,
-      lastSeen: mockV1Data.another_experiment.lastSeen,
+      lastSeen: NOW.toJSON(),
       preferences: {
         "another.pref": {
           preferenceValue: true,
@@ -106,15 +136,14 @@ const mockV2Data = {
   },
 };
 
-const MIGRATED_DATA = {
-  __version: 3,
+const mockV4Data = {
   experiments: {
     hypothetical_experiment: {
       name: "hypothetical_experiment",
       branch: "hypo_1",
       actionName: "SinglePreferenceExperimentAction",
       expired: false,
-      lastSeen: mockV1Data.hypothetical_experiment.lastSeen,
+      lastSeen: NOW.toJSON(),
       preferences: {
         "some.pref": {
           preferenceValue: 2,
@@ -130,7 +159,7 @@ const MIGRATED_DATA = {
       branch: "another_4",
       actionName: "SinglePreferenceExperimentAction",
       expired: true,
-      lastSeen: mockV1Data.another_experiment.lastSeen,
+      lastSeen: NOW.toJSON(),
       preferences: {
         "another.pref": {
           preferenceValue: true,
@@ -144,50 +173,66 @@ const MIGRATED_DATA = {
   },
 };
 
-add_task(function migrateStorage_migrates_to_new_format() {
-  let mockJsonFile = {
-    // Deep clone the data in case migrateStorage mutates it.
-    data: JSON.parse(JSON.stringify(mockV1Data)),
+/**
+ * Make a mock `JsonFile` object with a no-op `saveSoon` method and a deep copy
+ * of the data passed.
+ * @param {Object} data the data in the store
+ */
+function makeMockJsonFile(data = {}) {
+  return {
+    // Deep clone the data in case migrations mutate it.
+    data: JSON.parse(JSON.stringify(data)),
+    saveSoon: () => {},
   };
-  migrateStorage(mockJsonFile);
-  Assert.deepEqual(mockJsonFile.data, MIGRATED_DATA);
+}
 
-  mockJsonFile = {
-    data: JSON.parse(JSON.stringify(mockV2Data)),
-  };
-  migrateStorage(mockJsonFile);
-  Assert.deepEqual(mockJsonFile.data, MIGRATED_DATA);
+/** Test that each migration results in the expected data */
+add_task(async function test_migrations() {
+  let mockJsonFile = makeMockJsonFile(mockV1Data);
+  await PreferenceExperiments.migrations.migration01MoveExperiments(
+    mockJsonFile
+  );
+  Assert.deepEqual(mockJsonFile.data, mockV2Data);
+
+  mockJsonFile = makeMockJsonFile(mockV2Data);
+  await PreferenceExperiments.migrations.migration02MultiPreference(
+    mockJsonFile
+  );
+  Assert.deepEqual(mockJsonFile.data, mockV3Data);
+
+  mockJsonFile = makeMockJsonFile(mockV3Data);
+  await PreferenceExperiments.migrations.migration03AddActionName(mockJsonFile);
+  Assert.deepEqual(mockJsonFile.data, mockV4Data);
 });
 
-add_task(function migrateStorage_keeps_actionNames() {
-  let mockData = JSON.parse(JSON.stringify(mockV2Data));
+add_task(async function migration03KeepsActionName() {
+  let mockData = JSON.parse(JSON.stringify(mockV3Data));
   mockData.experiments.another_experiment.actionName = "SomeOldAction";
-  const mockJsonFile = {
-    data: mockData,
-  };
-  // Output should be the same as MIGRATED_DATA, but preserving the action.
-  const migratedData = JSON.parse(JSON.stringify(MIGRATED_DATA));
+  const mockJsonFile = makeMockJsonFile(mockData);
+  // Output should be the same as mockV4Data, but preserving the action.
+  const migratedData = JSON.parse(JSON.stringify(mockV4Data));
   migratedData.experiments.another_experiment.actionName = "SomeOldAction";
 
-  migrateStorage(mockJsonFile);
+  await PreferenceExperiments.migrations.migration03AddActionName(mockJsonFile);
   Assert.deepEqual(mockJsonFile.data, migratedData);
 });
 
-add_task(function migrateStorage_is_idempotent() {
-  for (const [name, mockOldData] of [["v1", mockV1Data], ["v2", mockV2Data]]) {
-    const mockJsonFileOnce = {
-      data: JSON.parse(JSON.stringify(mockOldData)),
-    };
-    const mockJsonFileTwice = {
-      data: JSON.parse(JSON.stringify(mockOldData)),
-    };
-    migrateStorage(mockJsonFileOnce);
-    migrateStorage(mockJsonFileTwice);
-    migrateStorage(mockJsonFileTwice);
+add_task(async function migrations_are_idempotent() {
+  let dataVersions = [
+    [PreferenceExperiments.migrations.migration01MoveExperiments, mockV1Data],
+    [PreferenceExperiments.migrations.migration02MultiPreference, mockV2Data],
+    [PreferenceExperiments.migrations.migration03AddActionName, mockV3Data],
+  ];
+  for (const [migration, mockOldData] of dataVersions) {
+    const mockJsonFileOnce = makeMockJsonFile(mockOldData);
+    const mockJsonFileTwice = makeMockJsonFile(mockOldData);
+    await migration(mockJsonFileOnce);
+    await migration(mockJsonFileTwice);
+    await migration(mockJsonFileTwice);
     Assert.deepEqual(
-      mockJsonFileOnce,
-      mockJsonFileTwice,
-      "migrating data twice should be idempotent for " + name
+      mockJsonFileOnce.data,
+      mockJsonFileTwice.data,
+      "migrating data twice should be idempotent for " + migration.name
     );
   }
 });

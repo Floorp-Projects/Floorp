@@ -98,7 +98,7 @@ ChromeUtils.defineModuleGetter(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["PreferenceExperiments", "migrateStorage"];
+var EXPORTED_SYMBOLS = ["PreferenceExperiments"];
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
 const STARTUP_EXPERIMENT_PREFS_BRANCH = "app.normandy.startupExperimentPrefs.";
@@ -135,88 +135,10 @@ function ensureStorage() {
     const path = OS.Path.join(OS.Constants.Path.profileDir, EXPERIMENT_FILE);
     const storage = new JSONFile({ path });
     gStorePromise = storage.load().then(() => {
-      migrateStorage(storage);
       return storage;
     });
   }
   return gStorePromise;
-}
-
-/**
- * Migrate storage of experiments from old format (one preference per
- * experiment) to new format.
- *
- * This function is exported for testing purposes but should not be
- * called otherwise.
- */
-function migrateStorage(storage) {
-  if (storage.data.__version == 3) {
-    return;
-  }
-
-  // v1 doesn't have a __version; it's just experiments
-  const oldVersion = storage.data.__version || 1;
-
-  if (oldVersion == 1) {
-    // Add version field
-    storage.data = {
-      __version: 2,
-      experiments: storage.data,
-    };
-
-    // Migrate storage.data to multi-preference format
-    const oldExperiments = storage.data.experiments;
-    const v2Experiments = {};
-
-    for (let [expName, experiment] of Object.entries(oldExperiments)) {
-      if (expName == "__version") {
-        continue;
-      }
-
-      const {
-        name,
-        branch,
-        expired,
-        lastSeen,
-        preferenceName,
-        preferenceValue,
-        preferenceType,
-        previousPreferenceValue,
-        preferenceBranchType,
-        experimentType,
-      } = experiment;
-      const newExperiment = {
-        name,
-        branch,
-        expired,
-        lastSeen,
-        preferences: {
-          [preferenceName]: {
-            preferenceBranchType,
-            preferenceType,
-            preferenceValue,
-            previousPreferenceValue,
-          },
-        },
-        experimentType,
-      };
-      v2Experiments[expName] = newExperiment;
-    }
-    storage.data.experiments = v2Experiments;
-  }
-  if (oldVersion <= 2) {
-    // Add "actionName" field for experiments that don't have it
-    for (const experiment of Object.values(storage.data.experiments)) {
-      if (!experiment.actionName) {
-        // Assume SinglePreferenceExperimentAction because as of this
-        // writing, no multi-pref experiment recipe has launched.
-        experiment.actionName = "SinglePreferenceExperimentAction";
-      }
-    }
-
-    // Bump version
-    storage.data.__version = 3;
-  }
 }
 
 const log = LogManager.getLogger("preference-experiments");
@@ -412,10 +334,7 @@ var PreferenceExperiments = {
         for (const exp of mockExperiments) {
           experiments[exp.name] = exp;
         }
-        const data = {
-          __version: 2,
-          experiments,
-        };
+        const data = { experiments };
 
         const oldPromise = gStorePromise;
         gStorePromise = Promise.resolve({
@@ -441,7 +360,6 @@ var PreferenceExperiments = {
   async clearAllExperimentStorage() {
     const store = await ensureStorage();
     store.data = {
-      __version: 2,
       experiments: {},
     };
     store.saveSoon();
@@ -853,7 +771,6 @@ var PreferenceExperiments = {
    */
   async getAll() {
     const store = await ensureStorage();
-
     return Object.values(store.data.experiments).map(experiment =>
       this._cloneExperiment(experiment)
     );
@@ -879,5 +796,82 @@ var PreferenceExperiments = {
     log.debug(`PreferenceExperiments.has(${experimentName})`);
     const store = await ensureStorage();
     return experimentName in store.data.experiments;
+  },
+
+  /**
+   * These migrations should only be called from `NormandyMigrations.jsm` and tests.
+   */
+  migrations: {
+    /** Move experiments into a specific key. */
+    async migration01MoveExperiments(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+      if (Object.hasOwnProperty.call(storage.data, "experiments")) {
+        return;
+      }
+      storage.data = {
+        experiments: storage.data,
+      };
+      delete storage.data.experiments.__version;
+      storage.saveSoon();
+    },
+
+    /** Migrate storage.data to multi-preference format */
+    async migration02MultiPreference(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+
+      const oldExperiments = storage.data.experiments;
+      const v2Experiments = {};
+
+      for (let [expName, oldExperiment] of Object.entries(oldExperiments)) {
+        if (expName == "__version") {
+          // A stray "__version" entry snuck in, likely from old migrations.
+          // Ignore it and continue. It won't be propagated to future
+          // migrations, since `v2Experiments` won't have it.
+          continue;
+        }
+        if (oldExperiment.preferences) {
+          // experiment is already migrated
+          v2Experiments[expName] = oldExperiment;
+          continue;
+        }
+        v2Experiments[expName] = {
+          name: oldExperiment.name,
+          branch: oldExperiment.branch,
+          expired: oldExperiment.expired,
+          lastSeen: oldExperiment.lastSeen,
+          preferences: {
+            [oldExperiment.preferenceName]: {
+              preferenceBranchType: oldExperiment.preferenceBranchType,
+              preferenceType: oldExperiment.preferenceType,
+              preferenceValue: oldExperiment.preferenceValue,
+              previousPreferenceValue: oldExperiment.previousPreferenceValue,
+            },
+          },
+          experimentType: oldExperiment.experimentType,
+        };
+      }
+      storage.data.experiments = v2Experiments;
+      storage.saveSoon();
+    },
+
+    /** Add "actionName" field for experiments that don't have it. */
+    async migration03AddActionName(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+
+      for (const experiment of Object.values(storage.data.experiments)) {
+        if (!experiment.actionName) {
+          // Assume SinglePreferenceExperimentAction because as of this
+          // writing, no multi-pref experiment recipe has launched.
+          experiment.actionName = "SinglePreferenceExperimentAction";
+        }
+      }
+      storage.saveSoon();
+    },
   },
 };
