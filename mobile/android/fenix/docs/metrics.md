@@ -1097,3 +1097,51 @@ Data that is sent in the activation ping
     </tr>
 </table>
 </pre>
+
+## private_browsing_mode
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <td>garbage_icon</td>
+        <td>event</td>
+        <td>A user pressed the garbage can icon on the private browsing home page, deleting all private tabs.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4968">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>snackbar_undo</td>
+        <td>event</td>
+        <td>A user pressed the "undo" button in the snackbar that is shown when the garbage icon is tapped.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4968">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>notification_tapped</td>
+        <td>event</td>
+        <td>A user pressed the private browsing mode notification itself.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4968">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>notification_open</td>
+        <td>event</td>
+        <td>A user pressed the private browsing mode notification's "Open" button.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4968">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>notification_delete</td>
+        <td>event</td>
+        <td>A user pressed the private browsing mode notification's "Delete and Open" button.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4968">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+

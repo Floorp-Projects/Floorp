@@ -21,7 +21,9 @@ import mozilla.components.support.utils.ThreadUtils
 
 import org.mozilla.fenix.R
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.sessionsOfType
 
 /**
@@ -39,6 +41,7 @@ class SessionNotificationService : Service() {
             }
 
             ACTION_ERASE -> {
+                metrics.track(Event.PrivateBrowsingNotificationTapped)
                 components.core.sessionManager.removeAndCloseAllPrivateSessions()
 
                 if (!VisibilityLifecycleCallback.finishAndRemoveTaskIfInBackground(this)) {
@@ -100,6 +103,7 @@ class SessionNotificationService : Service() {
 
     private fun createOpenActionIntent(): PendingIntent {
         val intent = Intent(this, HomeActivity::class.java)
+        intent.putExtra(HomeActivity.EXTRA_OPENED_FROM_NOTIFICATION, true)
 
         return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }

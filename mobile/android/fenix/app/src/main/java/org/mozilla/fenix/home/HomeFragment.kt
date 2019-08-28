@@ -616,6 +616,9 @@ class HomeFragment : Fragment(), AccountObserver {
             view!!,
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
+                if (private) {
+                    requireComponents.analytics.metrics.track(Event.PrivateBrowsingSnackbarUndoTapped)
+                }
                 deleteAllSessionsJob = null
                 emitSessionChanges()
             },

@@ -55,6 +55,7 @@ class TabHeaderViewHolder(
 
             close_tabs_button.run {
                 setOnClickListener {
+                    view.context.components.analytics.metrics.track(Event.PrivateBrowsingGarbageIconTapped)
                     actionEmitter.onNext(TabAction.CloseAll(true))
                 }
             }

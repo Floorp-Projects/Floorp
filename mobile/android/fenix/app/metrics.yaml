@@ -1142,6 +1142,65 @@ search_widget:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+private_browsing_mode:
+  garbage_icon:
+    type: event
+    description: >
+      A user pressed the garbage can icon on the private browsing home page,
+      deleting all private tabs.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  snackbar_undo:
+    type: event
+    description: >
+      A user pressed the "undo" button in the snackbar that is shown when the garbage icon is
+      tapped.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  notification_tapped:
+    type: event
+    description: >
+      A user pressed the private browsing mode notification itself.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  notification_open:
+    type: event
+    description: >
+      A user pressed the private browsing mode notification's "Open" button.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  notification_delete:
+    type: event
+    description: >
+      A user pressed the private browsing mode notification's "Delete and Open" button.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4968
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 experiments.metrics:
   active_experiment:
     type: string

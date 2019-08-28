@@ -339,6 +339,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         const val OPEN_TO_BROWSER = "open_to_browser"
         const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
         const val OPEN_TO_SEARCH = "open_to_search"
-        const val EXTRA_DELETE_PRIVATE_TABS = "notification"
+        const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
+        const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
     }
 }

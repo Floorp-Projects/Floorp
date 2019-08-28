@@ -27,6 +27,7 @@ import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.ReaderMode
@@ -313,6 +314,21 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SearchWidgetVoiceSearchPressed -> EventWrapper<NoExtraKeys>(
             { SearchWidget.voiceButton.record(it) }
+        )
+        is Event.PrivateBrowsingGarbageIconTapped -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingMode.garbageIcon.record(it) }
+        )
+        is Event.PrivateBrowsingSnackbarUndoTapped -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingMode.snackbarUndo.record(it) }
+        )
+        is Event.PrivateBrowsingNotificationTapped -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingMode.notificationTapped.record(it) }
+        )
+        is Event.PrivateBrowsingNotificationOpenTapped -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingMode.notificationOpen.record(it) }
+        )
+        is Event.PrivateBrowsingNotificationDeleteAndOpenTapped -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingMode.notificationDelete.record(it) }
         )
 
         // Don't record other events in Glean:

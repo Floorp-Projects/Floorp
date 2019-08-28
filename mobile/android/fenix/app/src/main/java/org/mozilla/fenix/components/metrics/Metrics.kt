@@ -96,6 +96,11 @@ sealed class Event {
     object FindInPageNext : Event()
     object FindInPagePrevious : Event()
     object FindInPageSearchCommitted : Event()
+    object PrivateBrowsingGarbageIconTapped : Event()
+    object PrivateBrowsingSnackbarUndoTapped : Event()
+    object PrivateBrowsingNotificationTapped : Event()
+    object PrivateBrowsingNotificationOpenTapped : Event()
+    object PrivateBrowsingNotificationDeleteAndOpenTapped : Event()
 
     // Interaction events with extras
 
