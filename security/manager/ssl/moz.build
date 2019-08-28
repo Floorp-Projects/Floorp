@@ -84,7 +84,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.psm += [
     'PSMContentListener.h',
-    'TransportSecurityInfo.h',
 ]
 
 EXPORTS.ipc += [
