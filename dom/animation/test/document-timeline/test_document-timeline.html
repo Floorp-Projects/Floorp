@@ -10,10 +10,6 @@
 <script>
 'use strict';
 
-function matchUnconditionalClamping(timestamp) {
-  return parseFloat((Math.floor(timestamp / .02) * .02).toPrecision(8), 10);
-}
-
 test(function() {
   assert_equals(document.timeline, document.timeline,
     'document.timeline returns the same object every time');
@@ -47,7 +43,7 @@ async_test(function(t) {
   // window.performance.now() because currentTime is only updated on a sample
   // so we use requestAnimationFrame instead.
   window.requestAnimationFrame(t.step_func(function(rafTime) {
-    assert_equals(document.timeline.currentTime, matchUnconditionalClamping(rafTime),
+    assert_equals(document.timeline.currentTime, rafTime,
                   'document.timeline.currentTime matches' +
                   ' requestAnimationFrame time');
     t.done();
