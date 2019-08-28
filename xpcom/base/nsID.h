@@ -45,11 +45,21 @@ struct nsID {
    */
 
   inline bool Equals(const nsID& aOther) const {
-    // Unfortunately memcmp isn't faster than this.
+    // At the time of this writing, modern compilers (namely Clang) inline this
+    // memcmp call into a single SIMD operation on x86/x86-64 architectures (as
+    // long as we compare to zero rather than returning the full integer return
+    // value), which is measurably more efficient to any manual comparisons we
+    // can do directly.
+#if defined(__x86_64__) || defined(__i386__)
+    return !memcmp(this, &aOther, sizeof *this);
+#else
+    // However, on ARM architectures, compilers still tend to generate a direct
+    // memcmp call, which we'd like to avoid.
     return (((uint32_t*)&m0)[0] == ((uint32_t*)&aOther.m0)[0]) &&
            (((uint32_t*)&m0)[1] == ((uint32_t*)&aOther.m0)[1]) &&
            (((uint32_t*)&m0)[2] == ((uint32_t*)&aOther.m0)[2]) &&
            (((uint32_t*)&m0)[3] == ((uint32_t*)&aOther.m0)[3]);
+#endif
   }
 
   inline bool operator==(const nsID& aOther) const { return Equals(aOther); }
