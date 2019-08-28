@@ -4,6 +4,8 @@
 "use strict";
 
 const { reducers } = require("devtools/client/accessibility/reducers/index");
+const CheckClass = require("devtools/client/accessibility/components/Check");
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 
 const {
   createStore,
@@ -70,8 +72,59 @@ function checkMenuItem(menuItem, expected) {
   }
 }
 
+/**
+ *
+ * @param {ReactWrapper}
+ *        React wrapper for the top level check component.
+ * @param {Object}
+ *        Expected audit properties:
+ *          - score: audit score
+ *          - issue: audit issue type
+ */
+function testCustomCheck(wrapper, props) {
+  expect(wrapper.html()).toMatchSnapshot();
+  expect(wrapper.children().length).toBe(1);
+  const check = wrapper.childAt(0);
+  expect(wrapper.find(CheckClass)).toStrictEqual(check);
+  testCheck(check, props);
+}
+
+/**
+ *
+ * @param {ReactWrapper}
+ *        React wrapper for the check component.
+ * @param {Object}
+ *        Expected audit properties:
+ *          - score: audit score
+ *          - issue: audit issue type
+ */
+function testCheck(wrapper, props) {
+  expect(wrapper.html()).toMatchSnapshot();
+  const container = wrapper.childAt(0);
+  expect(container.hasClass("accessibility-check")).toBe(true);
+  expect(container.prop("role")).toBe("presentation");
+  expect(wrapper.props()).toMatchObject(props);
+
+  const localized = wrapper.find(FluentReact.Localized);
+  expect(localized.length).toBe(3);
+
+  const heading = localized.at(0).childAt(0);
+  expect(heading.type()).toBe("h3");
+  expect(heading.hasClass("accessibility-check-header")).toBe(true);
+
+  const icon = localized.at(1).childAt(0);
+  expect(icon.type()).toBe("img");
+  expect(icon.hasClass(props.score)).toBe(true);
+
+  const annotation = localized.at(2).childAt(0);
+  expect(annotation.type()).toBe("p");
+  expect(annotation.hasClass("accessibility-check-annotation")).toBe(true);
+}
+
 module.exports = {
   checkMenuItem,
   mockAccessible,
   setupStore,
+  testCheck,
+  testCustomCheck,
 };
