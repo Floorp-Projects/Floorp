@@ -167,7 +167,7 @@ class LoopbackTransport : public MediaTransportHandler {
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
-  void StartIceGathering(bool aDefaultRouteOnly, bool aObfuscateAddresses,
+  void StartIceGathering(bool aDefaultRouteOnly,
                          // TODO: It probably makes sense to look
                          // this up internally
                          const nsTArray<NrIceStunAddr>& aStunAddrs) override {}

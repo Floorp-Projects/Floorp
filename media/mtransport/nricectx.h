@@ -311,8 +311,7 @@ class NrIceCtx {
   bool proxy_only() const { return proxy_only_; }
 
   // Start ICE gathering
-  nsresult StartGathering(bool default_route_only, bool proxy_only,
-                          bool obfuscate_host_addresses);
+  nsresult StartGathering(bool default_route_only, bool proxy_only);
 
   // Start checking
   nsresult StartChecks();
@@ -377,10 +376,6 @@ class NrIceCtx {
   // Set the state
   void SetGatheringState(GatheringState state);
 
-  void GenerateObfuscatedAddress(nr_ice_candidate* candidate,
-                                 std::string* mdns_address,
-                                 std::string* actual_address);
-
   ConnectionState connection_state_;
   GatheringState gathering_state_;
   const std::string name_;
@@ -396,8 +391,6 @@ class NrIceCtx {
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
   bool proxy_only_;
-  bool obfuscate_host_addresses_;
-  std::map<std::string, std::string> obfuscated_host_addresses_;
 };
 
 }  // namespace mozilla
