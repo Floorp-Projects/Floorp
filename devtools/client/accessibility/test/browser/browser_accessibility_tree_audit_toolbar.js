@@ -40,7 +40,7 @@ const tests = [
           selected: true,
         },
       ],
-      activeToolbarFilters: [true, false, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
   {
@@ -62,7 +62,7 @@ const tests = [
           badges: ["contrast"],
         },
       ],
-      activeToolbarFilters: [false, true, true, true, true],
+      activeToolbarFilters: [false, true, true, true],
     },
   },
   {
@@ -96,7 +96,7 @@ const tests = [
           badges: ["contrast"],
         },
       ],
-      activeToolbarFilters: [true, false, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
 ];

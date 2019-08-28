@@ -19,12 +19,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "auditKeyboard",
-  "devtools/server/actors/accessibility/audit/keyboard",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "auditTextLabel",
   "devtools/server/actors/accessibility/audit/text-label",
   true
@@ -492,9 +486,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     switch (type) {
       case AUDIT_TYPE.CONTRAST:
         return this._getContrastRatio();
-      case AUDIT_TYPE.KEYBOARD:
-        // Determine if keyboard accessibility is lacking where it is necessary.
-        return auditKeyboard(this.rawAccessible);
       case AUDIT_TYPE.TEXT_LABEL:
         // Determine if text alternative is missing for an accessible where it
         // is necessary.

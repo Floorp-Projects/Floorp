@@ -5,17 +5,19 @@
 
 // React
 const {
+  Component,
   createFactory,
-  PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Check = createFactory(
-  require("devtools/client/accessibility/components/Check")
-);
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
+const { openDocLink } = require("devtools/client/shared/link");
 
 const { A11Y_TEXT_LABEL_LINKS } = require("../constants");
+
 const {
   accessibility: {
     AUDIT_TYPE: { TEXT_LABEL },
@@ -41,6 +43,7 @@ const {
         TOOLBAR_NO_NAME,
       },
     },
+    SCORES: { BEST_PRACTICES, FAIL, WARNING },
   },
 } = require("devtools/shared/constants");
 
@@ -199,11 +202,101 @@ const ISSUE_TO_ANNOTATION_MAP = {
 };
 
 /**
+ * A map of accessibility scores to the text descriptions of check icons.
+ */
+const SCORE_TO_ICON_MAP = {
+  [BEST_PRACTICES]: {
+    l10nId: "accessibility-best-practices",
+    src: "chrome://devtools/skin/images/info.svg",
+  },
+  [FAIL]: {
+    l10nId: "accessibility-fail",
+    src: "chrome://devtools/skin/images/error.svg",
+  },
+  [WARNING]: {
+    l10nId: "accessibility-warning",
+    src: "chrome://devtools/skin/images/alert.svg",
+  },
+};
+
+/**
+ * Localized "Learn more" link that opens a new tab with relevant documentation.
+ */
+class LearnMoreClass extends Component {
+  static get propTypes() {
+    return {
+      href: PropTypes.string,
+      l10nId: PropTypes.string.isRequired,
+      onClick: PropTypes.func,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      href: "#",
+      l10nId: null,
+      onClick: LearnMoreClass.openDocOnClick,
+    };
+  }
+
+  static openDocOnClick(event) {
+    event.preventDefault();
+    openDocLink(event.target.href);
+  }
+
+  render() {
+    const { href, l10nId, onClick } = this.props;
+    const className = "link";
+
+    return Localized({ id: l10nId }, ReactDOM.a({ className, href, onClick }));
+  }
+}
+
+const LearnMore = createFactory(LearnMoreClass);
+
+/**
+ * Renders icon with text description for the text label accessibility check.
+ *
+ * @param {Object}
+ *        Options:
+ *          - score: value from SCORES from "devtools/shared/constants"
+ */
+function Icon({ score }) {
+  const { l10nId, src } = SCORE_TO_ICON_MAP[score];
+
+  return Localized(
+    { id: l10nId, attrs: { alt: true } },
+    ReactDOM.img({ src, className: `icon ${score}` })
+  );
+}
+
+/**
+ * Renders text description of the text label accessibility check.
+ *
+ * @param {Object}
+ *        Options:
+ *          - issue: value from ISSUE_TYPE[AUDIT_TYPE.TEXT_LABEL] from
+ *                   "devtools/shared/constants"
+ */
+function Annotation({ issue }) {
+  const { args, href, l10nId } = ISSUE_TO_ANNOTATION_MAP[issue];
+
+  return Localized(
+    {
+      id: l10nId,
+      a: LearnMore({ l10nId: "accessibility-learn-more", href }),
+      ...args,
+    },
+    ReactDOM.p({ className: "accessibility-check-annotation" })
+  );
+}
+
+/**
  * Component for rendering a check for text label accessibliity check failures,
  * warnings and best practices suggestions association with a given
  * accessibility object in the accessibility tree.
  */
-class TextLabelCheck extends PureComponent {
+class TextLabelCheck extends Component {
   static get propTypes() {
     return {
       issue: PropTypes.string.isRequired,
@@ -212,11 +305,28 @@ class TextLabelCheck extends PureComponent {
   }
 
   render() {
-    return Check({
-      ...this.props,
-      getAnnotation: issue => ISSUE_TO_ANNOTATION_MAP[issue],
-      id: "accessibility-text-label-header",
-    });
+    const { issue, score } = this.props;
+
+    return ReactDOM.div(
+      {
+        role: "presentation",
+        className: "accessibility-check",
+      },
+      Localized(
+        {
+          id: "accessibility-text-label-header",
+        },
+        ReactDOM.h3({ className: "accessibility-check-header" })
+      ),
+      ReactDOM.div(
+        {
+          role: "presentation",
+          className: "accessibility-text-label-check",
+        },
+        Icon({ score }),
+        Annotation({ issue })
+      )
+    );
   }
 }
 
