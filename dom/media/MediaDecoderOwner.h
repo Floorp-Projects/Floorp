@@ -94,10 +94,6 @@ class MediaDecoderOwner {
   // when the resource has completed seeking.
   virtual void SeekCompleted() = 0;
 
-  // Called by the video decoder object, on the main thread,
-  // when the resource has aborted seeking.
-  virtual void SeekAborted() = 0;
-
   // Called by the media stream, on the main thread, when the download
   // has been suspended by the cache or because the element itself
   // asked the decoder to suspend the download.
@@ -147,6 +143,12 @@ class MediaDecoderOwner {
   // Called by the media decoder to removes all audio/video tracks from its
   // owner's track list.
   virtual void RemoveMediaTracks() = 0;
+
+  // Called by the media decoder to notify the owner to resolve a seek promise.
+  virtual void AsyncResolveSeekDOMPromiseIfExists() = 0;
+
+  // Called by the media decoder to notify the owner to reject a seek promise.
+  virtual void AsyncRejectSeekDOMPromiseIfExists() = 0;
 
   // Notified by the decoder that a decryption key is required before emitting
   // further output.

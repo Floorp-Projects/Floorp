@@ -627,6 +627,7 @@ void MediaDecoder::DiscardOngoingSeekIfExists() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   mSeekRequest.DisconnectIfExists();
+  GetOwner()->AsyncRejectSeekDOMPromiseIfExists();
 }
 
 void MediaDecoder::CallSeek(const SeekTarget& aTarget) {
@@ -835,14 +836,14 @@ void MediaDecoder::OnSeekResolved() {
   mSeekRequest.Complete();
 
   GetOwner()->SeekCompleted();
+  GetOwner()->AsyncResolveSeekDOMPromiseIfExists();
 }
 
 void MediaDecoder::OnSeekRejected() {
   MOZ_ASSERT(NS_IsMainThread());
   mSeekRequest.Complete();
   mLogicallySeeking = false;
-
-  GetOwner()->SeekAborted();
+  GetOwner()->AsyncRejectSeekDOMPromiseIfExists();
 }
 
 void MediaDecoder::SeekingStarted() {
