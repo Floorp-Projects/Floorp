@@ -272,13 +272,16 @@ windows-tests:
 
 mingwclang-tests-debug:
     - cppunit
+    - firefox-ui-functional-local
     - firefox-ui-functional-remote
+    - mochitest-a11y
     - mochitest-gpu
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
+    - telemetry-tests-client
 
 mingwclang-tests-opt:
     - cppunit
