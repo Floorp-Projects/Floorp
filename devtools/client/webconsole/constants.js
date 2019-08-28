@@ -13,6 +13,7 @@ const actionTypes = {
   BATCH_ACTIONS: "BATCH_ACTIONS",
   CLEAR_HISTORY: "CLEAR_HISTORY",
   EDITOR_TOGGLE: "EDITOR_TOGGLE",
+  EDITOR_ONBOARDING_DISMISS: "EDITOR_ONBOARDING_DISMISS",
   EVALUATE_EXPRESSION: "EVALUATE_EXPRESSION",
   FILTER_TEXT_SET: "FILTER_TEXT_SET",
   FILTER_TOGGLE: "FILTER_TOGGLE",
@@ -76,6 +77,8 @@ const prefs = {
       MESSAGE_TIMESTAMP: "devtools.webconsole.timestampMessages",
       // Store the editor width.
       EDITOR_WIDTH: "input.editorWidth",
+      // Show the Editor onboarding UI
+      EDITOR_ONBOARDING: "devtools.webconsole.input.editorOnboarding",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.

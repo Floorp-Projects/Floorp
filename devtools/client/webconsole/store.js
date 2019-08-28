@@ -77,6 +77,7 @@ function configureStore(webConsoleUI, options = {}) {
         : true,
       editor: getBoolPref(PREFS.UI.EDITOR),
       editorWidth: getIntPref(PREFS.UI.EDITOR_WIDTH),
+      showEditorOnboarding: getBoolPref(PREFS.UI.EDITOR_ONBOARDING),
       timestampsVisible: getBoolPref(PREFS.UI.MESSAGE_TIMESTAMP),
     }),
   };
