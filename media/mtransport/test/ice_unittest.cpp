@@ -984,7 +984,9 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void CandidateInitialized(NrIceMediaStream* stream,
                             const std::string& raw_candidate,
-                            const std::string& ufrag) {
+                            const std::string& ufrag,
+                            const std::string& mdns_addr,
+                            const std::string& actual_addr) {
     std::string candidate(FilterCandidate(raw_candidate));
     if (candidate.empty()) {
       return;

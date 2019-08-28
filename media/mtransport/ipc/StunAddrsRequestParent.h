@@ -30,8 +30,10 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
   virtual ~StunAddrsRequestParent();
 
   virtual mozilla::ipc::IPCResult RecvGetStunAddrs() override;
-  virtual mozilla::ipc::IPCResult RecvRegisterMDNSHostname(const nsCString& hostname, const nsCString& address) override;
-  virtual mozilla::ipc::IPCResult RecvUnregisterMDNSHostname(const nsCString& hostname) override;
+  virtual mozilla::ipc::IPCResult RecvRegisterMDNSHostname(
+      const nsCString& hostname, const nsCString& address) override;
+  virtual mozilla::ipc::IPCResult RecvUnregisterMDNSHostname(
+      const nsCString& hostname) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIThread> mMainThread;
