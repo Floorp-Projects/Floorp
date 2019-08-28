@@ -4711,13 +4711,10 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   if (thisBrowserHost) {
     nsCOMPtr<nsILoadContext> context = thisBrowserHost->GetLoadContext();
 
-    // TODO: This failure condition is more relaxed than it should be, since
-    // there are some cases where the child process still fails to set the
-    // correct chrome flags. See bug 1576204.
-    if (((aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) &&
-         !context->UseRemoteTabs()) ||
-        ((aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) &&
-         !context->UseRemoteSubframes())) {
+    if ((!!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) !=
+         context->UseRemoteTabs()) ||
+        (!!(aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) !=
+         context->UseRemoteSubframes())) {
       return IPC_FAIL(this, "Unexpected aChromeFlags passed");
     }
   }
