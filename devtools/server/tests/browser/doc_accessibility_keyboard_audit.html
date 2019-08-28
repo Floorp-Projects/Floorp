@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      #focusable-1 {
+        outline: none;
+      }
+
+      #focusable-2:focus {
+        outline: none;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+<body>
+  <div id="button-1" class="Button" tabindex="0">I should really be a button</div>
+  <div id="button-2" class="Button">I should really be a button</div>
+  <div id="input-container"><input id="input-1" type="text" tabindex="-1" /></div>
+  <input id="input-2" type="text" tabindex="-1" disabled />
+  <input id="input-3" type="text" disabled />
+  <input id="input-4" type="text" />
+  <a id="link-1">Though a link, I'm not interactive.</a>
+  <a id="link-2" href="example.com">I'm a proper link.</a>
+  <button id="button-3">Button with no tabindex</button>
+  <button id="button-4" tabindex="-1">Button with -1 tabindex</button>
+  <button id="button-5" tabindex="0">Button with 0 tabindex</button>
+  <button id="button-6" tabindex="1">Button with 1 tabindex</button>
+  <div id="focusable-1" role="button" tabindex="0">Focusable with no focus style.</div>
+  <div id="focusable-2" role="button" tabindex="0">Focusable with focus style.</div>
+  <div id="focusable-3" role="button" tabindex="0">Focusable with focus style.</div>
+</body>
+</html>
