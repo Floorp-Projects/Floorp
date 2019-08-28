@@ -6,12 +6,14 @@ package org.mozilla.fenix.customtabs
 
 import androidx.navigation.NavDestination
 import mozilla.components.browser.session.intent.getSessionId
+import mozilla.components.browser.session.runWithSession
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.CustomTabBrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.CustomTabThemeManager
 import java.security.InvalidParameterException
 
@@ -40,4 +42,19 @@ open class CustomTabActivity : HomeActivity() {
         CustomTabBrowsingModeManager()
 
     final override fun createThemeManager() = CustomTabThemeManager()
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (isFinishing) {
+            // When this activity finishes, the process is staying around and the session still
+            // exists then remove it now to free all its resources. Once this activity is finished
+            // then there's no way to get back to it other than relaunching it.
+            val sessionId = getIntentSessionId(SafeIntent(intent))
+            components.core.sessionManager.runWithSession(sessionId) { session ->
+                remove(session)
+                true
+            }
+        }
+    }
 }
