@@ -4,8 +4,8 @@
 "use strict";
 
 const {
-  webExtensionSpec,
-} = require("devtools/shared/specs/addon/webextension");
+  webExtensionDescriptorSpec,
+} = require("devtools/shared/specs/descriptors/webextension");
 const {
   FrontClassWithSpec,
   registerFront,
@@ -17,10 +17,13 @@ loader.lazyRequireGetter(
   true
 );
 
-class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
+class WebExtensionDescriptorFront extends FrontClassWithSpec(
+  webExtensionDescriptorSpec
+) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this.client = client;
+    this.traits = {};
   }
 
   form(json) {
@@ -29,6 +32,7 @@ class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
     this.targetForm = json;
+    this.traits = json.traits || {};
 
     // We used to manipulate the form rather than the front itself.
     // Expose all form attributes to ease accessing them.
@@ -40,6 +44,10 @@ class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
     }
   }
 
+  connect() {
+    return this.getTarget();
+  }
+
   /**
    * Returns the actual target front for web extensions.
    *
@@ -47,7 +55,7 @@ class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
    * inherits from BrowsingContextTargetActor. This connect method is used to retrieve
    * the final target actor to use.
    */
-  async connect() {
+  async getTarget() {
     if (
       this.isWebExtension &&
       this.client.mainRoot.traits.webExtensionAddonConnect
@@ -59,8 +67,14 @@ class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
       // the addon (e.g. when the addon is disabled or uninstalled).
       // To retrieve the target actor instance, we call its "connect" method, (which
       // fetches the target actor targetForm from a WebExtensionTargetActor instance).
-      const form = await super.connect();
-      const front = new BrowsingContextTargetFront(this.client, {
+      let form = null;
+      // FF70+ The method is now called getTarget`
+      if (!this.traits.isDescriptor) {
+        form = await super.connect();
+      } else {
+        form = await super.getTarget();
+      }
+      const front = new BrowsingContextTargetFront(this.conn, {
         actor: form.actor,
       });
       front.form(form);
@@ -71,5 +85,5 @@ class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
   }
 }
 
-exports.WebExtensionFront = WebExtensionFront;
-registerFront(WebExtensionFront);
+exports.WebExtensionDescriptorFront = WebExtensionDescriptorFront;
+registerFront(WebExtensionDescriptorFront);

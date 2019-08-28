@@ -24,8 +24,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "WebExtensionActor",
-  "devtools/server/actors/addon/webextension",
+  "WebExtensionDescriptorActor",
+  "devtools/server/actors/descriptors/webextension",
   true
 );
 loader.lazyRequireGetter(
@@ -824,7 +824,7 @@ BrowserAddonList.prototype.getList = async function() {
   for (const addon of addons) {
     let actor = this._actorByAddonId.get(addon.id);
     if (!actor) {
-      actor = new WebExtensionActor(this._connection, addon);
+      actor = new WebExtensionDescriptorActor(this._connection, addon);
       this._actorByAddonId.set(addon.id, actor);
     }
   }

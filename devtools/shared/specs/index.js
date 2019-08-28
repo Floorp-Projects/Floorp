@@ -28,11 +28,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/addon/addons",
   },
   {
-    types: ["webExtension"],
-    spec: "devtools/shared/specs/addon/webextension",
-    front: "devtools/shared/fronts/addon/webextension",
-  },
-  {
     types: ["webExtensionInspectedWindow"],
     spec: "devtools/shared/specs/addon/webextension-inspected-window",
     front: "devtools/shared/fronts/addon/webextension-inspected-window",
@@ -66,6 +61,11 @@ const Types = (exports.__TypesForTests = [
     types: ["processDescriptor"],
     spec: "devtools/shared/specs/descriptors/process",
     front: "devtools/shared/fronts/descriptors/process",
+  },
+  {
+    types: ["webExtensionDescriptor"],
+    spec: "devtools/shared/specs/descriptors/webextension",
+    front: "devtools/shared/fronts/descriptors/webextension",
   },
   {
     types: ["device"],
