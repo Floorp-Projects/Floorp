@@ -158,7 +158,8 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServer, mCredential,
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::CandidateInfo, mCandidate, mUfrag,
                                   mDefaultHostRtp, mDefaultPortRtp,
-                                  mDefaultHostRtcp, mDefaultPortRtcp)
+                                  mDefaultHostRtcp, mDefaultPortRtcp,
+                                  mMDNSAddress, mActualAddress)
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::DtlsDigest, algorithm_, value_)
 
