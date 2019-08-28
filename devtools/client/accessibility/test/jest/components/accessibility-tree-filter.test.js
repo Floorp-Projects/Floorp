@@ -85,11 +85,6 @@ describe("AccessibilityTreeFilter component:", () => {
         {
           active: false,
           disabled: false,
-          text: "accessibility.filter.keyboard",
-        },
-        {
-          active: false,
-          disabled: false,
           text: "accessibility.filter.textLabel",
         },
       ],
@@ -103,7 +98,6 @@ describe("AccessibilityTreeFilter component:", () => {
           filters: {
             [FILTERS.ALL]: true,
             [FILTERS.CONTRAST]: true,
-            [FILTERS.KEYBOARD]: true,
             [FILTERS.TEXT_LABEL]: true,
           },
           auditing: [],
@@ -115,7 +109,6 @@ describe("AccessibilityTreeFilter component:", () => {
     checkFiltersState(wrapper, {
       filters: [
         { active: false, disabled: false },
-        { active: true, disabled: false },
         { active: true, disabled: false },
         { active: true, disabled: false },
         { active: true, disabled: false },
@@ -151,7 +144,6 @@ describe("AccessibilityTreeFilter component:", () => {
           filters: {
             [FILTERS.ALL]: false,
             [FILTERS.CONTRAST]: false,
-            [FILTERS.KEYBOARD]: false,
             [FILTERS.TEXT_LABEL]: false,
           },
           auditing: [FILTERS.CONTRAST],
@@ -165,7 +157,6 @@ describe("AccessibilityTreeFilter component:", () => {
         { active: true, disabled: true },
         { active: false, disabled: false },
         { active: false, disabled: true },
-        { active: false, disabled: false },
         { active: false, disabled: false },
       ],
     });
@@ -195,7 +186,6 @@ describe("AccessibilityTreeFilter component:", () => {
           filters: {
             [FILTERS.ALL]: false,
             [FILTERS.CONTRAST]: true,
-            [FILTERS.KEYBOARD]: false,
             [FILTERS.TEXT_LABEL]: false,
           },
           auditing: [FILTERS.CONTRAST],
@@ -209,7 +199,6 @@ describe("AccessibilityTreeFilter component:", () => {
         { active: false, disabled: true },
         { active: false, disabled: false },
         { active: true, disabled: true },
-        { active: false, disabled: false },
         { active: false, disabled: false },
       ],
     });
@@ -237,7 +226,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
-            { active: false, disabled: false },
           ],
         },
       },
@@ -252,7 +240,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: true },
             { active: false, disabled: true },
             { active: false, disabled: true },
-            { active: false, disabled: true },
           ],
         },
       },
@@ -264,7 +251,6 @@ describe("AccessibilityTreeFilter component:", () => {
         expected: {
           filters: [
             { active: true, disabled: false },
-            { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
@@ -282,7 +268,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: true, disabled: false },
             { active: true, disabled: false },
             { active: true, disabled: false },
-            { active: true, disabled: false },
           ],
         },
       },
@@ -296,7 +281,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
-            { active: true, disabled: false },
             { active: true, disabled: false },
           ],
         },
@@ -312,7 +296,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: true },
             { active: true, disabled: false },
-            { active: true, disabled: false },
           ],
         },
       },
@@ -327,7 +310,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: true, disabled: false },
-            { active: true, disabled: false },
           ],
         },
       },
@@ -339,7 +321,6 @@ describe("AccessibilityTreeFilter component:", () => {
         expected: {
           filters: [
             { active: false, disabled: false },
-            { active: true, disabled: false },
             { active: true, disabled: false },
             { active: true, disabled: false },
             { active: true, disabled: false },
@@ -357,7 +338,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
-            { active: false, disabled: false },
           ],
         },
       },
@@ -369,7 +349,6 @@ describe("AccessibilityTreeFilter component:", () => {
         expected: {
           filters: [
             { active: true, disabled: true },
-            { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: true },
@@ -387,7 +366,6 @@ describe("AccessibilityTreeFilter component:", () => {
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
-            { active: false, disabled: false },
           ],
         },
       },
@@ -398,7 +376,6 @@ describe("AccessibilityTreeFilter component:", () => {
         },
         expected: {
           filters: [
-            { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },
             { active: false, disabled: false },

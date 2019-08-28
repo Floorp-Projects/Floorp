@@ -74,8 +74,6 @@ namespace InspectorUtils {
   [Throws] void parseStyleSheet(CSSStyleSheet sheet, DOMString input);
   boolean isCustomElementName([TreatNullAs=EmptyString] DOMString name,
                               DOMString? namespaceURI);
-
-  boolean isElementThemed(Element element);
 };
 
 dictionary PropertyNamesOptions {

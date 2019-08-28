@@ -11,7 +11,7 @@
  */
 
 const {
-  accessibility: { AUDIT_TYPE, SCORES },
+  accessibility: { AUDIT_TYPE },
 } = require("devtools/shared/constants");
 const EMPTY_AUDIT = Object.keys(AUDIT_TYPE).reduce((audit, key) => {
   audit[key] = null;
@@ -23,7 +23,7 @@ const EXPECTED_CONTRAST_DATA = {
   color: [0, 0, 0, 1],
   backgroundColor: [255, 255, 255, 1],
   isLargeText: true,
-  score: SCORES.AAA,
+  score: "AAA",
 };
 
 const EMPTY_CONTRAST_AUDIT = {

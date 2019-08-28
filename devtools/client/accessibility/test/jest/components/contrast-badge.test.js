@@ -19,10 +19,6 @@ const Badge = require("devtools/client/accessibility/components/Badge");
 const ContrastBadgeClass = require("devtools/client/accessibility/components/ContrastBadge");
 const ContrastBadge = createFactory(ContrastBadgeClass);
 
-const {
-  accessibility: { SCORES },
-} = require("devtools/shared/constants");
-
 describe("ContrastBadge component:", () => {
   const store = setupStore();
 
@@ -37,7 +33,7 @@ describe("ContrastBadge component:", () => {
       ContrastBadge({
         value: 5.11,
         isLargeText: false,
-        score: SCORES.AA,
+        score: "AA",
       })
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -50,7 +46,7 @@ describe("ContrastBadge component:", () => {
         min: 5.11,
         max: 6.25,
         isLargeText: false,
-        score: SCORES.AA,
+        score: "AA",
       })
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -62,7 +58,7 @@ describe("ContrastBadge component:", () => {
       ContrastBadge({
         value: 3.77,
         isLargeText: true,
-        score: SCORES.AA,
+        score: "AA",
       })
     );
     expect(wrapper.html()).toMatchSnapshot();
@@ -76,7 +72,7 @@ describe("ContrastBadge component:", () => {
         ContrastBadge({
           value: 3.77,
           isLargeText: false,
-          score: SCORES.FAIL,
+          score: "fail",
         })
       )
     );

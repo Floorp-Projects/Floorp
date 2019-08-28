@@ -55,9 +55,9 @@ add_task(async function() {
           const { issue, score } = audit || {};
           let expected = "";
           if (issue) {
-            const { ISSUE_TO_INFOBAR_LABEL_MAP } = infobar.audit.reports[
-              AUDIT_TYPE.TEXT_LABEL
-            ].constructor;
+            const {
+              ISSUE_TO_INFOBAR_LABEL_MAP,
+            } = infobar.audit.reports[1].constructor;
             expected = L10N.getStr(ISSUE_TO_INFOBAR_LABEL_MAP[issue]);
           }
 
@@ -67,7 +67,11 @@ add_task(async function() {
             "infobar text label audit text content is correct"
           );
           if (score) {
-            ok(infobar.getElement("text-label").classList.contains(score));
+            ok(
+              infobar
+                .getElement("text-label")
+                .classList.contains(score === FAIL ? "fail" : score)
+            );
           }
         }
 

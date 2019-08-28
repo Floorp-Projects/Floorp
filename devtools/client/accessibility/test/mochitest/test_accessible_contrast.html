@@ -31,10 +31,6 @@ window.onload = async function() {
     const { ColorContrastCheck } = browserRequire(
       "devtools/client/accessibility/components/ColorContrastAccessibility");
 
-    const {
-      accessibility: { SCORES },
-    } = browserRequire("devtools/shared/constants");
-
     matchSnapshot("ColorContrastAccessibility error render.",
       React.createElement(ColorContrastCheck, { error: true })
     );
@@ -45,7 +41,7 @@ window.onload = async function() {
         "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
         "isLargeText": false,
-        "score": SCORES.FAIL,
+        "score": "fail",
       })
     );
 
@@ -57,9 +53,9 @@ window.onload = async function() {
         "backgroundColorMin": [219, 106, 116, 1],
         "backgroundColorMax": [156, 145, 211, 1],
         "isLargeText": false,
-        "score": SCORES.FAIL,
-        "scoreMin": SCORES.FAIL,
-        "scoreMax": SCORES.FAIL,
+        "score": "fail",
+        "scoreMin": "fail",
+        "scoreMax": "fail",
       })
     );
 
@@ -69,7 +65,7 @@ window.onload = async function() {
         "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
         "isLargeText": true,
-        "score": SCORES.AA,
+        "score": "AA",
       })
     );
   } catch (e) {
