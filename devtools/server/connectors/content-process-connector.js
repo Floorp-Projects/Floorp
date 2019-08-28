@@ -21,9 +21,6 @@ const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 const ContentProcessConnector = {
-  // Flag to check if the content process server startup script was already loaded.
-  _contentProcessServerStartupScriptLoaded: false,
-
   /**
    * Start a DevTools server in a content process (representing the entire process, not
    * just a single frame) and add it as a child server for an active connection.
@@ -36,8 +33,6 @@ const ContentProcessConnector = {
       mm.addMessageListener("debug:content-process-actor", function listener(
         msg
       ) {
-        // Arbitrarily choose the first content process to reply
-        // XXX: This code needs to be updated if we use more than one content process
         mm.removeMessageListener("debug:content-process-actor", listener);
 
         // Pipe Debugger message from/to parent/child via the message manager
@@ -58,13 +53,15 @@ const ContentProcessConnector = {
       });
 
       // Load the content process server startup script only once.
-      if (!this._contentProcessServerStartupScriptLoaded) {
+      const isContentProcessServerStartupScripLoaded = Services.ppmm
+        .getDelayedProcessScripts()
+        .some(([uri]) => uri === CONTENT_PROCESS_SERVER_STARTUP_SCRIPT);
+      if (!isContentProcessServerStartupScripLoaded) {
         // Load the process script that will receive the debug:init-content-server message
         Services.ppmm.loadProcessScript(
           CONTENT_PROCESS_SERVER_STARTUP_SCRIPT,
           true
         );
-        this._contentProcessServerStartupScriptLoaded = true;
       }
 
       // Send a message to the content process server startup script to forward it the
