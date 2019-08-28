@@ -80,7 +80,7 @@ const SCORES = {
   // Elevates accessibility experience.
   BEST_PRACTICES: "BEST_PRACTICES",
   // Does not satisfy the baseline WCAG guidelines.
-  FAIL: "fail",
+  FAIL: "FAIL",
   // Partially satisfies the WCAG AA guidelines.
   WARNING: "WARNING",
 };
