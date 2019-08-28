@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 use byteorder::{BigEndian, WriteBytesExt};
-use get_if_addrs;
 use socket2::{Domain, Socket, Type};
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -110,23 +109,7 @@ impl MDNSService {
         }
     }
 
-    fn get_ipv4_interface(&self) -> Option<std::net::Ipv4Addr> {
-        if let Ok(interfaces) = get_if_addrs::get_if_addrs() {
-            for interface in interfaces {
-                if let get_if_addrs::IfAddr::V4(addr) = &interface.addr {
-                    if !interface.is_loopback() {
-                        info!("Found interface {} -> {:?}", interface.name, interface.addr);
-                        return Some(addr.ip);
-                    }
-                }
-            }
-        }
-        None
-    }
-
-    fn start(&mut self) -> io::Result<()> {
-        let addr = self.get_ipv4_interface().unwrap();
-
+    fn start(&mut self, addr: std::net::Ipv4Addr) -> io::Result<()> {
         let (sender, receiver) = channel();
         self.sender = Some(sender);
 
@@ -276,12 +259,18 @@ pub extern "C" fn mdns_service_register_hostname(
 }
 
 #[no_mangle]
-pub extern "C" fn mdns_service_start() -> *mut MDNSService {
+pub extern "C" fn mdns_service_start(ifaddr: *const c_char) -> *mut MDNSService {
     let mut r = Box::new(MDNSService::new());
-    if let Err(err) = r.start() {
-        warn!("Could not start mDNS Service: {}", err);
+    unsafe {
+        let ifaddr = CStr::from_ptr(ifaddr).to_string_lossy();
+        if let Ok(addr) = ifaddr.parse() {
+            if let Err(err) = r.start(addr) {
+                warn!("Could not start mDNS Service: {}", err);
+            }
+        } else {
+            warn!("Could not parse interface address: {}", ifaddr);
+        }
     }
-
     Box::into_raw(r)
 }
 
