@@ -2084,12 +2084,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
   newWindow->SetFrameElementInternal(mOwnerContent);
 
-  // TODO(farre): Remove this when nsGlobalWindowOuter::GetOpenerWindowOuter
-  // starts using BrowsingContext::GetOpener.
-  if (RefPtr<BrowsingContext> opener = mBrowsingContext->GetOpener()) {
-    newWindow->SetOpenerWindow(opener->GetDOMWindow(), true);
-  }
-
   // Allow scripts to close the docshell if specified.
   if (mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       mOwnerContent->AttrValueIs(kNameSpaceID_None,

@@ -1095,7 +1095,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
       mIsClosed(false),
       mInClose(false),
       mHavePendingClose(false),
-      mHadOriginalOpener(false),
       mIsPopupSpam(false),
       mBlockScriptedClosingFlag(false),
       mWasOffline(false),
@@ -1298,10 +1297,7 @@ void nsGlobalWindowOuter::CleanUp() {
 
   ClearControllers();
 
-  mOpener = nullptr;  // Forces Release
-  if (mContext) {
-    mContext = nullptr;  // Forces Release
-  }
+  mContext = nullptr;             // Forces Release
   mChromeEventHandler = nullptr;  // Forces Release
   mParentTarget = nullptr;
   mMessageManager = nullptr;
@@ -2516,70 +2512,6 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
 
   MaybeForgiveSpamCount();
   CleanUp();
-}
-
-void nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                                          bool aOriginalOpener) {
-  nsWeakPtr opener = do_GetWeakReference(aOpener);
-  if (opener == mOpener) {
-    MOZ_DIAGNOSTIC_ASSERT(!aOpener || !aOpener->GetDocShell() ||
-                          (GetBrowsingContext() &&
-                           aOpener->GetBrowsingContext() &&
-                           aOpener->GetBrowsingContext()->Id() ==
-                               GetBrowsingContext()->GetOpenerId()));
-    return;
-  }
-
-  NS_ASSERTION(!aOriginalOpener || !mSetOpenerWindowCalled,
-               "aOriginalOpener is true, but not first call to "
-               "SetOpenerWindow!");
-  NS_ASSERTION(aOpener || !aOriginalOpener,
-               "Shouldn't set mHadOriginalOpener if aOpener is null");
-
-  mOpener = opener.forget();
-  NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
-
-  if (mDocShell) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        !aOriginalOpener || !aOpener ||
-        // TODO(farre): Allowing to set a closed or closing window as
-        // opener is not ideal, since it won't have a docshell and
-        // therefore no browsing context. This means that we're
-        // effectively setting the browsing context opener to null and
-        // the window opener to a closed window. This needs to be
-        // cleaned up, see Bug 1511353.
-        nsGlobalWindowOuter::Cast(aOpener)->IsClosedOrClosing() ||
-        // TODO(farre): Allowing to set an opener on a closed window is
-        // not ideal either, but we need to allow it for now. Bug 1543056.
-        IsClosedOrClosing() ||
-        aOpener->GetBrowsingContext()->Id() ==
-            GetBrowsingContext()->GetOpenerId());
-    // TODO(farre): Here we really wish to only consider the case
-    // where 'aOriginalOpener'. See bug 1509016.
-    GetBrowsingContext()->SetOpener(aOpener ? aOpener->GetBrowsingContext()
-                                            : nullptr);
-  }
-
-  // Check that the js visible opener matches! We currently don't depend on this
-  // being true outside of nightly, so we disable the assertion in optimized
-  // release / beta builds.
-  nsPIDOMWindowOuter* contentOpener = GetSanitizedOpener(aOpener);
-
-  // contentOpener is not used when the DIAGNOSTIC_ASSERT is compiled out.
-  mozilla::Unused << contentOpener;
-  MOZ_DIAGNOSTIC_ASSERT(
-      !contentOpener || !mTabGroup ||
-      mTabGroup == nsGlobalWindowOuter::Cast(contentOpener)->mTabGroup);
-
-  if (aOriginalOpener) {
-    MOZ_ASSERT(!mHadOriginalOpener,
-               "Probably too late to call ComputeIsSecureContext again");
-    mHadOriginalOpener = true;
-  }
-
-#ifdef DEBUG
-  mSetOpenerWindowCalled = true;
-#endif
 }
 
 void nsGlobalWindowOuter::UpdateParentTarget() {
