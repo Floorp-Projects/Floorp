@@ -1,0 +1,11 @@
+.manifest-issues {
+  list-style-type: none;
+  padding-inline-start: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: var(--base-unit);
+}
+
+.manifest-issues__item {
+  display: contents;
+}
