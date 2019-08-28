@@ -165,16 +165,12 @@ static bool SkipNode(const nsIContent* aContent) {
 
     // Skip option nodes if their select is a combo box, or if they
     // have no select (somehow).
-    if (content->IsHTMLElement(nsGkAtoms::option)) {
-      const HTMLOptionElement* option = HTMLOptionElement::FromNode(content);
-      if (option) {
-        HTMLSelectElement* select =
-            HTMLSelectElement::FromNodeOrNull(option->GetParent());
-        if (!select || select->IsCombobox()) {
-          DEBUG_FIND_PRINTF("Skipping node: ");
-          DumpNode(content);
-          return true;
-        }
+    if (const auto* option = HTMLOptionElement::FromNode(content)) {
+      auto* select = HTMLSelectElement::FromNodeOrNull(option->GetParent());
+      if (!select || select->IsCombobox()) {
+        DEBUG_FIND_PRINTF("Skipping node: ");
+        DumpNode(content);
+        return true;
       }
     }
 
