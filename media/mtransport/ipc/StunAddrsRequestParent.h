@@ -48,7 +48,26 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
  private:
   bool mIPCClosed;  // true if IPDL channel has been closed (child crash)
 
-  MDNSService* mMDNSService;
+  class MDNSServiceWrapper {
+   public:
+    void RegisterHostname(const char* hostname, const char* address);
+    void UnregisterHostname(const char* hostname);
+
+    NS_IMETHOD_(MozExternalRefCountType) AddRef();
+    NS_IMETHOD_(MozExternalRefCountType) Release();
+
+   protected:
+    ThreadSafeAutoRefCnt mRefCnt;
+    NS_DECL_OWNINGTHREAD
+
+   private:
+    virtual ~MDNSServiceWrapper();
+    void StartIfRequired();
+
+    MDNSService* mMDNSService = nullptr;
+  };
+
+  static StaticRefPtr<MDNSServiceWrapper> mSharedMDNSService;
 };
 
 }  // namespace net
