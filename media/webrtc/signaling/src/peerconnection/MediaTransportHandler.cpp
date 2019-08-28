@@ -86,7 +86,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
-  void StartIceGathering(bool aDefaultRouteOnly,
+  void StartIceGathering(bool aDefaultRouteOnly, bool aObfuscateHostAddresses,
                          // This will go away once mtransport moves to its
                          // own process, because we won't need to get this
                          // via IPC anymore
@@ -657,7 +657,8 @@ void MediaTransportHandlerSTS::SetTargetForDefaultLocalAddressLookup(
 }
 
 void MediaTransportHandlerSTS::StartIceGathering(
-    bool aDefaultRouteOnly, const nsTArray<NrIceStunAddr>& aStunAddrs) {
+    bool aDefaultRouteOnly, bool aObfuscateHostAddresses,
+    const nsTArray<NrIceStunAddr>& aStunAddrs) {
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -677,7 +678,8 @@ void MediaTransportHandlerSTS::StartIceGathering(
 
         // Start gathering, but only if there are streams
         if (!mIceCtx->GetStreams().empty()) {
-          mIceCtx->StartGathering(aDefaultRouteOnly, mProxyOnly);
+          mIceCtx->StartGathering(aDefaultRouteOnly, mProxyOnly,
+                                  aObfuscateHostAddresses);
           return;
         }
 
