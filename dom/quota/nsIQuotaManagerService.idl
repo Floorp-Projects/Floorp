@@ -225,15 +225,6 @@ interface nsIQuotaManagerService : nsISupports
   persist(in nsIPrincipal aPrincipal);
 
   /**
-   * Check if given spec is a valid MozURL.
-   *
-   * @param aSpec
-   *        A URL spec to check.
-   */
-  [must_use] boolean
-  isValidMozURL(in ACString aSpec);
-
-  /**
    * Given an origin, asynchronously calculate its group quota usage and quota
    * limit. An origin's group is the set of all origins that share the same
    * eTLD+1. This method is intended to be used for our implementation of the

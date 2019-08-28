@@ -9,22 +9,21 @@
 // test verifies that as well.
 
 async function testSteps() {
-  const obsoleteOriginPaths =
-    [
-      "storage/default/chrome+++content+browser.xul/",
-      "storage/default/moz-safe-about+++home/",
-      // Deprecated client
-      "storage/default/https+++example.com/asmjs/",
-      "storage/default/about+home+1",
-      "storage/default/about+home+1+q",
-      // about:reader?url=xxx before bug 1422456
-      "storage/default/about+reader+url=https%3A%2F%2Fexample.com",
-    ] +
-    // XXX The below directory is expected to fail now, but
-    // we expect it to pass once the rust-url issue is fixed.
-    isValidMozURL("https://smaug----.github.io")
-      ? ["storage/default/https+++smaug----.github.io/"]
-      : [];
+  const obsoleteOriginPaths = [
+    "storage/default/chrome+++content+browser.xul/",
+    "storage/default/moz-safe-about+++home/",
+    // XXX Bug 1540247 will expose MozURL::Init to js so that we could test the
+    // failure cases of that. The below directory is expected to fail now, but
+    // we expect it to pass once the rust-url issue is fixed. Thus, only test it
+    // manually.
+    // "storage/default/https+++smaug----.github.io/",
+    // Deprecated client
+    "storage/default/https+++example.com/asmjs/",
+    "storage/default/about+home+1",
+    "storage/default/about+home+1+q",
+    // about:reader?url=xxx before bug 1422456
+    "storage/default/about+reader+url=https%3A%2F%2Fexample.com",
+  ];
   const obsoleteFilePath =
     "storage/default/https+++example.com/idb/UUID123.tmp";
   const invalidOriginPath = "storage/default/invalid+++example.com/";
