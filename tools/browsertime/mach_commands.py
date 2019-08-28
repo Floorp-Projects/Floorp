@@ -164,6 +164,8 @@ class MachBrowsertime(MachCommandBase):
     def setup(self, should_clobber=False):
         r'''Install browsertime and visualmetrics.py requirements.'''
 
+        automation = bool(os.environ.get('MOZ_AUTOMATION'))
+
         from mozbuild.action.tooltool import unpack_file
         from mozbuild.artifact_cache import ArtifactCache
         sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
@@ -229,10 +231,13 @@ class MachBrowsertime(MachCommandBase):
             BROWSERTIME_ROOT,
             'browsertime',
             should_clobber=should_clobber,
-            no_optional=bool(os.environ.get('MOZ_AUTOMATION')))
+            no_optional=automation)
 
         if status:
             return status
+
+        if automation:
+            return 0
 
         return self.check()
 
