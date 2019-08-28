@@ -47,7 +47,7 @@ const rootSpecPrototype = {
         tabId: Option(0, "number"),
       },
       response: {
-        tab: RetVal("browsingContextTarget"),
+        tab: RetVal("json"),
       },
     },
 
