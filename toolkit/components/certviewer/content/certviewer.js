@@ -335,18 +335,22 @@ export const adjustCertInformation = cert => {
       let items = [];
       if (cert.ext.cp && cert.ext.cp.policies) {
         cert.ext.cp.policies.forEach(entry => {
-          items.push(
-            createEntryItem("Policy", entry.name + " ( " + entry.id + " )")
-          );
+          if (entry.name && entry.id) {
+            items.push(
+              createEntryItem("Policy", entry.name + " ( " + entry.id + " )")
+            );
+          }
           items.push(createEntryItem("Value", entry.value));
           if (entry.qualifiers) {
             entry.qualifiers.forEach(qualifier => {
-              items.push(
-                createEntryItem(
-                  "Qualifier",
-                  qualifier.name + " ( " + qualifier.id + " )"
-                )
-              );
+              if (qualifier.name && qualifier.id) {
+                items.push(
+                  createEntryItem(
+                    "Qualifier",
+                    qualifier.name + " ( " + qualifier.id + " )"
+                  )
+                );
+              }
               items.push(createEntryItem("Value", qualifier.value));
             });
           }

@@ -906,7 +906,7 @@
     }
 
     get newTabButton() {
-      return this.querySelector(".tabs-newtab-button");
+      return this.querySelector("#tabs-newtab-button");
     }
 
     // Accessor for tabs.  arrowScrollbox has two non-tab elements at the

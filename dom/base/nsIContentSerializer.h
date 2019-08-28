@@ -34,44 +34,51 @@ class nsIContentSerializer : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
+  /**
+   * @param aOutput The `Append*` methods will append to this string. The
+   *        reference to it will be dropped with `Finish`.
+   */
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const mozilla::Encoding* aEncoding, bool aIsCopying,
-                  bool aIsWholeDocument, bool* aNeedsPerformatScanning) = 0;
+                  bool aIsWholeDocument, bool* aNeedsPerformatScanning,
+                  nsAString& aOutput) = 0;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) = 0;
+                        int32_t aEndOffset) = 0;
 
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection, int32_t aStartOffset,
-                                int32_t aEndOffset, nsAString& aStr) = 0;
+                                int32_t aEndOffset) = 0;
 
   NS_IMETHOD AppendProcessingInstruction(
       mozilla::dom::ProcessingInstruction* aPI, int32_t aStartOffset,
-      int32_t aEndOffset, nsAString& aStr) = 0;
+      int32_t aEndOffset) = 0;
 
   NS_IMETHOD AppendComment(mozilla::dom::Comment* aComment,
-                           int32_t aStartOffset, int32_t aEndOffset,
-                           nsAString& aStr) = 0;
+                           int32_t aStartOffset, int32_t aEndOffset) = 0;
 
-  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype,
-                           nsAString& aStr) = 0;
+  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype) = 0;
 
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
-                                mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) = 0;
+                                mozilla::dom::Element* aOriginalElement) = 0;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              mozilla::dom::Element* aOriginalElement,
-                              nsAString& aStr) = 0;
+                              mozilla::dom::Element* aOriginalElement) = 0;
 
-  NS_IMETHOD Flush(nsAString& aStr) = 0;
+  NS_IMETHOD FlushAndFinish() = 0;
+
+  /**
+   * Drops the reference to the output buffer.
+   */
+  NS_IMETHOD Finish() = 0;
+
+  NS_IMETHOD GetOutputLength(uint32_t& aLength) const = 0;
 
   /**
    * Append any items in the beginning of the document that won't be
    * serialized by other methods. XML declaration is the most likely
    * thing this method can produce.
    */
-  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
-                                 nsAString& aStr) = 0;
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) = 0;
 
   // If Init() sets *aNeedsPerformatScanning to true, then these methods are
   // called when elements are started and ended, before AppendElementStart

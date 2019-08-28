@@ -259,7 +259,10 @@ inline void nsIContent::HandleShadowDOMRelatedRemovalSteps(bool aNullParent) {
   using mozilla::dom::ShadowRoot;
 
   if (aNullParent) {
-    if (Element* parentElement = Element::FromNode(mParent)) {
+    // FIXME(emilio, bug 1577141): FromNodeOrNull rather than just FromNode
+    // because XBL likes to call UnbindFromTree at very odd times (with already
+    // disconnected anonymous content subtrees).
+    if (Element* parentElement = Element::FromNodeOrNull(mParent)) {
       if (ShadowRoot* shadow = parentElement->GetShadowRoot()) {
         shadow->MaybeUnslotHostChild(*this);
       }

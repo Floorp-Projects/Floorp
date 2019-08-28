@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that hitting Ctrl + E does toggle the editor mode.
+// Test that hitting Ctrl + B does toggle the editor mode.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1519105
 
 "use strict";

@@ -22,10 +22,3 @@ Contents:
    push
    gradle
    testcoverage
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

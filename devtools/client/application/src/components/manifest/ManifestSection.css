@@ -20,5 +20,5 @@
   font-size: var(--title-10-font-size);
   font-weight: var(--title-20-font-weight);
   text-align: left;
-  padding-block-start: calc(var(--base-unit) * 2);
+  margin: 0;
 }

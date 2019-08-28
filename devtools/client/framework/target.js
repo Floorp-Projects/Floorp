@@ -71,7 +71,7 @@ exports.TargetFactory = {
       DebuggerServer.init();
 
       // When connecting to a local tab, we only need the root actor.
-      // Then we are going to call DebuggerServer.connectToFrame and talk
+      // Then we are going to call frame-connector.js' connectToFrame and talk
       // directly with actors living in the child process.
       // We also need browser actors for actor registry which enabled addons
       // to register custom actors.

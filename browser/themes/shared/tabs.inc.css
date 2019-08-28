@@ -706,7 +706,7 @@
 
 /* New tab button */
 
-.tabs-newtab-button,
+#tabs-newtab-button,
 #TabsToolbar #new-tab-button {
   list-style-image: url(chrome://browser/skin/add.svg);
 }

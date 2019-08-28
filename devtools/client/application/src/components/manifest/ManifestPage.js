@@ -21,10 +21,12 @@ class ManifestPage extends PureComponent {
   render() {
     // TODO: needs to be replaced with data from Redux
     const data = {
-      warnings: [
-        { warn: "Icons item at index 0 is invalid." },
+      validation: [
+        { level: "warning", message: "Icons item at index 0 is invalid." },
+        { level: "error", message: "Random JSON error" },
         {
-          warn:
+          level: "warning",
+          message:
             "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
         },
       ],
@@ -59,10 +61,10 @@ class ManifestPage extends PureComponent {
       isManifestEmpty
         ? ManifestEmpty({})
         : Manifest({
-            identity: data.identity,
-            warnings: data.warnings,
             icons: data.icons,
+            identity: data.identity,
             presentation: data.presentation,
+            validation: data.validation,
           })
     );
   }
