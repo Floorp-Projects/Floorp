@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.6.0 - f14a3e6
+ * Version 12.7.0 - c2b1b94
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -91,13 +91,16 @@ class Kinto extends _KintoBase.default {
     };
   }
 
+  get ApiClass() {
+    return KintoHttpClient;
+  }
+
   constructor(options = {}) {
     const events = {};
     EventEmitter.decorate(events);
     const defaults = {
       adapter: _IDB.default,
-      events,
-      ApiClass: KintoHttpClient
+      events
     };
     super({ ...defaults,
       ...options
@@ -212,34 +215,41 @@ class KintoBase {
       throw new Error("No adapter provided");
     }
 
-    const {
-      ApiClass,
-      events,
-      headers,
-      remote,
-      requestMode,
-      retry,
-      timeout
-    } = this._options; // public properties
-
-    /**
-     * The kinto HTTP client instance.
-     * @type {KintoClient}
-     */
-
-    this.api = new ApiClass(remote, {
-      events,
-      headers,
-      requestMode,
-      retry,
-      timeout
-    });
+    this._api = null;
     /**
      * The event emitter instance.
      * @type {EventEmitter}
      */
 
     this.events = this._options.events;
+  }
+  /**
+   * The kinto HTTP client instance.
+   * @type {KintoClient}
+   */
+
+
+  get api() {
+    const {
+      events,
+      headers,
+      remote,
+      requestMode,
+      retry,
+      timeout
+    } = this._options;
+
+    if (!this._api) {
+      this._api = new this.ApiClass(remote, {
+        events,
+        headers,
+        requestMode,
+        retry,
+        timeout
+      });
+    }
+
+    return this._api;
   }
   /**
    * Creates a {@link Collection} instance. The second (optional) parameter
@@ -274,7 +284,7 @@ class KintoBase {
       hooks,
       localFields
     } = options;
-    return new _collection.default(bucket, collName, this.api, {
+    return new _collection.default(bucket, collName, this, {
       events,
       adapter,
       adapterOptions,
@@ -326,7 +336,16 @@ async function open(dbname, {
     request.onupgradeneeded = event => {
       const db = event.target.result;
 
-      db.onerror = event => reject(event.target.error);
+      db.onerror = event => reject(event.target.error); // When an upgrade is needed, a transaction is started.
+
+
+      const transaction = event.target.transaction;
+
+      transaction.onabort = event => {
+        const error = event.target.error || transaction.error || new DOMException("The operation has been aborted", "AbortError");
+        reject(error);
+      }; // Callback for store creation etc.
+
 
       return onupgradeneeded(event);
     };
@@ -382,6 +401,11 @@ async function execute(db, name, callback, options = {}) {
     transaction.onerror = event => reject(event.target.error);
 
     transaction.oncomplete = event => resolve(result);
+
+    transaction.onabort = event => {
+      const error = event.target.error || transaction.error || new DOMException("The operation has been aborted", "AbortError");
+      reject(error);
+    };
   });
 }
 /**
@@ -1593,12 +1617,12 @@ class Collection {
    * Options:
    * - `{BaseAdapter} adapter` The DB adapter (default: `IDB`)
    *
-   * @param  {String} bucket  The bucket identifier.
-   * @param  {String} name    The collection name.
-   * @param  {Api}    api     The Api instance.
-   * @param  {Object} options The options object.
+   * @param  {String}    bucket  The bucket identifier.
+   * @param  {String}    name    The collection name.
+   * @param  {KintoBase} kinto   The Kinto instance.
+   * @param  {Object}    options The options object.
    */
-  constructor(bucket, name, api, options = {}) {
+  constructor(bucket, name, kinto, options = {}) {
     this._bucket = bucket;
     this._name = name;
     this._lastModified = null;
@@ -1622,11 +1646,11 @@ class Collection {
 
     this.db = db;
     /**
-     * The Api instance.
-     * @type {KintoClient}
+     * The KintoBase instance.
+     * @type {KintoBase}
      */
 
-    this.api = api;
+    this.kinto = kinto;
     /**
      * The event emitter instance.
      * @type {EventEmitter}
@@ -1657,6 +1681,15 @@ class Collection {
      */
 
     this.localFields = options.localFields || [];
+  }
+  /**
+   * The HTTP client.
+   * @type {KintoClient}
+   */
+
+
+  get api() {
+    return this.kinto.api;
   }
   /**
    * The collection name.
