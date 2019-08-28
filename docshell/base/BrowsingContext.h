@@ -216,6 +216,8 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   bool HasOpener() const;
 
+  bool HadOriginalOpener() const { return mHadOriginalOpener; }
+
   /**
    * When a new browsing context is opened by a sandboxed document, it needs to
    * keep track of the browsing context that opened it, so that it can be
@@ -481,9 +483,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
           uintptr_t(this) - offsetof(BrowsingContext, mLocation));
     }
 
-    already_AddRefed<nsIDocShell> GetDocShell() override {
-      return nullptr;
-    }
+    already_AddRefed<nsIDocShell> GetDocShell() override { return nullptr; }
   };
 
   // Ensure that opener is in the same BrowsingContextGroup.
