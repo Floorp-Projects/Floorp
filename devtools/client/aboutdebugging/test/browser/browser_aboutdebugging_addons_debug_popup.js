@@ -257,12 +257,6 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
 
       const waitForNavigated = toolbox.target.once("navigate");
       popupFrameBtn.click();
-      // Clicking the menu item may do highlighting.
-      await waitUntil(() => toolbox.highlighter);
-      await Promise.race([
-        toolbox.highlighter.once("node-highlight"),
-        wait(1000),
-      ]);
       await waitForNavigated;
       consoleWrapper.dispatchEvaluateExpression(
         "myWebExtensionPopupAddonFunction()"

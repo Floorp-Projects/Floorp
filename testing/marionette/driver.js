@@ -3019,7 +3019,7 @@ GeckoDriver.prototype.deleteSession = function() {
  *     string.  If <var>hash</var> is true, hex digest of the SHA-256
  *     hash of the Base64 encoded string.
  */
-GeckoDriver.prototype.takeScreenshot = function(cmd) {
+GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   let win = assert.open(this.getCurrentWindow());
 
   let { id, full, hash, scroll } = cmd.parameters;
@@ -3028,45 +3028,56 @@ GeckoDriver.prototype.takeScreenshot = function(cmd) {
   full = typeof full == "undefined" ? true : full;
   scroll = typeof scroll == "undefined" ? true : scroll;
 
+  let webEl = id ? WebElement.fromUUID(id, this.context) : null;
+
   // Only consider full screenshot if no element has been specified
-  full = id ? false : full;
+  full = webEl ? false : full;
+
+  let browsingContext;
+  let rect;
 
   switch (this.context) {
     case Context.Chrome:
-      let canvas;
+      browsingContext = win.docShell.browsingContext;
 
-      // element or full document element
-      if (id || full) {
-        let node;
-        if (id) {
-          let webEl = WebElement.fromUUID(id, Context.Chrome);
-          node = this.curBrowser.seenEls.get(webEl);
-        } else {
-          node = win.document.documentElement;
-        }
-
-        canvas = capture.element(node);
-
-        // viewport
+      if (id) {
+        let el = this.curBrowser.seenEls.get(webEl, win);
+        rect = el.getBoundingClientRect();
+      } else if (full) {
+        let clientRect = win.document.documentElement.getBoundingClientRect();
+        rect = new win.DOMRect(0, 0, clientRect.width, clientRect.height);
       } else {
-        canvas = capture.viewport(win);
-      }
-
-      switch (format) {
-        case capture.Format.Hash:
-          return capture.toHash(canvas);
-
-        case capture.Format.Base64:
-          return capture.toBase64(canvas);
+        // viewport
+        rect = new win.DOMRect(
+          win.pageXOffset,
+          win.pageYOffset,
+          win.innerWidth,
+          win.innerHeight
+        );
       }
       break;
 
     case Context.Content:
-      return this.listener.takeScreenshot(format, {
-        id,
-        full,
-        scroll,
-      });
+      browsingContext = this.curBrowser.contentBrowser.browsingContext;
+      rect = await this.listener.getScreenshotRect({ el: webEl, full, scroll });
+      break;
+  }
+
+  let canvas = await capture.canvas(
+    win,
+    browsingContext,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height
+  );
+
+  switch (format) {
+    case capture.Format.Hash:
+      return capture.toHash(canvas);
+
+    case capture.Format.Base64:
+      return capture.toBase64(canvas);
   }
 
   throw new TypeError(`Unknown context: ${this.context}`);

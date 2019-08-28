@@ -137,7 +137,7 @@ void ChildProcessInfo::LaunchSubprocess(
   size_t channelId = gNumChannels++;
 
   // Create a new channel every time we launch a new subprocess, without
-  // deleting or tearing down the old one's state. This is pretty lame and it
+  // deleting or tearing down the old one's state. This is pretty silly and it
   // would be nice if we could do something better here, especially because
   // with restarts we could create any number of channels over time.
   mChannel =

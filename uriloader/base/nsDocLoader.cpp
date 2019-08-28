@@ -243,7 +243,6 @@ nsDocLoader::Stop(void) {
   // after this, since mDocumentRequest will be null after the
   // DocLoaderIsEmpty() call.
   mChildrenInOnload.Clear();
-  mOOPChildrenLoading.Clear();
 
   // Make sure to call DocLoaderIsEmpty now so that we reset mDocumentRequest,
   // etc, as needed.  We could be getting into here from a subframe onload, in
@@ -278,8 +277,7 @@ bool nsDocLoader::IsBusy() {
   //   3. It's currently flushing layout in DocLoaderIsEmpty().
   //
 
-  if (!mChildrenInOnload.IsEmpty() || !mOOPChildrenLoading.IsEmpty() ||
-      mIsFlushingLayout) {
+  if (mChildrenInOnload.Count() || mIsFlushingLayout) {
     return true;
   }
 
@@ -288,7 +286,6 @@ bool nsDocLoader::IsBusy() {
     return false;
   }
 
-  // Check if any in-process sub-document is awaiting its 'load' event:
   bool busy;
   rv = mLoadGroup->IsPending(&busy);
   if (NS_FAILED(rv)) {

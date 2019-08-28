@@ -51,10 +51,12 @@ AntiTracking.runTest(
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    let shouldThrow =
-      SpecialPowers.Services.prefs.getIntPref(
-        "network.cookie.cookieBehavior"
-      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+    let shouldThrow = [
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    ].includes(
+      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
+    );
 
     await caches.open("wow").then(
       _ => {
