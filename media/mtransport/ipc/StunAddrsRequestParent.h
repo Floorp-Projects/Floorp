@@ -50,6 +50,7 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
 
   class MDNSServiceWrapper {
    public:
+    explicit MDNSServiceWrapper(const std::string& ifaddr);
     void RegisterHostname(const char* hostname, const char* address);
     void UnregisterHostname(const char* hostname);
 
@@ -64,6 +65,7 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
     virtual ~MDNSServiceWrapper();
     void StartIfRequired();
 
+    std::string ifaddr;
     MDNSService* mMDNSService = nullptr;
   };
 

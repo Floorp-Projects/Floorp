@@ -10,7 +10,7 @@ extern "C" {
 void mdns_service_register_hostname(MDNSService* serv, const char* hostname,
                                     const char* addr);
 
-MDNSService* mdns_service_start();
+MDNSService* mdns_service_start(const char* ifaddr);
 
 void mdns_service_stop(MDNSService* serv);
 
