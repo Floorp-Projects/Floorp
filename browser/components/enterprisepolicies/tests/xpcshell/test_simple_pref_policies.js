@@ -456,6 +456,16 @@ const POLICIES_TESTS = [
       "browser.newtabpage.activity-stream.feeds.section.topstories": false,
     },
   },
+
+  // POLICY: OfferToSaveLoginsDefault
+  {
+    policies: {
+      OfferToSaveLoginsDefault: false,
+    },
+    unlockedPrefs: {
+      "signon.rememberSignons": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

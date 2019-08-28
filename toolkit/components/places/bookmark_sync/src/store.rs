@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{convert::TryFrom, fmt, time::SystemTime};
+use std::{collections::HashMap, convert::TryFrom, fmt, time::SystemTime};
 
 use dogear::{
     debug, AbortSignal, CompletionOps, Content, Deletion, Guid, Item, Kind, MergedRoot, Tree,
@@ -259,59 +259,69 @@ impl<'s> dogear::Store for Store<'s> {
     /// Builds a fully rooted, consistent tree from the items and tombstones in
     /// Places.
     fn fetch_local_tree(&self) -> Result<Tree> {
-        let mut items_statement = self.db.prepare(format!(
-            "WITH RECURSIVE
-             localItems(id, guid, parentId, parentGuid, position, type, title,
-                        parentTitle, placeId, dateAdded, lastModified,
-                        syncChangeCounter, syncStatus, level)
-             AS (
-               SELECT b.id, b.guid, 0, NULL, b.position, b.type, b.title,
-                      NULL, b.fk, b.dateAdded, b.lastModified,
-                      b.syncChangeCounter, b.syncStatus, 0
-               FROM moz_bookmarks b
-               WHERE b.guid = 'root________'
-               UNION ALL
-               SELECT b.id, b.guid, s.id, s.guid, b.position, b.type, b.title,
-                      s.title, b.fk, b.dateAdded, b.lastModified,
-                      b.syncChangeCounter, b.syncStatus, s.level + 1
-               FROM moz_bookmarks b
-               JOIN localItems s ON s.id = b.parent
-             )
-             SELECT s.guid, s.parentGuid, s.type,  s.syncChangeCounter,
-                    s.syncStatus, s.lastModified / 1000 AS localModified,
-                    IFNULL(s.title, '') AS title, s.position,
-                    (SELECT h.url FROM moz_places h
-                     WHERE h.id = s.placeId) AS url,
-                    EXISTS(SELECT 1 FROM moz_items_annos a
-                           JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-                           WHERE a.item_id = s.id AND
-                                 n.name = '{}') AS isLivemark
-             FROM localItems s
-             ORDER BY s.level, s.parentId, s.position",
-            LMANNO_FEEDURI,
+        let mut root_statement = self.db.prepare(format!(
+            "SELECT guid, type, syncChangeCounter, syncStatus,
+                    lastModified / 1000 AS localModified,
+                    NULL AS url, 0 AS isLivemark
+             FROM moz_bookmarks
+             WHERE guid = '{}'",
+            dogear::ROOT_GUID
         ))?;
-        let mut builder = match items_statement.step()? {
-            // The first row is always the root.
+        let mut builder = match root_statement.step()? {
             Some(step) => {
                 let (item, _) = self.local_row_to_item(&step)?;
                 Tree::with_root(item)
             }
             None => return Err(Error::InvalidLocalRoots),
         };
+
+        // Add items and contents to the builder, keeping track of their
+        // structure in a separate map. We can't call `p.by_structure(...)`
+        // after adding the item, because this query might return rows for
+        // children before their parents. This approach also lets us scan
+        // `moz_bookmarks` once, using the index on `(b.parent, b.position)`
+        // to avoid a temp B-tree for the `ORDER BY`.
+        let mut child_guids_by_parent_guid: HashMap<Guid, Vec<Guid>> = HashMap::new();
+        let mut items_statement = self.db.prepare(format!(
+            "SELECT b.guid, p.guid AS parentGuid, b.type, b.syncChangeCounter,
+                    b.syncStatus, b.lastModified / 1000 AS localModified,
+                    IFNULL(b.title, '') AS title,
+                    (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url,
+                    EXISTS(SELECT 1 FROM moz_items_annos a
+                           JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+                           WHERE a.item_id = b.id AND
+                                 n.name = '{}') AS isLivemark
+             FROM moz_bookmarks b
+             JOIN moz_bookmarks p ON p.id = b.parent
+             WHERE b.guid <> '{}'
+             ORDER BY b.parent, b.position",
+            LMANNO_FEEDURI,
+            dogear::ROOT_GUID,
+        ))?;
         while let Some(step) = items_statement.step()? {
-            // All subsequent rows are descendants.
             self.controller.err_if_aborted()?;
+            let (item, content) = self.local_row_to_item(&step)?;
+
             let raw_parent_guid: nsString = step.get_by_name("parentGuid")?;
             let parent_guid = Guid::from_utf16(&*raw_parent_guid)?;
+            child_guids_by_parent_guid
+                .entry(parent_guid)
+                .or_default()
+                .push(item.guid.clone());
 
-            let (item, content) = self.local_row_to_item(&step)?;
             let mut p = builder.item(item)?;
-
             if let Some(content) = content {
                 p.content(content);
             }
+        }
 
-            p.by_structure(&parent_guid)?;
+        // At this point, we've added entries for all items to the tree, so
+        // we can add their structure info.
+        for (parent_guid, child_guids) in &child_guids_by_parent_guid {
+            for child_guid in child_guids {
+                self.controller.err_if_aborted()?;
+                builder.parent_for(child_guid).by_structure(parent_guid)?;
+            }
         }
 
         let mut deletions_statement = self.db.prepare("SELECT guid FROM moz_bookmarks_deleted")?;

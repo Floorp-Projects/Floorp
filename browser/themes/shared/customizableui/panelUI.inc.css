@@ -1699,14 +1699,13 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border-bottom: 1px solid var(--panel-separator-color);
   display: flex;
   flex: 1 auto;
-  height: 40px; /* fixed item height to prevent flex sizing; height + 2*4px padding */
   padding: 4px;
 }
 
 .panel-header > label {
   flex: auto;
   font-weight: 600;
-  margin: 0;
+  margin: 4px 0;
   text-align: center;
 }
 

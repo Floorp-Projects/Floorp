@@ -22,6 +22,9 @@
 
 .fxaccounts-avatar-button {
   cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .fxaccount-email {
