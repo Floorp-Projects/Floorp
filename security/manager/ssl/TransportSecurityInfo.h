@@ -14,14 +14,13 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ipc/TransportSecurityInfoUtils.h"
-#include "mozpkix/pkixtypes.h"
 #include "nsDataHashtable.h"
 #include "nsIClassInfo.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
+#include "mozpkix/pkixtypes.h"
 
 namespace mozilla {
 namespace psm {

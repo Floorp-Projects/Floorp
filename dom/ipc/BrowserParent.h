@@ -311,11 +311,6 @@ class BrowserParent final : public PBrowserParent,
       const RequestData& aRequestData, const nsresult aStatus,
       const nsString& aMessage);
 
-  mozilla::ipc::IPCResult RecvOnSecurityChange(
-      const Maybe<WebProgressData>& aWebProgressData,
-      const RequestData& aRequestData, const uint32_t aState,
-      const Maybe<WebProgressSecurityChangeData>& aSecurityChangeData);
-
   mozilla::ipc::IPCResult RecvOnContentBlockingEvent(
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
