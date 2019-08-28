@@ -550,14 +550,15 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   RefPtr<mozilla::ThrottledEventQueue> mPostMessageEventQueue;
 
  protected:
-  nsPIDOMWindowOuter* GetOpenerWindowOuter();
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder>
+  GetOpenerWindowOuter();
   // Initializes the mWasOffline member variable
   void InitWasOffline();
 
  public:
-  nsPIDOMWindowOuter* GetSanitizedOpener(nsPIDOMWindowOuter* aOpener);
-
-  already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
+  nsPIDOMWindowOuter* GetSameProcessOpener();
+  already_AddRefed<mozilla::dom::BrowsingContext> GetOpenerBrowsingContext();
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetOpener() override;
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParentOuter();
   already_AddRefed<nsPIDOMWindowOuter> GetInProcessParent() override;
   nsPIDOMWindowOuter* GetInProcessScriptableParent() override;
