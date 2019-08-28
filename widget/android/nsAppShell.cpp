@@ -72,7 +72,6 @@
 #include "fennec/MemoryMonitor.h"
 #include "fennec/ThumbnailHelper.h"
 #include "WebExecutorSupport.h"
-#include "Base64UtilsSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #  define EVLOG(args...) ALOG(args)
@@ -413,7 +412,6 @@ nsAppShell::nsAppShell()
     mozilla::PrefsHelper::Init();
     mozilla::widget::Telemetry::Init();
     mozilla::widget::WebExecutorSupport::Init();
-    mozilla::widget::Base64UtilsSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
     mozilla::WebAuthnTokenManager::Init();
