@@ -233,7 +233,7 @@ var CustomizableUIInternal = {
     ];
 
     if (AppConstants.MOZ_DEV_EDITION) {
-      navbarPlacements.splice(2, 0, "developer-button");
+      navbarPlacements.splice(7, 0, "developer-button");
     }
 
     this.registerArea(

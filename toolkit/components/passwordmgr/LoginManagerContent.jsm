@@ -1248,7 +1248,7 @@ this.LoginManagerContent = {
       return [usernameField, passwordField, null];
     }
 
-    // Try to figure out WTF is in the form based on the password values.
+    // Try to figure out what is in the form based on the password values.
     let oldPasswordField, newPasswordField;
     let pw1 = pwFields[0].element.value;
     let pw2 = pwFields[1].element.value;

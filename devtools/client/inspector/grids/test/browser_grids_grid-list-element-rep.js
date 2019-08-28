@@ -20,7 +20,7 @@ const TEST_URI = `
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, gridInspector, toolbox } = await openLayoutView();
+  const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
   const { store } = inspector;
 
@@ -30,7 +30,7 @@ add_task(async function() {
   elementRep.scrollIntoView();
 
   info("Listen to node-highlight event and mouse over the widget");
-  const onHighlight = toolbox.highlighter.once("node-highlight");
+  const onHighlight = inspector.highlighter.once("node-highlight");
   EventUtils.synthesizeMouse(
     elementRep,
     10,
