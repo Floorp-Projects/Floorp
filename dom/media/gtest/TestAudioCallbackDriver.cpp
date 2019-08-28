@@ -26,7 +26,7 @@ RefPtr<MediaStreamGraphImpl> MakeMSGImpl() {
                                           44100, 2, nullptr);
 }
 
-TEST(TestAudioCallbackDriver, Revive)
+TEST(TestAudioCallbackDriver, StartStop)
 {
   MockCubeb* mock = new MockCubeb();
   mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
@@ -40,15 +40,6 @@ TEST(TestAudioCallbackDriver, Revive)
 
   driver->Start();
   // Allow some time to "play" audio.
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  EXPECT_TRUE(driver->ThreadRunning()) << "Verify thread is running";
-  EXPECT_TRUE(driver->IsStarted()) << "Verify thread is started";
-
-  driver->Shutdown();
-  EXPECT_FALSE(driver->ThreadRunning()) << "Verify thread is not running";
-  EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
-
-  driver->Revive();
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
   EXPECT_TRUE(driver->ThreadRunning()) << "Verify thread is running";
   EXPECT_TRUE(driver->IsStarted()) << "Verify thread is started";
