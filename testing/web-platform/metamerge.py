@@ -72,7 +72,7 @@ class TestManifestItem(ExpectedManifest):
             if isinstance(item, KeyValueNode) and item.data == "expected":
                 assert "expected" in other_manifest._data
                 item.remove()
-                self.node.children.append(item)
+                self.node.children.insert(0, item)
                 self._data["expected"] = other_manifest._data.pop("expected")
                 break
 
@@ -158,7 +158,7 @@ def compare_test(test, ancestor_manifest, new_manifest):
 def compare_expected(changes, subtest, ancestor_manifest, new_manifest):
     if (not (ancestor_manifest and ancestor_manifest.has_key("expected")) and
         (new_manifest and new_manifest.has_key("expected"))):
-        changes.added.append((subtest, new_manifest))
+        changes.modified.append(ExpectedModified(subtest, ancestor_manifest, new_manifest))
     elif (ancestor_manifest and ancestor_manifest.has_key("expected") and
           not (new_manifest and new_manifest.has_key("expected"))):
         changes.deleted.append(subtest)
