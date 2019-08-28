@@ -17,7 +17,6 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/net/MozURL.h"
 #include "nsIIdleService.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
@@ -786,24 +785,6 @@ QuotaManagerService::ListInitializedOrigins(nsIQuotaCallback* aCallback,
   }
 
   request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-QuotaManagerService::IsValidMozURL(const nsACString& aSpec,
-                                   bool* const _retval) {
-  // it should also be okay to call it on the worker thread, but there is no any
-  // request for that so far
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(_retval);
-
-  RefPtr<net::MozURL> url;
-  const bool valid =
-      NS_SUCCEEDED(net::MozURL::Init(getter_AddRefs(url), aSpec));
-  MOZ_ASSERT(valid == static_cast<bool>(url));
-
-  *_retval = valid;
-
   return NS_OK;
 }
 
