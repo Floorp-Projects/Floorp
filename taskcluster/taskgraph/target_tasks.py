@@ -194,7 +194,7 @@ def target_tasks_ash(full_task_graph, parameters, graph_config):
             return False
         # No random non-build jobs either. This is being purposely done as a
         # blacklist so newly-added jobs aren't missed by default.
-        for p in ('nightly', 'haz', 'artifact', 'cov', 'add-on'):
+        for p in ('shippable', 'haz', 'artifact', 'cov', 'add-on'):
             if p in platform:
                 return False
         for k in ('toolchain', 'l10n'):
