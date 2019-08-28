@@ -315,13 +315,11 @@ class PreferenceStudyListItem extends React.Component {
   render() {
     const { study, translations } = this.props;
 
-    let userFacingName = study.userFacingName;
-    if (!userFacingName) {
-      userFacingName = study.name
-        .replace(/-?pref-?(flip|study)-?/, "")
-        .replace(/-?study-?/, "")
-        .slice(0, 1);
-    }
+    let iconLetter = (study.userFacingName || study.slug)
+      .replace(/-?pref-?(flip|study)-?/, "")
+      .replace(/-?study-?/, "")
+      .slice(0, 1)
+      .toUpperCase();
 
     let description = study.userFacingDescription;
     if (!description) {
@@ -349,7 +347,7 @@ class PreferenceStudyListItem extends React.Component {
         className: classnames("study pref-study", { disabled: study.expired }),
         "data-study-slug": study.slug, // used to identify this row in tests
       },
-      r("div", { className: "study-icon" }, userFacingName),
+      r("div", { className: "study-icon" }, iconLetter),
       r(
         "div",
         { className: "study-details" },
