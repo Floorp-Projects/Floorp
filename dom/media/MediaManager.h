@@ -118,6 +118,7 @@ class MediaDevice : public nsIMediaDevice {
   const RefPtr<AudioDeviceInfo> mSinkInfo;
   const dom::MediaDeviceKind mKind;
   const bool mScary;
+  const bool mIsFake;
   const nsString mType;
   const nsString mName;
   const nsString mID;
