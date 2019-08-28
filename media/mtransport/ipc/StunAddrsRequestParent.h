@@ -7,6 +7,11 @@
 
 #include "mozilla/net/PStunAddrsRequestParent.h"
 
+#include "nsICancelable.h"
+#include "nsIDNSServiceDiscovery.h"
+
+struct MDNSService;
+
 namespace mozilla {
 namespace net {
 
@@ -22,9 +27,11 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
   mozilla::ipc::IPCResult Recv__delete__() override;
 
  protected:
-  virtual ~StunAddrsRequestParent() {}
+  virtual ~StunAddrsRequestParent();
 
   virtual mozilla::ipc::IPCResult RecvGetStunAddrs() override;
+  virtual mozilla::ipc::IPCResult RecvRegisterMDNSHostname(const nsCString& hostname, const nsCString& address) override;
+  virtual mozilla::ipc::IPCResult RecvUnregisterMDNSHostname(const nsCString& hostname) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIThread> mMainThread;
@@ -38,6 +45,8 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
 
  private:
   bool mIPCClosed;  // true if IPDL channel has been closed (child crash)
+
+  MDNSService* mMDNSService;
 };
 
 }  // namespace net
