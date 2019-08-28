@@ -23,6 +23,9 @@ permalink: /changelog/
   )
   ```
 
+* **browser-engine-gecko-nightly** and **browser-engine-gecko-beta**
+  * The `TrackingProtectionPolicy.strict()` now blocks trackers from the social-tracking-protection-digest256 list, for more details take a look at the [issue #4213](https://github.com/mozilla-mobile/android-components/issues/4213)
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)

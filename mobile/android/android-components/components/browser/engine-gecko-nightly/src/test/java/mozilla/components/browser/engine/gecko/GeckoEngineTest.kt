@@ -19,6 +19,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -158,6 +159,32 @@ class GeckoEngineTest {
             engine.settings.domStorageEnabled = false
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedSettingException) { }
+    }
+
+    @Test
+    fun `WHEN a strict tracking protection policy is set THEN the strict social list must be activated`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(true)
+    }
+
+    @Test
+    fun `WHEN a non strict tracking protection policy is set THEN the strict social list must be disabled`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
     }
 
     @Test
