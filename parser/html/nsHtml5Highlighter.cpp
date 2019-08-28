@@ -68,14 +68,17 @@ nsHtml5Highlighter::~nsHtml5Highlighter() {
 
 void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
   // Doctype
-  mOpQueue.AppendElement()->Init(nsGkAtoms::html, EmptyString(), EmptyString());
+  opAppendDoctypeToDocument operation(nsGkAtoms::html, EmptyString(),
+                                      EmptyString());
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 
-  mOpQueue.AppendElement()->Init(STANDARDS_MODE);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(STANDARDS_MODE));
 
   // <html> uses NS_NewHTMLSharedElement creator
   nsIContent** root =
       CreateElement(nsGkAtoms::html, nullptr, nullptr, NS_NewHTMLSharedElement);
-  mOpQueue.AppendElement()->Init(eTreeOpAppendToDocument, root);
+  opAppendToDocument appendOp(root);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(appendOp));
   mStack.AppendElement(root);
 
   // <head> uses NS_NewHTMLSharedElement creator
@@ -97,7 +100,8 @@ void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
   Push(nsGkAtoms::link, nsHtml5ViewSourceUtils::NewLinkAttributes(),
        NS_NewHTMLLinkElement);
 
-  mOpQueue.AppendElement()->Init(eTreeOpUpdateStyleSheet, CurrentNode());
+  opUpdateStyleSheet updateOp(CurrentNode());
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(updateOp));
 
   Pop();  // link
 
@@ -113,7 +117,7 @@ void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
 
   StartCharacters();
 
-  mOpQueue.AppendElement()->Init(eTreeOpStartLayout);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(opStartLayout()));
 }
 
 int32_t nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume,
@@ -466,7 +470,7 @@ void nsHtml5Highlighter::End() {
   }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpStreamEnded);
+  treeOp->Init(mozilla::AsVariant(opStreamEnded()));
   FlushOps();
 }
 
@@ -561,7 +565,8 @@ void nsHtml5Highlighter::FlushChars() {
           Push(nsGkAtoms::span, nullptr, NS_NewHTMLSpanElement);
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
           NS_ASSERTION(treeOp, "Tree op allocation failed.");
-          treeOp->InitAddLineNumberId(CurrentNode(), mLineNumber);
+          opAddLineNumberId operation(CurrentNode(), mLineNumber);
+          treeOp->Init(mozilla::AsVariant(operation));
           Pop();
           break;
         }
@@ -628,11 +633,11 @@ nsIContent** nsHtml5Highlighter::CreateElement(
     nsIContent** aIntendedParent,
     mozilla::dom::HTMLContentCreatorFunction aCreator) {
   MOZ_ASSERT(aName, "Got null name.");
-  nsHtml5ContentCreatorFunction creator;
-  creator.html = aCreator;
   nsIContent** content = AllocateContentHandle();
-  mOpQueue.AppendElement()->Init(kNameSpaceID_XHTML, aName, aAttributes,
-                                 content, aIntendedParent, true, creator);
+  opCreateHTMLElement opeation(content, aName, aAttributes, aCreator,
+                               aIntendedParent,
+                               mozilla::dom::FROM_PARSER_NETWORK);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(opeation));
   return content;
 }
 
@@ -647,7 +652,8 @@ void nsHtml5Highlighter::Push(
   MOZ_ASSERT(mStack.Length() >= 1, "Pushing without root.");
   nsIContent** elt = CreateElement(aName, aAttributes, CurrentNode(),
                                    aCreator);  // Don't inline below!
-  mOpQueue.AppendElement()->Init(eTreeOpAppend, elt, CurrentNode());
+  opAppend operation(elt, CurrentNode());
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
   mStack.AppendElement(elt);
 }
 
@@ -663,12 +669,13 @@ void nsHtml5Highlighter::AppendCharacters(const char16_t* aBuffer,
   char16_t* bufferCopy = new char16_t[aLength];
   memcpy(bufferCopy, aBuffer + aStart, aLength * sizeof(char16_t));
 
-  mOpQueue.AppendElement()->Init(eTreeOpAppendText, bufferCopy, aLength,
-                                 CurrentNode());
+  opAppendText operation(CurrentNode(), bufferCopy, aLength);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddClass(const char16_t* aClass) {
-  mOpQueue.AppendElement()->InitAddClass(CurrentNode(), aClass);
+  opAddClass operation(CurrentNode(), (char16_t*)aClass);
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddViewSourceHref(nsHtml5String aValue) {
@@ -676,8 +683,8 @@ void nsHtml5Highlighter::AddViewSourceHref(nsHtml5String aValue) {
   aValue.CopyToBuffer(bufferCopy);
   bufferCopy[aValue.Length()] = 0;
 
-  mOpQueue.AppendElement()->Init(eTreeOpAddViewSourceHref, bufferCopy,
-                                 aValue.Length(), CurrentNode());
+  opAddViewSourceHref operation(CurrentNode(), bufferCopy, aValue.Length());
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddBase(nsHtml5String aValue) {
@@ -689,21 +696,23 @@ void nsHtml5Highlighter::AddBase(nsHtml5String aValue) {
   aValue.CopyToBuffer(bufferCopy);
   bufferCopy[aValue.Length()] = 0;
 
-  mOpQueue.AppendElement()->Init(eTreeOpAddViewSourceBase, bufferCopy,
-                                 aValue.Length());
+  opAddViewSourceBase operation(bufferCopy, aValue.Length());
+  mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId) {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(CurrentNode(), aMsgId);
+  opAddErrorType operation(CurrentNode(), (char*)aMsgId);
+  treeOp->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId) {
   MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mCurrentRun, aMsgId);
+  opAddErrorType operation(mCurrentRun, (char*)aMsgId);
+  treeOp->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
@@ -711,7 +720,8 @@ void nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
   MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mCurrentRun, aMsgId, aName);
+  opAddErrorType operation(mCurrentRun, (char*)aMsgId, aName);
+  treeOp->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId, nsAtom* aName,
@@ -719,19 +729,22 @@ void nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId, nsAtom* aName,
   MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mCurrentRun, aMsgId, aName, aOther);
+  opAddErrorType operation(mCurrentRun, (char*)aMsgId, aName, aOther);
+  treeOp->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId) {
   MOZ_ASSERT(mAmpersand, "Adding error to ampersand without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mAmpersand, aMsgId);
+  opAddErrorType operation(mAmpersand, (char*)aMsgId);
+  treeOp->Init(mozilla::AsVariant(operation));
 }
 
 void nsHtml5Highlighter::AddErrorToCurrentSlash(const char* aMsgId) {
   MOZ_ASSERT(mSlash, "Adding error to slash without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(mSlash, aMsgId);
+  opAddErrorType operation(mSlash, (char*)aMsgId);
+  treeOp->Init(mozilla::AsVariant(operation));
 }

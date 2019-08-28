@@ -8,6 +8,7 @@
 #define vm_Xdr_h
 
 #include "mozilla/EndianUtils.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Utf8.h"
 
@@ -79,11 +80,6 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
     return nullptr;
   }
 
-  uintptr_t uptr() const {
-    // Note: Avoid bounds check assertion if the buffer is not yet allocated.
-    return reinterpret_cast<uintptr_t>(buffer_.begin() + cursor_);
-  }
-
  private:
   JS::TranscodeBuffer& buffer_;
 };
@@ -113,11 +109,6 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
   uint8_t* write(size_t n) {
     MOZ_CRASH("Should never write in decode mode");
     return nullptr;
-  }
-
-  uintptr_t uptr() const {
-    // Note: Avoid bounds check assertion at the end of the buffer.
-    return reinterpret_cast<uintptr_t>(buffer_.begin().get() + cursor_);
   }
 
  private:
@@ -167,6 +158,10 @@ class MOZ_RAII AutoXDRTree {
   AutoXDRTree* parent_;
   XDRCoderBase* xdr_;
 };
+
+template <typename CharT>
+using XDRTranscodeString =
+    mozilla::MaybeOneOf<const CharT*, js::UniquePtr<CharT[], JS::FreePolicy>>;
 
 class XDRCoderBase {
  private:
@@ -387,41 +382,19 @@ class XDRState : public XDRCoderBase {
     return Ok();
   }
 
-  /*
-   * During encoding the string is written into the buffer together with its
-   * terminating '\0'. During decoding the method returns a pointer into the
-   * decoding buffer and the caller must copy the string if it will outlive
-   * the decoding buffer.
-   */
-  XDRResult codeCString(const char** sp) {
-    uint64_t len64;
-    if (mode == XDR_ENCODE) {
-      len64 = (uint64_t)(strlen(*sp) + 1);
-    }
-    MOZ_TRY(codeUint64(&len64));
-    size_t len = (size_t)len64;
-
-    if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(len);
-      if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
-      }
-      memcpy(ptr, *sp, len);
-      MOZ_ASSERT(ptr[len - 1] == '\0');
-    } else {
-      const uint8_t* ptr = buf.read(len);
-      if (!ptr || ptr[len - 1] != '\0') {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-      *sp = reinterpret_cast<const char*>(ptr);
-    }
-    return Ok();
-  }
+  // Prefer using a variant below that is encoding aware.
+  XDRResult codeChars(char* chars, size_t nchars);
 
   XDRResult codeChars(JS::Latin1Char* chars, size_t nchars);
   XDRResult codeChars(mozilla::Utf8Unit* units, size_t nchars);
-
   XDRResult codeChars(char16_t* chars, size_t nchars);
+
+  // Transcode null-terminated strings. When decoding, a new buffer is
+  // allocated and ownership is returned to caller.
+  //
+  // NOTE: Throws if string longer than JSString::MAX_LENGTH.
+  XDRResult codeCharsZ(XDRTranscodeString<char>& buffer);
+  XDRResult codeCharsZ(XDRTranscodeString<char16_t>& buffer);
 
   XDRResult codeFunction(JS::MutableHandleFunction objp,
                          HandleScriptSourceObject sourceObject = nullptr);

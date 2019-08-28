@@ -381,6 +381,7 @@ class WebConsoleWrapper {
               "inspector",
               "inspect_dom"
             );
+            // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
             const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
             const [front, inspector] = await Promise.all([
               onGripNodeToFront,

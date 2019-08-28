@@ -41,7 +41,9 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onDOMNodeMouseOver = serviceContainer.highlightDomElement
       ? object => serviceContainer.highlightDomElement(object)
       : null;
-    onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
+    onDOMNodeMouseOut = serviceContainer.unHighlightDomElement
+      ? object => serviceContainer.unHighlightDomElement(object)
+      : null;
     onInspectIconClick = serviceContainer.openNodeInInspector
       ? (object, e) => {
           // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.

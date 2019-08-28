@@ -159,6 +159,12 @@ var gIdentityHandler = {
       "identity-popup-mainView-panel-header-span"
     ));
   },
+  get _identityPopupSecurityView() {
+    delete this._identityPopupSecurityView;
+    return (this._identityPopupSecurityView = document.getElementById(
+      "identity-popup-securityView"
+    ));
+  },
   get _identityPopupSecurityEVContentOwner() {
     delete this._identityPopupSecurityEVContentOwner;
     return (this._identityPopupSecurityEVContentOwner = document.getElementById(
@@ -1070,6 +1076,13 @@ var gIdentityHandler = {
     this._identityPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
       "identity.headerMainWithHost",
       [host]
+    );
+
+    this._identityPopupSecurityView.setAttribute(
+      "title",
+      gNavigatorBundle.getFormattedString("identity.headerSecurityWithHost", [
+        host,
+      ])
     );
 
     this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(
