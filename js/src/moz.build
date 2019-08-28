@@ -47,6 +47,9 @@ for stlfile in ['jsdate.*', 'jsnum.*']:
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    CONFIGURE_SUBST_FILES += ['rust/extra-bindgen-flags']
+
 if not CONFIG['JS_DISABLE_SHELL']:
     DIRS += [
         'rust',

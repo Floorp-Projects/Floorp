@@ -18,3 +18,19 @@ export function toggleSkipPausing() {
     dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
   };
 }
+
+/**
+ * @memberof actions/pause
+ * @static
+ */
+export function setSkipPausing(skipPausing: boolean) {
+  return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
+    const currentlySkipping = getSkipPausing(getState());
+    if (currentlySkipping === skipPausing) {
+      return;
+    }
+
+    await client.setSkipPausing(skipPausing);
+    dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
+  };
+}

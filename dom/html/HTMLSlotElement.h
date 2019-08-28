@@ -54,9 +54,9 @@ class HTMLSlotElement final : public nsGenericHTMLElement {
 
   // Helper methods
   const nsTArray<RefPtr<nsINode>>& AssignedNodes() const;
-  void InsertAssignedNode(uint32_t aIndex, nsINode* aNode);
-  void AppendAssignedNode(nsINode* aNode);
-  void RemoveAssignedNode(nsINode* aNode);
+  void InsertAssignedNode(uint32_t aIndex, nsIContent&);
+  void AppendAssignedNode(nsIContent&);
+  void RemoveAssignedNode(nsIContent&);
   void ClearAssignedNodes();
 
   void EnqueueSlotChangeEvent();

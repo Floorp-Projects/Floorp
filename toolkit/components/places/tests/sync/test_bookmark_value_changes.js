@@ -105,7 +105,9 @@ add_task(async function test_value_combo() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications({ skipTags: true });
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(
     await buf.fetchUnmergedGuids(),
     [PlacesUtils.bookmarks.toolbarGuid],
@@ -1197,7 +1199,9 @@ add_task(async function test_keywords_complex() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(
     await buf.fetchUnmergedGuids(),
     ["bookmarkAAA1", "bookmarkAAAA", "bookmarkBBB1"],
@@ -1901,7 +1905,9 @@ add_task(async function test_date_added() {
 
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -2091,7 +2097,9 @@ add_task(async function test_duplicate_url_rows() {
 
   info("Apply mirror");
   let observer = expectBookmarkChangeNotifications();
-  let changesToUpload = await buf.apply();
+  let changesToUpload = await buf.apply({
+    notifyInStableOrder: true,
+  });
   deepEqual(
     await buf.fetchUnmergedGuids(),
     [
