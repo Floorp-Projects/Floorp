@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this,
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# If we add unicode_literals, Python 2.6.1 (required for OS X 10.6) breaks.
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import os
@@ -281,7 +280,7 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
 
     # Emulate yes.  For a discussion of passing input to check_output,
     # see https://stackoverflow.com/q/10103551.
-    yes = '\n'.join(['y']*100)
+    yes = '\n'.join(['y']*100).encode("UTF-8")
     proc = subprocess.Popen(args,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT,

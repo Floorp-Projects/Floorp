@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
 import pytest
@@ -41,13 +41,13 @@ def read(path):
 
 @pytest.fixture
 def config_path(tmpdir):
-    return unicode(tmpdir.join('machrc'))
+    return str(tmpdir.join('machrc'))
 
 
 @pytest.fixture
 def write_config(config_path):
     def _config(contents):
-        with open(config_path, 'wb') as f:
+        with open(config_path, 'w') as f:
             f.write(contents)
     return _config
 

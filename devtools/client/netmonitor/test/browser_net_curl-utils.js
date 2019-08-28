@@ -22,7 +22,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const wait = waitForNetworkEvents(monitor, 5);
+  const wait = waitForNetworkEvents(monitor, 6);
   await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     content.wrappedJSObject.performRequests(url);
   });
@@ -31,9 +31,10 @@ add_task(async function() {
   const requests = {
     get: getSortedRequests(store.getState()).get(0),
     post: getSortedRequests(store.getState()).get(1),
-    patch: getSortedRequests(store.getState()).get(2),
-    multipart: getSortedRequests(store.getState()).get(3),
-    multipartForm: getSortedRequests(store.getState()).get(4),
+    postJson: getSortedRequests(store.getState()).get(2),
+    patch: getSortedRequests(store.getState()).get(3),
+    multipart: getSortedRequests(store.getState()).get(4),
+    multipartForm: getSortedRequests(store.getState()).get(5),
   };
 
   let data = await createCurlData(requests.get, getLongString, requestData);
@@ -48,6 +49,9 @@ add_task(async function() {
   data = await createCurlData(requests.patch, getLongString, requestData);
   testWritePostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
+
+  data = await createCurlData(requests.postJson, getLongString, requestData);
+  testDataEscapeOnGeneratedCommand(data);
 
   data = await createCurlData(requests.multipart, getLongString, requestData);
   testIsMultipartRequest(data);
@@ -136,6 +140,23 @@ function testDataArgumentOnGeneratedCommand(data) {
   ok(
     curlCommand.includes("--data"),
     "Should return a curl command with --data"
+  );
+}
+
+function testDataEscapeOnGeneratedCommand(data) {
+  const paramsWin = `--data "{""param1"":""value1"",""param2"":""value2""}"`;
+  const paramsPosix = `--data '{"param1":"value1","param2":"value2"}'`;
+
+  let curlCommand = Curl.generateCommand(data, "WINNT");
+  ok(
+    curlCommand.includes(paramsWin),
+    "Should return a curl command with --data escaped for Windows systems"
+  );
+
+  curlCommand = Curl.generateCommand(data, "Linux");
+  ok(
+    curlCommand.includes(paramsPosix),
+    "Should return a curl command with --data escaped for Posix systems"
   );
 }
 

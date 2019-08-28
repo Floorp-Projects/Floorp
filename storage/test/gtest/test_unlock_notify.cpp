@@ -22,11 +22,12 @@ enum State { STARTING, WRITE_LOCK, READ_LOCK, TEST_DONE };
 
 class DatabaseLocker : public mozilla::Runnable {
  public:
-  explicit DatabaseLocker(const char* aSQL)
+  explicit DatabaseLocker(const char* aSQL, nsIFile* aDBFile = nullptr)
       : mozilla::Runnable("DatabaseLocker"),
         monitor("DatabaseLocker::monitor"),
         mSQL(aSQL),
-        mState(STARTING) {}
+        mState(STARTING),
+        mDBFile(aDBFile) {}
 
   void RunInBackground() {
     (void)NS_NewNamedThread("DatabaseLocker", getter_AddRefs(mThread));
@@ -44,7 +45,7 @@ class DatabaseLocker : public mozilla::Runnable {
   NS_IMETHOD Run() override {
     mozilla::ReentrantMonitorAutoEnter lock(monitor);
 
-    nsCOMPtr<mozIStorageConnection> db(getDatabase());
+    nsCOMPtr<mozIStorageConnection> db(getDatabase(mDBFile));
 
     nsCString sql(mSQL);
     nsCOMPtr<mozIStorageStatement> stmt;
@@ -78,6 +79,7 @@ class DatabaseLocker : public mozilla::Runnable {
   nsCOMPtr<nsIThread> mThread;
   const char* const mSQL;
   State mState;
+  nsCOMPtr<nsIFile> mDBFile;
 };
 
 class DatabaseTester : public DatabaseLocker {
@@ -144,7 +146,10 @@ void test_step_locked_does_not_block_main_thread() {
       getter_AddRefs(stmt));
   do_check_success(rv);
 
-  RefPtr<DatabaseLocker> locker(new DatabaseLocker("SELECT * FROM test"));
+  nsCOMPtr<nsIFile> dbFile;
+  db->GetDatabaseFile(getter_AddRefs(dbFile));
+  RefPtr<DatabaseLocker> locker(
+      new DatabaseLocker("SELECT * FROM test", dbFile));
   do_check_true(locker);
   {
     mozilla::ReentrantMonitorAutoEnter lock(locker->monitor);

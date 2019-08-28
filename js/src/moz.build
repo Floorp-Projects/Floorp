@@ -59,10 +59,10 @@ if not CONFIG['JS_DISABLE_SHELL']:
         'tests',
     ]
 
-if CONFIG['FUZZING_INTERFACES']:
-    TEST_DIRS += [
-        'fuzz-tests',
-    ]
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'fuzz-tests',
+        ]
 
 if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
     # In addition to regular coverage provided by trace-pc-guard,

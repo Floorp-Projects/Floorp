@@ -6449,6 +6449,12 @@
   value: 2592000   # 30 days (in seconds)
   mirror: always
 
+# Report Anti-tracking warnings to console lazily
+- name: privacy.restrict3rdpartystorage.console.lazy
+  type: bool
+  value: true
+  mirror: always
+
 # Anti-tracking user-interaction expiration.
 - name: privacy.userInteraction.expiration
   type: uint32_t
@@ -6714,7 +6720,7 @@
   mirror: always
 
 - name: toolkit.telemetry.geckoview.batchDurationMS
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 5000
   mirror: always
 

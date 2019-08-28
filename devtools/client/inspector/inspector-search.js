@@ -481,7 +481,7 @@ SelectorAutocompleter.prototype = {
    * Suggests classes,ids and tags based on the user input as user types in the
    * searchbox.
    */
-  showSuggestions: function() {
+  showSuggestions: async function() {
     let query = this.searchBox.value;
     const state = this.state;
     let firstPart = "";
@@ -514,37 +514,51 @@ SelectorAutocompleter.prototype = {
       query += "*";
     }
 
-    const suggestionsPromise = this.walker.getSuggestionsForQuery(
-      query,
-      firstPart,
-      state
-    );
-    this._lastQuery = suggestionsPromise.then(result => {
-      this.emit("processing-done");
-      if (result.query !== query) {
-        // This means that this response is for a previous request and the user
-        // as since typed something extra leading to a new request.
-        return promise.resolve(null);
-      }
+    const inspectorFront = this.inspector.inspectorFront;
+    const remoteInspectors = await inspectorFront.getChildInspectors();
+    const inspectors = [inspectorFront, ...remoteInspectors];
 
-      if (state === this.States.CLASS) {
-        firstPart = "." + firstPart;
-      } else if (state === this.States.ID) {
-        firstPart = "#" + firstPart;
-      }
-
-      // If there is a single tag match and it's what the user typed, then
-      // don't need to show a popup.
-      if (
-        result.suggestions.length === 1 &&
-        result.suggestions[0][0] === firstPart
-      ) {
-        result.suggestions = [];
-      }
-
-      // Wait for the autocomplete-popup to fire its popup-opened event, to make sure
-      // the autoSelect item has been selected.
-      return this._showPopup(result.suggestions, state);
+    const suggestionsPromises = inspectors.map(async inspector => {
+      const walker = inspector.walker;
+      return walker.getSuggestionsForQuery(query, firstPart, state);
     });
+
+    this._lastQuery = Promise.all(suggestionsPromises)
+      .then(suggestions => {
+        // Merge all the results
+        const result = { query: "", suggestions: [] };
+        for (const r of suggestions) {
+          result.query = r.query;
+          result.suggestions = result.suggestions.concat(r.suggestions);
+        }
+        return result;
+      })
+      .then(result => {
+        this.emit("processing-done");
+        if (result.query !== query) {
+          // This means that this response is for a previous request and the user
+          // as since typed something extra leading to a new request.
+          return promise.resolve(null);
+        }
+
+        if (state === this.States.CLASS) {
+          firstPart = "." + firstPart;
+        } else if (state === this.States.ID) {
+          firstPart = "#" + firstPart;
+        }
+
+        // If there is a single tag match and it's what the user typed, then
+        // don't need to show a popup.
+        if (
+          result.suggestions.length === 1 &&
+          result.suggestions[0][0] === firstPart
+        ) {
+          result.suggestions = [];
+        }
+
+        // Wait for the autocomplete-popup to fire its popup-opened event, to make sure
+        // the autoSelect item has been selected.
+        return this._showPopup(result.suggestions, state);
+      });
   },
 };

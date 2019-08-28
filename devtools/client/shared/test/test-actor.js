@@ -855,9 +855,9 @@ var TestActor = (exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
 }));
 
 class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
-  constructor(client, toolbox) {
+  constructor(client, highlighter) {
     super(client);
-    this.toolbox = toolbox;
+    this.highlighter = highlighter;
   }
 
   /**
@@ -867,7 +867,7 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
    * @return {Promise} The returned promise will only resolve when the
    * highlighter has updated to the new zoom level.
    */
-  zoomPageTo(level, actorID = this.toolbox.highlighter.actorID) {
+  zoomPageTo(level, actorID = this.highlighter.actorID) {
     return this.changeZoomLevel(level, actorID);
   }
 
@@ -877,7 +877,7 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
     return super.changeHighlightedNodeWaitForUpdate(
       name,
       value,
-      (highlighter || this.toolbox.highlighter).actorID
+      (highlighter || this.highlighter).actorID
     );
   }
 
@@ -892,14 +892,14 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
     return this.getHighlighterAttribute(
       nodeID,
       name,
-      (highlighter || this.toolbox.highlighter).actorID
+      (highlighter || this.highlighter).actorID
     );
   }
 
   getHighlighterNodeTextContent(nodeID, highlighter) {
     return super.getHighlighterNodeTextContent(
       nodeID,
-      (highlighter || this.toolbox.highlighter).actorID
+      (highlighter || this.highlighter).actorID
     );
   }
 
@@ -947,8 +947,8 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
   /**
    * Get the current rect of the border region of the box-model highlighter
    */
-  async getSimpleBorderRect(toolbox) {
-    const { border } = await this._getBoxModelStatus(toolbox);
+  async getSimpleBorderRect() {
+    const { border } = await this._getBoxModelStatus();
     const { p1, p2, p4 } = border.points;
 
     return {
@@ -1143,10 +1143,7 @@ class TestActorFront extends protocol.FrontClassWithSpec(testSpec) {
   }
 
   waitForHighlighterEvent(event) {
-    return super.waitForHighlighterEvent(
-      event,
-      this.toolbox.highlighter.actorID
-    );
+    return super.waitForHighlighterEvent(event, this.highlighter.actorID);
   }
 
   /**
