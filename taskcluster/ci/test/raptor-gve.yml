@@ -141,6 +141,59 @@ raptor-speedometer-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
+raptor-speedometer-geckoview-power:
+    description: "Raptor Speedometer power on GeckoView"
+    try-name: raptor-speedometer-geckoview-power
+    treeherder-symbol: Rap(sp-p)
+    target: geckoview_example.apk
+    run-on-projects: []
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --power-test
+            - --page-cycles 5
+            - --host HOST_IP
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-speedometer-geckoview-cpu-memory:
+    description: "Raptor Speedometer cpu/memory on GeckoView"
+    try-name: raptor-speedometer-geckoview-cpu-memory
+    treeherder-symbol: Rap(sp-cm)
+    target: geckoview_example.apk
+    run-on-projects: []
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --page-cycles 5
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-speedometer-geckoview-cpu-memory-power:
+    description: "Raptor Speedometer cpu/memory/power on GeckoView"
+    try-name: raptor-speedometer-geckoview-cpu-memory-power
+    treeherder-symbol: Rap(sp-cmp)
+    target: geckoview_example.apk
+    run-on-projects: []
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --page-cycles 5
+            - --host HOST_IP
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
 raptor-scn-power-idle-geckoview:
     description: "Raptor idle-browser power-use measurement on GeckoView"
     try-name: raptor-scn-power-idle-geckoview
