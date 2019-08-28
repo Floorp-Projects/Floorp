@@ -4,7 +4,6 @@
 
 DevToolsModules(
   'contrast.js',
-  'keyboard.js',
   'text-label.js',
 )
 

@@ -26,10 +26,6 @@ const AUDIT_TYPE_TO_FILTER = {
     filterKey: FILTERS.CONTRAST,
     validator: validateCheck,
   },
-  [AUDIT_TYPE.KEYBOARD]: {
-    filterKey: FILTERS.KEYBOARD,
-    validator: validateCheck,
-  },
   [AUDIT_TYPE.TEXT_LABEL]: {
     filterKey: FILTERS.TEXT_LABEL,
     validator: validateCheck,

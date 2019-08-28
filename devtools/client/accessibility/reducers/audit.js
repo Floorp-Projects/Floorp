@@ -25,7 +25,6 @@ function getInitialState() {
     filters: {
       [FILTERS.ALL]: false,
       [FILTERS.CONTRAST]: false,
-      [FILTERS.KEYBOARD]: false,
       [FILTERS.TEXT_LABEL]: false,
     },
     auditing: [],
@@ -40,7 +39,6 @@ function allActiveFilters() {
   return {
     [FILTERS.ALL]: true,
     [FILTERS.CONTRAST]: true,
-    [FILTERS.KEYBOARD]: true,
     [FILTERS.TEXT_LABEL]: true,
   };
 }
@@ -64,10 +62,11 @@ function audit(state = getInitialState(), action) {
           [filter]: isToggledToActive,
         };
 
-        const allAuditTypesActive = Object.values(AUDIT_TYPE)
-          .filter(filterKey => filters.hasOwnProperty(filterKey))
-          .every(filterKey => filters[filterKey]);
-        if (isToggledToActive && !filters[FILTERS.ALL] && allAuditTypesActive) {
+        if (
+          isToggledToActive &&
+          !filters[FILTERS.ALL] &&
+          Object.values(AUDIT_TYPE).every(filterKey => filters[filterKey])
+        ) {
           filters[FILTERS.ALL] = true;
         } else if (!isToggledToActive && filters[FILTERS.ALL]) {
           filters[FILTERS.ALL] = false;
