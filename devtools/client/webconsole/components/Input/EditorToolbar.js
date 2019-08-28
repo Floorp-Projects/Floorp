@@ -36,8 +36,6 @@ class EditorToolbar extends Component {
       return null;
     }
 
-    const enterStr = l10n.getStr("webconsole.enterKey");
-
     return dom.div(
       {
         className:
@@ -48,7 +46,7 @@ class EditorToolbar extends Component {
           className: "devtools-button webconsole-editor-toolbar-executeButton",
           title: l10n.getFormatStr(
             "webconsole.editor.toolbar.executeButton.tooltip",
-            [isMacOS ? `Cmd + ${enterStr}` : `Ctrl + ${enterStr}`]
+            [isMacOS ? "Cmd + Enter" : "Ctrl + Enter"]
           ),
           onClick: () => dispatch(actions.evaluateExpression()),
         },
@@ -77,7 +75,7 @@ class EditorToolbar extends Component {
       dom.button({
         className: "devtools-button webconsole-editor-toolbar-closeButton",
         title: l10n.getFormatStr(
-          "webconsole.editor.toolbar.closeButton.tooltip2",
+          "webconsole.editor.toolbar.closeButton.tooltip",
           [isMacOS ? "Cmd + B" : "Ctrl + B"]
         ),
         onClick: () => dispatch(actions.editorToggle()),

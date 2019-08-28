@@ -16,7 +16,6 @@ const {
   TIMESTAMPS_TOGGLE,
   FILTERBAR_DISPLAY_MODE_SET,
   FILTERBAR_DISPLAY_MODES,
-  EDITOR_ONBOARDING_DISMISS,
   EDITOR_TOGGLE,
   EDITOR_SET_WIDTH,
 } = require("devtools/client/webconsole/constants");
@@ -39,7 +38,6 @@ const UiState = overrides =>
         reverseSearchInitialValue: "",
         editor: false,
         editorWidth: null,
-        showEditorOnboarding: false,
         filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
       },
       overrides
@@ -88,11 +86,6 @@ function ui(state = UiState(), action) {
       return {
         ...state,
         editor: !state.editor,
-      };
-    case EDITOR_ONBOARDING_DISMISS:
-      return {
-        ...state,
-        showEditorOnboarding: false,
       };
     case EDITOR_SET_WIDTH:
       return {
