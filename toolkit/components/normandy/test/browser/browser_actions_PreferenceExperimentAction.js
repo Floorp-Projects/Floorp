@@ -181,7 +181,7 @@ decorate_task(
   async function markSeen_if_experiment_active(markLastSeenStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "test",
+      name: "test",
     });
 
     await action.runRecipe(recipe);
@@ -198,7 +198,7 @@ decorate_task(
   async function dont_markSeen_if_experiment_expired(markLastSeenStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "test",
+      name: "test",
     });
 
     await action.runRecipe(recipe);
@@ -268,7 +268,7 @@ decorate_task(
   async function dont_stop_experiments_for_other_action(stopStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "seen",
+      name: "seen",
     });
 
     await action.runRecipe(recipe);
@@ -301,7 +301,7 @@ decorate_task(
   ) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "new",
+      name: "new",
       branches: [
         {
           preferences: { "conflict.pref": {} },
