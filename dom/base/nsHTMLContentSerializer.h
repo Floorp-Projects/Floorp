@@ -24,16 +24,14 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();
 
-  NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
-                                mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) override;
+  NS_IMETHOD AppendElementStart(
+      mozilla::dom::Element* aElement,
+      mozilla::dom::Element* aOriginalElement) override;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              mozilla::dom::Element* aOriginalElement,
-                              nsAString& aStr) override;
+                              mozilla::dom::Element* aOriginalElement) override;
 
-  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
-                                 nsAString& aStr) override;
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) override;
 
  protected:
   MOZ_MUST_USE
