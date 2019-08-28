@@ -140,6 +140,7 @@ input[type="url"][readOnly]:hover:active {
 
 .copy-button {
   margin-bottom: 0; /* Align button at the bottom of the row */
+  margin-inline-start: 20px;
 }
 
 .copy-button:not([data-copied]) .copied-button-text,
@@ -188,7 +189,7 @@ input[type="url"][readOnly]:hover:active {
   background-color: transparent !important;
   border-width: 0 !important;
   background-image: url("chrome://browser/content/aboutlogins/icons/show-password.svg") !important;
-  margin-inline-start: 8px !important;
+  margin-inline: 10px 0 !important;
   cursor: pointer;
   -moz-context-properties: fill;
   fill: currentColor !important;
