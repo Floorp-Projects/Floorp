@@ -7,12 +7,44 @@
 #ifndef mozilla_mscom_AgileReference_h
 #define mozilla_mscom_AgileReference_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 
 #include <objidl.h>
 
 namespace mozilla {
 namespace mscom {
+namespace detail {
+
+class MOZ_HEAP_CLASS GlobalInterfaceTableCookie final {
+ public:
+  GlobalInterfaceTableCookie(IUnknown* aObject, REFIID aIid,
+                             HRESULT& aOutHResult);
+
+  bool IsValid() const { return !!mCookie; }
+  HRESULT GetInterface(REFIID aIid, void** aOutInterface) const;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GlobalInterfaceTableCookie)
+
+  GlobalInterfaceTableCookie(const GlobalInterfaceTableCookie&) = delete;
+  GlobalInterfaceTableCookie(GlobalInterfaceTableCookie&&) = delete;
+
+  GlobalInterfaceTableCookie& operator=(const GlobalInterfaceTableCookie&) =
+      delete;
+  GlobalInterfaceTableCookie& operator=(GlobalInterfaceTableCookie&&) = delete;
+
+ private:
+  ~GlobalInterfaceTableCookie();
+
+ private:
+  DWORD mCookie;
+
+ private:
+  static IGlobalInterfaceTable* ObtainGit();
+};
+
+}  // namespace detail
 
 /**
  * This class encapsulates an "agile reference." These are references that
@@ -42,11 +74,17 @@ class AgileReference final {
       : AgileReference(__uuidof(InterfaceT), aObject) {}
 
   AgileReference(REFIID aIid, IUnknown* aObject);
+
+  AgileReference(const AgileReference& aOther) = default;
   AgileReference(AgileReference&& aOther);
 
   ~AgileReference();
 
-  explicit operator bool() const { return mAgileRef || mGitCookie; }
+  explicit operator bool() const {
+    return mAgileRef || (mGitCookie && mGitCookie->IsValid());
+  }
+
+  HRESULT GetHResult() const { return mHResult; }
 
   template <typename T>
   void Assign(const RefPtr<T>& aOther) {
@@ -61,9 +99,7 @@ class AgileReference final {
 
   HRESULT Resolve(REFIID aIid, void** aOutInterface) const;
 
-  AgileReference(const AgileReference& aOther) = delete;
-  AgileReference& operator=(const AgileReference& aOther) = delete;
-
+  AgileReference& operator=(const AgileReference& aOther);
   AgileReference& operator=(AgileReference&& aOther);
 
   AgileReference& operator=(decltype(nullptr)) {
@@ -76,12 +112,12 @@ class AgileReference final {
  private:
   void Assign(REFIID aIid, IUnknown* aObject);
   void AssignInternal(IUnknown* aObject);
-  static IGlobalInterfaceTable* ObtainGit();
 
  private:
   IID mIid;
   RefPtr<IAgileReference> mAgileRef;
-  DWORD mGitCookie;
+  RefPtr<detail::GlobalInterfaceTableCookie> mGitCookie;
+  HRESULT mHResult;
 };
 
 }  // namespace mscom
