@@ -13,11 +13,24 @@
 // List of audit types.
 const AUDIT_TYPE = {
   CONTRAST: "CONTRAST",
+  KEYBOARD: "KEYBOARD",
   TEXT_LABEL: "TEXT_LABEL",
 };
 
 // Types of issues grouped by audit types.
 const ISSUE_TYPE = {
+  [AUDIT_TYPE.KEYBOARD]: {
+    // Focusable accessible objects have no semantics.
+    FOCUSABLE_NO_SEMANTICS: "FOCUSABLE_NO_SEMANTICS",
+    // Tab index greater than 0 is provided.
+    FOCUSABLE_POSITIVE_TABINDEX: "FOCUSABLE_POSITIVE_TABINDEX",
+    // Interactive accesible objects do not have an associated action.
+    INTERACTIVE_NO_ACTION: "INTERACTIVE_NO_ACTION",
+    // Interative accessible objcets are not focusable.
+    INTERACTIVE_NOT_FOCUSABLE: "INTERACTIVE_NOT_FOCUSABLE",
+    // Focusable accessible objects have no focus styling.
+    NO_FOCUS_VISIBLE: "NO_FOCUS_VISIBLE",
+  },
   [AUDIT_TYPE.TEXT_LABEL]: {
     // <AREA> name is provided via "alt" attribute.
     AREA_NO_NAME_FROM_ALT: "AREA_NO_NAME_FROM_ALT",
