@@ -5,3 +5,8 @@
 - [ ] **Quality**: This PR builds and passes detekt/ktlint checks (A pre-push hook is recommended)
 - [ ] **Tests**: This PR includes thorough tests or an explanation of why it does not
 - [ ] **Accessibility**: The code in this PR follows [accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md) or does not include any user facing features
+
+<!-- To download an APK when reviewing a PR:
+1. click on Show All Checks,
+2. click Details next to "Taskcluster (pull_request)" after it appears and then finishes with a green checkmark,
+3. click on the "Fenix - assemble" task, then click "Run Artifacts". -->
