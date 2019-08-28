@@ -83,12 +83,7 @@ add_task(async function() {
             inRange(r.h, 13, 14) &&
             inRange(r.w, 14, 16) && // icon size
             inRange(r.y1, 40, 80) && // in the toolbar
-            // near the left side of the screen
-            // The reload icon is shifted on devedition builds
-            // where there's an additional devtools toolbar icon.
-            AppConstants.MOZ_DEV_EDITION
-              ? inRange(r.x1, 100, 120)
-              : inRange(r.x1, 65, 100),
+            inRange(r.x1, 65, 100), // near the left side of the screen
         },
         {
           name: "bug 1555842 - the urlbar shouldn't flicker",

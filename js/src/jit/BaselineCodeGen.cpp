@@ -6866,15 +6866,7 @@ MethodStatus BaselineCompiler::emitBody() {
 }
 
 bool BaselineInterpreterGenerator::emitDebugTrap() {
-  JitRuntime* jrt = cx->runtime()->jitRuntime();
-
-  JitCode* handlerCode =
-      jrt->debugTrapHandler(cx, DebugTrapHandlerKind::Interpreter);
-  if (!handlerCode) {
-    return false;
-  }
-
-  CodeOffset offset = masm.toggledCall(handlerCode, /* enabled = */ false);
+  CodeOffset offset = masm.nopPatchableToCall();
   if (!debugTrapOffsets_.append(offset.offset())) {
     ReportOutOfMemory(cx);
     return false;
@@ -6909,7 +6901,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
   // Jump to table[op].
   {
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    CodeOffset label = masm.moveNearAddressWithPatch(scratch2);
     if (!tableLabels_.append(label)) {
       return false;
     }
@@ -6950,7 +6942,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
     // Load the opcode, jump to table[op].
     masm.load8ZeroExtend(Address(InterpreterPCRegAtDispatch, 0), scratch1);
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    CodeOffset label = masm.moveNearAddressWithPatch(scratch2);
     if (!tableLabels_.append(label)) {
       return false;
     }
@@ -6994,6 +6986,20 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
   restoreInterpreterPCReg();
   masm.jump(&bailoutPrologue_);
+
+  // Emit debug trap handler code (target of patchable call instructions). This
+  // is just a tail call to the debug trap handler trampoline code.
+  {
+    JitRuntime* jrt = cx->runtime()->jitRuntime();
+    JitCode* handlerCode =
+        jrt->debugTrapHandler(cx, DebugTrapHandlerKind::Interpreter);
+    if (!handlerCode) {
+      return false;
+    }
+
+    debugTrapHandlerOffset_ = masm.currentOffset();
+    masm.jump(handlerCode);
+  }
 
   // Emit code for JSOP_UNUSED* ops.
   Label invalidOp;
@@ -7110,10 +7116,10 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
     }
 
     // Patch loads now that we know the tableswitch base address.
+    CodeLocationLabel tableLoc(code, CodeOffset(tableOffset_));
     for (CodeOffset off : tableLabels_) {
-      Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, off),
-                                         ImmPtr(code->raw() + tableOffset_),
-                                         ImmPtr((void*)-1));
+      MacroAssembler::patchNearAddressMove(CodeLocationLabel(code, off),
+                                           tableLoc);
     }
 
 #ifdef JS_ION_PERF
@@ -7129,7 +7135,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
         bailoutPrologueOffset_.offset(),
         handler.generatorThrowOrReturnCallOffset(),
         profilerEnterFrameToggleOffset_.offset(),
-        profilerExitFrameToggleOffset_.offset(),
+        profilerExitFrameToggleOffset_.offset(), debugTrapHandlerOffset_,
         std::move(handler.debugInstrumentationOffsets()),
         std::move(debugTrapOffsets_), std::move(handler.codeCoverageOffsets()),
         std::move(handler.icReturnOffsets()), handler.callVMOffsets());

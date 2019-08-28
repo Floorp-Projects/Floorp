@@ -3218,6 +3218,11 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   return call(desc, scratch);
 }
 
+void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
+  CodeOffset offset = nopPatchableToCall();
+  append(desc, offset);
+}
+
 void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
                                             Register temp1, Register temp2,
                                             Register temp3, Label* noBarrier) {

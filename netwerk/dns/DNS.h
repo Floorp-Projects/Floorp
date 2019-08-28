@@ -177,6 +177,8 @@ bool IsIPAddrV4Mapped(const NetAddr* addr);
 
 bool IsIPAddrLocal(const NetAddr* addr);
 
+bool IsIPAddrShared(const NetAddr* addr);
+
 nsresult GetPort(const NetAddr* aAddr, uint16_t* aResult);
 
 }  // namespace net
