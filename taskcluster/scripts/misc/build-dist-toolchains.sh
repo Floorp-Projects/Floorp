@@ -5,5 +5,8 @@ set -x -e -v
 TL_NAME="$1"
 
 mkdir -p $HOME/artifacts
+mkdir -p $HOME/toolchains
 
-$MOZ_FETCHES_DIR/sccache/sccache --package-toolchain $MOZ_FETCHES_DIR/$TL_NAME/bin/$TL_NAME $HOME/artifacts/$TL_NAME-dist-toolchain.tar.xz
+mv $MOZ_FETCHES_DIR/$TL_NAME $HOME/toolchains/$TL_NAME
+
+$MOZ_FETCHES_DIR/sccache/sccache --package-toolchain $HOME/toolchains/$TL_NAME/bin/$TL_NAME $HOME/artifacts/$TL_NAME-dist-toolchain.tar.xz
