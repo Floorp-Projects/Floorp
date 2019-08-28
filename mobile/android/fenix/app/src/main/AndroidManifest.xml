@@ -149,6 +149,9 @@
                 android:resource="@xml/search_widget_info" />
         </receiver>
 
+        <service android:name=".session.SessionNotificationService"
+                android:exported="false" />
+
         <service
             android:name=".components.FirebasePush"
             android:exported="false">

@@ -5,6 +5,7 @@
 <resources>
     <!-- Name of the application -->
     <string name="app_name" translatable="false">Firefox Preview</string>
+    <string name="app_name_private" translatable="false">Firefox Preview (Private)</string>
 
     <!-- Preference for developers -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>

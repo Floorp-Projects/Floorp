@@ -46,6 +46,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
+import org.mozilla.fenix.home.intent.NotificationsIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
@@ -72,6 +73,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
+            NotificationsIntentProcessor(this),
             SpeechProcessingIntentProcessor(this),
             StartSearchIntentProcessor(components.analytics.metrics),
             DeepLinkIntentProcessor(this),
@@ -337,5 +339,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         const val OPEN_TO_BROWSER = "open_to_browser"
         const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
         const val OPEN_TO_SEARCH = "open_to_search"
+        const val EXTRA_DELETE_PRIVATE_TABS = "notification"
     }
 }
