@@ -7,6 +7,7 @@ add_task(async function test_skip_invisible() {
       <div>
         a
         <div style="visibility:hidden;">a</div>
+        <div style="visibility: hidden"><span style="visibility: visible">a</div>
         <select>
           <option>a</option>
         </select>
@@ -42,9 +43,10 @@ add_task(async function test_skip_invisible() {
       finder.fastFind(target, false, false);
       let findResult = await promiseFind;
 
-      // Check the results and repeat three times. After the final repeat, make sure we've wrapped to the beginning.
+      // Check the results and repeat four times. After the final repeat, make
+      // sure we've wrapped to the beginning.
       let i = 0;
-      for (; i < 3; i++) {
+      for (; i < 4; i++) {
         isnot(
           findResult.result,
           Ci.nsITypeAheadFind.FIND_NOTFOUND,
