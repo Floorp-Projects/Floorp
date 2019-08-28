@@ -890,11 +890,9 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     mInvalidRegion = invalidRegionSafe;
   }
 
-  mInvalidRect = mInvalidRegion.GetBounds();
-
   RefPtr<CompositingRenderTarget> target;
   if (mTarget) {
-    MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
+    MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
 
     // If we have a copy target, render into that DrawTarget directly without
     // any intermediate buffer. We don't need to call StartRemoteDrawingInRegion
@@ -905,7 +903,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     target = CreateRenderTargetAndClear(mTarget, mTargetBounds, clearRegion);
   } else if (aNativeLayer) {
 #ifdef XP_MACOSX
-    if (mInvalidRect.IsEmpty()) {
+    if (mInvalidRegion.IsEmpty()) {
       return Nothing();
     }
     NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
@@ -917,8 +915,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     }
     nativeLayer->InvalidateRegionThroughoutSwapchain(mInvalidRegion);
     mInvalidRegion = nativeLayer->CurrentSurfaceInvalidRegion();
-    mInvalidRect = mInvalidRegion.GetBounds();
-    MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
+    MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
     mCurrentNativeLayer = aNativeLayer;
     mCurrentIOSurface = new MacIOSurface(std::move(surf));
     mCurrentIOSurface->Lock(false);
@@ -936,14 +933,14 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     LayoutDeviceIntRegion invalidRegion =
         LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion);
     BufferMode bufferMode = BufferMode::BUFFERED;
+    // StartRemoteDrawingInRegion can mutate invalidRegion.
     RefPtr<DrawTarget> dt =
         mWidget->StartRemoteDrawingInRegion(invalidRegion, &bufferMode);
     if (!dt) {
       return Nothing();
     }
     mInvalidRegion = invalidRegion.ToUnknownRegion();
-    mInvalidRect = mInvalidRegion.GetBounds();
-    if (mInvalidRect.IsEmpty()) {
+    if (mInvalidRegion.IsEmpty()) {
       mWidget->EndRemoteDrawingInRegion(dt, invalidRegion);
       return Nothing();
     }
@@ -953,16 +950,17 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
 
     if (bufferMode == BufferMode::BUFFERED) {
       // Buffer drawing via a back buffer.
+      IntRect backBufferRect = mInvalidRegion.GetBounds();
       bool isCleared = false;
       RefPtr<DrawTarget> backBuffer =
-          mWidget->GetBackBufferDrawTarget(dt, mInvalidRect, &isCleared);
+          mWidget->GetBackBufferDrawTarget(dt, backBufferRect, &isCleared);
       if (!backBuffer) {
         mWidget->EndRemoteDrawingInRegion(dt, invalidRegion);
         return Nothing();
       }
       // Set up a render target for drawirg to the back buffer.
       target = CreateRenderTargetAndClear(
-          backBuffer, mInvalidRect, isCleared ? IntRegion() : clearRegion);
+          backBuffer, backBufferRect, isCleared ? IntRegion() : clearRegion);
       mFrontBuffer = dt;
       // We will copy the drawing from the back buffer into mFrontBuffer (the
       // widget) in EndRemoteDrawing().
@@ -972,10 +970,11 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
       // space. It can either cover the entire window, or it can cover just the
       // invalid region. We discern between the two cases by comparing the
       // DrawTarget's size with the invalild region's size.
-      IntRect dtBounds(IntPoint(), dt->GetSize());
-      if (dtBounds.Size() == mInvalidRect.Size()) {
-        dtBounds.MoveTo(mInvalidRect.TopLeft());
-      }
+      IntRect invalidRect = mInvalidRegion.GetBounds();
+      IntPoint dtLocation = dt->GetSize() == invalidRect.Size()
+                                ? invalidRect.TopLeft()
+                                : IntPoint(0, 0);
+      IntRect dtBounds(dtLocation, dt->GetSize());
 
       // Set up a render target for drawing directly to dt.
       target = CreateRenderTargetAndClear(dt, dtBounds, clearRegion);
@@ -985,8 +984,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
   MOZ_RELEASE_ASSERT(target);
   SetRenderTarget(target);
 
-  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
-                         mInvalidRegion.ToUnknownRegion());
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, mInvalidRegion);
 
   mRenderTarget->mDrawTarget->PushClipRect(Rect(aClipRect.valueOr(rect)));
 
@@ -1004,9 +1002,8 @@ void BasicCompositor::EndFrame() {
     float g = float(rand()) / float(RAND_MAX);
     float b = float(rand()) / float(RAND_MAX);
     // We're still clipped to mInvalidRegion, so just fill the bounds.
-    mRenderTarget->mDrawTarget->FillRect(
-        IntRectToRect(mInvalidRegion.GetBounds()).ToUnknownRect(),
-        ColorPattern(Color(r, g, b, 0.2f)));
+    mRenderTarget->mDrawTarget->FillRect(Rect(mInvalidRegion.GetBounds()),
+                                         ColorPattern(Color(r, g, b, 0.2f)));
   }
 
   // Pop aInvalidregion
