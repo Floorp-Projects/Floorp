@@ -947,8 +947,14 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     assert(!strcmp(nr_ice_candidate_type_names[HOST], "host"));
     assert(!strcmp(nr_ice_candidate_type_names[RELAYED], "relay"));
 
-    if(r=nr_transport_addr_get_addrstring(&cand->addr,addr,sizeof(addr)))
-      ABORT(r);
+    if (cand->mdns_addr) {
+      /* mdns_addr is NSID_LENGTH which is 39, - 2 for removing the "{" and "}"
+         + 6 for ".local" for a total of 43. */
+      strncpy(addr, cand->mdns_addr, sizeof(addr) - 1);
+    } else {
+      if(r=nr_transport_addr_get_addrstring(&cand->addr,addr,sizeof(addr)))
+        ABORT(r);
+    }
     if(r=nr_transport_addr_get_port(&cand->addr,&port))
       ABORT(r);
     /* https://tools.ietf.org/html/rfc6544#section-4.5 */
