@@ -16,11 +16,12 @@ import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailActi
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
-import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
+import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -301,6 +302,8 @@ class Session(
      */
     var trackerBlockingEnabled: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onTrackerBlockingEnabledChanged(this@Session, new) }
+
+        store?.syncDispatch(TrackingProtectionAction.ToggleAction(id, new))
     }
 
     /**
@@ -312,6 +315,18 @@ class Session(
                 onTrackerBlocked(this@Session, new.last(), new)
             }
         }
+
+        if (new.isEmpty()) {
+            // From `EngineObserver` we can assume that this means the trackers have been cleared.
+            // The `ClearTrackers` action will also clear the loaded trackers list. That is always
+            // the case when this list is cleared from `EngineObserver`. For the sake of migrating
+            // to browser-state we assume that no other code changes the tracking properties.
+            store?.syncDispatch(TrackingProtectionAction.ClearTrackers(id))
+        } else {
+            // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
+            // an action for the last item in the list.
+            store?.syncDispatch(TrackingProtectionAction.TrackerBlockedAction(id, new.last()))
+        }
     }
 
     /**
@@ -322,6 +337,14 @@ class Session(
             if (new.isNotEmpty()) {
                 onTrackerLoaded(this@Session, new.last(), new)
             }
+        }
+
+        if (new.isNotEmpty()) {
+            // The empty case is already handled by the `trackersBlocked` property since both
+            // properties are always cleared together by `EngineObserver`.
+            // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
+            // an action for the last item in the list.
+            store?.syncDispatch(TrackingProtectionAction.TrackerLoadedAction(id, new.last()))
         }
     }
 

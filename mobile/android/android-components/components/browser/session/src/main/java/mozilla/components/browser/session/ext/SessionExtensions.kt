@@ -9,12 +9,13 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.TrackingProtectionState
 
 /**
  * Create a matching [TabSessionState] from a [Session].
  */
 fun Session.toTabSessionState(): TabSessionState {
-    return TabSessionState(id, toContentState())
+    return TabSessionState(id, toContentState(), toTrackingProtectionState())
 }
 
 /**
@@ -43,3 +44,12 @@ private fun Session.toContentState(): ContentState {
 fun Session.SecurityInfo.toSecurityInfoState(): SecurityInfoState {
     return SecurityInfoState(secure, host, issuer)
 }
+
+/**
+ * Creates a matching [TrackingProtectionState] from a [Session].
+ */
+private fun Session.toTrackingProtectionState(): TrackingProtectionState = TrackingProtectionState(
+    enabled = trackerBlockingEnabled,
+    blockedTrackers = trackersBlocked,
+    loadedTrackers = trackersLoaded
+)
