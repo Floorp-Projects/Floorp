@@ -133,8 +133,8 @@ add_task(async function testDoNotTrack() {
 });
 
 add_task(async function testExperiments() {
-  const active = { name: "active", expired: false };
-  const expired = { name: "expired", expired: true };
+  const active = { slug: "active", expired: false };
+  const expired = { slug: "expired", expired: true };
   const getAll = sinon
     .stub(PreferenceExperiments, "getAll")
     .callsFake(async () => [active, expired]);

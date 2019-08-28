@@ -58,6 +58,7 @@ const NormandyMigrations = {
     PreferenceExperiments.migrations.migration01MoveExperiments,
     PreferenceExperiments.migrations.migration02MultiPreference,
     PreferenceExperiments.migrations.migration03AddActionName,
+    PreferenceExperiments.migrations.migration04RenameNameToSlug,
   ],
 };
 
