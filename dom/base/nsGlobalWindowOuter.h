@@ -456,7 +456,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsCleanedUp() const { return mCleanedUp; }
 
-  bool HadOriginalOpener() const { return mHadOriginalOpener; }
+  bool HadOriginalOpener() const {
+    return GetBrowsingContext()->HadOriginalOpener();
+  }
 
   bool IsTopLevelWindow();
 
