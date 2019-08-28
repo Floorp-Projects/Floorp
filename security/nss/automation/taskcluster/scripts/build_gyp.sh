@@ -6,7 +6,7 @@ source $(dirname "$0")/tools.sh
 hg_clone https://hg.mozilla.org/projects/nspr ./nspr default
 
 # Build.
-nss/build.sh -g -v "$@"
+nss/build.sh -g -v --enable-libpkix "$@"
 
 # Package.
 if [[ $(uname) = "Darwin" ]]; then
