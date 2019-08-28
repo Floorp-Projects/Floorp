@@ -265,7 +265,6 @@ function Toolbox(
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
-  this._onTargetClosed = this._onTargetClosed.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(
     this
@@ -280,8 +279,6 @@ function Toolbox(
   this._onPausedState = this._onPausedState.bind(this);
   this._onResumedState = this._onResumedState.bind(this);
   this.isPaintFlashing = false;
-
-  this._target.on("close", this._onTargetClosed);
 
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
@@ -1070,21 +1067,6 @@ Toolbox.prototype = {
       runtimeInfo,
       targetType,
     };
-  },
-
-  _onTargetClosed: async function() {
-    const win = this.win; // .destroy() will set this.win to null
-
-    // clean up the toolbox
-    this.destroy();
-    // NOTE: we should await this.destroy() to ensure a proper clean up.
-    //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1536144
-
-    // redirect to about:toolbox error page if we are connected to a remote
-    // target and we lose it
-    if (this.hostType === Toolbox.HostType.PAGE) {
-      win.location.replace("about:devtools-toolbox?disconnected");
-    }
   },
 
   /**
@@ -3651,7 +3633,6 @@ Toolbox.prototype = {
             }
             const target = this._target;
             this._target = null;
-            target.off("close", this._onTargetClosed);
             return target.destroy();
           }, console.error)
           .then(() => {

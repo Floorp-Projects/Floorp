@@ -474,9 +474,25 @@ function TargetMixin(parentClass) {
     /**
      * Handle tabs events.
      */
-    handleEvent(event) {
+    async handleEvent(event) {
       switch (event.type) {
         case "TabClose":
+          // Always destroy the toolbox opened for this local tab target.
+          // Toolboxes are no longer destroyed on target destruction.
+          // When the toolbox is in a Window Host, it won't be removed from the
+          // DOM when the tab is closed.
+          const toolbox = gDevTools.getToolbox(this);
+          // A few tests are using TargetFactory.forTab, but aren't spawning any
+          // toolbox. In this case, the toobox won't destroy the target, so we
+          // do it from here. But ultimately, the target should destroy itself
+          // from the actor side anyway.
+          if (toolbox) {
+            // Toolbox.destroy will call target.destroy eventually.
+            await toolbox.destroy();
+          } else {
+            this.destroy();
+          }
+          break;
         case "unload":
           this.destroy();
           break;
@@ -491,7 +507,7 @@ function TargetMixin(parentClass) {
      * loaded within the parent process and loaded from a content process.
      * Process change can go in both ways.
      */
-    onRemotenessChange() {
+    async onRemotenessChange() {
       // Responsive design do a crazy dance around tabs and triggers
       // remotenesschange events. But we should ignore them as at the end
       // the content doesn't change its remoteness.
@@ -501,17 +517,15 @@ function TargetMixin(parentClass) {
 
       // Save a reference to the tab as it will be nullified on destroy
       const tab = this._tab;
-      const onToolboxDestroyed = async target => {
-        if (target != this) {
-          return;
-        }
-        gDevTools.off("toolbox-destroyed", target);
+      const toolbox = gDevTools.getToolbox(this);
 
-        // Recreate a fresh target instance as the current one is now destroyed
-        const newTarget = await TargetFactory.forTab(tab);
-        gDevTools.showToolbox(newTarget);
-      };
-      gDevTools.on("toolbox-destroyed", onToolboxDestroyed);
+      // Force destroying the toolbox as the target will be destroyed,
+      // but not the toolbox.
+      await toolbox.destroy();
+
+      // Recreate a fresh target instance as the current one is now destroyed
+      const newTarget = await TargetFactory.forTab(tab);
+      gDevTools.showToolbox(newTarget);
     }
 
     /**
