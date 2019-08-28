@@ -174,10 +174,16 @@ static bool SkipNode(const nsIContent* aContent) {
       }
     }
 
-    // Skip NAC in non-form-control.
-    if (content->IsInNativeAnonymousSubtree() &&
-        !IsTextFormControl(AnonymousSubtreeRootParent(*content))) {
-      return true;
+    if (content->IsInNativeAnonymousSubtree()) {
+      // We don't want to use almost any NAC: Only editable NAC in textfields
+      // should be findable. That is, we want to find "bar" in
+      // `<input value="bar">`, but not in `<input placeholder="bar">`.
+      if (!content->IsEditable() ||
+          !IsTextFormControl(AnonymousSubtreeRootParent(*content))) {
+        DEBUG_FIND_PRINTF("Skipping node: ");
+        DumpNode(content);
+        return true;
+      }
     }
 
     // Only climb to the nearest block node
