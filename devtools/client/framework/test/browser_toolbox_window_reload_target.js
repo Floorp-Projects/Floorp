@@ -92,16 +92,17 @@ async function testOneTool(toolbox, toolID) {
   info(`Select tool ${toolID}`);
   await toolbox.selectTool(toolID);
 
-  await testReload("toolbox.reload.key", toolbox, toolID);
-  await testReload("toolbox.reload2.key", toolbox, toolID);
-  await testReload("toolbox.forceReload.key", toolbox, toolID);
-  await testReload("toolbox.forceReload2.key", toolbox, toolID);
+  await testReload("toolbox.reload.key", toolbox);
+  await testReload("toolbox.reload2.key", toolbox);
+  await testReload("toolbox.forceReload.key", toolbox);
+  await testReload("toolbox.forceReload2.key", toolbox);
 }
 
-function testReload(shortcut, toolbox, toolID) {
+async function testReload(shortcut, toolbox) {
   info(`Reload with ${shortcut}`);
 
   const mm = gBrowser.selectedBrowser.messageManager;
+  const walker = (await toolbox.target.getFront("inspector")).walker;
 
   return new Promise(resolve => {
     const observer = {
@@ -121,12 +122,8 @@ function testReload(shortcut, toolbox, toolID) {
       },
     };
 
-    if (toolbox.walker) {
-      observer.onMutation = observer.onMutation.bind(observer);
-      toolbox.walker.on("mutations", observer.onMutation);
-    } else {
-      observer.isReady = () => true;
-    }
+    observer.onMutation = observer.onMutation.bind(observer);
+    walker.on("mutations", observer.onMutation);
 
     // If we have a jsdebugger panel, wait for it to complete its reload
     const jsdebugger = toolbox.getPanel("jsdebugger");
@@ -139,9 +136,7 @@ function testReload(shortcut, toolbox, toolID) {
       mm.removeMessageListener("devtools:test:load", complete);
       // Wait for the documentUnload and newRoot were fired.
       await waitUntil(() => observer.isReady());
-      if (toolbox.walker) {
-        toolbox.walker.off("mutations", observer.onMutation);
-      }
+      walker.off("mutations", observer.onMutation);
       await onReloaded;
       resolve();
     };

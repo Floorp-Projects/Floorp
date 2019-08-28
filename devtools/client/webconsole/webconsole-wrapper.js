@@ -382,13 +382,15 @@ class WebConsoleWrapper {
           highlightDomElement: highlight,
           unHighlightDomElement: unhighlight,
           openNodeInInspector: async grip => {
-            await this.toolbox.initInspector();
             const onSelectInspector = this.toolbox.selectTool(
               "inspector",
               "inspect_dom"
             );
             // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
-            const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
+            const walkerFront = (await this.toolbox.target.getFront(
+              "inspector"
+            )).walker;
+            const onGripNodeToFront = walkerFront.gripToNodeFront(grip);
             const [front, inspector] = await Promise.all([
               onGripNodeToFront,
               onSelectInspector,

@@ -36,7 +36,6 @@ class AccessibilityTree extends Component {
   static get propTypes() {
     return {
       accessibilityWalker: PropTypes.object,
-      getDOMWalker: PropTypes.func.isRequired,
       dispatch: PropTypes.func.isRequired,
       accessibles: PropTypes.object,
       expanded: PropTypes.object,
@@ -168,7 +167,6 @@ class AccessibilityTree extends Component {
       highlighted: highlightedItem,
       supports,
       accessibilityWalker,
-      getDOMWalker,
       filtered,
     } = this.props;
 
@@ -182,7 +180,6 @@ class AccessibilityTree extends Component {
       return AccessibilityRow(
         Object.assign({}, rowProps, {
           accessibilityWalker,
-          getDOMWalker,
           hasContextMenu,
           highlighted,
           decorator: {

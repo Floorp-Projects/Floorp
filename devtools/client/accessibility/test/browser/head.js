@@ -591,9 +591,10 @@ async function toggleMenuItem(doc, menuButtonIndex, menuItemIndex) {
 }
 
 async function findAccessibleFor(
-  { toolbox: { walker: domWalker }, panel: { walker: accessibilityWalker } },
+  { toolbox: { target }, panel: { walker: accessibilityWalker } },
   selector
 ) {
+  const domWalker = (await target.getFront("inspector")).walker;
   const node = await domWalker.querySelector(domWalker.rootNode, selector);
   return accessibilityWalker.getAccessibleFor(node);
 }
