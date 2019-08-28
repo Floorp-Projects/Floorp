@@ -634,7 +634,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   // New candidate
   void GotCandidate(NrIceMediaStream* stream, const std::string& candidate,
-                    const std::string& ufrag) {
+                    const std::string& ufrag, const std::string& mdns_addr,
+                    const std::string& actual_addr) {
     std::cerr << "Got candidate " << candidate << " (ufrag=" << ufrag << ")"
               << std::endl;
   }
