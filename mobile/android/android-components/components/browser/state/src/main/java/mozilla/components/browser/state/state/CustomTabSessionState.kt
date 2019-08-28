@@ -11,8 +11,17 @@ import java.util.UUID
  *
  * @property id the ID of this custom tab and session.
  * @property content the [ContentState] of this custom tab.
+ * @property trackingProtection the [TrackingProtectionState] of this custom tab.
  */
 data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),
-    override val content: ContentState
+    override val content: ContentState,
+    override val trackingProtection: TrackingProtectionState = TrackingProtectionState()
 ) : SessionState
+
+internal fun createCustomTab(url: String, id: String = UUID.randomUUID().toString()): CustomTabSessionState {
+    return CustomTabSessionState(
+        id = id,
+        content = ContentState(url)
+    )
+}
