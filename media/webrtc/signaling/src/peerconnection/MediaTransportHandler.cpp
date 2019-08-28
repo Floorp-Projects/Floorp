@@ -1435,9 +1435,8 @@ NS_IMPL_ISUPPORTS(MediaTransportHandlerSTS::DNSListener, nsIDNSListener);
 
 nsresult MediaTransportHandlerSTS::DNSListener::OnLookupComplete(
     nsICancelable* aRequest, nsIDNSRecord* aRecord, nsresult aStatus) {
-  MOZ_ASSERT(mTransportHandler.mStsThread->IsOnCurrentThread());
-
   if (mCancel) {
+    MOZ_ASSERT(mTransportHandler.mStsThread->IsOnCurrentThread());
     if (NS_SUCCEEDED(aStatus)) {
       nsTArray<net::NetAddr> addresses;
       aRecord->GetAddresses(addresses);
