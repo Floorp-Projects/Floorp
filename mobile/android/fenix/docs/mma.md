@@ -210,12 +210,7 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>`E_Sign_Out_FxA`</td>
     <td>The user successfully signed out of FxA</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
-  </tr> 
-  <tr>
-    <td>`E_New_Sign_Up_FxA`</td>
-    <td>The user successfully signed up for a new FxA account</td>
-    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
-  </tr>  
+  </tr>
   <tr>
     <td>`E_Cleared_Private_Data`</td>
     <td>The user cleared one or many types of private data</td>

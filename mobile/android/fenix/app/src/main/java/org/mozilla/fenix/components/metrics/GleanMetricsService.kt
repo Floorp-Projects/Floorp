@@ -226,9 +226,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAuthSignOut -> EventWrapper<NoExtraKeys>(
             { SyncAuth.signOut.record(it) }
         )
-        is Event.FXANewSignup -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.signUp.record(it) }
-        )
         is Event.SyncAuthScanPairing -> EventWrapper<NoExtraKeys>(
             { SyncAuth.scanPairing.record(it) }
         )

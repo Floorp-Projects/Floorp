@@ -654,14 +654,6 @@ tracking_protection</td>
         <td>2020-03-01</td>
     </tr>
     <tr>
-        <td>sign_up</td>
-        <td>event</td>
-        <td> A user signed up for a new FxA account</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4816#issuecomment-522643217">link</a></td>
-        <td></td>
-        <td>2020-03-01</td>
-    </tr>
-    <tr>
         <td>scan_pairing</td>
         <td>event</td>
         <td>A user pressed the scan pairing button on the sync authentication page</td>

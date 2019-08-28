@@ -146,7 +146,6 @@ class BackgroundServices(
 
         override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
             if (newAccount) {
-                context.components.analytics.metrics.track(Event.FXANewSignup)
                 push.subscribeForType(PushType.Services)
             }
 

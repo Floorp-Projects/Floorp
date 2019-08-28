@@ -28,7 +28,6 @@ sealed class Event {
     // Interaction Events
     object OpenedAppFirstRun : Event()
     object InteractWithSearchURLArea : Event()
-    object FXANewSignup : Event()
     object DismissedOnboarding : Event()
     object ClearedPrivateData : Event()
     object SearchShortcutMenuOpened : Event()

@@ -26,7 +26,6 @@ private val Event.name: String?
         is Event.CollectionTabRestored -> "E_Collection_Tab_Opened"
         is Event.SyncAuthSignIn -> "E_Sign_In_FxA"
         is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
-        is Event.FXANewSignup -> "E_New_Sign_Up_FxA"
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
         is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"
 
