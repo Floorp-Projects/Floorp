@@ -132,7 +132,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   // The name and opener fields need to be explicitly initialized. Don't bother
   // using transactions to set them, as we haven't been attached yet.
   context->mName = aName;
-  context->mOpenerId = aOpener ? aOpener->Id() : 0;
+  if (aOpener) {
+    context->mOpenerId = aOpener->Id();
+    context->mHadOriginalOpener = true;
+  }
   context->mEmbedderPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   BrowsingContext* inherit = aParent ? aParent : aOpener;
