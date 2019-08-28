@@ -33,7 +33,7 @@ def uploadApk(apk,key):
 
 
 def uploadNightlyFenixApk(key):
-	apk_url = 'https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/arm/target.apk'
+	apk_url = 'https://index.taskcluster.net/v1/task/project.mobile.fenix.v2.nightly.latest/artifacts/public/build/armeabi-v7a/geckoNightly/target.apk'
 	apk_data = urllib2.urlopen(apk_url).read()
 	with open('./fenix_example_nd.apk', 'wb') as f:
     		f.write(apk_data)
