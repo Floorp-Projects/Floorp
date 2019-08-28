@@ -1225,10 +1225,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
         goodSpace =
             mLineBreaker->Prev(mCurrentLineContent.mValue.get(),
                                mCurrentLineContent.mValue.Length(), goodSpace);
-        if (goodSpace !=
-                NS_LINEBREAKER_NEED_MORE_TEXT &&  // MB: surprisingly goodSpace
-                                                  // ==
-                                                  // NS_LINEBREAKER_NEED_MORE_TEXT.
+        if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
             nsCRT::IsAsciiSpace(
                 mCurrentLineContent.mValue.CharAt(goodSpace - 1))) {
           --goodSpace;  // adjust the position since line breaker returns a
