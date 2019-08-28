@@ -574,10 +574,6 @@ menuitem.bookmark-item {
 %include ../shared/autocomplete.inc.css
 %include ../shared/urlbar-autocomplete.inc.css
 
-.urlbarView {
-  font-size: 1.15em;
-}
-
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
 }
