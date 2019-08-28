@@ -15,6 +15,7 @@ DevToolsModules(
     'Badge.js',
     'Badges.js',
     'Button.js',
+    'Check.js',
     'Checks.js',
     'ColorContrastAccessibility.js',
     'ContrastBadge.js',
