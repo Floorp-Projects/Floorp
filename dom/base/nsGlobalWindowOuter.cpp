@@ -3224,7 +3224,12 @@ nsresult nsGlobalWindowOuter::GetControllers(nsIControllers** aResult) {
 
 already_AddRefed<BrowsingContext>
 nsGlobalWindowOuter::GetOpenerBrowsingContext() {
-  RefPtr<BrowsingContext> opener = GetBrowsingContext()->GetOpener();
+  RefPtr<BrowsingContext> bc(GetBrowsingContext());
+  if (bc->IsDiscarded()) {
+    return nullptr;
+  }
+
+  RefPtr<BrowsingContext> opener = bc->GetOpener();
   MOZ_DIAGNOSTIC_ASSERT(!opener ||
                         opener->Group() == GetBrowsingContext()->Group());
   if (!opener || opener->Group() != GetBrowsingContext()->Group()) {
