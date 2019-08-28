@@ -521,14 +521,6 @@ Toolbox.prototype = {
   },
 
   /**
-   * Get the toolbox's walker front. Note that it may not always have been
-   * initialized first. Use `initInspector()` if needed.
-   */
-  get walker() {
-    return this._walker;
-  },
-
-  /**
    * Get the toggled state of the split console
    */
   get splitConsole() {
@@ -3325,7 +3317,6 @@ Toolbox.prototype = {
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
         this._inspector = await this.target.getFront("inspector");
-        this._walker = this.inspectorFront.walker;
         this.nodePicker = new NodePicker(this.target, this.selection);
 
         this.nodePicker.on("picker-starting", this._onPickerStarting);
@@ -3334,7 +3325,7 @@ Toolbox.prototype = {
         this.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
         this.nodePicker.on("picker-node-picked", this._onPickerPicked);
         this.nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
-        registerWalkerListeners(this);
+        registerWalkerListeners(this.store, this._inspector.walker);
       }.bind(this)();
     }
     return this._initInspector;
@@ -3448,7 +3439,6 @@ Toolbox.prototype = {
     this._inspector.destroy();
 
     this._inspector = null;
-    this._walker = null;
   },
 
   /**

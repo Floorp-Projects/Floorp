@@ -111,7 +111,6 @@ class Accessible extends Component {
       relations: PropTypes.object,
       supports: PropTypes.object,
       accessibilityWalker: PropTypes.object.isRequired,
-      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -171,11 +170,13 @@ class Accessible extends Component {
   }
 
   async update() {
-    const { dispatch, accessible, supports, getDOMWalker } = this.props;
-    const domWalker = await getDOMWalker();
-    if (!domWalker || !accessible.actorID) {
+    const { dispatch, accessible, supports } = this.props;
+    if (!accessible.actorID) {
       return;
     }
+
+    const domWalker = (await accessible.targetFront.getFront("inspector"))
+      .walker;
 
     dispatch(updateDetails(domWalker, accessible, supports));
   }
