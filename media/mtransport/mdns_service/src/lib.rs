@@ -7,12 +7,14 @@ use get_if_addrs;
 use socket2::{Domain, Socket, Type};
 use std::collections::HashMap;
 use std::ffi::CStr;
+use std::ffi::CString;
 use std::io;
 use std::net;
 use std::os::raw::c_char;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
+use uuid::Uuid;
 
 #[macro_use]
 extern crate log;
@@ -299,5 +301,23 @@ pub extern "C" fn mdns_service_unregister_hostname(
     unsafe {
         let hostname = CStr::from_ptr(hostname).to_string_lossy();
         (*serv).unregister_hostname(&hostname);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mdns_service_generate_uuid() -> *const c_char {
+    let uuid = Uuid::new_v4().to_hyphenated().to_string();
+    match CString::new(uuid) {
+        Ok(uuid) => {
+            uuid.into_raw()
+        }
+        Err(_) => unreachable!()  // UUID should not contain 0 byte
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mdns_service_free_uuid(uuid: *mut c_char) {
+    unsafe {
+        CString::from_raw(uuid);
     }
 }
