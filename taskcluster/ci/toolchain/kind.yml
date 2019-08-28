@@ -29,6 +29,7 @@ jobs-from:
     - clang-tidy.yml
     - clang.yml
     - gcc.yml
+    - geckodriver.yml
     - gn.yml
     - grcov.yml
     - mingw.yml
