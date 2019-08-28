@@ -1652,14 +1652,6 @@ PeerConnectionWrapper.prototype = {
         "usernameFragment not empty"
       );
 
-      // only check the m-section for the updated default addr that corresponds
-      // with this candidate.
-      var mSections = this.localDescription.sdp.split("\r\nm=");
-      sdputils.checkSdpCLineNotDefault(
-        mSections[anEvent.candidate.sdpMLineIndex + 1],
-        this.label
-      );
-
       ok(
         typeof anEvent.candidate.sdpMLineIndex === "number",
         "SDP MLine Index needs to exist"

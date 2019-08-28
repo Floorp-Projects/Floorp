@@ -1372,8 +1372,13 @@ void MediaTransportHandlerSTS::OnCandidateFound(
   NrIceCandidate defaultRtcpCandidate;
   nsresult rv = aStream->GetDefaultCandidate(1, &defaultRtpCandidate);
   if (NS_SUCCEEDED(rv)) {
-    info.mDefaultHostRtp = defaultRtpCandidate.cand_addr.host;
-    info.mDefaultPortRtp = defaultRtpCandidate.cand_addr.port;
+    if (!defaultRtpCandidate.mdns_addr.empty()) {
+      info.mDefaultHostRtp = "0.0.0.0";
+      info.mDefaultPortRtp = 9;
+    } else {
+      info.mDefaultHostRtp = defaultRtpCandidate.cand_addr.host;
+      info.mDefaultPortRtp = defaultRtpCandidate.cand_addr.port;
+    }
   } else {
     CSFLogError(LOGTAG,
                 "%s: GetDefaultCandidates failed for transport id %s, "
@@ -1384,7 +1389,11 @@ void MediaTransportHandlerSTS::OnCandidateFound(
 
   // Optional; component won't exist if doing rtcp-mux
   if (NS_SUCCEEDED(aStream->GetDefaultCandidate(2, &defaultRtcpCandidate))) {
-    info.mDefaultHostRtcp = defaultRtcpCandidate.cand_addr.host;
+    if (!defaultRtcpCandidate.mdns_addr.empty()) {
+      info.mDefaultHostRtcp = defaultRtcpCandidate.mdns_addr;
+    } else {
+      info.mDefaultHostRtcp = defaultRtcpCandidate.cand_addr.host;
+    }
     info.mDefaultPortRtcp = defaultRtcpCandidate.cand_addr.port;
   }
 
