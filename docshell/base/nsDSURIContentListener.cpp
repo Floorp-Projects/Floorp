@@ -16,6 +16,7 @@
 #include "nsError.h"
 #include "nsContentSecurityManager.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 
@@ -48,10 +49,11 @@ nsIInterfaceRequestor* MaybeCloseWindowHelper::MaybeCloseWindow() {
   if (mShouldCloseWindow) {
     // Reset the window context to the opener window so that the dependent
     // dialogs have a parent
-    nsCOMPtr<nsPIDOMWindowOuter> opener = window->GetOpener();
+    nsCOMPtr<nsPIDOMWindowOuter> opener =
+        nsGlobalWindowOuter::Cast(window)->GetSameProcessOpener();
 
     if (opener && !opener->Closed()) {
-      mContentContext = do_GetInterface(opener);
+      mContentContext = do_QueryInterface(opener);
 
       // Now close the old window.  Do it on a timer so that we don't run
       // into issues trying to close the window before it has fully opened.

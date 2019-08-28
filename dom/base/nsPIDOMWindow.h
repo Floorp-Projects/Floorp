@@ -1047,7 +1047,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
   virtual already_AddRefed<mozilla::dom::Selection> GetSelection() = 0;
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
+  virtual mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder>
+  GetOpener() = 0;
 
   // aLoadState will be passed on through to the windowwatcher.
   // aForceNoOpener will act just like a "noopener" feature in aOptions except
