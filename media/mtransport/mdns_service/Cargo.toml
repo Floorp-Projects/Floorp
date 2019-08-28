@@ -10,3 +10,4 @@ dns-parser = "0.8.0"
 log = "0.4"
 mio = "0.6"
 socket2 = { version = "0.3.9", features = ["reuseport"] }
+uuid = { version = "0.7", features = ["v4"] }
