@@ -299,6 +299,18 @@ bool PeerConnectionMedia::GetPrefDefaultAddressOnly() const {
   return default_address_only;
 }
 
+bool PeerConnectionMedia::GetPrefObfuscateHostAddresses() const {
+  ASSERT_ON_THREAD(mMainThread);  // will crash on STS thread
+
+  uint64_t winId = mParent->GetWindow()->WindowID();
+
+  bool obfuscate_host_addresses = Preferences::GetBool(
+      "media.peerconnection.ice.obfuscate_host_addresses", false);
+  obfuscate_host_addresses &=
+      !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
+  return obfuscate_host_addresses;
+}
+
 void PeerConnectionMedia::ConnectSignals() {
   mTransportHandler->SignalGatheringStateChange.connect(
       this, &PeerConnectionMedia::IceGatheringStateChange_s);
@@ -350,7 +362,8 @@ void PeerConnectionMedia::GatherIfReady() {
   mQueuedIceCtxOperations.clear();
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
       RefPtr<PeerConnectionMedia>(this),
-      &PeerConnectionMedia::EnsureIceGathering, GetPrefDefaultAddressOnly()));
+      &PeerConnectionMedia::EnsureIceGathering, GetPrefDefaultAddressOnly(),
+      GetPrefObfuscateHostAddresses()));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }
@@ -400,7 +413,8 @@ nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
   return NS_OK;
 }
 
-void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
+void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly,
+                                             bool aObfuscateHostAddresses) {
   if (mProxyConfig) {
     // Note that this could check if PrivacyRequested() is set on the PC and
     // remove "webrtc" from the ALPN list.  But that would only work if the PC
@@ -430,7 +444,8 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
     return;
   }
 
-  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mStunAddrs);
+  mTransportHandler->StartIceGathering(aDefaultRouteOnly,
+                                       aObfuscateHostAddresses, mStunAddrs);
 }
 
 void PeerConnectionMedia::SelfDestruct() {
