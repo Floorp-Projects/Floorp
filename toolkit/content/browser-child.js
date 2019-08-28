@@ -10,12 +10,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
-const { WebProgressChild } = ChromeUtils.import(
-  "resource://gre/modules/WebProgressChild.jsm"
-);
-
-this.WebProgress = new WebProgressChild(this);
-
 try {
   docShell
     .QueryInterface(Ci.nsIInterfaceRequestor)
