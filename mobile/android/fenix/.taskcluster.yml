@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 version: 1
 policy:
-  pullRequests: public
+  # XXX We restrict taskcluster to collaborators so priviledged tests (like UI tests) can run on PRs
+  pullRequests: collaborators
 tasks:
   $let:
     decision_task_id: {$eval: as_slugid("decision_task")}
