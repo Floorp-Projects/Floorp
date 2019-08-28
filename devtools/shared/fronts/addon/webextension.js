@@ -20,10 +20,7 @@ loader.lazyRequireGetter(
 class WebExtensionFront extends FrontClassWithSpec(webExtensionSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-
     this.client = client;
-
-    this.traits = {};
   }
 
   form(json) {
