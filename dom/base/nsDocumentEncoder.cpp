@@ -239,7 +239,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   nsresult SerializeToStringRecursive(nsINode* aNode, nsAString& aStr,
                                       bool aDontSerializeRoot,
                                       uint32_t aMaxLength = 0);
-  nsresult SerializeNodeEnd(nsINode& aNode, nsAString& aStr);
+  nsresult SerializeNodeEnd(nsINode& aOriginalNode, nsAString& aStr,
+                            nsINode* aFixupNode = nullptr);
   // This serializes the content of aNode.
   nsresult SerializeToStringIterative(nsINode* aNode, nsAString& aStr);
   nsresult SerializeRangeToString(nsRange* aRange, nsAString& aOutputString);
@@ -660,9 +661,8 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
         nsLayoutUtils::IsInvisibleBreak(node)) {
       return rv;
     }
-    Element* originalElement = aOriginalNode.AsElement();
-    rv = mSerializer->AppendElementStart(node->AsElement(), originalElement,
-                                         aStr);
+    rv = mSerializer->AppendElementStart(node->AsElement(),
+                                         aOriginalNode.AsElement(), aStr);
     return rv;
   }
 
@@ -697,26 +697,33 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
   return rv;
 }
 
-nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aNode, nsAString& aStr) {
+nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aOriginalNode,
+                                             nsAString& aStr,
+                                             nsINode* aFixupNode) {
   if (mNeedsPreformatScanning) {
-    if (aNode.IsElement()) {
-      mSerializer->ForgetElementForPreformat(aNode.AsElement());
-    } else if (aNode.IsText()) {
-      const nsCOMPtr<nsINode> parent = aNode.GetParent();
+    if (aOriginalNode.IsElement()) {
+      mSerializer->ForgetElementForPreformat(aOriginalNode.AsElement());
+    } else if (aOriginalNode.IsText()) {
+      const nsCOMPtr<nsINode> parent = aOriginalNode.GetParent();
       if (parent && parent->IsElement()) {
         mSerializer->ForgetElementForPreformat(parent->AsElement());
       }
     }
   }
 
-  if (IsInvisibleNodeAndShouldBeSkipped(aNode)) {
+  if (IsInvisibleNodeAndShouldBeSkipped(aOriginalNode)) {
     return NS_OK;
   }
 
   nsresult rv = NS_OK;
 
-  if (aNode.IsElement()) {
-    rv = mSerializer->AppendElementEnd(aNode.AsElement(), aStr);
+  FixupNodeDeterminer fixupNodeDeterminer{mNodeFixup, aFixupNode,
+                                          aOriginalNode};
+  nsINode* node = &fixupNodeDeterminer.GetFixupNodeFallBackToOriginalNode();
+
+  if (node->IsElement()) {
+    rv = mSerializer->AppendElementEnd(node->AsElement(),
+                                       aOriginalNode.AsElement(), aStr);
   }
 
   return rv;
@@ -773,7 +780,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   }
 
   if (!aDontSerializeRoot) {
-    rv = SerializeNodeEnd(*maybeFixedNode, aStr);
+    rv = SerializeNodeEnd(*aNode, aStr, maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

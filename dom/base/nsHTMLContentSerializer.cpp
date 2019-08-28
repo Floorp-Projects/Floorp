@@ -256,7 +256,9 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendElementEnd(Element* aElement, nsAString& aStr) {
+nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
+                                          Element* aOriginalElement,
+                                          nsAString& aStr) {
   NS_ENSURE_ARG(aElement);
 
   nsAtom* name = aElement->NodeInfo()->NameAtom();

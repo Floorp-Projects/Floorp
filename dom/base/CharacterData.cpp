@@ -489,6 +489,11 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   UpdateEditableState(false);
 
+  // Ensure we only do these once, in the case we move the shadow host around.
+  if (aContext.SubtreeRootChanges()) {
+    HandleShadowDOMRelatedInsertionSteps(hadParent);
+  }
+
   MOZ_ASSERT(OwnerDoc() == aParent.OwnerDoc(), "Bound to wrong document");
   MOZ_ASSERT(IsInComposedDoc() == aContext.InComposedDoc());
   MOZ_ASSERT(IsInUncomposedDoc() == aContext.InUncomposedDoc());
@@ -505,6 +510,8 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
 void CharacterData::UnbindFromTree(bool aNullParent) {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
+
+  HandleShadowDOMRelatedRemovalSteps(aNullParent);
 
   Document* document = GetComposedDoc();
 

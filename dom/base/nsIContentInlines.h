@@ -221,4 +221,51 @@ inline bool nsIContent::IsInAnonymousSubtree() const {
   return !bindingParent->GetShadowRoot();
 }
 
+inline void nsIContent::HandleInsertionToOrRemovalFromSlot() {
+  using mozilla::dom::HTMLSlotElement;
+
+  MOZ_ASSERT(GetParentElement());
+  if (!IsInShadowTree() || IsRootOfAnonymousSubtree()) {
+    return;
+  }
+  HTMLSlotElement* slot = HTMLSlotElement::FromNode(mParent);
+  if (!slot) {
+    return;
+  }
+  // If parent's root is a shadow root, and parent is a slot whose
+  // assigned nodes is the empty list, then run signal a slot change for
+  // parent.
+  if (slot->AssignedNodes().IsEmpty()) {
+    slot->EnqueueSlotChangeEvent();
+  }
+}
+
+inline void nsIContent::HandleShadowDOMRelatedInsertionSteps(bool aHadParent) {
+  using mozilla::dom::Element;
+  using mozilla::dom::ShadowRoot;
+
+  if (!aHadParent) {
+    if (Element* parentElement = Element::FromNode(mParent)) {
+      if (ShadowRoot* shadow = parentElement->GetShadowRoot()) {
+        shadow->MaybeSlotHostChild(*this);
+      }
+      HandleInsertionToOrRemovalFromSlot();
+    }
+  }
+}
+
+inline void nsIContent::HandleShadowDOMRelatedRemovalSteps(bool aNullParent) {
+  using mozilla::dom::Element;
+  using mozilla::dom::ShadowRoot;
+
+  if (aNullParent) {
+    if (Element* parentElement = Element::FromNode(mParent)) {
+      if (ShadowRoot* shadow = parentElement->GetShadowRoot()) {
+        shadow->MaybeUnslotHostChild(*this);
+      }
+      HandleInsertionToOrRemovalFromSlot();
+    }
+  }
+}
+
 #endif  // nsIContentInlines_h
