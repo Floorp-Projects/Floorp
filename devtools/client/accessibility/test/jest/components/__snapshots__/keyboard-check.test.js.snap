@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KeyboardCheck component: WARNING render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/alert.svg\\" class=\\"icon WARNING\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`KeyboardCheck component: WARNING render 2`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/alert.svg\\" class=\\"icon WARNING\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`KeyboardCheck component: fail render 1`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/error.svg\\" class=\\"icon fail\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
+
+exports[`KeyboardCheck component: fail render 2`] = `"<div role=\\"presentation\\" class=\\"accessibility-check\\"><h3 class=\\"accessibility-check-header\\"></h3><div role=\\"presentation\\"><img src=\\"chrome://devtools/skin/images/error.svg\\" class=\\"icon fail\\"><p class=\\"accessibility-check-annotation\\"></p></div></div>"`;
