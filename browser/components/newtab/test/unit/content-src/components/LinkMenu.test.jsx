@@ -482,5 +482,42 @@ describe("<LinkMenu>", () => {
           }
         });
     });
+    it(`should pin a SPOC with all of the site details sent`, () => {
+      const pinSpocTopSite = "PinSpocTopSite";
+      const { options: spocOptions } = shallow(
+        <LinkMenu
+          site={FAKE_SITE}
+          siteInfo={{ value: { card_type: FAKE_SITE.type } }}
+          dispatch={dispatch}
+          index={FAKE_INDEX}
+          isPrivateBrowsingEnabled={true}
+          platform={"default"}
+          options={[pinSpocTopSite]}
+          source={FAKE_SOURCE}
+          shouldSendImpressionStats={true}
+        />
+      )
+        .find(ContextMenu)
+        .props();
+
+      const [pinSpocOption] = spocOptions;
+      pinSpocOption.onClick();
+
+      if (pinSpocOption.impression && pinSpocOption.userEvent) {
+        assert.calledThrice(dispatch);
+      } else if (pinSpocOption.impression || pinSpocOption.userEvent) {
+        assert.calledTwice(dispatch);
+      } else {
+        assert.calledOnce(dispatch);
+      }
+
+      // option.action is dispatched
+      assert.ok(dispatch.firstCall.calledWith(pinSpocOption.action));
+
+      assert.deepEqual(pinSpocOption.action.data, {
+        site: FAKE_SITE,
+        index: FAKE_INDEX,
+      });
+    });
   });
 });
