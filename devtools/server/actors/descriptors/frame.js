@@ -11,7 +11,7 @@ const {
 
 loader.lazyRequireGetter(
   this,
-  "FrameConnector",
+  "connectToFrame",
   "devtools/server/connectors/frame-connector",
   true
 );
@@ -32,11 +32,7 @@ const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
    * Connect to a remote process actor, always a Frame target.
    */
   async _connectMessageManager() {
-    return FrameConnector.startServer(
-      this.conn,
-      this._embedderElement,
-      this.destroy
-    );
+    return connectToFrame(this.conn, this._embedderElement, this.destroy);
   },
 
   async _connectBrowsingContext() {

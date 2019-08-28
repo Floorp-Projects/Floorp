@@ -1,33 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ManifestSection renders the expected snapshot for a populated section 1`] = `
-<table
+<section
   className="manifest-section "
 >
-  <caption
+  <h2
     className="manifest-section__title"
   >
     Lorem ipsum
-  </caption>
-  <tbody>
-    <tr>
-      <td>
-        foo
-      </td>
-    </tr>
-  </tbody>
-</table>
+  </h2>
+  <tr>
+    <td>
+      foo
+    </td>
+  </tr>
+</section>
 `;
 
 exports[`ManifestSection renders the expected snapshot for a section with no children 1`] = `
-<table
+<section
   className="manifest-section manifest-section--empty"
 >
-  <caption
+  <h2
     className="manifest-section__title"
   >
     Lorem ipsum
-  </caption>
-  <tbody />
-</table>
+  </h2>
+</section>
 `;

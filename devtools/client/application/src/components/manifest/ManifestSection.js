@@ -7,9 +7,8 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const {
-  caption,
-  table,
-  tbody,
+  h2,
+  section,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
@@ -27,14 +26,14 @@ class ManifestSection extends PureComponent {
     const { children, title } = this.props;
     const isEmpty = !children || children.length === 0;
 
-    return table(
+    return section(
       {
         className: `manifest-section ${
           isEmpty ? "manifest-section--empty" : ""
         }`,
       },
-      caption({ className: "manifest-section__title" }, title),
-      tbody({}, children)
+      h2({ className: "manifest-section__title" }, title),
+      children
     );
   }
 }

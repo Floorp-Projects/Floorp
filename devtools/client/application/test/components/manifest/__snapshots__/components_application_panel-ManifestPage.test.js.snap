@@ -43,13 +43,19 @@ exports[`ManifestPage renders the expected snapshot 1`] = `
         },
       ]
     }
-    warnings={
+    validation={
       Array [
         Object {
-          "warn": "Icons item at index 0 is invalid.",
+          "level": "warning",
+          "message": "Icons item at index 0 is invalid.",
         },
         Object {
-          "warn": "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
+          "level": "error",
+          "message": "Random JSON error",
+        },
+        Object {
+          "level": "warning",
+          "message": "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
         },
       ]
     }

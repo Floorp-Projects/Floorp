@@ -42,6 +42,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 
@@ -1490,7 +1491,8 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
   if (aIsUnload) {
     // Poke the GC. The window might be collectable garbage now.
     nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE,
-                        mDocument->GetWrapperPreserveColor(), NS_GC_DELAY * 2);
+                        mDocument->GetWrapperPreserveColor(),
+                        StaticPrefs::javascript_options_gc_delay() * 2);
   }
 
   mDocument->OnPageHide(!aIsUnload, nullptr);
@@ -2374,7 +2376,8 @@ NS_IMETHODIMP
 nsDocumentViewer::ClearHistoryEntry() {
   if (mDocument) {
     nsJSContext::PokeGC(JS::GCReason::PAGE_HIDE,
-                        mDocument->GetWrapperPreserveColor(), NS_GC_DELAY * 2);
+                        mDocument->GetWrapperPreserveColor(),
+                        StaticPrefs::javascript_options_gc_delay() * 2);
   }
 
   mSHEntry = nullptr;

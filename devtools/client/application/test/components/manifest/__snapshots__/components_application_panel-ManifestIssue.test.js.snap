@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestIssue renders the expected snapshot for a warning 1`] = `
+<li
+  className="manifest-warning "
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+        "title": true,
+      }
+    }
+    id="icon-warning"
+  >
+    <img
+      className="manifest-issue__icon manifest-issue__icon--warning"
+      src="chrome://devtools/skin/images/alert-small.svg"
+    />
+  </Localized>
+  <span>
+    Lorem ipsum
+  </span>
+</li>
+`;
+
+exports[`ManifestIssue renders the expected snapshot for an error 1`] = `
+<li
+  className="manifest-warning "
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+        "title": true,
+      }
+    }
+    id="icon-error"
+  >
+    <img
+      className="manifest-issue__icon manifest-issue__icon--error"
+      src="chrome://devtools/skin/images/error-small.svg"
+    />
+  </Localized>
+  <span>
+    Lorem ipsum
+  </span>
+</li>
+`;
