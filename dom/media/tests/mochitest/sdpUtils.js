@@ -104,7 +104,6 @@ var sdputils = {
         msection.includes("a=end-of-candidates"),
         label + ": SDP contains end-of-candidates"
       );
-      sdputils.checkSdpCLineNotDefault(msection, label);
 
       if (!msection.startsWith("m=application")) {
         if (testOptions.rtcpmux) {
@@ -152,16 +151,6 @@ var sdputils = {
         label + ": SDP does not contain a=ssrc"
       );
     }
-  },
-
-  // takes sdp in string form (or possibly a fragment, say an m-section), and
-  // verifies that the default 0.0.0.0 addr is not present.
-  checkSdpCLineNotDefault: function(sdpStr, label) {
-    info("CLINE-NO-DEFAULT-ADDR-SDP: " + JSON.stringify(sdpStr));
-    ok(
-      !sdpStr.includes("c=IN IP4 0.0.0.0"),
-      label + ": SDP contains non-zero IP c line"
-    );
   },
 
   // Note, we don't bother removing the fmtp lines, which makes a good test
