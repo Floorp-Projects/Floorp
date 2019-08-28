@@ -1682,26 +1682,12 @@ void MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG) {
         EnsureNextIterationLocked();
       }
 
-      // If the MediaStreamGraph has more messages going to it, try to revive
-      // it to process those messages. Don't do this if we're in a forced
-      // shutdown or it's a non-realtime graph that has already terminated
-      // processing.
-      if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
-          mRealtime && !mForceShutDown) {
-        LifecycleStateRef() = LIFECYCLE_RUNNING;
-        // Revive the MediaStreamGraph since we have more messages going to it.
-        // Note that we need to put messages into its queue before reviving it,
-        // or it might exit immediately.
-        {
-          LOG(LogLevel::Debug,
-              ("%p: Reviving this graph! %s", this,
-               CurrentDriver()->AsAudioCallbackDriver() ? "AudioCallbackDriver"
-                                                        : "SystemClockDriver"));
-          RefPtr<GraphDriver> driver = CurrentDriver();
-          MonitorAutoUnlock unlock(mMonitor);
-          driver->Revive();
-        }
-      }
+      // If this MediaStreamGraph has entered regular (non-forced) shutdown it
+      // is not able to process any more messages. Those messages being added to
+      // the graph in the first place is an error.
+      MOZ_DIAGNOSTIC_ASSERT(mForceShutDown ||
+                            LifecycleStateRef() <
+                                LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP);
     }
 
     if (LifecycleStateRef() == LIFECYCLE_THREAD_NOT_STARTED) {
