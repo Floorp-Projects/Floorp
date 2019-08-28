@@ -14,6 +14,7 @@
 [Constructor(DOMString type, NotificationEventInit eventInitDict),
  Exposed=ServiceWorker,Func="mozilla::dom::Notification::PrefEnabled"]
 interface NotificationEvent : ExtendableEvent {
+  [BinaryName="notification_"]
   readonly attribute Notification notification;
 };
 

@@ -57,15 +57,12 @@ interface IDBIndex {
 };
 
 partial interface IDBIndex {
-    [Throws]
-    IDBRequest mozGetAll (optional any key, optional [EnforceRange] unsigned long limit);
-
-    [Throws]
-    IDBRequest mozGetAllKeys (optional any key, optional [EnforceRange] unsigned long limit);
-
-    [Throws]
+    // If we decide to add use counters for the mozGetAll/mozGetAllKeys
+    // functions, we'll need to pull them out into sepatate operations
+    // with a BinaryName mapping to the same underlying implementation.
+    [Throws, Alias="mozGetAll"]
     IDBRequest getAll (optional any key, optional [EnforceRange] unsigned long limit);
 
-    [Throws]
+    [Throws, Alias="mozGetAllKeys"]
     IDBRequest getAllKeys (optional any key, optional [EnforceRange] unsigned long limit);
 };

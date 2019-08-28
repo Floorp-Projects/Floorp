@@ -562,8 +562,6 @@ class Descriptor(DescriptorProvider):
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self._binaryNames = desc.get('binaryNames', {})
-        self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
-        self._binaryNames.setdefault('__stringifier', 'Stringify')
 
         if not self.interface.isExternal():
             def isTestInterface(iface):
@@ -580,6 +578,9 @@ class Descriptor(DescriptorProvider):
                     assert len(binaryName) == 1
                     self._binaryNames.setdefault(member.identifier.name,
                                                  binaryName[0])
+        # Some default binary names for cases when nothing else got set.
+        self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
+        self._binaryNames.setdefault('__stringifier', 'Stringify')
 
         # Build the prototype chain.
         self.prototypeChain = []

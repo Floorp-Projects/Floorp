@@ -64,7 +64,7 @@ interface Range : AbstractRange {
   [Throws]
   boolean intersectsNode(Node node);
 
-  [Throws]
+  [Throws, BinaryName="ToString"]
   stringifier;
 };
 

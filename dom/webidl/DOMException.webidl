@@ -56,6 +56,7 @@ interface Exception {
   // The name of the error code (ie, a string repr of |result|).
   readonly attribute DOMString               name;
   // A custom message set by the thrower.
+  [BinaryName="messageMoz"]
   readonly attribute DOMString               message;
   // A generic formatter - make it suitable to print, etc.
   stringifier;
@@ -72,6 +73,7 @@ interface DOMException {
   // The name of the error code (ie, a string repr of |result|).
   readonly attribute DOMString               name;
   // A custom message set by the thrower.
+  [BinaryName="messageMoz"]
   readonly attribute DOMString               message;
   readonly attribute unsigned short code;
 

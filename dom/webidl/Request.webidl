@@ -15,10 +15,11 @@ typedef unsigned long nsContentPolicyType;
 interface Request {
   readonly attribute ByteString method;
   readonly attribute USVString url;
-  [SameObject] readonly attribute Headers headers;
+  [SameObject, BinaryName="headers_"] readonly attribute Headers headers;
 
   readonly attribute RequestDestination destination;
   readonly attribute USVString referrer;
+  [BinaryName="referrerPolicy_"]
   readonly attribute ReferrerPolicy referrerPolicy;
   readonly attribute RequestMode mode;
   readonly attribute RequestCredentials credentials;
