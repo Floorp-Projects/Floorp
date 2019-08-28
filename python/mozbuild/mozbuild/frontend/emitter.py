@@ -1056,8 +1056,12 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if context.config.substs.get('OS_TARGET') == 'WINNT' and \
                 context['DELAYLOAD_DLLS']:
-            context['LDFLAGS'].extend([('-DELAYLOAD:%s' % dll)
-                                       for dll in context['DELAYLOAD_DLLS']])
+            if context.config.substs.get('CC_TYPE') != 'clang':
+                context['LDFLAGS'].extend([('-DELAYLOAD:%s' % dll)
+                                           for dll in context['DELAYLOAD_DLLS']])
+            else:
+                context['LDFLAGS'].extend([('-Wl,-Xlink=-DELAYLOAD:%s' % dll)
+                                           for dll in context['DELAYLOAD_DLLS']])
             context['OS_LIBS'].append('delayimp')
 
         for v in ['CMFLAGS', 'CMMFLAGS']:
