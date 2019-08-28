@@ -11,17 +11,27 @@
 #include "mtransport/nricemediastream.h"  // needed only for including nricectx.h
 #include "mtransport/nricestunaddr.h"
 
+#include "../mdns_service/mdns_service.h"
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
 
-StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
+StunAddrsRequestParent::StunAddrsRequestParent()
+    : mIPCClosed(false), mMDNSService(nullptr) {
   NS_GetMainThread(getter_AddRefs(mMainThread));
 
   nsresult res;
   mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
   MOZ_ASSERT(mSTSThread);
+}
+
+StunAddrsRequestParent::~StunAddrsRequestParent() {
+  if (mMDNSService) {
+    mdns_service_stop(mMDNSService);
+    mMDNSService = nullptr;
+  }
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
@@ -35,6 +45,41 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
                 WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
                              &StunAddrsRequestParent::GetStunAddrs_s),
                 NS_DISPATCH_NORMAL);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult StunAddrsRequestParent::RecvRegisterMDNSHostname(
+    const nsCString& aHostname, const nsCString& aAddress) {
+  ASSERT_ON_THREAD(mMainThread);
+
+  if (mIPCClosed) {
+    return IPC_OK();
+  }
+
+  if (!mMDNSService) {
+    mMDNSService = mdns_service_start();
+  }
+
+  if (mMDNSService) {
+    mdns_service_register_hostname(mMDNSService, aHostname.BeginReading(),
+                                   aAddress.BeginReading());
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult StunAddrsRequestParent::RecvUnregisterMDNSHostname(
+    const nsCString& aHostname) {
+  ASSERT_ON_THREAD(mMainThread);
+
+  if (mIPCClosed) {
+    return IPC_OK();
+  }
+
+  if (mMDNSService) {
+    mdns_service_unregister_hostname(mMDNSService, aHostname.BeginReading());
+  }
 
   return IPC_OK();
 }
@@ -79,7 +124,6 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
     return;
   }
 
-  mIPCClosed = true;
   // send the new addresses back to the child
   Unused << SendOnStunAddrsAvailable(addrs);
 }
