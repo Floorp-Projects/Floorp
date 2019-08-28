@@ -209,7 +209,13 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   BrowsingContext* Top();
 
-  already_AddRefed<BrowsingContext> GetOpener() const { return Get(mOpenerId); }
+  already_AddRefed<BrowsingContext> GetOpener() const {
+    RefPtr<BrowsingContext> opener(Get(mOpenerId));
+    if (opener && !opener->mIsDiscarded) {
+      return opener.forget();
+    }
+    return nullptr;
+  }
   void SetOpener(BrowsingContext* aOpener) {
     MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->Group() == Group());
     SetOpenerId(aOpener ? aOpener->Id() : 0);
