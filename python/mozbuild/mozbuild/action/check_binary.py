@@ -254,16 +254,14 @@ def check_networking(binary):
     retcode = 0
     networking_functions = set([
         # socketpair is not concerning; it is restricted to AF_UNIX
-        "socket", "connect", "accept", "bind", "listen",
-        "getsockname", "getsockopt", "setsockopt",
-        "recv", "recvfrom",
-        "send", "sendto",
+        "connect", "accept", "listen", "getsockname", "getsockopt",
+        "recv", "send",
         # We would be concerned by recvmsg and sendmsg; but we believe
         # they are okay as documented in 1376621#c23
         "gethostbyname", "gethostbyaddr", "gethostent", "sethostent", "endhostent",
         "gethostent_r", "gethostbyname2", "gethostbyaddr_r", "gethostbyname_r",
         "gethostbyname2_r",
-        "getaddrinfo", "getservent", "getservbyname", "getservbyport", "setservent",
+        "getservent", "getservbyname", "getservbyport", "setservent",
         "getprotoent", "getprotobyname", "getprotobynumber", "setprotoent",
         "endprotoent"])
     bad_occurences_names = set()
