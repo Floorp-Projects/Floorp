@@ -955,13 +955,16 @@ bool nsXMLContentSerializer::AppendEndOfElementStart(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsXMLContentSerializer::AppendElementEnd(Element* aElement, nsAString& aStr) {
+nsXMLContentSerializer::AppendElementEnd(Element* aElement,
+                                         Element* aOriginalElement,
+                                         nsAString& aStr) {
   NS_ENSURE_ARG(aElement);
 
   nsIContent* content = aElement;
 
   bool forceFormat = false, outputElementEnd;
-  outputElementEnd = CheckElementEnd(aElement, forceFormat, aStr);
+  outputElementEnd =
+      CheckElementEnd(aElement, aOriginalElement, forceFormat, aStr);
 
   nsAtom* name = content->NodeInfo()->NameAtom();
 
@@ -1083,15 +1086,12 @@ bool nsXMLContentSerializer::CheckElementStart(Element*, bool& aForceFormat,
 }
 
 bool nsXMLContentSerializer::CheckElementEnd(Element* aElement,
+                                             Element* aOriginalElement,
                                              bool& aForceFormat,
                                              nsAString& aStr) {
   // We don't output a separate end tag for empty element
   aForceFormat = false;
-
-  // XXXbz this is a bit messed up, but by now we don't have our fixed-up
-  // version of aElement anymore.  Let's hope fixup never changes the localName
-  // or namespace...
-  return ElementNeedsSeparateEndTag(aElement, aElement);
+  return ElementNeedsSeparateEndTag(aElement, aOriginalElement);
 }
 
 bool nsXMLContentSerializer::AppendToString(const char16_t aChar,

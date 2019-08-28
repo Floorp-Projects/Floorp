@@ -343,6 +343,20 @@ function update(
       };
     }
 
+    // Disable skipPausing if a breakpoint is enabled or added
+    case "SET_BREAKPOINT": {
+      return action.breakpoint.disabled
+        ? state
+        : { ...state, skipPausing: false };
+    }
+
+    case "UPDATE_EVENT_LISTENERS":
+    case "REMOVE_BREAKPOINT":
+    case "SET_XHR_BREAKPOINT":
+    case "ENABLE_XHR_BREAKPOINT": {
+      return { ...state, skipPausing: false };
+    }
+
     case "TOGGLE_SKIP_PAUSING": {
       const { skipPausing } = action;
       prefs.skipPausing = skipPausing;

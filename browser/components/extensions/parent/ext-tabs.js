@@ -205,7 +205,9 @@ class TabsUpdateFilterEventManager extends EventManager {
     let register = (fire, filterProps) => {
       let filter = { ...filterProps };
       if (filter.urls) {
-        filter.urls = new MatchPatternSet(filter.urls);
+        filter.urls = new MatchPatternSet(filter.urls, {
+          restrictSchemes: false,
+        });
       }
       let needsModified = true;
       if (filter.properties) {
@@ -944,7 +946,9 @@ this.tabs = class extends ExtensionAPI {
           queryInfo = Object.assign({}, queryInfo);
 
           if (queryInfo.url !== null) {
-            queryInfo.url = new MatchPatternSet([].concat(queryInfo.url));
+            queryInfo.url = new MatchPatternSet([].concat(queryInfo.url), {
+              restrictSchemes: false,
+            });
           }
           if (queryInfo.title !== null) {
             queryInfo.title = new MatchGlob(queryInfo.title);

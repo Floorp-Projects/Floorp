@@ -1118,7 +1118,7 @@ void nsIContent::AssertAnonymousSubtreeRelatedInvariants() const {
                    (GetParent() && GetBindingParent() == GetParent()),
                "root of native anonymous subtree must have parent equal "
                "to binding parent");
-  NS_ASSERTION(!GetParent() ||
+  NS_ASSERTION(!GetParent() || !IsInComposedDoc() ||
                    ((GetBindingParent() == GetParent()) ==
                     HasFlag(NODE_IS_ANONYMOUS_ROOT)) ||
                    // Unfortunately default content for XBL insertion points
@@ -1129,7 +1129,7 @@ void nsIContent::AssertAnonymousSubtreeRelatedInvariants() const {
                    (GetBindingParent() &&
                     (GetBindingParent() == GetParent()->GetBindingParent()) ==
                         HasFlag(NODE_IS_ANONYMOUS_ROOT)),
-               "For nodes with parent, flag and GetBindingParent() check "
+               "For connected nodes, flag and GetBindingParent() check "
                "should match");
 }
 #endif

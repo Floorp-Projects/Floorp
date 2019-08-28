@@ -2,9 +2,24 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Keep in sync with `SyncedBookmarksMirror.jsm`.
-const CURRENT_MIRROR_SCHEMA_VERSION = 6;
+const CURRENT_MIRROR_SCHEMA_VERSION = 7;
 
-// Migrations between 5 and 6 add two indexes.
+async function getIndexNames(db, table, schema = "mirror") {
+  let rows = await db.execute(`PRAGMA ${schema}.index_list(${table})`);
+  let names = [];
+  for (let row of rows) {
+    // Column 4 is `c` if the index was created via `CREATE INDEX`, `u` if
+    // via `UNIQUE`, and `pk` if via `PRIMARY KEY`.
+    let wasCreated = row.getResultByIndex(3) == "c";
+    if (wasCreated) {
+      // Column 2 is the name of the index.
+      names.push(row.getResultByIndex(1));
+    }
+  }
+  return names.sort();
+}
+
+// Migrations between 5 and 7 add three indexes.
 add_task(async function test_migrate_from_5_to_current() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
@@ -21,6 +36,20 @@ add_task(async function test_migrate_from_5_to_current() {
     schemaVersion,
     CURRENT_MIRROR_SCHEMA_VERSION,
     "Should upgrade mirror schema to current version"
+  );
+
+  let itemsIndexNames = await getIndexNames(buf.db, "items");
+  deepEqual(
+    itemsIndexNames,
+    ["itemKeywords", "itemURLs"],
+    "Should add two indexes on items"
+  );
+
+  let structureIndexNames = await getIndexNames(buf.db, "structure");
+  deepEqual(
+    structureIndexNames,
+    ["structurePositions"],
+    "Should add an index on structure"
   );
 
   let changesToUpload = await buf.apply();

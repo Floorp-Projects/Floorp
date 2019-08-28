@@ -60,6 +60,7 @@ class nsIContentSerializer : public nsISupports {
                                 nsAString& aStr) = 0;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
+                              mozilla::dom::Element* aOriginalElement,
                               nsAString& aStr) = 0;
 
   NS_IMETHOD Flush(nsAString& aStr) = 0;
