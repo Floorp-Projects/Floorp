@@ -171,8 +171,10 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
    * Returns the capability with index `aIndex` for our assigned device.
    *
    * It is an error to call this with `aIndex >= NumCapabilities()`.
+   *
+   * The lifetime of the returned capability is the same as for this source.
    */
-  webrtc::CaptureCapability GetCapability(size_t aIndex) const;
+  webrtc::CaptureCapability& GetCapability(size_t aIndex) const;
 
   int mCaptureIndex;
   const camera::CaptureEngine mCapEngine;  // source of media (cam, screen etc)
@@ -236,10 +238,24 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   /**
    * Capabilities that we choose between when applying constraints.
    *
-   * This is mutable so that the const method NumCapabilities() can reset it.
-   * Owning thread only.
+   * This allows for memoization of capabilities as they're requested from the
+   * parent process.
+   *
+   * This is mutable so that the const methods NumCapabilities() and
+   * GetCapability() can reset it. Owning thread only.
    */
-  mutable nsTArray<webrtc::CaptureCapability> mHardcodedCapabilities;
+  mutable nsTArray<UniquePtr<webrtc::CaptureCapability>> mCapabilities;
+
+  /**
+   * True if mCapabilities only contains hardcoded capabilities. This can happen
+   * if the underlying device is not reporting any capabilities. These can be
+   * affected by constraints, so they're evaluated in ChooseCapability() rather
+   * than GetCapability().
+   *
+   * This is mutable so that the const methods NumCapabilities() and
+   * GetCapability() can reset it. Owning thread only.
+   */
+  mutable bool mCapabilitiesAreHardcoded = false;
 
   nsString mDeviceName;
   nsCString mUniqueId;
