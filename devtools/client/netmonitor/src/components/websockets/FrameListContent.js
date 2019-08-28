@@ -102,9 +102,12 @@ class FrameListContent extends Component {
   componentWillUnmount() {
     // Reset observables and boolean values.
     const scrollAnchor = this.refs.scrollAnchor;
-    this.intersectionObserver.unobserve(scrollAnchor);
-    this.initIntersectionObserver = false;
-    this.pinnedToBottom = false;
+
+    if (this.intersectionObserver) {
+      this.intersectionObserver.unobserve(scrollAnchor);
+      this.initIntersectionObserver = false;
+      this.pinnedToBottom = false;
+    }
   }
 
   setupScrollToBottom(startPanelContainer, scrollAnchor) {
@@ -123,8 +126,10 @@ class FrameListContent extends Component {
             threshold: 0.1,
           }
         );
-        this.intersectionObserver.observe(scrollAnchor);
-        this.initIntersectionObserver = true;
+        if (this.intersectionObserver) {
+          this.intersectionObserver.observe(scrollAnchor);
+          this.initIntersectionObserver = true;
+        }
       }
 
       if (this.pinnedToBottom) {
