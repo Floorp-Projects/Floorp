@@ -2108,9 +2108,9 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
     }
     if (aItem->Frame()->PresContext()->GetPaintFlashing() && isInvalidated) {
       aDT->SetTransform(gfx::Matrix());
-      float r = float(rand()) / RAND_MAX;
-      float g = float(rand()) / RAND_MAX;
-      float b = float(rand()) / RAND_MAX;
+      float r = float(rand()) / float(RAND_MAX);
+      float g = float(rand()) / float(RAND_MAX);
+      float b = float(rand()) / float(RAND_MAX);
       aDT->FillRect(Rect(aDT->GetRect()),
                     gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
     }
