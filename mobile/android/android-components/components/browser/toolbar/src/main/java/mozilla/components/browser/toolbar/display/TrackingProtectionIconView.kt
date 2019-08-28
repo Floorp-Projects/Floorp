@@ -89,11 +89,11 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
             }
             ON_TRACKERS_BLOCKED -> {
                 isVisible = true
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1
             }
             OFF_FOR_A_SITE -> {
                 isVisible = true
-                R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1
             }
 
             OFF_GLOBALLY -> {
