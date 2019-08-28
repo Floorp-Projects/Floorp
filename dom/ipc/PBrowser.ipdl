@@ -30,6 +30,7 @@ include PBackgroundSharedTypes;
 
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
 
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::MaybeMatrix4x4 from "mozilla/gfx/Matrix.h";
@@ -91,6 +92,7 @@ using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
 using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct InputFormData from "mozilla/dom/SessionStoreMessageUtils.h";
 using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
+using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace dom {
@@ -159,6 +161,12 @@ struct WebProgressLocationChangeData
   CSPInfo? csp;
   nsIReferrerInfo referrerInfo;
   uint64_t? requestContextID;
+};
+
+struct WebProgressSecurityChangeData
+{
+  nsITransportSecurityInfo securityInfo;
+  bool isSecureContext;
 };
 
 /**
@@ -599,6 +607,10 @@ parent:
     async OnStatusChange(WebProgressData? aWebProgressData,
                          RequestData aRequestData, nsresult aStatus,
                          nsString aMessage);
+
+    async OnSecurityChange(WebProgressData? aWebProgressData,
+                           RequestData aRequestData, uint32_t aState,
+                           WebProgressSecurityChangeData? aSecurityChangeData);
 
     async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
