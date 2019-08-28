@@ -144,7 +144,6 @@ struct WebProgressStateChangeData
   nsIURI documentURI;
 };
 
-
 struct WebProgressLocationChangeData
 {
   bool isNavigating;
@@ -155,10 +154,10 @@ struct WebProgressLocationChangeData
   nsString title;
   nsString charset;
   nsIURI documentURI;
-  PrincipalInfo contentPrincipal;
-  PrincipalInfo contentStoragePrincipal;
-  OptionalPrincipalInfo contentBlockingAllowListPrincipal;
-  CSPInfo? csp;
+  nsIPrincipal contentPrincipal;
+  nsIPrincipal contentStoragePrincipal;
+  nsIPrincipal contentBlockingAllowListPrincipal;
+  nsIContentSecurityPolicy csp;
   nsIReferrerInfo referrerInfo;
   uint64_t? requestContextID;
 };
