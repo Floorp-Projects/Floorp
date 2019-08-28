@@ -212,10 +212,6 @@ function listInitializedOrigins(callback) {
   return request;
 }
 
-function isValidMozURL(spec) {
-  return SpecialPowers._getQuotaManager().isValidMozURL(spec);
-}
-
 function installPackage(packageName) {
   let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(
     Ci.nsIProperties
