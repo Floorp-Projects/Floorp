@@ -81,9 +81,6 @@ def push():
     other_tasks = all_tasks[-1]
     other_tasks[taskcluster.slugId()] = BUILDER.craft_ui_tests_task()
 
-    if SHORT_HEAD_BRANCH == 'master':
-        other_tasks[taskcluster.slugId()] = BUILDER.craft_dependencies_task()
-
     return all_tasks
 
 
