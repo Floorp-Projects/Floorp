@@ -8,6 +8,7 @@
 
 #include "DateTimeFormat.h"
 #include "PSMRunnable.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/Casting.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIArray.h"
@@ -157,6 +158,8 @@ TransportSecurityInfo::GetInterface(const nsIID& uuid, void** result) {
   }
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
+// NB: Any updates (except disk-only fields) must be kept in sync with
+//     |SerializeToIPC|.
 NS_IMETHODIMP
 TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   nsresult rv = aStream->WriteID(kTransportSecurityInfoMagic);
@@ -381,6 +384,8 @@ nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream) {
   return rv;
 }
 
+// NB: Any updates (except disk-only fields) must be kept in sync with
+//     |DeserializeFromIPC|.
 NS_IMETHODIMP
 TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   nsID id;
@@ -541,6 +546,64 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
 }
 
 #undef CHILD_DIAGNOSTIC_ASSERT
+
+void TransportSecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
+  MutexAutoLock guard(mMutex);
+
+  int32_t errorCode = static_cast<int32_t>(mErrorCode);
+
+  WriteParam(aMsg, mSecurityState);
+  WriteParam(aMsg, errorCode);
+  WriteParam(aMsg, mServerCert);
+  WriteParam(aMsg, mCipherSuite);
+  WriteParam(aMsg, mProtocolVersion);
+  WriteParam(aMsg, mIsDomainMismatch);
+  WriteParam(aMsg, mIsNotValidAtThisTime);
+  WriteParam(aMsg, mIsUntrusted);
+  WriteParam(aMsg, mIsEV);
+  WriteParam(aMsg, mHasIsEVStatus);
+  WriteParam(aMsg, mHaveCipherSuiteAndProtocol);
+  WriteParam(aMsg, mHaveCertErrorBits);
+  WriteParam(aMsg, mCertificateTransparencyStatus);
+  WriteParam(aMsg, mKeaGroup);
+  WriteParam(aMsg, mSignatureSchemeName);
+  WriteParam(aMsg, mSucceededCertChain);
+  WriteParam(aMsg, mFailedCertChain);
+}
+
+bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
+                                               PickleIterator* aIter) {
+  MutexAutoLock guard(mMutex);
+
+  int32_t errorCode = 0;
+
+  if (!ReadParam(aMsg, aIter, &mSecurityState) ||
+      !ReadParam(aMsg, aIter, &errorCode) ||
+      !ReadParam(aMsg, aIter, &mServerCert) ||
+      !ReadParam(aMsg, aIter, &mCipherSuite) ||
+      !ReadParam(aMsg, aIter, &mProtocolVersion) ||
+      !ReadParam(aMsg, aIter, &mIsDomainMismatch) ||
+      !ReadParam(aMsg, aIter, &mIsNotValidAtThisTime) ||
+      !ReadParam(aMsg, aIter, &mIsUntrusted) ||
+      !ReadParam(aMsg, aIter, &mIsEV) ||
+      !ReadParam(aMsg, aIter, &mHasIsEVStatus) ||
+      !ReadParam(aMsg, aIter, &mHaveCipherSuiteAndProtocol) ||
+      !ReadParam(aMsg, aIter, &mHaveCertErrorBits) ||
+      !ReadParam(aMsg, aIter, &mCertificateTransparencyStatus) ||
+      !ReadParam(aMsg, aIter, &mKeaGroup) ||
+      !ReadParam(aMsg, aIter, &mSignatureSchemeName) ||
+      !ReadParam(aMsg, aIter, &mSucceededCertChain) ||
+      !ReadParam(aMsg, aIter, &mFailedCertChain)) {
+    return false;
+  }
+
+  mErrorCode = static_cast<PRErrorCode>(errorCode);
+  if (mErrorCode != 0) {
+    mCanceled = true;
+  }
+
+  return true;
+}
 
 NS_IMETHODIMP
 TransportSecurityInfo::GetInterfaces(nsTArray<nsIID>& array) {
