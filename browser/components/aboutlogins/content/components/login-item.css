@@ -78,7 +78,7 @@ input[type="url"][readOnly] {
 }
 
 .delete-button {
-  background-image: url("chrome://browser/content/aboutlogins/icons/delete.svg");
+  background-image: url("chrome://global/skin/icons/delete.svg");
   padding-inline-start: 30px; /* 8px on each side, and 14px for icon width */
 }
 
