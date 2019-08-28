@@ -20,7 +20,6 @@ if (!("mediaDevices" in navigator)) {
 } else {
   runNetworkTest(async (options = {}) => {
     await pushPrefs(
-        ['media.peerconnection.ice.obfuscate_host_addresses', false],
         ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
         ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
         ['media.getusermedia.insecure.enabled', true]);

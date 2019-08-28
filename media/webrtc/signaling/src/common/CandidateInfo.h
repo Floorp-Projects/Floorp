@@ -13,8 +13,6 @@ namespace mozilla {
 // This is used both by IPDL code, and by signaling code.
 struct CandidateInfo {
   std::string mCandidate;
-  std::string mMDNSAddress;
-  std::string mActualAddress;
   std::string mUfrag;
   std::string mDefaultHostRtp;
   uint16_t mDefaultPortRtp = 0;
