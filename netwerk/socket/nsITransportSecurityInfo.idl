@@ -9,16 +9,6 @@
 interface nsIX509Cert;
 interface nsIX509CertList;
 
-%{ C++
-namespace IPC {
-  class Message;
-}
-class PickleIterator;
-%}
-
-[ptr] native IpcMessagePtr(IPC::Message);
-[ptr] native PickleIteratorPtr(PickleIterator);
-
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long securityState;
@@ -81,10 +71,4 @@ interface nsITransportSecurityInfo : nsISupports {
      */
     [must_use]
     readonly attribute boolean isExtendedValidation;
-
-    [notxpcom, noscript]
-    void SerializeToIPC(in IpcMessagePtr aMsg);
-
-    [notxpcom, noscript]
-    bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
 };
