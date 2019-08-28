@@ -200,10 +200,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // when the resource has completed seeking.
   void SeekCompleted() final;
 
-  // Called by the video decoder object, on the main thread,
-  // when the resource has aborted seeking.
-  void SeekAborted() final;
-
   // Called by the media stream, on the main thread, when the download
   // has been suspended by the cache or because the element itself
   // asked the decoder to suspend the download.
@@ -703,6 +699,17 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
 
+  // The promise resolving/rejection is queued as a "micro-task" which will be
+  // handled immediately after the current JS task and before any pending JS
+  // tasks.
+  // At the time we are going to resolve/reject a promise, the "seeking" event
+  // task should already be queued but might yet be processed, so we queue one
+  // more task to file the promise resolving/rejection micro-tasks
+  // asynchronously to make sure that the micro-tasks are processed after the
+  // "seeking" event task.
+  void AsyncResolveSeekDOMPromiseIfExists() override;
+  void AsyncRejectSeekDOMPromiseIfExists() override;
+
   nsISerialEventTarget* MainThreadEventTarget() {
     return mMainThreadEventTarget;
   }
@@ -1178,7 +1185,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // seek target, or PrevSyncPoint if a quicker but less precise seek is
   // desired, and we'll seek to the sync point (keyframe and/or start of the
   // next block of audio samples) preceeding seek target.
-  void Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
+  already_AddRefed<Promise> Seek(double aTime, SeekTarget::Type aSeekType,
+                                 ErrorResult& aRv);
 
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState(bool aForcePlaying = false);
