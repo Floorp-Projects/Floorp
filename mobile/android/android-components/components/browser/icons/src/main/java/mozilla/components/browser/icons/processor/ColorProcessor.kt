@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.processor
 
 import android.content.Context
+import android.graphics.Color
 import androidx.palette.graphics.Palette
 import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.browser.icons.Icon
@@ -22,8 +23,13 @@ class ColorProcessor : IconProcessor {
         icon: Icon,
         desiredSize: DesiredSize
     ): Icon {
+        // If the icon already has a color set, just return
         if (icon.color != null) return icon
-        if (request.color != null) return icon.copy(color = request.color)
+        // If the request already has a color set, then return.
+        // Some PWAs just set the background color to white (such as Twitter, Starbucks)
+        // but the icons would work better if we fill the background using the Palette API.
+        // If a PWA really want a white background a maskable icon can be used.
+        if (request.color != null && request.color != Color.WHITE) return icon.copy(color = request.color)
 
         val swatch = Palette.from(icon.bitmap).generate().dominantSwatch
         return swatch?.run { icon.copy(color = rgb) } ?: icon
