@@ -97,6 +97,10 @@ extern "C" {
 #include "rlogconnector.h"
 #include "test_nr_socket.h"
 
+extern "C" {
+#include "mdns_service/mdns_service.h"
+}
+
 namespace mozilla {
 
 using std::shared_ptr;
@@ -1060,28 +1064,11 @@ void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
     if (iter != obfuscated_host_addresses_.end()) {
       *mdns_address = iter->second;
     } else {
-      nsresult rv;
-      nsCOMPtr<nsIUUIDGenerator> uuidgen =
-          do_GetService("@mozilla.org/uuid-generator;1", &rv);
-
-      if (NS_FAILED(rv)) {
-        return;
-      }
-
-      nsID id;
-      rv = uuidgen->GenerateUUIDInPlace(&id);
-
-      if (NS_FAILED(rv)) {
-        return;
-      }
-
-      char chars[NSID_LENGTH];
-      id.ToProvidedString(chars);
-
+      const char* uuid = mdns_service_generate_uuid();
       std::ostringstream o;
-      chars[NSID_LENGTH - 2] = 0;  // trim trailing } from uuid
-      o << &chars[1] << ".local";  // trim leading { from uuid
+      o << uuid << ".local";
       *mdns_address = o.str();
+      mdns_service_free_uuid(uuid);
 
       obfuscated_host_addresses_[*actual_address] = *mdns_address;
     }
