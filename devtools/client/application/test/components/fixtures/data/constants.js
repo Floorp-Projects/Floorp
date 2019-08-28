@@ -90,7 +90,7 @@ const MANIFEST_SIMPLE = {
     { key: "lorem", value: "ipsum" },
     { key: "foo", value: "bar" },
   ],
-  warnings: [{ warn: "This is a warning" }],
+  validation: [{ level: "warning", message: "This is a warning" }],
 };
 
 module.exports = {
