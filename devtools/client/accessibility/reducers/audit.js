@@ -25,6 +25,7 @@ function getInitialState() {
     filters: {
       [FILTERS.ALL]: false,
       [FILTERS.CONTRAST]: false,
+      [FILTERS.KEYBOARD]: false,
       [FILTERS.TEXT_LABEL]: false,
     },
     auditing: [],
@@ -39,6 +40,7 @@ function allActiveFilters() {
   return {
     [FILTERS.ALL]: true,
     [FILTERS.CONTRAST]: true,
+    [FILTERS.KEYBOARD]: true,
     [FILTERS.TEXT_LABEL]: true,
   };
 }
