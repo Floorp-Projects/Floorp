@@ -1003,6 +1003,17 @@ var Policies = {
     },
   },
 
+  PasswordManagerEnabled: {
+    onBeforeUIStartup(manager, param) {
+      if (!param) {
+        blockAboutPage(manager, "about:logins", true);
+        gBlockedChromePages.push("passwordManager.xul");
+        setAndLockPref("pref.privacy.disable_button.view_passwords", true);
+      }
+      setAndLockPref("signon.rememberSignons", param);
+    },
+  },
+
   Permissions: {
     onBeforeUIStartup(manager, param) {
       if (param.Camera) {
