@@ -14,6 +14,7 @@ import type {
 
 import { createPause, prepareSourcePayload } from "./create";
 import sourceQueue from "../../utils/source-queue";
+import { recordEvent } from "../../utils/telemetry";
 
 const CALL_STACK_PAGE_SIZE = 1000;
 
@@ -72,6 +73,8 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
     await sourceQueue.flush();
     actions.paused(pause);
   }
+
+  recordEvent("pause", { reason: why.type });
 }
 
 function resumed(threadFront: ThreadFront) {
