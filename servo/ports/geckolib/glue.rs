@@ -103,7 +103,7 @@ use style::parser::{self, Parse, ParserContext};
 use style::profiler_label;
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
-use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
+use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder, UnparsedValue};
@@ -6553,13 +6553,24 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
     property: *const nsACString,
     known_prop: *mut bool,
 ) -> bool {
-    let prop_id = parse_enabled_property_name!(property, known_prop, false);
-    let non_custom_id = match prop_id.non_custom_id() {
-        Some(id) => id,
-        None => return false,
+    *known_prop = false;
+    let prop_name = property.as_ref().unwrap().as_str_unchecked();
+    let non_custom_id = match PropertyId::parse_enabled_for_all_content(prop_name) {
+        Ok(p) => {
+            *known_prop = true;
+            p.non_custom_id()
+        }
+        Err(..) => None,
     };
 
-    use_counters.non_custom_properties.recorded(non_custom_id)
+    if let Some(id) = non_custom_id {
+        return use_counters.non_custom_properties.recorded(id);
+    }
+
+    CountedUnknownProperty::parse_for_test(prop_name).map_or(false, |p| {
+        *known_prop = true;
+        use_counters.counted_unknown_properties.recorded(p)
+    })
 }
 
 #[no_mangle]

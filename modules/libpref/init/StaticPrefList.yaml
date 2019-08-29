@@ -4765,6 +4765,13 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
+# Are counters for unimplemented CSS properties enabled?
+- name: layout.css.use-counters-unimplemented.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_RELEASE_OR_BETA@
+  mirror: always
+  rust: true
+
 # Should the :visited selector ever match (otherwise :link matches instead)?
 - name: layout.css.visited_links_enabled
   type: bool
