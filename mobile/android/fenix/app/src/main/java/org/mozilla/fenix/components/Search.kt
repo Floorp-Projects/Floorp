@@ -31,12 +31,11 @@ class Search(private val context: Context) {
         ).apply {
             registerForLocaleUpdates(context)
             GlobalScope.launch {
-                loadAsync(context).await()
+                defaultSearchEngine = getDefaultSearchEngineAsync(
+                    context,
+                    Settings.getInstance(context).defaultSearchEngineName
+                )
             }
-            defaultSearchEngine = getDefaultSearchEngine(
-                context,
-                Settings.getInstance(context).defaultSearchEngineName
-            )
         }
     }
 }

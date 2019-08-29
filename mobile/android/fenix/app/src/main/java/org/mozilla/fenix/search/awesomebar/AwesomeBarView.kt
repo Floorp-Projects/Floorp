@@ -152,9 +152,8 @@ class AwesomeBarView(
 
             defaultSearchSuggestionProvider =
                 SearchSuggestionProvider(
-                    searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(
-                        this
-                    ),
+                    context = this,
+                    searchEngineManager = components.search.searchEngineManager,
                     searchUseCase = searchUseCase,
                     fetchClient = components.core.client,
                     mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
