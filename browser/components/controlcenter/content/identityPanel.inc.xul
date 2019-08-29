@@ -70,7 +70,6 @@
             <label id="identity-popup-permissions-headline"
                    role="heading" aria-level="2"
                    value="&identity.permissions2;"/>
-            <image id="identity-popup-permissions-granted-indicator"/>
           </hbox>
           <vbox id="identity-popup-permission-list"/>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
