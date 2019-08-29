@@ -143,11 +143,23 @@ static char sIdentifierAssociationKey;
   }
 
   button.title = [aInput title];
-  if ([aInput image]) {
-    button.image = [aInput image];
+  if (![aInput isIconPositionSet]) {
     [button setImagePosition:NSImageOnly];
+    [aInput setIconPositionSet:true];
   }
 
+  if ([aInput imageURI]) {
+    RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
+    if (!icon) {
+      icon = new nsTouchBarInputIcon(button);
+      [aInput setIcon:icon];
+    }
+    RefPtr<Document> document;
+    nsresult rv = mTouchBarHelper->GetDocument(getter_AddRefs(document));
+    if (!NS_FAILED(rv)) {
+      icon->SetupIcon([aInput imageURI], document);
+    }
+  }
   [button setEnabled:![aInput isDisabled]];
 
   if ([aInput color]) {
@@ -164,16 +176,17 @@ static char sIdentifierAssociationKey;
 
 - (NSTouchBarItem*)updateMainButton:(NSCustomTouchBarItem*)aMainButton
                               input:(TouchBarInput*)aInput {
-  aMainButton = (NSCustomTouchBarItem*)[self updateButton:aMainButton input:aInput];
   NSButton* button = (NSButton*)aMainButton.view;
-  button.imageHugsTitle = YES;
   // If empty, string is still being localized. Display a blank input instead.
-  if ([button.title isEqualToString:@""]) {
+  if ([[aInput title] isEqualToString:@""]) {
     [button setImagePosition:NSNoImage];
   } else {
     [button setImagePosition:NSImageLeft];
   }
+  button.imageHugsTitle = YES;
+  [aInput setIconPositionSet:true];
 
+  aMainButton = (NSCustomTouchBarItem*)[self updateButton:aMainButton input:aInput];
   [button.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
   [button setContentHuggingPriority:1.0 forOrientation:NSLayoutConstraintOrientationHorizontal];
   return aMainButton;
@@ -184,7 +197,23 @@ static char sIdentifierAssociationKey;
   // System-default share menu
   NSSharingServicePickerTouchBarItem* servicesItem =
       [[NSSharingServicePickerTouchBarItem alloc] initWithIdentifier:aIdentifier];
-  servicesItem.buttonImage = [input image];
+
+  // buttonImage needs to be set to nil while we wait for our icon to load.
+  // Otherwise, the default Apple share icon is automatically loaded.
+  servicesItem.buttonImage = nil;
+  if ([input imageURI]) {
+    RefPtr<nsTouchBarInputIcon> icon = [input icon];
+    if (!icon) {
+      icon = new nsTouchBarInputIcon(nil, servicesItem);
+      [input setIcon:icon];
+    }
+    RefPtr<Document> document;
+    nsresult rv = mTouchBarHelper->GetDocument(getter_AddRefs(document));
+    if (!NS_FAILED(rv)) {
+      icon->SetupIcon([input imageURI], document);
+    }
+  }
+
   servicesItem.delegate = self;
   return servicesItem;
 }
@@ -215,33 +244,13 @@ static char sIdentifierAssociationKey;
 
   for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
     TouchBarInput* input = self.mappedLayoutItems[identifier];
+    RefPtr<nsTouchBarInputIcon> icon = [input icon];
+    if (icon) {
+      icon->ReleaseJSObjects();
+    }
     [input setCallback:nil];
+    [input setImageURI:nil];
   }
-}
-
-#pragma mark - TouchBar Utilities
-
-+ (NSImage*)getTouchBarIconNamed:(NSString*)aImageName {
-  nsCOMPtr<nsIFile> resDir;
-  nsAutoCString resPath;
-  NSString* pathToImage;
-
-  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(resDir));
-  resDir->AppendNative(NS_LITERAL_CSTRING("res"));
-  resDir->AppendNative(NS_LITERAL_CSTRING("touchbar"));
-
-  rv = resDir->GetNativePath(resPath);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nil;
-  }
-
-  pathToImage = [NSString stringWithUTF8String:(const char*)resPath.get()];
-  pathToImage = [pathToImage stringByAppendingPathComponent:aImageName];
-  NSImage* image = [[[NSImage alloc] initWithContentsOfFile:pathToImage] autorelease];
-  // A nil image will fail gracefully to a labelled button
-
-  return image;
 }
 
 #pragma mark - NSSharingServicePickerTouchBarItemDelegate
@@ -301,8 +310,11 @@ static char sIdentifierAssociationKey;
 - (NSString*)title {
   return mTitle;
 }
-- (NSImage*)image {
-  return mImage;
+- (nsCOMPtr<nsIURI>)imageURI {
+  return mImageURI;
+}
+- (RefPtr<nsTouchBarInputIcon>)icon {
+  return mIcon;
 }
 - (NSString*)type {
   return mType;
@@ -319,6 +331,9 @@ static char sIdentifierAssociationKey;
 - (nsCOMPtr<nsITouchBarInputCallback>)callback {
   return mCallback;
 }
+- (BOOL)isIconPositionSet {
+  return mIsIconPositionSet;
+}
 - (void)setKey:(NSString*)aKey {
   [aKey retain];
   [mKey release];
@@ -331,10 +346,12 @@ static char sIdentifierAssociationKey;
   mTitle = aTitle;
 }
 
-- (void)setImage:(NSImage*)aImage {
-  [aImage retain];
-  [mImage release];
-  mImage = aImage;
+- (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI {
+  mImageURI = aImageURI;
+}
+
+- (void)setIcon:(RefPtr<nsTouchBarInputIcon>)aIcon {
+  mIcon = aIcon;
 }
 
 - (void)setType:(NSString*)aType {
@@ -363,9 +380,13 @@ static char sIdentifierAssociationKey;
   mCallback = aCallback;
 }
 
+- (void)setIconPositionSet:(BOOL)aIsIconPositionSet {
+  mIsIconPositionSet = aIsIconPositionSet;
+}
+
 - (id)initWithKey:(NSString*)aKey
             title:(NSString*)aTitle
-            image:(NSString*)aImage
+         imageURI:(nsCOMPtr<nsIURI>)aImageURI
              type:(NSString*)aType
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
@@ -373,9 +394,10 @@ static char sIdentifierAssociationKey;
   if (self = [super init]) {
     [self setKey:aKey];
     [self setTitle:aTitle];
-    [self setImage:[nsTouchBar getTouchBarIconNamed:aImage]];
+    [self setImageURI:aImageURI];
     [self setType:aType];
     [self setCallback:aCallback];
+    [self setIconPositionSet:false];
     if (aColor) {
       [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
                                               green:((aColor >> 8) & 0xFF) / 255.0
@@ -418,8 +440,8 @@ static char sIdentifierAssociationKey;
     return nil;
   }
 
-  nsAutoString imageStr;
-  rv = aInput->GetImage(imageStr);
+  nsCOMPtr<nsIURI> imageURI;
+  rv = aInput->GetImage(getter_AddRefs(imageURI));
   if (NS_FAILED(rv)) {
     return nil;
   }
@@ -450,7 +472,7 @@ static char sIdentifierAssociationKey;
 
   return [self initWithKey:nsCocoaUtils::ToNSString(keyStr)
                      title:nsCocoaUtils::ToNSString(titleStr)
-                     image:nsCocoaUtils::ToNSString(imageStr)
+                  imageURI:imageURI
                       type:nsCocoaUtils::ToNSString(typeStr)
                   callback:callback
                      color:colorInt
@@ -458,9 +480,12 @@ static char sIdentifierAssociationKey;
 }
 
 - (void)dealloc {
+  if (mIcon) {
+    mIcon->Destroy();
+    mIcon = nil;
+  }
   [mKey release];
   [mTitle release];
-  [mImage release];
   [mType release];
   [mColor release];
   [mNativeIdentifier release];
