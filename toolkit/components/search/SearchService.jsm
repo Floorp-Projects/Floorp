@@ -1916,11 +1916,18 @@ SearchService.prototype = {
       var prefName;
 
       // The original default engine should always be first in the list
-      if (this.originalDefaultEngine) {
-        this.__sortedEngines.push(this.originalDefaultEngine);
-        addedEngines[
-          this.originalDefaultEngine.name
-        ] = this.originalDefaultEngine;
+      const originalDefault = this.originalDefaultEngine;
+      if (originalDefault) {
+        this.__sortedEngines.push(originalDefault);
+        addedEngines[originalDefault.name] = originalDefault;
+      }
+
+      // If there's a private default, and it is different to the normal
+      // default, then it should be second in the list.
+      const originalPrivateDefault = this.originalPrivateDefaultEngine;
+      if (originalPrivateDefault && originalPrivateDefault != originalDefault) {
+        this.__sortedEngines.push(originalPrivateDefault);
+        addedEngines[originalPrivateDefault.name] = originalPrivateDefault;
       }
 
       if (distroID) {

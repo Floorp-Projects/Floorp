@@ -11,30 +11,53 @@ add_task(async function setup() {
   useTestEngineConfig();
 });
 
-add_task(async function test_searchOrderJSON() {
+async function checkOrder(expectedOrder) {
   await asyncReInit();
-
   Assert.ok(Services.search.isInitialized, "search initialized");
-  Assert.equal(
-    Services.search.defaultEngine.name,
-    kTestEngineName,
-    "expected test list JSON default search engine"
+
+  const sortedEngines = await Services.search.getEngines();
+  Assert.deepEqual(
+    sortedEngines.map(s => s.name),
+    expectedOrder,
+    "Should have the expected engine order"
+  );
+}
+
+add_task(async function test_searchOrderJSON_no_separate_private() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    false
   );
 
-  let sortedEngines = await Services.search.getEngines();
-  Assert.equal(
-    sortedEngines[0].name,
+  await checkOrder([
+    // Default engine
     "Test search engine",
-    "First engine should be default"
-  );
-  Assert.equal(
-    sortedEngines[1].name,
+    // Two engines listed in searchOrder.
     "engine-resourceicon",
-    "Second engine should be resource"
-  );
-  Assert.equal(
-    sortedEngines[2].name,
     "engine-chromeicon",
-    "Third engine should be chrome"
+    // Rest of the engines in order.
+    "engine-pref",
+    "engine-rel-searchform-purpose",
+    "Test search engine (Reordered)",
+  ]);
+});
+
+add_task(async function test_searchOrderJSON_separate_private() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
   );
+
+  await checkOrder([
+    // Default engine
+    "Test search engine",
+    // Default private engine
+    "engine-pref",
+    // Two engines listed in searchOrder.
+    "engine-resourceicon",
+    "engine-chromeicon",
+    // Rest of the engines in order.
+    "engine-rel-searchform-purpose",
+    "Test search engine (Reordered)",
+  ]);
 });
