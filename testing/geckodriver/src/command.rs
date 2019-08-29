@@ -194,7 +194,7 @@ impl<'de> Deserialize<'de> for AddonInstallParameters {
                 };
 
                 AddonInstallParameters {
-                    path: path,
+                    path,
                     temporary: data.temporary,
                 }
             }
