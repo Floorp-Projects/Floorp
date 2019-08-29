@@ -10,16 +10,22 @@
         android:background="@drawable/rounded_white_corners"
         android:layout_gravity="center">
 
+    <ImageView
+            android:id="@+id/button_search_widget_new_tab_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:padding="12dp"/>
+
     <TextView
             android:id="@+id/button_search_widget_new_tab"
+            android:layout_toEndOf="@id/button_search_widget_new_tab_icon"
             android:layout_width="match_parent"
             android:layout_height="32dp"
             android:gravity="center_vertical"
             android:textSize="15sp"
             android:textColor="@color/search_widget_text"
             android:letterSpacing="-0.025"
-            android:drawableStart="@drawable/ic_logo_widget"
-            android:drawablePadding="12dp"
             android:layout_marginStart="9dp"
             android:layout_marginTop="9dp"/>
 

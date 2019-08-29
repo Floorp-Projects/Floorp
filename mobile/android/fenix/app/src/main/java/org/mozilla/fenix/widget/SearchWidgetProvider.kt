@@ -20,7 +20,11 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
+import android.os.Build
+import androidx.appcompat.widget.AppCompatDrawableManager
+import androidx.core.graphics.drawable.toBitmap
 
+@Suppress("TooManyFunctions")
 class SearchWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
@@ -126,6 +130,7 @@ class SearchWidgetProvider : AppWidgetProvider() {
         text: String?
     ): RemoteViews {
         return RemoteViews(context.packageName, layout).apply {
+            setIcon(context)
             when (layout) {
                 R.layout.search_widget_extra_small_v1,
                 R.layout.search_widget_extra_small_v2,
@@ -140,6 +145,7 @@ class SearchWidgetProvider : AppWidgetProvider() {
                 R.layout.search_widget_large -> {
                     setOnClickPendingIntent(R.id.button_search_widget_new_tab, textSearchIntent)
                     setOnClickPendingIntent(R.id.button_search_widget_voice, voiceSearchIntent)
+                    setOnClickPendingIntent(R.id.button_search_widget_new_tab_icon, textSearchIntent)
                     setTextViewText(R.id.button_search_widget_new_tab, text)
                     // Unlike "small" widget, "medium" and "large" sizes do not have separate layouts
                     // that exclude the microphone icon, which is why we must hide it accordingly here.
@@ -148,6 +154,22 @@ class SearchWidgetProvider : AppWidgetProvider() {
                     }
                 }
             }
+        }
+    }
+
+    private fun RemoteViews.setIcon(context: Context) {
+        // gradient color available for android:fillColor only on SDK 24+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            setImageViewResource(
+                R.id.button_search_widget_new_tab_icon,
+                R.drawable.ic_logo_widget)
+        } else {
+            setImageViewBitmap(
+                R.id.button_search_widget_new_tab_icon,
+                AppCompatDrawableManager.get().getDrawable(
+                    context,
+                    R.drawable.ic_logo_widget
+                )?.toBitmap())
         }
     }
 
