@@ -25,6 +25,8 @@
 
       zoomDocument(document, 2.0);
 
+      document.body.offsetTop; // getBounds doesn't flush layout on its own, looks like.
+
       [x, y, width, height] = getBounds(textNode);
       testOffsetAtPoint(hyperText, x + width / 2, y + height / 2,
                         COORDTYPE_SCREEN_RELATIVE,
