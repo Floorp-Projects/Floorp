@@ -34,8 +34,7 @@
   width: 100%;
   align-items: center;
   display: flex;
-
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .accordion ._header:hover {
