@@ -438,7 +438,8 @@ class HTMLMediaElement::MediaStreamRenderer
         mWatchManager(this, aMainThread) {}
 
   void UpdateGraphTime() {
-    mGraphTime = mGraph->CurrentTime() - *mGraphTimeOffset;
+    mGraphTime =
+        mGraphTimeDummy->mStream->Graph()->CurrentTime() - *mGraphTimeOffset;
   }
 
   void Start() {
@@ -448,13 +449,13 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mRendering = true;
 
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return;
     }
 
-    *mGraphTimeOffset = mGraph->CurrentTime() - mGraphTime;
-
-    mWatchManager.Watch(mGraph->CurrentTime(),
+    MediaStreamGraph* graph = mGraphTimeDummy->mStream->Graph();
+    mGraphTimeOffset = Some(graph->CurrentTime().Ref() - mGraphTime);
+    mWatchManager.Watch(graph->CurrentTime(),
                         &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
@@ -477,12 +478,13 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mRendering = false;
 
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return;
     }
 
-    mWatchManager.Unwatch(mGraph->CurrentTime(),
+    mWatchManager.Unwatch(mGraphTimeDummy->mStream->Graph()->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
+    mGraphTimeOffset = Nothing();
 
     for (const auto& t : mAudioTracks) {
       if (t) {
@@ -514,7 +516,7 @@ class HTMLMediaElement::MediaStreamRenderer
   void AddTrack(AudioStreamTrack* aTrack) {
     MOZ_DIAGNOSTIC_ASSERT(!mAudioTracks.Contains(aTrack));
     mAudioTracks.AppendElement(aTrack);
-    EnsureGraph();
+    EnsureGraphTimeDummy();
     if (mRendering) {
       aTrack->AddAudioOutput(mAudioOutputKey);
       aTrack->SetAudioOutputVolume(mAudioOutputKey, mAudioOutputVolume);
@@ -526,7 +528,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
     mVideoTrack = aTrack;
-    EnsureGraph();
+    EnsureGraphTimeDummy();
     if (mRendering) {
       aTrack->AddVideoOutput(mVideoContainer);
     }
@@ -551,11 +553,12 @@ class HTMLMediaElement::MediaStreamRenderer
   }
 
   double CurrentTime() const {
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return 0.0;
     }
 
-    return mGraph->MediaTimeToSeconds(mGraphTime);
+    return mGraphTimeDummy->mStream->GraphImpl()->MediaTimeToSeconds(
+        mGraphTime);
   }
 
   Watchable<GraphTime>& CurrentGraphTime() { return mGraphTime; }
@@ -579,10 +582,10 @@ class HTMLMediaElement::MediaStreamRenderer
 
     MOZ_DIAGNOSTIC_ASSERT(mAudioTracks.IsEmpty());
     MOZ_DIAGNOSTIC_ASSERT(!mVideoTrack);
-  };
+  }
 
-  void EnsureGraph() {
-    if (mGraph) {
+  void EnsureGraphTimeDummy() {
+    if (mGraphTimeDummy) {
       return;
     }
 
@@ -602,14 +605,13 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
 
-    mGraph = static_cast<MediaStreamGraphImpl*>(graph);
-
-    // The current graph time will represent 0 for this session.
-    mGraphTimeOffset = Some(mGraph->CurrentTime().Ref());
-    mGraphTime = 0;
+    // This dummy keeps `graph` alive and ensures access to it.
+    mGraphTimeDummy =
+        MakeRefPtr<SharedDummyStream>(graph->CreateSourceStream());
 
     if (mRendering) {
-      mWatchManager.Watch(mGraph->CurrentTime(),
+      mGraphTimeOffset = Some(graph->CurrentTime() - mGraphTime);
+      mWatchManager.Watch(graph->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
     }
   }
@@ -624,17 +626,19 @@ class HTMLMediaElement::MediaStreamRenderer
   // WatchManager for mGraphTime.
   WatchManager<MediaStreamRenderer> mWatchManager;
 
-  // The MediaStreamGraph used to track current time. Set once the first track
-  // is added.
-  RefPtr<MediaStreamGraphImpl> mGraph;
+  // A dummy MediaStream to guarantee a MediaStreamGraph is kept alive while
+  // we're actively rendering, so we can track the graph's current time. Set
+  // when the first track is added, never unset.
+  RefPtr<SharedDummyStream> mGraphTimeDummy;
 
   // Watchable that relays the graph's currentTime updates to the media element
   // only while we're rendering. This is the current time of the rendering in
   // GraphTime units.
   Watchable<GraphTime> mGraphTime = {0, "MediaStreamRenderer::mGraphTime"};
 
-  // Nothing until we start playing a track from mSrcStream. Then the offset in
-  // mGraph's GraphTime at which started rendering the first track.
+  // Nothing while we're not rendering. While rendering, the current GraphTime
+  // at the time when rendering was Start()ed, possibly delayed until the first
+  // track appeared.
   Maybe<GraphTime> mGraphTimeOffset;
 
   // Currently enabled (and rendered) audio tracks.
