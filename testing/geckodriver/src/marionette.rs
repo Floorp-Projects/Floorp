@@ -523,9 +523,9 @@ impl MarionetteSession {
                 );
 
                 WebDriverResponse::Timeouts(TimeoutsResponse {
-                    script: script,
-                    page_load: page_load,
-                    implicit: implicit,
+                    script,
+                    page_load,
+                    implicit,
                 })
             }
             Status => panic!("Got status command that should already have been handled"),
@@ -949,9 +949,9 @@ impl Serialize for MarionetteCommand {
 impl MarionetteCommand {
     fn new(id: MessageId, name: String, params: Map<String, Value>) -> MarionetteCommand {
         MarionetteCommand {
-            id: id,
-            name: name,
-            params: params,
+            id,
+            name,
+            params,
         }
     }
 

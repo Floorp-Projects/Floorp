@@ -38,7 +38,7 @@ impl<'a> FirefoxCapabilities<'a> {
     pub fn new(fallback_binary: Option<&'a PathBuf>) -> FirefoxCapabilities<'a> {
         FirefoxCapabilities {
             chosen_binary: None,
-            fallback_binary: fallback_binary,
+            fallback_binary,
             version_cache: BTreeMap::new(),
         }
     }
