@@ -866,6 +866,7 @@ class UrlbarInput {
     }
 
     this.textbox.style.setProperty("--urlbar-width", px(inputRect.width));
+    this.textbox.style.setProperty("--urlbar-height", px(inputRect.height));
 
     let toolbarHeight = getBoundsWithoutFlushing(
       this.textbox.closest("toolbar")
