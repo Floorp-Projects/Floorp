@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", e => {
     // Set the total number of each type of tracker on the tabs as well as their
     // "Learn More" links
     for (let type of dataTypes) {
-      document.querySelector(`label[data-type=${type}]`).textContent =
+      document.querySelector(`label[data-type=${type}] span`).textContent =
         weekTypeCounts[type];
       const learnMoreLink = document.getElementById(`${type}-link`);
       learnMoreLink.href = RPMGetFormatURLPref(
