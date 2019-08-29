@@ -2416,6 +2416,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   MovingTracer trc(rt);
 
   zone->fixupAfterMovingGC();
+  zone->fixupScriptMapsAfterMovingGC(&trc);
 
   // Fixup compartment global pointers as these get accessed during marking.
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
@@ -7783,28 +7784,33 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   // Atoms which are marked in source's zone are now marked in target's zone.
   atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
 
-  // Merge script name maps in the target realm's map.
-  if (coverage::IsLCovEnabled() && source->scriptNameMap) {
+  // Merge script name map entries from the source zone that come from the
+  // source realm into the target zone's map. Note that the zones will always
+  // differ.
+  Zone* sourceZone = source->zone();
+  Zone* targetZone = target->zone();
+  MOZ_ASSERT(sourceZone != targetZone);
+  if (sourceZone->scriptNameMap) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    if (!target->scriptNameMap) {
-      target->scriptNameMap = cx->make_unique<ScriptNameMap>();
+    if (!targetZone->scriptNameMap) {
+      targetZone->scriptNameMap = cx->make_unique<ScriptNameMap>();
 
-      if (!target->scriptNameMap) {
+      if (!targetZone->scriptNameMap) {
         oomUnsafe.crash("Failed to create a script name map.");
       }
     }
 
-    for (ScriptNameMap::Range r = source->scriptNameMap->all(); !r.empty();
-         r.popFront()) {
-      JSScript* key = r.front().key();
-      auto value = std::move(r.front().value());
-      if (!target->scriptNameMap->putNew(key, std::move(value))) {
-        oomUnsafe.crash("Failed to add an entry in the script name map.");
+    for (auto i = sourceZone->scriptNameMap->modIter(); !i.done(); i.next()) {
+      JSScript* key = i.get().key();
+      if (key->realm() == source) {
+        auto value = std::move(i.get().value());
+        if (!targetZone->scriptNameMap->putNew(key, std::move(value))) {
+          oomUnsafe.crash("Failed to add an entry in the script name map.");
+        }
+        i.remove();
       }
     }
-
-    source->scriptNameMap->clear();
   }
 
   // The source realm is now completely empty, and is the only realm in its
@@ -7812,7 +7818,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   // compartment and zone without waiting for this to be cleaned up by a full
   // GC.
 
-  Zone* sourceZone = source->zone();
   sourceZone->deleteEmptyCompartment(source->compartment());
   deleteEmptyZone(sourceZone);
 }
@@ -8126,6 +8131,7 @@ void js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt) {
     zone->checkInitialShapesTableAfterMovingGC();
     zone->checkBaseShapeTableAfterMovingGC();
     zone->checkAllCrossCompartmentWrappersAfterMovingGC();
+    zone->checkScriptMapsAfterMovingGC();
 
     JS::AutoCheckCannotGC nogc;
     for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
@@ -8139,7 +8145,6 @@ void js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt) {
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
       r->checkObjectGroupTablesAfterMovingGC();
       r->dtoaCache.checkCacheAfterMovingGC();
-      r->checkScriptMapsAfterMovingGC();
       if (r->debugEnvs()) {
         r->debugEnvs()->checkHashTablesAfterMovingGC();
       }

@@ -644,7 +644,8 @@ struct ZoneStats {
   MACRO(Other, MallocHeap, shapeTables)                    \
   MACRO(Other, MallocHeap, compartmentObjects)             \
   MACRO(Other, MallocHeap, crossCompartmentWrappersTables) \
-  MACRO(Other, MallocHeap, compartmentsPrivateData)
+  MACRO(Other, MallocHeap, compartmentsPrivateData)        \
+  MACRO(Other, MallocHeap, scriptCountsMap)
 
   ZoneStats() = default;
   ZoneStats(ZoneStats&& other) = default;
@@ -735,8 +736,7 @@ struct RealmStats {
   MACRO(Other, MallocHeap, savedStacksSet)                    \
   MACRO(Other, MallocHeap, varNamesSet)                       \
   MACRO(Other, MallocHeap, nonSyntacticLexicalScopesTable)    \
-  MACRO(Other, MallocHeap, jitRealm)                          \
-  MACRO(Other, MallocHeap, scriptCountsMap)
+  MACRO(Other, MallocHeap, jitRealm)
 
   RealmStats() = default;
   RealmStats(RealmStats&& other) = default;
