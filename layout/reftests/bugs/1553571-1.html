@@ -1,0 +1,28 @@
+<!-- reftest-wait because it takes at least two changes of the transform style before it becomes active -->
+<html class='reftest-wait'>
+<head>
+<script>
+var changesLeft = 10;
+function go() {
+	window.setInterval(changeit, 50);
+}
+
+function changeit() {
+	var a = document.getElementById("a");
+	a.style.transform = 'scale(' + (140.1 + Math.random()*0.01) + ')';
+
+	if (changesLeft > 0) {
+		--changesLeft;
+	}
+	if (changesLeft == 0) {
+		document.documentElement.classList.remove("reftest-wait");
+	}
+}
+</script>
+</head>
+<body onload="go();">
+<div id="a" style="width: 1px; height: 1px; position: absolute; left: 100px; top: 100px;">
+	<img style="width: 1px; height: 1px;" src="repeatable-diagonal-gradient.png">
+</div>
+</body>
+</html>
