@@ -19,6 +19,9 @@ const AccessibilityTreeFilter = createFactory(
   require("./AccessibilityTreeFilter")
 );
 const AccessibilityPrefs = createFactory(require("./AccessibilityPrefs"));
+loader.lazyGetter(this, "SimulationMenuButton", function() {
+  return createFactory(require("./SimulationMenuButton"));
+});
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { disable, updateCanBeDisabled } = require("../actions/ui");
@@ -30,6 +33,7 @@ class Toolbar extends Component {
       dispatch: PropTypes.func.isRequired,
       accessibility: PropTypes.object.isRequired,
       canBeDisabled: PropTypes.bool.isRequired,
+      simulator: PropTypes.object,
     };
   }
 
@@ -72,7 +76,7 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { canBeDisabled, accessibilityWalker } = this.props;
+    const { canBeDisabled, accessibilityWalker, simulator } = this.props;
     const { disabling } = this.state;
     const disableButtonStr = disabling
       ? "accessibility.disabling"
@@ -87,6 +91,16 @@ class Toolbar extends Component {
       isDisabled = true;
       title = L10N.getStr("accessibility.disable.disabledTitle");
     }
+
+    const optionalSimulationSection = simulator
+      ? [
+          div({
+            role: "separator",
+            className: "devtools-separator",
+          }),
+          SimulationMenuButton({ simulator }),
+        ]
+      : [];
 
     return div(
       {
@@ -118,6 +132,8 @@ class Toolbar extends Component {
         L10N.getStr("accessibility.beta")
       ),
       AccessibilityTreeFilter({ accessibilityWalker, describedby: betaID }),
+      // Simulation section is shown if webrender is enabled
+      ...optionalSimulationSection,
       AccessibilityPrefs()
     );
   }
