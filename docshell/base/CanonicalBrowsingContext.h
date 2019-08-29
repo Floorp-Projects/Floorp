@@ -61,13 +61,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // This functions would set/reset its user gesture activation flag and then
-  // notify other browsing contexts which are not the one related with the
-  // current window global to set/reset the flag. (the corresponding browsing
-  // context of the current global window has been set/reset before calling this
-  // function)
-  void NotifySetUserGestureActivationFromIPC(bool aIsUserGestureActivation);
-
   // This function is used to start the autoplay media which are delayed to
   // start. If needed, it would also notify the content browsing context which
   // are related with the canonical browsing content tree to start delayed
