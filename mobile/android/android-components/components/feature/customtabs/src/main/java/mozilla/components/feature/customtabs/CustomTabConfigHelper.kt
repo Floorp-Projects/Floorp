@@ -29,6 +29,7 @@ import androidx.browser.customtabs.CustomTabsIntent.KEY_PENDING_INTENT
 import androidx.browser.customtabs.CustomTabsIntent.NO_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
+import androidx.browser.customtabs.CustomTabsSessionToken
 import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
 import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.session.tab.CustomTabConfig
@@ -82,7 +83,7 @@ fun isTrustedWebActivityIntent(safeIntent: SafeIntent) = isCustomTabIntent(safeI
  */
 fun createCustomTabConfigFromIntent(
     intent: Intent,
-    resources: Resources
+    resources: Resources?
 ): CustomTabConfig {
     val safeIntent = intent.toSafeIntent()
 
@@ -96,7 +97,13 @@ fun createCustomTabConfigFromIntent(
         showShareMenuItem = safeIntent.getBooleanExtra(EXTRA_DEFAULT_SHARE_MENU_ITEM, false),
         menuItems = getMenuItems(safeIntent),
         exitAnimations = safeIntent.getBundleExtra(EXTRA_EXIT_ANIMATION_BUNDLE)?.unsafe,
-        titleVisible = safeIntent.getIntExtra(EXTRA_TITLE_VISIBILITY_STATE, NO_TITLE) == SHOW_PAGE_TITLE
+        titleVisible = safeIntent.getIntExtra(EXTRA_TITLE_VISIBILITY_STATE, NO_TITLE) == SHOW_PAGE_TITLE,
+        sessionToken = if (intent.extras != null) {
+            // getSessionTokenFromIntent throws if extras is null
+            CustomTabsSessionToken.getSessionTokenFromIntent(intent)
+        } else {
+            null
+        }
     )
 }
 
@@ -104,9 +111,9 @@ fun createCustomTabConfigFromIntent(
 private fun SafeIntent.getColorExtra(name: String): Int? =
     if (hasExtra(name)) getIntExtra(name, 0) else null
 
-private fun getCloseButtonIcon(intent: SafeIntent, resources: Resources): Bitmap? {
+private fun getCloseButtonIcon(intent: SafeIntent, resources: Resources?): Bitmap? {
     val icon = intent.getParcelableExtra(EXTRA_CLOSE_BUTTON_ICON) as? Bitmap
-    val maxSize = resources.getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size)
+    val maxSize = resources?.getDimension(R.dimen.mozac_feature_customtabs_max_close_button_size) ?: Float.MAX_VALUE
 
     return if (icon != null && max(icon.width, icon.height) <= maxSize) {
         icon

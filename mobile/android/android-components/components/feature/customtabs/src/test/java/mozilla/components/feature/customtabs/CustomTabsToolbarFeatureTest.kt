@@ -81,6 +81,19 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `stop calls unregister`() {
+        val sessionManager: SessionManager = mock()
+        val session: Session = mock()
+        val feature = CustomTabsToolbarFeature(sessionManager, mock(), "") {}
+
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+
+        feature.stop()
+
+        verify(session).unregister(any())
+    }
+
+    @Test
     fun `initialize returns true if session is a customtab`() {
         val session: Session = mock()
         val toolbar = spy(BrowserToolbar(testContext))

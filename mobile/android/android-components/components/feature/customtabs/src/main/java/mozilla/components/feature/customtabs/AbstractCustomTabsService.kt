@@ -6,17 +6,20 @@ package mozilla.components.feature.customtabs
 
 import android.app.Service
 import android.net.Uri
+import android.os.Binder
 import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsService
 import androidx.browser.customtabs.CustomTabsSessionToken
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
-import mozilla.components.feature.customtabs.verify.OriginVerifier
+import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.customtabs.store.SaveCreatorPackageNameAction
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -33,7 +36,18 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     private val scope = MainScope()
 
     abstract val engine: Engine
+    open val customTabsServiceStore: CustomTabsServiceStore? = null
     open val httpClient: Client? = null
+
+    private val verifier by lazy {
+        val client = httpClient
+        val store = customTabsServiceStore
+        if (client != null && store != null) {
+            OriginVerifierFeature(client, packageManager) { store.dispatch(it) }
+        } else {
+            null
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -42,17 +56,28 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
 
     override fun warmup(flags: Long): Boolean {
         // We need to run this on the main thread since that's where GeckoRuntime expects to get initialized (if needed)
-        return runBlocking(Dispatchers.Main) {
+        return runBlocking(Main) {
             engine.warmUp()
             true
         }
     }
 
-    override fun requestPostMessageChannel(sessionToken: CustomTabsSessionToken?, postMessageOrigin: Uri?): Boolean {
+    override fun requestPostMessageChannel(sessionToken: CustomTabsSessionToken, postMessageOrigin: Uri?): Boolean {
         return false
     }
 
-    override fun newSession(sessionToken: CustomTabsSessionToken?): Boolean {
+    /**
+     * Saves the package name of the app creating the custom tab when a new session is started.
+     */
+    override fun newSession(sessionToken: CustomTabsSessionToken): Boolean {
+        // Extract the process UID of the app creating the custom tab.
+        val uid = Binder.getCallingUid()
+        // Only save the package if exactly one package name maps to the process UID.
+        val packageName = packageManager.getPackagesForUid(uid)?.singleOrNull()
+
+        if (!packageName.isNullOrEmpty()) {
+            customTabsServiceStore?.dispatch(SaveCreatorPackageNameAction(sessionToken, packageName))
+        }
         return true
     }
 
@@ -61,7 +86,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     }
 
     override fun mayLaunchUrl(
-        sessionToken: CustomTabsSessionToken?,
+        sessionToken: CustomTabsSessionToken,
         url: Uri?,
         extras: Bundle?,
         otherLikelyBundles: MutableList<Bundle>?
@@ -81,26 +106,30 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
         return true
     }
 
-    override fun postMessage(sessionToken: CustomTabsSessionToken?, message: String?, extras: Bundle?): Int {
+    override fun postMessage(sessionToken: CustomTabsSessionToken, message: String?, extras: Bundle?): Int {
         return RESULT_FAILURE_DISALLOWED
     }
 
     override fun validateRelationship(
-        sessionToken: CustomTabsSessionToken?,
-        relation: Int,
+        sessionToken: CustomTabsSessionToken,
+        @Relation relation: Int,
         origin: Uri,
         extras: Bundle?
     ): Boolean {
-        sessionToken ?: return false
-        val client = httpClient ?: return false
-        scope.launch {
-            val verified = OriginVerifier(packageName, relation, packageManager, client).verifyOrigin(origin)
-            sessionToken.callback.onRelationshipValidationResult(relation, origin, verified, extras)
+        val verifier = verifier
+        val state = customTabsServiceStore?.state?.tabs?.getOrElse(sessionToken) { null }
+        return if (verifier != null && state != null) {
+            scope.launch(Main) {
+                val result = verifier.verify(state, sessionToken, relation, origin)
+                sessionToken.callback?.onRelationshipValidationResult(relation, origin, result, extras)
+            }
+            true
+        } else {
+            false
         }
-        return true
     }
 
-    override fun updateVisuals(sessionToken: CustomTabsSessionToken?, bundle: Bundle?): Boolean {
+    override fun updateVisuals(sessionToken: CustomTabsSessionToken, bundle: Bundle?): Boolean {
         return false
     }
 }

@@ -17,11 +17,7 @@ class IntentReceiverActivity : Activity() {
         super.onCreate(savedInstanceState)
         MainScope().launch {
             val intent = intent?.let { Intent(it) } ?: Intent()
-            val intentProcessors = listOf(
-                components.webAppIntentProcessor,
-                components.customTabIntentProcessor,
-                components.tabIntentProcessor
-            )
+            val intentProcessors = components.externalAppIntentProcessors + components.tabIntentProcessor
 
             intentProcessors.any { it.process(intent) }
 
@@ -36,12 +32,7 @@ class IntentReceiverActivity : Activity() {
      * Sets the activity that this [intent] will launch.
      */
     private fun setBrowserActivity(intent: Intent) {
-        val externalAppIntentProcessors = listOf(
-            components.webAppIntentProcessor,
-            components.customTabIntentProcessor
-        )
-
-        val className = if (externalAppIntentProcessors.any { it.matches(intent) }) {
+        val className = if (components.externalAppIntentProcessors.any { it.matches(intent) }) {
             ExternalAppBrowserActivity::class
         } else {
             BrowserActivity::class

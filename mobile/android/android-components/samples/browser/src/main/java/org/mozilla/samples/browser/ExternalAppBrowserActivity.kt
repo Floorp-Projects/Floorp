@@ -5,7 +5,6 @@
 package org.mozilla.samples.browser
 
 import androidx.fragment.app.Fragment
-import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 
 /**
@@ -20,8 +19,7 @@ class ExternalAppBrowserActivity : BrowserActivity() {
 
             ExternalAppBrowserFragment.create(
                 sessionId,
-                manifest = manifest,
-                trustedScopes = listOfNotNull(manifest?.getTrustedScope())
+                manifest = manifest
             )
         } else {
             // Fall back to browser fragment

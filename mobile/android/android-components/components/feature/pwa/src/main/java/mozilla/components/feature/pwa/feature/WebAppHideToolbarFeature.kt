@@ -28,12 +28,12 @@ class WebAppHideToolbarFeature(
     private val sessionManager: SessionManager,
     private val toolbar: View,
     private val sessionId: String,
-    private val trustedScopes: List<Uri>
+    private var trustedScopes: List<Uri>
 ) : Session.Observer, LifecycleAwareFeature {
 
     init {
         // Hide the toolbar by default to prevent a flash.
-        // If we don't trust any scopes don't bother with hiding it.
+        // If trusted scopes is empty, we're probably a normal custom tab so don't hide the toolbar.
         toolbar.isGone = trustedScopes.isNotEmpty()
     }
 
@@ -41,36 +41,45 @@ class WebAppHideToolbarFeature(
      * Hides or reveals the toolbar when the session navigates to a new URL.
      */
     override fun onUrlChanged(session: Session, url: String) {
-        toolbar.isGone = isInScope(url.toUri())
+        toolbar.isGone = isInScope(url.toUri(), trustedScopes)
+    }
+
+    /**
+     * Hides or reveals the toolbar when the list of trusted scopes is changed.
+     */
+    fun onTrustedScopesChange(trustedScopes: List<Uri>) {
+        val url = sessionManager.findSessionById(sessionId)?.url?.toUri()
+        this.trustedScopes = trustedScopes
+        toolbar.isGone = url?.let { isInScope(url, trustedScopes) } ?: false
     }
 
     override fun start() {
-        if (trustedScopes.isNotEmpty()) {
-            sessionManager.findSessionById(sessionId)?.register(this)
-        }
+        sessionManager.findSessionById(sessionId)?.register(this)
     }
 
     override fun stop() {
         sessionManager.findSessionById(sessionId)?.unregister(this)
     }
 
-    /**
-     * Checks that the [target] URL is in scope of the web app.
-     *
-     * https://www.w3.org/TR/appmanifest/#dfn-within-scope
-     */
-    private fun isInScope(target: Uri): Boolean {
-        val path = target.path.orEmpty()
-        return trustedScopes.any { scope ->
-            sameOrigin(scope, target) && path.startsWith(scope.path.orEmpty())
+    companion object {
+        /**
+         * Checks that the [target] URL is in scope of the web app.
+         *
+         * https://www.w3.org/TR/appmanifest/#dfn-within-scope
+         */
+        private fun isInScope(target: Uri, trustedScopes: Iterable<Uri>): Boolean {
+            val path = target.path.orEmpty()
+            return trustedScopes.any { scope ->
+                sameOrigin(scope, target) && path.startsWith(scope.path.orEmpty())
+            }
         }
-    }
 
-    /**
-     * Checks that [a] and [b] have the same origin.
-     *
-     * https://html.spec.whatwg.org/multipage/origin.html#same-origin
-     */
-    private fun sameOrigin(a: Uri, b: Uri) =
-        a.scheme == b.scheme && a.host == b.host && a.port == b.port
+        /**
+         * Checks that [a] and [b] have the same origin.
+         *
+         * https://html.spec.whatwg.org/multipage/origin.html#same-origin
+         */
+        private fun sameOrigin(a: Uri, b: Uri) =
+            a.scheme == b.scheme && a.host == b.host && a.port == b.port
+    }
 }
