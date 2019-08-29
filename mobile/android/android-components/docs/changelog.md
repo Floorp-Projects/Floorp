@@ -44,8 +44,11 @@ permalink: /changelog/
   * **browser-engine-servo**
     * ❌ We removed the `browser-engine-servo` component since it was not being maintained, updated and used.
 
-* **service-firefox-accounts**
-  * ⚠️ **This is a breaking change**: `SyncConfig`'s `syncableStores` has been renamed to `supportedEngines`, expressed via new enum type `SyncEngine`.
+* **concept-sync**, **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**:
+  * `SyncConfig`'s `syncableStores` has been renamed to `supportedEngines`, expressed via new enum type `SyncEngine`.
+  * `begin*` OAuthAccount methods now return an `AuthFlowUrl`, which encapsulates an OAuth state identifier.
+  * `AccountObserver:onAuthenticated` method now has `authType` parameter (instead of `newAccount`), which describes in detail what caused an authentication.
 
 # 11.0.0
 

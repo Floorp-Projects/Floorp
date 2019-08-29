@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-@file:SuppressWarnings("TooManyFunctions")
+@file:SuppressWarnings("TooManyFunctions", "MatchingDeclarationName")
 package mozilla.components.service.fxa
 
 import mozilla.appservices.fxaclient.AccessTokenInfo
@@ -12,13 +12,36 @@ import mozilla.appservices.fxaclient.ScopedKey
 import mozilla.appservices.fxaclient.TabHistoryEntry
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.SyncAuthInfo
 
-// This file describes translations between fxaclient's internal type definitions and analogous
+/**
+ * Converts a raw 'action' string into an [AuthType] instance.
+ * Actions come to us from FxA during an OAuth login, either over the WebChannel or via the redirect URL.
+ */
+fun String.toAuthType(): AuthType {
+    return when (this) {
+        "signin" -> AuthType.Signin
+        "signup" -> AuthType.Signup
+        "pairing" -> AuthType.Pairing
+        // We want to gracefully handle 'actions' we don't know about.
+        else -> AuthType.OtherExternal(this)
+    }
+}
+
+/**
+ * Captures basic OAuth authentication data (code, state) and any additional data FxA passes along.
+ * @property authType Type of authentication which caused this object to be created.
+ * @property code OAuth code.
+ * @property state OAuth state.
+ */
+data class FxaAuthData(val authType: AuthType, val code: String, val state: String)
+
+// The rest of this file describes translations between fxaclient's internal type definitions and analogous
 // types defined by concept-sync. It's a little tedious, but ensures decoupling between abstract
 // definitions and a concrete implementation. In practice, this means that concept-sync doesn't need
 // impose a dependency on fxaclient native library.
@@ -80,7 +103,7 @@ fun Device.Type.into(): mozilla.components.concept.sync.DeviceType {
     }
 }
 
-fun mozilla.components.concept.sync.DeviceType.into(): Device.Type {
+fun DeviceType.into(): Device.Type {
     return when (this) {
         DeviceType.DESKTOP -> Device.Type.DESKTOP
         DeviceType.MOBILE -> Device.Type.MOBILE
@@ -91,15 +114,15 @@ fun mozilla.components.concept.sync.DeviceType.into(): Device.Type {
     }
 }
 
-fun mozilla.components.concept.sync.DeviceCapability.into(): Device.Capability {
+fun DeviceCapability.into(): Device.Capability {
     return when (this) {
         DeviceCapability.SEND_TAB -> Device.Capability.SEND_TAB
     }
 }
 
-fun Device.Capability.into(): mozilla.components.concept.sync.DeviceCapability {
+fun Device.Capability.into(): DeviceCapability {
     return when (this) {
-        Device.Capability.SEND_TAB -> mozilla.components.concept.sync.DeviceCapability.SEND_TAB
+        Device.Capability.SEND_TAB -> DeviceCapability.SEND_TAB
     }
 }
 

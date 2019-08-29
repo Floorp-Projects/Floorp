@@ -11,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.toAuthType
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -66,10 +68,15 @@ class FirefoxAccountsAuthFeature(
                 val code = parsedUri.getQueryParameter("code")
 
                 if (code != null) {
+                    val authType = parsedUri.getQueryParameter("action")!!.toAuthType()
                     val state = parsedUri.getQueryParameter("state") as String
 
                     // Notify the state machine about our success.
-                    accountManager.finishAuthenticationAsync(code, state)
+                    accountManager.finishAuthenticationAsync(FxaAuthData(
+                        authType = authType,
+                        code = code,
+                        state = state
+                    ))
 
                     return RequestInterceptor.InterceptionResponse.Url(redirectUrl)
                 }
