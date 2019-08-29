@@ -60,7 +60,9 @@ function stage2()
   ok(isFrameDecoded("testimage"), "image should be decoded");
 
   // Wait 1.5 seconds, then finish the test
-  setTimeout("finishTest();", 1500);
+  setTimeout(function() {
+    finishTest();;
+  }, 1500);
 
 }
 

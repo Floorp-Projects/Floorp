@@ -80,8 +80,9 @@ function myPoll() {
       loadNextImageAndPoll();
     }
   }
-  else
+  else {
     setTimeout(myPoll, 20);
+  }
 }
 
 function failTest() {

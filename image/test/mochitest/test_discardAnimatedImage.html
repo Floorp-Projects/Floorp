@@ -75,11 +75,11 @@ function runTest() {
 
 function step2() {
   // Draw the images to canvas to force them to be decoded.
-  for (var i = 0; i < gImgs.length; i++) {
+  for (let i = 0; i < gImgs.length; i++) {
     drawCanvas(document.getElementById(gImgs[i]));
   }
 
-  for (var i = 0; i < gImgs.length; i++) {
+  for (let i = 0; i < gImgs.length; i++) {
     addCallbacks(document.getElementById(gImgs[i]), i);
   }
 
