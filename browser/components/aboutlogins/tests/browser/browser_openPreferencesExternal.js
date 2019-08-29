@@ -20,12 +20,6 @@ add_task(async function test_open_feedback() {
       selector: ".menuitem-help",
     },
     {
-      urlFinal: "https://example.com/faqs",
-      urlBase: "https://example.com/faqs",
-      pref: "signon.management.page.faqURL",
-      selector: ".menuitem-faq",
-    },
-    {
       urlFinal: "https://example.com/android?utm_creative=Elipsis_Menu",
       urlBase: "https://example.com/android?utm_creative=",
       pref: "signon.management.page.mobileAndroidURL",

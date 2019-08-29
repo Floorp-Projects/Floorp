@@ -73,10 +73,6 @@
   background-image: url("chrome://browser/skin/settings.svg");
 }
 
-.menuitem-faq {
-  background-image: url("chrome://global/skin/icons/help.svg");
-}
-
 .menuitem-mobile {
   background-image: url("chrome://browser/skin/device-phone.svg");
 }

@@ -156,14 +156,6 @@ var AboutLoginsParent = {
         });
         break;
       }
-      case "AboutLogins:OpenFAQ": {
-        const FAQ_URL_PREF = "signon.management.page.faqURL";
-        const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
-        message.target.ownerGlobal.openWebLinkIn(FAQ_URL, "tab", {
-          relatedToCurrent: true,
-        });
-        break;
-      }
       case "AboutLogins:OpenMobileAndroid": {
         const MOBILE_ANDROID_URL_PREF =
           "signon.management.page.mobileAndroidURL";

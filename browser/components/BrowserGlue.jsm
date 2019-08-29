@@ -143,7 +143,6 @@ let LEGACY_ACTORS = {
         AboutLoginsHideFooter: { wantUntrusted: true },
         AboutLoginsImport: { wantUntrusted: true },
         AboutLoginsInit: { wantUntrusted: true },
-        AboutLoginsOpenFAQ: { wantUntrusted: true },
         AboutLoginsGetHelp: { wantUntrusted: true },
         AboutLoginsOpenMobileAndroid: { wantUntrusted: true },
         AboutLoginsOpenMobileIos: { wantUntrusted: true },
