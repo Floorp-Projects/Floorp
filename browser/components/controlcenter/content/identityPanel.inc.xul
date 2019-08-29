@@ -66,10 +66,10 @@
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
         <vbox id="identity-popup-permissions-content" flex="1" role="group"
               aria-labelledby="identity-popup-permissions-headline">
-          <hbox align="center">
+          <hbox id="identity-popup-permissions-header" align="center">
             <label id="identity-popup-permissions-headline"
                    role="heading" aria-level="2"
-                   value="&identity.permissions2;"/>
+                   value="&identity.permissions3;"/>
           </hbox>
           <vbox id="identity-popup-permission-list"/>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
