@@ -3247,13 +3247,13 @@ function BrowserViewSource(browser) {
 // documentURL - URL of the document to view, or null for this window's document
 // initialTab - name of the initial tab to display, or null for the first tab
 // imageElement - image to load in the Media Tab of the Page Info window; can be null/omitted
-// frameOuterWindowID - the id of the frame that the context menu opened in; can be null/omitted
+// browsingContext - the browsingContext of the frame that we want to view information about; can be null/omitted
 // browser - the browser containing the document we're interested in inspecting; can be null/omitted
 function BrowserPageInfo(
   documentURL,
   initialTab,
   imageElement,
-  frameOuterWindowID,
+  browsingContext,
   browser
 ) {
   if (documentURL instanceof HTMLDocument) {
@@ -3265,7 +3265,7 @@ function BrowserPageInfo(
     documentURL = documentURL.location;
   }
 
-  let args = { initialTab, imageElement, frameOuterWindowID, browser };
+  let args = { initialTab, imageElement, browsingContext, browser };
 
   documentURL = documentURL || window.gBrowser.selectedBrowser.currentURI.spec;
 
