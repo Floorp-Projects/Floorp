@@ -1564,6 +1564,7 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
       // Remember the lazy script on the compiled script, so it can be
       // stored on the function again in case of re-lazification.
       if (canRelazify) {
+        MOZ_RELEASE_ASSERT(script->maybeLazyScript() == lazy);
         script->setLazyScript(lazy);
       }
       return true;
@@ -1664,6 +1665,15 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
       // stored on the function again in case of re-lazification.
       // Only functions without inner functions are re-lazified.
       script->setLazyScript(lazy);
+    } else if (lazy->isWrappedByDebugger()) {
+      // Associate the LazyScript with the JSScript even though the latter
+      // can't be relazified. This is needed to ensure the Debugger can find
+      // the LazyScript when wrapping the JSScript. Mark the script as
+      // unrelazifiable so we don't get confused later.
+      //
+      // See Debugger::wrapVariantReferent.
+      script->setLazyScript(lazy);
+      script->setDoNotRelazify(true);
     }
 
     // XDR the newly delazified function.
