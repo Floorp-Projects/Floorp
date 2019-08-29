@@ -165,8 +165,7 @@ impl<'de> Visitor<'de> for MessageVisitor {
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
                 let response = if let Some(error) = maybe_error {
-                    let _ = seq
-                        .next_element::<Value>()?
+                    seq.next_element::<Value>()?
                         .ok_or_else(|| de::Error::invalid_length(3, &self))?
                         .as_null()
                         .ok_or_else(|| de::Error::invalid_type(Unexpected::Unit, &self))?;
