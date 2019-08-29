@@ -14867,12 +14867,12 @@ void Document::MaybeAllowStorageForOpenerAfterUserInteraction() {
     return;
   }
 
-  auto* outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> outer = inner->GetOuterWindow();
   if (NS_WARN_IF(!outer)) {
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> outerOpener = outer->GetSameProcessOpener();
+  nsCOMPtr<nsPIDOMWindowOuter> outerOpener = outer->GetOpener();
   if (!outerOpener) {
     return;
   }
