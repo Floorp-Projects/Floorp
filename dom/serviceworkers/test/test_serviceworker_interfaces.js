@@ -209,15 +209,15 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "PromiseRejectionEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushEvent", fennecOrDesktop: true },
+  { name: "PushEvent" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushManager", fennecOrDesktop: true },
+  { name: "PushManager" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushMessageData", fennecOrDesktop: true },
+  { name: "PushMessageData" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushSubscription", fennecOrDesktop: true },
+  { name: "PushSubscription" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushSubscriptionOptions", fennecOrDesktop: true },
+  { name: "PushSubscriptionOptions" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Request",
   // IMPORTANT: Do not change this list without review from a DOM peer!
