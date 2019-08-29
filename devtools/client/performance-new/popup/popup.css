@@ -5,7 +5,7 @@
 html {
   background: rgb(250,250,250);
   font: message-box;
-  -moz-user-select: none;
+  user-select: none;
   cursor: default;
   overflow: auto;
 }
@@ -354,7 +354,7 @@ kbd {
 .perf-settings-summary {
   height: 30px;
   cursor: default;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .perf-settings-thread-columns {

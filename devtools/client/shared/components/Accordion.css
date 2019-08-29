@@ -35,7 +35,7 @@
   margin: 0px;
   font-weight: normal;
 
-  -moz-user-select: none;
+  user-select: none;
   cursor: default;
 }
 

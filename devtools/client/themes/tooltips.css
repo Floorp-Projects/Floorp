@@ -90,7 +90,7 @@ strong {
 
 .devtools-tooltip-inactive-css,
 .devtools-tooltip-inactive-css strong {
-  -moz-user-select: text;
+  user-select: text;
   -moz-user-focus: normal;
 }
 
@@ -713,7 +713,7 @@ strong {
   font-size: 12px;
   padding: 7px;
   width: 100%;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .onboarding-icon {

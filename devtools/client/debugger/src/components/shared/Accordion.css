@@ -30,8 +30,6 @@
   margin: 0px;
   font-weight: normal;
   cursor: default;
-  -webkit-user-select: none;
-  -moz-user-select: none;
   user-select: none;
 }
 

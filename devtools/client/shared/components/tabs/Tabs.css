@@ -70,7 +70,7 @@ div[hidetabs=true] .tabs .tabs-navigation {
   text-decoration: none;
   white-space: nowrap;
   cursor: default;
-  -moz-user-select: none;
+  user-select: none;
   text-align: center;
 }
 
@@ -97,7 +97,7 @@ div[hidetabs=true] .tabs .tabs-navigation {
 /* To avoid "select all" commands from selecting content in hidden tabs */
 .tabs .hidden,
 .tabs .hidden * {
-  -moz-user-select: none !important;
+  user-select: none !important;
 }
 
 /* Make sure panel content takes entire vertical space. */

@@ -387,11 +387,11 @@ body {
 }
 
 .treeTable > tbody td {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .treeTable > tbody td > span {
-  -moz-user-select: text;
+  user-select: text;
 }
 
 .mainFrame .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
@@ -425,7 +425,7 @@ body {
   color: var(--badge-color);
   background-color: var(--badge-background-color);
   border: 1px solid var(--badge-border-color);
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .badge.audit-badge::before {
@@ -630,7 +630,7 @@ body {
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .accessible .tree:focus .node.focused .objectBox-accessible .accessible-role,
@@ -702,7 +702,7 @@ body {
 .checks-empty {
   font-style: italic;
   padding: 0.5em 20px;
-  -moz-user-select: none;
+  user-select: none;
   font-size: 12px;
   white-space: initial;
 }
