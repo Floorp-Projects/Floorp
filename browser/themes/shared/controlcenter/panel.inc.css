@@ -18,7 +18,7 @@
   fill: currentColor;
   --horizontal-padding: 2.1rem;
   --vertical-section-padding: 0.9em;
-  --height-offset: 0;
+  --height-offset: 0px;
 }
 
 #protections-popup[toast] {
