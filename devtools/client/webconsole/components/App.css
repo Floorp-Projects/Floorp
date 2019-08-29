@@ -19,7 +19,7 @@ body {
   direction: ltr;
   overflow: auto;
   overflow-anchor: none;
-  -moz-user-select: text;
+  user-select: text;
   position: relative;
 }
 

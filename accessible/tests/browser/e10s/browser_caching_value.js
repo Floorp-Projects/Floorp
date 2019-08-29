@@ -84,7 +84,7 @@ const valueTests = [
         attr: "aria-valuenow",
       },
     ],
-    expected: ["hey!", 0, 0, 7, 0],
+    expected: ["hey!", 3.5, 0, 7, 0],
   },
   {
     desc: "Initially value is not set for combobox",

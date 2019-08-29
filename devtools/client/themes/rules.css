@@ -69,7 +69,7 @@
 }
 
 .ruleview-reveal-panel label {
-  -moz-user-select: none;
+  user-select: none;
   flex-grow: 1;
   display: flex;
   align-items: center;
@@ -116,7 +116,7 @@
 /* Rule View Container */
 
 #ruleview-container {
-  -moz-user-select: text;
+  user-select: text;
   overflow: auto;
   flex: auto;
   height: 100%;
@@ -204,7 +204,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 
-  -moz-user-select: none;
+  user-select: none;
   margin-bottom: 2px;
   margin-left: 1ch;
 }
@@ -239,8 +239,7 @@
   width: 100%;
   align-items: center;
   display: flex;
-
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .ruleview-expandable-header {
