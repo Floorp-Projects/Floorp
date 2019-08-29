@@ -4822,14 +4822,22 @@ const BrowserSearch = {
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
-  _loadSearch(searchText, useNewTab, purpose, triggeringPrincipal, csp) {
+  _loadSearch(
+    searchText,
+    useNewTab,
+    usePrivate,
+    purpose,
+    triggeringPrincipal,
+    csp
+  ) {
     if (!triggeringPrincipal) {
       throw new Error(
         "Required argument triggeringPrincipal missing within _loadSearch"
       );
     }
 
-    let engine = Services.search.defaultEngine;
+    let engine =
+      Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
 
     let submission = engine.getSubmission(searchText, null, purpose); // HTML response
 
@@ -4861,10 +4869,11 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  loadSearchFromContext(terms, triggeringPrincipal, csp) {
+  loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
     let engine = BrowserSearch._loadSearch(
       terms,
       true,
+      usePrivate,
       "contextmenu",
       triggeringPrincipal,
       csp

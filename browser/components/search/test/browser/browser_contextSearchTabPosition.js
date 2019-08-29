@@ -37,10 +37,12 @@ add_task(async function test() {
   BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserSearch.loadSearchFromContext(
     "mozilla",
+    false,
     Services.scriptSecurityManager.getSystemPrincipal()
   );
   BrowserSearch.loadSearchFromContext(
     "firefox",
+    false,
     Services.scriptSecurityManager.getSystemPrincipal()
   );
 
