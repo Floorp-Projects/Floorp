@@ -1294,6 +1294,36 @@ void DocAccessible::ContentInserted(nsIContent* aStartChildNode,
 
 bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   bool insert = false;
+
+  // In the case that we are, or are in, a shadow host, we need to assure
+  // some accessibles are removed if they are not rendered anymore.
+  nsIContent* shadowHost =
+      aRoot->GetShadowRoot() ? aRoot : aRoot->GetContainingShadowHost();
+  if (shadowHost) {
+    dom::ExplicitChildIterator iter(shadowHost);
+
+    // Check all explicit children in the host, if they are not slotted
+    // then remove their accessibles and subtrees.
+    while (nsIContent* childNode = iter.GetNextChild()) {
+      if (!childNode->GetPrimaryFrame() &&
+          !nsCoreUtils::IsDisplayContents(childNode)) {
+        ContentRemoved(childNode);
+      }
+    }
+
+    // If this is a slot, check to see if its fallback content is rendered,
+    // if not - remove it.
+    if (aRoot->IsHTMLElement(nsGkAtoms::slot)) {
+      for (nsIContent* childNode = aRoot->GetFirstChild(); childNode;
+           childNode = childNode->GetNextSibling()) {
+        if (!childNode->GetPrimaryFrame() &&
+            !nsCoreUtils::IsDisplayContents(childNode)) {
+          ContentRemoved(childNode);
+        }
+      }
+    }
+  }
+
   // If we already have an accessible, check if we need to remove it, recreate
   // it, or keep it in place.
   Accessible* acc = GetAccessible(aRoot);
@@ -1334,6 +1364,11 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       ContentRemoved(aRoot);
       return true;
     }
+
+    // The accessible can be reparented or reordered in its parent.
+    // We schedule it for reinsertion. For example, a slotted element
+    // can change its slot attribute to a different slot.
+    insert = true;
   } else {
     // If there is no current accessible, and the node has a frame, or is
     // display:contents, schedule it for insertion.
@@ -1762,6 +1797,7 @@ class InsertIterator final {
   TreeWalker mWalker;
 
   const nsTArray<nsCOMPtr<nsIContent> >* mNodes;
+  nsTHashtable<nsPtrHashKey<const nsIContent>> mProcessedNodes;
   uint32_t mNodesIdx;
 };
 
@@ -1787,7 +1823,15 @@ bool InsertIterator::Next() {
     // what means there's no container. Ignore the insertion too.
     nsIContent* prevNode = mNodes->SafeElementAt(mNodesIdx - 1);
     nsIContent* node = mNodes->ElementAt(mNodesIdx++);
-    Accessible* container = Document()->AccessibleOrTrueContainer(node, true);
+    // Check to see if we already processed this node with this iterator.
+    // this can happen if we get two redundant insertions in the case of a
+    // text and frame insertion.
+    if (!mProcessedNodes.EnsureInserted(node)) {
+      continue;
+    }
+
+    Accessible* container =
+        Document()->AccessibleOrTrueContainer(node->GetParentNode(), true);
     if (container != Context()) {
       continue;
     }
@@ -1856,20 +1900,17 @@ void DocAccessible::ProcessContentInserted(
   do {
     Accessible* parent = iter.Child()->Parent();
     if (parent) {
-      if (parent != aContainer) {
+      Accessible* previousSibling = iter.ChildBefore();
+      if (parent != aContainer ||
+          iter.Child()->PrevSibling() != previousSibling) {
 #ifdef A11Y_LOG
-        logging::TreeInfo("stealing accessible", 0, "old parent", parent,
+        logging::TreeInfo("relocating accessible", 0, "old parent", parent,
                           "new parent", aContainer, "child", iter.Child(),
                           nullptr);
 #endif
-        MOZ_ASSERT_UNREACHABLE("stealing accessible");
-        continue;
+        MoveChild(iter.Child(), aContainer,
+                  previousSibling ? previousSibling->IndexInParent() + 1 : 0);
       }
-
-#ifdef A11Y_LOG
-      logging::TreeInfo("binding to same parent", logging::eVerbose, "parent",
-                        aContainer, "child", iter.Child(), nullptr);
-#endif
       continue;
     }
 
