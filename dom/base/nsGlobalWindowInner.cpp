@@ -3034,33 +3034,27 @@ nsresult nsGlobalWindowInner::GetControllers(nsIControllers** aResult) {
   return rv.StealNSResult();
 }
 
-Nullable<WindowProxyHolder> nsGlobalWindowInner::GetOpenerWindow(
-    ErrorResult& aError) {
+nsPIDOMWindowOuter* nsGlobalWindowInner::GetOpenerWindow(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetOpenerWindowOuter, (), aError, nullptr);
 }
 
 void nsGlobalWindowInner::GetOpener(JSContext* aCx,
                                     JS::MutableHandle<JS::Value> aRetval,
                                     ErrorResult& aError) {
-  Nullable<WindowProxyHolder> opener = GetOpenerWindow(aError);
-  if (aError.Failed() || opener.IsNull()) {
+  nsCOMPtr<nsPIDOMWindowOuter> opener = GetOpenerWindow(aError);
+  if (aError.Failed() || !opener) {
     aRetval.setNull();
     return;
   }
 
-  if (!ToJSValue(aCx, opener.Value(), aRetval)) {
-    aError.NoteJSContextException(aCx);
-  }
+  aError = nsContentUtils::WrapNative(aCx, opener, aRetval);
 }
 
 void nsGlobalWindowInner::SetOpener(JSContext* aCx,
                                     JS::Handle<JS::Value> aOpener,
                                     ErrorResult& aError) {
   if (aOpener.isNull()) {
-    RefPtr<BrowsingContext> bc(GetBrowsingContext());
-    if (!bc->IsDiscarded()) {
-      bc->SetOpener(nullptr);
-    }
+    FORWARD_TO_OUTER_VOID(SetOpenerWindow, (nullptr, false));
     return;
   }
 
