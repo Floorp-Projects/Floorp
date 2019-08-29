@@ -71,11 +71,9 @@ inline bool Accessible::HasGenericType(AccGenericType aType) const {
          (roleMapEntry && roleMapEntry->IsOfType(aType));
 }
 
-inline bool Accessible::NativeHasNumericValue() const {
-  return mStateFlags & eHasNumericValue;
-}
+inline bool Accessible::HasNumericValue() const {
+  if (mStateFlags & eHasNumericValue) return true;
 
-inline bool Accessible::ARIAHasNumericValue() const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
 
@@ -83,10 +81,6 @@ inline bool Accessible::ARIAHasNumericValue() const {
     return InteractiveState() & states::FOCUSABLE;
 
   return true;
-}
-
-inline bool Accessible::HasNumericValue() const {
-  return NativeHasNumericValue() || ARIAHasNumericValue();
 }
 
 inline bool Accessible::IsDefunct() const {
