@@ -17,7 +17,7 @@
 #include "nsIContentPolicy.h"
 
 class nsIURI;
-class nsINode;
+class nsIContent;
 class nsIPrincipal;
 class imgRequestProxy;
 
@@ -25,7 +25,7 @@ class nsIconLoaderService : public imgINotificationObserver {
  public:
   // If aScaleFactor is not specified, then an image with both regular and
   // HiDPI representations will be loaded.
-  nsIconLoaderService(nsINode* aContent, nsIntRect* aImageRegionRect,
+  nsIconLoaderService(nsIContent* aContent, nsIntRect* aImageRegionRect,
                       RefPtr<nsIconLoaderObserver> aObserver, uint32_t aIconHeight,
                       uint32_t aIconWidth, CGFloat aScaleFactor = 0.0f);
 
@@ -33,15 +33,15 @@ class nsIconLoaderService : public imgINotificationObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  // LoadIcon will start a load request for the icon.
-  // The request may not complete until after LoadIcon returns.
+  // LoadIcon will set a placeholder image and start a load request for the
+  // icon.  The request may not complete until after LoadIcon returns.
   nsresult LoadIcon(nsIURI* aIconURI);
 
-  NSImage* GetNativeIconImage();
-
+  // Unless we take precautions, we may outlive the object that created us
+  // (mMenuObject, which owns our native menu item (mNativeMenuItem)).
+  // Destroy() should be called from mMenuObject's destructor to prevent
+  // this from happening.  See bug 499600.
   void Destroy();
-
-  void ReleaseJSObjects() { mContent = nil; }
 
  protected:
   virtual ~nsIconLoaderService();
@@ -49,7 +49,7 @@ class nsIconLoaderService : public imgINotificationObserver {
  private:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
-  nsCOMPtr<nsINode> mContent;
+  nsCOMPtr<nsIContent> mContent;
   nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
   nsIntRect* mImageRegionRect;
@@ -60,4 +60,5 @@ class nsIconLoaderService : public imgINotificationObserver {
   CGFloat mScaleFactor;
   RefPtr<nsIconLoaderObserver> mCompletionHandler;
 };
+
 #endif  // nsIconLoaderService_h_
