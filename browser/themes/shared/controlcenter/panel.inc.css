@@ -122,6 +122,7 @@
   margin-bottom: 0;
 }
 
+#identity-popup-permissions-header,
 .identity-popup-security-connection,
 #identity-popup-security-description {
   /* icon indent + 16px icon width + 6px description margin
@@ -143,6 +144,17 @@
 #identity-popup-permissions-content {
   padding-top: 1em;
   padding-bottom: 1em;
+}
+
+#identity-popup-permissions-header {
+  background-image: url(chrome://browser/skin/permissions.svg);
+  background-repeat: no-repeat;
+}
+
+#identity-popup-permissions-header,
+#identity-popup-permission-list {
+  /* 16px icon width + 12px margin */
+  padding-inline-start: 28px;
 }
 
 #protections-popup-content {
@@ -853,26 +865,12 @@ description#identity-popup-content-verifier,
 
 /* PERMISSIONS */
 
-#identity-popup-permissions-content {
-  padding-bottom: 1.5em;
-}
-
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   /* The extra padding-bottom is there to work around XUL flex (Bug 1368281).
      This rule and the 1.5em above can both be removed once we are only using CSS flex. */
   #identity-popup-permissions-content {
     padding-bottom: 1em;
   }
-}
-
-#identity-popup-permissions-headline {
-  color: #737373;
-  font-weight: 500;
-  margin-inline-start: 0;
-}
-
-:root[lwt-popup-brighttext] #identity-popup-permissions-headline {
-  color: #f9f9fa;
 }
 
 .protections-popup-category,
@@ -892,7 +890,7 @@ description#identity-popup-content-verifier,
 #identity-popup-permission-reload-hint,
 #identity-popup-permission-empty-hint,
 #identity-popup-permission-list:not(:empty) {
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
 .identity-popup-permission-icon {

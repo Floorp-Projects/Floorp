@@ -21,6 +21,7 @@
   padding-inline-start: 8px;
 }
 
+#identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
 #identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
 #identity-box[pageproxystate="invalid"] > #identity-icon-labels,
@@ -116,6 +117,7 @@
 
 .sharing-icon,
 #identity-icon,
+#permissions-granted-icon,
 #tracking-protection-icon,
 .notification-anchor-icon,
 #blocked-permissions-container > .blocked-permission-icon {
@@ -181,6 +183,14 @@
 #identity-box[pageproxystate="valid"].insecureLoginForms > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveContent > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
+}
+
+#permissions-granted-icon {
+  list-style-image: url(chrome://browser/skin/permissions.svg);
+}
+
+#identity-box:not(.grantedPermissions) > #permissions-granted-icon {
+  display: none;
 }
 
 /* SHARING ICON */

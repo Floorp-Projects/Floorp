@@ -199,6 +199,8 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY urlbar.emeNotificationAnchor.tooltip             "Manage use of DRM software">
 <!ENTITY urlbar.midiNotificationAnchor.tooltip            "Open MIDI panel">
 
+<!ENTITY urlbar.permissionsGranted.tooltip       "You have granted this website additional permissions.">
+
 <!ENTITY urlbar.cameraBlocked.tooltip            "You have blocked your camera for this website.">
 <!ENTITY urlbar.microphoneBlocked.tooltip        "You have blocked your microphone for this website.">
 <!ENTITY urlbar.screenBlocked.tooltip            "You have blocked this website from sharing your screen.">
@@ -714,8 +716,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY identity.clearSiteData "Clear Cookies and Site Data…">
 
-<!-- LOCALIZATION NOTE (identity.permissions2): "set" as in "configured for this website" -->
-<!ENTITY identity.permissions2 "Permissions Set">
+<!ENTITY identity.permissions3 "Permissions">
 <!ENTITY identity.permissionsEmpty "You have not granted this site any special permissions.">
 <!ENTITY identity.permissionsReloadHint "You may need to reload the page for changes to apply.">
 
