@@ -213,7 +213,7 @@
 
 - name: apz.android.chrome_fling_physics.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.android.chrome_fling_physics.friction
@@ -233,7 +233,7 @@
 
 - name: apz.autoscroll.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.axis_lock.breakout_angle
@@ -259,6 +259,10 @@
   mirror: always
   include: <cmath>
 
+# Whether to lock touch scrolling to one axis at a time.
+# 0 = FREE (No locking at all)
+# 1 = STANDARD (Once locked, remain locked until scrolling ends)
+# 2 = STICKY (Allow lock to be broken, with hysteresis)
 - name: apz.axis_lock.mode
   type: RelaxedAtomicInt32
   value: 0
