@@ -3389,21 +3389,23 @@ Toolbox.prototype = {
       objectActor.preview &&
       objectActor.preview.nodeType === domNodeConstants.ELEMENT_NODE
     ) {
-      return this.viewElementInInspector(objectActor, inspectFromAnnotation);
-    }
-
-    if (objectActor.class == "Function") {
-      const { url, line } = objectActor.location;
-      return this.viewSourceInDebugger(url, line);
-    }
-
-    if (objectActor.type !== "null" && objectActor.type !== "undefined") {
+      // Open the inspector and select the DOM Element.
+      await this.loadTool("inspector");
+      const inspector = this.getPanel("inspector");
+      const nodeFound = await inspector.inspectNodeActor(
+        objectActor.actor,
+        inspectFromAnnotation
+      );
+      if (nodeFound) {
+        await this.selectTool("inspector");
+      }
+    } else if (
+      objectActor.type !== "null" &&
+      objectActor.type !== "undefined"
+    ) {
       // Open then split console and inspect the object in the variables view,
       // when the objectActor doesn't represent an undefined or null value.
-      if (this.currentToolId != "webconsole") {
-        await this.openSplitConsole();
-      }
-
+      await this.openSplitConsole();
       const panel = this.getPanel("webconsole");
       panel.hud.ui.inspectObjectActor(objectActor);
     }
@@ -3791,19 +3793,6 @@ Toolbox.prototype = {
       sourceLine,
       sourceColumn
     );
-  },
-
-  viewElementInInspector: async function(objectActor, inspectFromAnnotation) {
-    // Open the inspector and select the DOM Element.
-    await this.loadTool("inspector");
-    const inspector = this.getPanel("inspector");
-    const nodeFound = await inspector.inspectNodeActor(
-      objectActor.actor,
-      inspectFromAnnotation
-    );
-    if (nodeFound) {
-      await this.selectTool("inspector");
-    }
   },
 
   /**
