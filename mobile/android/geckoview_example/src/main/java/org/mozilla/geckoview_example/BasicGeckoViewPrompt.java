@@ -27,12 +27,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.CheckedTextView;
-import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -51,8 +48,8 @@ import java.util.Locale;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
-import org.mozilla.geckoview.GeckoSession.PromptDelegate;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
+import org.mozilla.geckoview.SlowScriptResponse;
 
 final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
     protected static final String LOGTAG = "BasicGeckoViewPrompt";
@@ -823,6 +820,30 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                        callback.grant();
                    }
                });
+
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    public void onSlowScriptPrompt(GeckoSession geckoSession, String title, GeckoResult<SlowScriptResponse> reportAction) {
+        final Activity activity = mActivity;
+        if (activity == null) {
+            return;
+        }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle(title)
+                .setNegativeButton(activity.getString(R.string.wait), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        reportAction.complete(SlowScriptResponse.CONTINUE);
+                    }
+                })
+                .setPositiveButton(activity.getString(R.string.stop), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialog, final int which) {
+                        reportAction.complete(SlowScriptResponse.STOP);
+                    }
+                });
 
         final AlertDialog dialog = builder.create();
         dialog.show();

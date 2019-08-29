@@ -1,0 +1,11 @@
+<html>
+    <head><title>Hung Script</title>
+	</head>
+    <body><div id="content"></div></body>
+	<script>
+		var start = new Date().getTime();
+		document.getElementById("content").innerHTML = "Started";
+		while((new Date().getTime() - start) < 5000 ) {};
+		document.getElementById("content").innerHTML = "Finished";
+	</script>
+</html>

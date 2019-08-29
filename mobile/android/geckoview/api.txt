@@ -77,6 +77,7 @@ import org.mozilla.geckoview.ScreenLength;
 import org.mozilla.geckoview.SessionAccessibility;
 import org.mozilla.geckoview.SessionFinder;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.StorageController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
@@ -508,6 +509,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onFocusRequest(@NonNull GeckoSession);
     method @UiThread default public void onFullScreen(@NonNull GeckoSession, boolean);
     method @UiThread default public void onKill(@NonNull GeckoSession);
+    method @UiThread @Nullable default public GeckoResult<SlowScriptResponse> onSlowScript(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onTitleChange(@NonNull GeckoSession, @Nullable String);
     method @UiThread default public void onWebAppManifest(@NonNull GeckoSession, @NonNull JSONObject);
   }
@@ -1156,6 +1158,13 @@ package org.mozilla.geckoview {
     method @UiThread public void onProvideAutofillVirtualStructure(@NonNull ViewStructure, int);
     method @UiThread public void setDelegate(@Nullable GeckoSession.TextInputDelegate);
     method @UiThread public synchronized void setView(@Nullable View);
+  }
+
+  @AnyThread public final enum SlowScriptResponse {
+    method public static SlowScriptResponse valueOf(String);
+    method public static SlowScriptResponse[] values();
+    enum_constant public static final SlowScriptResponse CONTINUE;
+    enum_constant public static final SlowScriptResponse STOP;
   }
 
   public final class StorageController {

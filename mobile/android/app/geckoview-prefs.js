@@ -22,6 +22,9 @@ pref("dom.ipc.processCount", 1);
 pref("dom.ipc.processHangMonitor", true);
 pref("dom.ipc.processPrelaunch.enabled", false);
 
+// Enable hang reports
+pref("dom.ipc.reportProcessHangs", true);
+
 // Tell Telemetry that we're in GeckoView mode.
 pref("toolkit.telemetry.isGeckoViewMode", true);
 // Disable the Telemetry Event Ping
