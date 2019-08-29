@@ -128,6 +128,15 @@ export default class LoginItem extends HTMLElement {
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
     this._passwordInput.defaultValue = this._login.password || "";
+    if (this.dataset.editing) {
+      this._usernameInput.removeAttribute("data-l10n-id");
+    } else {
+      document.l10n.setAttributes(
+        this._usernameInput,
+        "about-logins-login-item-username"
+      );
+    }
+    this._copyUsernameButton.disabled = !this._login.username;
     document.l10n.setAttributes(
       this._saveChangesButton,
       this.dataset.isNewLogin
@@ -279,6 +288,7 @@ export default class LoginItem extends HTMLElement {
         }
         if (classList.contains("edit-button")) {
           this._toggleEditing();
+          this.render();
 
           recordTelemetryEvent({ object: "existing_login", method: "edit" });
           return;
