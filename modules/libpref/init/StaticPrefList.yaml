@@ -395,7 +395,7 @@
 
 - name: apz.frame_delay.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 #ifdef MOZ_WIDGET_GTK
@@ -416,7 +416,11 @@
 
 - name: apz.keyboard.passive-listeners
   type: RelaxedAtomicBool
+#ifdef MOZ_WIDGET_ANDROID
   value: false
+#else
+  value: true
+#endif
   mirror: always
 
 - name: apz.max_tap_time
