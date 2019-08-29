@@ -3,6 +3,10 @@
 
 "use strict";
 
+const {
+  accessibility: { SCORES },
+} = require("devtools/shared/constants");
+
 const TEST_URI = `<html>
   <head>
     <meta charset="utf-8"/>
@@ -45,7 +49,7 @@ const tests = [
           color: [255, 0, 0, 1],
           backgroundColor: [255, 255, 255, 1],
           isLargeText: false,
-          score: "fail",
+          score: SCORES.FAIL,
         },
       },
     },
@@ -63,7 +67,7 @@ const tests = [
           color: [0, 0, 255, 1],
           backgroundColor: [255, 255, 255, 1],
           isLargeText: false,
-          score: "AAA",
+          score: SCORES.AAA,
         },
       },
     },
