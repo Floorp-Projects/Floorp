@@ -320,8 +320,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
 
  private:
-  js::ZoneData<DebuggerVector*> debuggers;
-
   js::jit::JitZone* createJitZone(JSContext* cx);
 
   bool isQueuedForBackgroundSweep() { return isOnList(); }
@@ -332,10 +330,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::gc::UniqueIdMap& uniqueIds() { return uniqueIds_.ref(); }
 
  public:
-  bool hasDebuggers() const { return debuggers && debuggers->length(); }
-  DebuggerVector* getDebuggers() const { return debuggers; }
-  DebuggerVector* getOrCreateDebuggers(JSContext* cx);
-
   void notifyObservingDebuggers();
 
   void clearTables();

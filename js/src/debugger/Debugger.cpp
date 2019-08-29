@@ -4545,13 +4545,12 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   //
   // 1. this js::Debugger must be in global->getDebuggers(),
   // 2. global must be in this->debuggees,
-  // 3. it must be in zone->getDebuggers(),
-  // 4. the debuggee's zone must be in this->debuggeeZones,
-  // 5. if we are tracking allocations, the SavedStacksMetadataBuilder must be
+  // 3. the debuggee's zone must be in this->debuggeeZones,
+  // 4. if we are tracking allocations, the SavedStacksMetadataBuilder must be
   //    installed for this realm, and
-  // 6. Realm::isDebuggee()'s bit must be set.
+  // 5. Realm::isDebuggee()'s bit must be set.
   //
-  // All six indications must be kept consistent.
+  // All five indications must be kept consistent.
 
   AutoRealm ar(cx, global);
   Zone* zone = global->zone();
@@ -4578,21 +4577,6 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   bool addingZoneRelation = !debuggeeZones.has(zone);
 
   // (3)
-  auto* zoneDebuggers = zone->getOrCreateDebuggers(cx);
-  if (!zoneDebuggers) {
-    return false;
-  }
-  if (addingZoneRelation && !zoneDebuggers->append(this)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  auto zoneDebuggersGuard = MakeScopeExit([&] {
-    if (addingZoneRelation) {
-      zoneDebuggers->popBack();
-    }
-  });
-
-  // (4)
   if (addingZoneRelation && !debuggeeZones.put(zone)) {
     ReportOutOfMemory(cx);
     return false;
@@ -4603,7 +4587,7 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
     }
   });
 
-  // (5)
+  // (4)
   if (trackingAllocationSites &&
       !Debugger::addAllocationsTracking(cx, global)) {
     return false;
@@ -4615,7 +4599,7 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
     }
   });
 
-  // (6)
+  // (5)
   AutoRestoreRealmDebugMode debugModeGuard(debuggeeRealm);
   debuggeeRealm->setIsDebuggee();
   debuggeeRealm->updateDebuggerObservesAsmJS();
@@ -4627,7 +4611,6 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
 
   globalDebuggersGuard.release();
   debuggeesGuard.release();
-  zoneDebuggersGuard.release();
   debuggeeZonesGuard.release();
   allocationsTrackingGuard.release();
   debugModeGuard.release();
@@ -4721,7 +4704,6 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   }
 
   auto* globalDebuggersVector = global->getDebuggers();
-  auto* zoneDebuggersVector = global->zone()->getDebuggers();
 
   // The relation must be removed from up to three places:
   // globalDebuggersVector and debuggees for sure, and possibly the
@@ -4742,10 +4724,6 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   }
 
   recomputeDebuggeeZoneSet();
-
-  if (!debuggeeZones.has(global->zone())) {
-    zoneDebuggersVector->erase(findDebuggerInVector(this, zoneDebuggersVector));
-  }
 
   // Remove all breakpoints for the debuggee.
   Breakpoint* nextbp;
