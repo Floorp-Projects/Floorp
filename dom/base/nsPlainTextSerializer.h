@@ -15,6 +15,7 @@
 #define nsPlainTextSerializer_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/intl/LineBreaker.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
@@ -150,7 +151,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
  private:
   uint32_t mHeadLevel;
-  bool mAtFirstColumn;
 
   class Settings {
    public:
@@ -203,8 +203,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
     void MaybeReplaceNbsps();
 
-    void AppendLineBreak();
-
     nsString mValue;
 
     // The width of the line as it will appear on the screen (approx.).
@@ -213,11 +211,38 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
    private:
     // As defined in nsIDocumentEncoder.idl.
     int32_t mFlags;
+  };
+
+  CurrentLineContent mCurrentLineContent;
+
+  class OutputManager {
+   public:
+    /**
+     *  @param aFlags As defined in nsIDocumentEncoder.idl.
+     *  @param aOutput An empty string.
+     */
+    OutputManager(int32_t aFlags, nsAString& aOutput);
+
+    /**
+     * @param aString Last character is expected to not be a line break.
+     */
+    void Append(const nsAString& aString);
+
+    void AppendLineBreak();
+
+    bool IsAtFirstColumn() const { return mAtFirstColumn; }
+
+    uint32_t GetOutputLength() const;
+
+   private:
+    nsAString& mOutput;
+
+    bool mAtFirstColumn;
 
     nsString mLineBreak;
   };
 
-  CurrentLineContent mCurrentLineContent;
+  Maybe<OutputManager> mOutputManager;
 
   // If we've just written out a cite blockquote, we need to remember it
   // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
