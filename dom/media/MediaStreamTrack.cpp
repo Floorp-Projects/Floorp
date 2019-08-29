@@ -12,6 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "systemservices/MediaUtils.h"
@@ -78,10 +79,7 @@ auto MediaStreamTrackSource::ApplyConstraints(
  */
 class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
  public:
-  explicit MSGListener(MediaStreamTrack* aTrack)
-      : mGraph(aTrack->GraphImpl()), mTrack(aTrack) {
-    MOZ_ASSERT(mGraph);
-  }
+  explicit MSGListener(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
 
   void DoNotifyPrincipalHandleChanged(
       const PrincipalHandle& aNewPrincipalHandle) {
@@ -97,7 +95,7 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
   void NotifyPrincipalHandleChanged(
       MediaStreamGraph* aGraph,
       const PrincipalHandle& aNewPrincipalHandle) override {
-    mGraph->DispatchToMainThreadStableState(
+    aGraph->DispatchToMainThreadStableState(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
             "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
@@ -105,11 +103,11 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
             aNewPrincipalHandle));
   }
 
-  void NotifyRemoved() override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     // `mTrack` is a WeakPtr and must be destroyed on main thread.
     // We dispatch ourselves to main thread here in case the MediaStreamGraph
     // is holding the last reference to us.
-    mGraph->DispatchToMainThreadStableState(
+    aGraph->DispatchToMainThreadStableState(
         NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
                                [self = RefPtr<MSGListener>(this)]() {}));
   }
@@ -121,20 +119,25 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
       return;
     }
 
-    mGraph->AbstractMainThread()->Dispatch(
-        NewRunnableMethod("MediaStreamTrack::OverrideEnded", mTrack.get(),
-                          &MediaStreamTrack::OverrideEnded));
+    if (!mTrack->GetParentObject()) {
+      return;
+    }
+
+    AbstractThread* mainThread =
+        nsGlobalWindowInner::Cast(mTrack->GetParentObject())
+            ->AbstractMainThreadFor(TaskCategory::Other);
+    mainThread->Dispatch(NewRunnableMethod("MediaStreamTrack::OverrideEnded",
+                                           mTrack.get(),
+                                           &MediaStreamTrack::OverrideEnded));
   }
 
-  void NotifyEnded() override {
-    mGraph->DispatchToMainThreadStableState(
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
+    aGraph->DispatchToMainThreadStableState(
         NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
                           &MSGListener::DoNotifyEnded));
   }
 
  protected:
-  const RefPtr<MediaStreamGraphImpl> mGraph;
-
   // Main thread only.
   WeakPtr<MediaStreamTrack> mTrack;
 };

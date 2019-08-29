@@ -79,7 +79,8 @@ class MediaStreamTrackListener {
    * (enabled) or silent (not enabled); or whether video should be displayed as
    * is (enabled), or black (not enabled).
    */
-  virtual void NotifyEnabledStateChanged(bool aEnabled) {}
+  virtual void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
+                                         bool aEnabled) {}
 
   /**
    * Notify that the stream output is advancing. aCurrentTrackTime is the number
@@ -91,13 +92,13 @@ class MediaStreamTrackListener {
   /**
    * Notify that this track has been ended and all data has been played out.
    */
-  virtual void NotifyEnded() {}
+  virtual void NotifyEnded(MediaStreamGraph* aGraph) {}
 
   /**
    * Notify that this track listener has been removed from the graph, either
    * after shutdown or RemoveTrackListener.
    */
-  virtual void NotifyRemoved() {}
+  virtual void NotifyRemoved(MediaStreamGraph* aGraph) {}
 
  protected:
   virtual ~MediaStreamTrackListener() {}

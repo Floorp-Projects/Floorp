@@ -43,7 +43,7 @@ class DecodedStreamTrackListener : public MediaStreamTrackListener {
 
   void NotifyOutput(MediaStreamGraph* aGraph,
                     StreamTime aCurrentTrackTime) override;
-  void NotifyEnded() override;
+  void NotifyEnded(MediaStreamGraph* aGraph) override;
 
  private:
   const RefPtr<DecodedStreamGraphListener> mGraphListener;
@@ -224,7 +224,7 @@ void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
   mGraphListener->NotifyOutput(mStream, aCurrentTrackTime);
 }
 
-void DecodedStreamTrackListener::NotifyEnded() {
+void DecodedStreamTrackListener::NotifyEnded(MediaStreamGraph* aGraph) {
   mGraphListener->NotifyEnded(mStream);
 }
 
