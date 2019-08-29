@@ -14,10 +14,10 @@ add_task(async function setup() {
 add_task(async function test_open_feedback() {
   const menuArray = [
     {
-      urlFinal: "https://example.com/feedback",
-      urlBase: "https://example.com/feedback",
-      pref: "signon.management.page.feedbackURL",
-      selector: ".menuitem-feedback",
+      urlFinal: "https://example.com/firefox-lockwise",
+      urlBase: "https://example.com/",
+      pref: "app.support.baseURL",
+      selector: ".menuitem-help",
     },
     {
       urlFinal: "https://example.com/faqs",
