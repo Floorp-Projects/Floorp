@@ -59,6 +59,10 @@
   padding: 0 6px 2px;
 }
 
+:root[uidensity=compact] #PersonalToolbar {
+  padding-inline: 2px;
+}
+
 :root[sessionrestored] #PersonalToolbar {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
 }
