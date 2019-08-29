@@ -1,0 +1,19 @@
+<!doctype html>
+<script src="util.js"></script>
+<div id="x"></div>
+<script>
+  /*
+   * Test performance of bareword lookup via the Window's named properties
+   * object.
+   */
+  onload = function() {
+    let count = 1000000; // About 700ms
+    perf_start();
+    for (let i = count; i > 0; --i) {
+      // Pretty sure JITs are not smart enough to optimize out this proxy
+      // lookup, so no need to do anything other than perform the get.
+      x;
+    }
+    perf_finish();
+  }
+</script>
