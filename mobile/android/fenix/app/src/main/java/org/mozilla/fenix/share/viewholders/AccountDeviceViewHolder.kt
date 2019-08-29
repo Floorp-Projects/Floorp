@@ -7,6 +7,7 @@ package org.mozilla.fenix.share.viewholders
 import android.content.Context
 import android.graphics.PorterDuff
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
@@ -17,7 +18,8 @@ import org.mozilla.fenix.share.listadapters.SyncShareOption
 
 class AccountDeviceViewHolder(
     itemView: View,
-    private val interactor: ShareToAccountDevicesInteractor
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val interactor: ShareToAccountDevicesInteractor
 ) : RecyclerView.ViewHolder(itemView) {
 
     private val context: Context = itemView.context

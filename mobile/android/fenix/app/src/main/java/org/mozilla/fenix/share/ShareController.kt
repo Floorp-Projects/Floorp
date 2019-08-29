@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
@@ -53,10 +54,8 @@ class DefaultShareController(
     }
 
     override fun handleShareToApp(app: AppShareOption) {
-        val shareText = tabs.joinToString("\n") { tab -> tab.url }
-
         val intent = Intent(ACTION_SEND).apply {
-            putExtra(EXTRA_TEXT, shareText)
+            putExtra(EXTRA_TEXT, getShareText())
             type = "text/plain"
             flags = FLAG_ACTIVITY_NEW_TASK
             setClassName(app.packageName, app.activityName)
@@ -91,7 +90,8 @@ class DefaultShareController(
         dismiss()
     }
 
-    private fun sendTab(deviceId: String) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun sendTab(deviceId: String) {
         account?.run {
             tabs.forEach { tab ->
                 deviceConstellation().sendEventToDeviceAsync(
@@ -101,4 +101,7 @@ class DefaultShareController(
             }
         }
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getShareText() = tabs.joinToString("\n") { tab -> tab.url }
 }

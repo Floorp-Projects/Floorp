@@ -5,6 +5,7 @@
 package org.mozilla.fenix.share.viewholders
 
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.app_share_list_item.view.*
 import org.mozilla.fenix.R
@@ -13,7 +14,8 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 
 class AppViewHolder(
     itemView: View,
-    interactor: ShareToAppsInteractor
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val interactor: ShareToAppsInteractor
 ) : RecyclerView.ViewHolder(itemView) {
 
     private var application: AppShareOption? = null
