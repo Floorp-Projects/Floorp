@@ -49,7 +49,7 @@ impl<'a> FirefoxCapabilities<'a> {
             .and_then(|x| x.get("binary"))
             .and_then(|x| x.as_str())
             .map(PathBuf::from)
-            .or_else(|| self.fallback_binary.map(|x| x.clone()))
+            .or_else(|| self.fallback_binary.cloned())
             .or_else(firefox_default_path)
     }
 
@@ -457,7 +457,7 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
         })?;
         let unzip_path = {
             let name = file.name();
-            let is_dir = name.ends_with("/");
+            let is_dir = name.ends_with('/');
             let rel_path = Path::new(name);
             let dest_path = dest_dir.join(rel_path);
 
