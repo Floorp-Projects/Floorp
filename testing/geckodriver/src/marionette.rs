@@ -1453,8 +1453,8 @@ impl ToMarionette<MarionetteCookie> for AddCookieParameters {
             value: self.value.clone(),
             path: self.path.clone(),
             domain: self.domain.clone(),
-            secure: self.secure.clone(),
-            http_only: self.httpOnly.clone(),
+            secure: self.secure,
+            http_only: self.httpOnly,
             expiry: match &self.expiry {
                 Some(date) => Some(date.to_marionette()?),
                 None => None,
@@ -1591,9 +1591,9 @@ impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
 impl ToMarionette<MarionetteTimeouts> for TimeoutsParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteTimeouts> {
         Ok(MarionetteTimeouts {
-            implicit: self.implicit.clone(),
-            page_load: self.page_load.clone(),
-            script: self.script.clone(),
+            implicit: self.implicit,
+            page_load: self.page_load,
+            script: self.script,
         })
     }
 }
@@ -1617,10 +1617,10 @@ impl ToMarionette<Map<String, Value>> for WebElement {
 impl ToMarionette<MarionetteWindowRect> for WindowRectParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteWindowRect> {
         Ok(MarionetteWindowRect {
-            x: self.x.clone(),
-            y: self.y.clone(),
-            width: self.width.clone(),
-            height: self.height.clone(),
+            x: self.x,
+            y: self.y,
+            width: self.width,
+            height: self.height,
         })
     }
 }
