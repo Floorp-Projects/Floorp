@@ -432,10 +432,10 @@ impl FirefoxOptions {
 }
 
 fn pref_from_json(value: &Value) -> WebDriverResult<Pref> {
-    match value {
-        &Value::String(ref x) => Ok(Pref::new(x.clone())),
-        &Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
-        &Value::Bool(x) => Ok(Pref::new(x)),
+    match *value {
+        Value::String(ref x) => Ok(Pref::new(x.clone())),
+        Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
+        Value::Bool(x) => Ok(Pref::new(x)),
         _ => Err(WebDriverError::new(
             ErrorStatus::UnknownError,
             "Could not convert pref value to string, boolean, or integer",
