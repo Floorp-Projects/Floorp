@@ -6121,6 +6121,11 @@
   value: false
   mirror: always
 
+- name: media.hardwaremediakeys.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: media.webrtc.platformencoder
   type: bool
   value: false
