@@ -32,7 +32,7 @@ job-defaults:
 cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
-    treeherder-symbol: Cpp
+    treeherder-symbol: cppunit
     instance-size:
         by-test-platform:
             android-em.*: xlarge
