@@ -71,16 +71,17 @@ const SLIDER = {
  * Fires the following events:
  * - changed : When the user changes the current color
  */
-function Spectrum(parentEl, rgb) {
-  EventEmitter.decorate(this);
+class Spectrum {
+  constructor(parentEl, rgb) {
+    EventEmitter.decorate(this);
 
-  this.document = parentEl.ownerDocument;
-  this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
-  this.parentEl = parentEl;
+    this.document = parentEl.ownerDocument;
+    this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
+    this.parentEl = parentEl;
 
-  this.element.className = "spectrum-container";
-  // eslint-disable-next-line no-unsanitized/property
-  this.element.innerHTML = `
+    this.element.className = "spectrum-container";
+    // eslint-disable-next-line no-unsanitized/property
+    this.element.innerHTML = `
     <section class="spectrum-color-picker">
       <div class="spectrum-color spectrum-box"
            tabindex="0"
@@ -120,66 +121,65 @@ function Spectrum(parentEl, rgb) {
     </section>
   `;
 
-  this.onElementClick = this.onElementClick.bind(this);
-  this.element.addEventListener("click", this.onElementClick);
+    this.onElementClick = this.onElementClick.bind(this);
+    this.element.addEventListener("click", this.onElementClick);
 
-  this.parentEl.appendChild(this.element);
+    this.parentEl.appendChild(this.element);
 
-  // Color spectrum dragger.
-  this.dragger = this.element.querySelector(".spectrum-color");
-  this.dragHelper = this.element.querySelector(".spectrum-dragger");
-  draggable(this.dragger, this.dragHelper, this.onDraggerMove.bind(this));
+    // Color spectrum dragger.
+    this.dragger = this.element.querySelector(".spectrum-color");
+    this.dragHelper = this.element.querySelector(".spectrum-dragger");
+    draggable(this.dragger, this.dragHelper, this.onDraggerMove.bind(this));
 
-  // Here we define the components for the "controls" section of the color picker.
-  this.controls = this.element.querySelector(".spectrum-controls");
-  this.colorPreview = this.element.querySelector(".spectrum-color-preview");
+    // Here we define the components for the "controls" section of the color picker.
+    this.controls = this.element.querySelector(".spectrum-controls");
+    this.colorPreview = this.element.querySelector(".spectrum-color-preview");
 
-  // Create the eyedropper.
-  const eyedropper = this.document.createElementNS(XHTML_NS, "button");
-  eyedropper.id = "eyedropper-button";
-  eyedropper.className = "devtools-button";
-  eyedropper.style.pointerEvents = "auto";
-  eyedropper.setAttribute(
-    "aria-label",
-    L10N.getStr("colorPickerTooltip.eyedropperTitle")
-  );
-  this.controls.insertBefore(eyedropper, this.colorPreview);
+    // Create the eyedropper.
+    const eyedropper = this.document.createElementNS(XHTML_NS, "button");
+    eyedropper.id = "eyedropper-button";
+    eyedropper.className = "devtools-button";
+    eyedropper.style.pointerEvents = "auto";
+    eyedropper.setAttribute(
+      "aria-label",
+      L10N.getStr("colorPickerTooltip.eyedropperTitle")
+    );
+    this.controls.insertBefore(eyedropper, this.colorPreview);
 
-  // Hue slider and alpha slider
-  this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
-  this.hueSlider.setAttribute("aria-describedby", this.dragHelper.id);
-  this.alphaSlider = this.createSlider(
-    "alpha",
-    this.onAlphaSliderMove.bind(this)
-  );
+    // Hue slider and alpha slider
+    this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
+    this.hueSlider.setAttribute("aria-describedby", this.dragHelper.id);
+    this.alphaSlider = this.createSlider(
+      "alpha",
+      this.onAlphaSliderMove.bind(this)
+    );
 
-  // Color contrast
-  this.spectrumContrast = this.element.querySelector(
-    ".spectrum-color-contrast"
-  );
-  this.contrastLabel = this.element.querySelector(".contrast-ratio-label");
-  [
-    this.contrastValue,
-    this.contrastValueMin,
-    this.contrastValueMax,
-  ] = this.element.querySelectorAll(".accessibility-contrast-value");
+    // Color contrast
+    this.spectrumContrast = this.element.querySelector(
+      ".spectrum-color-contrast"
+    );
+    this.contrastLabel = this.element.querySelector(".contrast-ratio-label");
+    [
+      this.contrastValue,
+      this.contrastValueMin,
+      this.contrastValueMax,
+    ] = this.element.querySelectorAll(".accessibility-contrast-value");
 
-  // Create the learn more info button
-  const learnMore = this.document.createElementNS(XHTML_NS, "button");
-  learnMore.id = "learn-more-button";
-  learnMore.className = "learn-more";
-  learnMore.title = L10N.getStr("accessibility.learnMore");
-  this.element
-    .querySelector(".contrast-ratio-header-and-single-ratio")
-    .appendChild(learnMore);
+    // Create the learn more info button
+    const learnMore = this.document.createElementNS(XHTML_NS, "button");
+    learnMore.id = "learn-more-button";
+    learnMore.className = "learn-more";
+    learnMore.title = L10N.getStr("accessibility.learnMore");
+    this.element
+      .querySelector(".contrast-ratio-header-and-single-ratio")
+      .appendChild(learnMore);
 
-  if (rgb) {
-    this.rgb = rgb;
-    this.updateUI();
+    if (rgb) {
+      this.rgb = rgb;
+      this.updateUI();
+    }
   }
-}
 
-Spectrum.prototype = {
   set textProps(style) {
     this._textProps = style
       ? {
@@ -188,23 +188,23 @@ Spectrum.prototype = {
           opacity: style.opacity.value,
         }
       : null;
-  },
+  }
 
   set rgb(color) {
     this.hsv = rgbToHsv(color[0], color[1], color[2], color[3]);
-  },
+  }
 
   set backgroundColorData(colorData) {
     this._backgroundColorData = colorData;
-  },
+  }
 
   get backgroundColorData() {
     return this._backgroundColorData;
-  },
+  }
 
   get textProps() {
     return this._textProps;
-  },
+  }
 
   get rgb() {
     const rgb = hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2], this.hsv[3]);
@@ -214,7 +214,7 @@ Spectrum.prototype = {
       Math.round(rgb[2]),
       Math.round(rgb[3] * 100) / 100,
     ];
-  },
+  }
 
   /**
    * Map current rgb to the closest color available in the database by
@@ -236,54 +236,54 @@ Spectrum.prototype = {
     return minDeltaE === 0
       ? colorName
       : L10N.getFormatStr("colorPickerTooltip.colorNameTitle", colorName);
-  },
+  }
 
   get rgbNoSatVal() {
     const rgb = hsvToRgb(this.hsv[0], 1, 1);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
-  },
+  }
 
   get rgbCssString() {
     const rgb = this.rgb;
     return (
       "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ")"
     );
-  },
+  }
 
-  show: function() {
+  show() {
     this.dragWidth = this.dragger.offsetWidth;
     this.dragHeight = this.dragger.offsetHeight;
     this.dragHelperHeight = this.dragHelper.offsetHeight;
 
     this.updateUI();
-  },
+  }
 
-  onElementClick: function(e) {
+  onElementClick(e) {
     e.stopPropagation();
-  },
+  }
 
-  onHueSliderMove: function() {
+  onHueSliderMove() {
     this.hsv[0] = this.hueSlider.value / this.hueSlider.max;
     this.updateUI();
     this.onChange();
-  },
+  }
 
-  onDraggerMove: function(dragX, dragY) {
+  onDraggerMove(dragX, dragY) {
     this.hsv[1] = dragX / this.dragWidth;
     this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
     this.updateUI();
     this.onChange();
-  },
+  }
 
-  onAlphaSliderMove: function() {
+  onAlphaSliderMove() {
     this.hsv[3] = this.alphaSlider.value / this.alphaSlider.max;
     this.updateUI();
     this.onChange();
-  },
+  }
 
-  onChange: function() {
+  onChange() {
     this.emit("changed", this.rgb, this.rgbCssString);
-  },
+  }
 
   /**
    * Creates and initializes a slider element, attaches it to its parent container
@@ -296,7 +296,7 @@ Spectrum.prototype = {
    * @return {DOMNode}
    *         Newly created slider
    */
-  createSlider: function(sliderType, onSliderMove) {
+  createSlider(sliderType, onSliderMove) {
     const container = this.element.querySelector(`.spectrum-${sliderType}`);
 
     const slider = this.document.createElementNS(XHTML_NS, "input");
@@ -310,7 +310,7 @@ Spectrum.prototype = {
 
     container.appendChild(slider);
     return slider;
-  },
+  }
 
   /**
    * Updates the contrast label with appropriate content (i.e. large text indicator
@@ -319,7 +319,7 @@ Spectrum.prototype = {
    * @param  {Boolean} isLargeText
    *         True if contrast is calculated for large text.
    */
-  updateContrastLabel: function(isLargeText) {
+  updateContrastLabel(isLargeText) {
     if (!isLargeText) {
       this.contrastLabel.textContent = L10N.getStr(
         "accessibility.contrast.ratio.label"
@@ -354,7 +354,7 @@ Spectrum.prototype = {
     for (const content of contents) {
       this.contrastLabel.appendChild(content);
     }
-  },
+  }
 
   /**
    * Updates a contrast value element with the given score, value and swatches.
@@ -368,7 +368,7 @@ Spectrum.prototype = {
    * @param  {Array} backgroundColor
    *         RGBA color array for the background color to show in the swatch.
    */
-  updateContrastValueEl: function(el, score, value, backgroundColor) {
+  updateContrastValueEl(el, score, value, backgroundColor) {
     el.classList.toggle(score, true);
     el.textContent = value.toFixed(2);
     el.title = L10N.getFormatStr(
@@ -386,9 +386,9 @@ Spectrum.prototype = {
       "--accessibility-contrast-bg",
       `rgba(${backgroundColor})`
     );
-  },
+  }
 
-  updateAlphaSlider: function() {
+  updateAlphaSlider() {
     // Set alpha slider background
     const rgb = this.rgb;
 
@@ -397,9 +397,9 @@ Spectrum.prototype = {
     const alphaGradient =
       "linear-gradient(to right, " + rgbAlpha0 + ", " + rgbNoAlpha + ")";
     this.alphaSlider.style.background = alphaGradient;
-  },
+  }
 
-  updateColorPreview: function() {
+  updateColorPreview() {
     // Overlay the rgba color over a checkered image background.
     this.colorPreview.style.setProperty("--overlay-color", this.rgbCssString);
 
@@ -411,9 +411,9 @@ Spectrum.prototype = {
 
     // Set title on color preview for better UX
     this.colorPreview.title = this.colorName;
-  },
+  }
 
-  updateDragger: function() {
+  updateDragger() {
     // Set dragger background color
     const flatColor =
       "rgb(" +
@@ -427,14 +427,14 @@ Spectrum.prototype = {
 
     // Set dragger aria attributes
     this.dragger.setAttribute("aria-valuetext", this.rgbCssString);
-  },
+  }
 
-  updateHueSlider: function() {
+  updateHueSlider() {
     // Set hue slider aria attributes
     this.hueSlider.setAttribute("aria-valuetext", this.rgbCssString);
-  },
+  }
 
-  updateHelperLocations: function() {
+  updateHelperLocations() {
     const h = this.hsv[0];
     const s = this.hsv[1];
     const v = this.hsv[2];
@@ -461,7 +461,7 @@ Spectrum.prototype = {
 
     // Placing the alpha slider
     this.alphaSlider.value = this.hsv[3] * this.alphaSlider.max;
-  },
+  }
 
   /* Calculates the contrast ratio for the currently selected
    * color against a single or range of background colors and displays contrast ratio section
@@ -474,7 +474,7 @@ Spectrum.prototype = {
    *                                  background swatches. Set to error text
    *                                  if there is an error in calculation.
    */
-  updateContrast: function() {
+  updateContrast() {
     // Remove additional classes on spectrum contrast, leaving behind only base classes
     this.spectrumContrast.classList.toggle("visible", false);
     this.spectrumContrast.classList.toggle("range", false);
@@ -554,9 +554,9 @@ Spectrum.prototype = {
       max,
       backgroundColorMax
     );
-  },
+  }
 
-  updateUI: function() {
+  updateUI() {
     this.updateHelperLocations();
 
     this.updateColorPreview();
@@ -564,9 +564,9 @@ Spectrum.prototype = {
     this.updateHueSlider();
     this.updateAlphaSlider();
     this.updateContrast();
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     this.element.removeEventListener("click", this.onElementClick);
     this.hueSlider.removeEventListener("input", this.onHueSliderMove);
     this.alphaSlider.removeEventListener("input", this.onAlphaSliderMove);
@@ -582,8 +582,8 @@ Spectrum.prototype = {
     this.spectrumContrast = null;
     this.contrastValue = this.contrastValueMin = this.contrastValueMax = null;
     this.contrastLabel = null;
-  },
-};
+  }
+}
 
 function hsvToRgb(h, s, v, a) {
   let r, g, b;
@@ -781,4 +781,4 @@ function getContrastRatio(computedStyle, backgroundColor) {
   return getContrastRatioAgainstBackground(backgroundColor, props);
 }
 
-module.exports.Spectrum = Spectrum;
+module.exports = Spectrum;
