@@ -1282,7 +1282,7 @@ nsContextMenu.prototype = {
       gContextMenuContentData.docLocation,
       null,
       null,
-      this.frameOuterWindowID,
+      this.actor.browsingContext,
       this.browser
     );
   },
