@@ -6,6 +6,8 @@
 #include "nsISupports.idl"
 #include "nsITouchBarInput.idl"
 
+webidl Document;
+
 /**
  * Back-to-frontend communication for the Touch Bar
  */
@@ -21,6 +23,12 @@ interface nsITouchBarHelper : nsISupports
    * Return the active browser's page title.
    */
   readonly attribute AString activeTitle;
+
+  /**
+   * The context in which this nsTouchBar exists. Required to create imgLoaders
+   * to load our SVG icons.
+   */
+  readonly attribute Document document;
 
   /**
    * Returns all available Touch Bar Inputs in an nsIArray

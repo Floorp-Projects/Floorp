@@ -4,6 +4,7 @@
 
 #include "nsIArray.idl"
 #include "nsISupports.idl"
+#include "nsIURI.idl"
 
 [scriptable, function, uuid(001ab07c-1b3a-4dbf-a657-fada0065ff55)]
 interface nsITouchBarInputCallback : nsISupports
@@ -26,10 +27,9 @@ interface nsITouchBarInput : nsISupports
   attribute AString title;
 
   /**
-   * The name of a icon file added to
-   * /widget/cocoa/touchbar.
+   * The URI of an icon file.
    */
-  attribute AString image;
+  attribute nsIURI image;
 
   /**
    * The type of the input.
