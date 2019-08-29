@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1566422986828">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1567022112963">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2516,10 +2516,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="ec121e9e-d56d-436b-bb2d-735fdcff3c03" id="/^((\{8387ccbe-b9ac-438d-b049-c86b30a6dacb\})|(\{2ef58672-740c-46bd-a50d-b9880986b574\})|(\{7ff51e81-f4b1-4682-9f45-43a771d80748\})|(\{ecb03616-f3c2-4580-99dd-6a233047abdd\})|(\{850be3a2-ca5f-47ad-838c-fe39b006e0da\})|(\{df9f6ab1-c82c-41d4-85ce-86dcfe839ce9\})|(\{a59679da-f097-4db4-b2bc-6ad7b645e127\}))$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="7bb234b0-cfda-4a23-bf02-9c82fb3500a3" id="{9d7cfde2-39ae-11e9-bde0-02427e2eba50}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3373,6 +3369,38 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="04365e2c-fbc2-4393-b2b3-a23ea5de6b79" id="{b89efd87-232e-4829-87d2-22148919d72f}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="6e9ea480-7f5f-49c7-b130-fb8af66bec0b" id="{df9f6ab1-c82c-41d4-85ce-86dcfe839ce9}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.0" severity="3"/>
+    </emItem>
+    <emItem blockID="c0767051-017a-45d7-b96f-632d7cae7c47" id="{2ef58672-740c-46bd-a50d-b9880986b574}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.5" severity="3"/>
+    </emItem>
+    <emItem blockID="627a5309-d310-4130-9827-d3e6d3116ba2" id="{7ff51e81-f4b1-4682-9f45-43a771d80748}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.16" severity="3"/>
+    </emItem>
+    <emItem blockID="9d598ecb-2473-4416-98b9-26658ea7746e" id="{8387ccbe-b9ac-438d-b049-c86b30a6dacb}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.17" severity="3"/>
+    </emItem>
+    <emItem blockID="7e71a557-5664-4319-a792-c94b2bf744d8" id="{ecb03616-f3c2-4580-99dd-6a233047abdd}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.19" severity="3"/>
+    </emItem>
+    <emItem blockID="aeb6bc24-36cf-4199-94d9-68f4822fa2cf" id="{850be3a2-ca5f-47ad-838c-fe39b006e0da}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.19" severity="3"/>
+    </emItem>
+    <emItem blockID="db043b8d-c91a-4d1d-b420-58087beef552" id="{a59679da-f097-4db4-b2bc-6ad7b645e127}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.18" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3405,15 +3433,15 @@
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
-      <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
-      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.207" minVersion="0" severity="0" vulnerabilitystatus="1"/>
-    </pluginItem>
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.207" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
+      <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
