@@ -82,6 +82,7 @@ h2 {
 
 
 /* We want to hide certain components depending on its state. */
+.etp-card .icon.dark,
 a.hidden,
 .loading .card-body.hidden,
 .lockwise-card.hidden,
@@ -95,22 +96,16 @@ a.hidden,
 #monitor-body-content .monitor-breached-passwords.hidden,
 .loading a,
 .loading button,
-.loading .card-title,
-.loading .content,
-.loading .monitor-scanned-text {
+.loading .wrapper {
   display: none;
 }
 
 .icon {
   width: 60px;
-  height: 60px;
+  height: auto;
   grid-column: 1;
   margin: 0 auto;
   z-index: 1;
-}
-
-.etp-card .icon {
-  background: url("chrome://browser/content/logos/tracking-protection.svg") no-repeat center/contain;
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
@@ -123,18 +118,14 @@ a.hidden,
       --cryptominer-highlight-color: #BEBECA;
     }
 
-    .etp-card .icon {
-      background: url("chrome://browser/content/logos/tracking-protection-dark-theme.svg") no-repeat center/contain;
+    .etp-card .icon.dark {
+      display: block;
+    }
+
+    .etp-card .icon.light {
+      display: none;
     }
   }
-}
-
-.lockwise-card .icon {
-  background: url("chrome://browser/content/logos/lockwise.svg") no-repeat center/cover;
-}
-
-.monitor-card .icon {
-  background: url("chrome://browser/content/logos/monitor.svg") no-repeat center/cover;
 }
 
 .card {
@@ -167,8 +158,7 @@ a.hidden,
   cursor: default;
 }
 
-#protection-details,
-.inline-text-icon {
+#protection-details {
   padding: 4px;
   padding-inline-start: 24px;
 }
@@ -244,6 +234,7 @@ a.hidden,
   width: 100%;
   border-radius: 2px;
   overflow: hidden;
+  outline: 1px solid transparent;
 }
 
 .graph-bar:hover {
@@ -359,47 +350,50 @@ input[type="radio"] {
 }
 
 #legend label {
-  display: inline-block;
   margin-bottom: -1px;
-  padding: 15px 23px;
+  padding: 15px 0px;
   padding-inline-end: 5px;
   border: 3px solid transparent;
   -moz-context-properties: fill;
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 16px;
-}
-
-[dir="rtl"] #legend label {
-  background-position: right center;
+  display: inline-block;
 }
 
 #legend label:-moz-focusring {
   outline: none;
 }
 
-label[data-type="social"] {
-  background-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
+.icon-small {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 2px;
+}
+
+label span {
+  margin-inline-start: 1px;
+  display: inline-block;
+}
+
+label[data-type="social"] .icon-small {
   fill: var(--social-color);
 }
 
-label[data-type="cookie"] {
-  background-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
+label[data-type="cookie"] .icon-small {
   fill: var(--cookie-color);
 }
 
-label[data-type="tracker"] {
-  background-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
+label[data-type="tracker"] .icon-small {
   fill: var(--tracker-color);
 }
 
-label[data-type="fingerprinter"] {
-  background-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
+label[data-type="fingerprinter"] .icon-small {
   fill: var(--fingerprinter-color);
 }
 
-label[data-type="cryptominer"] {
-  background-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
+label[data-type="cryptominer"] .icon-small {
   fill: var(--cryptominer-color);
 }
 
@@ -493,26 +487,9 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-gap: 10px;
 }
 
-.inline-text-icon {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  background-size: 16px 16px;
-  background-repeat: no-repeat;
-  background-position-x: 3px;
-  background-position-y: 5px;
-  padding: 4px;
-  padding-inline-start: 24px;
-}
-
-[dir="rtl"] #protection-details,
-[dir="rtl"] .inline-text-icon {
-  background-position-x: 100%;
-}
-
 .lockwise-mobile-app-icon {
   -moz-context-properties: fill;
   fill: currentColor;
-  background: url("chrome://browser/content/logos/lockwise-mobile-app.svg") no-repeat center/cover;
   width: 38px;
   height: 35px;
 }
@@ -520,14 +497,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .passwords-stored-text,
 .synced-devices-text {
   width: max-content;
-}
-
-.passwords-stored-text {
-  background-image: url("chrome://browser/skin/login.svg");
-}
-
-.synced-devices-text {
-  background-image: url("chrome://browser/skin/sync.svg");
+  padding-inline-start: 4px;
 }
 
 .block {
@@ -567,7 +537,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .monitor-scanned-text {
-  background-image: url("chrome://browser/skin/reload.svg");
   font-size: 0.85em;
 }
 
@@ -597,24 +566,12 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   background: linear-gradient(162.33deg, #AB71FF 0%, #9059FF 100%);
 }
 
-.email .monitor-icon {
-  background-image: url(chrome://browser/skin/mail.svg);
-}
-
 .breaches {
   background: linear-gradient(162.33deg, #9059FF 0%, #7542E5 100%);
 }
 
-.breaches .monitor-icon {
-  background-image: url(chrome://browser/skin/fxa/avatar.svg);
-}
-
 .passwords {
   background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
-}
-
-.passwords .monitor-icon {
-  background-image: url(chrome://browser/skin/login.svg);
 }
 
 .monitor-view-full-report {
@@ -637,17 +594,16 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   margin-inline-end: 3px;
 }
 
-.monitor-stat .monitor-icon {
-  background-size: 24px 24px;
-  background-repeat: no-repeat;
+.icon-med {
+  width: 24px;
+  height: 24px;
   -moz-context-properties: fill,fill-opacity;
   fill: white;
   fill-opacity: 0.65;
-  width: 24px;
-  height: 24px;
   display: block;
   padding: 5px;
-  background-position: center;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .info-text {
