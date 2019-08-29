@@ -30,6 +30,7 @@ const mappings = {
   reselect: "devtools/client/shared/vendor/reselect",
   "prop-types": "devtools/client/shared/vendor/react-prop-types",
   "devtools-services": "Services",
+  "devtools-shared-utils": "devtools/shared/DevToolsUtils",
   "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
   "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
   "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
