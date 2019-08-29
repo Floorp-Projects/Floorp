@@ -248,9 +248,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                 ErrorStatus::InvalidArgument,
                                 "prefs value is not an object"
                             );
-                            if !prefs_data.values().all(|x| {
+                            let is_pref_value_type = |x:&Value| {
                                 x.is_string() || x.is_i64() || x.is_u64() || x.is_boolean()
-                            }) {
+                            };
+                            if !prefs_data.values().all(is_pref_value_type) {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
                                     "Preference values not all string or integer or boolean",
