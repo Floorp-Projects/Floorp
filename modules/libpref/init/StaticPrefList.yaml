@@ -4393,6 +4393,14 @@
   value: 4096
   mirror: always
 
+# Allow <number> and <number>/<number> both for <aspect-ratio>
+# https://github.com/w3c/csswg-drafts/issues/3757
+- name: layout.css.aspect-ratio-number.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is the codepath for using cached scrollbar styles enabled?
 - name: layout.css.cached-scrollbar-styles.enabled
   type: bool
