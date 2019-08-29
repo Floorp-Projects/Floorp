@@ -8666,11 +8666,9 @@ bool nsDisplayTransform::CreateWebRenderCommands(
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
 
-  LayoutDeviceSize boundsSize = LayoutDeviceSize::FromAppUnits(
-      mChildBounds.Size(), mFrame->PresContext()->AppUnitsPerDevPixel());
-
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
-                           params, LayoutDeviceRect(position, boundsSize));
+                           params,
+                           LayoutDeviceRect(position, LayoutDeviceSize()));
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
       GetChildren(), this, aDisplayListBuilder, sc, aBuilder, aResources);
