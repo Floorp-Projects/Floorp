@@ -110,7 +110,6 @@ let ACTORS = {
 
     child: {
       moduleURI: "resource://gre/actors/AudioPlaybackChild.jsm",
-      messages: ["AudioPlayback"],
       observers: ["audio-playback"],
     },
 
@@ -196,11 +195,6 @@ let ACTORS = {
   Zoom: {
     parent: {
       moduleURI: "resource://gre/actors/ZoomParent.jsm",
-      messages: [
-        "FullZoomChange",
-        "TextZoomChange",
-        "ZoomChangeUsingMouseWheel",
-      ],
     },
     child: {
       moduleURI: "resource://gre/actors/ZoomChild.jsm",
@@ -209,7 +203,6 @@ let ACTORS = {
         TextZoomChange: {},
         ZoomChangeUsingMouseWheel: {},
       },
-      messages: ["FullZoom", "TextZoom"],
     },
 
     allFrames: true,

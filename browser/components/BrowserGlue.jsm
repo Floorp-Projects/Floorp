@@ -36,13 +36,6 @@ let ACTORS = {
         "MozDOMPointerLock:Entered": {},
         "MozDOMPointerLock:Exited": {},
       },
-      messages: [
-        "Browser:Reload",
-        "Browser:AppTab",
-        "Browser:HasSiblings",
-        "MixedContent:ReenableProtection",
-        "UpdateCharacterSet",
-      ],
     },
   },
 
@@ -71,7 +64,6 @@ let ACTORS = {
       events: {
         MozInvalidForm: {},
       },
-      messages: ["FormValidation:ShowPopup", "FormValidation:HidePopup"],
     },
 
     allFrames: true,
@@ -80,14 +72,6 @@ let ACTORS = {
   Plugin: {
     parent: {
       moduleURI: "resource:///actors/PluginParent.jsm",
-      messages: [
-        "PluginContent:ShowClickToPlayNotification",
-        "PluginContent:RemoveNotification",
-        "PluginContent:ShowPluginCrashedNotification",
-        "PluginContent:SubmitReport",
-        "PluginContent:LinkClickCallback",
-        "PluginContent:GetCrashData",
-      ],
     },
     child: {
       moduleURI: "resource:///actors/PluginChild.jsm",
@@ -99,11 +83,6 @@ let ACTORS = {
         PluginRemoved: { capture: true },
         HiddenPlugin: { capture: true },
       },
-
-      messages: [
-        "PluginParent:ActivatePlugins",
-        "PluginParent:Test:ClearCrashData",
-      ],
 
       observers: ["decoder-doctor-notification"],
     },
@@ -122,8 +101,6 @@ let ACTORS = {
   SwitchDocumentDirection: {
     child: {
       moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
-
-      messages: ["SwitchDocumentDirection"],
     },
 
     allFrames: true,
