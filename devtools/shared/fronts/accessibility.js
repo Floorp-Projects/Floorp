@@ -12,6 +12,7 @@ const {
   accessibleSpec,
   accessibleWalkerSpec,
   accessibilitySpec,
+  simulatorSpec,
 } = require("devtools/shared/specs/accessibility");
 const events = require("devtools/shared/event-emitter");
 
@@ -217,9 +218,13 @@ class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
   }
 }
 
+const SimulatorFront = FrontClassWithSpec(simulatorSpec);
+
 exports.AccessibleFront = AccessibleFront;
 registerFront(AccessibleFront);
 exports.AccessibleWalkerFront = AccessibleWalkerFront;
 registerFront(AccessibleWalkerFront);
 exports.AccessibilityFront = AccessibilityFront;
 registerFront(AccessibilityFront);
+exports.SimulatorFront = SimulatorFront;
+registerFront(SimulatorFront);

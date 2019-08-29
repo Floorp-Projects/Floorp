@@ -83,6 +83,19 @@ function removeSheetForBackgroundCalculation(win) {
   removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
 }
 
+/**
+ * Helper function that determines if web render is enabled.
+ *
+ * @param  {Window}  win
+ *         Window to be tested.
+ * @return {Boolean}
+ *         True if web render is enabled, false otherwise.
+ */
+function isWebRenderEnabled(win) {
+  return win.windowUtils && win.windowUtils.layerManagerType === "WebRender";
+}
+
 exports.isDefunct = isDefunct;
 exports.loadSheetForBackgroundCalculation = loadSheetForBackgroundCalculation;
 exports.removeSheetForBackgroundCalculation = removeSheetForBackgroundCalculation;
+exports.isWebRenderEnabled = isWebRenderEnabled;
