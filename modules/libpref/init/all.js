@@ -694,20 +694,6 @@ pref("apz.fling_accel_interval_ms", 500);
 pref("apz.fling_accel_min_velocity", "1.5");
 pref("apz.fling_accel_supplemental_mult", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "-1.0");
-pref("apz.fling_friction", "0.002");
-pref("apz.fling_min_velocity_threshold", "0.5");
-pref("apz.fling_stop_on_tap_threshold", "0.05");
-pref("apz.fling_stopped_threshold", "0.01");
-pref("apz.frame_delay.enabled", true);
-#if !defined(MOZ_WIDGET_ANDROID)
-  pref("apz.keyboard.passive-listeners", true);
-#else
-  pref("apz.keyboard.passive-listeners", false);
-#endif
-pref("apz.max_tap_time", 300);
-pref("apz.max_velocity_inches_per_ms", "-1.0");
-pref("apz.min_skate_speed", "1.0");
-pref("apz.minimap.enabled", false);
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 pref("apz.overscroll.stretch_factor", "0.35");
 
