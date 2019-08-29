@@ -356,85 +356,91 @@ async function onLoadPageInfo() {
   Services.obs.notifyObservers(window, "page-info-dialog-loaded");
 }
 
-function loadPageInfo(frameOuterWindowID, imageElement, browser) {
+async function loadPageInfo(browsingContext, imageElement, browser) {
   browser = browser || window.opener.gBrowser.selectedBrowser;
-  let mm = browser.messageManager;
+  browsingContext = browsingContext || browser.browsingContext;
 
-  let imageInfo = imageElement;
+  if (browser.outerBrowser) {
+    //We are in RDM mode
+    browser = browser.outerBrowser;
+  }
 
-  // Look for pageInfoListener in content.js. Sends message to listener with arguments.
-  mm.sendAsyncMessage("PageInfo:getData", {
+  let actor = browsingContext.currentWindowGlobal.getActor("PageInfo");
+
+  let result = await actor.sendQuery("PageInfo:getData", {
     strings: gStrings,
-    frameOuterWindowID,
   });
+  await onNonMediaPageInfoLoad(browser, result, imageElement);
 
-  let pageInfoData;
+  // Here, we are walking the frame tree via BrowsingContexts to collect all of the
+  // media information for each frame
+  let contextsToVisit = [browsingContext];
+  while (contextsToVisit.length) {
+    let currContext = contextsToVisit.pop();
+    let global = currContext.currentWindowGlobal;
 
-  // Get initial pageInfoData needed to display the general, permission and security tabs.
-  mm.addMessageListener("PageInfo:data", async function onmessage(message) {
-    mm.removeMessageListener("PageInfo:data", onmessage);
-    pageInfoData = message.data;
-    let docInfo = pageInfoData.docInfo;
-    let windowInfo = pageInfoData.windowInfo;
-    let uri = Services.io.newURI(docInfo.documentURIObject.spec);
-    let principal = docInfo.principal;
-    gDocInfo = docInfo;
+    if (!global) {
+      continue;
+    }
 
-    gImageElement = imageInfo;
-    var titleFormat = windowInfo.isTopWindow
-      ? "page-info-page"
-      : "page-info-frame";
-    document.l10n.setAttributes(document.documentElement, titleFormat, {
-      website: docInfo.location,
+    let subframeActor = global.getActor("PageInfo");
+    let mediaResult = await subframeActor.sendQuery("PageInfo:getMediaData", {
+      strings: gStrings,
     });
-
-    document
-      .getElementById("main-window")
-      .setAttribute("relatedUrl", docInfo.location);
-
-    await makeGeneralTab(pageInfoData.metaViewRows, docInfo);
-    if (
-      uri.spec.startsWith("about:neterror") ||
-      uri.spec.startsWith("about:certerror")
-    ) {
-      uri = browser.currentURI;
-      principal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        browser.contentPrincipal.originAttributes
-      );
-    }
-    onLoadPermission(uri, principal);
-    securityOnLoad(uri, windowInfo);
-  });
-
-  // Get the media elements from content script to setup the media tab.
-  mm.addMessageListener("PageInfo:mediaData", function onmessage(message) {
-    // Page info window was closed.
-    if (window.closed) {
-      mm.removeMessageListener("PageInfo:mediaData", onmessage);
-      return;
-    }
-
-    // The page info media fetching has been completed.
-    if (message.data.isComplete) {
-      mm.removeMessageListener("PageInfo:mediaData", onmessage);
-      onFinished.forEach(function(func) {
-        func(pageInfoData);
-      });
-      return;
-    }
-
-    for (let item of message.data.mediaItems) {
+    for (let item of mediaResult.mediaItems) {
       addImage(item);
     }
-
     selectImage();
-  });
+    contextsToVisit.push(...currContext.getChildren());
+  }
 
   /* Call registered overlay init functions */
   onLoadRegistry.forEach(function(func) {
     func();
   });
+
+  onFinished.forEach(function(func) {
+    func();
+  });
+}
+
+/**
+ * onNonMediaPageInfoLoad is responsible for populating the page info
+ * UI other than the media tab. This includes general, permissions, and security.
+ */
+async function onNonMediaPageInfoLoad(browser, args, imageInfo) {
+  let pageInfoData = args;
+  let docInfo = pageInfoData.docInfo;
+  let windowInfo = pageInfoData.windowInfo;
+  let uri = Services.io.newURI(docInfo.documentURIObject.spec);
+  let principal = docInfo.principal;
+  gDocInfo = docInfo;
+
+  gImageElement = imageInfo;
+  var titleFormat = windowInfo.isTopWindow
+    ? "page-info-page"
+    : "page-info-frame";
+  document.l10n.setAttributes(document.documentElement, titleFormat, {
+    website: docInfo.location,
+  });
+
+  document
+    .getElementById("main-window")
+    .setAttribute("relatedUrl", docInfo.location);
+
+  await makeGeneralTab(pageInfoData.metaViewRows, docInfo);
+  if (
+    uri.spec.startsWith("about:neterror") ||
+    uri.spec.startsWith("about:certerror")
+  ) {
+    uri = browser.currentURI;
+    principal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      browser.contentPrincipal.originAttributes
+    );
+  }
+  onLoadPermission(uri, principal);
+  securityOnLoad(uri, windowInfo);
 }
 
 function resetPageInfo(args) {
@@ -490,15 +496,15 @@ function showTab(id) {
   deck.selectedPanel = pagel;
 }
 
-function loadTab(args) {
+async function loadTab(args) {
   // If the "View Image Info" context menu item was used, the related image
   // element is provided as an argument. This can't be a background image.
   let imageElement = args && args.imageElement;
-  let frameOuterWindowID = args && args.frameOuterWindowID;
+  let browsingContext = args && args.browsingContext;
   let browser = args && args.browser;
 
   /* Load the page info */
-  loadPageInfo(frameOuterWindowID, imageElement, browser);
+  loadPageInfo(browsingContext, imageElement, browser);
 
   var initialTab = (args && args.initialTab) || "generalTab";
   var radioGroup = document.getElementById("viewGroup");

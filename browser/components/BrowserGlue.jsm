@@ -69,6 +69,14 @@ let ACTORS = {
     allFrames: true,
   },
 
+  PageInfo: {
+    child: {
+      moduleURI: "resource:///actors/PageInfoChild.jsm",
+    },
+
+    allFrames: true,
+  },
+
   Plugin: {
     parent: {
       moduleURI: "resource:///actors/PluginParent.jsm",
@@ -269,13 +277,6 @@ let LEGACY_ACTORS = {
         MozApplicationManifest: {},
       },
       messages: ["OfflineApps:StartFetching"],
-    },
-  },
-
-  PageInfo: {
-    child: {
-      module: "resource:///actors/PageInfoChild.jsm",
-      messages: ["PageInfo:getData"],
     },
   },
 

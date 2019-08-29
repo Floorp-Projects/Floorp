@@ -487,8 +487,6 @@ MessageManagerTunnel.prototype = {
     "Finder:",
     // Messages sent from InlineSpellChecker.jsm
     "MessageChannel:",
-    // Messages sent from pageinfo.js
-    "PageInfo:",
     // Messages sent from printUtils.js
     "Printing:",
   ],
@@ -502,8 +500,6 @@ MessageManagerTunnel.prototype = {
     "Finder:",
     // Messages sent to MessageChannel.jsm
     "MessageChannel:",
-    // Messages sent to pageinfo.js
-    "PageInfo:",
     // Messages sent to printUtils.js
     "Printing:",
   ],
