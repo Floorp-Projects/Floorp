@@ -28,9 +28,9 @@ class SpeechTrackListener : public MediaStreamTrackListener {
   void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
 
-  void NotifyEnded() override;
+  void NotifyEnded(MediaStreamGraph* aGraph) override;
 
-  void NotifyRemoved() override;
+  void NotifyRemoved(MediaStreamGraph* aGraph) override;
 
  private:
   template <typename SampleFormatType>

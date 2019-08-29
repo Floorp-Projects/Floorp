@@ -149,7 +149,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
 
     SendFramesEnsureLocked();
   }
-  void NotifyRemoved() override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     // Doesn't need locking by mMutex, since the direct listener is removed from
     // the track before we get notified.
     if (mFrames.Length() <= 1) {
@@ -169,7 +169,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
     SendFrames();
     mFrames.ClearAndRetainStorage();
   }
-  void NotifyEnded() override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     // Doesn't need locking by mMutex, since for the track to end, it must have
     // been ended by the source, meaning that the source won't append more data.
     if (mFrames.IsEmpty()) {
@@ -181,7 +181,8 @@ class VideoOutput : public DirectMediaStreamTrackListener {
     SendFrames();
     mFrames.ClearAndRetainStorage();
   }
-  void NotifyEnabledStateChanged(bool aEnabled) override {
+  void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
+                                 bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     mEnabled = aEnabled;
     // Since mEnabled will affect whether frames are real, or black, we assign
