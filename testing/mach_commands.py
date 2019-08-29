@@ -891,10 +891,12 @@ class TestInfoCommand(MachCommandBase):
         tp = record['build']['type']
         if type(tp) is list:
             tp = "-".join(tp)
+        e10s = ""
         if 'run' in record and 'type' in record['run'] and 'e10s' in str(record['run']['type']):
             e10s = "-e10s"
-        else:
-            e10s = ""
+        if 'run' in record and 'type' in record['run'] and 'fis' in str(record['run']['type']):
+            # fission implies e10s - keep the label simple
+            e10s = "-fis"
         return "%s/%s%s:" % (platform, tp, e10s)
 
     def submit(self, query):
@@ -929,6 +931,14 @@ class TestInfoCommand(MachCommandBase):
                     ]},
                     "aggregate": "sum",
                     "default": 0
+                },
+                {
+                    "name": "skips",
+                    "value": {"case": [
+                        {"when": {"eq": {"result.status": "SKIP"}}, "then": 1}
+                    ]},
+                    "aggregate": "sum",
+                    "default": 0
                 }
             ],
             "where": {"and": [
@@ -954,6 +964,7 @@ class TestInfoCommand(MachCommandBase):
                 runs = record['count']
                 total_runs = total_runs + runs
                 failures = record.get('failures', 0)
+                skips = record.get('skips', 0)
                 total_failures = total_failures + failures
                 rate = (float)(failures) / runs
                 if rate >= worst_rate:
@@ -961,8 +972,8 @@ class TestInfoCommand(MachCommandBase):
                     worst_platform = platform
                     worst_failures = failures
                     worst_runs = runs
-                print("%-40s %6d failures in %6d runs" % (
-                    platform, failures, runs))
+                print("%-40s %6d failures (%6d skipped) in %6d runs" % (
+                    platform, failures, skips, runs))
             print("\nTotal: %d failures in %d runs or %.3f failures/run" %
                   (total_failures, total_runs, (float)(total_failures) / total_runs))
             if worst_failures > 0:
