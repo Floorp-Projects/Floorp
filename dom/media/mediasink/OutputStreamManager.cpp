@@ -157,17 +157,16 @@ void OutputStreamData::SetPrincipal(nsIPrincipal* aPrincipal) {
   }
 }
 
-OutputStreamManager::OutputStreamManager(MediaStreamGraph* aGraph,
+OutputStreamManager::OutputStreamManager(SharedDummyStream* aDummyStream,
                                          nsIPrincipal* aPrincipal,
                                          AbstractThread* aAbstractMainThread)
     : mAbstractMainThread(aAbstractMainThread),
-      mDummyStream(aGraph->CreateSourceStream()),
+      mDummyStream(aDummyStream),
       mPrincipalHandle(
           aAbstractMainThread,
           aPrincipal ? MakePrincipalHandle(aPrincipal) : PRINCIPAL_HANDLE_NONE,
           "OutputStreamManager::mPrincipalHandle (Canonical)") {
   MOZ_ASSERT(NS_IsMainThread());
-  mDummyStream->Suspend();
 }
 
 void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
@@ -250,7 +249,7 @@ already_AddRefed<SourceMediaStream> OutputStreamManager::AddTrack(
              "Cannot have two tracks of the same type at the same time");
 
   RefPtr<SourceMediaStream> stream =
-      mDummyStream->Graph()->CreateSourceStream();
+      mDummyStream->mStream->Graph()->CreateSourceStream();
   if (!mPlaying) {
     stream->Suspend();
   }
@@ -348,7 +347,7 @@ void OutputStreamManager::SetPlaying(bool aPlaying) {
   }
 }
 
-OutputStreamManager::~OutputStreamManager() { mDummyStream->Destroy(); }
+OutputStreamManager::~OutputStreamManager() = default;
 
 #undef LOG
 
