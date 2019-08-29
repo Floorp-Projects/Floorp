@@ -2419,6 +2419,18 @@ SearchService.prototype = {
       this._currentEngine = null;
     }
 
+    // Bug 1575649 - We can't just check the default private engine here when
+    // we're not using separate, as that re-checks the normal default, and
+    // triggers update of the default search engine, which messes up various
+    // tests. Really, removeEngine should always commit to updating any
+    // changed defaults.
+    if (
+      gSeparatePrivateDefault &&
+      engineToRemove == this.defaultPrivateEngine
+    ) {
+      this._currentPrivateEngine = null;
+    }
+
     if (engineToRemove._readOnly || engineToRemove.isBuiltin) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
       // avoid future conflicts with other engines.
@@ -2546,7 +2558,9 @@ SearchService.prototype = {
    */
   _getEngineDefault(privateMode) {
     this._ensureInitialized();
-    const currentEngine = `_current${privateMode ? "Private" : ""}Engine`;
+    const currentEngine = privateMode
+      ? "_currentPrivateEngine"
+      : "_currentEngine";
     if (!this[currentEngine]) {
       let name = this.getGlobalAttr(privateMode ? "private" : "current");
       let engine = this.getEngineByName(name);
