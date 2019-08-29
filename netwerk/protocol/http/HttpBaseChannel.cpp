@@ -3327,6 +3327,9 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     RefPtr<nsHttpChannel> realChannel;
     CallQueryInterface(newChannel, realChannel.StartAssignment());
     if (realChannel) {
+      realChannel->SetContentBlockingAllowListPrincipal(
+          mContentBlockingAllowListPrincipal);
+
       rv = realChannel->SetTopWindowURI(mTopWindowURI);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
