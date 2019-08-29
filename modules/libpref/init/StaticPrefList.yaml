@@ -208,7 +208,7 @@
 
 - name: apz.allow_zooming
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_ANDROID@
   mirror: always
 
 - name: apz.android.chrome_fling_physics.enabled
@@ -310,7 +310,7 @@
 
 - name: apz.enlarge_displayport_when_clipped
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_ANDROID@
   mirror: always
 
 - name: apz.fixed-margin-override.enabled
@@ -556,12 +556,12 @@
 
 - name: apz.x_skate_size_multiplier
   type: AtomicFloat
-  value: 1.5f
+  value: 1.25f
   mirror: always
 
 - name: apz.x_stationary_size_multiplier
   type: AtomicFloat
-  value: 3.0f
+  value: 1.5f
   mirror: always
 
 - name: apz.y_skate_highmem_adjust
@@ -571,12 +571,20 @@
 
 - name: apz.y_skate_size_multiplier
   type: AtomicFloat
-  value: 2.5f
+#if defined(MOZ_WIDGET_ANDROID)
+  value: 1.5f
+#else
+  value: 3.5f
+#endif
   mirror: always
 
 - name: apz.y_stationary_size_multiplier
   type: AtomicFloat
+#if defined(MOZ_WIDGET_ANDROID)
+  value: 1.5f
+#else
   value: 3.5f
+#endif
   mirror: always
 
 - name: apz.zoom_animation_duration_ms
