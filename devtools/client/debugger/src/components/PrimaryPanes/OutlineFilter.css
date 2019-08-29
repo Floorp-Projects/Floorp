@@ -9,7 +9,6 @@
   background-color: var(--theme-sidebar-background);
   color: var(--theme-body-color);
   font-size: 12px;
-  -moz-user-select: text;
   user-select: text;
 }
 

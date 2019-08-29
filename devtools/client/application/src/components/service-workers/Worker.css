@@ -51,7 +51,7 @@
 
 .worker__scope,
 .worker__source-url {
-  -moz-user-select: text;
+  user-select: text;
 }
 
 .worker__meta-name {

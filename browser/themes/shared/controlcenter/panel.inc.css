@@ -18,7 +18,7 @@
   fill: currentColor;
   --horizontal-padding: 2.1rem;
   --vertical-section-padding: 0.9em;
-  --height-offset: 0;
+  --height-offset: 0px;
 }
 
 #protections-popup[toast] {
@@ -523,6 +523,10 @@ description#identity-popup-content-verifier,
 .protections-popup-cookiesView-list-header {
   color: #737373;
   margin: 5px 0;
+}
+
+#protections-popup-cookiesView-list > .protections-popup-cookiesView-list-section:only-of-type > .protections-popup-cookiesView-list-header {
+  display: none;
 }
 
 :root[lwt-popup-brighttext] .protections-popup-cookiesView-list-header {

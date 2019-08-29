@@ -73,8 +73,8 @@
             role: ROLE_ROW,
             tagName: "TR",
             children: [
-              { // td generic cell accessible
-                role: ROLE_CELL,
+              { // td implicit role="gridcell"
+                role: ROLE_GRID_CELL,
                 children: [
                   { // td text leaf
                     role: ROLE_TEXT_LEAF,
@@ -231,7 +231,7 @@
   <div id="crazy_grid2" role="grid">
     <table role="presentation">
       <tr role="row">
-        <td id="ct_cell1">cell1</td>
+        <td id="implicit_gridcell">cell1</td>
         <td role="gridcell">cell2</td>
       </tr>
     </table>

@@ -30,6 +30,15 @@ adapt the header to their replacements of standard-library types.
 
 ## Release Notes
 
+### 0.9.1
+
+* Wrap `Encoding::is_single_byte()`.
+* Pass through new feature flags introduced in encoding_rs 0.8.11.
+
+### 0.9.0
+
+* Update to encoding_rs 0.8.0.
+
 ### 0.8.0
 
 * Update to encoding_rs 0.7.0.

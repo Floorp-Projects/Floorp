@@ -293,7 +293,7 @@
   /* The geometry editor can be interacted with, so it needs to react to
      pointer events */
   pointer-events: auto;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 :-moz-native-anonymous .geometry-editor-offset-parent {
@@ -451,7 +451,7 @@
   font: var(--highlighter-font-family);
   font-size: 10px;
   pointer-events: none;
-  -moz-user-select: none;
+  user-select: none;
   box-sizing: border-box;
 }
 
@@ -612,7 +612,7 @@
 :-moz-native-anonymous .paused-dbg-toolbar {
   margin-top: 15px;
   display: inline-flex;
-  -moz-user-select: none;
+  user-select: none;
 
   color: var(--text-color);
   border-radius: 2px;

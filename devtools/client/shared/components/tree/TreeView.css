@@ -112,7 +112,7 @@
 
 /* Learn More link */
 .treeTable .treeValueCell .learn-more-link {
-  -moz-user-select: none;
+  user-select: none;
   color: var(--theme-highlight-blue);
   cursor: pointer;
   margin: 0 5px;
@@ -156,7 +156,7 @@
 
 .treeTable .treeHeaderCell {
   cursor: pointer;
-  -moz-user-select: none;
+  user-select: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   padding: 0 !important;
   background: linear-gradient(
