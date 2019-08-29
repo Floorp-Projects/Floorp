@@ -32,19 +32,6 @@
 -keep class org.mozilla.gecko.util.DebugConfig { *; }
 
 ####################################################################################################
-# Kotlinx
-####################################################################################################
-
--keep class kotlinx.coroutines.internal.MainDispatcherFactory {}
--keep class kotlinx.coroutines.CoroutineExceptionHandler {}
--keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
--keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
--keepclassmembernames class kotlinx.** {
-    volatile <fields>;
-}
-
-
-####################################################################################################
 # Force removal of slow Dispatchers.Main ServiceLoader
 #
 # Please remove these rules when Android Gradle Plugin 3.6+ & coroutines 1.3.0+ are both in use
@@ -59,7 +46,13 @@
 # Mozilla Application Services
 ####################################################################################################
 
--keep class mozilla.appservices.FenixMegazord  { *; }
+-keep class mozilla.appservices.** { *; }
+
+####################################################################################################
+# ViewModels
+####################################################################################################
+
+-keep class org.mozilla.fenix.**ViewModel { *; }
 
 ####################################################################################################
 # Adjust
