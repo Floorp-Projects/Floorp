@@ -273,12 +273,16 @@ var PlacesSearchAutocompleteProvider = Object.freeze({
    * Use this to get the current engine rather than Services.search.defaultEngine
    * directly.  This method makes sure that the service is first initialized.
    *
+   * @param {boolean} inPrivateWindow
+   *   Set to true if this search is being run in a private window.
    * @returns {nsISearchEngine} The current search engine.
    */
-  async currentEngine() {
+  async currentEngine(inPrivateWindow) {
     await this.ensureInitialized();
 
-    return Services.search.defaultEngine;
+    return inPrivateWindow
+      ? Services.search.defaultPrivateEngine
+      : Services.search.defaultEngine;
   },
 
   /**
