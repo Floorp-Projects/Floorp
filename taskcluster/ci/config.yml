@@ -128,8 +128,13 @@ treeherder:
         'pipfu': 'pipfile update'
         'WR': 'WebRender standalone'
         'Gd': 'Geckodriver'
-        'clang': 'Clang Tidy & Format'
-        'coverity': 'Coverity Static Analysis'
+        'cpp': 'C/C++ checks'
+        'pedantic': 'pedantic checks'
+        'text': 'Check on texts'
+        'misc': 'Misc checks'
+        'js': 'JavaScript checks'
+        'py': 'Python checks'
+        'java': 'Java checks'
         'SS': 'Shadow scheduler'
 
 index:

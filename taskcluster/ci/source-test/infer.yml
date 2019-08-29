@@ -40,7 +40,7 @@ job-defaults:
 infer:
     description: Run static-analysis (infer) on Java patches
     treeherder:
-        symbol: infer
+        symbol: java(infer)
     run:
         cwd: '{checkout}'
         command: >-
