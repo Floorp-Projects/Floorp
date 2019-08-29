@@ -11,14 +11,16 @@ import androidx.core.widget.NestedScrollView
 import androidx.navigation.NavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -86,6 +88,11 @@ class DefaultBrowserToolbarController(
                 item.isChecked,
                 currentSession
             )
+            ToolbarMenu.Item.AddToHomeScreen -> {
+                MainScope().launch {
+                    context.components.useCases.webAppUseCases.addToHomescreen()
+                }
+            }
             ToolbarMenu.Item.Share -> {
                 val currentUrl = currentSession?.url
                 currentUrl?.apply {
@@ -175,6 +182,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
+            ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
         }
 
         context.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

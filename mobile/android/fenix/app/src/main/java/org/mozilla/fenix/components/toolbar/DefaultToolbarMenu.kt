@@ -11,12 +11,12 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.theme.ThemeManager
 
 class DefaultToolbarMenu(
     private val context: Context,
@@ -133,10 +133,22 @@ class DefaultToolbarMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.Library)
             },
 
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
-                requestDesktopStateProvider, { checked ->
-                    onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
-                }),
+            BrowserMenuSwitch(
+                context.getString(R.string.browser_menu_desktop_site),
+                requestDesktopStateProvider
+            ) { checked ->
+                onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+            },
+
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_add_to_homescreen),
+                R.drawable.ic_add_to_homescreen,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+            }.apply {
+                visible = ::shouldShowAddToHomescreen
+            },
 
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),
@@ -200,5 +212,10 @@ class DefaultToolbarMenu(
         )
 
         items
+    }
+
+    private fun shouldShowAddToHomescreen(): Boolean {
+        return context.components.useCases.webAppUseCases.isPinningSupported() &&
+                context.components.core.sessionManager.selectedSession != null
     }
 }

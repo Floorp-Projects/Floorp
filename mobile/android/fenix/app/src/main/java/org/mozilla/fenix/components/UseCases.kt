@@ -8,7 +8,9 @@ import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.app.links.AppLinksUseCases
+import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
@@ -24,7 +26,8 @@ class UseCases(
     private val context: Context,
     private val sessionManager: SessionManager,
     private val engineSettings: Settings,
-    private val searchEngineManager: SearchEngineManager
+    private val searchEngineManager: SearchEngineManager,
+    private val httpClient: Client
 ) {
     /**
      * Use cases that provide engine interactions for a given browser session.
@@ -47,4 +50,6 @@ class UseCases(
     val settingsUseCases by lazy { SettingsUseCases(engineSettings, sessionManager) }
 
     val appLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
+
+    val webAppUseCases by lazy { WebAppUseCases(context, sessionManager, httpClient, supportWebApps = false) }
 }

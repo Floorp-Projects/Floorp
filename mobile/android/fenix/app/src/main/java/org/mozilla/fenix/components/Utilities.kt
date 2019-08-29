@@ -23,13 +23,15 @@ class Utilities(
     private val searchUseCases: SearchUseCases
 ) {
     /**
-     * Provides intent processing functionality for CustomTab, ACTION_VIEW
-     * and ACTION_SEND intents.
+     * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents.
      */
     val intentProcessor by lazy {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = false)
     }
 
+    /**
+     * Provides intent processing functionality for ACTION_VIEW and ACTION_SEND intents in private tabs.
+     */
     val privateIntentProcessor by lazy {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = true)
     }
