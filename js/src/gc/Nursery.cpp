@@ -1379,7 +1379,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   const float factor = promotionRate / PromotionGoal;
   MOZ_ASSERT(factor >= 0.0f);
 
-  MOZ_ASSERT((float(capacity()) * factor) <= SIZE_MAX);
+  MOZ_ASSERT((float(capacity()) * factor) <= float(SIZE_MAX));
   size_t newCapacity = size_t(float(capacity()) * factor);
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
