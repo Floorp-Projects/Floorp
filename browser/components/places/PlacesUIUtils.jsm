@@ -391,9 +391,9 @@ var PlacesUIUtils = {
     if (
       node.localName == "menu" &&
       !node._placesNode &&
-      node.lastChild._placesView
+      node.menupopup._placesView
     ) {
-      return node.lastChild._placesView;
+      return node.menupopup._placesView;
     }
 
     while (Element.isInstance(node)) {
