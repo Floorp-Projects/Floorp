@@ -105,7 +105,6 @@ static void DetermineLineBreak(const int32_t aFlags, nsAString& aLineBreak) {
 nsPlainTextSerializer::CurrentLineContent::CurrentLineContent(
     const int32_t aFlags)
     : mFlags(aFlags) {
-  DetermineLineBreak(mFlags, mLineBreak);
 }
 
 void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps() {
@@ -116,8 +115,28 @@ void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps() {
   }
 }
 
-void nsPlainTextSerializer::CurrentLineContent::AppendLineBreak() {
-  mValue.Append(mLineBreak);
+nsPlainTextSerializer::OutputManager::OutputManager(const int32_t aFlags,
+                                                    nsAString& aOutput)
+    : mOutput{aOutput}, mAtFirstColumn{true} {
+  MOZ_ASSERT(aOutput.IsEmpty());
+
+  DetermineLineBreak(aFlags, mLineBreak);
+}
+
+void nsPlainTextSerializer::OutputManager::Append(const nsAString& aString) {
+  if (!aString.IsEmpty()) {
+    mOutput.Append(aString);
+    mAtFirstColumn = false;
+  }
+}
+
+void nsPlainTextSerializer::OutputManager::AppendLineBreak() {
+  mOutput.Append(mLineBreak);
+  mAtFirstColumn = true;
+}
+
+uint32_t nsPlainTextSerializer::OutputManager::GetOutputLength() const {
+  return mOutput.Length();
 }
 
 nsPlainTextSerializer::nsPlainTextSerializer()
@@ -126,9 +145,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
       mLineBreakDue(false),
       kSpace(NS_LITERAL_STRING(" "))  // Init of "constant"
 {
-  mOutput = nullptr;
   mHeadLevel = 0;
-  mAtFirstColumn = true;
   mIndent = 0;
   mCiteQuoteLevel = 0;
   mHasWrittenCiteBlockquote = false;
@@ -215,9 +232,9 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
         "Can't do formatted and preformatted output at the same time!");
   }
 #endif
-  mOutput = &aOutput;
   *aNeedsPreformatScanning = true;
   mSettings.Init(aFlags);
+  mOutputManager.emplace(mSettings.GetFlags(), aOutput);
   mWrapColumn = aWrapColumn;
 
   if (MayWrap() && MayBreakLines()) {
@@ -290,8 +307,6 @@ static bool IsIgnorableScriptOrStyle(Element* aElement) {
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
                                   int32_t aEndOffset) {
-  NS_ENSURE_STATE(mOutput);
-
   if (mIgnoreAboveIndex != (uint32_t)kNotFound) {
     return NS_OK;
   }
@@ -388,7 +403,6 @@ NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementStart(Element* aElement,
                                           Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
-  NS_ENSURE_STATE(mOutput);
 
   mElement = aElement;
 
@@ -416,7 +430,6 @@ NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementEnd(Element* aElement,
                                         Element* aOriginalElement) {
   NS_ENSURE_ARG(aElement);
-  NS_ENSURE_STATE(mOutput);
 
   mElement = aElement;
 
@@ -448,18 +461,16 @@ nsPlainTextSerializer::FlushAndFinish() {
 
 NS_IMETHODIMP
 nsPlainTextSerializer::Finish() {
-  NS_ENSURE_STATE(mOutput);
-
-  mOutput = nullptr;
+  mOutputManager.reset();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPlainTextSerializer::GetOutputLength(uint32_t& aLength) const {
-  NS_ENSURE_STATE(mOutput);
+  MOZ_ASSERT(mOutputManager);
 
-  aLength = mOutput->Length();
+  aLength = mOutputManager->GetOutputLength();
 
   return NS_OK;
 }
@@ -1127,22 +1138,17 @@ void nsPlainTextSerializer::EnsureVerticalSpace(int32_t noOfRows) {
  */
 void nsPlainTextSerializer::FlushLine() {
   if (!mCurrentLineContent.mValue.IsEmpty()) {
-    if (mAtFirstColumn) {
+    MOZ_ASSERT(mOutputManager);
+
+    if (mOutputManager->IsAtFirstColumn()) {
       OutputQuotesAndIndent();  // XXX: Should we always do this? Bug?
     }
 
     mCurrentLineContent.MaybeReplaceNbsps();
-    Output(mCurrentLineContent.mValue);
-    mAtFirstColumn = false;
+    mOutputManager->Append(mCurrentLineContent.mValue);
     mCurrentLineContent.mValue.Truncate();
     mCurrentLineContent.mWidth = 0;
   }
-}
-
-void nsPlainTextSerializer::Output(nsString& aString) {
-  MOZ_ASSERT(mOutput);
-
-  mOutput->Append(aString);
 }
 
 static bool IsSpaceStuffable(const char16_t* s) {
@@ -1387,7 +1393,9 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     mEmptyLines++;
   }
 
-  if (mAtFirstColumn) {
+  MOZ_ASSERT(mOutputManager);
+
+  if (mOutputManager->IsAtFirstColumn()) {
     // If we don't have anything "real" to output we have to
     // make sure the indent doesn't end in a space since that
     // would trick a format=flowed-aware receiver.
@@ -1396,11 +1404,10 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   }
 
   mCurrentLineContent.MaybeReplaceNbsps();
-  mCurrentLineContent.AppendLineBreak();
-  Output(mCurrentLineContent.mValue);
+  mOutputManager->Append(mCurrentLineContent.mValue);
+  mOutputManager->AppendLineBreak();
   mCurrentLineContent.mValue.Truncate();
   mCurrentLineContent.mWidth = 0;
-  mAtFirstColumn = true;
   mInWhitespace = true;
   mLineBreakDue = false;
   mFloatingLines = -1;
@@ -1413,6 +1420,8 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
  */
 void nsPlainTextSerializer::OutputQuotesAndIndent(
     bool stripTrailingSpaces /* = false */) {
+  MOZ_ASSERT(mOutputManager);
+
   nsAutoString stringToOutput;
 
   // Put the mail quote "> " chars in, if appropriate:
@@ -1457,8 +1466,7 @@ void nsPlainTextSerializer::OutputQuotesAndIndent(
   }
 
   if (!stringToOutput.IsEmpty()) {
-    Output(stringToOutput);
-    mAtFirstColumn = false;
+    mOutputManager->Append(stringToOutput);
   }
 }
 
@@ -1530,7 +1538,9 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
     while (bol < totLen) {
-      const bool outputQuotes = mAtFirstColumn;
+      MOZ_ASSERT(mOutputManager);
+
+      const bool outputQuotes = mOutputManager->IsAtFirstColumn();
       bool outputLineBreak = false;
       bool spacesOnly = true;
 
@@ -1595,17 +1605,17 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       mCurrentLineContent.mValue.Append(stringpart);
 
       if (outputQuotes) {
-        // Note: this call messes with mAtFirstColumn
         OutputQuotesAndIndent();
       }
 
       mCurrentLineContent.MaybeReplaceNbsps();
-      if (outputLineBreak) {
-        mCurrentLineContent.AppendLineBreak();
-      }
-      Output(mCurrentLineContent.mValue);
 
-      mAtFirstColumn = outputLineBreak;
+      MOZ_ASSERT(mOutputManager);
+
+      mOutputManager->Append(mCurrentLineContent.mValue);
+      if (outputLineBreak) {
+        mOutputManager->AppendLineBreak();
+      }
     }
 
     // Reset mCurrentLineContent.mValue.
