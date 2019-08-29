@@ -121,21 +121,15 @@ add_task(async function test_alt_click_shadow_dom() {
 add_task(async function test_alt_click_on_xlinks() {
   await setup();
 
-  const allow_mathml_xlink = !SpecialPowers.getBoolPref(
-    "mathml.xlink.disabled"
-  );
-
   let downloadList = await Downloads.getList(Downloads.ALL);
   let downloads = [];
   let downloadView;
-  let downloadCount = allow_mathml_xlink ? 2 : 1;
-
-  // When all downloads have been attempted then resolve the promise.
+  // When all 2 downloads have been attempted then resolve the promise.
   let finishedAllDownloads = new Promise(resolve => {
     downloadView = {
       onDownloadAdded(aDownload) {
         downloads.push(aDownload);
-        if (downloads.length == downloadCount) {
+        if (downloads.length == 2) {
           resolve();
         }
       },
@@ -143,12 +137,12 @@ add_task(async function test_alt_click_on_xlinks() {
   });
   await downloadList.addView(downloadView);
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#svgxlink",
+    "#mathxlink",
     { altKey: true },
     gBrowser.selectedBrowser
   );
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#mathxlink",
+    "#svgxlink",
     { altKey: true },
     gBrowser.selectedBrowser
   );
@@ -157,19 +151,17 @@ add_task(async function test_alt_click_on_xlinks() {
   await finishedAllDownloads;
   await downloadList.removeView(downloadView);
 
-  is(downloads.length, downloadCount, `${downloadCount} downloads`);
+  is(downloads.length, 2, "2 downloads");
   is(
     downloads[0].source.url,
     "http://mochi.test/moz/",
+    "Downloaded #mathxlink element"
+  );
+  is(
+    downloads[1].source.url,
+    "http://mochi.test/moz/",
     "Downloaded #svgxlink element"
   );
-  if (downloadCount > 1) {
-    is(
-      downloads[1].source.url,
-      "http://mochi.test/moz/",
-      "Downloaded #mathxlink element"
-    );
-  }
 
   await clean_up();
 });
