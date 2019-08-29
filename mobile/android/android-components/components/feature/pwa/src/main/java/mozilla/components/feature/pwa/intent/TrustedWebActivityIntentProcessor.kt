@@ -19,7 +19,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.intent.IntentProcessor
 import mozilla.components.browser.session.intent.putSessionId
-import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
+import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent

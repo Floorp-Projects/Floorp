@@ -41,6 +41,28 @@ class SessionManagerMigrationTest {
     }
 
     @Test
+    fun `Add custom tab session`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        assertTrue(sessionManager.sessions.isEmpty())
+        assertTrue(store.state.tabs.isEmpty())
+
+        val customTabSession = Session("https://www.mozilla.org")
+        customTabSession.customTabConfig = mock()
+        sessionManager.add(customTabSession)
+
+        assertEquals(0, sessionManager.sessions.size)
+        assertEquals(1, sessionManager.all.size)
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(1, store.state.customTabs.size)
+
+        val tab = store.state.customTabs[0]
+        assertEquals("https://www.mozilla.org", tab.content.url)
+    }
+
+    @Test
     fun `Remove session`() {
         val store = BrowserStore()
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.tab
+package mozilla.components.browser.state.state
 
 import android.app.PendingIntent
 import android.graphics.Bitmap
@@ -10,10 +10,12 @@ import android.os.Bundle
 import androidx.annotation.ColorInt
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsSessionToken
+import java.util.UUID
 
 /**
  * Holds configuration data for a Custom Tab.
  *
+ * @property id a unique ID of this custom tab.
  * @property toolbarColor Background color for the toolbar.
  * @property closeButtonIcon Custom icon of the back button on the toolbar.
  * @property enableUrlbarHiding Enables the toolbar to hide as the user scrolls down on the page.
@@ -26,8 +28,8 @@ import androidx.browser.customtabs.CustomTabsSessionToken
  * @property sessionToken The token associated with the custom tab.
  */
 data class CustomTabConfig(
-    val id: String,
-    @ColorInt val toolbarColor: Int?,
+    val id: String = UUID.randomUUID().toString(),
+    @ColorInt val toolbarColor: Int? = null,
     val closeButtonIcon: Bitmap? = null,
     val enableUrlbarHiding: Boolean = false,
     val actionButtonConfig: CustomTabActionButtonConfig? = null,

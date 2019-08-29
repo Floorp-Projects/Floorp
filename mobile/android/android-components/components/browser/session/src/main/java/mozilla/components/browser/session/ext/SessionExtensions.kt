@@ -19,10 +19,11 @@ fun Session.toTabSessionState(): TabSessionState {
 }
 
 /**
- * Creates a matching [CustomTabSessionState] from a [Session]
+ * Creates a matching [CustomTabSessionState] from a custom tab [Session].
  */
 fun Session.toCustomTabSessionState(): CustomTabSessionState {
-    return CustomTabSessionState(id, toContentState())
+    val config = customTabConfig ?: throw IllegalStateException("Session is not a custom tab session")
+    return CustomTabSessionState(id, toContentState(), toTrackingProtectionState(), config)
 }
 
 private fun Session.toContentState(): ContentState {
