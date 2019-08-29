@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test shadow roots with slots</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function _dynamicShadowTest(name, mutationFunc, expectedTree, reorder_targets) {
+      info(name);
+
+      let container = getNode(name);
+      let host = container.querySelector('.host');
+
+      document.body.offsetTop;
+      let event = reorder_targets ?
+        waitForEvents(reorder_targets.map(target => [EVENT_REORDER, target, name])) :
+        waitForEvent(EVENT_REORDER, host, name);
+
+      mutationFunc(container, host);
+
+      await event;
+
+      testAccessibleTree(container, expectedTree);
+
+      return true;
+    }
+
+    async function attachFlatShadow() {
+      await _dynamicShadowTest("attachFlatShadow",
+        (container, host) => {
+          host.attachShadow({ mode: "open" })
+            .appendChild(container.querySelector('.shadowtree').content.cloneNode(true));
+        }, { SECTION: [{ SECTION: [{ name: "red"} ] }] });
+    }
+
+    async function attachOneDeepShadow() {
+      await _dynamicShadowTest("attachOneDeepShadow",
+        (container, host) => {
+          host.attachShadow({ mode: "open" })
+            .appendChild(container.querySelector('.shadowtree').content.cloneNode(true));
+        }, { SECTION: [{ SECTION: [{ SECTION: [{ name: "red"} ] }] }] });
+    }
+
+    async function changeSlotFlat() {
+      await _dynamicShadowTest("changeSlotFlat",
+        (container, host) => {
+          container.querySelector('.red').removeAttribute('slot');
+          container.querySelector('.green').setAttribute('slot', 'myslot');
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    async function changeSlotOneDeep() {
+      await _dynamicShadowTest("changeSlotOneDeep",
+        (container, host) => {
+          container.querySelector('.red').removeAttribute('slot');
+          container.querySelector('.green').setAttribute('slot', 'myslot');
+        }, { SECTION: [{ SECTION: [{ SECTION: [{ name: "green"} ] }] }] }, ["shadowdiv"]);
+    }
+
+    // Nested roots and slots
+    async function changeSlotNested() {
+      await _dynamicShadowTest("changeSlotNested",
+        (container, host) => {
+          testAccessibleTree(getNode("changeSlotNested"),
+            { SECTION: [{ SECTION: [{ SECTION: [{ name: "red"} ] }] }] });
+          container.querySelector('.red').removeAttribute('slot');
+          container.querySelector('.green').setAttribute('slot', 'myslot');
+        }, { SECTION: [{ SECTION: [{ SECTION: [{ name: "green"} ] }] }] }, ["shadowdiv"]);
+    }
+
+    // Dynamic mutations to both shadow root and shadow host subtrees
+    // testing/web-platform/tests/css/css-scoping/shadow-assign-dynamic-001.html
+    async function assignSlotDynamic() {
+      await _dynamicShadowTest("assignSlotDynamic",
+        (container, host) => {
+          host.shadowRoot.appendChild(container.querySelector('.shadowtree').content.cloneNode(true));
+          host.appendChild(container.querySelector('.lighttree').content.cloneNode(true));
+        }, { SECTION: [{ SECTION: [{ name: "slot1"}, { name: "slot2" } ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-001.html
+    async function shadowFallbackDynamic_1() {
+      await _dynamicShadowTest("shadowFallbackDynamic_1",
+        (container, host) => {
+          host.firstElementChild.remove();
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-002.html
+    async function shadowFallbackDynamic_2() {
+      await _dynamicShadowTest("shadowFallbackDynamic_2",
+        (container, host) => {
+          host.firstElementChild.removeAttribute("slot");
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-003.html
+    async function shadowFallbackDynamic_3() {
+      await _dynamicShadowTest("shadowFallbackDynamic_3",
+        (container, host) => {
+          host.appendChild(container.querySelector(".lighttree").content.cloneNode(true));
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-004.html
+    async function shadowFallbackDynamic_4() {
+      await _dynamicShadowTest("shadowFallbackDynamic_4",
+        (container, host) => {
+          host.shadowRoot.insertBefore(
+            container.querySelector(".moreshadowtree").
+              content.cloneNode(true), host.shadowRoot.firstChild);
+        }, { SECTION: [{ SECTION: [{ name: "slotparent2", children: [{ name: "green"} ] }, { name: "slotparent1" } ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-004.html
+    // This tests a case when the the slotted element would remain in the same accessible container
+    async function shadowFallbackDynamic_4_1() {
+      await _dynamicShadowTest("shadowFallbackDynamic_4_1",
+        (container, host) => {
+          host.shadowRoot.insertBefore(
+            container.querySelector(".moreshadowtree").
+              content.cloneNode(true), host.shadowRoot.firstChild);
+        }, { SECTION: [{ SECTION: [ { name: "green"}, { SEPARATOR: [] } ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-fallback-dynamic-005.html
+    async function shadowFallbackDynamic_5() {
+      await _dynamicShadowTest("shadowFallbackDynamic_5",
+        (container, host) => {
+          host.firstElementChild.setAttribute("slot", "myotherslot");
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-reassign-dynamic-002.html
+    async function shadowReassignDynamic_2() {
+      await _dynamicShadowTest("shadowReassignDynamic_2",
+        (container, host) => {
+          host.shadowRoot.querySelector("slot").setAttribute("name", "myslot");
+        }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-reassign-dynamic-003.html
+    async function shadowReassignDynamic_3() {
+      await _dynamicShadowTest("shadowReassignDynamic_3",
+        (container, host) => {
+          testAccessibleTree(container, { SECTION: [{ SECTION: [{ name: "green"}, { name: "red", children: [ { PUSHBUTTON: [] }]} ] }] });
+          host.shadowRoot.querySelector("slot[name]").removeAttribute("name");
+
+        }, { SECTION: [{ SECTION: [{ name: "green", children: [ { PUSHBUTTON: [] }]}, { name: "red"} ] }] },
+        [evt => evt.accessible.name == "green", evt => evt.accessible.name == "red"]);
+    }
+
+    // testing/web-platform/tests/css/css-scoping/shadow-reassign-dynamic-004.html
+    async function shadowReassignDynamic_4() {
+      await _dynamicShadowTest("shadowReassignDynamic_4",
+        (container, host) => {
+          host.shadowRoot.getElementById("slot").remove();
+      }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+
+    }
+
+    async function doTest() {
+      await attachFlatShadow();
+
+      await attachOneDeepShadow();
+
+      await changeSlotFlat();
+
+      await changeSlotOneDeep();
+
+      await changeSlotNested();
+
+      await assignSlotDynamic();
+
+      await shadowFallbackDynamic_1();
+
+      await shadowFallbackDynamic_2();
+
+      await shadowFallbackDynamic_3();
+
+      await shadowFallbackDynamic_4();
+
+      await shadowFallbackDynamic_4_1();
+
+      await shadowFallbackDynamic_5();
+
+      await shadowReassignDynamic_2();
+
+      await shadowReassignDynamic_3();
+
+      await shadowReassignDynamic_4();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="attachFlatShadow">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <slot name="myslot">FAIL</slot>
+    </template>
+    <section class="host">
+      <div style="background: green" aria-label="green"></div>
+      <div style="background: red" aria-label="red" slot="myslot"></div>
+    </section>
+  </div>
+
+  <div id="attachOneDeepShadow">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <div id="shadowdiv">
+        <slot name="myslot">FAIL</slot>
+      </div>
+    </template>
+    <section class="host">
+      <div style="background: green" aria-label="green"></div>
+      <div style="background: red" aria-label="red" slot="myslot"></div>
+    </section>
+  </div>
+
+  <div id="changeSlotFlat">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <slot name="myslot">FAIL</slot>
+    </template>
+    <section class="host">
+      <div class="green" style="background: green" aria-label="green"></div>
+      <div class="red" style="background: red" aria-label="red" slot="myslot"></div>
+    </section>
+    <script>
+      document.querySelector("#changeSlotFlat > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#changeSlotFlat > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="changeSlotOneDeep">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <div id="shadowdiv">
+        <slot name="myslot">FAIL</slot>
+      </div>
+    </template>
+    <section class="host">
+      <div class="green" style="background: green" aria-label="green"></div>
+      <div class="red" style="background: red" aria-label="red" slot="myslot"></div>
+    </section>
+    <script>
+      document.querySelector("#changeSlotOneDeep > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#changeSlotOneDeep > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+    <div id="changeSlotNested">
+    <template class="shadowtree outer">
+      <div id="shadowdiv">
+        <slot name="myslot">FAIL</slot>
+      </div>
+    </template>
+    <template class="shadowtree inner">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <slot>FAIL</slot>
+    </template>
+    <section class="host">
+      <div class="green" style="background: green" aria-label="green"></div>
+      <div class="red" style="background: red" aria-label="red" slot="myslot"></div>
+    </section>
+    <script>
+      (function foo() {
+        let outerShadow =
+          document.querySelector("#changeSlotNested > .host").
+            attachShadow({ mode: "open" });
+        outerShadow.appendChild(
+          document.querySelector("#changeSlotNested > .shadowtree.outer").
+            content.cloneNode(true));
+        let innerShadow =
+          outerShadow.querySelector("#shadowdiv").
+            attachShadow({ mode: "open" });
+        innerShadow.appendChild(
+          document.querySelector("#changeSlotNested > .shadowtree.inner").
+            content.cloneNode(true));
+      })();
+    </script>
+  </div>
+
+  <div id="assignSlotDynamic">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 50px; height: 100px }</style>
+      <slot name="slot1">FAIL</slot>
+      <slot name="slot2">FAIL</slot>
+    </template>
+    <template class="lighttree">
+      <div aria-label="slot1" slot="slot1"></div>
+      <div aria-label="slot2" slot="slot2"></div>
+    </template>
+    <section class="host"></section>
+    <script>
+      document.querySelector("#assignSlotDynamic > .host").attachShadow({ mode: "open" });
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_1">
+    <template class="shadowtree">
+      <slot name="myslot">
+        <div aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+      </slot>
+    </template>
+    <section class="host"><span slot="myslot">FAIL</span></section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_1 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_1 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_2">
+    <template class="shadowtree">
+      <slot name="myslot">
+        <div aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+      </slot>
+    </template>
+    <section class="host"><span slot="myslot">FAIL</span></section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_2 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_2 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_3">
+    <template class="shadowtree">
+      <slot name="myslot">FAIL</slot>
+    </template>
+    <template class="lighttree">
+      <div aria-label="green" slot="myslot" style="width: 100px; height: 100px; background: green"></div>
+    </template>
+    <section class="host"></section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_3 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_3 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_4">
+    <template class="shadowtree">
+      <div aria-label="slotparent1"><slot name="myslot"></slot></div>
+    </template>
+    <template class="moreshadowtree">
+      <div aria-label="slotparent2"><slot name="myslot">FAIL</slot></div>
+    </template>
+    <section class="host">
+      <div slot="myslot" aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_4 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_4 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_4_1">
+    <template class="shadowtree">
+      <hr>
+      <slot name="myslot"></slot>
+    </template>
+    <template class="moreshadowtree">
+      <slot name="myslot">FAIL</slot>
+    </template>
+    <section class="host">
+      <div slot="myslot" aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_4_1 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_4_1 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowFallbackDynamic_5">
+    <template class="shadowtree">
+      <slot name="myslot"></slot>
+      <slot name="myotherslot">FAIL</slot>
+    </template>
+    <section class="host">
+      <div slot="myslot" aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowFallbackDynamic_5 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowFallbackDynamic_5 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowReassignDynamic_2">
+    <template class="shadowtree">
+      <style>::slotted(div) { width: 100px; height: 100px }</style>
+      <slot>FAIL</slot>
+    </template>
+    <section class="host">
+      <div slot="myslot" aria-label="green" style="width: 100px; height: 100px; background: green"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowReassignDynamic_2 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowReassignDynamic_2 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowReassignDynamic_3">
+    <template class="shadowtree">
+      <div aria-label="green"><slot name="nomatch"></slot></div>
+      <div aria-label="red"><slot></slot></div>
+    </template>
+    <section class="host">
+      <div role="button"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowReassignDynamic_3 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowReassignDynamic_3 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowReassignDynamic_4">
+    <template class="shadowtree">
+      <style>::slotted(div),div { width: 100px; height: 100px }</style>
+      <slot id="slot"></slot>
+      <slot>
+        <div aria-label="red" style="background: red"></div>
+      </slot>
+    </template>
+    <section class="host">
+      <div aria-label="green" style="background: green"></div>
+    </section>
+    <script>
+      document.querySelector("#shadowReassignDynamic_4 > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowReassignDynamic_4 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
