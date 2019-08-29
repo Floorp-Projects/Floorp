@@ -68,7 +68,7 @@ export default class LoginList extends HTMLElement {
     this._createLoginButton.addEventListener("click", this);
   }
 
-  async render() {
+  render() {
     let visibleLoginGuids = this._applyFilter();
     this._updateVisibleLoginCount(visibleLoginGuids.size);
     this.classList.toggle("empty-search", visibleLoginGuids.size == 0);
@@ -159,19 +159,34 @@ export default class LoginList extends HTMLElement {
         if (!this._loginGuidsSortedOrder.length) {
           return;
         }
-        // Select the first visible login after any possible filter is applied.
+
         let firstVisibleListItem = this._list.querySelector(
           ".login-list-item[data-guid]:not([hidden])"
         );
+        let newlySelectedLogin;
         if (firstVisibleListItem) {
-          let { login } = this._logins[firstVisibleListItem.dataset.guid];
+          newlySelectedLogin = this._logins[firstVisibleListItem.dataset.guid]
+            .login;
+        } else {
+          // Clear the filter if all items have been filtered out.
+          this.classList.remove("create-login-selected");
+          this._createLoginButton.disabled = false;
           window.dispatchEvent(
-            new CustomEvent("AboutLoginsLoginSelected", {
-              detail: login,
-              cancelable: true,
+            new CustomEvent("AboutLoginsFilterLogins", {
+              detail: "",
             })
           );
+          newlySelectedLogin = this._logins[this._loginGuidsSortedOrder[0]]
+            .login;
         }
+
+        // Select the first visible login after any possible filter is applied.
+        window.dispatchEvent(
+          new CustomEvent("AboutLoginsLoginSelected", {
+            detail: newlySelectedLogin,
+            cancelable: true,
+          })
+        );
         break;
       }
       case "AboutLoginsFilterLogins": {

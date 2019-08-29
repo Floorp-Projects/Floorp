@@ -20,6 +20,7 @@ form {
 :host([data-editing]) .edit-button,
 :host([data-editing]) .copy-button,
 :host([data-editing]) login-footer,
+:host([data-is-new-login].no-logins) .cancel-button,
 :host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
 :host([data-is-new-login]) .meta-info,

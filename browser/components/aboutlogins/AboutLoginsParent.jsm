@@ -67,6 +67,7 @@ const augmentVanillaLoginObject = login => {
 var AboutLoginsParent = {
   _l10n: null,
   _subscribers: new WeakSet(),
+  _observersAdded: false,
 
   // Listeners are added in BrowserGlue.jsm
   async receiveMessage(message) {
@@ -247,13 +248,12 @@ var AboutLoginsParent = {
         break;
       }
       case "AboutLogins:Subscribe": {
-        if (
-          !ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length
-        ) {
+        if (!this._observersAdded) {
           Services.obs.addObserver(this, "passwordmgr-crypto-login");
           Services.obs.addObserver(this, "passwordmgr-crypto-loginCanceled");
           Services.obs.addObserver(this, "passwordmgr-storage-changed");
           Services.obs.addObserver(this, UIState.ON_UPDATE);
+          this._observersAdded = true;
         }
         this._subscribers.add(message.target);
 
@@ -472,6 +472,7 @@ var AboutLoginsParent = {
       Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
       Services.obs.removeObserver(this, "passwordmgr-storage-changed");
       Services.obs.removeObserver(this, UIState.ON_UPDATE);
+      this._observersAdded = false;
       return;
     }
 
