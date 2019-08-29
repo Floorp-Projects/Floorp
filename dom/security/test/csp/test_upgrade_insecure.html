@@ -28,6 +28,8 @@
  * received by the server (*.sjs) were actually *https* requests.
  */
 
+const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
 const UPGRADE_POLICY =
   "upgrade-insecure-requests;" +               // upgrade all http requests to https
   "block-all-mixed-content;" +                 // upgrade should be enforced before block-all.
@@ -50,7 +52,7 @@ var tests = [
     deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
-      "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
+      "media-ok", "object-ok", "form-ok", "nested-img-ok"
     ]
   },
   { // (2) test that all requests within an >> http << page get updated
@@ -60,7 +62,7 @@ var tests = [
     deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
-      "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
+      "media-ok", "object-ok", "form-ok", "nested-img-ok"
     ]
   },
   { // (3) test that all requests within an >> http << page get updated, but do
@@ -71,7 +73,7 @@ var tests = [
     deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
-      "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
+      "media-ok", "object-ok", "form-ok", "nested-img-ok"
     ]
   },
   { // (4) test that no requests get updated if >> upgrade-insecure-requests << is not used
@@ -82,7 +84,7 @@ var tests = [
     results: [
       "iframe-error", "script-error", "img-error", "img-redir-error", "font-error",
       "xhr-error", "style-error", "media-error", "object-error", "form-error",
-      "websocket-error", "nested-img-error"
+      "nested-img-error"
     ]
   },
   { // (5) test that all requests within an >> https << page using meta CSP get updated
@@ -94,10 +96,17 @@ var tests = [
     deliveryMethod: "meta",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
-      "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
+      "media-ok", "object-ok", "form-ok", "nested-img-ok"
     ]
   },
 ];
+
+// TODO: WebSocket tests are not supported on Android Yet. Bug 1566168.
+if (AppConstants.platform !== "android") {
+    for (let test of tests) {
+        test.results.push(test.results[0] == "iframe-ok" ? "websocket-ok" : "websocket-error");
+    }
+}
 
 var counter = 0;
 var curTest;
