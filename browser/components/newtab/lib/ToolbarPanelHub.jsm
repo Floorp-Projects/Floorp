@@ -95,6 +95,8 @@ class _ToolbarPanelHub {
 
   maybeInsertFTL(win) {
     win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
+    win.MozXULElement.insertFTLIfNeeded("browser/branding/brandings.ftl");
+    win.MozXULElement.insertFTLIfNeeded("browser/branding/sync-brand.ftl");
   }
 
   // Turns on the Appmenu (hamburger menu) button for all open windows and future windows.
