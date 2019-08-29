@@ -894,7 +894,7 @@ addressbar-suggestions-settings = Change preferences for search engine suggestio
 
 content-blocking-enhanced-tracking-protection = Enhanced Tracking Protection
 
-content-blocking-section-description = Protect your privacy while you browse. Block invisible content that tracks the sites you visit and profiles you. Blocking some of this content may make pages load faster.
+content-blocking-section-top-level-description = Trackers follow you around online to collect information about your browsing habits and interests. { -brand-short-name } blocks many of these trackers and other malicious scripts.
 
 content-blocking-learn-more = Learn more
 
