@@ -504,6 +504,7 @@
   value: false
   mirror: always
 
+# Whether to print the APZC tree for debugging.
 - name: apz.printtree
   type: RelaxedAtomicBool
   value: false
@@ -511,7 +512,7 @@
 
 - name: apz.record_checkerboarding
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: apz.second_tap_tolerance
@@ -536,7 +537,7 @@
 
 - name: apz.touch_start_tolerance
   type: AtomicFloat
-  value: 1.0f/4.5f
+  value: 0.1f
   mirror: always
 
 - name: apz.velocity_bias
