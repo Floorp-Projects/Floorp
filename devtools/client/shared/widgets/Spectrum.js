@@ -6,26 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new MultiLocalizationHelper(
-  "devtools/shared/locales/en-US/accessibility.properties",
-  "devtools/client/locales/en-US/accessibility.properties",
-  "devtools/client/locales/en-US/inspector.properties"
-);
-const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
-const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const SLIDER = {
-  hue: {
-    MIN: "0",
-    MAX: "128",
-    STEP: "1",
-  },
-  alpha: {
-    MIN: "0",
-    MAX: "1",
-    STEP: "0.01",
-  },
-};
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
@@ -46,6 +26,27 @@ loader.lazyRequireGetter(
   "devtools/shared/accessibility",
   true
 );
+
+const L10N = new MultiLocalizationHelper(
+  "devtools/shared/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/inspector.properties"
+);
+const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
+const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const SLIDER = {
+  hue: {
+    MIN: "0",
+    MAX: "128",
+    STEP: "1",
+  },
+  alpha: {
+    MIN: "0",
+    MAX: "1",
+    STEP: "0.01",
+  },
+};
 
 /**
  * Spectrum creates a color picker widget in any container you give it.
@@ -81,13 +82,11 @@ function Spectrum(parentEl, rgb) {
   // eslint-disable-next-line no-unsanitized/property
   this.element.innerHTML = `
     <section class="spectrum-color-picker">
-      <div
-        class="spectrum-color spectrum-box"
-        tabindex="0"
-        role="slider"
-        title="${L10N.getStr("colorPickerTooltip.spectrumDraggerTitle")}"
-        aria-describedby="spectrum-dragger"
-      >
+      <div class="spectrum-color spectrum-box"
+           tabindex="0"
+           role="slider"
+           title="${L10N.getStr("colorPickerTooltip.spectrumDraggerTitle")}"
+           aria-describedby="spectrum-dragger">
         <div class="spectrum-sat">
           <div class="spectrum-val">
             <div class="spectrum-dragger" id="spectrum-dragger"></div>
