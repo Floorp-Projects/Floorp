@@ -25,16 +25,16 @@ function clearImageCache() {
 
 // Helper function to determine if the frame is decoded for a given image id
 function isFrameDecoded(id) {
-  return getImageStatus(id) & SpecialPowers.Ci.imgIRequest.STATUS_FRAME_COMPLETE
-    ? true
-    : false;
+  return !!(
+    getImageStatus(id) & SpecialPowers.Ci.imgIRequest.STATUS_FRAME_COMPLETE
+  );
 }
 
 // Helper function to determine if the image is loaded for a given image id
 function isImageLoaded(id) {
-  return getImageStatus(id) & SpecialPowers.Ci.imgIRequest.STATUS_LOAD_COMPLETE
-    ? true
-    : false;
+  return !!(
+    getImageStatus(id) & SpecialPowers.Ci.imgIRequest.STATUS_LOAD_COMPLETE
+  );
 }
 
 // Helper function to get the status flags of an image
@@ -89,9 +89,7 @@ const DISCARD_TIMEOUT_PREF = {
 };
 
 function setImagePref(pref, val) {
-  var prefService = SpecialPowers.Cc[
-    "@mozilla.org/preferences-service;1"
-  ].getService(SpecialPowers.Ci.nsIPrefService);
+  var prefService = SpecialPowers.Services.prefs;
   var branch = prefService.getBranch(pref.branch);
   if (val != null) {
     switch (pref.type) {
@@ -110,9 +108,7 @@ function setImagePref(pref, val) {
 }
 
 function getImagePref(pref) {
-  var prefService = SpecialPowers.Cc[
-    "@mozilla.org/preferences-service;1"
-  ].getService(SpecialPowers.Ci.nsIPrefService);
+  var prefService = SpecialPowers.Services.prefs;
   var branch = prefService.getBranch(pref.branch);
   if (branch.prefHasUserValue(pref.name)) {
     switch (pref.type) {

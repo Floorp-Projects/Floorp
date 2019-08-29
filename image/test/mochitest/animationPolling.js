@@ -1,3 +1,5 @@
+// This file expects imgutils.js to be loaded as well.
+/* import-globals-from imgutils.js */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 var currentTest;
 var gIsRefImageLoaded = false;
@@ -7,7 +9,7 @@ function pollForSuccess() {
   if (!currentTest.isTestFinished) {
     if (
       !currentTest.reusingReferenceImage ||
-      (currentTest.reusingReferenceImage && gRefImageLoaded)
+      (currentTest.reusingReferenceImage && gIsRefImageLoaded)
     ) {
       currentTest.checkImage();
     }
@@ -301,7 +303,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function() {
 
     this.referenceSnapshot = snapshotWindow(window, false);
 
-    var snapResult = compareSnapshots(
+    let snapResult = compareSnapshots(
       this.cleanSnapshot,
       this.referenceSnapshot,
       false
@@ -328,7 +330,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function() {
       "Reference snapshot shouldn't match clean (non-image) snapshot"
     );
 
-    var dataString = "Reference Snapshot #" + this.numRefsTaken;
+    let dataString = "Reference Snapshot #" + this.numRefsTaken;
     this.outputDebugInfo(
       dataString,
       "refSnapId",
@@ -343,7 +345,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function() {
     this.enableDisplay(referenceDiv);
 
     this.referenceSnapshot = snapshotWindow(window, false);
-    var snapResult = compareSnapshots(
+    let snapResult = compareSnapshots(
       this.cleanSnapshot,
       this.referenceSnapshot,
       false
@@ -370,7 +372,7 @@ AnimationTest.prototype.takeReferenceSnapshot = function() {
       "Reference snapshot shouldn't match clean (non-image) snapshot"
     );
 
-    var dataString = "Reference Snapshot #" + this.numRefsTaken;
+    let dataString = "Reference Snapshot #" + this.numRefsTaken;
     this.outputDebugInfo(
       dataString,
       "refSnapId",

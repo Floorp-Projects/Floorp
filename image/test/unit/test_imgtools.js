@@ -68,7 +68,7 @@ function streamToArray(aStream) {
 
   var bytes = bis.readByteArray(size);
   if (size != bytes.length) {
-    throw "Didn't read expected number of bytes";
+    throw new Error("Didn't read expected number of bytes");
   }
 
   return bytes;
@@ -84,7 +84,7 @@ function compareArrays(aArray1, aArray2) {
 
   for (var i = 0; i < aArray1.length; i++) {
     if (aArray1[i] != aArray2[i]) {
-      throw "arrays differ at index " + i;
+      throw new Error("arrays differ at index " + i);
     }
   }
 }
@@ -98,17 +98,17 @@ function compareArrays(aArray1, aArray2) {
 function checkExpectedError(aExpectedError, aActualError) {
   if (aExpectedError) {
     if (!aActualError) {
-      throw "Didn't throw as expected (" + aExpectedError + ")";
+      throw new Error("Didn't throw as expected (" + aExpectedError + ")");
     }
 
     if (!aExpectedError.test(aActualError)) {
-      throw "Threw (" + aActualError + "), not (" + aExpectedError;
+      throw new Error("Threw (" + aActualError + "), not (" + aExpectedError);
     }
 
     // We got the expected error, so make a note in the test log.
     dump("...that error was expected.\n\n");
   } else if (aActualError) {
-    throw "Threw unexpected error: " + aActualError;
+    throw new Error("Threw unexpected error: " + aActualError);
   }
 }
 
@@ -122,7 +122,7 @@ function run_test() {
     var imgTools = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools);
 
     if (!imgTools) {
-      throw "Couldn't get imgITools service";
+      throw new Error("Couldn't get imgITools service");
     }
 
     // Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
@@ -690,18 +690,15 @@ function run_test() {
     for (var i = 0; i < testData.length; ++i) {
       var dict = testData[i];
 
-      var imgFile = do_get_file(dict.refImage);
-      var istream = getFileInputStream(imgFile);
+      imgFile = do_get_file(dict.refImage);
+      istream = getFileInputStream(imgFile);
       var refBytes = streamToArray(istream);
 
       imgFile = do_get_file(dict.preImage);
       istream = getFileInputStream(imgFile);
 
-      var buffer = NetUtil.readInputStreamToString(
-        istream,
-        istream.available()
-      );
-      var container = imgTools.decodeImageFromBuffer(
+      buffer = NetUtil.readInputStreamToString(istream, istream.available());
+      container = imgTools.decodeImageFromBuffer(
         buffer,
         buffer.length,
         dict.preImageMimeType
@@ -794,6 +791,8 @@ function run_test() {
 
     /* ========== end ========== */
   } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
+    throw new Error(
+      "FAILED in test #" + testnum + " -- " + testdesc + ": " + e
+    );
   }
 }
