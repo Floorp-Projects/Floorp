@@ -1362,10 +1362,12 @@ class _ASRouter {
         ToolbarBadgeHub.registerBadgeNotificationListener(message, { force });
         break;
       default:
-        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
-          type: "SET_MESSAGE",
-          data: message,
-        });
+        try {
+          target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
+            type: "SET_MESSAGE",
+            data: message,
+          });
+        } catch (e) {}
         break;
     }
   }
@@ -1410,9 +1412,7 @@ class _ASRouter {
         });
       } catch (e) {}
     } else {
-      try {
-        this.routeMessageToTarget(message, target, trigger, force);
-      } catch (e) {}
+      this.routeMessageToTarget(message, target, trigger, force);
     }
   }
 
