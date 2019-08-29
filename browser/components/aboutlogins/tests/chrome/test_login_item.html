@@ -217,6 +217,13 @@ add_task(async function test_reveal_password_change_selected_login() {
     "waiting for password input type to change after checking for master password");
   is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
 
+  let editButton = gLoginItem.shadowRoot.querySelector(".edit-button");
+  editButton.click();
+  ok(revealCheckbox.checked, "reveal-checkbox should remain checked when entering 'edit' mode");
+  gLoginItem.shadowRoot.querySelector(".cancel-button").click();
+  ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked after canceling 'edit' mode");
+  revealCheckbox.click();
+
   gLoginItem.setLogin(TEST_LOGIN_2);
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked when changing logins");
   is(passwordInput.type, "password", "Password should be masked by default when switching logins");
