@@ -691,6 +691,7 @@ var ThirdPartyCookies = {
       }
 
       let box = document.createXULElement("vbox");
+      box.className = "protections-popup-cookiesView-list-section";
       let label = document.createXULElement("label");
       label.className = "protections-popup-cookiesView-list-header";
       label.textContent = gNavigatorBundle.getString(

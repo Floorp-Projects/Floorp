@@ -525,6 +525,10 @@ description#identity-popup-content-verifier,
   margin: 5px 0;
 }
 
+#protections-popup-cookiesView-list > .protections-popup-cookiesView-list-section:only-of-type > .protections-popup-cookiesView-list-header {
+  display: none;
+}
+
 :root[lwt-popup-brighttext] .protections-popup-cookiesView-list-header {
   color: #f9f9fa;
 }
