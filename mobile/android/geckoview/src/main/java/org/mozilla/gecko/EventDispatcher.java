@@ -318,12 +318,7 @@ public final class EventDispatcher extends JNIObject {
             return true;
         }
 
-        final String error = "No listener for " + type;
-        if (callback != null) {
-            callback.sendError(error);
-        }
-
-        Log.w(LOGTAG, error);
+        Log.w(LOGTAG, "No listener for " + type);
         return false;
     }
 

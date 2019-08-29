@@ -12,7 +12,7 @@ window.addEventListener("pageshow", () => {
       try {
         // Using eval here is the whole point of this WebExtension so we can
         // safely ignore the eslint warning.
-        const response = window.eval(message.eval); // eslint-disable-line no-eval
+        const response = eval(message.eval); // eslint-disable-line no-eval
         sendResponse(message.id, response);
       } catch (ex) {
         sendSyncResponse(message.id, null, ex);
