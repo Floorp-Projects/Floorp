@@ -1033,7 +1033,9 @@ Search.prototype = {
           if (this._searchEngineAliasMatch) {
             engine = this._searchEngineAliasMatch.engine;
           } else {
-            engine = await PlacesSearchAutocompleteProvider.currentEngine();
+            engine = await PlacesSearchAutocompleteProvider.currentEngine(
+              this._inPrivateWindow
+            );
             if (!this.pending) {
               return;
             }
@@ -1727,7 +1729,9 @@ Search.prototype = {
   },
 
   async _matchCurrentSearchEngine() {
-    let engine = await PlacesSearchAutocompleteProvider.currentEngine();
+    let engine = await PlacesSearchAutocompleteProvider.currentEngine(
+      this._inPrivateWindow
+    );
     if (!engine || !this.pending) {
       return false;
     }
