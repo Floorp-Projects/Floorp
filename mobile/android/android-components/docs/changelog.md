@@ -21,6 +21,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added property delegates to work with `SharedPreferences`.
+  * Added `Flow.ifChanged()` operator for filtering a `Flow` based on whether a value has changed from the previous one (e.g. A, A, B, C, A -> A, B, C, A).
 
 # 10.0.1
 
