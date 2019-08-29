@@ -718,26 +718,9 @@ pref("apz.paint_skipping.enabled", true);
 // Fetch displayport updates early from the message queue
 pref("apz.peek_messages.enabled", true);
 pref("apz.pinch_lock.mode", 1);
-pref("apz.pinch_lock.scoll_lock_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_breakout_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_lock_threshold", "0.03125");  // 1/32 inches
-pref("apz.popups.enabled", false);
 pref("apz.relative-update.enabled", true);
-
-// Whether to print the APZC tree for debugging
-pref("apz.printtree", false);
-
-#ifdef NIGHTLY_BUILD
-  pref("apz.record_checkerboarding", true);
-#else
-  pref("apz.record_checkerboarding", false);
-#endif
-pref("apz.second_tap_tolerance", "0.5");
-pref("apz.test.logging_enabled", false);
-pref("apz.touch_start_tolerance", "0.1");
-pref("apz.touch_move_tolerance", "0.1");
-pref("apz.velocity_bias", "0.0");
-pref("apz.velocity_relevance_time_ms", 150);
 
 #ifdef XP_MACOSX
   // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI
