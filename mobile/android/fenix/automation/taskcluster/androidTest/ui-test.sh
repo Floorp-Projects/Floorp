@@ -26,10 +26,10 @@ display_help() {
     echo
     echo "Examples:"
     echo "To run UI tests on ARM device shard (1 test / shard)"
-    echo "$ ui-test.sh arm -1"
+    echo "$ ui-test.sh arm64-v8a -1"
     echo
     echo "To run UI tests on X86 device (on 3 shards)"
-    echo "$ ui-test.sh feature x86 3"
+    echo "$ ui-test.sh x86 3"
     echo
 }
 
@@ -40,7 +40,7 @@ if [[ $# -lt 1 ]]; then
     exit 1
 fi
 
-device_type="$1"  # arm | x86
+device_type="$1"  # arm64-v8a | armeabi-v7a | x86_64 | x86
 if [[ ! -z "$2" ]]; then
     num_shards=$2
 fi
@@ -68,34 +68,20 @@ gcloud auth activate-service-account --key-file "$GOOGLE_APPLICATION_CREDENTIALS
 echo
 echo
 
-# From now on disable exiting on error. If the tests fail we want to continue
+# Disable exiting on error. If the tests fail we want to continue
 # and try to download the artifacts. We will exit with the actual error code later.
 set +e
 
-APK_APP="${PATH_APK}/app-geckoNightly-${deviceType,,}-debug.apk"
-if [[ "${device_type,,}" == "aarch64" ]]
-then
-    flank_template="${PATH_TEST}/flank-aarch64.yml"
-    APK_APP="${PATH_APK}/app-geckoNightly-arm64-v8a-debug.apk"
-elif [[ "${device_type,,}" == "arm" ]]
-then
-    flank_template="${PATH_TEST}/flank-arm.yml"
-    APK_APP="${PATH_APK}/app-geckoNightly-armeabi-v7a-debug.apk"
-elif [[ "${device_type,,}" == "x86_64" ]]
-then
-    flank_template="${PATH_TEST}/flank-x86-64.yml"
-    APK_APP="${PATH_APK}/app-geckoNightly-x86_64-debug.apk"
-elif [[ "${device_type,,}" == "x86" ]]
-then
-    flank_template="${PATH_TEST}/flank-x86.yml"
-    APK_APP="${PATH_APK}/app-geckoNightly-x86-debug.apk"
+if [[ "${device_type}" =~ ^(arm64-v8a|armeabi-v7a|x86_64|x86)$ ]]; then
+    APK_APP="${PATH_APK}/app-geckoNightly-${device_type}-debug.apk"
+    flank_template="${PATH_TEST}/flank-${device_type}.yml"
+    echo "device_type: ${device_type}"
 else
     echo "NOT FOUND"
     exitcode=1
 fi
 
-APK_TEST="./app/build/outputs/apk/androidTest/debug/app-geckoNightly-debug-androidTest.apk"
-ls -la ./app/build/outputs/apk/androidTest/debug
+APK_TEST="./app/build/outputs/apk/androidTest/geckoNightly/debug/app-geckoNightly-debug-androidTest.apk"
 
 # function to exit script with exit code from test run.
 # (Only 0 if all test executions passed)
