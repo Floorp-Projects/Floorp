@@ -28,9 +28,9 @@ repackage_signing_description_schema = schema.extend({
 })
 
 SIGNING_FORMATS = {
-    "target.installer.exe": ["sha2signcode"],
-    "target.stub-installer.exe": ["sha2signcodestub"],
-    "target.installer.msi": ["sha2signcode"],
+    "target.installer.exe": ["autograph_authenticode"],
+    "target.stub-installer.exe": ["autograph_authenticode_stub"],
+    "target.installer.msi": ["autograph_authenticode"],
 }
 
 transforms = TransformSequence()
