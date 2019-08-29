@@ -4138,7 +4138,7 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptError(
     const nsString& aSourceLine, const uint32_t& aLineNumber,
     const uint32_t& aColNumber, const uint32_t& aFlags,
     const nsCString& aCategory, const bool& aFromPrivateWindow,
-    const bool& aFromChromeContext) {
+    const uint64_t& aInnerWindowId, const bool& aFromChromeContext) {
   return RecvScriptErrorInternal(aMessage, aSourceName, aSourceLine,
                                  aLineNumber, aColNumber, aFlags, aCategory,
                                  aFromPrivateWindow, aFromChromeContext);

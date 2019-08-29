@@ -194,7 +194,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 }
 
 .spectrum-dragger {
-  -moz-user-select: none;
+  user-select: none;
   position: absolute;
   top: 0px;
   left: 0px;

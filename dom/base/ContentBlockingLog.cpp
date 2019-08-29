@@ -79,7 +79,7 @@ static bool IsReportingPerUserEnabled() {
 
 static bool IsReportingPerDocumentEnabled() {
   constexpr double boundary =
-      kRatioReportDocument * std::numeric_limits<uint64_t>::max();
+      kRatioReportDocument * double(std::numeric_limits<uint64_t>::max());
   Maybe<uint64_t> randomNum = RandomUint64();
   return randomNum.isSome() && randomNum.value() <= boundary;
 }

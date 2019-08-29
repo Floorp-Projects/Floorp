@@ -43,7 +43,6 @@ exports.TargetFactory = {
     target = await promise;
     // Then replace the promise with the target object
     targets.set(tab, target);
-    target.attachTab(tab);
     target.once("close", () => {
       targets.delete(tab);
     });
@@ -91,7 +90,7 @@ exports.TargetFactory = {
     // Connect the local client to the local server
     await client.connect();
 
-    // Fetch the FrameTargetActor's Front
+    // Fetch the FrameTargetActor's Front which is a BrowsingContextTargetFront
     return client.mainRoot.getTab({ tab });
   },
 
