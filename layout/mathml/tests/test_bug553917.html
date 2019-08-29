@@ -31,14 +31,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         ChildCountIncorrect: {
             status : [false, false, false, false, false, false],
             args : [["mroot"], ["msub"], ["msup"], ["mfrac"], ["msubsup"], ["munderover"]] },
-      /*<math fontfamily="serif"></math>
-        <math color="#112233"></math>
-        <math background="#FFFFFF"></math>
-        <math fontsize="10"></math>
-        <math xlink:href="http://www.mozilla.org"></math>*/
-        DeprecatedSupersededBy: { 
-          status: [false],
-          args: [["xlink:href","href"]] },
       /*<math><mpadded width="BAD!"></mpadded></math>
         <math><mpadded height="BAD!"></mpadded></math>
         <math><mpadded voffset="BAD!"></mpadded></math>*/
@@ -132,7 +124,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
           status : [!allow_nonzero_unitless_lengths],
           args : [[]] }};
       
-      var g_errorTypes = ["ChildCountIncorrect","DeprecatedSupersededBy","AttributeParsingError",
+      var g_errorTypes = ["ChildCountIncorrect","AttributeParsingError",
                           "AttributeParsingErrorNoTag","LengthParsingError", "MMultiscriptsErrors",
                           "UnitlessValuesAreDeprecated"];
       
@@ -196,9 +188,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mfrac></mfrac></math>
     <math><msubsup></msubsup></math>
     <math><munderover></munderover></math>
-    
-    <!-- DeprecatedSupersededBy -->
-    <math xlink:href="http://www.mozilla.org"></math>
     
     <!-- AttributeParsingError -->
     <math><mpadded width="BAD!"></mpadded></math>

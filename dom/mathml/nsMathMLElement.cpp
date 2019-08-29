@@ -37,17 +37,6 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase, Link)
 
-static nsresult WarnDeprecated(const char16_t* aDeprecatedAttribute,
-                               const char16_t* aFavoredAttribute,
-                               Document* aDocument) {
-  AutoTArray<nsString, 2> argv;
-  argv.AppendElement(aDeprecatedAttribute);
-  argv.AppendElement(aFavoredAttribute);
-  return nsContentUtils::ReportToConsole(
-      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("MathML"), aDocument,
-      nsContentUtils::eMATHML_PROPERTIES, "DeprecatedSupersededBy", argv);
-}
-
 static nsresult ReportLengthParseError(const nsString& aValue,
                                        Document* aDocument) {
   AutoTArray<nsString, 1> arg = {aValue};
@@ -870,7 +859,7 @@ bool nsMathMLElement::IsLink(nsIURI** aURI) const {
     // The REC says: "When user agents encounter MathML elements with both href
     // and xlink:href attributes, the href attribute should take precedence."
     hasHref = true;
-  } else {
+  } else if (!StaticPrefs::mathml_xlink_disabled()) {
     // To be a clickable XLink for styling and interaction purposes, we require:
     //
     //   xlink:href    - must be set
@@ -899,6 +888,8 @@ bool nsMathMLElement::IsLink(nsIURI** aURI) const {
                         eCaseMatters) != Element::ATTR_VALUE_NO_MATCH &&
         FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::actuate, sActuateVals,
                         eCaseMatters) != Element::ATTR_VALUE_NO_MATCH) {
+      OwnerDoc()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedXLinkAttribute);
       hasHref = true;
     }
   }
@@ -918,9 +909,15 @@ bool nsMathMLElement::IsLink(nsIURI** aURI) const {
 }
 
 void nsMathMLElement::GetLinkTarget(nsAString& aTarget) {
+  if (StaticPrefs::mathml_xlink_disabled()) {
+    nsMathMLElementBase::GetLinkTarget(aTarget);
+    return;
+  }
+
   const nsAttrValue* target =
       mAttrs.GetAttr(nsGkAtoms::target, kNameSpaceID_XLink);
   if (target) {
+    OwnerDoc()->WarnOnceAbout(dom::Document::eMathML_DeprecatedXLinkAttribute);
     target->ToString(aTarget);
   }
 
@@ -928,13 +925,21 @@ void nsMathMLElement::GetLinkTarget(nsAString& aTarget) {
     static Element::AttrValuesArray sShowVals[] = {nsGkAtoms::_new,
                                                    nsGkAtoms::replace, nullptr};
 
+    bool hasDeprecatedShowAttribute = true;
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show, sShowVals,
                             eCaseMatters)) {
+      case ATTR_MISSING:
+        hasDeprecatedShowAttribute = false;
+        break;
       case 0:
         aTarget.AssignLiteral("_blank");
         return;
       case 1:
         return;
+    }
+    if (hasDeprecatedShowAttribute) {
+      OwnerDoc()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedXLinkAttribute);
     }
     OwnerDoc()->GetBaseTarget(aTarget);
   }
@@ -955,9 +960,11 @@ nsresult nsMathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
   if (aName == nsGkAtoms::href && (aNameSpaceID == kNameSpaceID_None ||
-                                   aNameSpaceID == kNameSpaceID_XLink)) {
+                                   (!StaticPrefs::mathml_xlink_disabled() &&
+                                    aNameSpaceID == kNameSpaceID_XLink))) {
     if (aValue && aNameSpaceID == kNameSpaceID_XLink) {
-      WarnDeprecated(u"xlink:href", u"href", OwnerDoc());
+      OwnerDoc()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedXLinkAttribute);
     }
     // Note: When unsetting href, there may still be another href since there
     // are 2 possible namespaces.
