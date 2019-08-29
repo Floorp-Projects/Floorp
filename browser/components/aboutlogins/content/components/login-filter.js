@@ -18,6 +18,7 @@ export default class LoginFilter extends HTMLElement {
     this._input = this.shadowRoot.querySelector("input");
 
     this.addEventListener("input", this);
+    window.addEventListener("AboutLoginsFilterLogins", this);
   }
 
   focus() {
@@ -26,6 +27,12 @@ export default class LoginFilter extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "AboutLoginsFilterLogins": {
+        if (this.value != event.detail) {
+          this.value = event.detail;
+        }
+        break;
+      }
       case "input": {
         this._dispatchFilterEvent(event.originalTarget.value);
         break;
