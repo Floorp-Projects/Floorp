@@ -9,7 +9,11 @@ import { kebabCase } from "lodash";
 
 import { showMenu } from "devtools-contextmenu";
 import { copyToTheClipboard } from "../../../../utils/clipboard";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
+import {
+  makeMockFrame,
+  makeMockSource,
+  mockthreadcx,
+} from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../../utils/clipboard", () => ({
@@ -53,7 +57,13 @@ describe("FrameMenu", () => {
     const frameworkGroupingId = generateMockId("framework.enableGrouping");
     const blackBoxId = generateMockId("sourceFooter.blackbox");
 
-    FrameMenu(mockFrame, frameworkGroupingOn, callbacks, mockEvent);
+    FrameMenu(
+      mockFrame,
+      frameworkGroupingOn,
+      callbacks,
+      mockEvent,
+      mockthreadcx
+    );
 
     const receivedArray = showMenu.mock.calls[0][1];
     expect(showMenu).toHaveBeenCalledWith(mockEvent, receivedArray);
@@ -70,7 +80,13 @@ describe("FrameMenu", () => {
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGrouping = generateMockId("framework.enableGrouping");
 
-    FrameMenu(emptyFrame, frameworkGroupingOn, callbacks, mockEvent);
+    FrameMenu(
+      emptyFrame,
+      frameworkGroupingOn,
+      callbacks,
+      mockEvent,
+      mockthreadcx
+    );
 
     const receivedArray = showMenu.mock.calls[0][1];
     expect(showMenu).toHaveBeenCalledWith(mockEvent, receivedArray);
@@ -82,7 +98,7 @@ describe("FrameMenu", () => {
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGrouping = generateMockId("framework.disableGrouping");
 
-    FrameMenu(emptyFrame, true, callbacks, mockEvent);
+    FrameMenu(emptyFrame, true, callbacks, mockEvent, mockthreadcx);
 
     const receivedArray = showMenu.mock.calls[0][1];
     const receivedArrayIds = receivedArray.map(item => item.id);
@@ -93,7 +109,7 @@ describe("FrameMenu", () => {
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGrouping = generateMockId("framework.enableGrouping");
 
-    FrameMenu(emptyFrame, false, callbacks, mockEvent);
+    FrameMenu(emptyFrame, false, callbacks, mockEvent, mockthreadcx);
 
     const receivedArray = showMenu.mock.calls[0][1];
     const receivedArrayIds = receivedArray.map(item => item.id);
