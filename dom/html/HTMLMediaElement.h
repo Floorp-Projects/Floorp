@@ -758,7 +758,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     ~OutputMediaStream();
 
     RefPtr<DOMMediaStream> mStream;
-    RefPtr<MediaStreamGraphImpl> mGraph;
     // Dummy stream to keep mGraph from shutting down when MediaDecoder shuts
     // down. Shared across all OutputMediaStreams as one stream is enough to
     // keep the graph alive.

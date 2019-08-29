@@ -3776,7 +3776,7 @@ void MediaDecoderStateMachine::RemoveOutputStream(DOMMediaStream* aStream) {
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManager(
-    MediaStreamGraphImpl* aGraph) {
+    MediaStreamGraph* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
     return;
