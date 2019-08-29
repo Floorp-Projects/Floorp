@@ -834,6 +834,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (completion.await || completion.yield) {
         thread.suspendedFrame = this;
         this.waitingOnStep = true;
+        thread.dbg.onEnterFrame = undefined;
         return undefined;
       }
 
