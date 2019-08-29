@@ -17,11 +17,11 @@ export default class LoginIntro extends HTMLElement {
   }
 
   handleEvent(event) {
-    let faqLink = this.shadowRoot.querySelector(".intro-faq-link");
+    let helpLink = this.shadowRoot.querySelector(".intro-help-link");
 
-    if (event.type == "click" && event.originalTarget == faqLink) {
+    if (event.type == "click" && event.originalTarget == helpLink) {
       document.dispatchEvent(
-        new CustomEvent("AboutLoginsOpenFAQ", {
+        new CustomEvent("AboutLoginsGetHelp", {
           bubbles: true,
         })
       );

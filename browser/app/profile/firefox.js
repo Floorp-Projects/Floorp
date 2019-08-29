@@ -1784,7 +1784,6 @@ pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
   pref("signon.showAutoCompleteOrigins", true);
   pref("signon.includeOtherSubdomainsInLookup", true);
 #endif
-pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
 // The utm_creative value is appended within the code (specific to the location on
 // where it is clicked). Be sure that if these two prefs are updated, that
 // the utm_creative param be last.
@@ -2380,4 +2379,3 @@ pref("devtools.webide.lastConnectedRuntime", "");
 pref("devtools.webide.lastSelectedProject", "");
 pref("devtools.webide.zoom", "1");
 pref("devtools.webide.busyTimeout", 10000);
-
