@@ -326,28 +326,6 @@ void Realm::traceRoots(JSTracer* trc,
   }
 
   objects_.trace(trc);
-
-  // If code coverage is only enabled with the Debugger or the LCovOutput,
-  // then the following comment holds.
-  //
-  // The scriptCountsMap maps JSScript weak-pointers to ScriptCounts
-  // structures. It uses a HashMap instead of a WeakMap, so that we can keep
-  // the data alive for the JSScript::finalize call. Thus, we do not trace the
-  // keys of the HashMap to avoid adding a strong reference to the JSScript
-  // pointers.
-  //
-  // If the --dump-bytecode command line option or the PCCount JSFriend API
-  // is used, then we mark the keys of the map to hold the JSScript alive.
-  if (scriptCountsMap && trc->runtime()->profilingScripts &&
-      !JS::RuntimeHeapIsMinorCollecting()) {
-    for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty();
-         r.popFront()) {
-      JSScript* script = const_cast<JSScript*>(r.front().key());
-      MOZ_ASSERT(script->hasScriptCounts());
-      TraceRoot(trc, &script, "profilingScripts");
-      MOZ_ASSERT(script == r.front().key(), "const_cast is only a work-around");
-    }
-  }
 }
 
 void ObjectRealm::finishRoots() {
@@ -373,10 +351,6 @@ void Realm::finishRoots() {
 
   clearScriptCounts();
   clearScriptNames();
-
-#ifdef MOZ_VTUNE
-  scriptVTuneIdMap.reset();
-#endif
 }
 
 void ObjectRealm::sweepAfterMinorGC() {
@@ -475,7 +449,6 @@ void Realm::fixupAfterMovingGC(JSTracer* trc) {
   purge();
   fixupGlobal();
   objectGroups_.fixupTablesAfterMovingGC();
-  fixupScriptMapsAfterMovingGC(trc);
 }
 
 void Realm::fixupGlobal() {
@@ -484,102 +457,6 @@ void Realm::fixupGlobal() {
     global_.set(MaybeForwarded(global));
   }
 }
-
-void Realm::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
-  // Map entries are removed by JSScript::finalize, but we need to update the
-  // script pointers here in case they are moved by the GC.
-
-  if (scriptCountsMap) {
-    for (ScriptCountsMap::Enum e(*scriptCountsMap); !e.empty(); e.popFront()) {
-      JSScript* script = e.front().key();
-      TraceManuallyBarrieredEdge(trc, &script, "Realm::scriptCountsMap::key");
-      if (script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
-  }
-
-  if (scriptNameMap) {
-    for (ScriptNameMap::Enum e(*scriptNameMap); !e.empty(); e.popFront()) {
-      JSScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
-  }
-
-  if (debugScriptMap) {
-    for (DebugScriptMap::Enum e(*debugScriptMap); !e.empty(); e.popFront()) {
-      JSScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
-  }
-
-#ifdef MOZ_VTUNE
-  if (scriptVTuneIdMap) {
-    for (ScriptVTuneIdMap::Enum e(*scriptVTuneIdMap); !e.empty();
-         e.popFront()) {
-      JSScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
-  }
-#endif
-}
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-void Realm::checkScriptMapsAfterMovingGC() {
-  if (scriptCountsMap) {
-    for (auto r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
-      JSScript* script = r.front().key();
-      MOZ_ASSERT(script->realm() == this);
-      CheckGCThingAfterMovingGC(script);
-      auto ptr = scriptCountsMap->lookup(script);
-      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-    }
-  }
-
-  if (scriptNameMap) {
-    for (auto r = scriptNameMap->all(); !r.empty(); r.popFront()) {
-      JSScript* script = r.front().key();
-      MOZ_ASSERT(script->realm() == this);
-      CheckGCThingAfterMovingGC(script);
-      auto ptr = scriptNameMap->lookup(script);
-      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-    }
-  }
-
-  if (debugScriptMap) {
-    for (auto r = debugScriptMap->all(); !r.empty(); r.popFront()) {
-      JSScript* script = r.front().key();
-      MOZ_ASSERT(script->realm() == this);
-      CheckGCThingAfterMovingGC(script);
-      DebugScript* ds = r.front().value().get();
-      DebugAPI::checkDebugScriptAfterMovingGC(ds);
-      auto ptr = debugScriptMap->lookup(script);
-      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-    }
-  }
-
-#  ifdef MOZ_VTUNE
-  if (scriptVTuneIdMap) {
-    for (auto r = scriptVTuneIdMap->all(); !r.empty(); r.popFront()) {
-      JSScript* script = r.front().key();
-      MOZ_ASSERT(script->realm() == this);
-      CheckGCThingAfterMovingGC(script);
-      auto ptr = scriptVTuneIdMap->lookup(script);
-      MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
-    }
-  }
-#  endif  // MOZ_VTUNE
-}
-#endif
 
 void Realm::purge() {
   dtoaCache.purge();
@@ -843,22 +720,9 @@ bool Realm::collectCoverageForDebug() const {
   return debuggerObservesCoverage() || coverage::IsLCovEnabled();
 }
 
-void Realm::clearScriptCounts() {
-  if (!scriptCountsMap) {
-    return;
-  }
+void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 
-  // Clear all hasScriptCounts_ flags of JSScript, in order to release all
-  // ScriptCounts entries of the current realm.
-  for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty();
-       r.popFront()) {
-    r.front().key()->clearHasScriptCounts();
-  }
-
-  scriptCountsMap.reset();
-}
-
-void Realm::clearScriptNames() { scriptNameMap.reset(); }
+void Realm::clearScriptNames() { zone()->clearScriptNames(this); }
 
 void ObjectRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* innerViewsArg,
@@ -887,7 +751,7 @@ void Realm::addSizeOfIncludingThis(
     size_t* realmTables, size_t* innerViewsArg, size_t* lazyArrayBuffersArg,
     size_t* objectMetadataTablesArg, size_t* savedStacksSet,
     size_t* varNamesSet, size_t* nonSyntacticLexicalEnvironmentsArg,
-    size_t* jitRealm, size_t* scriptCountsMapArg) {
+    size_t* jitRealm) {
   *realmObject += mallocSizeOf(this);
   objectGroups_.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
                                        tiArrayTypeTables, tiObjectTypeTables,
@@ -903,15 +767,6 @@ void Realm::addSizeOfIncludingThis(
 
   if (jitRealm_) {
     *jitRealm += jitRealm_->sizeOfIncludingThis(mallocSizeOf);
-  }
-
-  if (scriptCountsMap) {
-    *scriptCountsMapArg +=
-        scriptCountsMap->shallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
-      *scriptCountsMapArg +=
-          r.front().value()->sizeOfIncludingThis(mallocSizeOf);
-    }
   }
 }
 

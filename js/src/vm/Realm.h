@@ -416,13 +416,6 @@ class JS::Realm : public JS::shadow::Realm {
   js::ArraySpeciesLookup arraySpeciesLookup;
   js::PromiseLookup promiseLookup;
 
-  js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
-  js::UniquePtr<js::ScriptNameMap> scriptNameMap;
-  js::UniquePtr<js::DebugScriptMap> debugScriptMap;
-#ifdef MOZ_VTUNE
-  js::UniquePtr<js::ScriptVTuneIdMap> scriptVTuneIdMap;
-#endif
-
   /*
    * Lazily initialized script source object to use for scripts cloned
    * from the self-hosting global.
@@ -465,16 +458,13 @@ class JS::Realm : public JS::shadow::Realm {
   void destroy(JSFreeOp* fop);
   void clearTables();
 
-  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              size_t* tiAllocationSiteTables,
-                              size_t* tiArrayTypeTables,
-                              size_t* tiObjectTypeTables, size_t* realmObject,
-                              size_t* realmTables, size_t* innerViews,
-                              size_t* lazyArrayBuffers,
-                              size_t* objectMetadataTables,
-                              size_t* savedStacksSet, size_t* varNamesSet,
-                              size_t* nonSyntacticLexicalScopes,
-                              size_t* jitRealm, size_t* scriptCountsMapArg);
+  void addSizeOfIncludingThis(
+      mozilla::MallocSizeOf mallocSizeOf, size_t* tiAllocationSiteTables,
+      size_t* tiArrayTypeTables, size_t* tiObjectTypeTables,
+      size_t* realmObject, size_t* realmTables, size_t* innerViewsArg,
+      size_t* lazyArrayBuffersArg, size_t* objectMetadataTablesArg,
+      size_t* savedStacksSet, size_t* varNamesSet,
+      size_t* nonSyntacticLexicalEnvironmentsArg, size_t* jitRealm);
 
   JS::Zone* zone() { return zone_; }
   const JS::Zone* zone() const { return zone_; }
@@ -563,13 +553,11 @@ class JS::Realm : public JS::shadow::Realm {
   void purge();
 
   void fixupAfterMovingGC(JSTracer* trc);
-  void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkObjectGroupTablesAfterMovingGC() {
     objectGroups_.checkTablesAfterMovingGC();
   }
-  void checkScriptMapsAfterMovingGC();
 #endif
 
   // Add a name to [[VarNames]].  Reports OOM on failure.

@@ -206,14 +206,12 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
       ShouldDiscardBaselineCode discardBaselineCode = DiscardBaselineCode,
       ShouldDiscardJitScripts discardJitScripts = KeepJitScripts);
 
-  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              size_t* typePool, size_t* regexpZone,
-                              size_t* jitZone, size_t* baselineStubsOptimized,
-                              size_t* cachedCFG, size_t* uniqueIdMap,
-                              size_t* shapeCaches, size_t* atomsMarkBitmaps,
-                              size_t* compartmentObjects,
-                              size_t* crossCompartmentWrappersTables,
-                              size_t* compartmentsPrivateData);
+  void addSizeOfIncludingThis(
+      mozilla::MallocSizeOf mallocSizeOf, size_t* typePool, size_t* regexpZone,
+      size_t* jitZone, size_t* baselineStubsOptimized, size_t* cachedCFG,
+      size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
+      size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
+      size_t* compartmentsPrivateData, size_t* scriptCountsMapArg);
 
   // Iterate over all cells in the zone. See the definition of ZoneCellIter
   // in gc/GC-inl.h for the possible arguments and documentation.
@@ -575,6 +573,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #endif
   void fixupInitialShapeTable();
   void fixupAfterMovingGC();
+  void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
   // Per-zone data for use by an embedder.
   js::ZoneData<void*> data;
@@ -650,6 +649,27 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   friend bool js::CurrentThreadCanAccessZone(Zone* zone);
   friend class js::gc::GCRuntime;
+
+ public:
+  // Script side-tables. These used to be held by Realm, but are now placed
+  // here in order to allow JSScript to access them during finalize (see bug
+  // 1568245; this change in 1575350). The tables are initialized lazily by
+  // JSScript.
+  js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
+  js::UniquePtr<js::ScriptNameMap> scriptNameMap;
+  js::UniquePtr<js::DebugScriptMap> debugScriptMap;
+#ifdef MOZ_VTUNE
+  js::UniquePtr<js::ScriptVTuneIdMap> scriptVTuneIdMap;
+#endif
+
+  void traceScriptTableRoots(JSTracer* trc);
+
+  void clearScriptCounts(Realm* realm);
+  void clearScriptNames(Realm* realm);
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkScriptMapsAfterMovingGC();
+#endif
 };
 
 }  // namespace JS

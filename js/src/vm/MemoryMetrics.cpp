@@ -224,7 +224,8 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone) {
       &zStats.jitZone, &zStats.baselineStubsOptimized, &zStats.cachedCFG,
       &zStats.uniqueIdMap, &zStats.shapeTables,
       &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
-      &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData);
+      &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
+      &zStats.scriptCountsMap);
 }
 
 static void StatsRealmCallback(JSContext* cx, void* data,
@@ -248,8 +249,7 @@ static void StatsRealmCallback(JSContext* cx, void* data,
       &realmStats.realmTables, &realmStats.innerViewsTable,
       &realmStats.lazyArrayBuffersTable, &realmStats.objectMetadataTable,
       &realmStats.savedStacksSet, &realmStats.varNamesSet,
-      &realmStats.nonSyntacticLexicalScopesTable, &realmStats.jitRealm,
-      &realmStats.scriptCountsMap);
+      &realmStats.nonSyntacticLexicalScopesTable, &realmStats.jitRealm);
 }
 
 static void StatsArenaCallback(JSRuntime* rt, void* data, gc::Arena* arena,

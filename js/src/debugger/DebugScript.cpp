@@ -42,7 +42,7 @@ namespace js {
 /* static */
 DebugScript* DebugScript::get(JSScript* script) {
   MOZ_ASSERT(script->hasDebugScript());
-  DebugScriptMap* map = script->realm()->debugScriptMap.get();
+  DebugScriptMap* map = script->zone()->debugScriptMap.get();
   MOZ_ASSERT(map);
   DebugScriptMap::Ptr p = map->lookup(script);
   MOZ_ASSERT(p);
@@ -62,18 +62,18 @@ DebugScript* DebugScript::getOrCreate(JSContext* cx, JSScript* script) {
     return nullptr;
   }
 
-  /* Create realm's debugScriptMap if necessary. */
-  if (!script->realm()->debugScriptMap) {
+  /* Create zone's debugScriptMap if necessary. */
+  if (!script->zone()->debugScriptMap) {
     auto map = cx->make_unique<DebugScriptMap>();
     if (!map) {
       return nullptr;
     }
 
-    script->realm()->debugScriptMap = std::move(map);
+    script->zone()->debugScriptMap = std::move(map);
   }
 
   DebugScript* borrowed = debug.get();
-  if (!script->realm()->debugScriptMap->putNew(script, std::move(debug))) {
+  if (!script->zone()->debugScriptMap->putNew(script, std::move(debug))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -271,7 +271,7 @@ void DebugScript::decrementGeneratorObserverCount(JSFreeOp* fop,
 /* static */
 void DebugAPI::destroyDebugScript(JSFreeOp* fop, JSScript* script) {
   if (script->hasDebugScript()) {
-    DebugScriptMap* map = script->realm()->debugScriptMap.get();
+    DebugScriptMap* map = script->zone()->debugScriptMap.get();
     MOZ_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(script);
     MOZ_ASSERT(p);
