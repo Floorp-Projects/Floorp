@@ -43,6 +43,7 @@ var SearchUtils = {
     REMOVED: "engine-removed",
     ADDED: "engine-added",
     DEFAULT: "engine-default",
+    DEFAULT_PRIVATE: "engine-default-private",
   },
 
   URL_TYPE: {
