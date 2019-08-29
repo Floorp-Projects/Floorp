@@ -8,7 +8,6 @@ import android.view.View
 import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Action
@@ -26,7 +25,6 @@ import mozilla.components.support.ktx.android.view.toScope
  */
 @MainThread
 @ExperimentalCoroutinesApi // Channel
-@ObsoleteCoroutinesApi // consumeEach
 fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) -> Unit) {
     val fragment = this
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }

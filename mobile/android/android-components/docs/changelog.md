@@ -19,9 +19,12 @@ permalink: /changelog/
   * Added `startImage` to Highlight of HighlightableMenuItem, which allows changing the startImage in addition to the endImage when highlighted
   * Highlight properties of HighlightableMenuItem `startImage` and `endImage` are now both optional
 
+* **lib-state**
+  * Added `Store` extensions to observe `State` using Kotlin's `Flow` API: `Store.flow()`, `Store.flowScoped()`.
+
 * **support-ktx**
   * Added property delegates to work with `SharedPreferences`.
-  * Added `Flow.ifChanged()` operator for filtering a `Flow` based on whether a value has changed from the previous one (e.g. A, A, B, C, A -> A, B, C, A).
+  * Added `Flow.ifChanged()` operator for filtering a `Flow` based on whether a value has changed from the previous one (e.g. `A, A, B, C, A -> A, B, C, A`).
 
 # 10.0.1
 

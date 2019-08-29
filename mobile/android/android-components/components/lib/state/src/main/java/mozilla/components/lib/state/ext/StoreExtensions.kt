@@ -11,9 +11,16 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Observer
@@ -122,6 +129,57 @@ fun <S : State, A : Action> Store<S, A>.channel(
     channel.invokeOnClose { subscription.unsubscribe() }
 
     return channel
+}
+
+/**
+ * Creates a [Flow] for observing [State] changes in the [Store].
+ *
+ * @param owner An optional [LifecycleOwner] that will be used to determine when to pause and resume
+ * the store subscription. When the [Lifecycle] is in STOPPED state then no [State] will be received.
+ * Once the [Lifecycle] switches back to at least STARTED state then the latest [State] and further
+ * updates will be emitted.
+ */
+@ExperimentalCoroutinesApi
+@MainThread
+fun <S : State, A : Action> Store<S, A>.flow(
+    owner: LifecycleOwner = ProcessLifecycleOwner.get()
+): Flow<S> {
+    return channelFlow {
+        val subscription = observeManually { state ->
+            runBlocking { send(state) }
+        }
+
+        subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
+            owner.lifecycle.addObserver(this)
+        }
+
+        awaitClose {
+            subscription.unsubscribe()
+        }
+    }.buffer(Channel.CONFLATED)
+}
+
+/**
+ * Launches a coroutine in a new [MainScope] and creates a [Flow] for observing [State] changes in
+ * the [Store] in that scope. Invokes [block] inside that scope and passes the [Flow] to it.
+ *
+ * @param owner An optional [LifecycleOwner] that will be used to determine when to pause and resume
+ * the store subscription. When the [Lifecycle] is in STOPPED state then no [State] will be received.
+ * Once the [Lifecycle] switches back to at least STARTED state then the latest [State] and further
+ * updates will be emitted.
+ * @return The [CoroutineScope] [block] is getting executed in.
+ */
+@ExperimentalCoroutinesApi
+@MainThread
+fun <S : State, A : Action> Store<S, A>.flowScoped(
+    owner: LifecycleOwner = ProcessLifecycleOwner.get(),
+    block: suspend (Flow<S>) -> Unit
+): CoroutineScope {
+    return MainScope().apply {
+        launch {
+            block(flow(owner))
+        }
+    }
 }
 
 /**
