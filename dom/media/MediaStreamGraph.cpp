@@ -170,7 +170,7 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
             if (listener.mTrackID == track->GetID()) {
               listener.mListener->NotifyOutput(
                   this, track->GetEnd() - track->GetStart());
-              listener.mListener->NotifyEnded();
+              listener.mListener->NotifyEnded(this);
             }
           }
         }
@@ -1971,7 +1971,7 @@ void MediaStream::RemoveAllListenersImpl() {
 
   auto trackListeners(mTrackListeners);
   for (auto& l : trackListeners) {
-    l.mListener->NotifyRemoved();
+    l.mListener->NotifyRemoved(Graph());
   }
   mTrackListeners.Clear();
 
@@ -2121,10 +2121,10 @@ void MediaStream::AddTrackListenerImpl(
   if (track->IsEnded() &&
       track->GetEnd() <=
           GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
-    l->mListener->NotifyEnded();
+    l->mListener->NotifyEnded(Graph());
   }
   if (GetDisabledTrackMode(aTrackID) == DisabledTrackMode::SILENCE_BLACK) {
-    l->mListener->NotifyEnabledStateChanged(false);
+    l->mListener->NotifyEnabledStateChanged(Graph(), false);
   }
 }
 
@@ -2149,7 +2149,7 @@ void MediaStream::RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
   for (size_t i = 0; i < mTrackListeners.Length(); ++i) {
     if (mTrackListeners[i].mListener == aListener &&
         mTrackListeners[i].mTrackID == aTrackID) {
-      mTrackListeners[i].mListener->NotifyRemoved();
+      mTrackListeners[i].mListener->NotifyRemoved(Graph());
       mTrackListeners.RemoveElementAt(i);
       return;
     }
@@ -2265,7 +2265,7 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
         mDisabledTracks.RemoveElementAt(i);
         for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
           if (l.mTrackID == aTrackID) {
-            l.mListener->NotifyEnabledStateChanged(true);
+            l.mListener->NotifyEnabledStateChanged(Graph(), true);
           }
         }
         return;
@@ -2282,7 +2282,7 @@ void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
     if (aMode == DisabledTrackMode::SILENCE_BLACK) {
       for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
         if (l.mTrackID == aTrackID) {
-          l.mListener->NotifyEnabledStateChanged(false);
+          l.mListener->NotifyEnabledStateChanged(Graph(), false);
         }
       }
     }
