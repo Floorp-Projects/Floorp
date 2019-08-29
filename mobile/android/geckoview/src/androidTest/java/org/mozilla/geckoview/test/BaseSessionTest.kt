@@ -59,7 +59,11 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val COLORS_HTML_PATH = "/assets/www/colors.html"
         const val FIXED_BOTTOM = "/assets/www/fixedbottom.html"
         const val STORAGE_TITLE_HTML_PATH = "/assets/www/reflect_local_storage_into_title.html"
+<<<<<<< HEAD
         const val HUNG_SCRIPT = "/assets/www/hungScript.html"
+=======
+        const val PUSH_HTML_PATH = "/assets/www/push/push.html"
+>>>>>>> Bug 1343678 - Add WebPush support to GeckoView r?#geckoview-reviewers
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
