@@ -33,7 +33,7 @@ codespell:
     description: Checks for misspellings in text files
     platform: lint/opt
     treeherder:
-        symbol: spell
+        symbol: text(spell)
     run:
         mach: lint -l codespell -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -57,7 +57,7 @@ cpp-virtual-final:
     description: lint C++ virtual function declarations
     platform: lint/opt
     treeherder:
-        symbol: Cvf
+        symbol: cpp(Cvf)
     run:
         mach: lint -l cpp-virtual-final -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -70,7 +70,7 @@ eslint:
     description: JS lint check
     platform: lint/opt
     treeherder:
-        symbol: ES
+        symbol: js(ES)
     run:
         using: run-task
         cwd: '{checkout}'
@@ -99,7 +99,7 @@ mingw-cap:
     description: lint for MinGW Capitalization issues
     platform: lint/opt
     treeherder:
-        symbol: mingw
+        symbol: misc(mingw)
     run:
         mach: lint -l mingw-capitalization -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -113,7 +113,7 @@ py-compat:
     description: lint for python 2/3 compatibility issues
     platform: lint/opt
     treeherder:
-        symbol: py-compat
+        symbol: py(py-compat)
     run:
         mach: lint -l py2 -l py3 -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -125,7 +125,7 @@ py-flake8:
     description: flake8 run over the gecko codebase
     platform: lint/opt
     treeherder:
-        symbol: f8
+        symbol: py(f8)
     run:
         mach: lint -l flake8 -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -139,7 +139,7 @@ test-manifest:
     description: lint test manifests
     platform: lint/opt
     treeherder:
-        symbol: tm
+        symbol: misc(tm)
     run:
         mach: lint -l test-disable -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -152,7 +152,7 @@ wptlint-gecko:
     description: web-platform-tests linter
     platform: lint/opt
     treeherder:
-        symbol: W
+        symbol: misc(W)
     run:
         mach: lint -l wpt -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -164,7 +164,7 @@ yaml:
     description: yamllint run over the gecko codebase
     platform: lint/opt
     treeherder:
-        symbol: yaml
+        symbol: pedantic(yaml)
     run:
         mach: lint -l yaml -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -177,7 +177,7 @@ rst:
     description: rst lint run over the gecko codebase
     platform: lint/opt
     treeherder:
-        symbol: rst
+        symbol: text(rst)
     run:
         mach: lint -l rst -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -188,7 +188,7 @@ shellcheck:
     description: shellcheck run over the gecko codebase
     platform: lint/opt
     treeherder:
-        symbol: shell
+        symbol: misc(shell)
     run:
         mach: lint -l shellcheck -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -200,7 +200,7 @@ localization:
     description: l10n tests for strings with errors and conflicts with cross-channel
     platform: lint/opt
     treeherder:
-        symbol: l1nt
+        symbol: text(l1nt)
     run:
         mach: lint -l l10n -f treeherder
     when:
@@ -215,7 +215,7 @@ rustfmt:
     description: rustfmt on the Rust code
     platform: lint/opt
     treeherder:
-        symbol: rustfmt
+        symbol: misc(rustfmt)
     run:
         mach: lint -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -227,7 +227,7 @@ file-whitespace:
     description: Check for trailing whitespaces and Windows CR
     platform: lint/opt
     treeherder:
-        symbol: file-whitespace
+        symbol: pedantic(file-whitespace)
     run:
         mach: lint -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json
     when:
@@ -244,7 +244,7 @@ file-perm:
     description: Check for incorrect permissions on source files
     platform: lint/opt
     treeherder:
-        symbol: file-perm
+        symbol: pedantic(file-perm)
     run:
         mach: lint -l file-perm -f treeherder -f json:/builds/worker/mozlint.json
     when:
