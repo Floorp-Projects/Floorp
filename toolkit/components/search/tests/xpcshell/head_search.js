@@ -8,6 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",

@@ -3,78 +3,134 @@
 
 "use strict";
 
-var gTestLog = [];
+let engine;
+let originalDefaultEngine;
 
 /**
- * The order of notifications expected for this test is:
- *  - engine-changed (while we're installing the engine, we modify it, which notifies - bug 606886)
- *  - engine-added (engine was added to the store by the search service)
- *   -> our search observer is called, which sets:
- *    - .defaultEngine, triggering engine-default and engine-default (after bug
- *      493051 - for now the search service sets this after engine-added)
- *   ...and then schedules a removal
- *  - engine-loaded (the search service's observer is garanteed to fire first, which is what causes engine-added to fire)
- *  - engine-removed (due to the removal schedule above)
+ * A simple observer to ensure we get only the expected notifications.
  */
-var expectedLog = [
-  "engine-changed", // XXX bug 606886
-  "engine-added",
-  "engine-default",
-  "engine-loaded",
-  "engine-removed",
-];
+class SearchObserver {
+  constructor(expectedNotifications, returnAddedEngine = false) {
+    this.observer = this.observer.bind(this);
+    this.deferred = PromiseUtils.defer();
+    this.expectedNotifications = expectedNotifications;
+    this.returnAddedEngine = returnAddedEngine;
 
-function create_search_observer(resolve) {
-  return function search_observer(subject, topic, data) {
-    let engine = subject.QueryInterface(Ci.nsISearchEngine);
-    gTestLog.push(data + " for " + engine.name);
+    Services.obs.addObserver(this.observer, SearchUtils.TOPIC_ENGINE_MODIFIED);
+  }
 
-    info("Observer: " + data + " for " + engine.name);
+  get promise() {
+    return this.deferred.promise;
+  }
 
-    switch (data) {
-      case "engine-added":
-        let retrievedEngine = Services.search.getEngineByName(
-          "Test search engine"
-        );
-        Assert.equal(engine, retrievedEngine);
-        Services.search.defaultEngine = engine;
-        executeSoon(function() {
-          Services.search.removeEngine(engine);
-        });
-        break;
-      case "engine-removed":
-        let engineNameOutput = " for Test search engine";
-        expectedLog = expectedLog.map(logLine => logLine + engineNameOutput);
-        info("expectedLog:\n" + expectedLog.join("\n"));
-        info("gTestLog:\n" + gTestLog.join("\n"));
-        for (let i = 0; i < expectedLog.length; i++) {
-          Assert.equal(gTestLog[i], expectedLog[i]);
-        }
-        Assert.equal(gTestLog.length, expectedLog.length);
-        resolve();
-        break;
+  observer(subject, topic, data) {
+    Assert.greater(
+      this.expectedNotifications.length,
+      0,
+      "Should be expecting a notification"
+    );
+    Assert.equal(
+      data,
+      this.expectedNotifications[0],
+      "Should have received the next expected notification"
+    );
+
+    if (this.returnAddedEngine && data == SearchUtils.MODIFIED_TYPE.ADDED) {
+      this.addedEngine = subject.QueryInterface(Ci.nsISearchEngine);
     }
-  };
+
+    this.expectedNotifications.shift();
+
+    if (this.expectedNotifications.length == 0) {
+      this.deferred.resolve(this.addedEngine);
+      Services.obs.removeObserver(
+        this.observer,
+        SearchUtils.TOPIC_ENGINE_MODIFIED
+      );
+    }
+  }
 }
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+  useHttpServer();
+
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+
+  originalDefaultEngine = await Services.search.getDefault();
 });
 
-add_task(async function test_notifications() {
-  return new Promise(resolve => {
-    useHttpServer();
+add_task(async function test_addingEngine() {
+  const addEngineObserver = new SearchObserver(
+    [
+      // engine-changed
+      // While we're installing the engine, we modify it, which notifies.
+      // See bug 606886.
+      SearchUtils.MODIFIED_TYPE.CHANGED,
+      // engine-loaded
+      // Engine was loaded.
+      SearchUtils.MODIFIED_TYPE.LOADED,
+      // engine-added
+      // Engine was added to the store by the search service.
+      SearchUtils.MODIFIED_TYPE.ADDED,
+    ],
+    true
+  );
 
-    registerCleanupFunction(function cleanup() {
-      Services.obs.removeObserver(
-        search_observer,
-        "browser-search-engine-modified"
-      );
-    });
+  await Services.search.addEngine(gDataUrl + "engine.xml", null, false);
 
-    let search_observer = create_search_observer(resolve);
-    Services.obs.addObserver(search_observer, "browser-search-engine-modified");
+  engine = await addEngineObserver.promise;
 
-    Services.search.addEngine(gDataUrl + "engine.xml", null, false);
-  });
+  let retrievedEngine = Services.search.getEngineByName("Test search engine");
+  Assert.equal(engine, retrievedEngine);
+});
+
+async function defaultNotificationTest(
+  setPrivateDefault,
+  expectNotificationForPrivate
+) {
+  const defaultObserver = new SearchObserver([
+    expectNotificationForPrivate
+      ? SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+      : SearchUtils.MODIFIED_TYPE.DEFAULT,
+  ]);
+
+  Services.search[
+    setPrivateDefault ? "defaultPrivateEngine" : "defaultEngine"
+  ] = engine;
+  await defaultObserver.promise;
+}
+
+add_task(async function test_defaultEngine_notifications() {
+  await defaultNotificationTest(false, false);
+});
+
+add_task(async function test_defaultPrivateEngine_notifications() {
+  await defaultNotificationTest(true, true);
+});
+
+add_task(
+  async function test_defaultPrivateEngine_notifications_when_not_enabled() {
+    await Services.search.setDefault(originalDefaultEngine);
+
+    Services.prefs.setBoolPref(
+      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+      false
+    );
+
+    await defaultNotificationTest(true, false);
+  }
+);
+
+add_task(async function test_removeEngine() {
+  const removedObserver = new SearchObserver([
+    SearchUtils.MODIFIED_TYPE.REMOVED,
+  ]);
+
+  await Services.search.removeEngine(engine);
+
+  await removedObserver;
 });
