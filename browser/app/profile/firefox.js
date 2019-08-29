@@ -1337,7 +1337,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("trailhead.firstrun.branches", "join-supercharge");
 
 // The pref that controls if the What's New panel is enabled.
-pref("browser.messaging-system.whatsNewPanel.enabled", false);
+pref("browser.messaging-system.whatsNewPanel.enabled", true);
 // Whether to use Messaging System to add a badge to the FxA toolbar button
 pref("browser.messaging-system.fxatoolbarbadge.enabled", true);
 
