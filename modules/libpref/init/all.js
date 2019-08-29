@@ -675,25 +675,10 @@ pref("layers.geometry.d3d11.enabled", true);
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
-pref("apz.allow_double_tap_zooming", true);
-pref("apz.allow_immediate_handoff", false);
-pref("apz.allow_zooming", false);
-pref("apz.android.chrome_fling_physics.enabled", true);
-pref("apz.android.chrome_fling_physics.friction", "0.015");
-pref("apz.android.chrome_fling_physics.inflexion", "0.35");
-pref("apz.android.chrome_fling_physics.stop_threshold", "0.1");
-pref("apz.autoscroll.enabled", true);
-
-// Whether to lock touch scrolling to one axis at a time
-// 0 = FREE (No locking at all)
-// 1 = STANDARD (Once locked, remain locked until scrolling ends)
-// 2 = STICKY (Allow lock to be broken, with hysteresis)
-pref("apz.axis_lock.mode", 0);
 pref("apz.axis_lock.lock_angle", "0.5235987");        // PI / 6 (30 degrees)
 pref("apz.axis_lock.breakout_threshold", "0.03125");  // 1/32 inches
 pref("apz.axis_lock.breakout_angle", "0.3926991");    // PI / 8 (22.5 degrees)
 pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
-pref("apz.content_response_timeout", 400);
 pref("apz.drag.enabled", true);
 pref("apz.drag.initial.enabled", true);
 pref("apz.drag.touch.enabled", true);
@@ -934,7 +919,6 @@ pref("gfx.webrender.picture-caching", true);
   pref("gfx.webrender.start-debug-server", false);
 #endif
 
-pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
 pref("accessibility.browsewithcaret_shortcut.enabled", true);
