@@ -19,6 +19,7 @@ const ColorContrastCheck = createFactory(
   require("./ColorContrastAccessibility").ColorContrastCheck
 );
 const TextLabelCheck = createFactory(require("./TextLabelCheck"));
+const KeyboardCheck = createFactory(require("./KeyboardCheck"));
 const { L10N } = require("../utils/l10n");
 
 const {
@@ -47,6 +48,10 @@ class Checks extends Component {
 
   [AUDIT_TYPE.CONTRAST](contrastRatio) {
     return ColorContrastCheck(contrastRatio);
+  }
+
+  [AUDIT_TYPE.KEYBOARD](keyboardCheck) {
+    return KeyboardCheck(keyboardCheck);
   }
 
   [AUDIT_TYPE.TEXT_LABEL](textLabelCheck) {

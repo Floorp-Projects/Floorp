@@ -7,7 +7,6 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
-#include "nsILocalFileMac.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -23,6 +22,7 @@
 #include "nsILoadContext.h"
 #include "mozilla/dom/Element.h"
 
+#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -265,56 +265,15 @@ nsMacShellService::OnStateChange(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP
-nsMacShellService::OpenApplication(int32_t aApplication) {
-  nsresult rv = NS_OK;
-  CFURLRef appURL = nil;
-  OSStatus err = noErr;
-
-  switch (aApplication) {
-    case nsIShellService::APPLICATION_MAIL: {
-      CFURLRef tempURL = ::CFURLCreateWithString(kCFAllocatorDefault,
-                                                 CFSTR("mailto:"), nullptr);
-      err = ::LSGetApplicationForURL(tempURL, kLSRolesAll, nullptr, &appURL);
-      ::CFRelease(tempURL);
-    } break;
-    case nsIShellService::APPLICATION_NEWS: {
-      CFURLRef tempURL =
-          ::CFURLCreateWithString(kCFAllocatorDefault, CFSTR("news:"), nullptr);
-      err = ::LSGetApplicationForURL(tempURL, kLSRolesAll, nullptr, &appURL);
-      ::CFRelease(tempURL);
-    } break;
-    case nsIMacShellService::APPLICATION_KEYCHAIN_ACCESS:
-      err = ::LSGetApplicationForInfo('APPL', 'kcmr', nullptr, kLSRolesAll,
-                                      nullptr, &appURL);
-      break;
-    case nsIMacShellService::APPLICATION_NETWORK: {
-      nsCOMPtr<nsIFile> lf;
-      rv = NS_NewNativeLocalFile(NETWORK_PREFPANE, true, getter_AddRefs(lf));
-      NS_ENSURE_SUCCESS(rv, rv);
-      bool exists;
-      lf->Exists(&exists);
-      if (!exists) return NS_ERROR_FILE_NOT_FOUND;
-      return lf->Launch();
-    }
-    case nsIMacShellService::APPLICATION_DESKTOP: {
-      nsCOMPtr<nsIFile> lf;
-      rv = NS_NewNativeLocalFile(DESKTOP_PREFPANE, true, getter_AddRefs(lf));
-      NS_ENSURE_SUCCESS(rv, rv);
-      bool exists;
-      lf->Exists(&exists);
-      if (!exists) return NS_ERROR_FILE_NOT_FOUND;
-      return lf->Launch();
-    }
-  }
-
-  if (appURL && err == noErr) {
-    err = ::LSOpenCFURLRef(appURL, nullptr);
-    rv = err != noErr ? NS_ERROR_FAILURE : NS_OK;
-
-    ::CFRelease(appURL);
-  }
-
-  return rv;
+nsMacShellService::ShowDesktopPreferences() {
+  nsCOMPtr<nsIFile> lf;
+  nsresult rv =
+      NS_NewNativeLocalFile(DESKTOP_PREFPANE, true, getter_AddRefs(lf));
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool exists;
+  lf->Exists(&exists);
+  if (!exists) return NS_ERROR_FILE_NOT_FOUND;
+  return lf->Launch();
 }
 
 NS_IMETHODIMP
@@ -331,39 +290,4 @@ nsMacShellService::SetDesktopBackgroundColor(uint32_t aColor) {
   // The mac desktop preferences UI uses pictures for the few solid colors it
   // supports.
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMacShellService::OpenApplicationWithURI(nsIFile* aApplication,
-                                          const nsACString& aURI) {
-  nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(aApplication));
-  CFURLRef appURL;
-  nsresult rv = lfm->GetCFURL(&appURL);
-  if (NS_FAILED(rv)) return rv;
-
-  const nsCString spec(aURI);
-  const UInt8* uriString = (const UInt8*)spec.get();
-  CFURLRef uri = ::CFURLCreateWithBytes(nullptr, uriString, aURI.Length(),
-                                        kCFStringEncodingUTF8, nullptr);
-  if (!uri) return NS_ERROR_OUT_OF_MEMORY;
-
-  CFArrayRef uris = ::CFArrayCreate(nullptr, (const void**)&uri, 1, nullptr);
-  if (!uris) {
-    ::CFRelease(uri);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  LSLaunchURLSpec launchSpec;
-  launchSpec.appURL = appURL;
-  launchSpec.itemURLs = uris;
-  launchSpec.passThruParams = nullptr;
-  launchSpec.launchFlags = kLSLaunchDefaults;
-  launchSpec.asyncRefCon = nullptr;
-
-  OSErr err = ::LSOpenFromURLSpec(&launchSpec, nullptr);
-
-  ::CFRelease(uris);
-  ::CFRelease(uri);
-
-  return err != noErr ? NS_ERROR_FAILURE : NS_OK;
 }

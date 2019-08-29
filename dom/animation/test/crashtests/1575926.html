@@ -1,0 +1,24 @@
+<style>
+    @keyframes animation_0 {
+        88% { }
+    }
+
+    * {
+        animation-name: animation_0;
+        animation-delay: 4s;
+    }
+</style>
+<script>
+  function start () {
+    const input = document.createElement('input')
+    document.documentElement.appendChild(input)
+    const animations = input.getAnimations({})
+    const animation = animations[(3782796448 % animations.length)]
+    const effect = animation.effect
+    effect.setKeyframes({ 'borderLeft': ['inherit'] })
+    effect.target = null
+    input.contentEditable = 'true'
+  }
+
+  document.addEventListener('DOMContentLoaded', start)
+</script>

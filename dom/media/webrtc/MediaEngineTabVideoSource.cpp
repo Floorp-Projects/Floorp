@@ -133,8 +133,8 @@ nsString MediaEngineTabVideoSource::GetGroupId() const {
 
 nsresult MediaEngineTabVideoSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const nsString& aGroupId, const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    const MediaEnginePrefs& aPrefs,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
@@ -146,14 +146,12 @@ nsresult MediaEngineTabVideoSource::Allocate(
                   : -1;
   mState = kAllocated;
 
-  return Reconfigure(aConstraints, aPrefs, aDeviceId, aGroupId,
-                     aOutBadConstraint);
+  return Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
 }
 
 nsresult MediaEngineTabVideoSource::Reconfigure(
     const dom::MediaTrackConstraints& aConstraints,
-    const mozilla::MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const nsString& aGroupId, const char** aOutBadConstraint) {
+    const mozilla::MediaEnginePrefs& aPrefs, const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState != kReleased);
 

@@ -101,6 +101,34 @@ add_task(async function setup() {
 add_task(async function test_empty_list() {
   ok(gLoginList, "loginList exists");
   is(gLoginList.textContent, "", "Initially empty");
+  gLoginList.classList.add("no-logins");
+  let loginListBox = gLoginList.shadowRoot.querySelector("ol");
+  let introText = gLoginList.shadowRoot.querySelector(".intro");
+  let emptySearchText = gLoginList.shadowRoot.querySelector(".empty-search-message");
+  ok(isHidden(loginListBox), "The login-list ol should be hidden when there are no logins");
+  ok(!isHidden(introText), "The intro text should be visible when the list is empty");
+  ok(isHidden(emptySearchText), "The empty-search text should be hidden when there are no logins");
+
+  gLoginList.classList.add("create-login-selected");
+  ok(!isHidden(loginListBox), "The login-list ol should be visible when the create-login mode is active");
+  ok(isHidden(introText), "The intro text should be hidden when the create-login mode is active");
+  ok(isHidden(emptySearchText), "The empty-search text should be hidden when the create-login mode is active");
+  gLoginList.classList.remove("create-login-selected");
+
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "foo",
+  }));
+  ok(isHidden(loginListBox), "The login-list ol should be hidden when there are no logins");
+  ok(!isHidden(introText), "The intro text should be visible when the list is empty");
+  ok(isHidden(emptySearchText), "The empty-search text should be hidden when there are no logins even if a filter is applied");
+
+  // Clean up state for next test
+  gLoginList.classList.remove("no-logins");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "",
+  }));
 });
 
 add_task(async function test_keyboard_navigation() {
@@ -190,6 +218,8 @@ add_task(async function test_breach_indicator() {
 });
 
 add_task(async function test_filtered_list() {
+  let emptySearchText = gLoginList.shadowRoot.querySelector(".empty-search-message");
+  ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   is(gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])").length, 2, "Both logins should be visible");
   let countSpan = gLoginList.shadowRoot.querySelector(".count");
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match full list length");
@@ -198,6 +228,7 @@ add_task(async function test_filtered_list() {
     detail: "user1",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
+  ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   is(loginListItems[0].querySelector(".username").textContent, "user1", "user1 is expected first");
   ok(!loginListItems[0].hidden, "user1 should remain visible");
@@ -207,6 +238,7 @@ add_task(async function test_filtered_list() {
     detail: "user2",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
+  ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -215,6 +247,7 @@ add_task(async function test_filtered_list() {
     detail: "user",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should match result amount");
+  ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
@@ -223,6 +256,7 @@ add_task(async function test_filtered_list() {
     detail: "foo",
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
+  ok(!isHidden(emptySearchText), "The empty search text should be visible when there are no results in the list");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
@@ -230,6 +264,7 @@ add_task(async function test_filtered_list() {
     bubbles: true,
     detail: "",
   }));
+  ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 2, "Count should be reset to full list length");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(!loginListItems[0].hidden, "user1 should be visible");

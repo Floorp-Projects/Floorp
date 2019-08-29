@@ -70,6 +70,7 @@ class BackgroundPage extends HiddenExtensionPage {
       // Extension was down before the background page has loaded.
       Cu.reportError(e);
       ExtensionTelemetry.backgroundPageLoad.stopwatchCancel(extension, this);
+      EventManager.clearPrimedListeners(this.extension, false);
       extension.emit("background-page-aborted");
       return;
     }

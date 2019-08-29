@@ -55,6 +55,22 @@
         xhr.send(params);
       }
 
+      function ajaxPostJson(url, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function() {
+          callback();
+        };
+        const params = {
+          param1: "value1",
+          param2: "value2",
+        };
+        const jsonParams = JSON.stringify(params);
+        xhr.send(jsonParams);
+      }
+
       function ajaxPatch(url, callback) {
         const xhr = new XMLHttpRequest();
         xhr.open("PATCH", url, true);
@@ -102,9 +118,11 @@
       function performRequests(url) {
         ajaxGet(url, () => {
           ajaxPost(url, () => {
-            ajaxPatch(url, () => {
-              ajaxMultipart(url, () => {
-                submitForm();
+            ajaxPostJson(url, () => {
+              ajaxPatch(url, () => {
+                ajaxMultipart(url, () => {
+                  submitForm();
+                });
               });
             });
           });

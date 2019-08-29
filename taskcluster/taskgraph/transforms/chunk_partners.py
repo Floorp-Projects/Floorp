@@ -11,9 +11,14 @@ import copy
 
 from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.partners import get_partner_config_by_kind, locales_per_build_platform
+from taskgraph.util.partners import (
+    get_partner_config_by_kind,
+    locales_per_build_platform,
+    apply_partner_priority,
+)
 
 transforms = TransformSequence()
+transforms.add(apply_partner_priority)
 
 
 used_repack_ids_by_platform = {}

@@ -5,8 +5,6 @@
  * however using an extension to gather the captive portal information.
  */
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const PREF_CAPTIVE_ENABLED = "network.captive-portal-service.enabled";
 const PREF_CAPTIVE_TESTMODE = "network.captive-portal-service.testMode";
 const PREF_CAPTIVE_MINTIME = "network.captive-portal-service.minInterval";

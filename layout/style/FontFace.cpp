@@ -629,7 +629,7 @@ Maybe<StyleComputedFontStretchRange> FontFace::GetFontStretch() const {
 }
 
 Maybe<StyleComputedFontStyleDescriptor> FontFace::GetFontStyle() const {
-  StyleComputedFontStyleDescriptor descriptor;
+  auto descriptor = StyleComputedFontStyleDescriptor::Normal();
   if (!Servo_FontFaceRule_GetFontStyle(GetData(), &descriptor)) {
     return Nothing();
   }

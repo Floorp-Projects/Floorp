@@ -269,6 +269,9 @@ pub struct OperatorValidatorConfig {
     pub enable_simd: bool,
     pub enable_bulk_memory: bool,
     pub enable_multi_value: bool,
+
+    #[cfg(feature = "deterministic")]
+    pub deterministic_only: bool,
 }
 
 pub(crate) const DEFAULT_OPERATOR_VALIDATOR_CONFIG: OperatorValidatorConfig =
@@ -278,6 +281,9 @@ pub(crate) const DEFAULT_OPERATOR_VALIDATOR_CONFIG: OperatorValidatorConfig =
         enable_simd: false,
         enable_bulk_memory: false,
         enable_multi_value: false,
+
+        #[cfg(feature = "deterministic")]
+        deterministic_only: true,
     };
 
 #[derive(Debug)]
@@ -488,6 +494,20 @@ impl OperatorValidator {
         Ok(())
     }
 
+    #[cfg(feature = "deterministic")]
+    fn check_non_deterministic_enabled(&self) -> OperatorValidatorResult<()> {
+        if !self.config.deterministic_only {
+            return Err("deterministic_only support is not enabled");
+        }
+        Ok(())
+    }
+
+    #[inline(always)]
+    #[cfg(not(feature = "deterministic"))]
+    fn check_non_deterministic_enabled(&self) -> OperatorValidatorResult<()> {
+        Ok(())
+    }
+
     fn check_threads_enabled(&self) -> OperatorValidatorResult<()> {
         if !self.config.enable_threads {
             return Err("threads support is not enabled");
@@ -549,10 +569,43 @@ impl OperatorValidator {
                 if idx >= types.len() {
                     return Err("type index out of bounds");
                 }
+                let ty = &types[idx];
+                if !self.config.enable_multi_value {
+                    if ty.returns.len() > 1 {
+                        return Err("blocks, loops, and ifs may only return at most one \
+                                    value when multi-value is not enabled");
+                    }
+                    if ty.params.len() > 0 {
+                        return Err("blocks, loops, and ifs accept no parameters \
+                                    when multi-value is not enabled");
+                    }
+                }
                 Ok(())
             }
             _ => Err("invalid block return type"),
         }
+    }
+
+    fn check_block_params(
+        &self,
+        ty: TypeOrFuncType,
+        resources: &dyn WasmModuleResources,
+        skip: usize,
+    ) -> OperatorValidatorResult<()> {
+        if let TypeOrFuncType::FuncType(idx) = ty {
+            let func_ty = &resources.types()[idx as usize];
+            let len = func_ty.params.len();
+            self.check_frame_size(len + skip)?;
+            for i in 0..len {
+                if !self
+                    .func_state
+                    .assert_stack_type_at(len - 1 - i + skip, func_ty.params[i])
+                {
+                    return Err("stack operand type mismatch for block");
+                }
+            }
+        }
+        Ok(())
     }
 
     fn check_select(&self) -> OperatorValidatorResult<Option<Type>> {
@@ -596,16 +649,19 @@ impl OperatorValidator {
             Operator::Nop => (),
             Operator::Block { ty } => {
                 self.check_block_type(ty, resources)?;
+                self.check_block_params(ty, resources, 0)?;
                 self.func_state
                     .push_block(ty, BlockType::Block, resources)?;
             }
             Operator::Loop { ty } => {
                 self.check_block_type(ty, resources)?;
+                self.check_block_params(ty, resources, 0)?;
                 self.func_state.push_block(ty, BlockType::Loop, resources)?;
             }
             Operator::If { ty } => {
                 self.check_block_type(ty, resources)?;
                 self.check_operands_1(Type::I32)?;
+                self.check_block_params(ty, resources, 1)?;
                 self.func_state.push_block(ty, BlockType::If, resources)?;
             }
             Operator::Else => {
@@ -729,10 +785,9 @@ impl OperatorValidator {
                     return Err("global index out of bounds");
                 }
                 let ty = &resources.globals()[global_index as usize];
-                // FIXME
-                //    if !ty.mutable {
-                //        return self.create_error("global expected to be mutable");
-                //    }
+                if !ty.mutable {
+                    return Err("global expected to be mutable");
+                }
                 self.check_operands_1(ty.content_type)?;
                 self.func_state.change_frame(1)?;
             }
@@ -747,11 +802,13 @@ impl OperatorValidator {
                 self.func_state.change_frame_with_type(1, Type::I64)?;
             }
             Operator::F32Load { ref memarg } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_memarg(memarg, 2, resources)?;
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F64Load { ref memarg } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_memarg(memarg, 3, resources)?;
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
@@ -817,11 +874,13 @@ impl OperatorValidator {
                 self.func_state.change_frame(2)?;
             }
             Operator::F32Store { ref memarg } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_memarg(memarg, 2, resources)?;
                 self.check_operands_2(Type::I32, Type::F32)?;
                 self.func_state.change_frame(2)?;
             }
             Operator::F64Store { ref memarg } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_memarg(memarg, 3, resources)?;
                 self.check_operands_2(Type::I32, Type::F64)?;
                 self.func_state.change_frame(2)?;
@@ -866,8 +925,14 @@ impl OperatorValidator {
             }
             Operator::I32Const { .. } => self.func_state.change_frame_with_type(0, Type::I32)?,
             Operator::I64Const { .. } => self.func_state.change_frame_with_type(0, Type::I64)?,
-            Operator::F32Const { .. } => self.func_state.change_frame_with_type(0, Type::F32)?,
-            Operator::F64Const { .. } => self.func_state.change_frame_with_type(0, Type::F64)?,
+            Operator::F32Const { .. } => {
+                self.check_non_deterministic_enabled()?;
+                self.func_state.change_frame_with_type(0, Type::F32)?;
+            }
+            Operator::F64Const { .. } => {
+                self.check_non_deterministic_enabled()?;
+                self.func_state.change_frame_with_type(0, Type::F64)?;
+            }
             Operator::I32Eqz => {
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
@@ -908,6 +973,7 @@ impl OperatorValidator {
             | Operator::F32Gt
             | Operator::F32Le
             | Operator::F32Ge => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_2(Type::F32, Type::F32)?;
                 self.func_state.change_frame_with_type(2, Type::I32)?;
             }
@@ -917,6 +983,7 @@ impl OperatorValidator {
             | Operator::F64Gt
             | Operator::F64Le
             | Operator::F64Ge => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_2(Type::F64, Type::F64)?;
                 self.func_state.change_frame_with_type(2, Type::I32)?;
             }
@@ -971,6 +1038,7 @@ impl OperatorValidator {
             | Operator::F32Trunc
             | Operator::F32Nearest
             | Operator::F32Sqrt => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::F32)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
@@ -981,6 +1049,7 @@ impl OperatorValidator {
             | Operator::F32Min
             | Operator::F32Max
             | Operator::F32Copysign => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_2(Type::F32, Type::F32)?;
                 self.func_state.change_frame_with_type(2, Type::F32)?;
             }
@@ -991,6 +1060,7 @@ impl OperatorValidator {
             | Operator::F64Trunc
             | Operator::F64Nearest
             | Operator::F64Sqrt => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::F64)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
@@ -1001,6 +1071,7 @@ impl OperatorValidator {
             | Operator::F64Min
             | Operator::F64Max
             | Operator::F64Copysign => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_2(Type::F64, Type::F64)?;
                 self.func_state.change_frame_with_type(2, Type::F64)?;
             }
@@ -1029,26 +1100,32 @@ impl OperatorValidator {
                 self.func_state.change_frame_with_type(1, Type::I64)?;
             }
             Operator::F32ConvertSI32 | Operator::F32ConvertUI32 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F32ConvertSI64 | Operator::F32ConvertUI64 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I64)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F32DemoteF64 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::F64)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F64ConvertSI32 | Operator::F64ConvertUI32 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
             Operator::F64ConvertSI64 | Operator::F64ConvertUI64 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I64)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
             Operator::F64PromoteF32 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::F32)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
@@ -1061,10 +1138,12 @@ impl OperatorValidator {
                 self.func_state.change_frame_with_type(1, Type::I64)?;
             }
             Operator::F32ReinterpretI32 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I32)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F64ReinterpretI64 => {
+                self.check_non_deterministic_enabled()?;
                 self.check_operands_1(Type::I64)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
@@ -1225,6 +1304,12 @@ impl OperatorValidator {
                 self.check_operands(&[Type::I32, Type::I64, Type::I64])?;
                 self.func_state.change_frame_with_type(3, Type::I32)?;
             }
+            Operator::Fence { ref flags } => {
+                self.check_threads_enabled()?;
+                if *flags != 0 {
+                    return Err("non-zero flags for fence not supported yet");
+                }
+            }
             Operator::RefNull => {
                 self.check_reference_types_enabled()?;
                 self.func_state.change_frame_with_type(0, Type::AnyRef)?;
@@ -1250,14 +1335,6 @@ impl OperatorValidator {
                 self.check_simd_enabled()?;
                 self.func_state.change_frame_with_type(0, Type::V128)?;
             }
-            Operator::V8x16Shuffle { ref lanes } => {
-                self.check_simd_enabled()?;
-                self.check_operands_2(Type::V128, Type::V128)?;
-                for i in lanes {
-                    self.check_simd_lane_index(*i, 32)?;
-                }
-                self.func_state.change_frame_with_type(2, Type::V128)?;
-            }
             Operator::I8x16Splat | Operator::I16x8Splat | Operator::I32x4Splat => {
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::I32)?;
@@ -1269,11 +1346,13 @@ impl OperatorValidator {
                 self.func_state.change_frame_with_type(1, Type::V128)?;
             }
             Operator::F32x4Splat => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::F32)?;
                 self.func_state.change_frame_with_type(1, Type::V128)?;
             }
             Operator::F64x2Splat => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::F64)?;
                 self.func_state.change_frame_with_type(1, Type::V128)?;
@@ -1327,27 +1406,60 @@ impl OperatorValidator {
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
             Operator::F32x4ExtractLane { lane } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::F32)?;
             }
             Operator::F32x4ReplaceLane { lane } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_simd_lane_index(lane, 4)?;
                 self.check_operands_2(Type::V128, Type::F32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
             Operator::F64x2ExtractLane { lane } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::F64)?;
             }
             Operator::F64x2ReplaceLane { lane } => {
+                self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_simd_lane_index(lane, 2)?;
                 self.check_operands_2(Type::V128, Type::F64)?;
+                self.func_state.change_frame_with_type(2, Type::V128)?;
+            }
+            Operator::F32x4Eq
+            | Operator::F32x4Ne
+            | Operator::F32x4Lt
+            | Operator::F32x4Gt
+            | Operator::F32x4Le
+            | Operator::F32x4Ge
+            | Operator::F64x2Eq
+            | Operator::F64x2Ne
+            | Operator::F64x2Lt
+            | Operator::F64x2Gt
+            | Operator::F64x2Le
+            | Operator::F64x2Ge
+            | Operator::F32x4Add
+            | Operator::F32x4Sub
+            | Operator::F32x4Mul
+            | Operator::F32x4Div
+            | Operator::F32x4Min
+            | Operator::F32x4Max
+            | Operator::F64x2Add
+            | Operator::F64x2Sub
+            | Operator::F64x2Mul
+            | Operator::F64x2Div
+            | Operator::F64x2Min
+            | Operator::F64x2Max => {
+                self.check_non_deterministic_enabled()?;
+                self.check_simd_enabled()?;
+                self.check_operands_2(Type::V128, Type::V128)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
             Operator::I8x16Eq
@@ -1380,18 +1492,6 @@ impl OperatorValidator {
             | Operator::I32x4LeU
             | Operator::I32x4GeS
             | Operator::I32x4GeU
-            | Operator::F32x4Eq
-            | Operator::F32x4Ne
-            | Operator::F32x4Lt
-            | Operator::F32x4Gt
-            | Operator::F32x4Le
-            | Operator::F32x4Ge
-            | Operator::F64x2Eq
-            | Operator::F64x2Ne
-            | Operator::F64x2Lt
-            | Operator::F64x2Gt
-            | Operator::F64x2Le
-            | Operator::F64x2Ge
             | Operator::V128And
             | Operator::V128Or
             | Operator::V128Xor
@@ -1413,42 +1513,35 @@ impl OperatorValidator {
             | Operator::I32x4Sub
             | Operator::I32x4Mul
             | Operator::I64x2Add
-            | Operator::I64x2Sub
-            | Operator::F32x4Add
-            | Operator::F32x4Sub
-            | Operator::F32x4Mul
-            | Operator::F32x4Div
-            | Operator::F32x4Min
-            | Operator::F32x4Max
-            | Operator::F64x2Add
-            | Operator::F64x2Sub
-            | Operator::F64x2Mul
-            | Operator::F64x2Div
-            | Operator::F64x2Min
-            | Operator::F64x2Max => {
+            | Operator::I64x2Sub => {
                 self.check_simd_enabled()?;
                 self.check_operands_2(Type::V128, Type::V128)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
+            }
+            Operator::F32x4Abs
+            | Operator::F32x4Neg
+            | Operator::F32x4Sqrt
+            | Operator::F64x2Abs
+            | Operator::F64x2Neg
+            | Operator::F64x2Sqrt
+            | Operator::F32x4ConvertSI32x4
+            | Operator::F32x4ConvertUI32x4
+            | Operator::F64x2ConvertSI64x2
+            | Operator::F64x2ConvertUI64x2 => {
+                self.check_non_deterministic_enabled()?;
+                self.check_simd_enabled()?;
+                self.check_operands_1(Type::V128)?;
+                self.func_state.change_frame_with_type(1, Type::V128)?;
             }
             Operator::V128Not
             | Operator::I8x16Neg
             | Operator::I16x8Neg
             | Operator::I32x4Neg
             | Operator::I64x2Neg
-            | Operator::F32x4Abs
-            | Operator::F32x4Neg
-            | Operator::F32x4Sqrt
-            | Operator::F64x2Abs
-            | Operator::F64x2Neg
-            | Operator::F64x2Sqrt
             | Operator::I32x4TruncSF32x4Sat
             | Operator::I32x4TruncUF32x4Sat
             | Operator::I64x2TruncSF64x2Sat
-            | Operator::I64x2TruncUF64x2Sat
-            | Operator::F32x4ConvertSI32x4
-            | Operator::F32x4ConvertUI32x4
-            | Operator::F64x2ConvertSI64x2
-            | Operator::F64x2ConvertUI64x2 => {
+            | Operator::I64x2TruncUF64x2Sat => {
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::V128)?;
@@ -1486,18 +1579,26 @@ impl OperatorValidator {
                 self.check_operands_2(Type::V128, Type::I32)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::V8x16Shuffle1 => {
+            Operator::V8x16Swizzle => {
                 self.check_simd_enabled()?;
                 self.check_operands_2(Type::V128, Type::V128)?;
                 self.func_state.change_frame_with_type(2, Type::V128)?;
             }
-            Operator::V8x16Shuffle2Imm { ref lanes } => {
+            Operator::V8x16Shuffle { ref lanes } => {
                 self.check_simd_enabled()?;
                 self.check_operands_2(Type::V128, Type::V128)?;
                 for i in lanes {
                     self.check_simd_lane_index(*i, 32)?;
                 }
                 self.func_state.change_frame_with_type(2, Type::V128)?;
+            }
+            Operator::I8x16LoadSplat { ref memarg }
+            | Operator::I16x8LoadSplat { ref memarg }
+            | Operator::I32x4LoadSplat { ref memarg }
+            | Operator::I64x2LoadSplat { ref memarg } => {
+                self.check_simd_enabled()?;
+                self.check_memarg(memarg, 4, resources)?;
+                self.func_state.change_frame_with_type(1, Type::V128)?;
             }
 
             Operator::MemoryInit { segment } => {

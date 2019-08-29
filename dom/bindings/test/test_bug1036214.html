@@ -15,12 +15,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
   SimpleTest.waitForExplicitFinish();
   var xoObjects = [];
   function setup() {
+    // window[0] is same-process and cross-origin, even with Fission enabled.
     xoObjects.push(window[0]);
     xoObjects.push(window[0].location);
     xoObjects.push(SpecialPowers.unwrap(SpecialPowers.wrap(window[0]).document));
     xoObjects.push(SpecialPowers);
     xoObjects.push(SpecialPowers.wrap);
     SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]}, go);
+  }
+
+  function setup2() {
+    if (SpecialPowers.useRemoteSubframes) {
+      // window[1] is cross-origin and out of process, with Fission enabled.
+      xoObjects.push(window[1]);
+      xoObjects.push(window[1].location);
+    }
   }
 
   function checkThrows(f, msg) {
@@ -127,5 +136,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
 <pre id="test">
 </pre>
 <iframe id="ifr" onload="setup();" src="http://test1.mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<iframe id="ifr2" onload="setup2();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
 </body>
 </html>

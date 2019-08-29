@@ -45,7 +45,7 @@ partial interface WorkerGlobalScope {
   void dump(optional DOMString str);
 
   // https://w3c.github.io/hr-time/#the-performance-attribute
-  [Constant, Cached, Replaceable]
+  [Constant, Cached, Replaceable, BinaryName="getPerformance"]
   readonly attribute Performance performance;
 
   [Func="WorkerGlobalScope::IsInAutomation", Throws]

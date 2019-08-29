@@ -44,6 +44,14 @@ global-current-changed: A
   expected:
     if os == "linux": FAIL
     TIMEOUT
+
+[new-add-expected-with-subtest.html]
+  [subtest]
+    expected: FAIL
+
+[current-add-expected-with-subtest.html]
+  [subtest]
+    expected: FAIL
 """
 
 new = """
@@ -91,6 +99,15 @@ global-current-changed: A
     if os == "linux": FAIL
     if os == "mac": FAIL
     TIMEOUT
+
+[new-add-expected-with-subtest.html]
+  expected: FAIL
+  [subtest]
+    expected: FAIL
+
+[current-add-expected-with-subtest.html]
+  [subtest]
+    expected: FAIL
 """
 
 current = """
@@ -122,6 +139,15 @@ global-current-changed: B
 [current-added-test.html]
   [Added subtest]
     expected: FAIL
+
+[new-add-expected-with-subtest.html]
+  [subtest]
+    expected: FAIL
+
+[current-add-expected-with-subtest.html]
+  expected: FAIL
+  [subtest]
+    expected: FAIL
 """
 
 updated = """global-new-deleted: A
@@ -141,8 +167,8 @@ global-current-changed: B
     expected: FAIL
 
   [Ancestor no expected new expected]
-    bug: 1234
     expected: FAIL
+    bug: 1234
 
   [New added subtest]
     expected: FAIL
@@ -156,20 +182,32 @@ global-current-changed: B
     expected: FAIL
 
 
+[new-add-expected-with-subtest.html]
+  expected: FAIL
+  [subtest]
+    expected: FAIL
+
+
+[current-add-expected-with-subtest.html]
+  expected: FAIL
+  [subtest]
+    expected: FAIL
+
+
 [new-added-test.html]
   [Added subtest]
     expected: FAIL
 
+
+[test-modified.html]
+  expected:
+    if os == "linux": FAIL
 
 [new-modified-current-deleted.html]
   expected:
     if os == "linux": FAIL
     if os == "mac": FAIL
     TIMEOUT
-
-[test-modified.html]
-  expected:
-    if os == "linux": FAIL
 """
 
 
@@ -182,9 +220,10 @@ def test_merge():
     current_manifest = get_manifest(current)
     new_manifest = get_manifest(new)
 
-    assert metamerge.make_changes(ancestor_manifest,
-                                  current_manifest,
-                                  new_manifest) == updated
+    result = metamerge.make_changes(ancestor_manifest,
+                                    current_manifest,
+                                    new_manifest)
+    assert result == updated
 
 if __name__ == '__main__':
     mozunit.main()

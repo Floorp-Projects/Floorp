@@ -28,7 +28,7 @@ pub struct DirectComposition {
     dxgi_factory: ComPtr<IDXGIFactory2>,
 
     egl: Rc<egl::SharedEglThings>,
-    pub gleam: Rc<gleam::gl::Gl>,
+    pub gleam: Rc<dyn gleam::gl::Gl>,
 
     composition_device: ComPtr<IDCompositionDevice>,
     root_visual: ComPtr<IDCompositionVisual>,
@@ -150,7 +150,7 @@ pub struct AngleVisual {
     visual: ComPtr<IDCompositionVisual>,
     swap_chain: ComPtr<winapi::shared::dxgi1_2::IDXGISwapChain1>,
     egl: egl::PerVisualEglThings,
-    pub gleam: Rc<gleam::gl::Gl>,
+    pub gleam: Rc<dyn gleam::gl::Gl>,
 }
 
 impl AngleVisual {

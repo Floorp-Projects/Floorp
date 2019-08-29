@@ -98,7 +98,6 @@ class AlternateServerPlayback:
         """
             Replay server responses from flows.
         """
-        self.flowmap = {}
         for i in flows:
             if i.type == 'websocket':
                 ctx.log.info(
@@ -116,6 +115,8 @@ class AlternateServerPlayback:
         ctx.master.addons.trigger("update", [])
 
     def load_files(self, paths):
+        if "," in paths[0]:
+            paths = paths[0].split(",")
         for path in paths:
             ctx.log.info("Loading flows from %s" % path)
             try:

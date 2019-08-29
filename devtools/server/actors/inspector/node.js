@@ -11,7 +11,9 @@ const InspectorUtils = require("InspectorUtils");
 const protocol = require("devtools/shared/protocol");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
-const { DebuggerServer } = require("devtools/server/debugger-server");
+const {
+  connectToFrame,
+} = require("devtools/server/connectors/frame-connector");
 
 loader.lazyRequireGetter(
   this,
@@ -718,7 +720,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         message: "Tried to call `connectToRemoteFrame` on a local frame",
       };
     }
-    return DebuggerServer.connectToFrame(this.conn, this.rawNode);
+    return connectToFrame(this.conn, this.rawNode);
   },
 });
 

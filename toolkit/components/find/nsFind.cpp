@@ -155,7 +155,7 @@ static bool IsTextFormControl(nsIContent& aContent) {
 static bool SkipNode(const nsIContent* aContent) {
   const nsIContent* content = aContent;
   while (content) {
-    if (!IsVisibleNode(content) || content->IsComment() ||
+    if (!IsDisplayedNode(content) || content->IsComment() ||
         content->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::noframes,
                                      nsGkAtoms::select)) {
       DEBUG_FIND_PRINTF("Skipping node: ");
@@ -165,23 +165,25 @@ static bool SkipNode(const nsIContent* aContent) {
 
     // Skip option nodes if their select is a combo box, or if they
     // have no select (somehow).
-    if (content->IsHTMLElement(nsGkAtoms::option)) {
-      const HTMLOptionElement* option = HTMLOptionElement::FromNode(content);
-      if (option) {
-        HTMLSelectElement* select =
-            HTMLSelectElement::FromNodeOrNull(option->GetParent());
-        if (!select || select->IsCombobox()) {
-          DEBUG_FIND_PRINTF("Skipping node: ");
-          DumpNode(content);
-          return true;
-        }
+    if (const auto* option = HTMLOptionElement::FromNode(content)) {
+      auto* select = HTMLSelectElement::FromNodeOrNull(option->GetParent());
+      if (!select || select->IsCombobox()) {
+        DEBUG_FIND_PRINTF("Skipping node: ");
+        DumpNode(content);
+        return true;
       }
     }
 
-    // Skip NAC in non-form-control.
-    if (content->IsInNativeAnonymousSubtree() &&
-        !IsTextFormControl(AnonymousSubtreeRootParent(*content))) {
-      return true;
+    if (content->IsInNativeAnonymousSubtree()) {
+      // We don't want to use almost any NAC: Only editable NAC in textfields
+      // should be findable. That is, we want to find "bar" in
+      // `<input value="bar">`, but not in `<input placeholder="bar">`.
+      if (!content->IsEditable() ||
+          !IsTextFormControl(AnonymousSubtreeRootParent(*content))) {
+        DEBUG_FIND_PRINTF("Skipping node: ");
+        DumpNode(content);
+        return true;
+      }
     }
 
     // Only climb to the nearest block node

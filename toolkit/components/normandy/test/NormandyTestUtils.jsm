@@ -80,9 +80,20 @@ const NormandyTestUtils = {
         preferences[prefName] = { ...defaultPrefInfo, ...prefInfo };
       }
 
+      // Generate a slug from userFacingName
+      let {
+        userFacingName = `Test study ${_preferenceStudyFactoryId++}`,
+        slug,
+      } = attrs;
+      delete attrs.slug;
+      if (userFacingName && !slug) {
+        slug = userFacingName.replace(" ", "-").toLowerCase();
+      }
+
       return Object.assign(
         {
-          name: `Test study ${_preferenceStudyFactoryId++}`,
+          userFacingName,
+          slug,
           branch: "control",
           expired: false,
           lastSeen: new Date().toJSON(),

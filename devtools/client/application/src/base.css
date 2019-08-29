@@ -25,14 +25,13 @@
   --list-line-height: 1.25;
 
  /* Global colours */
-  --bg-color: var(--grey-10);
-  --text-color: var(--grey-90);
-
-  /* Global layout vars */
-  --base-unit: 4px;
+  --separator-color: var(--theme-text-color-alt);
 
   /* extra, raw colors */
   --blue-50-a30: rgba(10, 132, 255, 0.3);
+
+  /* Global layout vars */
+  --base-unit: 4px;
 }
 
 /*
@@ -57,13 +56,6 @@ a {
   color: var(--theme-highlight-blue);
   text-decoration: none;
   cursor: pointer;
-}
-
-h1,
-.application--title {
-  font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
-  line-height: var(--base-line-height);
 }
 
 p {

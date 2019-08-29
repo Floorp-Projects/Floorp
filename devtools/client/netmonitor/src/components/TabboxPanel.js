@@ -123,6 +123,7 @@ class TabboxPanel extends Component {
         {
           id: PANELS.HEADERS,
           title: HEADERS_TITLE,
+          className: "panel-with-code",
         },
         HeadersPanel({
           cloneSelectedRequest,
@@ -136,6 +137,7 @@ class TabboxPanel extends Component {
           {
             id: PANELS.MESSAGES,
             title: MESSAGES_TITLE,
+            className: "panel-with-code",
           },
           WebSocketsPanel({
             connector,
@@ -145,6 +147,7 @@ class TabboxPanel extends Component {
         {
           id: PANELS.COOKIES,
           title: COOKIES_TITLE,
+          className: "panel-with-code",
         },
         CookiesPanel({
           connector,
@@ -156,6 +159,7 @@ class TabboxPanel extends Component {
         {
           id: PANELS.PARAMS,
           title: PARAMS_TITLE,
+          className: "panel-with-code",
         },
         ParamsPanel({ connector, openLink, request })
       ),
@@ -163,6 +167,7 @@ class TabboxPanel extends Component {
         {
           id: PANELS.RESPONSE,
           title: RESPONSE_TITLE,
+          className: "panel-with-code",
         },
         ResponsePanel({ request, openLink, connector })
       ),
@@ -190,6 +195,7 @@ class TabboxPanel extends Component {
           {
             id: PANELS.STACK_TRACE,
             title: STACK_TRACE_TITLE,
+            className: "panel-with-code",
           },
           StackTracePanel({ connector, openLink, request, sourceMapService })
         ),

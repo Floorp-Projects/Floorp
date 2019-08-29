@@ -1,0 +1,80 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "geckodriver toolchain build"
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-geckodriver.sh
+        toolchain-artifact: public/build/geckodriver.tar.xz
+        sparse-profile: null
+        resources:
+            - 'testing/geckodriver'
+            - 'testing/mozbase/rust'
+            - 'testing/webdriver'
+            # Changes to 'third_party/rust' should be captured by
+            # 'testing/geckodriver/Cargo.toml'.
+
+linux64-geckodriver:
+    treeherder:
+        symbol: TL(geckodriver)
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-rust
+
+macosx64-geckodriver:
+    treeherder:
+        symbol: TM(geckodriver)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        arguments: ['x86_64-apple-darwin']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+
+win32-geckodriver:
+    treeherder:
+        symbol: TW32(geckodriver)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+    run:
+        arguments: ['i686-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        toolchain-artifact: public/build/geckodriver.tar.bz2
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust-windows
+
+win64-geckodriver:
+    treeherder:
+        symbol: TW64(geckodriver)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
+        toolchain-artifact: public/build/geckodriver.tar.bz2
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust-windows

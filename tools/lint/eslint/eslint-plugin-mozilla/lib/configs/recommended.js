@@ -85,7 +85,7 @@ module.exports = {
   ],
 
   parserOptions: {
-    ecmaVersion: 9,
+    ecmaVersion: 11,
   },
 
   // When adding items to this file please check for effects on sub-directories.

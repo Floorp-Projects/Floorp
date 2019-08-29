@@ -42,11 +42,3 @@ want to do then dive in!
    servingcontent
    loggingreporting
    devicemanagement
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

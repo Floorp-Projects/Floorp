@@ -589,6 +589,11 @@ inline const Length& LengthOrAuto::AsLength() const {
 }
 
 template <>
+inline nscoord LengthOrAuto::ToLength() const {
+  return AsLength().ToAppUnits();
+}
+
+template <>
 inline bool StyleFlexBasis::IsAuto() const {
   return IsSize() && AsSize().IsAuto();
 }
@@ -689,6 +694,15 @@ StyleGridTemplateComponent::GetRepeatAutoValue() const {
 
 constexpr const auto kPaintOrderShift = StylePAINT_ORDER_SHIFT;
 constexpr const auto kPaintOrderMask = StylePAINT_ORDER_MASK;
+
+template <>
+inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(nscoord aAutoSize) const {
+  nscoord x = left.IsLength() ? left.ToLength() : 0;
+  nscoord y = top.IsLength() ? top.ToLength() : 0;
+  nscoord width = right.IsLength() ? right.ToLength() - x : aAutoSize;
+  nscoord height = bottom.IsLength() ? bottom.ToLength() - y : aAutoSize;
+  return nsRect(x, y, width, height);
+}
 
 }  // namespace mozilla
 

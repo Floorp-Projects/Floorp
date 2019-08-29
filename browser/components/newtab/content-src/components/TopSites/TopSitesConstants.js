@@ -13,6 +13,14 @@ export const TOP_SITES_CONTEXT_MENU_OPTIONS = [
   "BlockUrl",
   "DeleteUrl",
 ];
+export const TOP_SITES_SPOC_CONTEXT_MENU_OPTIONS = [
+  "PinSpocTopSite",
+  "Separator",
+  "OpenInNewWindow",
+  "OpenInPrivateWindow",
+  "Separator",
+  "BlockUrl",
+];
 // the special top site for search shortcut experiment can only have the option to unpin (which removes) the topsite
 export const TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS = [
   "CheckPinTopSite",

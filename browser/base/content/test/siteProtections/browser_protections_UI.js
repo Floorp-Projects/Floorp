@@ -67,9 +67,11 @@ add_task(async function setup() {
   });
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
+  Services.telemetry.clearEvents();
 
   registerCleanupFunction(() => {
     Services.telemetry.canRecordExtended = oldCanRecord;
+    Services.telemetry.clearEvents();
   });
 });
 
@@ -604,15 +606,17 @@ add_task(async function testQuickSwitchTabAfterTogglingTPSwitch() {
   // Check that the first tab is still with ETP enabled.
   ok(
     !ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
-    "The tracking protection icon state is still enabled."
+    "The ETP state of the first tab is still enabled."
   );
 
   // Check the ETP is disabled on the second origin.
-  gBrowser.selectedTab = tabTwo;
   ok(
-    ContentBlockingAllowList.includes(gBrowser.selectedBrowser),
-    "The tracking protection icon state has been changed to disabled."
+    ContentBlockingAllowList.includes(tabTwo.linkedBrowser),
+    "The ETP state of the second tab has been changed to disabled."
   );
+
+  // Clean up the state of the allow list for the second tab.
+  ContentBlockingAllowList.remove(tabTwo.linkedBrowser);
 
   BrowserTestUtils.removeTab(tabOne);
   BrowserTestUtils.removeTab(tabTwo);

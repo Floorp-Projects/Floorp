@@ -50,6 +50,7 @@ interface HTMLTextAreaElement : HTMLElement {
   [CEReactions, Throws, Pure]
            attribute DOMString defaultValue;
   [CEReactions, SetterThrows] attribute [TreatNullAs=EmptyString] DOMString value;
+  [BinaryName="getTextLength"]
   readonly attribute unsigned long textLength;
 
   readonly attribute boolean willValidate;

@@ -20,8 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
-Services.prefs.setBoolPref("extensions.webextensions.remote", false);
-
 ExtensionTestUtils.init(this);
 
 /**

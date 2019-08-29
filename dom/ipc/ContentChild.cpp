@@ -2094,10 +2094,6 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
-  // XXX bug 1576296: Figure out why we intermittently we don't have a docShell
-  if (auto docShell = owner->OwnerDoc()->GetDocShell()) {
-    nsDocShell::Cast(docShell)->OOPChildLoadStarted(browserBridge);
-  }
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
@@ -2918,21 +2914,6 @@ mozilla::ipc::IPCResult ContentChild::RecvUnregisterSheet(
   }
 
   return IPC_OK();
-}
-
-POfflineCacheUpdateChild* ContentChild::AllocPOfflineCacheUpdateChild(
-    const URIParams& manifestURI, const URIParams& documentURI,
-    const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument) {
-  MOZ_CRASH("unused");
-  return nullptr;
-}
-
-bool ContentChild::DeallocPOfflineCacheUpdateChild(
-    POfflineCacheUpdateChild* actor) {
-  OfflineCacheUpdateChild* offlineCacheUpdate =
-      static_cast<OfflineCacheUpdateChild*>(actor);
-  NS_RELEASE(offlineCacheUpdate);
-  return true;
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDomainSetChanged(

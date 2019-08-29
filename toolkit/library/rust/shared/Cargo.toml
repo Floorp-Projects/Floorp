@@ -42,7 +42,7 @@ bitsdownload = { path = "../../../components/bitsdownload", optional = true }
 storage = { path = "../../../../storage/rust" }
 bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
 shift_or_euc_c = "0.1.0"
-audio_thread_priority = "0.18.0"
+audio_thread_priority = "0.19.1"
 
 [build-dependencies]
 rustc_version = "0.2"

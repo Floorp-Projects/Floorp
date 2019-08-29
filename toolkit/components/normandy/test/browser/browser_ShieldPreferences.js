@@ -72,8 +72,8 @@ decorate_task(
     await stoppedBoth;
 
     Assert.deepEqual(stopArgs, [
-      [study1.name, { reason: "general-opt-out" }],
-      [study2.name, { reason: "general-opt-out" }],
+      [study1.slug, { reason: "general-opt-out" }],
+      [study2.slug, { reason: "general-opt-out" }],
     ]);
   }
 );

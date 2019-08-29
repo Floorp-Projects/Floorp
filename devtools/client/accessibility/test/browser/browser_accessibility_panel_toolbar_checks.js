@@ -26,7 +26,7 @@ const tests = [
   {
     desc: "Check initial state.",
     expected: {
-      activeToolbarFilters: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false, false],
     },
   },
   {
@@ -35,7 +35,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 1);
     },
     expected: {
-      activeToolbarFilters: [false, true, true, true],
+      activeToolbarFilters: [false, true, true, true, true],
     },
   },
   {
@@ -44,7 +44,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 1);
     },
     expected: {
-      activeToolbarFilters: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false, false],
     },
   },
   {
@@ -53,7 +53,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      activeToolbarFilters: [false, false, true, false],
+      activeToolbarFilters: [false, false, true, false, false],
     },
   },
   {
@@ -62,7 +62,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      activeToolbarFilters: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false, false],
     },
   },
   {
@@ -71,7 +71,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      activeToolbarFilters: [false, false, true, false],
+      activeToolbarFilters: [false, false, true, false, false],
     },
   },
   {
@@ -80,7 +80,16 @@ const tests = [
       await toggleMenuItem(doc, 0, 3);
     },
     expected: {
-      activeToolbarFilters: [false, true, true, true],
+      activeToolbarFilters: [false, false, true, true, false],
+    },
+  },
+  {
+    desc: "Toggle third custom filter to activate.",
+    setup: async ({ doc }) => {
+      await toggleMenuItem(doc, 0, 4);
+    },
+    expected: {
+      activeToolbarFilters: [false, true, true, true, true],
     },
   },
   {
@@ -89,7 +98,7 @@ const tests = [
       await toggleMenuItem(doc, 0, 0);
     },
     expected: {
-      activeToolbarFilters: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false, false],
     },
   },
 ];

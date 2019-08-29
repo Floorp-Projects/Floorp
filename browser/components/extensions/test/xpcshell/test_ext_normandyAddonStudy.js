@@ -46,12 +46,18 @@ async function run(test) {
     test.permissions || ["normandyAddonStudy"],
     test.isPrivileged
   );
+  const promiseValidation = test.validationScript
+    ? test.validationScript(extension)
+    : Promise.resolve();
+
   await extension.startup();
+
+  await promiseValidation;
+
   if (test.doneSignal) {
     await extension.awaitFinish(test.doneSignal);
-  } else if (test.validationScript) {
-    await test.validationScript(extension);
   }
+
   await extension.unload();
 }
 
@@ -188,12 +194,14 @@ add_task(async function test_onUnenroll_works() {
   const testWrapper = AddonStudies.withStudies([study]);
   const test = testWrapper(async () => {
     await run({
-      backgroundScript: async () => {
+      backgroundScript: () => {
         browser.normandyAddonStudy.onUnenroll.addListener(reason => {
           browser.test.sendMessage("unenrollReason", reason);
         });
+        browser.test.sendMessage("bgpageReady");
       },
       validationScript: async extension => {
+        await extension.awaitMessage("bgpageReady");
         await AddonStudies.markAsEnded(study, "test");
         const unenrollReason = await extension.awaitMessage("unenrollReason");
         equal(unenrollReason, "test", "Unenroll listener should be called.");

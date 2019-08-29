@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
 });
 
 var SiteDataManager = {
-  _qms: Services.qms,
-
   _appCache: Cc["@mozilla.org/network/application-cache-service;1"].getService(
     Ci.nsIApplicationCacheService
   ),
@@ -174,7 +172,7 @@ var SiteDataManager = {
       // XXX: The work of integrating localStorage into Quota Manager is in progress.
       //      After the bug 742822 and 1286798 landed, localStorage usage will be included.
       //      So currently only get indexedDB usage.
-      this._quotaUsageRequest = this._qms.getUsage(onUsageResult);
+      this._quotaUsageRequest = Services.qms.getUsage(onUsageResult);
     });
     return this._getQuotaUsagePromise;
   },
@@ -226,6 +224,94 @@ var SiteDataManager = {
       }
       site.appCacheList.push(cache);
     }
+  },
+
+  /**
+   * Gets the current AppCache usage by host. This is using asciiHost to compare
+   * against the provided host.
+   *
+   * @param {String} the ascii host to check usage for
+   * @returns the usage in bytes
+   */
+  getAppCacheUsageByHost(host) {
+    let usage = 0;
+
+    let groups;
+    try {
+      groups = this._appCache.getGroups();
+    } catch (e) {
+      // NS_ERROR_NOT_AVAILABLE means that appCache is not initialized,
+      // which probably means the user has disabled it. Otherwise, log an
+      // error. Either way, there's nothing we can do here.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        Cu.reportError(e);
+      }
+      return usage;
+    }
+
+    for (let group of groups) {
+      let uri = Services.io.newURI(group);
+      if (uri.asciiHost == host) {
+        let cache = this._appCache.getActiveCache(group);
+        usage += cache.usage;
+      }
+    }
+
+    return usage;
+  },
+
+  /**
+   * Checks if the site with the provided ASCII host is using any site data at all.
+   * This will check for:
+   *   - Cookies (incl. subdomains)
+   *   - AppCache
+   *   - Quota Usage
+   * in that order. This function is meant to be fast, and thus will
+   * end searching and return true once the first trace of site data is found.
+   *
+   * @param {String} the ASCII host to check
+   * @returns {Boolean} whether the site has any data associated with it
+   */
+  async hasSiteData(asciiHost) {
+    if (Services.cookies.countCookiesFromHost(asciiHost)) {
+      return true;
+    }
+
+    let appCacheUsage = this.getAppCacheUsageByHost(asciiHost);
+    if (appCacheUsage > 0) {
+      return true;
+    }
+
+    let hasQuota = await new Promise(resolve => {
+      Services.qms.getUsage(request => {
+        if (request.resultCode != Cr.NS_OK) {
+          resolve(false);
+          return;
+        }
+
+        for (let item of request.result) {
+          if (!item.persisted && item.usage <= 0) {
+            continue;
+          }
+
+          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            item.origin
+          );
+          if (principal.URI.asciiHost == asciiHost) {
+            resolve(true);
+            return;
+          }
+        }
+
+        resolve(false);
+      });
+    });
+
+    if (hasQuota) {
+      return true;
+    }
+
+    return false;
   },
 
   getTotalUsage() {

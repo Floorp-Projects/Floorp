@@ -1822,11 +1822,11 @@ Inspector.prototype = {
    *         Options passed to the highlighter actor.
    */
   onShowBoxModelHighlighterForNode(nodeFront, options) {
-    const toolbox = this.toolbox;
-    toolbox.highlighter.highlight(nodeFront, options);
+    nodeFront.highlighterFront.highlight(nodeFront, options);
   },
 
   async inspectNodeActor(nodeActor, inspectFromAnnotation) {
+    // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
     const nodeFront = await this.walker.gripToNodeFront({ actor: nodeActor });
     if (!nodeFront) {
       console.error(

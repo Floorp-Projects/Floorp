@@ -40,7 +40,15 @@
       'target_defaults': {
         'defines': [
           'SQLITE_THREADSAFE=1'
-        ]
+        ],
+        'cflags': [
+          '-w',
+        ],
+        'xcode_settings': {
+          'OTHER_CFLAGS': [
+            '-w',
+          ],
+        },
       },
       'variables': {
         'module': 'nss'

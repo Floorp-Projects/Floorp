@@ -419,8 +419,7 @@ void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
       IsTrackingClassificationFlag(aClassificationFlags) ||
       IsCryptominingClassificationFlag(aClassificationFlags);
 
-  if (validClassificationFlags &&
-      (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel))) {
+  if (validClassificationFlags && isThirdPartyWithTopLevelWinURI) {
     UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         aChannel, aLoadingState);
   }

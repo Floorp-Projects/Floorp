@@ -10,6 +10,7 @@
 #endif
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
@@ -158,8 +159,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvFireFrameLoadEvent(
   event.mFlags.mCancelable = false;
   EventDispatcher::Dispatch(owner, nullptr, &event, nullptr, &status);
 
-  UnblockOwnerDocsLoadEvent(owner->OwnerDoc());
-
   return IPC_OK();
 }
 
@@ -195,22 +194,26 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvScrollRectIntoView(
   return IPC_OK();
 }
 
-void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
+    BrowsingContext* aContext) {
+  if (aContext) {
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+        do_QueryObject(aContext->GetEmbedderElement());
+    IgnoredErrorResult rv;
+    RemotenessOptions options;
+    options.mError.Construct(static_cast<uint32_t>(NS_ERROR_FRAME_CRASHED));
+    frameLoaderOwner->ChangeRemoteness(options, rv);
 
-  // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
-  // been removed before it finishes loading, or its subprocess crashed):
-  if (RefPtr<Element> owner = mFrameLoader->GetOwnerContent()) {
-    UnblockOwnerDocsLoadEvent(owner->OwnerDoc());
+    if (NS_WARN_IF(rv.Failed())) {
+      return IPC_FAIL(this, "Remoteness change failed");
+    }
   }
+
+  return IPC_OK();
 }
 
-void BrowserBridgeChild::UnblockOwnerDocsLoadEvent(Document* aOwnerDoc) {
-  // XXX bug 1576296: Is it expected that we sometimes don't have a docShell?
-  if (!mHadInitialLoad && aOwnerDoc->GetDocShell()) {
-    mHadInitialLoad = true;
-    nsDocShell::Cast(aOwnerDoc->GetDocShell())->OOPChildLoadDone(this);
-  }
+void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mIPCOpen = false;
 }
 
 }  // namespace dom

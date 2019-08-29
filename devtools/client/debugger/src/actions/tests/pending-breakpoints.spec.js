@@ -30,6 +30,9 @@ jest.mock("../../utils/prefs", () => ({
     pendingBreakpoints: {},
   },
   clear: jest.fn(),
+  features: {
+    inlinePreview: true,
+  },
 }));
 
 import {

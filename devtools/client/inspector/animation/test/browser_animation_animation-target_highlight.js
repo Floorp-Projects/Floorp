@@ -21,17 +21,16 @@ add_task(async function() {
     animationInspector,
     inspector,
     panel,
-    toolbox,
   } = await openAnimationInspector();
 
   info("Check highlighting when mouse over on a target node");
-  const onHighlight = toolbox.highlighter.once("node-highlight");
+  const onHighlight = inspector.highlighter.once("node-highlight");
   mouseOverOnTargetNode(animationInspector, panel, 0);
   let nodeFront = await onHighlight;
   assertNodeFront(nodeFront, "DIV", "ball animated");
 
   info("Check unhighlighting when mouse out on a target node");
-  const onUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  const onUnhighlight = inspector.highlighter.once("node-unhighlight");
   mouseOutOnTargetNode(animationInspector, panel, 0);
   await onUnhighlight;
   ok(true, "Unhighlighted the targe node");
@@ -65,11 +64,11 @@ add_task(async function() {
   const highlightEventCounter = () => {
     highlightEventCount += 1;
   };
-  toolbox.highlighter.on("node-highlight", highlightEventCounter);
+  inspector.highlighter.on("node-highlight", highlightEventCounter);
   mouseOverOnTargetNode(animationInspector, panel, 0);
   await wait(500);
   is(highlightEventCount, 0, "Highlight event should not occur");
-  toolbox.highlighter.off("node-highlight", highlightEventCounter);
+  inspector.highlighter.off("node-highlight", highlightEventCounter);
 
   info("Highlighting another animation target");
   onHighlighterShown = inspector.highlighters.once(

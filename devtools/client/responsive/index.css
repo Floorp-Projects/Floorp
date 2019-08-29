@@ -155,8 +155,17 @@ input:-moz-focusring {
     max-content;
 }
 
-#toolbar:not(.left-aligned) #toolbar-center-controls {
+#toolbar:not(.left-aligned) {
+  grid-template-columns: 1fr auto 1fr min-content;
   justify-content: center;
+}
+
+#toolbar:not(.left-aligned) #toolbar-center-controls {
+  grid-column-start: 2;
+}
+
+#toolbar:not(.left-aligned) #toolbar-end-controls {
+  justify-content: end;
 }
 
 #user-agent-label {

@@ -23,9 +23,9 @@ ActorRegistry.registerModule("devtools/server/actors/webconsole", {
 To register a global actor:
 
 ```
-ActorRegistry.registerModule("devtools/server/actors/addon/addons", {
-  prefix: "addons",
-  constructor: "AddonsActor",
+ActorRegistry.registerModule("devtools/server/actors/preference", {
+  prefix: "preference",
+  constructor: "PreferenceActor",
   type: { global: true }
 });
 ```

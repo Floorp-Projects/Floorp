@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "nsIDocShell.h"
@@ -19,11 +20,6 @@ namespace widget {
 /******************************************************************************
  * TextEventDispatcher
  *****************************************************************************/
-
-bool TextEventDispatcher::sDispatchKeyEventsDuringComposition = false;
-bool TextEventDispatcher::sDispatchKeyPressEventsOnlySystemGroupInContent =
-    false;
-
 TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
     : mWidget(aWidget),
       mDispatchingEvent(0),
@@ -32,19 +28,6 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
       mIsHandlingComposition(false),
       mHasFocus(false) {
   MOZ_RELEASE_ASSERT(mWidget, "aWidget must not be nullptr");
-
-  static bool sInitialized = false;
-  if (!sInitialized) {
-    Preferences::AddBoolVarCache(
-        &sDispatchKeyEventsDuringComposition,
-        "dom.keyboardevent.dispatch_during_composition", true);
-    Preferences::AddBoolVarCache(
-        &sDispatchKeyPressEventsOnlySystemGroupInContent,
-        "dom.keyboardevent.keypress."
-        "dispatch_non_printable_keys_only_system_group_in_content",
-        true);
-    sInitialized = true;
-  }
 
   ClearNotificationRequests();
 }
@@ -543,7 +526,8 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     // However, if we need to behave like other browsers, we need the keydown
     // and keyup events.  Note that this behavior is also allowed by D3E spec.
     // FYI: keypress events must not be fired during composition.
-    if (!sDispatchKeyEventsDuringComposition || aMessage == eKeyPress) {
+    if (!StaticPrefs::dom_keyboardevent_dispatch_during_composition() ||
+        aMessage == eKeyPress) {
       return false;
     }
     // XXX If there was mOnlyContentDispatch for this case, it might be useful
@@ -658,7 +642,8 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     }
   }
 
-  if (sDispatchKeyPressEventsOnlySystemGroupInContent &&
+  if (StaticPrefs::
+          dom_keyboardevent_keypress_dispatch_non_printable_keys_only_system_group_in_content() &&
       keyEvent.mMessage == eKeyPress &&
       !keyEvent.ShouldKeyPressEventBeFiredOnContent()) {
     // Note that even if we set it to true, this may be overwritten by

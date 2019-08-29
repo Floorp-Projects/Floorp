@@ -407,7 +407,7 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * WillMakeBasicBlock() called before changing block style around Selection.
-   * This method actually does something with calling MakeBasicBlock().
+   * This method actually does something with calling FormatBlockContainer().
    *
    * @param aBlockType          Necessary block style as string.
    * @param aCancel             Returns true if the operation is canceled.
@@ -416,24 +416,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillMakeBasicBlock(const nsAString& aBlockType,
                                            bool* aCancel, bool* aHandled);
-
-  /**
-   * MakeBasicBlock() applies or clears block style around Selection.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   *
-   * @param aBlockType          New block tag name.
-   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                            RemoveBlockContainerElements() will be called.
-   *                            If nsGkAtoms::blockquote,
-   *                            MoveNodesIntoNewBlockquoteElement() will be
-   *                            called.  Otherwise,
-   *                            CreateOrChangeBlockContainerElement() will be
-   *                            called.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeBasicBlock(nsAtom& aBlockType);
 
   /**
    * Called after creating a basic block, indenting, outdenting or aligning

@@ -348,24 +348,26 @@ class FastBernoulliTrial {
      *
      * The clamp is written carefully. Note that if we had said:
      *
-     *    if (skipCount > SIZE_MAX)
-     *       skipCount = SIZE_MAX;
+     *    if (skipCount > double(SIZE_MAX))
+     *       mSkipCount = SIZE_MAX;
+     *    else
+     *       mSkipCount = skipCount;
      *
      * that leads to undefined behavior 64-bit machines: SIZE_MAX coerced to
-     * double is 2^64, not 2^64-1, so this doesn't actually set skipCount to a
-     * value that can be safely assigned to mSkipCount.
+     * double can equal 2^64, so if skipCount equaled 2^64 converting it to
+     * size_t would induce undefined behavior.
      *
-     * Jakob Olesen cleverly suggested flipping the sense of the comparison: if
-     * we require that skipCount < SIZE_MAX, then because of the gaps (2048)
-     * between doubles at that magnitude, the highest double less than 2^64 is
-     * 2^64 - 2048, which is fine to store in a size_t.
+     * Jakob Olesen cleverly suggested flipping the sense of the comparison to
+     * skipCount < double(SIZE_MAX).  The conversion will evaluate to 2^64 or
+     * the double just below it: either way, skipCount is guaranteed to have a
+     * value that's safely convertible to size_t.
      *
      * (On 32-bit machines, all size_t values can be represented exactly in
      * double, so all is well.)
      */
     double skipCount =
         std::floor(std::log(mGenerator.nextDouble()) * mInvLogNotProbability);
-    if (skipCount < SIZE_MAX)
+    if (skipCount < double(SIZE_MAX))
       mSkipCount = skipCount;
     else
       mSkipCount = SIZE_MAX;

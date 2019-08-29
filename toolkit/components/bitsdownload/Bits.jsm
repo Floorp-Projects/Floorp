@@ -27,7 +27,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 // systems other than Windows. This is purely for convenient importing, because
 // attempting to use anything in this file on platforms other than Windows will
 // result in an error.
-if (AppConstants.platform == "win") {
+if (AppConstants.MOZ_BITS_DOWNLOAD) {
   XPCOMUtils.defineLazyServiceGetter(
     this,
     "gBits",

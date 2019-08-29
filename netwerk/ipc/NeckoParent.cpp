@@ -270,7 +270,7 @@ void NeckoParent::ActorDestroy(ActorDestroyReason aWhy) {
   // non-refcounted class.
 }
 
-PHttpChannelParent* NeckoParent::AllocPHttpChannelParent(
+already_AddRefed<PHttpChannelParent> NeckoParent::AllocPHttpChannelParent(
     const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
     const HttpChannelCreationArgs& aOpenArgs) {
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
@@ -288,16 +288,9 @@ PHttpChannelParent* NeckoParent::AllocPHttpChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  HttpChannelParent* p =
+  RefPtr<HttpChannelParent> p =
       new HttpChannelParent(aBrowser, loadContext, overrideStatus);
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPHttpChannelParent(PHttpChannelParent* channel) {
-  HttpChannelParent* p = static_cast<HttpChannelParent*>(channel);
-  p->Release();
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPHttpChannelConstructor(
@@ -468,16 +461,10 @@ bool NeckoParent::DeallocPWebSocketEventListenerParent(
   return true;
 }
 
-PDataChannelParent* NeckoParent::AllocPDataChannelParent(
+already_AddRefed<PDataChannelParent> NeckoParent::AllocPDataChannelParent(
     const uint32_t& channelId) {
   RefPtr<DataChannelParent> p = new DataChannelParent();
-  return p.forget().take();
-}
-
-bool NeckoParent::DeallocPDataChannelParent(PDataChannelParent* actor) {
-  RefPtr<DataChannelParent> p =
-      dont_AddRef(static_cast<DataChannelParent*>(actor));
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDataChannelConstructor(
@@ -507,16 +494,10 @@ mozilla::ipc::IPCResult NeckoParent::RecvPSimpleChannelConstructor(
   return IPC_OK();
 }
 
-PFileChannelParent* NeckoParent::AllocPFileChannelParent(
+already_AddRefed<PFileChannelParent> NeckoParent::AllocPFileChannelParent(
     const uint32_t& channelId) {
   RefPtr<FileChannelParent> p = new FileChannelParent();
-  return p.forget().take();
-}
-
-bool NeckoParent::DeallocPFileChannelParent(PFileChannelParent* actor) {
-  RefPtr<FileChannelParent> p =
-      dont_AddRef(static_cast<FileChannelParent*>(actor));
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPFileChannelConstructor(

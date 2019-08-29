@@ -26,25 +26,25 @@ job-defaults:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-
-awsy:
-    description: "Are we slim yet"
-    treeherder-symbol: SY(sy)
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            default: built-projects
+            default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+
+awsy:
+    description: "Are we slim yet"
+    treeherder-symbol: SY(sy)
 
 awsy-tp6:
     description: "Are we slim yet - tp6 pageset"
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
         by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
             .*-ccov/.*: []  # don't run on coverage
+            .*-devedition/.*: []  # don't run on devedition
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            default: built-projects
+            default: ['try', 'integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
             - --tp6
@@ -61,11 +61,6 @@ awsy-dmd:
 awsy-base:
     description: "Are we slim yet - about:blank base case"
     treeherder-symbol: SY(ab)
-    run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --base
@@ -82,11 +77,6 @@ awsy-base-dmd:
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     treeherder-symbol: SYss(sy)
-    run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
-            windows10-aarch64/opt: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --single-stylo-traversal

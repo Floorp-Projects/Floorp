@@ -446,6 +446,10 @@ export function getSourceClassnames(source: Object, symbols?: Symbols) {
     return symbols.framework.toLowerCase();
   }
 
+  if (isUrlExtension(source.url)) {
+    return "extension";
+  }
+
   return sourceTypes[getFileExtension(source)] || defaultClassName;
 }
 

@@ -386,14 +386,8 @@ OfflineCacheUpdateChild::Schedule() {
   // See also nsOfflineCacheUpdate::ScheduleImplicit.
   bool stickDocument = mDocument != nullptr;
 
-  // Need to addref ourself here, because the IPC stack doesn't hold
-  // a reference to us. Will be released in RecvFinish() that identifies
-  // the work has been done.
   ContentChild::GetSingleton()->SendPOfflineCacheUpdateConstructor(
       this, manifestURI, documentURI, loadingPrincipalInfo, stickDocument);
-
-  // ContentChild::DeallocPOfflineCacheUpdate will release this.
-  NS_ADDREF_THIS();
 
   return NS_OK;
 }

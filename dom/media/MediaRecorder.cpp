@@ -714,7 +714,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     LOG(LogLevel::Debug,
         ("Session.MediaTracksReady track type = (%d)", trackTypes));
-    InitEncoder(trackTypes, tracks[0]->Graph()->GraphRate());
+    InitEncoder(trackTypes, mMediaStreamTracks[0]->Graph()->GraphRate());
   }
 
   void ConnectMediaStreamTrack(MediaStreamTrack& aTrack) {

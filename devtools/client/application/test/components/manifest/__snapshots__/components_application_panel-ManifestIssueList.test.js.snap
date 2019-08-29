@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestIssueList groups issues by level and shows errors first 1`] = `
+Array [
+  <ul
+    className="manifest-issues js-manifest-issues"
+    key="issuelist-0"
+  >
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-0"
+      level="error"
+      message="An error"
+    />
+  </ul>,
+  <ul
+    className="manifest-issues js-manifest-issues"
+    key="issuelist-1"
+  >
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-0"
+      level="warning"
+      message="A warning"
+    />
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-1"
+      level="warning"
+      message="Another warning"
+    />
+  </ul>,
+]
+`;
+
+exports[`ManifestIssueList renders nothing for empty issues 1`] = `null`;
+
+exports[`ManifestIssueList renders the expected snapshot for a populated list 1`] = `
+Array [
+  <ul
+    className="manifest-issues js-manifest-issues"
+    key="issuelist-0"
+  >
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-0"
+      level="error"
+      message="Foo"
+    />
+  </ul>,
+  <ul
+    className="manifest-issues js-manifest-issues"
+    key="issuelist-1"
+  >
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-0"
+      level="warning"
+      message="Foo"
+    />
+    <ManifestIssue
+      className="manifest-issues__item"
+      key="issue-1"
+      level="warning"
+      message="Bar"
+    />
+  </ul>,
+]
+`;
+
+exports[`ManifestIssueList skips rendering empty level groups 1`] = `
+<ul
+  className="manifest-issues js-manifest-issues"
+  key="issuelist-0"
+>
+  <ManifestIssue
+    className="manifest-issues__item"
+    key="issue-0"
+    level="warning"
+    message="A warning"
+  />
+  <ManifestIssue
+    className="manifest-issues__item"
+    key="issue-1"
+    level="warning"
+    message="Another warning"
+  />
+</ul>
+`;

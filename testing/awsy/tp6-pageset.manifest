@@ -1,132 +1,250 @@
 [
-    {
-        "algorithm": "sha512",
-        "digest": "edc07e9eb78e3ec83364f5b9150a40c2640338957a7c53da848a1c0a5f0b917411a088d2ad7f2a5be0deb42dc5a2413534a1b682940f0e4c12f703d50b6ff1f2",
-        "filename": "mitmproxy-tp6-instagram-binast.zip",
-        "size": 6626956,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "f1dba7631f1f17d04e4811a3ee139c23a8ff599bb1a38b564a05d87b02261f58168d3c3e8c49a1e16d3b268c9c315a0f7eb106eec1d759261641b729f691d013",
-        "filename": "mitmproxy-tp6-ebay.zip",
-        "size": 2860653,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "28c3b2a5871bba34fbb25e1a9bbb367c665792484cffec40f2cb6b17d989569b9e56a51bf901ad195dcde45bc1dfa5c7428266147ffe5124e8dc8e1c2a7a9f3f",
-        "filename": "mitmproxy-tp6-google-mail.zip",
-        "size": 9966121,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "913d7631cc2f1685310ea1d807cf4dc6a91298f6f24700393e46272128de9bb47ce44c9e88a771ff2169d0458c83b1df07b654456495b7d8fb6c6899fba0bc3a",
-        "filename": "mitmproxy-tp6-paypal.zip",
-        "size": 1037796,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "a0dd4ccb99bac02a38b3c67baa08296c3e894837aba1c1b0750c592db6ff962ab0c61f557ffb45c2ea77e95345954a0786bf764448d090cc6cf76679d1a8a616",
-        "filename": "mitmproxy-tp6-pinterest.zip",
-        "size": 11627712,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "3343f54b6c727a2061534872888da4e3aa647e81903c675dc318c717ed0c93f6ce4e2b98c66eb4128376cf8507590531283c95f3951259607edaaae28944d9a5",
-        "filename": "mitmproxy-recordings-raptor-tp6.zip",
-        "size": 8767174,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "eb32218815d3c2187807f3a18d6df1657e01a215820deaaa7a035f06d180780ac9652479ac7db1d8cde3728a890521aff2e0a5c4738304966b2a93ce1b7f33bb",
-        "filename": "mitmproxy-recordings-raptor-gdocs.zip",
-        "size": 26179496,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "5b8080cf842a50fe2055127daa084fa9f133307965e4d8af246978150b8b3b11f1fb06cdf65ba69e13c875b77db14e7494cdb940376b264c3aefb5b53e22b892",
-        "filename": "raptor-tp6-3.zip",
-        "size": 24512088,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "0e9f2a23323f93f7a9839ab49d84555cce03bfab2196aa8670e604d6df390b22f0594527cecf7b2efd0449dd87507ec934bdcc74f1ebee68c22161f4104b6513",
-        "filename": "raptor-tp6-4.zip",
-        "size": 1643188,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "4a52cb6770062231f9f283ab42ac53634d91677146b4d91931f508de22bff262512775d0c93d80730287000907e438d467136768883691c3e20c1e6a8f475a03",
-        "filename": "raptor-tp6-5.zip",
-        "size": 27670268,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "21110ee297074413a72343bcb7d22ae88efce104de6e7eea5916e2dae004b29746ec6dd6155686cffed816e88d38ad1bbc04fe1253623ed8c0d4256a146d8b77",
-        "filename": "raptor-tp6-6.zip",
-        "size": 2240008,
-        "unpack": true
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "3b5d06a79b2f9fb4e18534229844da69ca6f8e0f0759562947a29f681e27204ebae25b9a56c4ae2b95dabf067c3afeda424bcfb4d104bbc474a3970d4f2177aa",
-        "filename": "raptor-tp6-7.zip",
-        "size": 1862165,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "d49ac687231a71a19d946e49ad9abea172316201d58ebd84bea360b70792948b36454966a0193039bafe18311444b3f25ab3f6101b77fa0a1e77b7ec83f3c8dc",
-        "filename": "mitmproxy-tp6-tumblr.zip",
-        "size": 20872384,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "46ab2d3b58fe5be72029bae6ed2e84b8b81ac46d30a1ffaf4ac4ba3ba4284e73507d3becc2a274b9d5ef3497f91bb655fa48df959f0ed1c98e0581e638702200",
-        "filename": "mitmproxy-tp6-twitter.zip",
-        "size": 17821103,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "efd7090b826d03f54ef58e631d8b24e0e7263e06fb679a8c2f072dde9e7a8223e02812db73e6fb71b08d4247f7652a72c94029959e34f6d49271c6172c0587cb",
-        "filename": "mitmproxy-tp6-wikipedia.zip",
-        "size": 1336699,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "daf99106a71bea24ff6a0b195096fb36d328121effe9de84fc57e26a6ad8674db7c08eb17966cb2f3312a1e2b87b05da4339889c58b81c46c1e5af301dd27ad2",
-        "filename": "mitmproxy-tp6-yahoo-mail.zip",
-        "size": 4110884,
-        "unpack": true,
-        "visibility": "public"
-    },
-    {
-        "algorithm": "sha512",
-        "digest": "c29479b82a26db3722d6fe60c6a9d5b0849c828b4904553c115712610ead7be508d1c194050860140f8d9f4057b5e5088c085ea52319e37a0c9862fa120e5f22",
-        "filename": "mitmproxy-tp6-yahoo-news.zip",
-        "size": 11849146,
-        "unpack": true,
-        "visibility": "public"
-    }
+  {
+    "size": 1505360,
+    "visibility": "public",
+    "digest": "89a93e65ae36b3c8b53bfadba2f318736bfe9073839241731df20610607245a530bfc6118d27b0244bea0a31d4e1ad03d95f8125a170c89d70e2dd8e506eb1a4",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-amazon.zip",
+    "unpack": true
+  },
+  {
+    "size": 14244293,
+    "visibility": "public",
+    "digest": "04c8a440e56868d01878e2c2b1e7b096ac4f39f9c113a3bc3e9dcab52359abff408afb4d5ca4ba984735dacf5af815c4a4d71f939026a91817654fb55011d38f",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-apple.zip",
+    "unpack": true
+  },
+  {
+    "size": 181484,
+    "visibility": "public",
+    "digest": "94cf72eef8ca4c90f3ea8517db848510d22fc98599a5aa63435f519544f25d8de94c826f0c5bc2b6ea8dd2d31916278e5dcb8cf32a63033ad2ce0c3a09505a6a",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-bing-search.zip",
+    "unpack": true
+  },
+  {
+    "size": 2455205,
+    "visibility": "public",
+    "digest": "44f5a9baf7fc27484d9450f6625e9afbbd9f12f2c80c7ebfad8821f2fed69c7744c131f4e18257c77d24e82cf004abd2e761f774b000efb57fb5d15565a01dce",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-ebay.zip",
+    "unpack": true
+  },
+  {
+    "size": 5646483,
+    "visibility": "public",
+    "digest": "3f4c11d8003278b5b13ad3f2ed1adaf2a33e0b645844202d8371ee669e00d36f0ae09814ffda3632011bd47e8202cc8ef23757e5d72a6d05a37a49a1ad59413e",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-facebook.zip",
+    "unpack": true
+  },
+  {
+    "size": 6175607,
+    "visibility": "public",
+    "digest": "588dc72d7e853e7b3bf51858b1e48445b70564a24e245bd361075ac83e64d65593fdbc87831fd4ea02805cb0442af754178c6011475fb0a6d4a61001fe76523a",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-fandom.zip",
+    "unpack": true
+  },
+  {
+    "size": 56817901,
+    "visibility": "public",
+    "digest": "5bad8693dbef7cc12ec1a735f80596158948cdc18e522100562e32ed7a286e95909cf8275fac2d46ebf4e9cc84b3c28e59e78973d4282613c5aad60a2a3892ad",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-google-docs.zip",
+    "unpack": true
+  },
+  {
+    "size": 8188029,
+    "visibility": "public",
+    "digest": "e4bf46d3676e0a9b101ef942f97186258289e448c85c9ba296c7faec3e00581a4da9bf35f75b4124cecb69e4933f19f37412688812dfd68cc625b18ccd8a05ae",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-google-mail.zip",
+    "unpack": true
+  },
+  {
+    "size": 3860610,
+    "visibility": "public",
+    "digest": "45ee7d7f4af86c32edfe1fc57f6a5fd6478209409dd244bd8349dbad5e538061b6f94093c89520e0bffb77ac5d628c7ae60cb50428d3130192db9f8ac895c2a7",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-google-search.zip",
+    "unpack": true
+  },
+  {
+    "size": 12726066,
+    "visibility": "public",
+    "digest": "904dfb7b604875e196c46ce5677f2ca419ddf2804f3575b8fd6ca49bd47cc066e298d123023a0b254c59f473507bdafef46cbb21b2f0592ec3780c40bb5d7dca",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-google-sheets.zip",
+    "unpack": true
+  },
+  {
+    "size": 18308375,
+    "visibility": "public",
+    "digest": "af4b0c9985dec29b9d54e765771546161fb770a2573be7a287f2fb29dddc1a9e85765810cffd79d585952d71d6e5d45a6ca13ffdad2b4271c79ac569ea2f7704",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-google-slides.zip",
+    "unpack": true
+  },
+  {
+    "size": 1916181,
+    "visibility": "public",
+    "digest": "f44c735e5b69f6f17c55dd98b5af3a762ecb4e27acd79673f05704617da9f0e8bd6d4f657223ebcdb0b5cdcbe62dd40646cbd1d173aaaa1b6332bc8397aae2bb",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-imdb.zip",
+    "unpack": true
+  },
+  {
+    "size": 7551825,
+    "visibility": "public",
+    "digest": "a04d8141c28abde302cc8c2329e71e9d38ca6f1458f0e38161b94c17400b80900329ef26230552339ffbc93df497b4fe3feda90226fb08215031f880fc76ad51",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-imgur.zip",
+    "unpack": true
+  },
+  {
+    "size": 5501545,
+    "visibility": "public",
+    "digest": "a5c441b3ede7d7c0da2ed5414761929c17863e3bb03612a396fd40259eca767bd344ea1d64d2b7d3bea88aee75172406766b9bd4a7cd2c02d3b0a9a4993eb61b",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-instagram-binast.zip",
+    "unpack": true
+  },
+  {
+    "size": 4210445,
+    "visibility": "public",
+    "digest": "62f980b5f1a1d6f896667ae5480d9637bd7dd2c059abc8a449c7212cded3a5078450c804c50c65fa6328eeadd4edd04536b4a9be0bc634f8d538c088c1410684",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-instagram.zip",
+    "unpack": true
+  },
+  {
+    "size": 5041497,
+    "visibility": "public",
+    "digest": "bd3831953cdefc26c28e298830c4ccc14fcbfb1e42b190ddfb4dd75c96a5fc946c9560c4411bf232b1e4046347258c1bfe43db88b461e8a1b9de5a8cbfe50c9c",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-linkedin.zip",
+    "unpack": true
+  },
+  {
+    "size": 2886896,
+    "visibility": "public",
+    "digest": "af40b89006f6e457f0c6afa7e20fe176181de8ddf0c11c76dc4b5b1c8bbfb74a2bd0214a76c5d5f6a73b74637641bb01ff77e6abdb5fba6833b2d6af225a83c2",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-microsoft.zip",
+    "unpack": true
+  },
+  {
+    "size": 63313140,
+    "visibility": "public",
+    "digest": "24236b7cb2b6f5656fa87173b887801dd3ee1a6dd43d9cabf055735813aaf3975ac1daf743f3dd281c4d0f93fa32900377b17f3711e38b32d90f7271b3f118c1",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-netflix.zip",
+    "unpack": true
+  },
+  {
+    "size": 3094726,
+    "visibility": "public",
+    "digest": "3582326ba319f583f86480176bfc039d9b252374acc3b19f215dedb284340ee161e0fb890e4b90d9f29da56b5448044edc5247661a9ebadccfecb03340ee4249",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-office.zip",
+    "unpack": true
+  },
+  {
+    "size": 10091794,
+    "visibility": "public",
+    "digest": "4ab0e3defec98b227f1685f97246848d7662897cb6a1e83ae657f82b1ca17de7c69ac2e764def36f3dcf4f4c372b5a0410f1bb9d55e55ec046b6f96c183db42a",
+    "algorithm": "sha512",
+    "filename": "firefox-outlook.zip",
+    "unpack": true
+  },
+  {
+    "size": 5110282,
+    "visibility": "public",
+    "digest": "37dfef70b9fd8f9038084fc35878f82f67b8a96ca35b1d9d899813a87df513a591a92aa0e20017d40ea2de91b4b409a191eaa872680335bf67bae492705996ea",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-paypal.zip",
+    "unpack": true
+  },
+  {
+    "size": 22153229,
+    "visibility": "public",
+    "digest": "92dcecc7a3862b3e6ef1ec5e6c025726d81e4b7ef2107043c64bf342a1ab6dd9d4f4db301f6b563d0ac64a530faa954c4f1f877fb593a2cf800734f71c58d07d",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-pinterest.zip",
+    "unpack": true
+  },
+  {
+    "size": 3622625,
+    "visibility": "public",
+    "digest": "7c90d685d5a0e3e4a50e16747255ebed66718e527aaf63f13c7d1b5ad6d2d158ebc90bf8736d66617d9a59ede6ff9bd6cca3ee6f016045d20203750c4980ed79",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-reddit.zip",
+    "unpack": true
+  },
+  {
+    "size": 20028158,
+    "visibility": "public",
+    "digest": "2829c998c429ee03113473bb21f09f6d7b2fdaa199a009fac20cc8ebd073b2379ff7b15b286fac26ce7536967be31bb54451a582f9163bb29869cb8e43f8c9c3",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-tumblr.zip",
+    "unpack": true
+  },
+  {
+    "size": 16839627,
+    "visibility": "public",
+    "digest": "aeac3c3689c0ac7e6993025f51c89750e90a6084680d0c15d63e21b96739484c960ecd3bf34d30949d60aa8edf88862394786fe9499f2d68b46055373723f388",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-twitch.zip",
+    "unpack": true
+  },
+  {
+    "size": 6590856,
+    "visibility": "public",
+    "digest": "51c3068ed8061baec1c826634d66b2db6daf35f0fb3984b9bbbdfa7c6681f59532ac1ba797de6bb123a2f0caba5caf2a7c5b2690685de82d43269450da5b7477",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-twitter.zip",
+    "unpack": true
+  },
+  {
+    "size": 1336433,
+    "visibility": "public",
+    "digest": "c574a872a93278b99bc8012a127b91acdcad300172b22699074a0d68180d7f134b7f4963d7f8a54d95cd034aad634a8f5de2bbeb12d8963d93089364cded77eb",
+    "algorithm": "sha512",
+    "filename": "firefox-wikipedia.zip",
+    "unpack": true
+  },
+  {
+    "size": 4179595,
+    "visibility": "public",
+    "digest": "def5d6c77d083a841a5ca203f453590c862b88205b68b3e623e2f0a5223e3afd15e275b6cf950ec135be20dc9615caddb032a5538819f56395e6058d7b03ba71",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-yahoo-mail.zip",
+    "unpack": true
+  },
+  {
+    "size": 4769089,
+    "visibility": "public",
+    "digest": "2b13c1211704d5b1f9ff5a450c6dd07b5d312a4497d69a1b408759c8ba9f8dda821f0b7d975d00d5ebbde0f9517c4a5f002489aa2127300e29db1610948321e4",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6-yahoo-news.zip",
+    "unpack": true
+  },
+  {
+    "size": 1099328,
+    "visibility": "public",
+    "digest": "628d7026ff9d45592342300df326be7126fbfa300a0664cac8d789ac58b4f90c13b73502029d932120413d9957fef4fa2d5ff2971c2c2acd6ab3c2c4c5e67bcf",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-yandex.zip",
+    "unpack": true
+  },
+  {
+    "size": 4828567,
+    "visibility": "public",
+    "digest": "eaca3d7f82de7e48332342db5ac18620d76f0568fa553c3ae12b631b35763e29eaee487f2c17179b987ffe192e01da6fae89f7f88f0e6adfb31a2b081a66e3c6",
+    "algorithm": "sha512",
+    "filename": "mitm4-linux-firefox-youtube.zip",
+    "unpack": true
+  }
 ]

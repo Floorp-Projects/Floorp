@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.manifest-issue__icon {
+  -moz-context-properties: fill;
+  width: calc(var(--base-unit) * 3);
+  height: calc(var(--base-unit) * 3);
+}
+
+.manifest-issue__icon--warning {
+  fill: var(--theme-icon-warning-color);
+}
+
+.manifest-issue__icon--error {
+  fill: var(--theme-icon-error-color);
+}

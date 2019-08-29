@@ -743,7 +743,7 @@
   color: var(--highlighter-infobar-color);
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::before {
   content: "";
   height: 8px;
   width: 8px;
@@ -754,39 +754,48 @@
   margin-inline-end: 9px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::after {
   margin-inline-start: 2px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
   color: #90E274;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).FAIL::after {
   color: #E57180;
   content: "⚠️";
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after {
   content: "AA\2713";
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
   content: "AAA\2713";
 }
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-label,
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
   margin-inline-end: 3px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
   content: "-";
   margin-inline-start: 3px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit {
+  display: block;
+  padding-block-end: 5px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit:last-child {
+  padding-block-end: 0;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit::before {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -800,17 +809,17 @@
   fill: currentColor;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.fail:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.FAIL::before {
   background-image: url(chrome://devtools/skin/images/error-small.svg);
   fill: var(--red-40);
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.WARNING:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.WARNING::before {
   background-image: url(chrome://devtools/skin/images/alert-small.svg);
   fill: var(--yellow-60);
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-text-label.BEST_PRACTICES:before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit.BEST_PRACTICES::before {
   background-image: url(chrome://devtools/skin/images/info-small.svg);
 }
 

@@ -2276,7 +2276,8 @@ static bool RememberSourceURL(JSContext* cx, HandleScript script) {
   }
 
   const char* filename = script->filename();
-  if (!filename || strlen(filename) > SourceURLMaxLength) {
+  if (!filename ||
+      strnlen(filename, SourceURLMaxLength + 1) > SourceURLMaxLength) {
     return true;
   }
 

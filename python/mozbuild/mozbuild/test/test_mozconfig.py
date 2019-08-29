@@ -455,8 +455,8 @@ class TestMozconfigLoader(unittest.TestCase):
             with self.assertRaises(MozconfigLoadException) as e:
                 self.get_loader().read_mozconfig(mozconfig.name)
 
-            self.assertTrue(e.exception.message.startswith(
-                'Evaluation of your mozconfig exited with an error'))
+            self.assertIn('Evaluation of your mozconfig exited with an error',
+                          e.exception.message)
             self.assertEquals(e.exception.path,
                               mozconfig.name.replace(os.sep, '/'))
             self.assertEquals(e.exception.output, ['hello world'])

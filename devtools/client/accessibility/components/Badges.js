@@ -21,6 +21,10 @@ loader.lazyGetter(this, "ContrastBadge", () =>
   createFactory(require("./ContrastBadge"))
 );
 
+loader.lazyGetter(this, "KeyboardBadge", () =>
+  createFactory(require("./KeyboardBadge"))
+);
+
 loader.lazyGetter(this, "TextLabelBadge", () =>
   createFactory(require("./TextLabelBadge"))
 );
@@ -28,6 +32,7 @@ loader.lazyGetter(this, "TextLabelBadge", () =>
 function getComponentForAuditType(type) {
   const auditTypeToComponentMap = {
     [AUDIT_TYPE.CONTRAST]: ContrastBadge,
+    [AUDIT_TYPE.KEYBOARD]: KeyboardBadge,
     [AUDIT_TYPE.TEXT_LABEL]: TextLabelBadge,
   };
 

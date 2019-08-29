@@ -24,6 +24,12 @@ loader.lazyRequireGetter(
   "resource://gre/modules/AppConstants.jsm",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "PREFS",
+  "devtools/client/webconsole/constants",
+  true
+);
 
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
@@ -45,7 +51,6 @@ class WebConsoleUI {
     this.hud = hud;
     this.hudId = this.hud.hudId;
     this.isBrowserConsole = this.hud.isBrowserConsole;
-    this.fissionSupport = this.hud.fissionSupport;
     this.window = this.hud.iframeWindow;
 
     this._onPanelSelected = this._onPanelSelected.bind(this);
@@ -257,10 +262,20 @@ class WebConsoleUI {
    *         A promise object that is resolved/reject based on the proxies connections.
    */
   async _initConnection() {
-    this.proxy = new WebConsoleConnectionProxy(this, this.hud.currentTarget);
-
     const target = this.hud.currentTarget;
-    if (this.fissionSupport && target.chrome && !target.isAddon) {
+    const fissionSupport = Services.prefs.getBoolPref(
+      PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
+    );
+    const needContentProcessMessagesListener =
+      target.isParentProcess && !target.isAddon && !fissionSupport;
+
+    this.proxy = new WebConsoleConnectionProxy(
+      this,
+      target,
+      needContentProcessMessagesListener
+    );
+
+    if (fissionSupport && target.isParentProcess && !target.isAddon) {
       const { mainRoot } = target.client;
       const { processes } = await mainRoot.listProcesses();
 

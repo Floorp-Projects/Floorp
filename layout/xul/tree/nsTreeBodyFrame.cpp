@@ -1973,25 +1973,26 @@ nsRect nsTreeBodyFrame::GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol,
 
   const nsStylePosition* myPosition = aComputedStyle->StylePosition();
   const nsStyleList* myList = aComputedStyle->StyleList();
-
+  nsRect imageRegion = myList->GetImageRegion();
   if (useImageRegion) {
-    r.x += myList->mImageRegion.x;
-    r.y += myList->mImageRegion.y;
+    r.x += imageRegion.x;
+    r.y += imageRegion.y;
   }
 
   if (myPosition->mWidth.ConvertsToLength()) {
     int32_t val = myPosition->mWidth.ToLength();
     r.width += val;
-  } else if (useImageRegion && myList->mImageRegion.width > 0)
-    r.width += myList->mImageRegion.width;
-  else
+  } else if (useImageRegion && imageRegion.width > 0) {
+    r.width += imageRegion.width;
+  } else {
     needWidth = true;
+  }
 
   if (myPosition->mHeight.ConvertsToLength()) {
     int32_t val = myPosition->mHeight.ToLength();
     r.height += val;
-  } else if (useImageRegion && myList->mImageRegion.height > 0)
-    r.height += myList->mImageRegion.height;
+  } else if (useImageRegion && imageRegion.height > 0)
+    r.height += imageRegion.height;
   else
     needHeight = true;
 
@@ -2062,21 +2063,21 @@ nsSize nsTreeBodyFrame::GetImageDestSize(ComputedStyle* aComputedStyle,
     nsSize imageSize(0, 0);
 
     const nsStyleList* myList = aComputedStyle->StyleList();
-
-    if (useImageRegion && myList->mImageRegion.width > 0) {
+    nsRect imageRegion = myList->GetImageRegion();
+    if (useImageRegion && imageRegion.width > 0) {
       // CSS has specified an image region.
       // Use the width of the image region.
-      imageSize.width = myList->mImageRegion.width;
+      imageSize.width = imageRegion.width;
     } else if (image) {
       nscoord width;
       image->GetWidth(&width);
       imageSize.width = nsPresContext::CSSPixelsToAppUnits(width);
     }
 
-    if (useImageRegion && myList->mImageRegion.height > 0) {
+    if (useImageRegion && imageRegion.height > 0) {
       // CSS has specified an image region.
       // Use the height of the image region.
-      imageSize.height = myList->mImageRegion.height;
+      imageSize.height = imageRegion.height;
     } else if (image) {
       nscoord height;
       image->GetHeight(&height);
@@ -2119,23 +2120,25 @@ nsSize nsTreeBodyFrame::GetImageDestSize(ComputedStyle* aComputedStyle,
 nsRect nsTreeBodyFrame::GetImageSourceRect(ComputedStyle* aComputedStyle,
                                            bool useImageRegion,
                                            imgIContainer* image) {
-  nsRect r(0, 0, 0, 0);
-
   const nsStyleList* myList = aComputedStyle->StyleList();
-
-  if (useImageRegion &&
-      (myList->mImageRegion.width > 0 || myList->mImageRegion.height > 0)) {
-    // CSS has specified an image region.
-    r = myList->mImageRegion;
-  } else if (image) {
-    // Use the actual image size.
-    nscoord coord;
-    image->GetWidth(&coord);
-    r.width = nsPresContext::CSSPixelsToAppUnits(coord);
-    image->GetHeight(&coord);
-    r.height = nsPresContext::CSSPixelsToAppUnits(coord);
+  // CSS has specified an image region.
+  if (useImageRegion && myList->mImageRegion.IsRect()) {
+    return myList->GetImageRegion();
   }
 
+  if (!image) {
+    return nsRect();
+  }
+
+  nsRect r;
+  // Use the actual image size.
+  nscoord coord;
+  if (NS_SUCCEEDED(image->GetWidth(&coord))) {
+    r.width = nsPresContext::CSSPixelsToAppUnits(coord);
+  }
+  if (NS_SUCCEEDED(image->GetHeight(&coord))) {
+    r.height = nsPresContext::CSSPixelsToAppUnits(coord);
+  }
   return r;
 }
 

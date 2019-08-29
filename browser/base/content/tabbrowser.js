@@ -5266,12 +5266,6 @@
           return;
         }
 
-        if (!event.isTopFrame) {
-          let bc = BrowsingContext.get(event.browsingContextId);
-          SubframeCrashHandler.onSubframeCrash(bc);
-          return;
-        }
-
         let browser = event.originalTarget;
 
         // Preloaded browsers do not actually have any tabs. If one crashes,

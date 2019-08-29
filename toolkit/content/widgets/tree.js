@@ -599,15 +599,15 @@
               <html:slot name="treechildren"></html:slot>
             </hbox>
             <scrollbar height="0" minwidth="0" minheight="0" orient="vertical"
-                       class="hidevscroll-scrollbar"
-                       style="position:relative; z-index:2147483647;"></scrollbar>
+                       class="hidevscroll-scrollbar scrollbar-topmost"
+                       ></scrollbar>
           </hbox>
           <box class="tree-input-wrapper" left="0" top="0" hidden="true">
             <html:input class="tree-input" type="text"/>
           </box>
         </stack>
         <hbox class="hidehscroll-box">
-          <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"></scrollbar>
+          <scrollbar orient="horizontal" flex="1" increment="16" class="scrollbar-topmost" ></scrollbar>
           <scrollcorner class="hidevscroll-scrollcorner"></scrollcorner>
         </hbox>
       `);

@@ -56,7 +56,6 @@ dictionary addonInstallOptions {
 
 [HeaderFile="mozilla/AddonManagerWebAPI.h",
  Func="mozilla::AddonManagerWebAPI::IsAPIEnabled",
- NavigatorProperty="mozAddonManager",
  JSImplementation="@mozilla.org/addon-web-api/manager;1",
  WantsEventListenerHooks]
 interface AddonManager : EventTarget {

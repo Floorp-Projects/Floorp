@@ -35,5 +35,5 @@ rustc-dist-toolchain:
         toolchain-artifact: public/build/rustc-dist-toolchain.tar.xz
     fetches:
         toolchain:
-            - linux64-rust-macos-1.36
+            - linux64-rust-cross-1.37
             - linux64-sccache

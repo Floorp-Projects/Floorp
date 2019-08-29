@@ -44,6 +44,10 @@
   margin: 1px 3px;
 }
 
+.network-monitor .sidebar-toggle:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 /* Empty notices in tab panels */
 
 .network-monitor .empty-notice {
@@ -131,6 +135,11 @@
   fill: var(--theme-icon-dimmed-color);
 }
 
+/* Make the twisties rotate to the right in code-only sections on RTL. */
+.network-monitor .tab-panel.panel-with-code tr:not(.tree-section).hasChildren .theme-twisty:not(.open):dir(rtl) {
+  transform: rotate(-90deg);
+}
+
 .network-monitor .tree-container .treeTable .treeValueCell {
   /* FIXME: Make value cell can be reduced to shorter width */
   max-width: 0;
@@ -139,6 +148,11 @@
 
 .network-monitor .tree-container .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
   text-decoration: none;
+}
+
+.network-monitor .tab-panel.panel-with-code .tree-container .treeTable tr:not(.tree-section):dir(rtl) {
+  direction: ltr;
+  text-align: left;
 }
 
 /* Source editor in tab panels */
@@ -328,7 +342,7 @@
 
 .network-monitor .headers-summary .status-text {
     width: auto!important;
-    margin-left: 4px;
+    margin-inline-start: 4px;
 }
 
 /* Params and Response error messages */
@@ -431,6 +445,7 @@
      Make sure this whitespace doesn't affect the HTML rendering */
   white-space: normal;
   padding: 5px;
+  direction: ltr;
 }
 
 .network-monitor .stack-trace .frame-link-source,

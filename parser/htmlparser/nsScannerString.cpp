@@ -313,7 +313,7 @@ void nsScannerString::UngetReadable(const nsAString& aReadable,
 
   Buffer* new_buffer = AllocBufferFromString(aReadable);
   // make a new buffer with all the data to insert...
-  // BULLSHIT ALERT: we may have empty space to re-use in the split buffer,
+  // ALERT: we may have empty space to re-use in the split buffer,
   // measure the cost of this and decide if we should do the work to fill
   // it
 

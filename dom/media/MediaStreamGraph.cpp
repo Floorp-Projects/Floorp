@@ -3529,9 +3529,20 @@ AudioCaptureStream* MediaStreamGraph::CreateAudioCaptureStream(
 }
 
 void MediaStreamGraph::AddStream(MediaStream* aStream) {
-  MOZ_DIAGNOSTIC_ASSERT(!Destroyed(), "Can't add stream to destroyed graph");
-  NS_ADDREF(aStream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (graph->mRealtime) {
+    bool found = false;
+    for (auto iter = gGraphs.ConstIter(); !iter.Done(); iter.Next()) {
+      if (iter.UserData() == graph) {
+        found = true;
+        break;
+      }
+    }
+    MOZ_DIAGNOSTIC_ASSERT(found, "Graph must not be shutting down");
+  }
+#endif
+  NS_ADDREF(aStream);
   aStream->SetGraphImpl(graph);
   graph->AppendMessage(MakeUnique<CreateMessage>(aStream));
 }

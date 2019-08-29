@@ -88,14 +88,10 @@ impl SectionOrderState {
 #[derive(Copy, Clone)]
 pub struct ValidatingParserConfig {
     pub operator_config: OperatorValidatorConfig,
-
-    pub mutable_global_imports: bool,
 }
 
 const DEFAULT_VALIDATING_PARSER_CONFIG: ValidatingParserConfig = ValidatingParserConfig {
     operator_config: DEFAULT_OPERATOR_VALIDATOR_CONFIG,
-
-    mutable_global_imports: false,
 };
 
 struct ValidatingParserResources {
@@ -199,7 +195,13 @@ impl<'a> ValidatingParser<'a> {
 
     fn check_value_type(&self, ty: Type) -> ValidatorResult<'a, ()> {
         match ty {
-            Type::I32 | Type::I64 | Type::F32 | Type::F64 | Type::V128 => Ok(()),
+            Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
+            Type::V128 => {
+                if !self.config.operator_config.enable_simd {
+                    return self.create_error("SIMD support is not enabled");
+                }
+                Ok(())
+            }
             _ => self.create_error("invalid value type"),
         }
     }
@@ -284,9 +286,6 @@ impl<'a> ValidatingParser<'a> {
                 if self.resources.globals.len() >= MAX_WASM_GLOBALS {
                     return self.create_error("functions count out of bounds");
                 }
-                if global_type.mutable && !self.config.mutable_global_imports {
-                    return self.create_error("global imports are required to be immutable");
-                }
                 self.check_global_type(global_type)
             }
         }
@@ -302,6 +301,12 @@ impl<'a> ValidatingParser<'a> {
             Operator::I64Const { .. } => Type::I64,
             Operator::F32Const { .. } => Type::F32,
             Operator::F64Const { .. } => Type::F64,
+            Operator::V128Const { .. } => {
+                if !self.config.operator_config.enable_simd {
+                    return self.create_error("SIMD support is not enabled");
+                }
+                Type::V128
+            }
             Operator::GetGlobal { global_index } => {
                 if global_index as usize >= state.global_count {
                     return self.create_error("init_expr global index out of bounds");
@@ -344,10 +349,6 @@ impl<'a> ValidatingParser<'a> {
             ExternalKind::Global => {
                 if index as usize >= self.resources.globals.len() {
                     return self.create_error("exported global index out of bounds");
-                }
-                let global = &self.resources.globals[index as usize];
-                if global.mutable && !self.config.mutable_global_imports {
-                    return self.create_error("exported global must be const");
                 }
             }
         };

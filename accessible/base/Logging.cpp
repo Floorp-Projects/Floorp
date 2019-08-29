@@ -358,7 +358,7 @@ static void DescribeNode(nsINode* aNode, nsAString& aOutDescription) {
     return;
   }
 
-  aOutDescription.AppendPrintf("%p, ", (void*)aNode);
+  aOutDescription.AppendPrintf("0x%p, ", (void*)aNode);
   aOutDescription.Append(aNode->NodeInfo()->QualifiedName());
 
   if (!aNode->IsElement()) {

@@ -257,7 +257,9 @@ class SourceTreeItem extends Component<Props, State> {
     }
 
     if (source) {
-      return <SourceIcon source={source} />;
+      return (
+        <SourceIcon source={source} shouldHide={icon => icon === "extension"} />
+      );
     }
 
     return null;

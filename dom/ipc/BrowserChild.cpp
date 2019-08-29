@@ -528,23 +528,20 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
-  const uint32_t notifyMask =
-      nsIWebProgress::NOTIFY_STATE_ALL | nsIWebProgress::NOTIFY_PROGRESS |
-      nsIWebProgress::NOTIFY_STATUS | nsIWebProgress::NOTIFY_LOCATION |
-      nsIWebProgress::NOTIFY_REFRESH | nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
-
   mStatusFilter = new nsBrowserStatusFilter();
 
   RefPtr<nsIEventTarget> eventTarget =
       TabGroup()->EventTargetFor(TaskCategory::Network);
 
   mStatusFilter->SetTarget(eventTarget);
-  nsresult rv = mStatusFilter->AddProgressListener(this, notifyMask);
+  nsresult rv =
+      mStatusFilter->AddProgressListener(this, nsIWebProgress::NOTIFY_ALL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
     nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
-    rv = webProgress->AddProgressListener(mStatusFilter, notifyMask);
+    rv = webProgress->AddProgressListener(mStatusFilter,
+                                          nsIWebProgress::NOTIFY_ALL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -674,6 +671,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserChild)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener2)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserChild)
 NS_INTERFACE_MAP_END
 
@@ -3611,31 +3609,12 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
     locationChangeData->charsetAutodetected() =
         docShell->GetCharsetAutodetected();
 
-    MOZ_TRY(PrincipalToPrincipalInfo(
-        document->EffectiveStoragePrincipal(),
-        &locationChangeData->contentStoragePrincipal(), false));
-
-    MOZ_TRY(PrincipalToPrincipalInfo(document->NodePrincipal(),
-                                     &locationChangeData->contentPrincipal(),
-                                     false));
-
-    nsIPrincipal* contentBlockingAllowListPrincipal =
-
+    locationChangeData->contentPrincipal() = document->NodePrincipal();
+    locationChangeData->contentStoragePrincipal() =
+        document->EffectiveStoragePrincipal();
+    locationChangeData->csp() = document->GetCsp();
+    locationChangeData->contentBlockingAllowListPrincipal() =
         document->GetContentBlockingAllowListPrincipal();
-    if (contentBlockingAllowListPrincipal) {
-      PrincipalInfo principalInfo;
-      MOZ_TRY(PrincipalToPrincipalInfo(contentBlockingAllowListPrincipal,
-                                       &principalInfo, false));
-      locationChangeData->contentBlockingAllowListPrincipal() = principalInfo;
-    } else {
-      locationChangeData->contentBlockingAllowListPrincipal() = void_t();
-    }
-
-    if (const nsCOMPtr<nsIContentSecurityPolicy> csp = document->GetCsp()) {
-      locationChangeData->csp().emplace();
-      MOZ_TRY(CSPToCSPInfo(csp, &locationChangeData->csp().ref()));
-    }
-
     locationChangeData->referrerInfo() = document->ReferrerInfo();
     locationChangeData->isSyntheticDocument() = document->IsSyntheticDocument();
 
@@ -3697,8 +3676,59 @@ NS_IMETHODIMP BrowserChild::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP BrowserChild::OnSecurityChange(nsIWebProgress* aWebProgress,
                                              nsIRequest* aRequest,
                                              uint32_t aState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IPCOpen() || !mShouldSendWebProgressEventsToParent) {
+    return NS_OK;
+  }
+
+  Maybe<WebProgressData> webProgressData;
+  RequestData requestData;
+
+  MOZ_TRY(PrepareProgressListenerData(aWebProgress, aRequest, webProgressData,
+                                      requestData));
+
+  Maybe<WebProgressSecurityChangeData> securityChangeData;
+
+  if (aWebProgress && webProgressData->isTopLevel()) {
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+    if (!docShell) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+    {
+      nsCOMPtr<nsISecureBrowserUI> securityUI;
+      MOZ_TRY(docShell->GetSecurityUI(getter_AddRefs(securityUI)));
+
+      if (securityUI) {
+        MOZ_TRY(securityUI->GetSecInfo(getter_AddRefs(securityInfo)));
+      }
+    }
+
+    bool isSecureContext = false;
+    {
+      nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_GetInterface(docShell);
+      if (!outerWindow) {
+        return NS_OK;
+      }
+
+      if (nsPIDOMWindowInner* window = outerWindow->GetCurrentInnerWindow()) {
+        isSecureContext = window->IsSecureContext();
+      } else {
+        return NS_OK;
+      }
+    }
+
+    securityChangeData.emplace();
+    securityChangeData->securityInfo() = securityInfo.forget();
+    securityChangeData->isSecureContext() = isSecureContext;
+  }
+
+  Unused << SendOnSecurityChange(webProgressData, requestData, aState,
+                                 securityChangeData);
+
+  return NS_OK;
 }
+
 NS_IMETHODIMP BrowserChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
                                                    nsIRequest* aRequest,
                                                    uint32_t aEvent) {

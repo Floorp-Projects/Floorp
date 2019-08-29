@@ -1528,47 +1528,44 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
         for (local_position, local_child_node) in local_parent_node.children().enumerate() {
             self.signal.err_if_aborted()?;
             if local_child_node.is_built_in_root() {
-                continue;
-            }
-            if let Some(local_child_content) = local_child_node.content() {
-                if let Some(remote_child_node) =
-                    self.remote_tree.node_for_guid(&local_child_node.guid)
-                {
-                    trace!(
-                        self.driver,
-                        "Not deduping local child {}; already exists remotely as {}",
-                        local_child_node,
-                        remote_child_node
-                    );
-                    continue;
-                }
-                if self.remote_tree.is_deleted(&local_child_node.guid) {
-                    trace!(
-                        self.driver,
-                        "Not deduping local child {}; deleted remotely",
-                        local_child_node
-                    );
-                    continue;
-                }
-                // Store matching local children in an array, in case multiple children
-                // have the same dupe key (for example, a toolbar containing multiple
-                // empty folders, as in bug 1213369).
-                let dupe_key = match local_child_content {
-                    Content::Bookmark { .. } | Content::Folder { .. } => {
-                        DupeKey::WithoutPosition(local_child_content)
-                    }
-                    Content::Separator => {
-                        DupeKey::WithPosition(local_child_content, local_position)
-                    }
-                };
-                let local_nodes_for_key = dupe_key_to_local_nodes.entry(dupe_key).or_default();
-                local_nodes_for_key.push_back(local_child_node);
-            } else {
                 trace!(
                     self.driver,
-                    "Not deduping local child {}; already uploaded",
+                    "Not deduping local built-in root {}",
                     local_child_node
                 );
+                continue;
+            }
+            if self.remote_tree.mentions(&local_child_node.guid) {
+                trace!(
+                    self.driver,
+                    "Not deduping local child {}; already deleted or exists remotely",
+                    local_child_node
+                );
+                continue;
+            }
+            match local_child_node.content() {
+                Some(local_child_content) => {
+                    // Store matching local children in an array, in case multiple children
+                    // have the same dupe key (for example, a toolbar containing multiple
+                    // empty folders, as in bug 1213369).
+                    let dupe_key = match local_child_content {
+                        Content::Bookmark { .. } | Content::Folder { .. } => {
+                            DupeKey::WithoutPosition(local_child_content)
+                        }
+                        Content::Separator => {
+                            DupeKey::WithPosition(local_child_content, local_position)
+                        }
+                    };
+                    let local_nodes_for_key = dupe_key_to_local_nodes.entry(dupe_key).or_default();
+                    local_nodes_for_key.push_back(local_child_node);
+                }
+                None => {
+                    trace!(
+                        self.driver,
+                        "Not deduping local child {} without content info",
+                        local_child_node
+                    );
+                }
             }
         }
 
@@ -1577,6 +1574,22 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
 
         for (remote_position, remote_child_node) in remote_parent_node.children().enumerate() {
             self.signal.err_if_aborted()?;
+            if remote_child_node.is_built_in_root() {
+                trace!(
+                    self.driver,
+                    "Not deduping remote built-in root {}",
+                    remote_child_node
+                );
+                continue;
+            }
+            if self.local_tree.mentions(&remote_child_node.guid) {
+                trace!(
+                    self.driver,
+                    "Not deduping remote child {}; already deleted or exists locally",
+                    remote_child_node
+                );
+                continue;
+            }
             if remote_to_local.contains_key(&remote_child_node.guid) {
                 trace!(
                     self.driver,
@@ -1588,47 +1601,52 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
             // Note that we don't need to check if the remote node is deleted
             // locally, because it wouldn't have local content entries if it
             // were.
-            if let Some(remote_child_content) = remote_child_node.content() {
-                let dupe_key = match remote_child_content {
-                    Content::Bookmark { .. } | Content::Folder { .. } => {
-                        DupeKey::WithoutPosition(remote_child_content)
-                    }
-                    Content::Separator => {
-                        DupeKey::WithPosition(remote_child_content, remote_position)
-                    }
-                };
-                if let Some(local_nodes_for_key) = dupe_key_to_local_nodes.get_mut(&dupe_key) {
-                    if let Some(local_child_node) = local_nodes_for_key.pop_front() {
-                        trace!(
-                            self.driver,
-                            "Deduping local child {} to remote child {}",
-                            local_child_node,
-                            remote_child_node
-                        );
-                        local_to_remote.insert(local_child_node.guid.clone(), remote_child_node);
-                        remote_to_local.insert(remote_child_node.guid.clone(), local_child_node);
+            match remote_child_node.content() {
+                Some(remote_child_content) => {
+                    let dupe_key = match remote_child_content {
+                        Content::Bookmark { .. } | Content::Folder { .. } => {
+                            DupeKey::WithoutPosition(remote_child_content)
+                        }
+                        Content::Separator => {
+                            DupeKey::WithPosition(remote_child_content, remote_position)
+                        }
+                    };
+                    if let Some(local_nodes_for_key) = dupe_key_to_local_nodes.get_mut(&dupe_key) {
+                        if let Some(local_child_node) = local_nodes_for_key.pop_front() {
+                            trace!(
+                                self.driver,
+                                "Deduping local child {} to remote child {}",
+                                local_child_node,
+                                remote_child_node
+                            );
+                            local_to_remote
+                                .insert(local_child_node.guid.clone(), remote_child_node);
+                            remote_to_local
+                                .insert(remote_child_node.guid.clone(), local_child_node);
+                        } else {
+                            trace!(
+                                self.driver,
+                                "Not deduping remote child {}; no remaining local content matches",
+                                remote_child_node
+                            );
+                            continue;
+                        }
                     } else {
                         trace!(
                             self.driver,
-                            "Not deduping remote child {}; no remaining local content matches",
+                            "Not deduping remote child {}; no local content matches",
                             remote_child_node
                         );
                         continue;
                     }
-                } else {
+                }
+                None => {
                     trace!(
                         self.driver,
-                        "Not deduping remote child {}; no local content matches",
+                        "Not deduping remote child {} without content info",
                         remote_child_node
                     );
-                    continue;
                 }
-            } else {
-                trace!(
-                    self.driver,
-                    "Not deduping remote child {}; already merged",
-                    remote_child_node
-                );
             }
         }
 

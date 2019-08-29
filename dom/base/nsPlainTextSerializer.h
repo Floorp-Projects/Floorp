@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -44,36 +45,38 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // nsIContentSerializer
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const mozilla::Encoding* aEncoding, bool aIsCopying,
-                  bool aIsWholeDocument,
-                  bool* aNeedsPreformatScanning) override;
+                  bool aIsWholeDocument, bool* aNeedsPreformatScanning,
+                  nsAString& aOutput) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) override;
+                        int32_t aEndOffset) override;
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection, int32_t aStartOffset,
-                                int32_t aEndOffset, nsAString& aStr) override;
+                                int32_t aEndOffset) override;
   NS_IMETHOD AppendProcessingInstruction(
       mozilla::dom::ProcessingInstruction* aPI, int32_t aStartOffset,
-      int32_t aEndOffset, nsAString& aStr) override {
+      int32_t aEndOffset) override {
     return NS_OK;
   }
   NS_IMETHOD AppendComment(mozilla::dom::Comment* aComment,
-                           int32_t aStartOffset, int32_t aEndOffset,
-                           nsAString& aStr) override {
+                           int32_t aStartOffset, int32_t aEndOffset) override {
     return NS_OK;
   }
-  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype,
-                           nsAString& aStr) override {
+  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype) override {
     return NS_OK;
   }
-  NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
-                                mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) override;
+  NS_IMETHOD AppendElementStart(
+      mozilla::dom::Element* aElement,
+      mozilla::dom::Element* aOriginalElement) override;
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr) override;
-  NS_IMETHOD Flush(nsAString& aStr) override;
+                              mozilla::dom::Element* aOriginalElement) override;
 
-  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
-                                 nsAString& aStr) override;
+  NS_IMETHOD FlushAndFinish() override;
+
+  NS_IMETHOD Finish() override;
+
+  NS_IMETHOD GetOutputLength(uint32_t& aLength) const override;
+
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) override;
 
   NS_IMETHOD ScanElementForPreformat(mozilla::dom::Element* aElement) override;
   NS_IMETHOD ForgetElementForPreformat(
@@ -116,16 +119,16 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // Inlined functions
   inline bool MayWrap() const {
     return mWrapColumn &&
-           ((mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) ||
-            (mSettings.mFlags & nsIDocumentEncoder::OutputWrap));
+           mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted |
+                             nsIDocumentEncoder::OutputWrap);
   }
   inline bool MayBreakLines() const {
-    return !(mSettings.mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
+    return !mSettings.HasFlag(nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
 
-  inline bool IsQuotedLine(const nsAString& aLine) {
+  static inline bool IsQuotedLine(const nsAString& aLine) {
     return !aLine.IsEmpty() && aLine.First() == char16_t('>');
   }
 
@@ -135,7 +138,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool IsIgnorableRubyAnnotation(nsAtom* aTag);
+  bool IsIgnorableRubyAnnotation(nsAtom* aTag) const;
 
   // @return true, iff the elements' whitespace and newline characters have to
   //         be preserved according to its style or because it's a `<pre>`
@@ -149,7 +152,30 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   uint32_t mHeadLevel;
   bool mAtFirstColumn;
 
-  struct Settings {
+  class Settings {
+   public:
+    // May adapt the flags.
+    //
+    // @param aFlags As defined in nsIDocumentEncoder.idl.
+    void Init(int32_t aFlags);
+
+    // Pref: converter.html2txt.structs.
+    bool GetStructs() const { return mStructs; }
+
+    // Pref: converter.html2txt.header_strategy.
+    int32_t GetHeaderStrategy() const { return mHeaderStrategy; }
+
+    // @return As defined in nsIDocumentEncoder.idl.
+    int32_t GetFlags() const { return mFlags; }
+
+    // @param aFlag As defined in nsIDocumentEncoder.idl. May consist of
+    // multiple bitwise or'd flags.
+    bool HasFlag(int32_t aFlag) const { return mFlags & aFlag; }
+
+    // Whether the output should include ruby annotations.
+    bool GetWithRubyAnnotation() const { return mWithRubyAnnotation; }
+
+   private:
     // Pref: converter.html2txt.structs.
     bool mStructs = true;
 
@@ -245,8 +271,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
   AutoTArray<bool, 8> mIsInCiteBlockquote;
 
-  // The output data
-  nsAString* mOutputString;
+  // Non-owning.
+  nsAString* mOutput;
 
   // The tag stack: the stack of tags we're operating on, so we can nest.
   // The stack only ever points to static atoms, so they don't need to be

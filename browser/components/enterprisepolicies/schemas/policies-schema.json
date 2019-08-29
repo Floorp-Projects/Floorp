@@ -497,6 +497,10 @@
       "type": "boolean"
     },
 
+    "OfferToSaveLoginsDefault": {
+      "type": "boolean"
+    },
+
     "OverrideFirstRunPage": {
       "type": "URLorEmpty"
     },

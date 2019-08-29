@@ -183,6 +183,18 @@
       ] });
     }
 
+    // Bug 1572829
+    async function removeShadowRootHost() {
+      info("removeShadowRootHost");
+      document.body.offsetTop; // Flush layout.
+
+      let event = waitForEvent(EVENT_REORDER, "c9", "removeShadowRootHost");
+      getNode("c9").firstElementChild.attachShadow({mode: "open"});
+      getNode("c9").firstElementChild.replaceWith("");
+
+      await event;
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -199,6 +211,8 @@
       await intermediateNonAccessibleContainerBecomesAccessible();
 
       await removeRelocatedWhenDomAncestorHidden();
+
+      await removeShadowRootHost();
 
       SimpleTest.finish();
     }
@@ -247,6 +261,10 @@
     <div id="c8_owned_container">
       <div id="c8_owned" role="listbox"></div>
     </div>
+  </div>
+
+  <div id="c9">
+    <div><dir>a</dir></div>
   </div>
 
   <div id="eventdump"></div>

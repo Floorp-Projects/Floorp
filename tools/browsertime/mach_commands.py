@@ -102,7 +102,7 @@ host_fetches = {
     'darwin': {
         'ffmpeg': {
             'type': 'static-url',
-            'url': 'https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip',  # noqa
+            'url': 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip',  # noqa
             # An extension to `fetch` syntax.
             'path': 'ffmpeg-4.1.1-macos64-static',
         },
@@ -119,9 +119,9 @@ host_fetches = {
     'linux64': {
         'ffmpeg': {
             'type': 'static-url',
-            'url': 'https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-4.0.3-64bit-static.tar.xz',  # noqa
+            'url': 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz',  # noqa
             # An extension to `fetch` syntax.
-            'path': 'ffmpeg-4.0.3-64bit-static',
+            'path': 'ffmpeg-4.1.4-i686-static',
         },
         # TODO: install a static ImageMagick.  All easily available binaries are
         # not statically linked, so they will (mostly) fail at runtime due to
@@ -131,7 +131,7 @@ host_fetches = {
     'win64': {
         'ffmpeg': {
             'type': 'static-url',
-            'url': 'https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.1.1-win64-static.zip',  # noqa
+            'url': 'https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip',  # noqa
             # An extension to `fetch` syntax.
             'path': 'ffmpeg-4.1.1-win64-static',
         },
@@ -163,6 +163,8 @@ class MachBrowsertime(MachCommandBase):
 
     def setup(self, should_clobber=False):
         r'''Install browsertime and visualmetrics.py requirements.'''
+
+        automation = bool(os.environ.get('MOZ_AUTOMATION'))
 
         from mozbuild.action.tooltool import unpack_file
         from mozbuild.artifact_cache import ArtifactCache
@@ -229,10 +231,13 @@ class MachBrowsertime(MachCommandBase):
             BROWSERTIME_ROOT,
             'browsertime',
             should_clobber=should_clobber,
-            no_optional=bool(os.environ.get('MOZ_AUTOMATION')))
+            no_optional=automation)
 
         if status:
             return status
+
+        if automation:
+            return 0
 
         return self.check()
 

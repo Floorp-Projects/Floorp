@@ -111,7 +111,6 @@ class Accessible extends Component {
       relations: PropTypes.object,
       supports: PropTypes.object,
       accessibilityWalker: PropTypes.object.isRequired,
-      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -171,11 +170,13 @@ class Accessible extends Component {
   }
 
   async update() {
-    const { dispatch, accessible, supports, getDOMWalker } = this.props;
-    const domWalker = await getDOMWalker();
-    if (!domWalker || !accessible.actorID) {
+    const { dispatch, accessible, supports } = this.props;
+    if (!accessible.actorID) {
       return;
     }
+
+    const domWalker = (await accessible.targetFront.getFront("inspector"))
+      .walker;
 
     dispatch(updateDetails(domWalker, accessible, supports));
   }
@@ -192,20 +193,22 @@ class Accessible extends Component {
     this.setState({ expanded });
   }
 
-  showHighlighter(nodeFront) {
+  async showHighlighter(nodeFront) {
     if (!gToolbox) {
       return;
     }
 
-    gToolbox.highlighter.highlight(nodeFront);
+    const { highlighterFront } = nodeFront;
+    await highlighterFront.highlight(nodeFront);
   }
 
-  hideHighlighter() {
+  async hideHighlighter(nodeFront) {
     if (!gToolbox) {
       return;
     }
 
-    gToolbox.highlighter.unhighlight();
+    const { highlighterFront } = nodeFront;
+    await highlighterFront.unhighlight();
   }
 
   showAccessibleHighlighter(accessible) {
@@ -288,7 +291,8 @@ class Accessible extends Component {
 
     if (isNode(object)) {
       valueProps.defaultRep = ElementNode;
-      valueProps.onDOMNodeMouseOut = () => this.hideHighlighter();
+      valueProps.onDOMNodeMouseOut = () =>
+        this.hideHighlighter(this.props.DOMNode);
       valueProps.onDOMNodeMouseOver = () =>
         this.showHighlighter(this.props.DOMNode);
       valueProps.onInspectIconClick = () => this.selectNode(this.props.DOMNode);

@@ -25,6 +25,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/targets/parent-process",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "connectToContentProcess",
+  "devtools/server/connectors/content-process-connector",
+  true
+);
 
 const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
   initialize(connection, options = {}) {
@@ -74,7 +80,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
         message: "There is no process with id '" + id + "'.",
       };
     }
-    const childTargetForm = await DebuggerServer.connectToContentProcess(
+    const childTargetForm = await connectToContentProcess(
       this.conn,
       mm,
       this.destroy

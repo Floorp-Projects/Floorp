@@ -178,6 +178,19 @@
   value: false
   mirror: always
 
+#ifdef ANDROID
+  #---------------------------------------------------------------------------
+  # Prefs starting with "android."
+  #---------------------------------------------------------------------------
+
+  # On Android, we want an opaque background to be visible under the page,
+  # so layout should not force a default background.
+-   name: android.widget_paints_background
+    type: bool
+    value: true
+    mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "apz."
 # The apz prefs are explained in AsyncPanZoomController.cpp
@@ -866,6 +879,11 @@
   value: 2048
   mirror: always
 
+- name: browser.tabs.remote.desktopbehavior
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.tabs.remote.force-paint
   type: bool
   value: true
@@ -1150,6 +1168,11 @@
   value: false
   mirror: always
 
+- name: devtools.toolbox.force-chrome-prefs
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
@@ -1380,6 +1403,12 @@
   value: false
   mirror: always
 
+# User interaction timer interval, in ms
+- name: dom.events.user_interaction_interval
+  type: uint32_t
+  value: 5000
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
@@ -1599,6 +1628,21 @@
 #else
   value: true
 #endif
+  mirror: always
+
+# If this is true, TextEventDispatcher dispatches keydown and keyup events
+# even during composition (keypress events are never fired during composition
+# even if this is true).
+- name: dom.keyboardevent.dispatch_during_composition
+  type: bool
+  value: true
+  mirror: always
+
+# If this is true, keypress events for non-printable keys are dispatched only
+# for event listeners of the system event group in web content.
+- name: dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content
+  type: bool
+  value: true
   mirror: always
 
 # If this is true, "keypress" event's keyCode value and charCode value always
@@ -2366,6 +2410,15 @@
 #endif
   mirror: always
 
+#ifdef XP_WIN
+  # Control firing WidgetMouseEvent by handling Windows pointer messages or
+  # mouse messages.
+-   name: dom.w3c_pointer_events.dispatch_by_pointer_messages
+    type: bool
+    value: false
+    mirror: always
+#endif
+
 # If the value is >= 0, it will be used for max touch points in child processes.
 - name: dom.maxtouchpoints.testing.value
   type: int32_t
@@ -2601,6 +2654,15 @@
 # This pref governs whether we run webextensions in a separate process (true)
 # or the parent/main process (false)
 - name: extensions.webextensions.remote
+  type: bool
+  value: false
+  mirror: always
+
+#---------------------------------------------------------------------------
+# Prefs starting with "findbar."
+#---------------------------------------------------------------------------
+
+- name: findbar.modalHighlight
   type: bool
   value: false
   mirror: always
@@ -3607,6 +3669,17 @@
   value: true
   mirror: always
 
+# If true, dispatch the keydown and keyup events on any web apps even during
+# composition.
+- name: intl.ime.hack.on_any_apps.fire_key_events_for_composition
+  type: bool
+#ifdef MOZ_WIDGET_ANDROID
+  value: @IS_EARLY_BETA_OR_EARLIER@
+#else
+  value: false
+#endif
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
@@ -3635,6 +3708,30 @@
 - name: javascript.options.experimental.await_fix
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
+- name: javascript.options.gc_delay
+  type: uint32_t
+  value: 4000
+  mirror: always
+
+# The amount of time we wait from the first request to GC to actually doing the first GC, in ms.
+- name: javascript.options.gc_delay.first
+  type: uint32_t
+  value: 10000
+  mirror: always
+
+# Duration of the dom events full gc delay, in ms.
+- name: javascript.options.gc_delay.full
+  type: uint32_t
+  value: 60000
+  mirror: always
+
+# Maximum amount of time that should elapse between incremental GC slices, in ms.
+- name: javascript.options.gc_delay.interslice
+  type: uint32_t
+  value: 100
   mirror: always
 
 # nsJSEnvironmentObserver observes the memory-pressure notifications and
@@ -4309,6 +4406,15 @@
   mirror: always
   rust: true
 
+# Set the number of device pixels per CSS pixel. A value <= 0 means choose
+# automatically based on user settings for the platform (e.g., "UI scale factor"
+# on Mac). A positive value is used as-is. This effectively controls the size
+# of a CSS "px". This is only used for windows on the screen, not for printing.
+- name: layout.css.devPixelsPerPx
+  type: AtomicFloat
+  value: -1.0f
+  mirror: always
+
 # text underline offset
 - name: layout.css.text-underline-offset.enabled
   type: bool
@@ -4863,7 +4969,7 @@
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 - name: layout.css.shadow-parts.enabled
@@ -4930,6 +5036,13 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
+
+# Whether to disable deprecated style attributes background, color, fontfamily,
+# fontsize, fontstyle and fontweight.
+- name: mathml.deprecated_style_attributes.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
 
 # Whether to disable legacy MathML number values that are not valid CSS numbers
 # (e.g. "1234.")
@@ -6064,6 +6177,49 @@
   value: true
   mirror: always
 
+# Single TRR request timeout, in milliseconds
+- name: network.trr.request_timeout_ms
+  type: uint32_t
+  value: 1500
+  mirror: always
+
+# Single TRR request timeout, in milliseconds for mode 3
+- name: network.trr.request_timeout_mode_trronly_ms
+  type: uint32_t
+  value: 30000
+  mirror: always
+
+# Allow the network changed event to get sent when a network topology or setup
+# change is noticed while running.
+- name: network.notify.changed
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Allow network detection of IPv6 related changes (bug 1245059)
+- name: network.notify.IPv6
+  type: RelaxedAtomicBool
+# ifdef XP_WIN
+  value: false
+# else
+  value: true
+# endif
+  mirror: always
+
+# IP addresses that are used by netlink service to check whether default route
+# is used for outgoing traffic. They are used just to check routing rules,
+# no packets are sent to those hosts. Initially, addresses of host
+# detectportal.firefox.com were used but they don't necessarily need to be
+# updated when addresses of this host change.
+- name: network.netlink.route.check.IPv4
+  type: String
+  value: "23.219.91.27"
+  mirror: never
+- name: network.netlink.route.check.IPv6
+  type: String
+  value: "2a02:26f0:40::17db:5b1b"
+  mirror: never
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
@@ -6335,6 +6491,12 @@
   value: 2592000   # 30 days (in seconds)
   mirror: always
 
+# Report Anti-tracking warnings to console lazily
+- name: privacy.restrict3rdpartystorage.console.lazy
+  type: bool
+  value: true
+  mirror: always
+
 # Anti-tracking user-interaction expiration.
 - name: privacy.userInteraction.expiration
   type: uint32_t
@@ -6600,7 +6762,7 @@
   mirror: always
 
 - name: toolkit.telemetry.geckoview.batchDurationMS
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 5000
   mirror: always
 
@@ -6612,6 +6774,44 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------
+
+- name: ui.key.generalAccessKey
+  type: int32_t
+  value: -1
+  mirror: always
+
+# Only used if generalAccessKey is -1.
+- name: ui.key.chromeAccess
+  type: int32_t
+#ifdef XP_MACOSX
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 =  ctrl+shift, 8 = Meta
+  value: 2
+#else
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
+  # 8 = Meta, 16 = Win
+  value: 4
+#endif
+  mirror: always
+
+# Only used if generalAccessKey is -1.
+- name: ui.key.contentAccess
+  type: int32_t
+#ifdef XP_MACOSX
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 3 = ctrl+shift, 8 = Meta
+  value: 6
+#else
+  # 0 = disabled, 1 = Shift, 2 = Ctrl, 4 = Alt, 5 =  Alt+Shift,
+  # 8 = Meta, 16 = Win
+  value: 5
+#endif
+  mirror: always
+
+# Negate scroll, true will make the mouse scroll wheel move the screen the
+# same direction as with most desktops or laptops.
+- name: ui.scrolling.negate_wheel_scroll
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
 
 # If the user puts a finger down on an element and we think the user might be
 # executing a pan gesture, how long do we wait before tentatively deciding the
@@ -6629,6 +6829,11 @@
   value: 10
   mirror: always
 
+- name: ui.use_native_colors
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Prevent system colors from being exposed to CSS or canvas.
 - name: ui.use_standins_for_native_colors
   type: RelaxedAtomicBool
@@ -6637,6 +6842,14 @@
 
 # Disable page loading activity cursor by default.
 - name: ui.use_activity_cursor
+  type: bool
+  value: false
+  mirror: always
+
+# Whether context menus should only appear on mouseup instead of mousedown,
+# on OSes where they normally appear on mousedown (macOS, *nix).
+# Note: ignored on Windows (context menus always use mouseup).
+- name: ui.context_menus.after_mouseup
   type: bool
   value: false
   mirror: always
