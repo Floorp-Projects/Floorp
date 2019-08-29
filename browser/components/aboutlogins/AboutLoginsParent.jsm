@@ -9,37 +9,16 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "MigrationUtils",
-  "resource:///modules/MigrationUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "UIState",
-  "resource://services-sync/UIState.jsm"
-);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  LoginBreaches: "resource:///modules/LoginBreaches.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("AboutLoginsParent");
@@ -48,6 +27,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "BREACH_ALERTS_ENABLED",
   "signon.management.page.breach-alerts.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "FXA_ENABLED",
+  "identity.fxaccounts.enabled",
   false
 );
 
@@ -85,12 +70,17 @@ var AboutLoginsParent = {
 
   // Listeners are added in BrowserGlue.jsm
   async receiveMessage(message) {
-    // Only respond to messages sent from about:logins.
-    if (
-      message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
-      message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN
-    ) {
-      return;
+    // Only respond to messages sent from a privlegedabout process. Ideally
+    // we would also check the contentPrincipal.originNoSuffix but this
+    // check has been removed due to bug 1576722.
+    if (message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE) {
+      throw new Error(
+        `AboutLoginsParent: Received ${
+          message.name
+        } message the remote type didn't match expectations: ${
+          message.target.remoteType
+        } == ${EXPECTED_ABOUTLOGINS_REMOTE_TYPE}`
+      );
     }
 
     switch (message.name) {
@@ -121,9 +111,9 @@ var AboutLoginsParent = {
       case "AboutLogins:DismissBreachAlert": {
         const login = message.data.login;
 
-        await LoginHelper.recordBreachAlertDismissal(login.guid);
+        await LoginBreaches.recordDismissal(login.guid);
         const logins = await this.getAllLogins();
-        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+        const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
           logins
         );
         const messageManager = message.target.messageManager;
@@ -157,20 +147,11 @@ var AboutLoginsParent = {
         }
         break;
       }
-      case "AboutLogins:OpenFeedback": {
-        const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
-        const FEEDBACK_URL = Services.urlFormatter.formatURLPref(
-          FEEDBACK_URL_PREF
-        );
-        message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {
-          relatedToCurrent: true,
-        });
-        break;
-      }
-      case "AboutLogins:OpenFAQ": {
-        const FAQ_URL_PREF = "signon.management.page.faqURL";
-        const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
-        message.target.ownerGlobal.openWebLinkIn(FAQ_URL, "tab", {
+      case "AboutLogins:GetHelp": {
+        const SUPPORT_URL =
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "firefox-lockwise";
+        message.target.ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
           relatedToCurrent: true,
         });
         break;
@@ -282,9 +263,11 @@ var AboutLoginsParent = {
         try {
           messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
 
-          let syncState = this.getSyncState();
-          messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
-          this.updatePasswordSyncNotificationState();
+          if (FXA_ENABLED) {
+            let syncState = this.getSyncState();
+            messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
+            this.updatePasswordSyncNotificationState();
+          }
 
           // App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
           // This array mirrors the file names from the App store directory (./content/third-party/app-store)
@@ -428,7 +411,7 @@ var AboutLoginsParent = {
           );
 
           if (BREACH_ALERTS_ENABLED) {
-            const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+            const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
               logins
             );
             messageManager.sendAsyncMessage(
@@ -546,7 +529,7 @@ var AboutLoginsParent = {
 
   async getFavicon(login) {
     try {
-      const faviconData = await PlacesUtils.promiseFaviconData(login.hostname);
+      const faviconData = await PlacesUtils.promiseFaviconData(login.origin);
       return {
         faviconData,
         guid: login.guid,

@@ -19,7 +19,7 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-async protocol PHttpBackgroundChannel
+async refcounted protocol PHttpBackgroundChannel
 {
   manager PBackground;
 

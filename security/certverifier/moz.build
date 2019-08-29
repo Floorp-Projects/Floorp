@@ -55,6 +55,8 @@ CXXFLAGS += [
     '-Wno-unused-parameter',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] == 'clang-cl':

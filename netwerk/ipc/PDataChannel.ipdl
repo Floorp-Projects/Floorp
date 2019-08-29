@@ -11,7 +11,7 @@ include URIParams;
 namespace mozilla {
 namespace net {
 
-async protocol PDataChannel
+async refcounted protocol PDataChannel
 {
   manager PNecko;
 

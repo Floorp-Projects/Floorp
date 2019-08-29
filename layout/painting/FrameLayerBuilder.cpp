@@ -4012,9 +4012,7 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                              nsDisplayItem* aItem,
                                              const DisplayItemClip& aClip,
                                              TransformClipNode* aTransform) {
-  MOZ_ASSERT(aItem->HasHitTestInfo());
   auto* item = static_cast<nsDisplayHitTestInfoItem*>(aItem);
-
   const HitTestInfo& info = item->GetHitTestInfo();
 
   nsRect area = info.mArea;
@@ -4556,6 +4554,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     nsRect itemContent;
 
     if (marker == DisplayItemEntryType::HitTestInfo) {
+      MOZ_ASSERT(item->IsHitTestItem());
       const auto& hitTestInfo =
           static_cast<nsDisplayHitTestInfoItem*>(item)->GetHitTestInfo();
 

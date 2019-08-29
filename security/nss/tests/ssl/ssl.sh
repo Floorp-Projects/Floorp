@@ -10,7 +10,27 @@
 #
 # Script to test NSS SSL
 #
-# needs to work on all Unix and Windows platforms
+# Needs to work on all Unix and Windows platforms
+#
+# Testing schema:
+# ---------------
+#                           all.sh                       ~  (main)
+#                              |                               |
+#          +------------+------------+-----------+       ~  run_cycles
+#          |            |            |           |             |
+#      standard       pkix       upgradedb     sharedb   ~  run_cycle_*
+#         ...           |           ...         ...            |
+#                +------+------+----->                   ~  run_tests
+#                |      |      |                               |
+#               ...    ssl    ...                        ~   ssl.sh
+#                       |                                      |
+#          +-------+-------+-----------------+           ~  ssl_run_tests
+#          |       |       |                 |                 |
+#         crl     iopr   policy    permute(normal,fips)  ~  ssl_run_test_*
+#                                         | | | |              |
+#         +------+------+------+------+---+-+-+-+---->   ~  ssl_run
+#         |      |      |      |      |      |                 |
+#    stapling   cov   auth  stress  dtls    ...          ~  ssl_run_*
 #
 # special strings
 # ---------------
@@ -64,7 +84,7 @@ ssl_init()
     PORT=$(($PORT + $padd))
   fi
   NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="stapling signed_cert_timestamps cov auth stress dtls scheme"
+  nss_ssl_run="stapling signed_cert_timestamps cov auth dtls scheme"
   NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
 
   # Test case files
@@ -521,10 +541,10 @@ ssl_stapling_stress()
     echo "${testname}"
     start_selfserv
 
-    echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \\"
+    echo "strsclnt -4 -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \\"
     echo "         -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}"
     echo "strsclnt started at `date`"
-    ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \
+    ${PROFTOOL} ${BINDIR}/strsclnt -4 -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \
             -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}
     ret=$?
 
@@ -651,10 +671,10 @@ ssl_stress()
               dbdir=${P_R_CLIENTDIR}
           fi
 
-          echo "strsclnt -q -p ${PORT} -d ${dbdir} ${CLIENT_OPTIONS} -w nss $cparam \\"
+          echo "strsclnt -4 -q -p ${PORT} -d ${dbdir} ${CLIENT_OPTIONS} -w nss $cparam \\"
           echo "         -V ssl3:tls1.2 $verbose ${HOSTADDR}"
           echo "strsclnt started at `date`"
-          ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} -d ${dbdir} ${CLIENT_OPTIONS} -w nss $cparam \
+          ${PROFTOOL} ${BINDIR}/strsclnt -4 -q -p ${PORT} -d ${dbdir} ${CLIENT_OPTIONS} -w nss $cparam \
                    -V ssl3:tls1.2 $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
@@ -1275,9 +1295,9 @@ ssl_scheme_stress()
 
             start_selfserv -V tls1.2:tls1.2 -J "$sscheme"
 
-            echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
+            echo "strsclnt -4 -q -p ${PORT} -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
             echo "         -V tls1.2:tls1.2 -J "$cscheme" ${HOSTADDR} < ${REQUEST_FILE}"
-            ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} ${CLIENT_OPTIONS} \
+            ${PROFTOOL} ${BINDIR}/strsclnt -4 -q -p ${PORT} ${CLIENT_OPTIONS} \
                         -d ${P_R_CLIENTDIR} $verbose -V tls1.2:tls1.2 -J "$cscheme" ${HOSTADDR} < ${REQUEST_FILE} 2>&1
             ret=$?
             # If both schemes include just one option and those options don't

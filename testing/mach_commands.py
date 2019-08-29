@@ -193,7 +193,11 @@ class AddTest(MachCommandBase):
         creator.check_args()
 
         paths = []
+        added_tests = False
         for path, template in creator:
+            if not template:
+                continue
+            added_tests = True
             if (path):
                 paths.append(path)
                 print("Adding a test file at {} (suite `{}`)".format(path, suite))
@@ -208,6 +212,9 @@ class AddTest(MachCommandBase):
             else:
                 # write to stdout if you passed only suite and doc and not a file path
                 print(template)
+
+        if not added_tests:
+            return 1
 
         if test:
             creator.update_manifest()

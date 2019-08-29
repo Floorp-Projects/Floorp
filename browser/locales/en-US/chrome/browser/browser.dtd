@@ -670,10 +670,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY editBookmark.showForNewBookmarks.label       "Show editor when saving">
 <!ENTITY editBookmark.showForNewBookmarks.accesskey   "S">
 
-<!-- LOCALIZATION NOTE (identity.securityView.label2)
-     This is the header of the security subview in the Site Identity panel. -->
-<!ENTITY identity.securityView.label2 "Connection Security">
-
 <!ENTITY identity.connectionSecure2 "Connection Secure">
 <!ENTITY identity.connectionNotSecure "Connection Is Not Secure">
 <!ENTITY identity.connectionNotSecureSecurityView "You are not securely connected to this site.">

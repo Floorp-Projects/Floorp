@@ -25,6 +25,7 @@ import type {
 } from "../../types";
 
 import type { EventListenerCategoryList } from "../../actions/types";
+import actions from "../../actions";
 
 type URL = string;
 
@@ -185,7 +186,7 @@ export type Actions = {
   resumed: ActorId => void,
   newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
-  updateThreads: () => void,
+  updateThreads: typeof actions.updateThreads,
 };
 
 type ConsoleClient = {

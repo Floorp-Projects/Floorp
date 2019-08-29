@@ -61,20 +61,16 @@
   width: 100%;
 }
 
+.menuitem-help {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
+
 .menuitem-import {
   background-image: url("chrome://browser/skin/save.svg");
 }
 
 .menuitem-preferences {
   background-image: url("chrome://browser/skin/settings.svg");
-}
-
-.menuitem-feedback {
-  background-image: url("chrome://browser/skin/notification-icons/desktop-notification.svg");
-}
-
-.menuitem-faq {
-  background-image: url("chrome://global/skin/icons/help.svg");
 }
 
 .menuitem-mobile {

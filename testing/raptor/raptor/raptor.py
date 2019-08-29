@@ -20,6 +20,7 @@ import requests
 
 import mozcrash
 import mozinfo
+import mozprocess
 from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
 from mozlog import commandline
@@ -237,6 +238,112 @@ either Raptor or browsertime."""
 
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
+
+
+class Browsertime(Perftest):
+    """Container class for Browsertime"""
+
+    def __init__(self, *args, **kwargs):
+        for key in kwargs.keys():
+            if key.startswith('browsertime_'):
+                value = kwargs.pop(key)
+                setattr(self, key, value)
+
+        super(Browsertime, self).__init__(*args, **kwargs)
+
+        LOG.info("cwd: '{}'".format(os.getcwd()))
+
+        # For debugging.
+        for k in ("browsertime_node",
+                  "browsertime_browsertimejs",
+                  "browsertime_geckodriver",
+                  "browsertime_chromedriver"):
+            LOG.info("{}: {}".format(k, getattr(self, k)))
+            try:
+                LOG.info("{}: {}".format(k, os.stat(getattr(self, k))))
+            except Exception as e:
+                LOG.info("{}: {}".format(k, e))
+
+    def run_test_setup(self, test):
+        super(Browsertime, self).run_test_setup(test)
+
+        # TODO - Bug 1568048 - Lift mozproxy management out of `Raptor` and into `Perftest`
+        LOG.info("TODO: Add playback support - Bug 1568048")
+        # if using playback, start it up
+        # if test.get('playback') is not None:
+        #    self.start_playback(test)
+
+        # TODO: geckodriver/chromedriver from tasks.
+        self.driver_paths = []
+        if self.browsertime_geckodriver:
+            self.driver_paths.extend(['--firefox.geckodriverPath', self.browsertime_geckodriver])
+        if self.browsertime_chromedriver:
+            self.driver_paths.extend(['--chrome.chromedriverPath', self.browsertime_chromedriver])
+
+        self.resultdir = [
+            '--resultDir',
+            os.path.join(os.environ.get('MOZ_UPLOAD_DIR', os.getcwd()),
+                         'browsertime-results', test['name']),
+        ]
+
+        LOG.info('test: {}'.format(test))
+
+    def run_test_teardown(self, test):
+        super(Browsertime, self).run_test_teardown(test)
+
+        # if we were using a playback tool, stop it
+        if self.playback is not None:
+            self.playback.stop()
+
+    def check_for_crashes(self):
+        super(Browsertime, self).check_for_crashes()
+
+    def clean_up(self):
+        super(Browsertime, self).clean_up()
+
+    def run_test(self, test, timeout):
+
+        self.run_test_setup(test)
+
+        cmd = [self.browsertime_node, self.browsertime_browsertimejs, '--browser', 'firefox'] + \
+            self.driver_paths + \
+            ['--firefox.binaryPath', self.config['binary'],
+             '--skipHar',
+             '--video', 'true',
+             '--visualMetrics', 'false',
+             '-vv'] + \
+            self.resultdir + \
+            ['-n', str(test.get('browser_cycles', 1)),
+             test['test_url']]
+
+        # timeout is a single page-load timeout value in ms from the test INI
+        # convert timeout to seconds and account for browser cycles
+        timeout = int(timeout / 1000) * int(test.get('browser_cycles', 1))
+
+        # add some time for browser startup, time for the browsertime measurement code
+        # to be injected/invoked, and for exceptions to bubble up; be generous
+        timeout += (20 * int(test.get('browser_cycles', 1)))
+
+        # if geckoProfile enabled, give browser more time for profiling
+        if self.config['gecko_profile'] is True:
+            timeout += 5 * 60
+
+        LOG.info('timeout (s): {}'.format(timeout))
+        LOG.info('browsertime cwd: {}'.format(os.getcwd()))
+        LOG.info('browsertime cmd: {}'.format(cmd))
+
+        try:
+            proc = mozprocess.ProcessHandler(cmd)
+            proc.run(timeout=timeout,
+                     outputTimeout=2*60)
+            proc.wait()
+
+        except Exception as e:
+            raise Exception("Error while attempting to run browsertime: %s" % str(e))
+
+    def process_results(self, test_names):
+        # TODO - Bug 1565316 - Process browsertime results and dump out for perfherder
+        LOG.info("TODO: Bug 1565316 - Process browsertime results and dump out for perfherder")
 
 
 class Raptor(Perftest):
@@ -1210,8 +1317,15 @@ def main(args=sys.argv[1:]):
         else:
             raptor_class = RaptorAndroid
     else:
-        LOG.critical("Browsertime is not yet supported!")
-        sys.exit(1)
+        def raptor_class(*inner_args, **inner_kwargs):
+            outer_kwargs = vars(args)
+            # peel off arguments that are specific to browsertime
+            for key in outer_kwargs.keys():
+                if key.startswith('browsertime_'):
+                    value = outer_kwargs.pop(key)
+                    inner_kwargs[key] = value
+
+            return Browsertime(*inner_args, **inner_kwargs)
 
     raptor = raptor_class(args.app,
                           args.binary,

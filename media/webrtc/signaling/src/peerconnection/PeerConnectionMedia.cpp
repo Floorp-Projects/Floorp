@@ -32,6 +32,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/ProxyConfigLookup.h"
 #include "mozilla/net/ProxyConfigLookupChild.h"
+#include "mozilla/net/SocketProcessChild.h"
 #include "MediaManager.h"
 #include "WebrtcGmpVideoCodec.h"
 
@@ -103,6 +104,12 @@ void PeerConnectionMedia::InitLocalAddrs() {
   }
 }
 
+static net::ProxyConfigLookupChild* CreateActor(PeerConnectionMedia* aSelf) {
+  RefPtr<PeerConnectionMedia> self = aSelf;
+  return new net::ProxyConfigLookupChild(
+      [self](bool aProxied) { self->ProxySettingReceived(aProxied); });
+}
+
 nsresult PeerConnectionMedia::InitProxy() {
   // Allow mochitests to disable this, since mochitest configures a fake proxy
   // that serves up content.
@@ -113,16 +120,22 @@ nsresult PeerConnectionMedia::InitProxy() {
     return NS_OK;
   }
 
-  if (!XRE_IsParentProcess()) {
+  if (XRE_IsContentProcess()) {
     if (NS_WARN_IF(!net::gNeckoChild)) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<PeerConnectionMedia> self = this;
-    net::ProxyConfigLookupChild* actor = new net::ProxyConfigLookupChild(
-        [self](bool aProxied) { self->ProxySettingReceived(aProxied); });
+    net::gNeckoChild->SendPProxyConfigLookupConstructor(CreateActor(this));
+    return NS_OK;
+  }
 
-    net::gNeckoChild->SendPProxyConfigLookupConstructor(actor);
+  if (XRE_IsSocketProcess()) {
+    net::SocketProcessChild* child = net::SocketProcessChild::GetSingleton();
+    if (!child) {
+      return NS_ERROR_FAILURE;
+    }
+
+    child->SendPProxyConfigLookupConstructor(CreateActor(this));
     return NS_OK;
   }
 

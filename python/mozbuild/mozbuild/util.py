@@ -1315,7 +1315,12 @@ def patch_main():
     See also: http://bugs.python.org/issue19946
     And: https://bugzilla.mozilla.org/show_bug.cgi?id=914563
     '''
-    if sys.platform == 'win32':
+    # XXX In Python 3.4 the multiprocessing module was re-written and the below
+    # code is no longer valid. The Python issue19946 also claims to be fixed in
+    # this version. It's not clear whether this hack is still needed in 3.4+ or
+    # not, but at least some basic mach commands appear to work without it. So
+    # skip it in 3.4+ until we determine it's still needed.
+    if sys.platform == 'win32' and sys.version_info < (3, 4):
         import inspect
         import os
         from multiprocessing import forking

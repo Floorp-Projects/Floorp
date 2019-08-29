@@ -238,6 +238,12 @@ struct SizeComputationInput {
     // nsColumnSetFrame is balancing columns
     bool mIsColumnBalancing : 1;
 
+    // True if ColumnSetWrapperFrame has a constrained block-size, and is going
+    // to consume all of its block-size in this fragment. This bit is passed to
+    // nsColumnSetFrame to determine whether to give up balancing and create
+    // overflow columns.
+    bool mColumnSetWrapperHasNoBSizeLeft : 1;
+
     // nsFlexContainerFrame is reflowing this child to measure its intrinsic
     // BSize.
     bool mIsFlexContainerMeasuringBSize : 1;

@@ -1,9 +1,22 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function test_vertical_text() {
-  const URI =
-    '<body>a<div style="visibility:hidden;">a</div><select><option>a</option></select><select size=2><option>a</option><option>a</option></select></body>';
+add_task(async function test_skip_invisible() {
+  const URI = `
+    <body>
+      <div>
+        a
+        <div style="visibility:hidden;">a</div>
+        <div style="visibility: hidden"><span style="visibility: visible">a</div>
+        <select>
+          <option>a</option>
+        </select>
+        <select size=2>
+          <option>a</option>
+          <option>a</option>
+        </select>
+        <input placeholder="a">
+      </body>`;
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -30,9 +43,10 @@ add_task(async function test_vertical_text() {
       finder.fastFind(target, false, false);
       let findResult = await promiseFind;
 
-      // Check the results and repeat three times. After the final repeat, make sure we've wrapped to the beginning.
+      // Check the results and repeat four times. After the final repeat, make
+      // sure we've wrapped to the beginning.
       let i = 0;
-      for (; i < 3; i++) {
+      for (; i < 4; i++) {
         isnot(
           findResult.result,
           Ci.nsITypeAheadFind.FIND_NOTFOUND,

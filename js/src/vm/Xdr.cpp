@@ -43,6 +43,11 @@ bool XDRCoderBase::validateResultCode(JSContext* cx,
 #endif
 
 template <XDRMode mode>
+XDRResult XDRState<mode>::codeChars(char* chars, size_t nchars) {
+  return codeBytes(chars, nchars);
+}
+
+template <XDRMode mode>
 XDRResult XDRState<mode>::codeChars(Latin1Char* chars, size_t nchars) {
   static_assert(sizeof(Latin1Char) == 1,
                 "Latin1Char must be 1 byte for nchars below to be the "
@@ -105,6 +110,62 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
     mozilla::NativeEndian::copyAndSwapFromLittleEndian(chars, ptr, nchars);
   }
   return Ok();
+}
+
+template <XDRMode mode, typename CharT>
+static XDRResult XDRCodeCharsZ(XDRState<mode>* xdr,
+                               XDRTranscodeString<CharT>& buffer) {
+  MOZ_ASSERT_IF(mode == XDR_ENCODE, !buffer.empty());
+  MOZ_ASSERT_IF(mode == XDR_DECODE, buffer.empty());
+
+  using OwnedString = js::UniquePtr<CharT[], JS::FreePolicy>;
+  OwnedString owned;
+
+  static_assert(JSString::MAX_LENGTH <= INT32_MAX,
+                "String length must fit in int32_t");
+
+  uint32_t length = 0;
+  CharT* chars = nullptr;
+
+  if (mode == XDR_ENCODE) {
+    chars = const_cast<CharT*>(buffer.template ref<const CharT*>());
+
+    // Set a reasonable limit on string length.
+    size_t lengthSizeT = std::char_traits<CharT>::length(chars);
+    if (lengthSizeT > JSString::MAX_LENGTH) {
+      ReportAllocationOverflow(xdr->cx());
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    length = static_cast<uint32_t>(lengthSizeT);
+  }
+  MOZ_TRY(xdr->codeUint32(&length));
+
+  if (mode == XDR_DECODE) {
+    owned = xdr->cx()->template make_pod_array<CharT>(length + 1);
+    if (!owned) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    chars = owned.get();
+  }
+
+  MOZ_TRY(xdr->codeChars(chars, length));
+  if (mode == XDR_DECODE) {
+    // Null-terminate and transfer ownership to caller.
+    owned[length] = '\0';
+    buffer.template construct<OwnedString>(std::move(owned));
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode>
+XDRResult XDRState<mode>::codeCharsZ(XDRTranscodeString<char>& buffer) {
+  return XDRCodeCharsZ(this, buffer);
+}
+
+template <XDRMode mode>
+XDRResult XDRState<mode>::codeCharsZ(XDRTranscodeString<char16_t>& buffer) {
+  return XDRCodeCharsZ(this, buffer);
 }
 
 template <XDRMode mode>

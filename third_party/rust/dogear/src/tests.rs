@@ -60,7 +60,7 @@ impl TryFrom<Node> for Builder {
                     _ => return Err(err),
                 }
             }
-            b.mutate(&guid).by_structure(&parent_guid)?;
+            b.parent_for(&guid).by_structure(&parent_guid)?;
             for child in node.children {
                 inflate(b, &guid, child)?;
             }
@@ -1319,6 +1319,82 @@ fn newer_move_to_deleted() {
     let mut deletions = merged_root.deletions().map(|d| d.guid).collect::<Vec<_>>();
     deletions.sort();
     assert_eq!(deletions, expected_deletions);
+
+    assert_eq!(merged_root.counts(), &expected_telem);
+}
+
+#[test]
+fn deduping_multiple_candidates() {
+    before_each();
+
+    let mut local_tree_builder = Builder::try_from(nodes!({
+        ("menu________", Folder[needs_merge = true, age = 5], {
+            ("folderAAAAA1", Folder[needs_merge = true, age = 5]),
+            ("folderAAAAA2", Folder[needs_merge = true, age = 5])
+        }),
+        ("toolbar_____", Folder[needs_merge = true], {
+            ("folderBBBBB1", Folder[needs_merge = true])
+        })
+    }))
+    .unwrap();
+    local_tree_builder
+        .mutate(&"folderAAAAA1".into())
+        .content(Content::Folder { title: "A".into() });
+    local_tree_builder
+        .mutate(&"folderAAAAA2".into())
+        .content(Content::Folder { title: "A".into() });
+    local_tree_builder
+        .mutate(&"folderBBBBB1".into())
+        .content(Content::Folder { title: "B".into() });
+    let local_tree = local_tree_builder.into_tree().unwrap();
+
+    let mut remote_tree_builder = Builder::try_from(nodes!({
+        ("menu________", Folder[needs_merge = true], {
+            ("folderAAAAA1", Folder[needs_merge = true])
+        }),
+        ("toolbar_____", Folder[needs_merge = true, age = 5], {
+            ("folderBBBBB1", Folder[needs_merge = true, age = 5]),
+            ("folderBBBBB2", Folder[needs_merge = true, age = 5])
+        })
+    }))
+    .unwrap();
+    remote_tree_builder
+        .mutate(&"folderAAAAA1".into())
+        .content(Content::Folder { title: "A".into() });
+    remote_tree_builder
+        .mutate(&"folderBBBBB1".into())
+        .content(Content::Folder { title: "B".into() });
+    remote_tree_builder
+        .mutate(&"folderBBBBB2".into())
+        .content(Content::Folder { title: "B".into() });
+    let remote_tree = remote_tree_builder.into_tree().unwrap();
+
+    let merger = Merger::new(&local_tree, &remote_tree);
+    let merged_root = merger.merge().unwrap();
+
+    let expected_tree = merged_nodes!({
+        ("menu________", LocalWithNewLocalStructure, {
+            ("folderAAAAA1", Remote),
+            ("folderAAAAA2", Local)
+        }),
+        ("toolbar_____", LocalWithNewLocalStructure, {
+            ("folderBBBBB1", Local),
+            ("folderBBBBB2", Remote)
+        })
+    });
+    let expected_telem = StructureCounts {
+        remote_revives: 0,
+        local_deletes: 0,
+        local_revives: 0,
+        remote_deletes: 0,
+        dupes: 0,
+        merged_nodes: 6,
+        merged_deletions: 0,
+    };
+
+    assert_eq!(&expected_tree, merged_root.node());
+
+    assert_eq!(merged_root.deletions().count(), 0);
 
     assert_eq!(merged_root.counts(), &expected_telem);
 }

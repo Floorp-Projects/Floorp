@@ -58,7 +58,7 @@ Naming standards for class names:
 
 DevTools supports 2 different themes: the dark theme and the light theme. In order to support them, there are 2 class names available (`theme-dark` and `theme-light`).
 
-* Use [pre-defined CSS variables](https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors) instead of hardcoding colors when possible.
+* Use [pre-defined CSS variables](https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css) instead of hardcoding colors when possible.
 * If you need to support themes and the pre-defined variables don't fit, define a variable with your custom colors at the beginning of the CSS file. This avoids selector duplication in the code.
 
 Example:

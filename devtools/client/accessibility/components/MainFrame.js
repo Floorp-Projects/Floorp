@@ -47,7 +47,6 @@ class MainFrame extends Component {
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
       supports: PropTypes.object,
-      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -113,7 +112,6 @@ class MainFrame extends Component {
     const {
       accessibility,
       accessibilityWalker,
-      getDOMWalker,
       fluentBundles,
       enabled,
       auditing,
@@ -150,9 +148,9 @@ class MainFrame extends Component {
                 className: "main-panel",
                 role: "presentation",
               },
-              AccessibilityTree({ accessibilityWalker, getDOMWalker })
+              AccessibilityTree({ accessibilityWalker })
             ),
-            endPanel: RightSidebar({ accessibilityWalker, getDOMWalker }),
+            endPanel: RightSidebar({ accessibilityWalker }),
             vert: this.useLandscapeMode,
           })
         )

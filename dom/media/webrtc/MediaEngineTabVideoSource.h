@@ -30,8 +30,7 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   }
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-                    const nsString& aGroupId,
+                    const MediaEnginePrefs& aPrefs,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
@@ -40,16 +39,9 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
   nsresult FocusOnSelectedSource() override;
   nsresult Stop() override;
-
-  uint32_t GetBestFitnessDistance(
-      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId, const nsString& aGroupId) const override {
-    return 0;
-  }
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 

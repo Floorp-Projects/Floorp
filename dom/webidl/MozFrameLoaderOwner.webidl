@@ -9,6 +9,10 @@ dictionary RemotenessOptions {
   FrameLoader? sameProcessAsFrameLoader;
   WindowProxy? opener;
 
+  // Used to indicate that there is an error condition that needs to
+  // be handled.
+  unsigned long error;
+
   // Used to resume a given channel load within the target process. If present,
   // it will be used rather than the `src` & `srcdoc` attributes on the
   // frameloader to control the load behaviour.

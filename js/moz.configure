@@ -439,7 +439,7 @@ set_define('JS_BUILD_BINAST', depends_if('--enable-binast')(lambda x: True))
 # ==============================================================
 
 js_option('--enable-cranelift',
-          default=milestone.is_nightly & js_standalone,
+          default=milestone.is_nightly,
           help='{Enable|Disable} Cranelift code generator for wasm')
 
 set_config('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))

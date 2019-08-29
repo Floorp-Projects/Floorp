@@ -3945,6 +3945,10 @@ class nsIFrame : public nsQueryFrame {
    */
   inline bool IsFlexItem() const;
   /**
+   * Is this a grid item? (i.e. a non-abs-pos child of a grid container)
+   */
+  inline bool IsGridItem() const;
+  /**
    * Is this a flex or grid item? (i.e. a non-abs-pos child of a flex/grid
    * container)
    */

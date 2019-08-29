@@ -965,12 +965,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  ParentLayerIntRect clipRect;
-  IntRect bounds(mRenderBounds.X(), mRenderBounds.Y(), mRenderBounds.Width(),
-                 mRenderBounds.Height());
-  IntRect actualBounds;
-
-  CompositorBench(mCompositor, bounds);
+  CompositorBench(mCompositor, mRenderBounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
 #if defined(MOZ_WIDGET_ANDROID)
@@ -983,34 +978,19 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif
 
   if (mNativeLayerForEntireWindow) {
-    mNativeLayerForEntireWindow->SetRect(bounds);
+    mNativeLayerForEntireWindow->SetRect(mRenderBounds);
 #ifdef XP_MACOSX
     mNativeLayerForEntireWindow->SetOpaqueRegion(
         mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
 #endif
   }
 
-  if (mRoot->GetClipRect()) {
-    clipRect = *mRoot->GetClipRect();
-    IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(),
-                 clipRect.Height());
-    mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, nullptr,
-                            &actualBounds);
-  } else {
-    gfx::IntRect rect;
-    mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion,
-                            mNativeLayerForEntireWindow, &rect, &actualBounds);
-    clipRect =
-        ParentLayerIntRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
-  }
-#if defined(MOZ_WIDGET_ANDROID)
-  ScreenCoord offset = GetContentShiftForToolbar();
-  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
-                                            ScreenPoint(0.0f, offset));
-#endif
-
-  if (actualBounds.IsEmpty()) {
+  Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
+      [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
+  Maybe<IntRect> maybeBounds =
+      mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
+                              aOpaqueRegion, mNativeLayerForEntireWindow);
+  if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
 
@@ -1022,6 +1002,14 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     return true;
   }
 
+  IntRect bounds = *maybeBounds;
+  IntRect clipRect = rootLayerClip.valueOr(bounds);
+#if defined(MOZ_WIDGET_ANDROID)
+  ScreenCoord offset = GetContentShiftForToolbar();
+  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
+                                            ScreenPoint(0.0f, offset));
+#endif
+
   RefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
     previousTarget = PushGroupForLayerEffects();
@@ -1032,8 +1020,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // Render our layers.
   {
     Diagnostics::Record record(mRenderStartTime);
-    RootLayer()->Prepare(ViewAs<RenderTargetPixel>(
-        clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
+    RootLayer()->Prepare(RenderTargetIntRect::FromUnknownRect(clipRect));
     if (record.Recording()) {
       mDiagnostics->RecordPrepareTime(record.Duration());
     }
@@ -1041,7 +1028,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   // Execute draw commands.
   {
     Diagnostics::Record record;
-    RootLayer()->RenderLayer(clipRect.ToUnknownRect(), Nothing());
+    RootLayer()->RenderLayer(clipRect, Nothing());
     if (record.Recording()) {
       mDiagnostics->RecordCompositeTime(record.Duration());
     }
@@ -1050,20 +1037,19 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   if (!mRegionToClear.IsEmpty()) {
     for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& r = iter.Get();
-      mCompositor->ClearRect(Rect(r.X(), r.Y(), r.Width(), r.Height()));
+      mCompositor->ClearRect(Rect(iter.Get()));
     }
   }
 
   if (mTwoPassTmpTarget) {
     MOZ_ASSERT(haveLayerEffects);
-    PopGroupForLayerEffects(previousTarget, clipRect.ToUnknownRect(),
-                            grayscaleVal, invertVal, contrastVal);
+    PopGroupForLayerEffects(previousTarget, clipRect, grayscaleVal, invertVal,
+                            contrastVal);
   }
 
   // Allow widget to render a custom foreground.
   mCompositor->GetWidget()->DrawWindowOverlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
+      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
 
   mCompositor->NormalDrawingDone();
 
@@ -1093,7 +1079,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   // Debugging
-  RenderDebugOverlay(actualBounds);
+  RenderDebugOverlay(bounds);
 
   {
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
@@ -1238,10 +1224,9 @@ void LayerManagerComposite::RenderToPresentationSurface() {
 
   nsIntRegion invalid;
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
-  IntRect rect, actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), nullptr,
-                          &rect, &actualBounds);
+  Unused << mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(),
+                                    nullptr);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer

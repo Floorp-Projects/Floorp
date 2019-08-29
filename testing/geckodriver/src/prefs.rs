@@ -141,9 +141,6 @@ lazy_static! {
         // c.f. https://github.com/mozilla/geckodriver/issues/225.
         ("plugin.state.flash", Pref::new(0)),
 
-        // Disable the GFX sanity window
-        ("sanity-test.running", Pref::new(true)),
-
         // Don't do network connections for mitm priming
         ("security.certerrors.mitm.priming.enabled", Pref::new(false)),
 

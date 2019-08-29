@@ -227,7 +227,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   // Test highlight DOMNode on mouseover.
   info("Highlight the node by moving the cursor on it");
 
-  const onNodeHighlight = toolbox.highlighter.once("node-highlight");
+  const onNodeHighlight = inspector.highlighter.once("node-highlight");
 
   moveMouseOnObjectInspectorDOMNode(sidebarPanelContent);
 
@@ -236,7 +236,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   // Test unhighlight DOMNode on mousemove.
   info("Unhighlight the node by moving away from the node");
-  const onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  const onNodeUnhighlight = inspector.highlighter.once("node-unhighlight");
 
   moveMouseOnPanelCenter(sidebarPanelContent);
 
@@ -266,8 +266,8 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
 
   // Once we click the open-inspector icon we expect a new node front to be selected
   // and the node to have been highlighted and unhighlighted.
-  const onNodeHighlight = toolbox.highlighter.once("node-highlight");
-  const onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  const onNodeHighlight = inspector.highlighter.once("node-highlight");
+  const onNodeUnhighlight = inspector.highlighter.once("node-unhighlight");
   onceNewNodeFront = inspector.selection.once("new-node-front");
 
   clickOpenInspectorIcon(sidebarPanelContent);

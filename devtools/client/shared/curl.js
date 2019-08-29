@@ -50,19 +50,25 @@ const Curl = {
    *        - httpVersion:string, http protocol version rfc2616 formatted. Eg. "HTTP/1.1"
    *        - postDataText:string, optional - the request payload.
    *
+   * @param string platform
+   *        Optional parameter to override platform,
+   *        Fallbacks to current platform if not defined.
+   *
    * @return string
    *         A cURL command.
    */
-  generateCommand: function(data) {
+  generateCommand: function(data, platform) {
     const utils = CurlUtils;
 
     let command = ["curl"];
     const ignoredHeaders = new Set();
 
+    const currentPlatform = platform || Services.appinfo.OS;
+
     // The cURL command is expected to run on the same platform that Firefox runs
     // (it may be different from the inspected page platform).
     const escapeString =
-      Services.appinfo.OS == "WINNT"
+      currentPlatform == "WINNT"
         ? utils.escapeStringWin
         : utils.escapeStringPosix;
 

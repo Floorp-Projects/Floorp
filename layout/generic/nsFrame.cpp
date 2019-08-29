@@ -2564,12 +2564,13 @@ bool nsIFrame::FormsBackdropRoot(const nsStyleDisplay* aStyleDisplay,
 Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
                                             const nsStyleEffects* aEffects,
                                             const nsSize& aSize) const {
-  if (!(aEffects->mClipFlags & NS_STYLE_CLIP_RECT) ||
+  if (aEffects->mClip.IsAuto() ||
       !(aDisp->IsAbsolutelyPositioned(this) || IsSVGContentWithCSSClip(this))) {
     return Nothing();
   }
 
-  nsRect rect = aEffects->mClip;
+  auto& clipRect = aEffects->mClip.AsRect();
+  nsRect rect = clipRect.ToLayoutRect();
   if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak ==
                  StyleBoxDecorationBreak::Slice)) {
     // The clip applies to the joined boxes so it's relative the first
@@ -2581,10 +2582,10 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
     rect.MoveBy(nsPoint(0, -y));
   }
 
-  if (NS_STYLE_CLIP_RIGHT_AUTO & aEffects->mClipFlags) {
+  if (clipRect.right.IsAuto()) {
     rect.width = aSize.width - rect.x;
   }
-  if (NS_STYLE_CLIP_BOTTOM_AUTO & aEffects->mClipFlags) {
+  if (clipRect.bottom.IsAuto()) {
     rect.height = aSize.height - rect.y;
   }
   return Some(rect);
@@ -4021,8 +4022,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
       isPlaceholder || (!isSVG && disp->IsFloating(child)) ||
-      (isSVG && (effects->mClipFlags & NS_STYLE_CLIP_RECT) &&
-       IsSVGContentWithCSSClip(child))) {
+      (isSVG && effects->mClip.IsRect() && IsSVGContentWithCSSClip(child))) {
     pseudoStackingContext = true;
     awayFromCommonPath = true;
   }

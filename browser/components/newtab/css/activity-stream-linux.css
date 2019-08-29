@@ -2563,6 +2563,22 @@ main {
   .ds-column-4 .ds-top-sites .top-site-inner .title {
     width: var(--rightPanelIconWidth); }
 
+.top-sites-spoc .top-sites-list {
+  display: flex;
+  flex-wrap: wrap; }
+  .top-sites-spoc .top-sites-list .top-site-outer {
+    margin: 0 0 20px; }
+    .top-sites-spoc .top-sites-list .top-site-outer .top-site-spoc-label {
+      color: #737373;
+      font-size: 11px;
+      display: flex;
+      justify-content: center;
+      margin-top: -4px; }
+      [lwt-newtab-brighttext] .top-sites-spoc .top-sites-list .top-site-outer .top-site-spoc-label {
+        color: #B1B1B3; }
+    .top-sites-spoc .top-sites-list .top-site-outer.dragged .top-site-spoc-label {
+      visibility: hidden; }
+
 .ds-hero-item .context-menu-button,
 .ds-list-item .context-menu-button,
 .ds-card .context-menu-button {
@@ -2863,6 +2879,36 @@ main {
     width: 100%;
     height: 100%;
     object-fit: cover; }
+
+.ds-dismiss {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  transition-delay: 100ms;
+  transition-duration: 100ms;
+  transition-property: background; }
+  .ds-dismiss.hovering {
+    background: var(--newtab-element-hover-color); }
+  .ds-dismiss:hover .ds-dismiss-button {
+    opacity: 1; }
+  .ds-dismiss .ds-dismiss-button {
+    border: 0;
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 50%;
+    margin: 16px 24px 0 0;
+    transition-duration: 200ms;
+    transition-property: opacity;
+    opacity: 0;
+    background: var(--newtab-element-active-color); }
 
 .ds-message {
   margin: 8px 0 0; }

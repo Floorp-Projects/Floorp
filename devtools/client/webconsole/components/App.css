@@ -231,9 +231,23 @@ body {
   grid-column: 1 / 2;
   grid-row: 2 / 3;
   display: grid;
+  align-items: center;
   /* We're going to have the run button, the history nav and the close button */
   grid-template-columns: auto 1fr auto auto auto;
   height: unset;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton {
+  background-image: url(chrome://devtools/skin/images/webconsole/run.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  padding-inline-start: 22px;
+  background-repeat: no-repeat;
+  background-position: 4px center;
+  padding-inline-end: 8px;
+  height: 20px;
+  margin-inline-start: 5px;
+  background-size: 16px 16px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
@@ -279,7 +293,10 @@ body {
   width: 30vw;
   min-width: 150px;
   border-top: none;
-  display: block;
+  padding: 0;
+  /* Needed as we might have the onboarding UI displayed */
+  display: flex;
+  flex-direction: column;
 }
 
 .jsterm-editor #webconsole-notificationbox {
@@ -288,6 +305,7 @@ body {
 }
 
 .jsterm-editor .jsterm-input-container > .CodeMirror {
+  flex: 1;
   padding-inline-start: 0;
   background-image: none;
 }
@@ -306,4 +324,56 @@ body {
   grid-column: -1 / -2;
   /* We want the splitter to cover the whole column (minus self-xss message) */
   grid-row: 2 / -1;
+}
+
+.editor-onboarding {
+  display: none;
+}
+
+.jsterm-editor .editor-onboarding {
+  display: grid;
+  /**
+   * Here's the design we want: 
+   * ┌──────┬────────────────────────┐
+   * │ Icon │    Onboarding text     │
+   * ├──────┼────────────────────────┤
+   * │      │                 Got it!│
+   * └──────┴────────────────────────┘
+   **/
+  grid-template-columns: 22px 1fr;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 8px 16px;
+  background-color: var(--theme-selection-background-hover);
+  grid-gap: 0 14px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.editor-onboarding-fox {
+  width: 22px;
+  height: 22px;
+  align-self: center;
+}
+
+.jsterm-editor .editor-onboarding p {
+  padding: 0;
+  margin: 0;
+}
+
+.jsterm-editor .editor-onboarding .editor-onboarding-shortcut {
+  font-weight: bold;
+}
+
+.editor-onboarding-dismiss-button {
+  grid-row: 2 / 3;
+  grid-column: 2 / 3;
+  justify-self: end;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: var(--theme-highlight-blue);
+  font-family: inherit;
+  cursor: pointer;
+  font-size: inherit;
 }

@@ -8,6 +8,7 @@
 #define mozilla_dom_Navigator_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/AddonManagerBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Nullable.h"
@@ -28,6 +29,7 @@ class nsIURI;
 
 namespace mozilla {
 namespace dom {
+class AddonManager;
 class BodyExtractorBase;
 class Geolocation;
 class systemMessageCallback;
@@ -208,6 +210,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
 
   dom::MediaCapabilities* MediaCapabilities();
 
+  AddonManager* GetMozAddonManager(ErrorResult& aRv);
+
   // WebIDL helper methods
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
@@ -266,6 +270,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   nsTArray<uint32_t> mRequestedVibrationPattern;
   RefPtr<StorageManager> mStorageManager;
   RefPtr<dom::MediaCapabilities> mMediaCapabilities;
+  RefPtr<AddonManager> mAddonManager;
 };
 
 }  // namespace dom

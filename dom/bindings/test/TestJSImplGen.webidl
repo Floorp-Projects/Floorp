@@ -841,14 +841,6 @@ interface TestJSImplInterface {
   // If you add things here, add them to TestCodeGen as well
 };
 
-[NavigatorProperty="TestNavigator", JSImplementation="@mozilla.org/test;1"]
-interface TestNavigator {
-};
-
-[Constructor, NavigatorProperty="TestNavigatorWithConstructor", JSImplementation="@mozilla.org/test;1"]
-interface TestNavigatorWithConstructor {
-};
-
 interface TestCImplementedInterface : TestJSImplInterface {
 };
 

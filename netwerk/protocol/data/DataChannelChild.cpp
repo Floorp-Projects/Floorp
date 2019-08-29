@@ -31,7 +31,7 @@ DataChannelChild::ConnectParent(uint32_t aId) {
   }
 
   // IPC now has a ref to us.
-  AddIPDLReference();
+  mIPCOpen = true;
   return NS_OK;
 }
 
@@ -49,11 +49,6 @@ DataChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
     Unused << Send__delete__(this);
   }
   return NS_OK;
-}
-
-void DataChannelChild::AddIPDLReference() {
-  AddRef();  // Released in NeckoChild::DeallocPDataChannelChild.
-  mIPCOpen = true;
 }
 
 void DataChannelChild::ActorDestroy(ActorDestroyReason why) {

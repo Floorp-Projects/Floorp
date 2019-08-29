@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test InspectorUtils::IsElementThemed</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .not-themed-border:focus {
+      border: none;
+    }
+
+    .not-themed-background:focus {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+<h1>Test InspectorUtils::isValidCSSColor</h1>
+
+<button id="themed-button">Themed Button</button>
+<input id="themed-input-number" type="number"/>
+<input id="themed-input-text" type="text"/>
+<textarea id="themed-textarea"></textarea>
+
+<button id="not-themed-button-(border)" class="not-themed-border">Not Themed Button</button>
+<input id="not-themed-input-number-(border)" class="not-themed-border" type="number"/>
+<input id="not-themed-input-text-(border)" class="not-themed-border" type="text"/>
+<textarea id="not-themed-textarea-(border)" class="not-themed-border"></textarea>
+
+<button id="not-themed-button-(background)" class="not-themed-background">Not Themed Button</button>
+<input id="not-themed-input-number-(background)" class="not-themed-background" type="number"/>
+<input id="not-themed-input-text-(background)" class="not-themed-background" type="text"/>
+<textarea id="not-themed-textarea-(background)" class="not-themed-background"></textarea>
+
+<script type="application/javascript">
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+  const tests = [{
+    id: "themed-button",
+    themed: true,
+  }, {
+    id: "themed-input-number",
+    themed: true,
+  }, {
+    id: "themed-input-text",
+    themed: true,
+  }, {
+    id: "themed-textarea",
+    themed: true,
+  }, {
+    id: "not-themed-button-(border)",
+    themed: false,
+  }, {
+    id: "not-themed-input-number-(border)",
+    themed: false,
+  }, {
+    id: "not-themed-input-text-(border)",
+    themed: false,
+  }, {
+    id: "not-themed-textarea-(border)",
+    themed: false,
+  }, {
+    id: "not-themed-button-(background)",
+    themed: false,
+  }, {
+    id: "not-themed-input-number-(background)",
+    themed: false,
+  }, {
+    id: "not-themed-input-text-(background)",
+    themed: false,
+  }, {
+    id: "not-themed-textarea-(background)",
+    themed: false,
+  }];
+
+  for (const { id, themed } of tests) {
+    ok(InspectorUtils.isElementThemed(document.getElementById(id)),
+       `#${id} is${themed ? " ": " not "}themed natively`);
+  }
+</script>
+</body>
+</html>

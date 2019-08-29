@@ -10,8 +10,7 @@ cd $GECKO_PATH
 
 export PATH=$PATH:$MOZ_FETCHES_DIR/node/bin
 
-# We don't install ImageMagick, so this will fail.  Continue.
-./mach browsertime --setup || true
+./mach browsertime --setup
 
 # We have tools/browsertime/{package.json,node_modules,...} and want
 # browsertime/{package.json,node_modules}.  ZIP because generic-worker

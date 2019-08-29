@@ -1695,6 +1695,24 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateOrChangeBlockContainerElement(
       nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
 
+  /**
+   * FormatBlockContainer() is implementation of "formatBlock" command of
+   * `Document.execCommand()`.  This applies block style or removes it.
+   * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
+   *       return NS_OK, editor may have been destroyed.
+   *
+   * @param aBlockType          New block tag name.
+   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
+   *                            RemoveBlockContainerElements() will be called.
+   *                            If nsGkAtoms::blockquote,
+   *                            MoveNodesIntoNewBlockquoteElement() will be
+   *                            called.  Otherwise,
+   *                            CreateOrChangeBlockContainerElement() will be
+   *                            called.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  FormatBlockContainer(nsAtom& aBlockType);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

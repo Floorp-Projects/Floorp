@@ -14,6 +14,7 @@ import type {
 
 import { createPause, prepareSourcePayload } from "./create";
 import sourceQueue from "../../utils/source-queue";
+import { recordEvent } from "../../utils/telemetry";
 
 const CALL_STACK_PAGE_SIZE = 1000;
 
@@ -39,7 +40,8 @@ function setupEvents(dependencies: Dependencies) {
   sourceQueue.initialize(actions);
 
   addThreadEventListeners(threadFront);
-  tabTarget.on("workerListChanged", workerListChanged);
+  tabTarget.on("workerListChanged", () => threadListChanged("worker"));
+  tabTarget.on("processListChanged", () => threadListChanged("contentProcess"));
 }
 
 async function paused(threadFront: ThreadFront, packet: PausedPacket) {
@@ -71,6 +73,8 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
     await sourceQueue.flush();
     actions.paused(pause);
   }
+
+  recordEvent("pause", { reason: why.type });
 }
 
 function resumed(threadFront: ThreadFront) {
@@ -92,8 +96,8 @@ function newSource(threadFront: ThreadFront, { source }: SourcePacket) {
   });
 }
 
-function workerListChanged() {
-  actions.updateThreads();
+function threadListChanged(type) {
+  actions.updateThreads(type);
 }
 
 const clientEvents = {

@@ -1226,6 +1226,7 @@ Document::Document(const char* aContentType)
       mIsBeingUsedAsImage(false),
       mDocURISchemeIsChrome(false),
       mInChromeDocShell(false),
+      mIsDevToolsDocument(false),
       mIsSyntheticDocument(false),
       mHasLinksToUpdateRunnable(false),
       mFlushingPendingLinkUpdates(false),
@@ -2385,6 +2386,14 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   // mDocumentURI.
   mDocumentBaseURI = nullptr;
   mChromeXHRDocBaseURI = nullptr;
+
+  // Check if the current document is the top-level DevTools document.
+  // For inner DevTools frames, mIsDevToolsDocument will be set when
+  // calling SetDocumentParent.
+  if (aURI && aURI->SchemeIs("about") &&
+      aURI->GetSpecOrDefault().EqualsLiteral("about:devtools-toolbox")) {
+    mIsDevToolsDocument = true;
+  }
 
   if (aLoadGroup) {
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
@@ -14811,20 +14820,6 @@ bool Document::HasBeenUserGestureActivated() {
     return false;
   }
   return bc->GetUserGestureActivation();
-}
-
-void Document::MaybeNotifyAutoplayBlocked() {
-  Document* topLevelDoc = GetTopLevelContentDocument();
-  if (!topLevelDoc) {
-    return;
-  }
-
-  // This event is used to notify front-end side that we've blocked autoplay,
-  // so front-end side should show blocking icon as well.
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      topLevelDoc, NS_LITERAL_STRING("GloballyAutoplayBlocked"),
-      CanBubble::eYes, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->PostDOMEvent();
 }
 
 void Document::ClearUserGestureActivation() {

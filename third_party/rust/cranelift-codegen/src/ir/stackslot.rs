@@ -101,7 +101,7 @@ impl fmt::Display for StackSlotKind {
 }
 
 /// Contents of a stack slot.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct StackSlotData {
     /// The kind of stack slot.
@@ -154,7 +154,7 @@ impl fmt::Display for StackSlotData {
 /// Stack frame manager.
 ///
 /// Keep track of all the stack slots used by a function.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct StackSlots {
     /// All allocated stack slots.
@@ -207,11 +207,6 @@ impl StackSlots {
     /// Check if `ss` is a valid stack slot reference.
     pub fn is_valid(&self, ss: StackSlot) -> bool {
         self.slots.is_valid(ss)
-    }
-
-    /// Set the offset of a stack slot.
-    pub fn set_offset(&mut self, ss: StackSlot, offset: StackOffset) {
-        self.slots[ss].offset = Some(offset);
     }
 
     /// Get an iterator over all the stack slot keys.

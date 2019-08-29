@@ -111,35 +111,38 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   DCHECK(mapped_file_ == NULL);
   read_only_ = false;
 
-  SECURITY_ATTRIBUTES sa;
+  SECURITY_ATTRIBUTES sa, *psa = nullptr;
   SECURITY_DESCRIPTOR sd;
   ACL dacl;
-
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = &sd;
-  sa.bInheritHandle = FALSE;
-
-  if (NS_WARN_IF(!InitializeAcl(&dacl, sizeof(dacl), ACL_REVISION)) ||
-      NS_WARN_IF(
-          !InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) ||
-      NS_WARN_IF(!SetSecurityDescriptorDacl(&sd, TRUE, &dacl, FALSE))) {
-    return false;
-  }
-
   nsAutoStringN<sizeof("MozSharedMem_") + 16 * 4> name;
-  if (!mozilla::IsWin8Point1OrLater()) {
-    name.AssignLiteral("MozSharedMem_");
-    for (size_t i = 0; i < 4; ++i) {
-      mozilla::Maybe<uint64_t> randomNum = mozilla::RandomUint64();
-      if (NS_WARN_IF(randomNum.isNothing())) {
-        return false;
+
+  if (freezeable) {
+    psa = &sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = &sd;
+    sa.bInheritHandle = FALSE;
+
+    if (NS_WARN_IF(!InitializeAcl(&dacl, sizeof(dacl), ACL_REVISION)) ||
+        NS_WARN_IF(
+            !InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) ||
+        NS_WARN_IF(!SetSecurityDescriptorDacl(&sd, TRUE, &dacl, FALSE))) {
+      return false;
+    }
+
+    if (!mozilla::IsWin8Point1OrLater()) {
+      name.AssignLiteral("MozSharedMem_");
+      for (size_t i = 0; i < 4; ++i) {
+        mozilla::Maybe<uint64_t> randomNum = mozilla::RandomUint64();
+        if (NS_WARN_IF(randomNum.isNothing())) {
+          return false;
+        }
+        name.AppendPrintf("%016llx", *randomNum);
       }
-      name.AppendPrintf("%016llx", *randomNum);
     }
   }
 
-  mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE,
-                                   0, static_cast<DWORD>(size),
+  mapped_file_ = CreateFileMapping(INVALID_HANDLE_VALUE, psa, PAGE_READWRITE, 0,
+                                   static_cast<DWORD>(size),
                                    name.IsEmpty() ? nullptr : name.get());
   if (!mapped_file_) return false;
 

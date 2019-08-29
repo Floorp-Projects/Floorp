@@ -1269,7 +1269,8 @@ nsresult nsSocketTransport::InitiateSocket() {
 #endif
 
     if (NS_SUCCEEDED(mCondition) && xpc::AreNonLocalConnectionsDisabled() &&
-        !(IsIPAddrAny(&mNetAddr) || IsIPAddrLocal(&mNetAddr))) {
+        !(IsIPAddrAny(&mNetAddr) || IsIPAddrLocal(&mNetAddr) ||
+          IsIPAddrShared(&mNetAddr))) {
       nsAutoCString ipaddr;
       RefPtr<nsNetAddr> netaddr = new nsNetAddr(&mNetAddr);
       netaddr->GetAddress(ipaddr);

@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
+  --sidebar-width: 320px;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: 75px 1fr;
   grid-template-areas: "header header"
                        "logins login";
@@ -17,12 +18,13 @@ header {
   align-items: center;
   background-color: var(--in-content-box-background);
   border-bottom: 1px solid var(--in-content-box-border-color);
-  padding-inline: 60px 23px;
+  padding-inline-end: 23px;
 }
 
 login-filter {
-  max-width: 30%;
-  margin: auto;
+  min-width: 320px;
+  max-width: 400px;
+  margin-inline: 40px auto;
   flex-grow: 1;
   align-self: center;
 }
@@ -52,8 +54,9 @@ login-item {
 }
 
 #branding-logo {
+  flex-basis: var(--sidebar-width);
+  flex-shrink: 0;
   height: 32px;
-  margin-inline-end: 18px;
   -moz-context-properties: fill;
   fill: #20123a;
 }

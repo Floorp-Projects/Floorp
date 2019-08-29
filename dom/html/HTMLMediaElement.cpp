@@ -3876,10 +3876,24 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
       ChromeOnlyDispatch::eYes);
   asyncDispatcher->PostDOMEvent();
 #endif
-  OwnerDoc()->MaybeNotifyAutoplayBlocked();
+  MaybeNotifyAutoplayBlocked();
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
   mHasPlayEverBeenBlocked = true;
   mHasEverBeenBlockedForAutoplay = true;
+}
+
+void HTMLMediaElement::MaybeNotifyAutoplayBlocked() {
+  Document* topLevelDoc = OwnerDoc()->GetTopLevelContentDocument();
+  if (!topLevelDoc) {
+    return;
+  }
+
+  // This event is used to notify front-end side that we've blocked autoplay,
+  // so front-end side should show blocking icon as well.
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      topLevelDoc, NS_LITERAL_STRING("GloballyAutoplayBlocked"),
+      CanBubble::eYes, ChromeOnlyDispatch::eYes);
+  asyncDispatcher->PostDOMEvent();
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
@@ -6099,7 +6113,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
       // blocked.
       if (mHasEverBeenBlockedForAutoplay &&
           !AutoplayPolicy::IsAllowedToPlay(*this)) {
-        OwnerDoc()->MaybeNotifyAutoplayBlocked();
+        MaybeNotifyAutoplayBlocked();
       }
     }
   }

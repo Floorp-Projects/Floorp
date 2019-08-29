@@ -127,6 +127,10 @@
   margin-top: -1px;
 }
 
+.variables-view-scope > .title:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 /* Custom scope stylings */
 
 .variables-view-watch-expressions .title > .name  {
@@ -155,6 +159,10 @@
 
 .variable-or-property > .title > .theme-twisty {
   margin-inline-start: 5px;
+}
+
+.variables-view-container .variables-view-element-details .theme-twisty:not([open]):-moz-locale-dir(rtl) {
+  transform: rotate(-90deg);
 }
 
 .variable-or-property:not([untitled]) > .variables-view-element-details {

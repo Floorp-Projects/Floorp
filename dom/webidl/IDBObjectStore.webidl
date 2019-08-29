@@ -60,10 +60,10 @@ interface IDBObjectStore {
 
 partial interface IDBObjectStore {
     // Success fires IDBTransactionEvent, result == array of values for given keys
-    [Throws]
-    IDBRequest mozGetAll (optional any key, optional [EnforceRange] unsigned long limit);
-
-    [Throws]
+    // If we decide to add use a counter for the mozGetAll function, we'll need
+    // to pull it out into a sepatate operation with a BinaryName mapping to the
+    // same underlying implementation.
+    [Throws, Alias="mozGetAll"]
     IDBRequest getAll (optional any key, optional [EnforceRange] unsigned long limit);
 
     [Throws]

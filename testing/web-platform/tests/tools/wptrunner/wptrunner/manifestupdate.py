@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os
-from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urljoin, urlsplit
 from collections import namedtuple, defaultdict, deque
 from math import ceil
 
@@ -216,9 +216,7 @@ class TestNode(ManifestItem):
 
         :param test_type: The type of the test
         :param test_id: The id of the test"""
-
-        url = test_id
-        name = url.rsplit("/", 1)[1]
+        name = test_id[len(urlsplit(test_id).path.rsplit("/", 1)[0]) + 1:]
         node = DataNode(name)
         self = cls(node)
 

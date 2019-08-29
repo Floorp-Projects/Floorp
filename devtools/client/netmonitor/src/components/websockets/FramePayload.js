@@ -25,6 +25,9 @@ const MESSAGE_DATA_LIMIT = Services.prefs.getIntPref(
 );
 const MESSAGE_DATA_TRUNCATED = L10N.getStr("messageDataTruncated");
 const SocketIODecoder = require("devtools/client/netmonitor/src/components/websockets/parsers/socket-io/index.js");
+const {
+  parseSockJS,
+} = require("devtools/client/netmonitor/src/components/websockets/parsers/sockjs/index.js");
 
 // Components
 const Accordion = createFactory(
@@ -72,7 +75,6 @@ class FramePayload extends Component {
 
   updateFramePayload() {
     const { selectedFrame, connector } = this.props;
-
     getFramePayload(selectedFrame.payload, connector.getLongString).then(
       payload => {
         const { formattedData, formattedDataTitle } = this.parsePayload(
@@ -95,6 +97,14 @@ class FramePayload extends Component {
       return {
         formattedData: socketIOPayload,
         formattedDataTitle: "Socket.IO",
+      };
+    }
+    // sockjs payload
+    const sockJSPayload = parseSockJS(payload);
+    if (sockJSPayload) {
+      return {
+        formattedData: sockJSPayload,
+        formattedDataTitle: "SockJS",
       };
     }
     // json payload

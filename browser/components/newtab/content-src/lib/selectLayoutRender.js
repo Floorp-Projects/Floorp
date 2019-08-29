@@ -4,16 +4,19 @@
 
 export const selectLayoutRender = (state, prefs, rickRollCache) => {
   const { layout, feeds, spocs } = state;
-  let spocIndex = 0;
+  let spocIndexMap = {};
   let bufferRollCache = [];
   // Records the chosen and unchosen spocs by the probability selection.
   let chosenSpocs = new Set();
   let unchosenSpocs = new Set();
 
-  function rollForSpocs(data, spocsConfig) {
-    const recommendations = [...data.recommendations];
+  function rollForSpocs(data, spocsConfig, spocsData, placementName) {
+    if (!spocIndexMap[placementName] && spocIndexMap[placementName] !== 0) {
+      spocIndexMap[placementName] = 0;
+    }
+    const results = [...data];
     for (let position of spocsConfig.positions) {
-      const spoc = spocs.data.spocs[spocIndex];
+      const spoc = spocsData[spocIndexMap[placementName]];
       if (!spoc) {
         break;
       }
@@ -29,9 +32,9 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       }
 
       if (rickRoll <= spocsConfig.probability) {
-        spocIndex++;
+        spocIndexMap[placementName]++;
         if (!spocs.blocked.includes(spoc.url)) {
-          recommendations.splice(position.index, 0, spoc);
+          results.splice(position.index, 0, spoc);
           chosenSpocs.add(spoc);
         }
       } else {
@@ -39,15 +42,13 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       }
     }
 
-    return {
-      ...data,
-      recommendations,
-    };
+    return results;
   }
 
   const positions = {};
   const DS_COMPONENTS = [
     "Message",
+    "TextPromo",
     "SectionTitle",
     "Navigation",
     "CardGrid",
@@ -67,6 +68,15 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
   }
 
   const placeholderComponent = component => {
+    if (!component.feed) {
+      // TODO we now need a placeholder for topsites and textPromo.
+      return {
+        ...component,
+        data: {
+          spocs: [],
+        },
+      };
+    }
     const data = {
       recommendations: [],
     };
@@ -82,13 +92,47 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
     return { ...component, data };
   };
 
-  const handleComponent = component => {
-    positions[component.type] = positions[component.type] || 0;
+  // TODO update devtools to show placements
+  const handleSpocs = (data, component) => {
+    let result = [...data];
+    // Do we ever expect to possibly have a spoc.
+    if (
+      component.spocs &&
+      component.spocs.positions &&
+      component.spocs.positions.length
+    ) {
+      const placement = component.placement || {};
+      const placementName = placement.name || "spocs";
+      const spocsData = spocs.data[placementName];
+      // We expect a spoc, spocs are loaded, and the server returned spocs.
+      if (spocs.loaded && spocsData && spocsData.length) {
+        result = rollForSpocs(
+          result,
+          component.spocs,
+          spocsData,
+          placementName
+        );
+      }
+    }
+    return result;
+  };
 
-    const feed = feeds.data[component.feed.url];
+  const handleComponent = component => {
+    return {
+      ...component,
+      data: {
+        spocs: handleSpocs([], component),
+      },
+    };
+  };
+
+  const handleComponentWithFeed = component => {
+    positions[component.type] = positions[component.type] || 0;
     let data = {
       recommendations: [],
     };
+
+    const feed = feeds.data[component.feed.url];
     if (feed && feed.data) {
       data = {
         ...feed.data,
@@ -105,21 +149,10 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       };
     }
 
-    // Ensure we have recs available for this feed.
-    const hasRecs = data && data.recommendations;
-
-    // Do we ever expect to possibly have a spoc.
-    if (
-      hasRecs &&
-      component.spocs &&
-      component.spocs.positions &&
-      component.spocs.positions.length
-    ) {
-      // We expect a spoc, spocs are loaded, and the server returned spocs.
-      if (spocs.loaded && spocs.data.spocs && spocs.data.spocs.length) {
-        data = rollForSpocs(data, component.spocs);
-      }
-    }
+    data = {
+      ...data,
+      recommendations: handleSpocs(data.recommendations, component),
+    };
 
     let items = 0;
     if (component.properties && component.properties.items) {
@@ -152,12 +185,11 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       for (const component of row.components.filter(
         c => !filterArray.includes(c.type)
       )) {
-        if (component.feed) {
-          const spocsConfig = component.spocs;
-          // Are we still waiting on a feed/spocs, render what we have,
-          // add a placeholder for this component, and bail out early.
+        const spocsConfig = component.spocs;
+        if (spocsConfig || component.feed) {
+          // TODO make sure this still works for different loading cases.
           if (
-            !feeds.data[component.feed.url] ||
+            (component.feed && !feeds.data[component.feed.url]) ||
             (spocsConfig &&
               spocsConfig.positions &&
               spocsConfig.positions.length &&
@@ -166,7 +198,11 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
             components.push(placeholderComponent(component));
             return renderedLayoutArray;
           }
-          components.push(handleComponent(component));
+          if (component.feed) {
+            components.push(handleComponentWithFeed(component));
+          } else {
+            components.push(handleComponent(component));
+          }
         } else {
           components.push(component);
         }
@@ -175,7 +211,7 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
     return renderedLayoutArray;
   };
 
-  const layoutRender = renderLayout(layout);
+  const layoutRender = renderLayout();
 
   // If empty, fill rickRollCache with random probability values from bufferRollCache
   if (!rickRollCache.length) {
@@ -203,7 +239,7 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
         full_recalc: 0,
       }));
     const outOfPositionSpocsFill = spocs.data.spocs
-      .slice(spocIndex)
+      .slice(spocIndexMap.spocs)
       .filter(spoc => !unchosenSpocs.has(spoc))
       .map(spoc => ({
         id: spoc.id,

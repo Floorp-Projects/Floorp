@@ -98,18 +98,12 @@ nsString MediaEngineDefaultVideoSource::GetGroupId() const {
 }
 
 uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
-    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId, const nsString& aGroupId) const {
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets) const {
   AssertIsOnOwningThread();
 
   uint64_t distance = 0;
 #ifdef MOZ_WEBRTC
   for (const auto* cs : aConstraintSets) {
-    distance +=
-        MediaConstraintsHelper::FitnessDistance(Some(aDeviceId), cs->mDeviceId);
-    distance +=
-        MediaConstraintsHelper::FitnessDistance(Some(aGroupId), cs->mGroupId);
-
     Maybe<nsString> facingMode = Nothing();
     distance +=
         MediaConstraintsHelper::FitnessDistance(facingMode, cs->mFacingMode);
@@ -138,7 +132,6 @@ void MediaEngineDefaultVideoSource::GetSettings(
 
 nsresult MediaEngineDefaultVideoSource::Allocate(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    const nsString& aDeviceId, const nsString& aGroupId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
@@ -146,12 +139,6 @@ nsresult MediaEngineDefaultVideoSource::Allocate(
   MOZ_ASSERT(mState == kReleased);
 
   FlattenedConstraints c(aConstraints);
-
-  // Mock failure for automated tests.
-  if (c.mDeviceId.mIdeal.find(NS_LITERAL_STRING("bad device")) !=
-      c.mDeviceId.mIdeal.end()) {
-    return NS_ERROR_FAILURE;
-  }
 
   // emulator debug is very, very slow; reduce load on it with smaller/slower
   // fake video
@@ -316,7 +303,6 @@ nsresult MediaEngineDefaultVideoSource::Stop() {
 
 nsresult MediaEngineDefaultVideoSource::Reconfigure(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    const nsString& aDeviceId, const nsString& aGroupId,
     const char** aOutBadConstraint) {
   return NS_OK;
 }
@@ -423,20 +409,6 @@ nsString MediaEngineDefaultAudioSource::GetGroupId() const {
   return NS_LITERAL_STRING(u"Default Audio Group");
 }
 
-uint32_t MediaEngineDefaultAudioSource::GetBestFitnessDistance(
-    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId, const nsString& aGroupId) const {
-  uint32_t distance = 0;
-#ifdef MOZ_WEBRTC
-  for (const auto* cs : aConstraintSets) {
-    distance = MediaConstraintsHelper::GetMinimumFitnessDistance(*cs, aDeviceId,
-                                                                 aGroupId);
-    break;  // distance is read from first entry only
-  }
-#endif
-  return distance;
-}
-
 void MediaEngineDefaultAudioSource::GetSettings(
     MediaTrackSettings& aOutSettings) const {
   MOZ_ASSERT(NS_IsMainThread());
@@ -448,19 +420,11 @@ void MediaEngineDefaultAudioSource::GetSettings(
 
 nsresult MediaEngineDefaultAudioSource::Allocate(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    const nsString& aDeviceId, const nsString& aGroupId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);
-
-  // Mock failure for automated tests.
-  if (aConstraints.mDeviceId.WasPassed() &&
-      aConstraints.mDeviceId.Value().IsString() &&
-      aConstraints.mDeviceId.Value().GetAsString().EqualsASCII("bad device")) {
-    return NS_ERROR_FAILURE;
-  }
 
   mFrequency = aPrefs.mFreq ? aPrefs.mFreq : 1000;
 
@@ -550,7 +514,6 @@ nsresult MediaEngineDefaultAudioSource::Stop() {
 
 nsresult MediaEngineDefaultAudioSource::Reconfigure(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
-    const nsString& aDeviceId, const nsString& aGroupId,
     const char** aOutBadConstraint) {
   return NS_OK;
 }

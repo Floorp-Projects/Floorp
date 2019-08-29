@@ -645,6 +645,11 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
 
   DrawTarget* drawTarget = aContext->GetDrawTarget();
 
+  MOZ_ASSERT(drawTarget);
+  if (!drawTarget->IsValid()) {
+    return;
+  }
+
   FillRule fillRule = nsSVGUtils::ToFillRule(
       (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) ? StyleSVG()->mClipRule
                                                      : StyleSVG()->mFillRule);

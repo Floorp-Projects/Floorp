@@ -31,7 +31,7 @@ add_task(async function() {
   is(nodeFront.displayName, "h1", "The correct node was highlighted");
 
   info("Unhighlight the node by moving away from the node");
-  let onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   const btn = toolbox.doc.querySelector("#toolbox-meatball-menu-button");
   EventUtils.synthesizeMouseAtCenter(
     btn,
@@ -56,7 +56,7 @@ add_task(async function() {
     },
     node.ownerDocument.defaultView
   );
-  onNodeHighlight = toolbox.highlighter.once("node-highlight");
+  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
   nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "h2", "The correct node was highlighted");
 
@@ -68,7 +68,7 @@ add_task(async function() {
     },
     btn.ownerDocument.defaultView
   );
-  onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   await onNodeUnhighlight;
   ok(true, "node-unhighlight event was fired when moving away from the node");
 });

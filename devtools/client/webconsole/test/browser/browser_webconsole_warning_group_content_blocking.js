@@ -42,6 +42,16 @@ registerCleanupFunction(function() {
 pushPref("privacy.trackingprotection.enabled", true);
 pushPref("devtools.webconsole.groupWarningMessages", true);
 
+async function cleanUp() {
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+}
+
+add_task(cleanUp);
+
 add_task(async function testContentBlockingMessage() {
   const { hud, tab, win } = await openNewWindowAndConsole(
     "http://tracking.example.org/" + TEST_FILE
@@ -154,6 +164,8 @@ add_task(async function testCookieBlockedByPermissionMessage() {
   // Remove the custom permission.
   Services.perms.removeFromPrincipal(p, "cookie");
 });
+
+add_task(cleanUp);
 
 /**
  * Test that storage access blocked messages are grouped by emitting 2 messages.

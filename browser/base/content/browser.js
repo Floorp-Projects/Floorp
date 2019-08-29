@@ -68,7 +68,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
-  SubframeCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
@@ -7966,38 +7965,13 @@ var OfflineApps = {
     );
   },
 
-  // XXX: duplicated in preferences/advanced.js
-  _getOfflineAppUsage(host, groups) {
-    let cacheService = Cc[
-      "@mozilla.org/network/application-cache-service;1"
-    ].getService(Ci.nsIApplicationCacheService);
-    if (!groups) {
-      try {
-        groups = cacheService.getGroups();
-      } catch (ex) {
-        return 0;
-      }
-    }
-
-    let usage = 0;
-    for (let group of groups) {
-      let uri = Services.io.newURI(group);
-      if (uri.asciiHost == host) {
-        let cache = cacheService.getActiveCache(group);
-        usage += cache.usage;
-      }
-    }
-
-    return usage;
-  },
-
   _usedMoreThanWarnQuota(uri) {
     // if the user has already allowed excessive usage, don't bother checking
     if (
       Services.perms.testExactPermission(uri, "offline-app") !=
       Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
     ) {
-      let usageBytes = this._getOfflineAppUsage(uri.asciiHost);
+      let usageBytes = SiteDataManager.getAppCacheUsageByHost(uri.asciiHost);
       let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
       // The pref is in kb, the usage we get is in bytes, so multiply the quota
       // to compare correctly:

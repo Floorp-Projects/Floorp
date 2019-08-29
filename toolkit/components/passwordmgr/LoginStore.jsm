@@ -98,6 +98,10 @@ LoginStore.prototype._dataPostProcessor = function(data) {
     data.logins = [];
   }
 
+  if (!data.potentiallyVulnerablePasswords) {
+    data.potentiallyVulnerablePasswords = [];
+  }
+
   if (!data.dismissedBreachAlertsByLoginGUID) {
     data.dismissedBreachAlertsByLoginGUID = {};
   }

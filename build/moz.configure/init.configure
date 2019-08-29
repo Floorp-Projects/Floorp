@@ -789,7 +789,7 @@ def real_host(value, shell):
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
-        host = check_cmd_output(shell, config_guess, universal_newlines=True).strip()
+        host = check_cmd_output(shell, config_guess).strip()
         try:
             return split_triplet(host)
         except ValueError:

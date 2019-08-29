@@ -1114,23 +1114,23 @@ void nsIContent::SetXBLInsertionPoint(nsIContent* aContent) {
 
 #ifdef DEBUG
 void nsIContent::AssertAnonymousSubtreeRelatedInvariants() const {
-  NS_ASSERTION(!IsRootOfNativeAnonymousSubtree() ||
-                   (GetParent() && GetBindingParent() == GetParent()),
-               "root of native anonymous subtree must have parent equal "
-               "to binding parent");
-  NS_ASSERTION(!GetParent() ||
-                   ((GetBindingParent() == GetParent()) ==
-                    HasFlag(NODE_IS_ANONYMOUS_ROOT)) ||
-                   // Unfortunately default content for XBL insertion points
-                   // is anonymous content that is bound with the parent of
-                   // the insertion point as the parent but the bound element
-                   // for the binding as the binding parent.  So we have to
-                   // complicate the assert a bit here.
-                   (GetBindingParent() &&
-                    (GetBindingParent() == GetParent()->GetBindingParent()) ==
-                        HasFlag(NODE_IS_ANONYMOUS_ROOT)),
-               "For nodes with parent, flag and GetBindingParent() check "
-               "should match");
+  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() ||
+                 (GetParent() && GetBindingParent() == GetParent()),
+             "root of native anonymous subtree must have parent equal "
+             "to binding parent");
+  MOZ_ASSERT(!GetParent() || !IsInComposedDoc() ||
+                 ((GetBindingParent() == GetParent()) ==
+                  HasFlag(NODE_IS_ANONYMOUS_ROOT)) ||
+                 // Unfortunately default content for XBL insertion points
+                 // is anonymous content that is bound with the parent of
+                 // the insertion point as the parent but the bound element
+                 // for the binding as the binding parent.  So we have to
+                 // complicate the assert a bit here.
+                 (GetBindingParent() &&
+                  (GetBindingParent() == GetParent()->GetBindingParent()) ==
+                      HasFlag(NODE_IS_ANONYMOUS_ROOT)),
+             "For connected nodes, flag and GetBindingParent() check "
+             "should match");
 }
 #endif
 

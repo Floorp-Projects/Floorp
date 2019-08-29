@@ -19,6 +19,10 @@ const {
 } = require("devtools/client/accessibility/test/jest/helpers");
 const { FILTERS } = require("devtools/client/accessibility/constants");
 
+const {
+  accessibility: { SCORES },
+} = require("devtools/shared/constants");
+
 describe("AuditController component:", () => {
   it("audit filter not filtered", () => {
     const store = setupStore();
@@ -67,7 +71,7 @@ describe("AuditController component:", () => {
                 color: [255, 0, 0, 1],
                 backgroundColor: [255, 255, 255, 1],
                 isLargeText: false,
-                score: "AA",
+                score: SCORES.AA,
               },
             },
           },
@@ -89,7 +93,7 @@ describe("AuditController component:", () => {
       color: [255, 0, 0, 1],
       backgroundColor: [255, 255, 255, 1],
       isLargeText: false,
-      score: "fail",
+      score: SCORES.FAIL,
     };
 
     const wrapper = mount(
@@ -121,7 +125,7 @@ describe("AuditController component:", () => {
       backgroundColorMin: [219, 106, 116, 1],
       backgroundColorMax: [156, 145, 211, 1],
       isLargeText: false,
-      score: "fail",
+      score: SCORES.FAIL,
     };
 
     const wrapper = mount(

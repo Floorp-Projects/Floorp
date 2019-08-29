@@ -154,7 +154,7 @@ decorate_task(
     Assert.deepEqual(startStub.args, [
       [
         {
-          name: "test",
+          slug: "test",
           actionName: "PreferenceExperimentAction",
           branch: "branch1",
           preferences: {
@@ -177,11 +177,11 @@ decorate_task(
 decorate_task(
   withStudiesEnabled,
   withStub(PreferenceExperiments, "markLastSeen"),
-  PreferenceExperiments.withMockExperiments([{ name: "test", expired: false }]),
+  PreferenceExperiments.withMockExperiments([{ slug: "test", expired: false }]),
   async function markSeen_if_experiment_active(markLastSeenStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "test",
+      name: "test",
     });
 
     await action.runRecipe(recipe);
@@ -194,11 +194,11 @@ decorate_task(
 decorate_task(
   withStudiesEnabled,
   withStub(PreferenceExperiments, "markLastSeen"),
-  PreferenceExperiments.withMockExperiments([{ name: "test", expired: true }]),
+  PreferenceExperiments.withMockExperiments([{ slug: "test", expired: true }]),
   async function dont_markSeen_if_experiment_expired(markLastSeenStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "test",
+      name: "test",
     });
 
     await action.runRecipe(recipe);
@@ -228,9 +228,9 @@ decorate_task(
   withStudiesEnabled,
   withStub(PreferenceExperiments, "stop"),
   PreferenceExperiments.withMockExperiments([
-    { name: "seen", expired: false, actionName: "PreferenceExperimentAction" },
+    { slug: "seen", expired: false, actionName: "PreferenceExperimentAction" },
     {
-      name: "unseen",
+      slug: "unseen",
       expired: false,
       actionName: "PreferenceExperimentAction",
     },
@@ -255,12 +255,12 @@ decorate_task(
   withStub(PreferenceExperiments, "stop"),
   PreferenceExperiments.withMockExperiments([
     {
-      name: "seen",
+      slug: "seen",
       expired: false,
       actionName: "SinglePreferenceExperimentAction",
     },
     {
-      name: "unseen",
+      slug: "unseen",
       expired: false,
       actionName: "SinglePreferenceExperimentAction",
     },
@@ -268,7 +268,7 @@ decorate_task(
   async function dont_stop_experiments_for_other_action(stopStub) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "seen",
+      name: "seen",
     });
 
     await action.runRecipe(recipe);
@@ -288,7 +288,7 @@ decorate_task(
   withStub(Uptake, "reportRecipe"),
   PreferenceExperiments.withMockExperiments([
     {
-      name: "conflict",
+      slug: "conflict",
       preferences: {
         "conflict.pref": {},
       },
@@ -301,7 +301,7 @@ decorate_task(
   ) {
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
-      slug: "new",
+      name: "new",
       branches: [
         {
           preferences: { "conflict.pref": {} },
@@ -447,7 +447,7 @@ decorate_task(
     ok(activeExperiments.length > 0);
     Assert.deepEqual(activeExperiments, [
       {
-        name: "integration test experiment",
+        slug: "integration test experiment",
         actionName: "PreferenceExperimentAction",
         branch: "branch1",
         preferences: {

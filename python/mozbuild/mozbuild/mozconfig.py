@@ -10,6 +10,7 @@ import re
 import sys
 import subprocess
 import traceback
+from textwrap import dedent
 
 from mozpack import path as mozpath
 from mozbuild.util import system_encoding
@@ -54,6 +55,20 @@ class MozconfigLoadException(Exception):
     def __init__(self, path, message, output=None):
         self.path = path
         self.output = output
+
+        message = dedent("""
+        Error loading mozconfig: {path}
+
+        {message}
+        """).format(path=self.path, message=message).lstrip()
+
+        if self.output:
+            message += dedent("""
+            mozconfig output:
+
+            {output}
+            """).format(output="\n".join(self.output))
+
         Exception.__init__(self, message)
 
 

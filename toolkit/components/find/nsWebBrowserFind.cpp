@@ -190,7 +190,7 @@ nsWebBrowserFind::FindNext(bool* aResult) {
   // From here on, we're wrapping, first through the other frames, then finally
   // from the beginning of the starting frame back to the starting point.
 
-  // because nsISimpleEnumerator is totally lame and isn't resettable, I have to
+  // because nsISimpleEnumerator is bad and isn't resettable, I have to
   // make a new one
   docShellEnumerator = nullptr;
   rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,

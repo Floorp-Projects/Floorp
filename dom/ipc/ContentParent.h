@@ -482,7 +482,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                   const ContentParentId& aCpId);
 
-  POfflineCacheUpdateParent* AllocPOfflineCacheUpdateParent(
+  already_AddRefed<POfflineCacheUpdateParent> AllocPOfflineCacheUpdateParent(
       const URIParams& aManifestURI, const URIParams& aDocumentURI,
       const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument);
 
@@ -490,8 +490,6 @@ class ContentParent final : public PContentParent,
       POfflineCacheUpdateParent* aActor, const URIParams& aManifestURI,
       const URIParams& aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
       const bool& stickDocument) override;
-
-  bool DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor);
 
   mozilla::ipc::IPCResult RecvSetOfflinePermission(
       const IPC::Principal& principal);

@@ -25,7 +25,7 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
  public:
   explicit HttpBackgroundChannelParent();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HttpBackgroundChannelParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HttpBackgroundChannelParent, final)
 
   // Try to find associated HttpChannelParent with the same
   // channel Id.

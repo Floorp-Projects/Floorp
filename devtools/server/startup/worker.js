@@ -9,8 +9,8 @@
 
 /*
  * Worker debugger script that listens for requests to start a `DebuggerServer` for a
- * worker in a process.  Loaded into a specific worker during
- * `DebuggerServer.connectToWorker` which is called from the same process as the worker.
+ * worker in a process.  Loaded into a specific worker during worker-connector.js'
+ * `connectToWorker` which is called from the same process as the worker.
  */
 
 // This function is used to do remote procedure calls from the worker to the

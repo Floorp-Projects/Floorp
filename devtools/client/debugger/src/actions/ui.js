@@ -77,6 +77,15 @@ export function toggleFrameworkGrouping(toggleValue: boolean) {
   };
 }
 
+export function toggleInlinePreview(toggleValue: boolean) {
+  return ({ dispatch, getState }: ThunkArgs) => {
+    dispatch({
+      type: "TOGGLE_INLINE_PREVIEW",
+      value: toggleValue,
+    });
+  };
+}
+
 export function showSource(cx: Context, sourceId: string) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);

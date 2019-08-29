@@ -323,5 +323,15 @@ FuzzySecurityInfo::GetServerRootCertIsBuiltInRoot(bool* aIsBuiltInRoot) {
   return NS_OK;
 }
 
+void FuzzySecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
+  MOZ_CRASH("Unused");
+}
+
+bool FuzzySecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
+                                           PickleIterator* aIter) {
+  MOZ_CRASH("Unused");
+  return false;
+}
+
 }  // namespace net
 }  // namespace mozilla

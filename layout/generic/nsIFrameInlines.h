@@ -19,6 +19,11 @@ bool nsIFrame::IsFlexItem() const {
          !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
 }
 
+bool nsIFrame::IsGridItem() const {
+  return GetParent() && GetParent()->IsGridContainerFrame() &&
+         !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+}
+
 bool nsIFrame::IsFlexOrGridContainer() const {
   return IsFlexContainerFrame() || IsGridContainerFrame();
 }

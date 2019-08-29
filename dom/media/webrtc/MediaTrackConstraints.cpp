@@ -316,8 +316,7 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
 
 // MediaEngine helper
 //
-// The full algorithm for all devices. Sources that don't list capabilities
-// need to fake it and hardcode some by populating mHardcodedCapabilities above.
+// The full algorithm for all devices.
 //
 // Fitness distance returned as integer math * 1000. Infinity = UINT32_MAX
 
@@ -338,16 +337,6 @@ bool MediaConstraintsHelper::SomeSettingsFit(
     }
   }
   return false;
-}
-
-/* static */
-uint32_t MediaConstraintsHelper::GetMinimumFitnessDistance(
-    const NormalizedConstraintSet& aConstraints, const nsString& aDeviceId,
-    const nsString& aGroupId) {
-  uint64_t distance =
-      uint64_t(FitnessDistance(Some(aDeviceId), aConstraints.mDeviceId)) +
-      uint64_t(FitnessDistance(Some(aGroupId), aConstraints.mGroupId));
-  return std::min<uint64_t>(distance, UINT32_MAX);
 }
 
 template <class ValueType, class NormalizedRange>
@@ -526,13 +515,16 @@ uint32_t MediaConstraintsHelper::FitnessDistance(
 
 /* static */ const char* MediaConstraintsHelper::FindBadConstraint(
     const NormalizedConstraints& aConstraints,
-    const RefPtr<MediaEngineSource>& aMediaEngineSource,
-    const nsString& aDeviceId, const nsString& aGroupId) {
+    const RefPtr<MediaEngineSource>& aMediaEngineSource) {
+  NormalizedConstraints c(aConstraints);
+  NormalizedConstraints empty((dom::MediaTrackConstraints()));
+  c.mDeviceId = empty.mDeviceId;
+  c.mGroupId = empty.mGroupId;
   AutoTArray<RefPtr<MediaDevice>, 1> devices;
-  devices.AppendElement(
-      MakeRefPtr<MediaDevice>(aMediaEngineSource, aMediaEngineSource->GetName(),
-                              aDeviceId, aGroupId, NS_LITERAL_STRING("")));
-  return FindBadConstraint(aConstraints, devices);
+  devices.AppendElement(MakeRefPtr<MediaDevice>(
+      aMediaEngineSource, aMediaEngineSource->GetName(), NS_LITERAL_STRING(""),
+      NS_LITERAL_STRING(""), NS_LITERAL_STRING("")));
+  return FindBadConstraint(c, devices);
 }
 
 static void LogConstraintStringRange(

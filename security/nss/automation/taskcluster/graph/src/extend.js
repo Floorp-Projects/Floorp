@@ -121,12 +121,22 @@ queue.map(task => {
     }
   }
 
-  // We don't run FIPS SSL tests
   if (task.tests == "ssl") {
     if (!task.env) {
       task.env = {};
     }
-    task.env.NSS_SSL_TESTS = "crl iopr policy";
+
+    // Stress tests to not include other SSL tests
+    if (task.symbol == "stress") {
+      task.env.NSS_SSL_TESTS = "normal_normal";
+    } else {
+      task.env.NSS_SSL_TESTS = "crl iopr policy normal_normal";
+    }
+
+    // FIPS runs
+    if (task.collection == "fips") {
+      task.env.NSS_SSL_TESTS += " fips_fips fips_normal normal_fips";
+    }
 
     if (task.platform == "mac") {
       task.maxRunTime = 7200;
@@ -574,7 +584,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz"
+      "nss/automation/taskcluster/scripts/build_gyp.sh --fuzz"
     ],
     artifacts: {
       public: {
@@ -601,7 +611,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls"
+      "nss/automation/taskcluster/scripts/build_gyp.sh --fuzz=tls"
     ],
   }));
 
@@ -679,7 +689,7 @@ async function scheduleFuzzing32() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz -t ia32"
+      "nss/automation/taskcluster/scripts/build_gyp.sh --fuzz -t ia32"
     ],
     artifacts: {
       public: {
@@ -706,7 +716,7 @@ async function scheduleFuzzing32() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls -t ia32"
+      "nss/automation/taskcluster/scripts/build_gyp.sh --fuzz=tls -t ia32"
     ],
   }));
 
@@ -957,6 +967,10 @@ function scheduleTests(task_build, task_cert, test_base) {
   }));
   queue.scheduleTask(merge(ssl_base, {
     name: "SSL tests (upgradedb)", symbol: "upgradedb", cycle: "upgradedb"
+  }));
+  queue.scheduleTask(merge(ssl_base, {
+    name: "SSL tests (stress)", symbol: "stress", cycle: "sharedb",
+    env: {NSS_SSL_RUN: "stress"}
   }));
 }
 

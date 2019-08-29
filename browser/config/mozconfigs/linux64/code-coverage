@@ -12,6 +12,6 @@ ac_add_options --disable-profiling
 ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
 
-export LDFLAGS="--coverage -L$MOZ_FETCHES_DIR/clang/lib/clang/8.0.0/lib/linux/"
+export LDFLAGS="--coverage -L$MOZ_FETCHES_DIR/clang/lib/clang/8.0.1/lib/linux/"
 export LIBS="-lclang_rt.profile-x86_64"
 export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads -Clink-dead-code -Coverflow-checks=off"

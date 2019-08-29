@@ -61,7 +61,7 @@ add_task(async function() {
   ok(isVisible, "Highlighter is displayed");
 
   info("Unhighlight the node by moving away from the node");
-  let onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   EventUtils.synthesizeMouseAtCenter(
     nonHighlightEl,
     { type: "mousemove" },
@@ -72,8 +72,8 @@ add_task(async function() {
   ok(true, "node-unhighlight event was fired when moving away from the node");
 
   info("Check we don't have zombie highlighters when briefly hovering a node");
-  onNodeHighlight = toolbox.highlighter.once("node-highlight");
-  onNodeUnhighlight = toolbox.highlighter.once("node-unhighlight");
+  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
   // Move hover the node and then right after move out.
   EventUtils.synthesizeMouseAtCenter(node, { type: "mousemove" }, view);
   EventUtils.synthesizeMouseAtCenter(

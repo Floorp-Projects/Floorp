@@ -123,7 +123,14 @@ bool GLContextCGL::IsDoubleBuffered() const { return sCGLLibrary.UseDoubleBuffer
 bool GLContextCGL::SwapBuffers() {
   AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
-  [mContext flushBuffer];
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // We do not have a framebuffer zero. Just do a flush.
+    // Flushing is necessary if we want our IOSurfaces to have the correct
+    // content once they're picked up by the WindowServer from our CALayers.
+    fFlush();
+  } else {
+    [mContext flushBuffer];
+  }
 
   return true;
 }

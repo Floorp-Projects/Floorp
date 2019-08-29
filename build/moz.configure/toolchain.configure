@@ -2025,22 +2025,20 @@ def select_linker(linker, c_compiler, developer_options, enable_gold,
         env = dict(os.environ)
         env['LD_PRINT_OPTIONS'] = '1'
         retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
-        cmd_output = stdout.decode('utf-8')
-        stderr = stderr.decode('utf-8')
         if retcode == 1 and 'Logging ld64 options' in stderr:
             kind = 'ld64'
 
         elif retcode != 0:
             return None
 
-        elif 'GNU ld' in cmd_output:
+        elif 'GNU ld' in stdout:
             # We are using the normal linker
             kind = 'bfd'
 
-        elif 'GNU gold' in cmd_output:
+        elif 'GNU gold' in stdout:
             kind = 'gold'
 
-        elif 'LLD' in cmd_output:
+        elif 'LLD' in stdout:
             kind = 'lld'
 
         else:

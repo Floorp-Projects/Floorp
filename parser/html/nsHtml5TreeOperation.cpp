@@ -71,60 +71,141 @@ class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
   RefPtr<Document> mDocument;
 };
 
-nsHtml5TreeOperation::nsHtml5TreeOperation()
-    : mOpCode(eTreeOpUninitialized),
-      mOne{},
-      mTwo{},
-      mThree{},
-      mFour{},
-      mFive{} {
+nsHtml5TreeOperation::nsHtml5TreeOperation() : mOperation(uninitialized()) {
   MOZ_COUNT_CTOR(nsHtml5TreeOperation);
 }
 
 nsHtml5TreeOperation::~nsHtml5TreeOperation() {
   MOZ_COUNT_DTOR(nsHtml5TreeOperation);
-  NS_ASSERTION(mOpCode != eTreeOpUninitialized, "Uninitialized tree op.");
-  switch (mOpCode) {
-    case eTreeOpAddAttributes:
-      delete mTwo.attributes;
-      break;
-    case eTreeOpCreateHTMLElementNetwork:
-    case eTreeOpCreateHTMLElementNotNetwork:
-    case eTreeOpCreateSVGElementNetwork:
-    case eTreeOpCreateSVGElementNotNetwork:
-    case eTreeOpCreateMathMLElement:
-      mTwo.atom->Release();
-      delete mThree.attributes;
-      break;
-    case eTreeOpAddError:
-      if (mThree.atom) {
-        mThree.atom->Release();
+
+  struct TreeOperationMatcher {
+    void operator()(const opAppend& aOperation) {}
+
+    void operator()(const opDetach& aOperation) {}
+
+    void operator()(const opAppendChildrenToNewParent& aOperation) {}
+
+    void operator()(const opFosterParent& aOperation) {}
+
+    void operator()(const opAppendToDocument& aOperation) {}
+
+    void operator()(const opAddAttributes& aOperation) {
+      delete aOperation.mAttributes;
+    }
+
+    void operator()(const nsHtml5DocumentMode& aMode) {}
+
+    void operator()(const opCreateHTMLElement& aOperation) {
+      aOperation.mName->Release();
+      delete aOperation.mAttributes;
+    }
+
+    void operator()(const opCreateSVGElement& aOperation) {
+      aOperation.mName->Release();
+      delete aOperation.mAttributes;
+    }
+
+    void operator()(const opCreateMathMLElement& aOperation) {
+      aOperation.mName->Release();
+      delete aOperation.mAttributes;
+    }
+
+    void operator()(const opSetFormElement& aOperation) {}
+
+    void operator()(const opAppendText& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opFosterParentText& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opAppendComment& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opAppendCommentToDocument& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opAppendDoctypeToDocument& aOperation) {
+      aOperation.mName->Release();
+      delete aOperation.mStringPair;
+    }
+
+    void operator()(const opGetDocumentFragmentForTemplate& aOperation) {}
+
+    void operator()(const opGetFosterParent& aOperation) {}
+
+    void operator()(const opMarkAsBroken& aOperation) {}
+
+    void operator()(const opRunScript& aOperation) {}
+
+    void operator()(const opRunScriptAsyncDefer& aOperation) {}
+
+    void operator()(const opPreventScriptExecution& aOperation) {}
+
+    void operator()(const opDoneAddingChildren& aOperation) {}
+
+    void operator()(const opDoneCreatingElement& aOperation) {}
+
+    void operator()(const opSetDocumentCharset& aOperation) {}
+
+    void operator()(const opCharsetSwitchTo& aOperation) {}
+
+    void operator()(const opUpdateStyleSheet& aOperation) {}
+
+    void operator()(const opProcessMeta& aOperation) {}
+
+    void operator()(const opProcessOfflineManifest& aOperation) {
+      free(aOperation.mUrl);
+    }
+
+    void operator()(const opMarkMalformedIfScript& aOperation) {}
+
+    void operator()(const opStreamEnded& aOperation) {}
+
+    void operator()(const opSetStyleLineNumber& aOperation) {}
+
+    void operator()(const opSetScriptLineNumberAndFreeze& aOperation) {}
+
+    void operator()(const opSvgLoad& aOperation) {}
+
+    void operator()(const opMaybeComplainAboutCharset& aOperation) {}
+
+    void operator()(const opMaybeComplainAboutDeepTree& aOperation) {}
+
+    void operator()(const opAddClass& aOperation) {}
+
+    void operator()(const opAddViewSourceHref& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opAddViewSourceBase& aOperation) {
+      delete[] aOperation.mBuffer;
+    }
+
+    void operator()(const opAddErrorType& aOperation) {
+      if (aOperation.mName) {
+        aOperation.mName->Release();
       }
-      if (mFour.atom) {
-        mFour.atom->Release();
+      if (aOperation.mOther) {
+        aOperation.mOther->Release();
       }
-      break;
-    case eTreeOpAppendDoctypeToDocument:
-      mOne.atom->Release();
-      delete mTwo.stringPair;
-      break;
-    case eTreeOpFosterParentText:
-    case eTreeOpAppendText:
-    case eTreeOpAppendComment:
-    case eTreeOpAppendCommentToDocument:
-    case eTreeOpAddViewSourceHref:
-    case eTreeOpAddViewSourceBase:
-      delete[] mTwo.unicharPtr;
-      break;
-    case eTreeOpSetDocumentCharset:
-    case eTreeOpNeedsCharsetSwitchTo:
-      break;
-    case eTreeOpProcessOfflineManifest:
-      free(mOne.unicharPtr);
-      break;
-    default:  // keep the compiler happy
-      break;
-  }
+    }
+
+    void operator()(const opAddLineNumberId& aOperation) {}
+
+    void operator()(const opStartLayout& aOperation) {}
+
+    void operator()(const opEnableEncodingMenu& aOperation) {}
+
+    void operator()(const uninitialized& aOperation) {
+      NS_WARNING("Uninitialized tree op.");
+    }
+  };
+
+  mOperation.match(TreeOperationMatcher());
 }
 
 nsresult nsHtml5TreeOperation::AppendTextToTextNode(
@@ -674,241 +755,263 @@ void nsHtml5TreeOperation::MarkMalformedIfScript(nsIContent* aNode) {
 nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                        nsIContent** aScriptElement,
                                        bool* aInterrupted, bool* aStreamEnded) {
-  switch (mOpCode) {
-    case eTreeOpUninitialized: {
-      MOZ_CRASH("eTreeOpUninitialized");
+  struct TreeOperationMatcher {
+    TreeOperationMatcher(nsHtml5TreeOpExecutor* aBuilder,
+                         nsIContent** aScriptElement, bool* aInterrupted,
+                         bool* aStreamEnded)
+        : mBuilder(aBuilder),
+          mScriptElement(aScriptElement),
+          mInterrupted(aInterrupted),
+          mStreamEnded(aStreamEnded) {}
+
+    nsHtml5TreeOpExecutor* mBuilder;
+    nsIContent** mScriptElement;
+    bool* mInterrupted;
+    bool* mStreamEnded;
+
+    nsresult operator()(const opAppend& aOperation) {
+      return Append(*(aOperation.mChild), *(aOperation.mParent), mBuilder);
     }
-    case eTreeOpAppend: {
-      nsIContent* node = *(mOne.node);
-      nsIContent* parent = *(mTwo.node);
-      return Append(node, parent, aBuilder);
-    }
-    case eTreeOpDetach: {
-      nsIContent* node = *(mOne.node);
-      Detach(node, aBuilder);
+
+    nsresult operator()(const opDetach& aOperation) {
+      Detach(*(aOperation.mElement), mBuilder);
       return NS_OK;
     }
-    case eTreeOpAppendChildrenToNewParent: {
-      nsCOMPtr<nsIContent> node = *(mOne.node);
-      nsIContent* parent = *(mTwo.node);
-      return AppendChildrenToNewParent(node, parent, aBuilder);
-    }
-    case eTreeOpFosterParent: {
-      nsIContent* node = *(mOne.node);
-      nsIContent* parent = *(mTwo.node);
-      nsIContent* table = *(mThree.node);
-      return FosterParent(node, parent, table, aBuilder);
-    }
-    case eTreeOpAppendToDocument: {
-      nsIContent* node = *(mOne.node);
-      nsresult rv = AppendToDocument(node, aBuilder);
 
-      aBuilder->PauseDocUpdate(aInterrupted);
+    nsresult operator()(const opAppendChildrenToNewParent& aOperation) {
+      nsCOMPtr<nsIContent> node = *(aOperation.mOldParent);
+      nsIContent* parent = *(aOperation.mNewParent);
+      return AppendChildrenToNewParent(node, parent, mBuilder);
+    }
+
+    nsresult operator()(const opFosterParent& aOperation) {
+      nsIContent* node = *(aOperation.mChild);
+      nsIContent* parent = *(aOperation.mStackParent);
+      nsIContent* table = *(aOperation.mTable);
+      return FosterParent(node, parent, table, mBuilder);
+    }
+
+    nsresult operator()(const opAppendToDocument& aOperation) {
+      nsresult rv = AppendToDocument(*(aOperation.mContent), mBuilder);
+      mBuilder->PauseDocUpdate(mInterrupted);
       return rv;
     }
-    case eTreeOpAddAttributes: {
-      nsIContent* node = *(mOne.node);
-      nsHtml5HtmlAttributes* attributes = mTwo.attributes;
-      return AddAttributes(node, attributes, aBuilder);
+
+    nsresult operator()(const opAddAttributes& aOperation) {
+      nsIContent* node = *(aOperation.mElement);
+      nsHtml5HtmlAttributes* attributes = aOperation.mAttributes;
+      return AddAttributes(node, attributes, mBuilder);
     }
-    case eTreeOpDocumentMode: {
-      aBuilder->SetDocumentMode(mOne.mode);
+
+    nsresult operator()(const nsHtml5DocumentMode& aMode) {
+      mBuilder->SetDocumentMode(aMode);
       return NS_OK;
     }
-    case eTreeOpCreateHTMLElementNetwork:
-    case eTreeOpCreateHTMLElementNotNetwork: {
-      nsIContent** target = mOne.node;
-      mozilla::dom::HTMLContentCreatorFunction creator = mFour.htmlCreator;
-      nsAtom* name = mTwo.atom;
-      nsHtml5HtmlAttributes* attributes = mThree.attributes;
-      nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
+
+    nsresult operator()(const opCreateHTMLElement& aOperation) {
+      nsIContent** target = aOperation.mContent;
+      mozilla::dom::HTMLContentCreatorFunction creator = aOperation.mCreator;
+      nsAtom* name = aOperation.mName;
+      nsHtml5HtmlAttributes* attributes = aOperation.mAttributes;
+      nsIContent* intendedParent =
+          aOperation.mIntendedParent ? *(aOperation.mIntendedParent) : nullptr;
 
       // intendedParent == nullptr is a special case where the
       // intended parent is the document.
       nsNodeInfoManager* nodeInfoManager =
           intendedParent ? intendedParent->OwnerDoc()->NodeInfoManager()
-                         : aBuilder->GetNodeInfoManager();
+                         : mBuilder->GetNodeInfoManager();
 
-      *target = CreateHTMLElement(name, attributes,
-                                  mOpCode == eTreeOpCreateHTMLElementNetwork
-                                      ? dom::FROM_PARSER_NETWORK
-                                      : dom::FROM_PARSER_DOCUMENT_WRITE,
-                                  nodeInfoManager, aBuilder, creator);
+      *target = CreateHTMLElement(name, attributes, aOperation.mFromNetwork,
+                                  nodeInfoManager, mBuilder, creator);
       return NS_OK;
     }
-    case eTreeOpCreateSVGElementNetwork:
-    case eTreeOpCreateSVGElementNotNetwork: {
-      nsIContent** target = mOne.node;
-      mozilla::dom::SVGContentCreatorFunction creator = mFour.svgCreator;
-      nsAtom* name = mTwo.atom;
-      nsHtml5HtmlAttributes* attributes = mThree.attributes;
-      nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
+
+    nsresult operator()(const opCreateSVGElement& aOperation) {
+      nsIContent** target = aOperation.mContent;
+      mozilla::dom::SVGContentCreatorFunction creator = aOperation.mCreator;
+      nsAtom* name = aOperation.mName;
+      nsHtml5HtmlAttributes* attributes = aOperation.mAttributes;
+      nsIContent* intendedParent =
+          aOperation.mIntendedParent ? *(aOperation.mIntendedParent) : nullptr;
 
       // intendedParent == nullptr is a special case where the
       // intended parent is the document.
       nsNodeInfoManager* nodeInfoManager =
           intendedParent ? intendedParent->OwnerDoc()->NodeInfoManager()
-                         : aBuilder->GetNodeInfoManager();
+                         : mBuilder->GetNodeInfoManager();
 
-      *target = CreateSVGElement(name, attributes,
-                                 mOpCode == eTreeOpCreateSVGElementNetwork
-                                     ? dom::FROM_PARSER_NETWORK
-                                     : dom::FROM_PARSER_DOCUMENT_WRITE,
-                                 nodeInfoManager, aBuilder, creator);
+      *target = CreateSVGElement(name, attributes, aOperation.mFromNetwork,
+                                 nodeInfoManager, mBuilder, creator);
       return NS_OK;
     }
-    case eTreeOpCreateMathMLElement: {
-      nsIContent** target = mOne.node;
-      nsAtom* name = mTwo.atom;
-      nsHtml5HtmlAttributes* attributes = mThree.attributes;
-      nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
+
+    nsresult operator()(const opCreateMathMLElement& aOperation) {
+      nsIContent** target = aOperation.mContent;
+      nsAtom* name = aOperation.mName;
+      nsHtml5HtmlAttributes* attributes = aOperation.mAttributes;
+      nsIContent* intendedParent =
+          aOperation.mIntendedParent ? *(aOperation.mIntendedParent) : nullptr;
 
       // intendedParent == nullptr is a special case where the
       // intended parent is the document.
       nsNodeInfoManager* nodeInfoManager =
           intendedParent ? intendedParent->OwnerDoc()->NodeInfoManager()
-                         : aBuilder->GetNodeInfoManager();
+                         : mBuilder->GetNodeInfoManager();
 
       *target =
-          CreateMathMLElement(name, attributes, nodeInfoManager, aBuilder);
+          CreateMathMLElement(name, attributes, nodeInfoManager, mBuilder);
       return NS_OK;
     }
-    case eTreeOpSetFormElement: {
-      nsIContent* node = *(mOne.node);
-      nsIContent* parent = *(mTwo.node);
-      SetFormElement(node, parent);
+
+    nsresult operator()(const opSetFormElement& aOperation) {
+      SetFormElement(*(aOperation.mContent), *(aOperation.mFormElement));
       return NS_OK;
     }
-    case eTreeOpAppendText: {
-      nsIContent* parent = *mOne.node;
-      char16_t* buffer = mTwo.unicharPtr;
-      uint32_t length = mFour.integer;
-      return AppendText(buffer, length, parent, aBuilder);
+
+    nsresult operator()(const opAppendText& aOperation) {
+      nsIContent* parent = *aOperation.mParent;
+      char16_t* buffer = aOperation.mBuffer;
+      uint32_t length = aOperation.mLength;
+      return AppendText(buffer, length, parent, mBuilder);
     }
-    case eTreeOpFosterParentText: {
-      nsIContent* stackParent = *mOne.node;
-      char16_t* buffer = mTwo.unicharPtr;
-      uint32_t length = mFour.integer;
-      nsIContent* table = *mThree.node;
-      return FosterParentText(stackParent, buffer, length, table, aBuilder);
+
+    nsresult operator()(const opFosterParentText& aOperation) {
+      nsIContent* stackParent = *aOperation.mStackParent;
+      char16_t* buffer = aOperation.mBuffer;
+      uint32_t length = aOperation.mLength;
+      nsIContent* table = *aOperation.mTable;
+      return FosterParentText(stackParent, buffer, length, table, mBuilder);
     }
-    case eTreeOpAppendComment: {
-      nsIContent* parent = *mOne.node;
-      char16_t* buffer = mTwo.unicharPtr;
-      int32_t length = mFour.integer;
-      return AppendComment(parent, buffer, length, aBuilder);
+
+    nsresult operator()(const opAppendComment& aOperation) {
+      nsIContent* parent = *aOperation.mParent;
+      char16_t* buffer = aOperation.mBuffer;
+      uint32_t length = aOperation.mLength;
+      return AppendComment(parent, buffer, length, mBuilder);
     }
-    case eTreeOpAppendCommentToDocument: {
-      char16_t* buffer = mTwo.unicharPtr;
-      int32_t length = mFour.integer;
-      return AppendCommentToDocument(buffer, length, aBuilder);
+
+    nsresult operator()(const opAppendCommentToDocument& aOperation) {
+      char16_t* buffer = aOperation.mBuffer;
+      int32_t length = aOperation.mLength;
+      return AppendCommentToDocument(buffer, length, mBuilder);
     }
-    case eTreeOpAppendDoctypeToDocument: {
-      nsAtom* name = mOne.atom;
-      nsHtml5TreeOperationStringPair* pair = mTwo.stringPair;
+
+    nsresult operator()(const opAppendDoctypeToDocument& aOperation) {
+      nsAtom* name = aOperation.mName;
+      nsHtml5TreeOperationStringPair* pair = aOperation.mStringPair;
       nsString publicId;
       nsString systemId;
       pair->Get(publicId, systemId);
-      return AppendDoctypeToDocument(name, publicId, systemId, aBuilder);
+      return AppendDoctypeToDocument(name, publicId, systemId, mBuilder);
     }
-    case eTreeOpGetDocumentFragmentForTemplate: {
-      nsIContent* node = *(mOne.node);
-      *mTwo.node = GetDocumentFragmentForTemplate(node);
+
+    nsresult operator()(const opGetDocumentFragmentForTemplate& aOperation) {
+      nsIContent* node = *(aOperation.mTemplate);
+      *(aOperation.mFragHandle) = GetDocumentFragmentForTemplate(node);
       return NS_OK;
     }
-    case eTreeOpGetFosterParent: {
-      nsIContent* table = *(mOne.node);
-      nsIContent* stackParent = *(mTwo.node);
+
+    nsresult operator()(const opGetFosterParent& aOperation) {
+      nsIContent* table = *(aOperation.mTable);
+      nsIContent* stackParent = *(aOperation.mStackParent);
       nsIContent* fosterParent = GetFosterParent(table, stackParent);
-      *mThree.node = fosterParent;
+      *aOperation.mParentHandle = fosterParent;
       return NS_OK;
     }
-    case eTreeOpMarkAsBroken: {
-      return mOne.result;
+
+    nsresult operator()(const opMarkAsBroken& aOperation) {
+      return aOperation.mResult;
     }
-    case eTreeOpRunScript: {
-      nsIContent* node = *(mOne.node);
-      nsAHtml5TreeBuilderState* snapshot = mTwo.state;
+
+    nsresult operator()(const opRunScript& aOperation) {
+      nsIContent* node = *(aOperation.mElement);
+      nsAHtml5TreeBuilderState* snapshot = aOperation.mBuilderState;
       if (snapshot) {
-        aBuilder->InitializeDocWriteParserState(snapshot, mFour.integer);
+        mBuilder->InitializeDocWriteParserState(snapshot,
+                                                aOperation.mLineNumber);
       }
-      *aScriptElement = node;
+      *mScriptElement = node;
       return NS_OK;
     }
-    case eTreeOpRunScriptAsyncDefer: {
-      nsIContent* node = *(mOne.node);
-      aBuilder->RunScript(node);
+
+    nsresult operator()(const opRunScriptAsyncDefer& aOperation) {
+      mBuilder->RunScript(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpPreventScriptExecution: {
-      nsIContent* node = *(mOne.node);
-      PreventScriptExecution(node);
+
+    nsresult operator()(const opPreventScriptExecution& aOperation) {
+      PreventScriptExecution(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpDoneAddingChildren: {
-      nsIContent* node = *(mOne.node);
+
+    nsresult operator()(const opDoneAddingChildren& aOperation) {
+      nsIContent* node = *(aOperation.mElement);
       node->DoneAddingChildren(node->HasParserNotified());
       return NS_OK;
     }
-    case eTreeOpDoneCreatingElement: {
-      nsIContent* node = *(mOne.node);
-      DoneCreatingElement(node);
+
+    nsresult operator()(const opDoneCreatingElement& aOperation) {
+      DoneCreatingElement(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpSetDocumentCharset: {
-      auto encoding = WrapNotNull(mOne.encoding);
-      int32_t charsetSource = mFour.integer;
-      aBuilder->SetDocumentCharsetAndSource(encoding, charsetSource);
+
+    nsresult operator()(const opSetDocumentCharset& aOperation) {
+      auto encoding = WrapNotNull(aOperation.mEncoding);
+      mBuilder->SetDocumentCharsetAndSource(encoding,
+                                            aOperation.mCharsetSource);
       return NS_OK;
     }
-    case eTreeOpNeedsCharsetSwitchTo: {
-      auto encoding = WrapNotNull(mOne.encoding);
-      int32_t charsetSource = mFour.integer;
-      int32_t lineNumber = mTwo.integer;
-      aBuilder->NeedsCharsetSwitchTo(encoding, charsetSource,
-                                     (uint32_t)lineNumber);
+
+    nsresult operator()(const opCharsetSwitchTo& aOperation) {
+      auto encoding = WrapNotNull(aOperation.mEncoding);
+      mBuilder->NeedsCharsetSwitchTo(encoding, aOperation.mCharsetSource,
+                                     (uint32_t)aOperation.mLineNumber);
       return NS_OK;
     }
-    case eTreeOpUpdateStyleSheet: {
-      nsIContent* node = *(mOne.node);
-      aBuilder->UpdateStyleSheet(node);
+
+    nsresult operator()(const opUpdateStyleSheet& aOperation) {
+      mBuilder->UpdateStyleSheet(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpProcessMeta: {
-      nsIContent* node = *(mOne.node);
-      return aBuilder->ProcessMETATag(node);
+
+    nsresult operator()(const opProcessMeta& aOperation) {
+      return mBuilder->ProcessMETATag(*(aOperation.mElement));
     }
-    case eTreeOpProcessOfflineManifest: {
-      char16_t* str = mOne.unicharPtr;
-      nsDependentString dependentString(str);
-      aBuilder->ProcessOfflineManifest(dependentString);
+
+    nsresult operator()(const opProcessOfflineManifest& aOperation) {
+      nsDependentString dependentString(aOperation.mUrl);
+      mBuilder->ProcessOfflineManifest(dependentString);
       return NS_OK;
     }
-    case eTreeOpMarkMalformedIfScript: {
-      nsIContent* node = *(mOne.node);
-      MarkMalformedIfScript(node);
+
+    nsresult operator()(const opMarkMalformedIfScript& aOperation) {
+      MarkMalformedIfScript(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpStreamEnded: {
-      *aStreamEnded = true;
+
+    nsresult operator()(const opStreamEnded& aOperation) {
+      *mStreamEnded = true;
       return NS_OK;
     }
-    case eTreeOpSetStyleLineNumber: {
-      nsIContent* node = *(mOne.node);
+
+    nsresult operator()(const opSetStyleLineNumber& aOperation) {
+      nsIContent* node = *(aOperation.mContent);
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(node);
       if (ssle) {
-        ssle->SetLineNumber(mFour.integer);
+        ssle->SetLineNumber(aOperation.mLineNumber);
       } else {
         MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
                    "Node didn't QI to style, but SVG wasn't disabled.");
       }
       return NS_OK;
     }
-    case eTreeOpSetScriptLineNumberAndFreeze: {
-      nsIContent* node = *(mOne.node);
+
+    nsresult operator()(const opSetScriptLineNumberAndFreeze& aOperation) {
+      nsIContent* node = *(aOperation.mContent);
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       if (sele) {
-        sele->SetScriptLineNumber(mFour.integer);
+        sele->SetScriptLineNumber(aOperation.mLineNumber);
         sele->FreezeExecutionAttrs(node->OwnerDoc());
       } else {
         MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
@@ -916,31 +1019,28 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return NS_OK;
     }
-    case eTreeOpSvgLoad: {
-      nsIContent* node = *(mOne.node);
-      SvgLoad(node);
+
+    nsresult operator()(const opSvgLoad& aOperation) {
+      SvgLoad(*(aOperation.mElement));
       return NS_OK;
     }
-    case eTreeOpMaybeComplainAboutCharset: {
-      char* msgId = mOne.charPtr;
-      bool error = mTwo.integer;
-      int32_t lineNumber = mThree.integer;
-      aBuilder->MaybeComplainAboutCharset(msgId, error, (uint32_t)lineNumber);
+
+    nsresult operator()(const opMaybeComplainAboutCharset& aOperation) {
+      char* msgId = aOperation.mMsgId;
+      bool error = aOperation.mError;
+      int32_t lineNumber = aOperation.mLineNumber;
+      mBuilder->MaybeComplainAboutCharset(msgId, error, (uint32_t)lineNumber);
       return NS_OK;
     }
-    case eTreeOpEnableEncodingMenu: {
-      Document* doc = aBuilder->GetDocument();
-      doc->EnableEncodingMenu();
+
+    nsresult operator()(const opMaybeComplainAboutDeepTree& aOperation) {
+      mBuilder->MaybeComplainAboutDeepTree((uint32_t)aOperation.mLineNumber);
       return NS_OK;
     }
-    case eTreeOpMaybeComplainAboutDeepTree: {
-      int32_t lineNumber = mOne.integer;
-      aBuilder->MaybeComplainAboutDeepTree((uint32_t)lineNumber);
-      return NS_OK;
-    }
-    case eTreeOpAddClass: {
-      Element* element = (*(mOne.node))->AsElement();
-      char16_t* str = mTwo.unicharPtr;
+
+    nsresult operator()(const opAddClass& aOperation) {
+      Element* element = (*(aOperation.mElement))->AsElement();
+      char16_t* str = aOperation.mClass;
       nsDependentString depStr(str);
       // See viewsource.css for the possible classes
       nsAutoString klass;
@@ -954,19 +1054,19 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return NS_OK;
     }
-    case eTreeOpAddViewSourceHref: {
-      Element* element = (*mOne.node)->AsElement();
-      char16_t* buffer = mTwo.unicharPtr;
-      int32_t length = mFour.integer;
 
+    nsresult operator()(const opAddViewSourceHref& aOperation) {
+      Element* element = (*aOperation.mElement)->AsElement();
+      char16_t* buffer = aOperation.mBuffer;
+      int32_t length = aOperation.mLength;
       nsDependentString relative(buffer, length);
 
-      Document* doc = aBuilder->GetDocument();
+      Document* doc = mBuilder->GetDocument();
 
       auto encoding = doc->GetDocumentCharacterSet();
       nsCOMPtr<nsIURI> uri;
       nsresult rv = NS_NewURI(getter_AddRefs(uri), relative, encoding,
-                              aBuilder->GetViewSourceBaseURI());
+                              mBuilder->GetViewSourceBaseURI());
       NS_ENSURE_SUCCESS(rv, NS_OK);
 
       // Reuse the fix for bug 467852
@@ -1008,18 +1108,18 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       element->SetAttr(kNameSpaceID_None, nsGkAtoms::href, utf16, true);
       return NS_OK;
     }
-    case eTreeOpAddViewSourceBase: {
-      char16_t* buffer = mTwo.unicharPtr;
-      int32_t length = mFour.integer;
-      nsDependentString baseUrl(buffer, length);
-      aBuilder->AddBase(baseUrl);
+
+    nsresult operator()(const opAddViewSourceBase& aOperation) {
+      nsDependentString baseUrl(aOperation.mBuffer, aOperation.mLength);
+      mBuilder->AddBase(baseUrl);
       return NS_OK;
     }
-    case eTreeOpAddError: {
-      Element* element = (*(mOne.node))->AsElement();
-      char* msgId = mTwo.charPtr;
-      nsAtom* atom = mThree.atom;
-      nsAtom* otherAtom = mFour.atom;
+
+    nsresult operator()(const opAddErrorType& aOperation) {
+      Element* element = (*(aOperation.mElement))->AsElement();
+      char* msgId = aOperation.mMsgId;
+      nsAtom* atom = aOperation.mName;
+      nsAtom* otherAtom = aOperation.mOther;
       // See viewsource.css for the possible classes in addition to "error".
       nsAutoString klass;
       element->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);
@@ -1060,22 +1160,34 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return rv;
     }
-    case eTreeOpAddLineNumberId: {
-      Element* element = (*(mOne.node))->AsElement();
-      int32_t lineNumber = mFour.integer;
+
+    nsresult operator()(const opAddLineNumberId& aOperation) {
+      Element* element = (*(aOperation.mElement))->AsElement();
+      int32_t lineNumber = aOperation.mLineNumber;
       nsAutoString val(NS_LITERAL_STRING("line"));
       val.AppendInt(lineNumber);
       element->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
       return NS_OK;
     }
-    case eTreeOpStartLayout: {
-      aBuilder->StartLayout(
-          aInterrupted);  // this causes a notification flush anyway
+
+    nsresult operator()(const opStartLayout& aOperation) {
+      mBuilder->StartLayout(
+          mInterrupted);  // this causes a notification flush anyway
       return NS_OK;
     }
-    default: {
-      MOZ_CRASH("Bogus tree op");
+
+    nsresult operator()(const opEnableEncodingMenu& aOperation) {
+      Document* doc = mBuilder->GetDocument();
+      doc->EnableEncodingMenu();
+      return NS_OK;
     }
-  }
-  return NS_OK;  // keep compiler happy
+
+    nsresult operator()(const uninitialized& aOperation) {
+      MOZ_CRASH("uninitialized");
+      return NS_OK;
+    }
+  };
+
+  return mOperation.match(TreeOperationMatcher(aBuilder, aScriptElement,
+                                               aInterrupted, aStreamEnded));
 }

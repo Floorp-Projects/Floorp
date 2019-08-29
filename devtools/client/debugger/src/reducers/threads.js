@@ -28,7 +28,7 @@ export function initialThreadsState(): ThreadsState {
     mainThread: {
       actor: "",
       url: "",
-      type: "main-thread",
+      type: "mainThread",
       name: "",
     },
     isWebExtension: false,

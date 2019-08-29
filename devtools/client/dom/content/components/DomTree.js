@@ -77,25 +77,26 @@ class DomTree extends Component {
     const toolbox = DomProvider.getToolbox();
     if (toolbox) {
       onDOMNodeMouseOver = async (grip, options = {}) => {
-        await toolbox.initInspector();
-        if (!toolbox.highlighter) {
-          return null;
-        }
-        const nodeFront = await toolbox.walker.gripToNodeFront(grip);
-        return toolbox.highlighter.highlight(nodeFront, options);
+        // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+        const walkerFront = (await toolbox.target.getFront("inspector")).walker;
+        const nodeFront = await walkerFront.gripToNodeFront(grip);
+        const { highlighterFront } = nodeFront;
+        return highlighterFront.highlight(nodeFront, options);
       };
-      onDOMNodeMouseOut = (forceHide = false) => {
-        return toolbox.highlighter
-          ? toolbox.highlighter.unhighlight(forceHide)
-          : null;
+      onDOMNodeMouseOut = async grip => {
+        // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+        const walkerFront = (await toolbox.target.getFront("inspector")).walker;
+        const nodeFront = await walkerFront.gripToNodeFront(grip);
+        nodeFront.highlighterFront.unhighlight();
       };
       onInspectIconClick = async grip => {
-        await toolbox.initInspector();
+        // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+        const walkerFront = (await toolbox.target.getFront("inspector")).walker;
         const onSelectInspector = toolbox.selectTool(
           "inspector",
           "inspect_dom"
         );
-        const onGripNodeToFront = toolbox.walker.gripToNodeFront(grip);
+        const onGripNodeToFront = walkerFront.gripToNodeFront(grip);
         const [front, inspector] = await Promise.all([
           onGripNodeToFront,
           onSelectInspector,

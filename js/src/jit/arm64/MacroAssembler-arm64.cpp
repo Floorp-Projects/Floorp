@@ -727,13 +727,11 @@ void MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
   inst2->SetInstructionBits((uint32_t)(distance >> 32));
 }
 
-CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
+CodeOffset MacroAssembler::nopPatchableToCall() {
   AutoForbidPoolsAndNops afp(this,
                              /* max number of instructions in scope = */ 1);
-  CodeOffset offset(currentOffset());
   Nop();
-  append(desc, CodeOffset(currentOffset()));
-  return offset;
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target) {
@@ -2021,6 +2019,26 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest,
   // Compute remainder
   Mul(scratch, ARMRegister(srcDest, 32), ARMRegister(rhs, 32));
   Sub(ARMRegister(remOutput, 32), src, scratch);
+}
+
+CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {
+  AutoForbidPoolsAndNops afp(this,
+                             /* max number of instructions in scope = */ 1);
+  CodeOffset offset(currentOffset());
+  adr(ARMRegister(dest, 64), 0, LabelDoc());
+  return offset;
+}
+
+void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
+                                          CodeLocationLabel target) {
+  ptrdiff_t off = target - loc;
+  MOZ_RELEASE_ASSERT(vixl::IsInt21(off));
+
+  Instruction* cur = reinterpret_cast<Instruction*>(loc.raw());
+  MOZ_ASSERT(cur->IsADR());
+
+  vixl::Register rd = vixl::Register::XRegFromCode(cur->Rd());
+  adr(cur, rd, off);
 }
 
 // ========================================================================

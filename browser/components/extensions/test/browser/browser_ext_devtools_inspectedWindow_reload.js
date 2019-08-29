@@ -17,7 +17,7 @@ async function runReloadTestCase({
 }) {
   const BASE =
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
-  const TEST_TARGET_URL = `${BASE}/test-oop-extensions/file_inspectedwindow_reload_target.sjs?${urlParams}`;
+  const TEST_TARGET_URL = `${BASE}/file_inspectedwindow_reload_target.sjs?${urlParams}`;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_TARGET_URL

@@ -1077,7 +1077,6 @@ function TypedArrayCompareInt(x, y) {
 // TypedArray SortCompare specialization for BigInt values.
 function TypedArrayCompareBigInt(x, y) {
     // Step 1.
-    // eslint-disable-next-line valid-typeof
     assert(typeof x === "bigint" && typeof y === "bigint",
            "x and y are not BigInts.");
 

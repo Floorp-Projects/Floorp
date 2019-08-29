@@ -20,11 +20,11 @@ add_task(async function() {
   // We don't need to test here that the highlighter is actually visible, we
   // just care about whether the markup-view asks it to be shown
   let highlightedNode = null;
-  inspector.toolbox._highlighter.showBoxModel = function(nodeFront) {
+  inspector.highlighter.showBoxModel = function(nodeFront) {
     highlightedNode = nodeFront;
     return promise.resolve();
   };
-  inspector.toolbox._highlighter.hideBoxModel = function() {
+  inspector.highlighter.hideBoxModel = function() {
     return promise.resolve();
   };
 

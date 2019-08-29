@@ -786,10 +786,6 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
             "Invalid native key binding type");
     }
   }
-
-  static int32_t GenericAccessModifierKeyPref();
-  static int32_t ChromeAccessModifierMaskPref();
-  static int32_t ContentAccessModifierMaskPref();
 };
 
 /******************************************************************************

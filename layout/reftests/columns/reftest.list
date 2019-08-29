@@ -17,6 +17,7 @@ fuzzy-if(webrender,0-126,0-364) == column-balancing-overflow-005.html column-bal
 == column-balancing-002.html column-balancing-002.ref.html
 == column-balancing-003.html column-balancing-000.ref.html
 == column-balancing-004.html column-balancing-004.ref.html
+pref(layout.css.column-span.enabled,true) == column-balancing-paged-001.html column-balancing-paged-001-ref.html
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 == columnfill-balance.html columnfill-balance-ref.html
 fuzzy-if(OSX,0-32,0-1000) == columnfill-auto.html columnfill-auto-ref.html

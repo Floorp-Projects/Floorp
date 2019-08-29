@@ -159,6 +159,12 @@ var gIdentityHandler = {
       "identity-popup-mainView-panel-header-span"
     ));
   },
+  get _identityPopupSecurityView() {
+    delete this._identityPopupSecurityView;
+    return (this._identityPopupSecurityView = document.getElementById(
+      "identity-popup-securityView"
+    ));
+  },
   get _identityPopupSecurityEVContentOwner() {
     delete this._identityPopupSecurityEVContentOwner;
     return (this._identityPopupSecurityEVContentOwner = document.getElementById(
@@ -932,14 +938,8 @@ var gIdentityHandler = {
     // "Clear Site Data" button if the site is storing local data.
     this._clearSiteDataFooter.hidden = true;
     if (this._uriHasHost) {
-      let host = this._uri.host;
-      SiteDataManager.updateSites().then(async () => {
-        let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
-        let siteData = await SiteDataManager.getSites(baseDomain);
-
-        if (siteData && siteData.length) {
-          this._clearSiteDataFooter.hidden = false;
-        }
+      SiteDataManager.hasSiteData(this._uri.asciiHost).then(hasData => {
+        this._clearSiteDataFooter.hidden = !hasData;
       });
     }
 
@@ -1070,6 +1070,13 @@ var gIdentityHandler = {
     this._identityPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
       "identity.headerMainWithHost",
       [host]
+    );
+
+    this._identityPopupSecurityView.setAttribute(
+      "title",
+      gNavigatorBundle.getFormattedString("identity.headerSecurityWithHost", [
+        host,
+      ])
     );
 
     this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(

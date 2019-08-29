@@ -405,6 +405,7 @@ function transformEvaluationResultPacket(packet) {
     timeStamp,
     notes,
     private: packet.private,
+    allowRepeating: false,
   });
 }
 

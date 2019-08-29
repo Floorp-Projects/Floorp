@@ -10,7 +10,7 @@ const TEST_URI = URL_ROOT + "doc_flexbox_specific_cases.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
-  const { inspector, flexboxInspector, toolbox } = await openLayoutView();
+  const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
   const onFlexContainerRepRendered = waitForDOM(
@@ -23,7 +23,7 @@ add_task(async function() {
   ok(flexContainerRep, "The flex container element rep is rendered.");
 
   info("Listen to node-highlight event and mouse over the rep");
-  const onHighlight = toolbox.highlighter.once("node-highlight");
+  const onHighlight = inspector.highlighter.once("node-highlight");
   EventUtils.synthesizeMouse(
     flexContainerRep,
     10,

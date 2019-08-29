@@ -87,7 +87,7 @@ bool MediaCodecs::ContainsPrefix(const nsAString& aCodecPrefix) const {
   const size_t prefixLength = aCodecPrefix.Length();
   for (const auto& myCodec : Range()) {
     if (myCodec.Length() >= prefixLength &&
-        memcmp(myCodec.Data(), aCodecPrefix.Data(), prefixLength) == 0) {
+        memcmp(myCodec.Data(), aCodecPrefix.Data(), prefixLength * sizeof(char16_t)) == 0) {
       return true;
     }
   }

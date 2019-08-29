@@ -2001,6 +2001,20 @@ void DocAccessible::ContentRemoved(nsIContent* aContentNode) {
   while (nsIContent* childNode = iter.GetNextChild()) {
     ContentRemoved(childNode);
   }
+
+  // If this node has a shadow root, remove its explicit children too.
+  // The host node may be removed after the shadow root was attached, and
+  // before we asynchronously prune the light DOM and construct the shadow DOM.
+  // If this is a case where the node does not have its own accessible, we will
+  // not recurse into its current children, so we need to use an
+  // ExplicitChildIterator in order to get its accessible children in the light
+  // DOM, since they are not accessible anymore via AllChildrenIterator.
+  if (aContentNode->GetShadowRoot()) {
+    dom::ExplicitChildIterator iter = dom::ExplicitChildIterator(aContentNode);
+    while (nsIContent* childNode = iter.GetNextChild()) {
+      ContentRemoved(childNode);
+    }
+  }
 }
 
 bool DocAccessible::RelocateARIAOwnedIfNeeded(nsIContent* aElement) {

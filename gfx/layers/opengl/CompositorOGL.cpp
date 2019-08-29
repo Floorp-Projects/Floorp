@@ -868,48 +868,40 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
 #endif
 }
 
-void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
-                               const IntRect* aClipRectIn,
-                               const IntRect& aRenderBounds,
-                               const nsIntRegion& aOpaqueRegion,
-                               NativeLayer* aNativeLayer, IntRect* aClipRectOut,
-                               IntRect* aRenderBoundsOut) {
+Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
+                                         const Maybe<IntRect>& aClipRect,
+                                         const IntRect& aRenderBounds,
+                                         const nsIntRegion& aOpaqueRegion,
+                                         NativeLayer* aNativeLayer) {
   AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
   MOZ_ASSERT(!mFrameInProgress,
              "frame still in progress (should have called EndFrame");
 
-  gfx::IntRect rect;
+  IntRect rect;
   if (mUseExternalSurfaceSize) {
-    rect = gfx::IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
+    rect = IntRect(IntPoint(), mSurfaceSize);
   } else {
-    rect = gfx::IntRect(aRenderBounds.X(), aRenderBounds.Y(),
-                        aRenderBounds.Width(), aRenderBounds.Height());
+    rect = aRenderBounds;
   }
-
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = rect;
-  }
-
-  auto width = rect.Width();
-  auto height = rect.Height();
 
   // We can't draw anything to something with no area
   // so just return
-  if (width == 0 || height == 0) return;
+  if (rect.IsZeroArea()) {
+    return Nothing();
+  }
 
   // If the widget size changed, we have to force a MakeCurrent
   // to make sure that GL sees the updated widget size.
-  if (mWidgetSize.width != width || mWidgetSize.height != height) {
+  if (mWidgetSize.ToUnknownSize() != rect.Size()) {
     MakeCurrent(ForceMakeCurrent);
 
-    mWidgetSize.width = width;
-    mWidgetSize.height = height;
+    mWidgetSize = LayoutDeviceIntSize::FromUnknownSize(rect.Size());
   } else {
     MakeCurrent();
   }
 
-  mPixelsPerFrame = width * height;
+  mPixelsPerFrame = rect.Area();
   mPixelsFilled = 0;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -940,9 +932,8 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (!rt) {
-    *aRenderBoundsOut = IntRect();
     mCurrentNativeLayer = nullptr;
-    return;
+    return Nothing();
   }
 
   // We're about to actually draw a frame.
@@ -950,10 +941,6 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   SetRenderTarget(rt);
   mWindowRenderTarget = mCurrentRenderTarget;
-
-  if (aClipRectOut && !aClipRectIn) {
-    aClipRectOut->SetRect(0, 0, width, height);
-  }
 
 #if defined(MOZ_WIDGET_ANDROID)
   if ((mSurfaceOrigin.x > 0) || (mSurfaceOrigin.y > 0)) {
@@ -990,6 +977,8 @@ void CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   } else {
     mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
   }
+
+  return Some(rect);
 }
 
 void CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect,
@@ -1306,7 +1295,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
-  mPixelsFilled += destRect.Width() * destRect.Height();
+  mPixelsFilled += destRect.Area();
 
   // Do a simple culling if this rect is out of target buffer.
   // Inflate a small size to avoid some numerical imprecision issue.
@@ -1903,9 +1892,9 @@ void CompositorOGL::EndFrame() {
 #endif
 
   if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
-    float r = float(rand()) / RAND_MAX;
-    float g = float(rand()) / RAND_MAX;
-    float b = float(rand()) / RAND_MAX;
+    float r = float(rand()) / float(RAND_MAX);
+    float g = float(rand()) / float(RAND_MAX);
+    float b = float(rand()) / float(RAND_MAX);
     EffectChain effectChain;
     effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
     // If we're clipping the render target to the invalid rect, then the

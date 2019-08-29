@@ -890,7 +890,7 @@ class UrlbarInput {
   endLayoutBreakout(force) {
     if (
       !force &&
-      (this.isOpen ||
+      (this.view.isOpen ||
         (this.focused && !this.textbox.classList.contains("hidden-focus")))
     ) {
       return;

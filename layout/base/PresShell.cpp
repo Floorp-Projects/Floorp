@@ -1863,6 +1863,10 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                                ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
 
+  if (aWidth == aOldWidth && aHeight == aOldHeight) {
+    return NS_OK;
+  }
+
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {
     // If we don't have a root frame yet, that means we haven't had our initial

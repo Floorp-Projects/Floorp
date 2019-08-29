@@ -43,6 +43,7 @@
         '<(DEPTH)/lib/pkcs7/pkcs7.gyp:pkcs7',
         # This is a static build of pk11wrap, softoken, and freebl.
         '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
+        '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
       ],
       'cflags_cc': [
         '-Wno-error=shadow',

@@ -11,6 +11,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
@@ -1009,7 +1010,7 @@ Modifiers WidgetKeyboardEvent::ModifiersForAccessKeyMatching() const {
 
 /* static */
 Modifiers WidgetKeyboardEvent::AccessKeyModifiers(AccessKeyType aType) {
-  switch (GenericAccessModifierKeyPref()) {
+  switch (StaticPrefs::ui_key_generalAccessKey()) {
     case -1:
       break;  // use the individual prefs
     case NS_VK_SHIFT:
@@ -1028,45 +1029,12 @@ Modifiers WidgetKeyboardEvent::AccessKeyModifiers(AccessKeyType aType) {
 
   switch (aType) {
     case AccessKeyType::eChrome:
-      return PrefFlagsToModifiers(ChromeAccessModifierMaskPref());
+      return PrefFlagsToModifiers(StaticPrefs::ui_key_chromeAccess());
     case AccessKeyType::eContent:
-      return PrefFlagsToModifiers(ContentAccessModifierMaskPref());
+      return PrefFlagsToModifiers(StaticPrefs::ui_key_contentAccess());
     default:
       return MODIFIER_NONE;
   }
-}
-
-/* static */
-int32_t WidgetKeyboardEvent::GenericAccessModifierKeyPref() {
-  static bool sInitialized = false;
-  static int32_t sValue = -1;
-  if (!sInitialized) {
-    Preferences::AddIntVarCache(&sValue, "ui.key.generalAccessKey", sValue);
-    sInitialized = true;
-  }
-  return sValue;
-}
-
-/* static */
-int32_t WidgetKeyboardEvent::ChromeAccessModifierMaskPref() {
-  static bool sInitialized = false;
-  static int32_t sValue = 0;
-  if (!sInitialized) {
-    Preferences::AddIntVarCache(&sValue, "ui.key.chromeAccess", sValue);
-    sInitialized = true;
-  }
-  return sValue;
-}
-
-/* static */
-int32_t WidgetKeyboardEvent::ContentAccessModifierMaskPref() {
-  static bool sInitialized = false;
-  static int32_t sValue = 0;
-  if (!sInitialized) {
-    Preferences::AddIntVarCache(&sValue, "ui.key.contentAccess", sValue);
-    sInitialized = true;
-  }
-  return sValue;
 }
 
 /* static */

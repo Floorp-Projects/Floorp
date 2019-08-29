@@ -43,8 +43,20 @@ add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
       buttonEl.click();
 
       if (destroyWindow) {
+        // The next popup may be shown during closeWindow or promiseFocus
+        // calls.
+        let waitForPopupShown = new Promise(resolve => {
+          window.addEventListener(
+            "popupshown",
+            () => {
+              executeSoon(resolve);
+            },
+            { once: true }
+          );
+        });
         await BrowserTestUtils.closeWindow(extraWindow);
         await SimpleTest.promiseFocus(window);
+        await waitForPopupShown;
       }
     };
   }
@@ -57,7 +69,7 @@ add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
   let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(extraWindow);
 
-  let params = { checkAttempts: 1, queryString: "&badURL=1" };
+  let params = { checkAttempts: 1, queryString: "&badURL=1", popupShown: true };
   await runDoorhangerUpdateTest(params, [
     getBackgroundWindowHandler(false),
     getBackgroundWindowHandler(true),

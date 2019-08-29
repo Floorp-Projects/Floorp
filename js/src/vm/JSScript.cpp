@@ -2704,8 +2704,7 @@ bool js::SynchronouslyCompressSource(JSContext* cx,
 
 void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                           JS::ScriptSourceInfo* info) const {
-  info->misc += mallocSizeOf(this) + mallocSizeOf(filename_.get()) +
-                mallocSizeOf(introducerFilename_.get());
+  info->misc += mallocSizeOf(this);
   info->numScripts++;
 }
 
@@ -3333,70 +3332,58 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint8(&haveSourceMap));
 
   if (haveSourceMap) {
-    UniqueTwoByteChars& sourceMapURL(ss->sourceMapURL_);
-    uint32_t sourceMapURLLen =
-        (mode == XDR_DECODE) ? 0 : js_strlen(sourceMapURL.get());
-    MOZ_TRY(xdr->codeUint32(&sourceMapURLLen));
+    XDRTranscodeString<char16_t> chars;
 
+    if (mode == XDR_ENCODE) {
+      chars.construct<const char16_t*>(ss->sourceMapURL());
+    }
+    MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      sourceMapURL =
-          xdr->cx()->template make_pod_array<char16_t>(sourceMapURLLen + 1);
-      if (!sourceMapURL) {
+      if (!ss->setSourceMapURL(cx,
+                               std::move(chars.ref<UniqueTwoByteChars>()))) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
-    auto guard = mozilla::MakeScopeExit([&] {
-      if (mode == XDR_DECODE) {
-        sourceMapURL = nullptr;
-      }
-    });
-    MOZ_TRY(xdr->codeChars(sourceMapURL.get(), sourceMapURLLen));
-    guard.release();
-    sourceMapURL[sourceMapURLLen] = '\0';
   }
 
   uint8_t haveDisplayURL = ss->hasDisplayURL();
   MOZ_TRY(xdr->codeUint8(&haveDisplayURL));
 
   if (haveDisplayURL) {
-    UniqueTwoByteChars& displayURL(ss->displayURL_);
-    uint32_t displayURLLen =
-        (mode == XDR_DECODE) ? 0 : js_strlen(displayURL.get());
-    MOZ_TRY(xdr->codeUint32(&displayURLLen));
+    XDRTranscodeString<char16_t> chars;
 
+    if (mode == XDR_ENCODE) {
+      chars.construct<const char16_t*>(ss->displayURL());
+    }
+    MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      displayURL =
-          xdr->cx()->template make_pod_array<char16_t>(displayURLLen + 1);
-      if (!displayURL) {
+      if (!ss->setDisplayURL(cx, std::move(chars.ref<UniqueTwoByteChars>()))) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
-    auto guard = mozilla::MakeScopeExit([&] {
-      if (mode == XDR_DECODE) {
-        displayURL = nullptr;
-      }
-    });
-    MOZ_TRY(xdr->codeChars(displayURL.get(), displayURLLen));
-    guard.release();
-    displayURL[displayURLLen] = '\0';
   }
 
   uint8_t haveFilename = !!ss->filename_;
   MOZ_TRY(xdr->codeUint8(&haveFilename));
 
   if (haveFilename) {
-    const char* fn = ss->filename();
-    MOZ_TRY(xdr->codeCString(&fn));
-    // Note: If the decoder has an option, then the filename is defined by
-    // the CompileOption from the document.
-    MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), ss->filename());
-    if (mode == XDR_DECODE && !xdr->hasOptions() &&
-        !ss->setFilename(xdr->cx(), fn)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
+    XDRTranscodeString<char> chars;
 
-    // Note the content of sources decoded when recording or replaying.
+    if (mode == XDR_ENCODE) {
+      chars.construct<const char*>(ss->filename());
+    }
+    MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
+      // NOTE: If the decoder has an option, then the filename is defined by
+      // the CompileOption from the document.
+      if (!xdr->hasOptions()) {
+        if (!ss->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
+          return xdr->fail(JS::TranscodeResult_Throw);
+        }
+      }
+      MOZ_ASSERT(ss->filename());
+
+      // Note the content of sources decoded when recording or replaying.
       if (!MaybeNoteContentParse(xdr->cx(), ss)) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -3455,9 +3442,12 @@ bool ScriptSource::initFromOptions(JSContext* cx,
     MOZ_ASSERT(options.introductionType != nullptr);
     const char* filename =
         options.filename() ? options.filename() : "<unknown>";
-    filename_ = FormatIntroducedFilename(
+    UniqueChars formatted = FormatIntroducedFilename(
         cx, filename, options.introductionLineno, options.introductionType);
-    if (!filename_) {
+    if (!formatted) {
+      return false;
+    }
+    if (!setFilename(cx, std::move(formatted))) {
       return false;
     }
   } else if (options.filename()) {
@@ -3467,8 +3457,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   }
 
   if (options.introducerFilename()) {
-    introducerFilename_ = DuplicateString(cx, options.introducerFilename());
-    if (!introducerFilename_) {
+    if (!setIntroducerFilename(cx, options.introducerFilename())) {
       return false;
     }
   }
@@ -3476,43 +3465,104 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   return true;
 }
 
-bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
-  MOZ_ASSERT(!filename_);
-  filename_ = DuplicateString(cx, filename);
-  return filename_ != nullptr;
+// Use the SharedImmutableString map to deduplicate input string. The input
+// string must be null-terminated.
+template <typename SharedT, typename CharT>
+static Maybe<SharedT> GetOrCreateStringZ(
+    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy>&& str) {
+  JSRuntime* rt = cx->zone()->runtimeFromAnyThread();
+  size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
+  auto res =
+      rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
+  if (!res) {
+    ReportOutOfMemory(cx);
+  }
+  return res;
 }
 
-bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* displayURL) {
-  MOZ_ASSERT(displayURL);
+Maybe<SharedImmutableString> ScriptSource::getOrCreateStringZ(
+    JSContext* cx, UniqueChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableString>(cx, std::move(str));
+}
+
+Maybe<SharedImmutableTwoByteString> ScriptSource::getOrCreateStringZ(
+    JSContext* cx, UniqueTwoByteChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, std::move(str));
+}
+
+bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
+  UniqueChars owned = DuplicateString(cx, filename);
+  if (!owned) {
+    return false;
+  }
+  return setFilename(cx, std::move(owned));
+}
+
+bool ScriptSource::setFilename(JSContext* cx, UniqueChars&& filename) {
+  MOZ_ASSERT(!filename_);
+  filename_ = getOrCreateStringZ(cx, std::move(filename));
+  return filename_.isSome();
+}
+
+bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
+  UniqueChars owned = DuplicateString(cx, filename);
+  if (!owned) {
+    return false;
+  }
+  return setIntroducerFilename(cx, std::move(owned));
+}
+
+bool ScriptSource::setIntroducerFilename(JSContext* cx,
+                                         UniqueChars&& filename) {
+  MOZ_ASSERT(!introducerFilename_);
+  introducerFilename_ = getOrCreateStringZ(cx, std::move(filename));
+  return introducerFilename_.isSome();
+}
+
+bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* url) {
+  UniqueTwoByteChars owned = DuplicateString(cx, url);
+  if (!owned) {
+    return false;
+  }
+  return setDisplayURL(cx, std::move(owned));
+}
+
+bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
   if (hasDisplayURL()) {
-    // FIXME: filename_.get() should be UTF-8 (bug 987069).
+    // FIXME: filename() should be UTF-8 (bug 987069).
     if (!cx->isHelperThreadContext() &&
         !JS_ReportErrorFlagsAndNumberLatin1(
             cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-            JSMSG_ALREADY_HAS_PRAGMA, filename_.get(), "//# sourceURL")) {
+            JSMSG_ALREADY_HAS_PRAGMA, filename(), "//# sourceURL")) {
       return false;
     }
   }
-  size_t len = js_strlen(displayURL) + 1;
-  if (len == 1) {
+
+  MOZ_ASSERT(url);
+  if (url[0] == '\0') {
     return true;
   }
 
-  displayURL_ = DuplicateString(cx, displayURL);
-  return displayURL_ != nullptr;
+  displayURL_ = getOrCreateStringZ(cx, std::move(url));
+  return displayURL_.isSome();
 }
 
-bool ScriptSource::setSourceMapURL(JSContext* cx,
-                                   const char16_t* sourceMapURL) {
-  MOZ_ASSERT(sourceMapURL);
+bool ScriptSource::setSourceMapURL(JSContext* cx, const char16_t* url) {
+  UniqueTwoByteChars owned = DuplicateString(cx, url);
+  if (!owned) {
+    return false;
+  }
+  return setSourceMapURL(cx, std::move(owned));
+}
 
-  size_t len = js_strlen(sourceMapURL) + 1;
-  if (len == 1) {
+bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
+  MOZ_ASSERT(url);
+  if (url[0] == '\0') {
     return true;
   }
 
-  sourceMapURL_ = DuplicateString(cx, sourceMapURL);
-  return sourceMapURL_ != nullptr;
+  sourceMapURL_ = getOrCreateStringZ(cx, std::move(url));
+  return sourceMapURL_.isSome();
 }
 
 /* static */ mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,

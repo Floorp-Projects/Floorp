@@ -87,6 +87,10 @@ class SearchPanel extends Component {
 
     return LabelCell({
       ...props,
+      title:
+        member.level == 1
+          ? this.provider.getValue(member.object)
+          : this.provider.getResourceTooltipLabel(member.object),
       renderSuffix,
     });
   }
@@ -119,6 +123,7 @@ class SearchPanel extends Component {
     if (member.level === SEARCH_RESULT_LEVEL) {
       const { object } = member;
 
+      // Handles multiple matches in a string
       if (object.startIndex && object.startIndex.length > 1) {
         let indexStart = 0;
         const allMatches = object.startIndex.map((match, index) => {
@@ -145,15 +150,16 @@ class SearchPanel extends Component {
           return highlightedMatch;
         });
 
-        return span({}, allMatches);
+        return span({ title: object.value }, allMatches);
       }
 
       const indexStart = object.value.indexOf(query);
       const indexEnd = indexStart + query.length;
 
+      // Handles a match in a string
       if (indexStart > 0) {
         return span(
-          {},
+          { title: object.value },
           span({}, object.value.substring(0, indexStart)),
           span(
             { className: "query-match" },
@@ -162,6 +168,10 @@ class SearchPanel extends Component {
           span({}, object.value.substring(indexEnd, object.value.length))
         );
       }
+
+      // Default for key:value matches where query might not
+      // be present in the value, but found in the key.
+      return span({ title: object.value }, span({}, object.value));
     }
 
     return this.provider.getValue(member.object);

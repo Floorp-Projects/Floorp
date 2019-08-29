@@ -8,14 +8,14 @@
 // shows the highlighter over those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { toolbox, inspector, testActor } = await openInspectorForURL(
+  const { inspector, testActor } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
   info("Selecting the test node");
   await selectNode("span", inspector);
   const bcButtons = inspector.breadcrumbs.container;
 
-  let onNodeHighlighted = toolbox.highlighter.once("node-highlight");
+  let onNodeHighlighted = inspector.highlighter.once("node-highlight");
   let button = bcButtons.childNodes[1];
   EventUtils.synthesizeMouseAtCenter(
     button,
@@ -32,7 +32,7 @@ add_task(async function() {
     "The highlighter highlights the right node"
   );
 
-  const onNodeUnhighlighted = toolbox.highlighter.once("node-unhighlight");
+  const onNodeUnhighlighted = inspector.highlighter.once("node-unhighlight");
   // move outside of the breadcrumb trail to trigger unhighlight
   EventUtils.synthesizeMouseAtCenter(
     inspector.addNodeButton,
@@ -41,7 +41,7 @@ add_task(async function() {
   );
   await onNodeUnhighlighted;
 
-  onNodeHighlighted = toolbox.highlighter.once("node-highlight");
+  onNodeHighlighted = inspector.highlighter.once("node-highlight");
   button = bcButtons.childNodes[2];
   EventUtils.synthesizeMouseAtCenter(
     button,

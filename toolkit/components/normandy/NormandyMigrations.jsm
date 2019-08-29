@@ -11,6 +11,11 @@ ChromeUtils.defineModuleGetter(
   "AddonStudies",
   "resource://normandy/lib/AddonStudies.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PreferenceExperiments",
+  "resource://normandy/lib/PreferenceExperiments.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["NormandyMigrations"];
 
@@ -50,6 +55,10 @@ const NormandyMigrations = {
     migrateShieldPrefs,
     migrateStudiesEnabledWithoutHealthReporting,
     AddonStudies.migrateAddonStudyFieldsToSlugAndUserFacingFields,
+    PreferenceExperiments.migrations.migration01MoveExperiments,
+    PreferenceExperiments.migrations.migration02MultiPreference,
+    PreferenceExperiments.migrations.migration03AddActionName,
+    PreferenceExperiments.migrations.migration04RenameNameToSlug,
   ],
 };
 

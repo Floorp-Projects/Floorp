@@ -18,24 +18,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "ContentProcessConnector",
-  "devtools/server/connectors/content-process-connector",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "FrameConnector",
-  "devtools/server/connectors/frame-connector",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "WorkerConnector",
-  "devtools/server/connectors/worker-connector",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "Authentication",
   "devtools/shared/security/auth"
 );
@@ -347,29 +329,6 @@ var DebuggerServer = {
       : new ChildDebuggerTransport(scopeOrManager, prefix);
 
     return this._onConnection(transport, prefix, true);
-  },
-
-  /**
-   * See ContentProcessConnector.startServer.
-   */
-  connectToContentProcess(connection, mm, onDestroy) {
-    return ContentProcessConnector.startServer(connection, mm, onDestroy);
-  },
-
-  /**
-   * See WorkerConnector.startServer.
-   */
-  connectToWorker(connection, dbg, id, options) {
-    return WorkerConnector.startServer(connection, dbg, id, options);
-  },
-
-  /**
-   * See FrameConnector.startServer.
-   */
-  connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
-    return FrameConnector.startServer(connection, frame, onDestroy, {
-      addonId,
-    });
   },
 
   /**

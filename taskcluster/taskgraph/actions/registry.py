@@ -266,6 +266,7 @@ def render_actions_json(parameters, graph_config):
             actions.append(action)
     return {
         'version': 1,
+        'variables': {},
         'actions': actions,
     }
 
