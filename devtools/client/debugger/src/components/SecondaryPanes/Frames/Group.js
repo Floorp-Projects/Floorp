@@ -73,13 +73,15 @@ export default class Group extends Component<Props, State> {
       toggleFrameworkGrouping,
       toggleBlackBox,
       frameworkGroupingOn,
+      cx,
     } = this.props;
     const frame = group[0];
     FrameMenu(
       frame,
       frameworkGroupingOn,
       { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox },
-      event
+      event,
+      cx
     );
   }
 

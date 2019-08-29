@@ -113,7 +113,12 @@ describe("Group", () => {
 
     it("calls FrameMenu on right click", () => {
       const { component, props } = render();
-      const { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox } = props;
+      const {
+        copyStackTrace,
+        toggleFrameworkGrouping,
+        toggleBlackBox,
+        cx,
+      } = props;
       const mockEvent = "mockEvent";
       component.simulate("contextmenu", mockEvent);
 
@@ -125,7 +130,8 @@ describe("Group", () => {
           toggleFrameworkGrouping,
           toggleBlackBox,
         },
-        mockEvent
+        mockEvent,
+        cx
       );
     });
   });

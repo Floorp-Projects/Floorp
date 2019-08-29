@@ -92,12 +92,14 @@ export default class FrameComponent extends Component<FrameComponentProps> {
       toggleFrameworkGrouping,
       toggleBlackBox,
       frameworkGroupingOn,
+      cx,
     } = this.props;
     FrameMenu(
       frame,
       frameworkGroupingOn,
       { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox },
-      event
+      event,
+      cx
     );
   }
 
