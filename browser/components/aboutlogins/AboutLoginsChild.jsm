@@ -120,8 +120,8 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
-      case "AboutLoginsOpenFeedback": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenFeedback");
+      case "AboutLoginsGetHelp": {
+        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
         break;
       }
       case "AboutLoginsOpenPreferences": {
