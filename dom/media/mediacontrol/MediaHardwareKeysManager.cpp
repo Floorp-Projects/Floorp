@@ -31,6 +31,9 @@ MediaHardwareKeysManager::~MediaHardwareKeysManager() {
 
 void MediaHardwareKeysManager::StartMonitoringHardwareKeys() {
   LOG("StartMonitoringHardwareKeys");
+  if (!StaticPrefs::media_hardwaremediakeys_enabled()) {
+    return;
+  }
   CreateEventSource();
   if (mEventSource) {
     mEventSource->AddListener(new MediaHardwareKeysEventListener());
