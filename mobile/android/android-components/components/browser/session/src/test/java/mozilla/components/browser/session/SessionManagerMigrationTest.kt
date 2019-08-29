@@ -4,10 +4,13 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -554,5 +557,96 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", store.state.selectedTab!!.content.url)
+    }
+
+    @Test
+    fun `Adding sessions with tracking protection state`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val tracker1: Tracker = mock()
+        val tracker2: Tracker = mock()
+        val tracker3: Tracker = mock()
+
+        manager.add(Session(id = "session1", initialUrl = "https://www.mozilla.org").apply {
+            trackerBlockingEnabled = true
+            trackersBlocked = listOf(tracker1)
+            trackersLoaded = listOf(tracker2, tracker3)
+        })
+
+        manager.add(Session(id = "session2", initialUrl = "https://www.mozilla.org").apply {
+            trackerBlockingEnabled = false
+            trackersBlocked = listOf()
+            trackersLoaded = listOf(tracker2)
+        })
+
+        assertEquals(2, manager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
+
+        store.state.findTab("session1")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(1, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(2, tab.trackingProtection.loadedTrackers.size)
+            assertTrue(tab.trackingProtection.blockedTrackers.contains(tracker1))
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker2))
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker3))
+        }
+
+        store.state.findTab("session2")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertTrue(tab.trackingProtection.blockedTrackers.isEmpty())
+            assertEquals(1, tab.trackingProtection.loadedTrackers.size)
+            assertTrue(tab.trackingProtection.loadedTrackers.contains(tracker2))
+        }
+    }
+
+    @Test
+    fun `Updating tracking protection state of session`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        store.state.findTab("session")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackerBlockingEnabled = true
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackersBlocked = listOf(mock())
+        session.trackersLoaded = listOf(mock())
+        session.trackersBlocked = listOf(mock(), mock())
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(2, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(1, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackersBlocked = emptyList()
+        session.trackersLoaded = emptyList()
+
+        store.state.findTab("session")!!.also { tab ->
+            assertTrue(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
+
+        session.trackerBlockingEnabled = false
+
+        store.state.findTab("session")!!.also { tab ->
+            assertFalse(tab.trackingProtection.enabled)
+            assertEquals(0, tab.trackingProtection.blockedTrackers.size)
+            assertEquals(0, tab.trackingProtection.loadedTrackers.size)
+        }
     }
 }
