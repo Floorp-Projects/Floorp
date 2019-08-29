@@ -199,7 +199,7 @@ def run(src_root, obj_root, logger_=None, **kwargs):
         with open(out_path, "w") as f:
             json.dump(rv, f)
     else:
-        print json.dumps(rv, indent=2)
+        print(json.dumps(rv, indent=2))
 
     if kwargs["meta_dir"]:
         update_wpt_meta(logger_obj, kwargs["meta_dir"], rv)
