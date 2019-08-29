@@ -420,7 +420,7 @@ impl MarionetteSession {
     }
 
     pub fn next_command_id(&mut self) -> MessageId {
-        self.command_id = self.command_id + 1;
+        self.command_id += 1;
         self.command_id
     }
 
@@ -1353,7 +1353,7 @@ impl MarionetteConnection {
             };
             match byte {
                 '0'..='9' => {
-                    bytes = bytes * 10;
+                    bytes *= 10;
                     bytes += byte as usize - '0' as usize;
                 }
                 ':' => break,
