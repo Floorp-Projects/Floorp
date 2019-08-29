@@ -10,10 +10,10 @@
 // Plus we also support moz-icon://[valid URL] for backwards compatibility.
 
 // Main test entry point.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
-  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
+  let ioService = Services.io;
   let currentSpec = ""; // the uri spec that we're currently testing
   let exception = false; // whether or not an exception was thrown
   let uri = null; // the current URI

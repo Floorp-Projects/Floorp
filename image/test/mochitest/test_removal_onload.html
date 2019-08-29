@@ -112,7 +112,7 @@ function main() {
   gImg.onerror = onNotification;
 
   // Create, customize & attach decoder observer
-  observer = new ImageDecoderObserverStub();
+  var observer = new ImageDecoderObserverStub();
   observer.sizeAvailable = onSizeAvailable;
   observer.loadComplete = onLoadComplete;
   observer.decodeComplete = onDecodeComplete;

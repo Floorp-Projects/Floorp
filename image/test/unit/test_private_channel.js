@@ -12,13 +12,12 @@ var server = new HttpServer();
 server.registerPathHandler("/image.png", imageHandler);
 server.start(-1);
 
+/* import-globals-from image_load_helpers.js */
 load("image_load_helpers.js");
 
 var gHits = 0;
 
-var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
+var gIoService = Services.io;
 var gPublicLoader = Cc["@mozilla.org/image/loader;1"].createInstance(
   Ci.imgILoader
 );
@@ -128,9 +127,7 @@ function run_loadImage_tests() {
   }
 
   Services.obs.addObserver(observer, "cacheservice:empty-cache");
-  let cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(
-    Ci.nsICacheStorageService
-  );
+  let cs = Services.cache2;
   cs.clear();
 }
 

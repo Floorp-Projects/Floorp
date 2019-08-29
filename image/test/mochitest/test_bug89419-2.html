@@ -27,6 +27,7 @@ function checkFirst()
   first = snapshotWindow(iframeelem.contentWindow, false);
 
   iframeelem.onload = checkSecond;
+  // eslint-disable-next-line no-self-assign
   iframeelem.contentWindow.location.href = iframeelem.contentWindow.location.href;
 }
 
@@ -40,6 +41,7 @@ function checkSecond()
   ok(correct, "Image should have changed after the first reload.");
 
   iframeelem.onload = checkThird;
+  // eslint-disable-next-line no-self-assign
   iframeelem.contentWindow.location.href = iframeelem.contentWindow.location.href;
 }
 

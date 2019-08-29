@@ -75,8 +75,8 @@ function takeSnapshot(iframe_element)
 
 function passes(op, shot1, shot2)
 {
-  var [correct, s1, s2] = compareSnapshots(shot1, shot2, op == "==");
-  return correct;
+  var values = compareSnapshots(shot1, shot2, op == "==");
+  return values[0];
 }
 
 function startTest(i)
