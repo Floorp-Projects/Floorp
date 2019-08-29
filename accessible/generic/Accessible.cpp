@@ -1377,12 +1377,8 @@ void Accessible::Value(nsString& aValue) const {
 
     if (!mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                         nsGkAtoms::aria_valuetext, aValue)) {
-      if (!NativeHasNumericValue()) {
-        double checkValue = CurValue();
-        if (!IsNaN(checkValue)) {
-          aValue.AppendFloat(checkValue);
-        }
-      }
+      mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                     nsGkAtoms::aria_valuenow, aValue);
     }
     return;
   }
@@ -1416,13 +1412,11 @@ void Accessible::Value(nsString& aValue) const {
 }
 
 double Accessible::MaxValue() const {
-  double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemax);
-  return IsNaN(checkValue) && !NativeHasNumericValue() ? 100 : checkValue;
+  return AttrNumericValue(nsGkAtoms::aria_valuemax);
 }
 
 double Accessible::MinValue() const {
-  double checkValue = AttrNumericValue(nsGkAtoms::aria_valuemin);
-  return IsNaN(checkValue) && !NativeHasNumericValue() ? 0 : checkValue;
+  return AttrNumericValue(nsGkAtoms::aria_valuemin);
 }
 
 double Accessible::Step() const {
@@ -1430,13 +1424,7 @@ double Accessible::Step() const {
 }
 
 double Accessible::CurValue() const {
-  double checkValue = AttrNumericValue(nsGkAtoms::aria_valuenow);
-  if (IsNaN(checkValue) && !NativeHasNumericValue()) {
-    double minValue = MinValue();
-    return minValue + ((MaxValue() - minValue) / 2);
-  }
-
-  return checkValue;
+  return AttrNumericValue(nsGkAtoms::aria_valuenow);
 }
 
 bool Accessible::SetCurValue(double aValue) {
