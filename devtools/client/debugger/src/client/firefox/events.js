@@ -39,7 +39,8 @@ function setupEvents(dependencies: Dependencies) {
   sourceQueue.initialize(actions);
 
   addThreadEventListeners(threadFront);
-  tabTarget.on("workerListChanged", workerListChanged);
+  tabTarget.on("workerListChanged", () => threadListChanged("worker"));
+  tabTarget.on("processListChanged", () => threadListChanged("contentProcess"));
 }
 
 async function paused(threadFront: ThreadFront, packet: PausedPacket) {
@@ -92,8 +93,8 @@ function newSource(threadFront: ThreadFront, { source }: SourcePacket) {
   });
 }
 
-function workerListChanged() {
-  actions.updateThreads();
+function threadListChanged(type) {
+  actions.updateThreads(type);
 }
 
 const clientEvents = {

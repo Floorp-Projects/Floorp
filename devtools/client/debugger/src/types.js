@@ -459,10 +459,11 @@ export type Scope = {|
   scopeKind: string,
 |};
 
+export type ThreadType = "mainThread" | "worker" | "contentProcess";
 export type Thread = {
   +actor: ThreadId,
   +url: string,
-  +type: string,
+  +type: ThreadType,
   +name: string,
 };
 
