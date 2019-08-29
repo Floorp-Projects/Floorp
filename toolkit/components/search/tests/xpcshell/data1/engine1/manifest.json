@@ -1,0 +1,27 @@
+{
+  "name": "engine1",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine1@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A small test engine",
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "engine1",
+      "search_url": "https://1.example.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        }
+      ]
+    }
+  }
+}
