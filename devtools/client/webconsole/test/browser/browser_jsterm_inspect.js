@@ -21,8 +21,6 @@ add_task(async function() {
 // Test primitives
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = gDevTools.getToolbox(hud.target);
-
   await testInspectingWindow(hud);
   await testInspectIngPrimitive(hud);
 });
