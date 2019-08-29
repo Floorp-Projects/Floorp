@@ -138,3 +138,42 @@ td.cell-value > form > input[type="number"] {
   width: 100%;
   box-sizing: border-box;
 }
+
+.button-add,
+.button-save,
+.button-edit,
+.button-toggle,
+.button-delete,
+.button-reset {
+  -moz-context-properties: fill;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  fill: currentColor;
+  min-width: auto;
+  width: 32px;
+}
+
+.button-add {
+  background-image: url("chrome://browser/skin/add.svg");
+}
+
+.button-save {
+  background-image: url("chrome://global/skin/icons/check.svg");
+}
+
+.button-edit {
+  background-image: url("chrome://browser/skin/edit.svg");
+}
+
+.button-toggle {
+  background-image: url("chrome://browser/skin/toggle.svg");
+}
+
+.button-delete {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+.button-reset {
+  background-image: url("chrome://browser/skin/undo.svg");
+}
