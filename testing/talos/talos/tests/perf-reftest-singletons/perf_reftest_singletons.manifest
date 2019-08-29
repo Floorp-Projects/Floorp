@@ -25,3 +25,5 @@
 % http://localhost/tests/perf-reftest-singletons/scrollbar-styles-1.html
 % http://localhost/tests/perf-reftest-singletons/inline-style-cache-1.html
 % http://localhost/tests/perf-reftest-singletons/link-style-cache-1.html
+% http://localhost/tests/perf-reftest-singletons/window-named-property-get.html
+% http://localhost/tests/perf-reftest-singletons/getElementById-1.html

@@ -56,24 +56,24 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
                                    void* aData);
 
  public:
-  struct AtomOrString {
-    MOZ_IMPLICIT AtomOrString(nsAtom* aAtom) : mAtom(aAtom) {}
-    MOZ_IMPLICIT AtomOrString(const nsAString& aString) : mString(aString) {}
-    AtomOrString(const AtomOrString& aOther)
+  // We use DependentAtomOrString as our external key interface.  This allows
+  // consumers to use an nsAString, for example, without forcing a copy.
+  struct DependentAtomOrString final {
+    MOZ_IMPLICIT DependentAtomOrString(nsAtom* aAtom)
+        : mAtom(aAtom), mString(nullptr) {}
+    MOZ_IMPLICIT DependentAtomOrString(const nsAString& aString)
+        : mAtom(nullptr), mString(&aString) {}
+    DependentAtomOrString(const DependentAtomOrString& aOther)
         : mAtom(aOther.mAtom), mString(aOther.mString) {}
 
-    AtomOrString(AtomOrString&& aOther)
-        : mAtom(aOther.mAtom.forget()), mString(aOther.mString) {}
-
-    RefPtr<nsAtom> mAtom;
-    const nsString mString;
+    nsAtom* mAtom;
+    const nsAString* mString;
   };
 
-  typedef const AtomOrString& KeyType;
-  typedef const AtomOrString* KeyTypePointer;
+  typedef const DependentAtomOrString& KeyType;
+  typedef const DependentAtomOrString* KeyTypePointer;
 
-  explicit IdentifierMapEntry(const AtomOrString& aKey);
-  explicit IdentifierMapEntry(const AtomOrString* aKey);
+  explicit IdentifierMapEntry(const DependentAtomOrString* aKey);
   IdentifierMapEntry(IdentifierMapEntry&& aOther);
   ~IdentifierMapEntry();
 
@@ -91,20 +91,20 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
         return mKey.mAtom == aOtherKey->mAtom;
       }
 
-      return mKey.mAtom->Equals(aOtherKey->mString);
+      return mKey.mAtom->Equals(*aOtherKey->mString);
     }
 
     if (aOtherKey->mAtom) {
       return aOtherKey->mAtom->Equals(mKey.mString);
     }
 
-    return mKey.mString.Equals(aOtherKey->mString);
+    return mKey.mString.Equals(*aOtherKey->mString);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
   static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-    return aKey->mAtom ? aKey->mAtom->hash() : HashString(aKey->mString);
+    return aKey->mAtom ? aKey->mAtom->hash() : HashString(*aKey->mString);
   }
 
   enum { ALLOW_MEMMOVE = false };
@@ -189,13 +189,35 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
  private:
+  // We use an OwningAtomOrString as our internal key storage.  It needs to own
+  // the key string, whether in atom or string form.
+  struct OwningAtomOrString final {
+    OwningAtomOrString(const OwningAtomOrString& aOther)
+        : mAtom(aOther.mAtom), mString(aOther.mString) {}
+
+    OwningAtomOrString(OwningAtomOrString&& aOther)
+        : mAtom(std::move(aOther.mAtom)), mString(std::move(aOther.mString)) {}
+
+    explicit OwningAtomOrString(const DependentAtomOrString& aOther)
+        // aOther may have a null mString, so jump through a bit of a hoop in
+        // that case.  I wish there were a way to just default-initialize
+        // mString in that situation...  We could also make mString not const
+        // and only assign to it if aOther.mString is not null, but having it be
+        // const is nice.
+        : mAtom(aOther.mAtom),
+          mString(aOther.mString ? *aOther.mString : EmptyString()) {}
+
+    RefPtr<nsAtom> mAtom;
+    const nsString mString;
+  };
+
   IdentifierMapEntry(const IdentifierMapEntry& aOther) = delete;
   IdentifierMapEntry& operator=(const IdentifierMapEntry& aOther) = delete;
 
   void FireChangeCallbacks(Element* aOldElement, Element* aNewElement,
                            bool aImageOnly = false);
 
-  AtomOrString mKey;
+  OwningAtomOrString mKey;
   dom::TreeOrderedArray<Element> mIdContentList;
   RefPtr<nsBaseContentList> mNameContentList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
