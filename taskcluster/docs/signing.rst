@@ -103,12 +103,12 @@ set of keys for the Focus app.
 files to ``tar.gz`` before submitting to the signing server. The signed binary
 is a ``tar.gz``.
 
-``signcode`` signing takes individual binaries or a zipfile. We sign the
+``authenticode`` signing takes individual binaries or a zipfile. We sign the
 individual file or internals of the zipfile, skipping any already-signed files
 and a select few blocklisted files (using the `should_sign_windows`_ function).
 It returns a signed individual binary or zipfile with signed internals, depending
-on the input. This format includes ``signcode``, ``osslsigncode``,
-``sha2signcode``, and ``sha2signcodestub``.
+on the input. This format includes ``authograph_authenticode``, and
+``autograph_authenticode_stub``.
 
 ``mar`` signing signs our update files (Mozilla ARchive). ``mar_sha384`` is
 the same, but with a different hashing algorithm.
