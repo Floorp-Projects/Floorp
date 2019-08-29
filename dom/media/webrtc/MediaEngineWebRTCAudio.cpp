@@ -172,10 +172,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__,
-      [that, graph = std::move(gripGraph), aEnable, aUseAecMobile, aLevel] {
+      __func__, [that, stream = mStream, aEnable, aUseAecMobile, aLevel] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -197,10 +195,12 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
           EchoCancellation::SuppressionLevel mLevel;
         };
 
-        if (graph) {
-          graph->AppendMessage(MakeUnique<Message>(
-              that->mInputProcessing, aEnable, aUseAecMobile, aLevel));
+        if (stream->IsDestroyed()) {
+          return;
         }
+
+        stream->GraphImpl()->AppendMessage(MakeUnique<Message>(
+            that->mInputProcessing, aEnable, aUseAecMobile, aLevel));
       }));
 }
 
@@ -209,9 +209,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [that, graph = std::move(gripGraph), aEnable, aMode] {
+      __func__, [that, stream = mStream, aEnable, aMode] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -231,10 +230,12 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
           GainControl::Mode mMode;
         };
 
-        if (graph) {
-          graph->AppendMessage(
-              MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
+        if (stream->IsDestroyed()) {
+          return;
         }
+
+        stream->GraphImpl()->AppendMessage(
+            MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
       }));
 }
 
@@ -243,9 +244,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [that, graph = std::move(gripGraph), aEnable, aLevel] {
+      __func__, [that, stream = mStream, aEnable, aLevel] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aEnable,
@@ -265,10 +265,12 @@ void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
           webrtc::NoiseSuppression::Level mLevel;
         };
 
-        if (graph) {
-          graph->AppendMessage(
-              MakeUnique<Message>(that->mInputProcessing, aEnable, aLevel));
+        if (stream->IsDestroyed()) {
+          return;
         }
+
+        stream->GraphImpl()->AppendMessage(
+            MakeUnique<Message>(that->mInputProcessing, aEnable, aLevel));
       }));
 }
 
@@ -277,10 +279,8 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
   AssertIsOnOwningThread();
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__,
-      [that, graph = std::move(gripGraph), aExtendedFilter, aDelayAgnostic] {
+      __func__, [that, stream = mStream, aExtendedFilter, aDelayAgnostic] {
         class Message : public ControlMessage {
          public:
           Message(AudioInputProcessing* aInputProcessing, bool aExtendedFilter,
@@ -301,10 +301,12 @@ void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
           bool mDelayAgnostic;
         };
 
-        if (graph) {
-          graph->AppendMessage(MakeUnique<Message>(
-              that->mInputProcessing, aExtendedFilter, aDelayAgnostic));
+        if (stream->IsDestroyed()) {
+          return;
         }
+
+        stream->GraphImpl()->AppendMessage(MakeUnique<Message>(
+            that->mInputProcessing, aExtendedFilter, aDelayAgnostic));
       }));
 }
 
@@ -330,9 +332,8 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> graphImpl = mStream->GraphImpl();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [that, graph = std::move(graphImpl), prefs = aPrefs] {
+      __func__, [that, stream = mStream, prefs = aPrefs] {
         that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
         that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
         that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
@@ -360,10 +361,12 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
         };
 
         bool passThrough = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
-        if (graph) {
-          graph->AppendMessage(MakeUnique<Message>(
-              that->mInputProcessing, passThrough, prefs.mChannels));
+        if (stream->IsDestroyed()) {
+          return;
         }
+
+        stream->GraphImpl()->AppendMessage(MakeUnique<Message>(
+            that->mInputProcessing, passThrough, prefs.mChannels));
       }));
 }
 
@@ -422,18 +425,16 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   };
 
   if (mStream && IsTrackIDExplicit(mTrackID)) {
-    RefPtr<MediaStream> sourceStream = mStream;
     RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        __func__, [stream = std::move(sourceStream),
-                   audioInputProcessing = std::move(inputProcessing),
-                   trackID = mTrackID] {
+        __func__,
+        [stream = mStream, audioInputProcessing = std::move(inputProcessing),
+         trackID = mTrackID] {
           if (stream->IsDestroyed()) {
             // This stream has already been destroyed on main thread by its
             // DOMMediaStream. No cleanup left to do.
             return;
           }
-          MOZ_ASSERT(stream->GraphImpl());
           stream->GraphImpl()->AppendMessage(MakeUnique<EndTrackMessage>(
               stream, audioInputProcessing, trackID));
         }));
