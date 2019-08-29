@@ -48,7 +48,15 @@ module.exports = function(config) {
     reporters: [
       "coverage-istanbul", // require("karma-coverage")
       "mocha", // require("karma-mocha-reporter")
+
+      // for bin/try-runner.js to parse the output easily
+      "json", // require("karma-json-reporter")
     ],
+    jsonReporter: {
+      // So this doesn't get interleaved with other karma output
+      stdout: false,
+      outputFile: path.join("logs", "karma-run-results.json"),
+    },
     coverageIstanbulReporter: {
       reports: ["html", "text-summary"],
       dir: PATHS.coverageReportingPath,
