@@ -370,22 +370,19 @@ impl MarionetteSession {
         msg: &WebDriverMessage<GeckoExtensionRoute>,
         resp: &MarionetteResponse,
     ) -> WebDriverResult<()> {
-        match msg.command {
-            NewSession(_) => {
-                let session_id = try_opt!(
-                    try_opt!(
-                        resp.result.get("sessionId"),
-                        ErrorStatus::SessionNotCreated,
-                        "Unable to get session id"
-                    )
-                    .as_str(),
+        if let NewSession(_) = msg.command {
+            let session_id = try_opt!(
+                try_opt!(
+                    resp.result.get("sessionId"),
                     ErrorStatus::SessionNotCreated,
-                    "Unable to convert session id to string"
-                );
-                self.session_id = session_id.to_string().clone();
-            }
-            _ => {}
-        }
+                    "Unable to get session id"
+                )
+                .as_str(),
+                ErrorStatus::SessionNotCreated,
+                "Unable to convert session id to string"
+            );
+            self.session_id = session_id.to_string().clone();
+        };
         Ok(())
     }
 
@@ -1116,13 +1113,14 @@ impl<'de> Deserialize<'de> for MarionetteResponse {
 
 impl MarionetteResponse {
     fn to_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
-        let value: &Value = match value_required {
-            true => try_opt!(
+        let value: &Value = if value_required {
+            try_opt!(
                 self.result.get("value"),
                 ErrorStatus::UnknownError,
                 "Failed to find value field"
-            ),
-            false => &self.result,
+            )
+        } else {
+            &self.result
         };
 
         Ok(ValueResponse(value.clone()))
