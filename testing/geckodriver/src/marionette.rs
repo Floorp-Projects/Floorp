@@ -108,7 +108,7 @@ impl MarionetteHandler {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = new_session_parameters
                 .match_browser(&mut fx_capabilities)?
-                .ok_or(WebDriverError::new(
+                .ok_or_else(|| WebDriverError::new(
                     ErrorStatus::SessionNotCreated,
                     "Unable to find a matching set of capabilities",
                 ))?;
@@ -142,7 +142,7 @@ impl MarionetteHandler {
     }
 
     fn start_browser(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
-        let binary = options.binary.ok_or(WebDriverError::new(
+        let binary = options.binary.ok_or_else(|| WebDriverError::new(
             ErrorStatus::SessionNotCreated,
             "Expected browser binary location, but unable to find \
              binary in default location, no \
@@ -356,7 +356,7 @@ pub struct MarionetteSession {
 
 impl MarionetteSession {
     pub fn new(session_id: Option<String>) -> MarionetteSession {
-        let initital_id = session_id.unwrap_or("".to_string());
+        let initital_id = session_id.unwrap_or_else(|| "".to_string());
         MarionetteSession {
             session_id: initital_id,
             protocol: None,
@@ -503,7 +503,7 @@ impl MarionetteSession {
                 // which was sent by Firefox 52 and earlier.
                 let page_load = try_opt!(
                     try_opt!(
-                        resp.result.get("pageLoad").or(resp.result.get("page load")),
+                        resp.result.get("pageLoad").or_else(|| resp.result.get("page load")),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
                     )
@@ -1070,7 +1070,7 @@ impl MarionetteCommand {
                 ErrorStatus::UnsupportedOperation,
                 "Operation not supported"
             );
-            let parameters = opt_parameters.unwrap_or(Ok(Map::new()))?;
+            let parameters = opt_parameters.unwrap_or_else(|| Ok(Map::new()))?;
 
             let req = MarionetteCommand::new(id, name.into(), parameters);
             MarionetteCommand::encode_msg(req)
@@ -1193,7 +1193,7 @@ impl MarionetteConnection {
                         status
                             .code()
                             .map(|c| c.to_string())
-                            .unwrap_or("signal".into()),
+                            .unwrap_or_else(|| "signal".into()),
                     ),
                     Ok(None) => None,
                     Err(_) => Some("{unknown}".into()),

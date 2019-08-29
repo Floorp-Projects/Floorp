@@ -325,7 +325,7 @@ impl FirefoxOptions {
         rv.binary = binary_path;
 
         if let Some(json) = matched.remove("moz:firefoxOptions") {
-            let options = json.as_object().ok_or(WebDriverError::new(
+            let options = json.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "'moz:firefoxOptions' \
                  capability is not an object",
@@ -342,7 +342,7 @@ impl FirefoxOptions {
 
     fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = profile_json.as_str().ok_or(WebDriverError::new(
+            let profile_base64 = profile_json.as_str().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Profile is not a string",
             ))?;
@@ -367,7 +367,7 @@ impl FirefoxOptions {
 
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
-            let args_array = args_json.as_array().ok_or(WebDriverError::new(
+            let args_array = args_json.as_array().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Arguments were not an \
                  array",
@@ -376,7 +376,7 @@ impl FirefoxOptions {
                 .iter()
                 .map(|x| x.as_str().map(|x| x.to_owned()))
                 .collect::<Option<Vec<String>>>()
-                .ok_or(WebDriverError::new(
+                .ok_or_else(|| WebDriverError::new(
                     ErrorStatus::UnknownError,
                     "Arguments entries were not all \
                      strings",
@@ -389,18 +389,18 @@ impl FirefoxOptions {
 
     fn load_log(options: &Capabilities) -> WebDriverResult<LogOptions> {
         if let Some(json) = options.get("log") {
-            let log = json.as_object().ok_or(WebDriverError::new(
+            let log = json.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "Log section is not an object",
             ))?;
 
             let level = match log.get("level") {
                 Some(json) => {
-                    let s = json.as_str().ok_or(WebDriverError::new(
+                    let s = json.as_str().ok_or_else(|| WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is not a string",
                     ))?;
-                    Some(Level::from_str(s).ok().ok_or(WebDriverError::new(
+                    Some(Level::from_str(s).ok().ok_or_else(|| WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is unknown",
                     ))?)
@@ -416,7 +416,7 @@ impl FirefoxOptions {
 
     pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
-            let prefs = prefs_data.as_object().ok_or(WebDriverError::new(
+            let prefs = prefs_data.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Prefs were not an object",
             ))?;
