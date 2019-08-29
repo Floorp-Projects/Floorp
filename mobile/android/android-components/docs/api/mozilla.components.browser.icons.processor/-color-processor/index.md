@@ -2,7 +2,7 @@
 
 # ColorProcessor
 
-`class ColorProcessor : `[`IconProcessor`](../-icon-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/ColorProcessor.kt#L16)
+`class ColorProcessor : `[`IconProcessor`](../-icon-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/ColorProcessor.kt#L17)
 
 [IconProcessor](../-icon-processor/index.md) implementation to extract the dominant color from the icon.
 
