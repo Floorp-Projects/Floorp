@@ -1980,7 +1980,11 @@ nsContextMenu.prototype = {
     }
 
     // format "Search <engine> for <selection>" string to show in menu
-    let engineName = Services.search.defaultEngine.name;
+    const docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
+    let engineName =
+      Services.search[docIsPrivate ? "defaultPrivateEngine" : "defaultEngine"]
+        .name;
+    menuItem.usePrivate = docIsPrivate;
     var menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
       engineName,
       selectedText,
