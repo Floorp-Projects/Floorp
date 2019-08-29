@@ -102,7 +102,7 @@ const ACCESSIBLE_BOUNDS_SHEET =
     color: hsl(210, 30%, 85%);
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):before {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::before {
     content: "";
     height: 8px;
     width: 8px;
@@ -115,34 +115,34 @@ const ACCESSIBLE_BOUNDS_SHEET =
     margin-inline-end: 9px;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):after {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::after {
     margin-inline-start: 2px;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after,
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
     color: #90E274;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).FAIL::after {
     color: #E57180;
     content: "⚠️";
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after {
     content: "AA\u2713";
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
     content: "AAA\u2713";
   }
 
   .accessible-infobar-audit .accessible-contrast-ratio-label,
-  .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
+  .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
     margin-inline-end: 3px;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio-separator:before {
+  .accessible-infobar-audit .accessible-contrast-ratio-separator::before {
     content: "-";
     margin-inline-start: 3px;
   }
@@ -153,7 +153,16 @@ const ACCESSIBLE_BOUNDS_SHEET =
     padding-inline-start: 6px;
   }
 
-  .accessible-infobar-audit .accessible-text-label:before {
+  .accessible-infobar-audit .accessible-audit {
+    display: block;
+    padding-block-end: 5px;
+  }
+
+  .accessible-infobar-audit .accessible-audit:last-child {
+    padding-block-end: 0;
+  }
+
+  .accessible-infobar-audit .accessible-audit::before {
     display: inline-block;
     width: 12px;
     height: 12px;
@@ -167,17 +176,17 @@ const ACCESSIBLE_BOUNDS_SHEET =
     fill: currentColor;
   }
 
-  .accessible-infobar-audit .accessible-text-label.fail:before {
+  .accessible-infobar-audit .accessible-audit.FAIL::before {
     background-image: url(chrome://devtools/skin/images/error-small.svg);
     fill: var(--red-40);
   }
 
-  .accessible-infobar-audit .accessible-text-label.WARNING:before {
+  .accessible-infobar-audit .accessible-audit.WARNING::before {
     background-image: url(chrome://devtools/skin/images/alert-small.svg);
     fill: var(--yellow-60);
   }
 
-  .accessible-infobar-audit .accessible-text-label.BEST_PRACTICES:before {
+  .accessible-infobar-audit .accessible-audit.BEST_PRACTICES::before {
     background-image: url(chrome://devtools/skin/images/info-small.svg);
   }`);
 

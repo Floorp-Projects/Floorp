@@ -132,6 +132,18 @@ async function initToolbox(url, host) {
         target = await targetFromURL(url);
       }
     }
+
+    // Display an error page if we are connected to a remote target and we lose it
+    const onTargetDestroyed = function() {
+      target.off("close", onTargetDestroyed);
+      // Prevent trying to display the error page if the toolbox tab is being destroyed
+      if (host.contentDocument) {
+        const error = new Error("Debug target was disconnected");
+        showErrorPage(host.contentDocument, `${error}`);
+      }
+    };
+    target.on("close", onTargetDestroyed);
+
     const options = { customIframe: host };
     await gDevTools.showToolbox(target, tool, Toolbox.HostType.PAGE, options);
   } catch (error) {
@@ -143,14 +155,7 @@ async function initToolbox(url, host) {
 
 // Only use this method to attach the toolbox if some query parameters are given
 if (url.search.length > 1) {
-  // show error page if 'disconnected' param appears in the querystring
-  if (url.searchParams.has("disconnected")) {
-    const error = new Error("Debug target was disconnected");
-    showErrorPage(host.contentDocument, `${error}`);
-    // otherwise, try to init the toolbox
-  } else {
-    initToolbox(url, host);
-  }
+  initToolbox(url, host);
 }
 // TODO: handle no params in about:devtool-toolbox
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1526996

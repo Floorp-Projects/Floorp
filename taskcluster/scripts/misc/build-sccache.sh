@@ -1,7 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
-TARGET="$1"
+# Needed by osx-cross-linker.
+export TARGET="$1"
 
 # This script is for building sccache
 
@@ -33,17 +34,7 @@ Linux)
     if [ "$TARGET" == "x86_64-apple-darwin" ]; then
         export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
-        cat >cross-linker <<EOF
-exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
-  -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin-ld \
-  -mmacosx-version-min=10.11 \
-  -target $TARGET \
-  -B $MOZ_FETCHES_DIR/cctools/bin \
-  -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk \
-  "\$@"
-EOF
-        chmod +x cross-linker
-        export RUSTFLAGS="-C linker=$PWD/cross-linker"
+        export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
         export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
         cargo build --features "all" --verbose --release --target $TARGET
     else

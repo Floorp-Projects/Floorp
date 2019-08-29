@@ -5,8 +5,8 @@
 
 // React
 const {
-  Component,
   createFactory,
+  PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -23,7 +23,7 @@ loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
  * failures association with a given accessibility object in the accessibility
  * tree.
  */
-class ContrastBadge extends Component {
+class ContrastBadge extends PureComponent {
   static get propTypes() {
     return {
       error: PropTypes.string,
@@ -33,11 +33,7 @@ class ContrastBadge extends Component {
 
   render() {
     const { error, score } = this.props;
-    if (error) {
-      return null;
-    }
-
-    if (score !== SCORES.FAIL) {
+    if (error || score !== SCORES.FAIL) {
       return null;
     }
 

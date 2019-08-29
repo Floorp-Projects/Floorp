@@ -61,7 +61,7 @@ var ShieldPreferences = {
               if (experiment.expired) {
                 return null;
               }
-              return PreferenceExperiments.stop(experiment.name, {
+              return PreferenceExperiments.stop(experiment.slug, {
                 reason: "general-opt-out",
               });
             }

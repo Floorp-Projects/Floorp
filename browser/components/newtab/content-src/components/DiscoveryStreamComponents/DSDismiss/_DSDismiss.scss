@@ -1,0 +1,38 @@
+.ds-dismiss {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  transition-delay: 100ms;
+  transition-duration: 100ms;
+  transition-property: background;
+
+  &.hovering {
+    background: var(--newtab-element-hover-color);
+  }
+
+  &:hover {
+    .ds-dismiss-button {
+      opacity: 1;
+    }
+  }
+
+  .ds-dismiss-button {
+    border: 0;
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 50%;
+    margin: 16px 24px 0 0;
+    transition-duration: 200ms;
+    transition-property: opacity;
+    opacity: 0;
+    background: var(--newtab-element-active-color);
+  }
+}

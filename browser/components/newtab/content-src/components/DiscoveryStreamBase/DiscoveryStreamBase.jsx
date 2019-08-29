@@ -6,6 +6,7 @@ import { actionCreators as ac } from "common/Actions.jsm";
 import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import { CollapsibleSection } from "content-src/components/CollapsibleSection/CollapsibleSection";
 import { connect } from "react-redux";
+import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss";
 import { DSMessage } from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import { DSTextPromo } from "content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo";
 import { Hero } from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
@@ -114,17 +115,69 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "Highlights":
         return <Highlights />;
       case "TopSites":
-        return <TopSites header={component.header} />;
-      case "TextPromo":
+        let promoAlignment;
+        if (
+          component.spocs &&
+          component.spocs.positions &&
+          component.spocs.positions.length
+        ) {
+          promoAlignment =
+            component.spocs.positions[0].index === 0 ? "left" : "right";
+        }
         return (
-          <DSTextPromo
-            image={component.properties.image_src}
-            alt_text={component.properties.alt_text}
-            header={component.properties.excerpt}
-            cta_text={component.properties.cta_text}
-            cta_url={component.properties.cta_url}
-            subtitle={component.properties.context}
+          <TopSites
+            header={component.header}
+            data={component.data}
+            promoAlignment={promoAlignment}
           />
+        );
+      case "TextPromo":
+        if (
+          !component.data ||
+          !component.data.spocs ||
+          !component.data.spocs[0]
+        ) {
+          return null;
+        }
+        // Grab the first item in the array as we only have 1 spoc position.
+        const [spoc] = component.data.spocs;
+        const {
+          image_src,
+          alt_text,
+          title,
+          url,
+          context,
+          cta,
+          campaign_id,
+          id,
+          shim,
+        } = spoc;
+
+        return (
+          <DSDismiss
+            data={{
+              url: spoc.url,
+              guid: spoc.id,
+              shim: spoc.shim,
+            }}
+            dispatch={this.props.dispatch}
+            shouldSendImpressionStats={true}
+          >
+            <DSTextPromo
+              dispatch={this.props.dispatch}
+              image={image_src}
+              alt_text={alt_text || title}
+              header={title}
+              cta_text={cta}
+              cta_url={url}
+              subtitle={context}
+              campaignId={campaign_id}
+              id={id}
+              pos={0}
+              shim={shim}
+              type={component.type}
+            />
+          </DSDismiss>
         );
       case "Message":
         return (

@@ -14,7 +14,7 @@ enum CSSStyleSheetParsingMode {
 };
 
 interface CSSStyleSheet : StyleSheet {
-  [Pure]
+  [Pure, BinaryName="DOMOwnerRule"]
   readonly attribute CSSRule? ownerRule;
   [Throws, NeedsSubjectPrincipal]
   readonly attribute CSSRuleList cssRules;

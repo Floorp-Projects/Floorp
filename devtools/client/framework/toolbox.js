@@ -38,11 +38,6 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
-loader.lazyRequireGetter(
-  this,
-  "NodePicker",
-  "devtools/client/inspector/node-picker"
-);
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
@@ -143,6 +138,11 @@ loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
+  "NodePicker",
+  "devtools/client/inspector/node-picker"
 );
 
 loader.lazyGetter(this, "domNodeConstants", () => {
@@ -265,7 +265,6 @@ function Toolbox(
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
-  this._onTargetClosed = this._onTargetClosed.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(
     this
@@ -280,8 +279,6 @@ function Toolbox(
   this._onPausedState = this._onPausedState.bind(this);
   this._onResumedState = this._onResumedState.bind(this);
   this.isPaintFlashing = false;
-
-  this._target.on("close", this._onTargetClosed);
 
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
@@ -347,6 +344,20 @@ Toolbox.prototype = {
   _prefs: {
     LAST_TOOL: "devtools.toolbox.selectedTool",
     SIDE_ENABLED: "devtools.toolbox.sideEnabled",
+  },
+
+  get nodePicker() {
+    if (!this._nodePicker) {
+      this._nodePicker = new NodePicker(this.target, this.selection);
+      this._nodePicker.on("picker-starting", this._onPickerStarting);
+      this._nodePicker.on("picker-started", this._onPickerStarted);
+      this._nodePicker.on("picker-stopped", this._onPickerStopped);
+      this._nodePicker.on("picker-node-canceled", this._onPickerCanceled);
+      this._nodePicker.on("picker-node-picked", this._onPickerPicked);
+      this._nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
+    }
+
+    return this._nodePicker;
   },
 
   get store() {
@@ -518,14 +529,6 @@ Toolbox.prototype = {
    */
   get inspectorFront() {
     return this._inspector;
-  },
-
-  /**
-   * Get the toolbox's walker front. Note that it may not always have been
-   * initialized first. Use `initInspector()` if needed.
-   */
-  get walker() {
-    return this._walker;
   },
 
   /**
@@ -1064,21 +1067,6 @@ Toolbox.prototype = {
       runtimeInfo,
       targetType,
     };
-  },
-
-  _onTargetClosed: async function() {
-    const win = this.win; // .destroy() will set this.win to null
-
-    // clean up the toolbox
-    this.destroy();
-    // NOTE: we should await this.destroy() to ensure a proper clean up.
-    //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1536144
-
-    // redirect to about:toolbox error page if we are connected to a remote
-    // target and we lose it
-    if (this.hostType === Toolbox.HostType.PAGE) {
-      win.location.replace("about:devtools-toolbox?disconnected");
-    }
   },
 
   /**
@@ -1761,9 +1749,6 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
-      if (!this.inspectorFront) {
-        await this.initInspector();
-      }
       this.nodePicker.togglePicker(focus);
     }
   },
@@ -3325,16 +3310,7 @@ Toolbox.prototype = {
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
         this._inspector = await this.target.getFront("inspector");
-        this._walker = this.inspectorFront.walker;
-        this.nodePicker = new NodePicker(this.target, this.selection);
-
-        this.nodePicker.on("picker-starting", this._onPickerStarting);
-        this.nodePicker.on("picker-started", this._onPickerStarted);
-        this.nodePicker.on("picker-stopped", this._onPickerStopped);
-        this.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
-        this.nodePicker.on("picker-node-picked", this._onPickerPicked);
-        this.nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
-        registerWalkerListeners(this);
+        registerWalkerListeners(this.store, this._inspector.walker);
       }.bind(this)();
     }
     return this._initInspector;
@@ -3450,7 +3426,6 @@ Toolbox.prototype = {
     this._inspector.destroy();
 
     this._inspector = null;
-    this._walker = null;
   },
 
   /**
@@ -3658,7 +3633,6 @@ Toolbox.prototype = {
             }
             const target = this._target;
             this._target = null;
-            target.off("close", this._onTargetClosed);
             return target.destroy();
           }, console.error)
           .then(() => {

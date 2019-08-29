@@ -8,9 +8,16 @@ interface nsISimpleEnumerator;
 interface nsIX509Cert;
 
 %{C++
+namespace IPC {
+  class Message;
+}
+class PickleIterator;
 class nsNSSCertList;
 %}
+
 [ptr] native nsNSSCertListPtr(nsNSSCertList);
+[ptr] native IpcMessagePtr(IPC::Message);
+[ptr] native PickleIteratorPtr(PickleIterator);
 
 [scriptable, builtinclass, uuid(ae74cda5-cd2f-473f-96f5-f0b7fff62c68)]
 interface nsIX509CertList : nsISupports {
@@ -42,6 +49,11 @@ interface nsIX509CertList : nsISupports {
   [must_use]
   ACString asPKCS7Blob();
 
+  [notxpcom, noscript]
+  void SerializeToIPC(in IpcMessagePtr aMsg);
+
+  [notxpcom, noscript]
+  bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
 };
 
 %{C++

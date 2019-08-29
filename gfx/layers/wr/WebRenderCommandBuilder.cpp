@@ -266,16 +266,10 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
 static bool DetectContainerLayerPropertiesBoundsChange(
     nsDisplayItem* aItem, BlobItemData* aData,
     nsDisplayItemGeometry& aGeometry) {
-  switch (aItem->GetType()) {
-    case DisplayItemType::TYPE_MASK:
-    case DisplayItemType::TYPE_FILTER: {
-      // These two items go through BasicLayerManager composition which clips to
-      // the BuildingRect
-      aGeometry.mBounds = aGeometry.mBounds.Intersect(aItem->GetBuildingRect());
-      break;
-    }
-    default:
-      break;
+  if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
+    // Filters go through BasicLayerManager composition which clips to
+    // the BuildingRect
+    aGeometry.mBounds = aGeometry.mBounds.Intersect(aItem->GetBuildingRect());
   }
 
   return !aGeometry.mBounds.IsEqualEdges(aData->mGeometry->mBounds);
@@ -2114,9 +2108,9 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
     }
     if (aItem->Frame()->PresContext()->GetPaintFlashing() && isInvalidated) {
       aDT->SetTransform(gfx::Matrix());
-      float r = float(rand()) / RAND_MAX;
-      float g = float(rand()) / RAND_MAX;
-      float b = float(rand()) / RAND_MAX;
+      float r = float(rand()) / float(RAND_MAX);
+      float g = float(rand()) / float(RAND_MAX);
+      float b = float(rand()) / float(RAND_MAX);
       aDT->FillRect(Rect(aDT->GetRect()),
                     gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
     }

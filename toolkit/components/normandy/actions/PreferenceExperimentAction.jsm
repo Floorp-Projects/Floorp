@@ -42,7 +42,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
 
   constructor() {
     super();
-    this.seenExperimentNames = [];
+    this.seenExperimentSlugs = [];
   }
 
   async _run(recipe) {
@@ -55,7 +55,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
       userFacingDescription,
     } = recipe.arguments;
 
-    this.seenExperimentNames.push(slug);
+    this.seenExperimentSlugs.push(slug);
 
     // If we're not in the experiment, enroll!
     const hasSlug = await PreferenceExperiments.has(slug);
@@ -89,7 +89,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
       const branch = await this.chooseBranch(slug, branches);
       const experimentType = isHighPopulation ? "exp-highpop" : "exp";
       await PreferenceExperiments.start({
-        name: slug,
+        slug,
         actionName: this.name,
         branch: branch.slug,
         preferences: branch.preferences,
@@ -140,15 +140,15 @@ class PreferenceExperimentAction extends BaseStudyAction {
           return null;
         }
 
-        if (this.seenExperimentNames.includes(experiment.name)) {
+        if (this.seenExperimentSlugs.includes(experiment.slug)) {
           return null;
         }
 
-        return PreferenceExperiments.stop(experiment.name, {
+        return PreferenceExperiments.stop(experiment.slug, {
           resetValue: true,
           reason: "recipe-not-seen",
         }).catch(e => {
-          this.log.warn(`Stopping experiment ${experiment.name} failed: ${e}`);
+          this.log.warn(`Stopping experiment ${experiment.slug} failed: ${e}`);
         });
       })
     );
