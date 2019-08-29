@@ -445,20 +445,33 @@ body {
 .badge.audit-badge::before {
   content: "";
   display: inline-block;
-  vertical-align: -1px;
-  width: 10px;
-  height: 10px;
-  margin-inline-end: 1px;
-  background: url("chrome://devtools/skin/images/alert-tiny.svg") no-repeat;
+  vertical-align: 0px;
+  width: 9px;
+  height: 9px;
+  margin-inline-end: 2px;
   -moz-context-properties: fill;
   fill: currentColor;
   opacity: 0.9;
 }
 
+.badge.audit-badge[data-score="BEST_PRACTICES"]::before {
+  background-image: url(chrome://devtools/skin/images/info-tiny.svg);
+  vertical-align: -1px;
+}
+
+.badge.audit-badge[data-score="WARNING"]::before {
+  background-image: url(chrome://devtools/skin/images/alert-tiny.svg);
+}
+
+.badge.audit-badge[data-score="FAIL"]::before {
+  background-image: url(chrome://devtools/skin/images/error-tiny.svg);
+  vertical-align: -1px;
+}
+
 /* improve alignment in high res (where we can use half pixels) */
 @media (min-resolution: 1.5x) {
-  .badge.audit-badge::before {
-    vertical-align: -1.5px;
+  .badge.audit-badge[data-score="WARNING"]::before {
+    vertical-align: -0.5px;
   }
 }
 

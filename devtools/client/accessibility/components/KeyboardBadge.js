@@ -40,6 +40,7 @@ class KeyboardBadge extends PureComponent {
     }
 
     return Badge({
+      score,
       label: L10N.getStr("accessibility.badge.keyboard"),
       tooltip: L10N.getStr("accessibility.badge.keyboard.tooltip"),
     });
