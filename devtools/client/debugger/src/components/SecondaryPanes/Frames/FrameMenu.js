@@ -5,7 +5,7 @@
 // @flow
 import { showMenu } from "devtools-contextmenu";
 import { copyToTheClipboard } from "../../../utils/clipboard";
-import type { ContextMenuItem, Frame } from "../../../types";
+import type { ContextMenuItem, Frame, ThreadContext } from "../../../types";
 import { kebabCase } from "lodash";
 
 const blackboxString = "blackboxContextItem.blackbox";
@@ -47,19 +47,22 @@ function toggleFrameworkGroupingElement(
   return formatMenuElement(actionType, () => toggleFrameworkGrouping());
 }
 
-function blackBoxSource(source, toggleBlackBox) {
+function blackBoxSource(cx, source, toggleBlackBox) {
   const toggleBlackBoxString = source.isBlackBoxed
     ? unblackboxString
     : blackboxString;
 
-  return formatMenuElement(toggleBlackBoxString, () => toggleBlackBox(source));
+  return formatMenuElement(toggleBlackBoxString, () =>
+    toggleBlackBox(cx, source)
+  );
 }
 
 export default function FrameMenu(
   frame: Frame,
   frameworkGroupingOn: boolean,
   callbacks: Object,
-  event: SyntheticMouseEvent<HTMLElement>
+  event: SyntheticMouseEvent<HTMLElement>,
+  cx: ThreadContext
 ) {
   event.stopPropagation();
   event.preventDefault();
@@ -77,7 +80,7 @@ export default function FrameMenu(
   if (source) {
     const copySourceUri2 = copySourceElement(source.url);
     menuOptions.push(copySourceUri2);
-    menuOptions.push(blackBoxSource(source, callbacks.toggleBlackBox));
+    menuOptions.push(blackBoxSource(cx, source, callbacks.toggleBlackBox));
   }
 
   const copyStackTraceItem = copyStackTraceElement(callbacks.copyStackTrace);
