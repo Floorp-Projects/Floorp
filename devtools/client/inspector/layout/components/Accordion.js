@@ -29,25 +29,21 @@ class Accordion extends PureComponent {
     super(props);
 
     this.state = {
-      opened: props.items.map(item => item.opened),
-      created: [],
+      created: {},
+      opened: Object.fromEntries(
+        props.items.map(item => [item.header, item.opened])
+      ),
     };
 
     this.handleHeaderClick = this.handleHeaderClick.bind(this);
     this.renderContainer = this.renderContainer.bind(this);
   }
 
-  handleHeaderClick(i, event) {
-    const opened = [...this.state.opened];
-    const created = [...this.state.created];
-    const item = this.props.items[i];
-
+  handleHeaderClick(event, item) {
     event.stopPropagation();
+    const isOpened = !this.isOpened(item);
 
-    opened[i] = !opened[i];
-    created[i] = true;
-
-    if (opened[i] && item.onOpened) {
+    if (isOpened && item.onOpened) {
       item.onOpened();
     }
 
@@ -55,36 +51,47 @@ class Accordion extends PureComponent {
       item.onToggled();
     }
 
-    this.setState({ opened, created });
+    this.setState({
+      created: {
+        ...this.state.created,
+        [item.header]: true,
+      },
+      opened: {
+        ...this.state.opened,
+        [item.header]: isOpened,
+      },
+    });
   }
 
-  renderContainer(item, i) {
-    const { opened, created } = this.state;
+  isOpened(item) {
+    const isOpened = this.state.opened[item.header];
+    return typeof isOpened === "boolean" ? isOpened : item.opened;
+  }
+
+  renderContainer(item) {
+    const isOpened = this.isOpened(item);
+    const isCreated = this.state.created[item.header] === true;
     const containerClassName = item.className
       ? item.className
       : item.header.toLowerCase().replace(/\s/g, "-") + "-pane";
-    let arrowClassName = "arrow theme-twisty";
-    if (opened[i]) {
-      arrowClassName += " open";
-    }
 
     return div(
-      { className: containerClassName, key: i },
+      { className: containerClassName, key: item.header },
 
       div(
         {
           className: "_header",
-          onClick: event => this.handleHeaderClick(i, event),
+          onClick: event => this.handleHeaderClick(event, item),
         },
-        span({ className: arrowClassName }),
+        span({ className: `arrow theme-twisty${isOpened ? " open" : ""}` }),
         span({ className: "truncate" }, item.header)
       ),
 
-      created[i] || opened[i]
+      isCreated || isOpened
         ? div(
             {
               className: "_content",
-              style: { display: opened[i] ? "block" : "none" },
+              style: { display: isOpened ? "block" : "none" },
             },
             createElement(item.component, item.componentProps || {})
           )
