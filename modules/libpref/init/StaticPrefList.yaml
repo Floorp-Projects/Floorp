@@ -313,16 +313,19 @@
   value: @IS_ANDROID@
   mirror: always
 
+# Test only.
 - name: apz.fixed-margin-override.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# Test only.
 - name: apz.fixed-margin-override.bottom
   type: RelaxedAtomicInt32
   value: 0
   mirror: always
 
+# Test only.
 - name: apz.fixed-margin-override.top
   type: RelaxedAtomicInt32
   value: 0
