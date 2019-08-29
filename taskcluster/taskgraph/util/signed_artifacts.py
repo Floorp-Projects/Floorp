@@ -67,12 +67,12 @@ def generate_specifications_of_artifacts_to_sign(
             'artifacts': [
                 get_artifact_path(job, '{locale}/setup.exe'),
             ],
-            'formats': ['sha2signcode'],
+            'formats': ['autograph_authenticode'],
         }, {
             'artifacts': [
                 get_artifact_path(job, '{locale}/target.zip'),
             ],
-            'formats': ['sha2signcode', 'autograph_widevine', 'autograph_omnija'],
+            'formats': ['autograph_authenticode', 'autograph_widevine', 'autograph_omnija'],
         }]
 
         if use_stub:
