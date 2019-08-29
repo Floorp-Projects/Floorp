@@ -5,15 +5,9 @@
 
 var EXPORTED_SYMBOLS = ["RemoteWebProgressManager"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const RemoteWebProgress = Components.Constructor(
   "@mozilla.org/dom/remote-web-progress;1",
   "nsIRemoteWebProgress",
-  "init"
-);
-const RemoteWebProgressRequest = Components.Constructor(
-  "@mozilla.org/dom/remote-web-progress-request;1",
-  "nsIRemoteWebProgressRequest",
   "init"
 );
 
@@ -29,16 +23,7 @@ class RemoteWebProgressManager {
   }
 
   swapBrowser(aBrowser) {
-    if (this._messageManager) {
-      this._messageManager.removeMessageListener(
-        "Content:SecurityChange",
-        this
-      );
-    }
-
     this._browser = aBrowser;
-    this._messageManager = aBrowser.messageManager;
-    this._messageManager.addMessageListener("Content:SecurityChange", this);
   }
 
   swapListeners(aOtherRemoteWebProgressManager) {
@@ -67,20 +52,6 @@ class RemoteWebProgressManager {
     this._progressListeners = this._progressListeners.filter(
       l => l.listener != aListener
     );
-  }
-
-  _fixSecInfo(aSecInfo) {
-    let deserialized = null;
-    if (aSecInfo) {
-      let helper = Cc["@mozilla.org/network/serialization-helper;1"].getService(
-        Ci.nsISerializationHelper
-      );
-
-      deserialized = helper.deserializeObject(aSecInfo);
-      deserialized.QueryInterface(Ci.nsITransportSecurityInfo);
-    }
-
-    return deserialized;
   }
 
   setCurrentURI(aURI) {
@@ -182,56 +153,6 @@ class RemoteWebProgressManager {
       aRequest,
       aEvent
     );
-  }
-
-  receiveMessage(aMessage) {
-    let json = aMessage.json;
-    let webProgress = null;
-    let isTopLevel = json.webProgress && json.webProgress.isTopLevel;
-    // The top-level WebProgress is always the same, but because we don't
-    // really have a concept of subframes/content we always create a new object
-    // for those.
-    if (json.webProgress) {
-      webProgress = isTopLevel
-        ? this._topLevelWebProgress
-        : new RemoteWebProgress(this, isTopLevel);
-      webProgress.update(
-        json.webProgress.DOMWindowID,
-        0,
-        json.webProgress.loadType,
-        json.webProgress.isLoadingDocument
-      );
-      webProgress.QueryInterface(Ci.nsIWebProgress);
-    }
-
-    // The WebProgressRequest object however is always dynamic.
-    let request = null;
-    if (json.requestURI) {
-      request = new RemoteWebProgressRequest(
-        Services.io.newURI(json.requestURI),
-        Services.io.newURI(json.originalRequestURI)
-      );
-      request = request.QueryInterface(Ci.nsIRequest);
-    }
-
-    switch (aMessage.name) {
-      case "Content:SecurityChange":
-        let state = json.state;
-
-        if (isTopLevel) {
-          let secInfo = this._fixSecInfo(json.secInfo);
-          let isSecureContext = json.isSecureContext;
-
-          // Invoking this getter triggers the generation of the underlying object,
-          // which we need to access with ._securityUI, because .securityUI returns
-          // a wrapper that makes _update inaccessible.
-          void this._browser.securityUI;
-          this._browser._securityUI._update(secInfo, state, isSecureContext);
-        }
-
-        this.onSecurityChange(webProgress, request, state);
-        break;
-    }
   }
 }
 

@@ -336,7 +336,7 @@ class nsWindow::GeckoViewSupport final
                    jni::Object::Param aSessionAccessibility,
                    jni::Object::Param aInitData, jni::String::Param aId,
                    jni::String::Param aChromeURI, int32_t aScreenId,
-                   bool aPrivateMode);
+                   bool aPrivateMode, bool aRemote);
 
   // Close and destroy the nsWindow.
   void Close();
@@ -1231,7 +1231,8 @@ void nsWindow::GeckoViewSupport::Open(
     jni::Object::Param aQueue, jni::Object::Param aCompositor,
     jni::Object::Param aDispatcher, jni::Object::Param aSessionAccessibility,
     jni::Object::Param aInitData, jni::String::Param aId,
-    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode) {
+    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode,
+    bool aRemote) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("nsWindow::GeckoViewSupport::Open", OTHER);
@@ -1258,6 +1259,9 @@ void nsWindow::GeckoViewSupport::Open(
   nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars");
   if (aPrivateMode) {
     chromeFlags += ",private";
+  }
+  if (aRemote) {
+    chromeFlags += ",remote";
   }
   nsCOMPtr<mozIDOMWindowProxy> domWindow;
   ww->OpenWindow(nullptr, url.get(), aId->ToCString().get(), chromeFlags.get(),

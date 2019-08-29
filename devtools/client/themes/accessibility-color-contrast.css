@@ -6,7 +6,7 @@
  * Checks panel and color picker tooltip across the Inspector panel.
  *
  * The section consists of:
- *   - contrast ratio value (numeric + score badge (AA/AAA/fail)):
+ *   - contrast ratio value (numeric + score badge (AA/AAA/FAIL)):
  *       Only shows up if contrast ratio can be calculated.
  *   - large text indicator badge:
  *       Only shows up if the selected text node contains large text.
@@ -31,7 +31,7 @@
 }
 
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).fail:after {
+  .accessibility-contrast-value:not(:empty).FAIL:after {
   color: #e57180;
   content: "⚠️";
 }

@@ -822,7 +822,11 @@ DevTools.prototype = {
       null,
       startTime
     );
-    const nodeFront = await this.findNodeFront(toolbox.walker, nodeSelectors);
+    const inspectorFront = await toolbox.target.getFront("inspector");
+    const nodeFront = await this.findNodeFront(
+      inspectorFront.walker,
+      nodeSelectors
+    );
     // Select the accessible object in the panel and wait for the event that
     // tells us it has been done.
     const a11yPanel = toolbox.getCurrentPanel();

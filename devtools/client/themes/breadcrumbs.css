@@ -65,14 +65,14 @@
 
 /* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
 .scrollbutton-up {
-  border-right: solid 1px rgba(255, 255, 255, .1);
+  border-right: solid 1px var(--theme-splitter-color);
   border-left: solid 1px transparent;
   box-shadow: 3px 0px 3px -3px var(--theme-sidebar-background);
 }
 
 .scrollbutton-down {
   border-right: solid 1px transparent;
-  border-left: solid 1px rgba(255, 255, 255, .1);
+  border-left: solid 1px var(--theme-splitter-color);
   box-shadow: -3px 0px 3px -3px var(--theme-sidebar-background);
 }
 

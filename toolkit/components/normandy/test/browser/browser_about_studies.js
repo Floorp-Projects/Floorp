@@ -111,17 +111,20 @@ decorate_task(
   ]),
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({
-      name: "D Fake Preference Study",
+      slug: "fake-study-d",
+      userFacingName: "D Fake Preference Study",
       lastSeen: new Date(2018, 0, 3),
       expired: false,
     }),
     preferenceStudyFactory({
-      name: "E Fake Preference Study",
+      slug: "fake-study-e",
+      userFacingName: "E Fake Preference Study",
       lastSeen: new Date(2018, 0, 5),
       expired: true,
     }),
     preferenceStudyFactory({
-      name: "F Fake Preference Study",
+      slug: "fake-study-f",
+      userFacingName: "F Fake Preference Study",
       lastSeen: new Date(2018, 0, 6),
       expired: false,
     }),
@@ -151,16 +154,16 @@ decorate_task(
         Assert.deepEqual(
           activeNames,
           [
-            prefStudies[2].name,
+            prefStudies[2].slug,
             addonStudies[0].slug,
-            prefStudies[0].name,
+            prefStudies[0].slug,
             addonStudies[2].slug,
           ],
           "Active studies are grouped by enabled status, and sorted by date"
         );
         Assert.deepEqual(
           inactiveNames,
-          [prefStudies[1].name, addonStudies[1].slug],
+          [prefStudies[1].slug, addonStudies[1].slug],
           "Inactive studies are grouped by enabled status, and sorted by date"
         );
 
@@ -199,7 +202,7 @@ decorate_task(
           "Inactive studies do not show a remove button"
         );
 
-        const activePrefStudy = getStudyRow(doc, prefStudies[0].name);
+        const activePrefStudy = getStudyRow(doc, prefStudies[0].slug);
         const preferenceName = Object.keys(prefStudies[0].preferences)[0];
         ok(
           activePrefStudy
@@ -216,15 +219,8 @@ decorate_task(
           activePrefStudy.querySelector(".remove-button"),
           "Active studies show a remove button"
         );
-        is(
-          activePrefStudy
-            .querySelector(".study-icon")
-            .textContent.toLowerCase(),
-          "d",
-          "Study icons use the first letter of the study name."
-        );
 
-        const inactivePrefStudy = getStudyRow(doc, prefStudies[1].name);
+        const inactivePrefStudy = getStudyRow(doc, prefStudies[1].slug);
         is(
           inactivePrefStudy.querySelector(".study-status").textContent,
           "Complete",
@@ -246,10 +242,10 @@ decorate_task(
 
         activePrefStudy.querySelector(".remove-button").click();
         await ContentTaskUtils.waitForCondition(() =>
-          getStudyRow(doc, prefStudies[0].name).matches(".study.disabled")
+          getStudyRow(doc, prefStudies[0].slug).matches(".study.disabled")
         );
         ok(
-          getStudyRow(doc, prefStudies[0].name).matches(".study.disabled"),
+          getStudyRow(doc, prefStudies[0].slug).matches(".study.disabled"),
           "Clicking the remove button updates the UI to show that the study has been disabled."
         );
       }
@@ -262,7 +258,7 @@ decorate_task(
     );
 
     const updatedPrefStudy = await PreferenceExperiments.get(
-      prefStudies[0].name
+      prefStudies[0].slug
     );
     ok(
       updatedPrefStudy.expired,
@@ -306,7 +302,8 @@ decorate_task(
   ]),
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({
-      name: "B Fake Preference Study",
+      slug: "fake-pref-study",
+      userFacingName: "B Fake Preference Study",
       lastSeen: new Date(2018, 0, 5),
       expired: true,
     }),
@@ -387,7 +384,8 @@ decorate_task(
   ]),
   PreferenceExperiments.withMockExperiments([
     preferenceStudyFactory({
-      name: "Fake Preference Study",
+      slug: "fake-pref-study",
+      userFacingName: "Fake Preference Study",
       lastSeen: new Date(2018, 0, 3),
       expired: false,
     }),
@@ -397,7 +395,7 @@ decorate_task(
     // The content page has already loaded. Disabling the studies here shouldn't
     // affect it, since it doesn't live-update.
     await AddonStudies.markAsEnded(addonStudy, "disabled-automatically-test");
-    await PreferenceExperiments.stop(prefStudy.name, {
+    await PreferenceExperiments.stop(prefStudy.slug, {
       resetValue: false,
       reason: "disabled-automatically-test",
     });
@@ -424,7 +422,7 @@ decorate_task(
 
         Assert.deepEqual(
           activeNames,
-          [addonStudy.slug, prefStudy.name],
+          [addonStudy.slug, prefStudy.slug],
           "Both studies should be listed as active, even though they have been disabled outside of the page"
         );
         Assert.deepEqual(
@@ -434,7 +432,7 @@ decorate_task(
         );
 
         const activeAddonStudy = getStudyRow(doc, addonStudy.slug);
-        const activePrefStudy = getStudyRow(doc, prefStudy.name);
+        const activePrefStudy = getStudyRow(doc, prefStudy.slug);
 
         activeAddonStudy.querySelector(".remove-button").click();
         await ContentTaskUtils.waitForCondition(() =>
@@ -447,10 +445,10 @@ decorate_task(
 
         activePrefStudy.querySelector(".remove-button").click();
         await ContentTaskUtils.waitForCondition(() =>
-          getStudyRow(doc, prefStudy.name).matches(".study.disabled")
+          getStudyRow(doc, prefStudy.slug).matches(".study.disabled")
         );
         ok(
-          getStudyRow(doc, prefStudy.name).matches(".study.disabled"),
+          getStudyRow(doc, prefStudy.slug).matches(".study.disabled"),
           "Clicking the remove button updates the UI to show that the study has been disabled."
         );
 

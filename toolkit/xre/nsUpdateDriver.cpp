@@ -108,22 +108,26 @@ static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
 }
 #endif
 
-static nsresult GetCurrentWorkingDir(char* buf, size_t size) {
+static nsresult GetCurrentWorkingDir(nsACString& aOutPath) {
   // Cannot use NS_GetSpecialDirectory because XPCOM is not yet initialized.
   // This code is duplicated from xpcom/io/SpecialSystemDirectory.cpp:
 
+  aOutPath.Truncate();
+
 #if defined(XP_WIN)
   wchar_t wpath[MAX_PATH];
-  if (!_wgetcwd(wpath, size)) {
+  if (!_wgetcwd(wpath, ArrayLength(wpath))) {
     return NS_ERROR_FAILURE;
   }
-  NS_ConvertUTF16toUTF8 path(wpath);
-  strncpy(buf, path.get(), size);
+  CopyUTF16toUTF8(nsDependentString(wpath), aOutPath);
 #else
-  if (!getcwd(buf, size)) {
+  char path[MAXPATHLEN];
+  if (!getcwd(path, ArrayLength(path))) {
     return NS_ERROR_FAILURE;
   }
+  aOutPath = path;
 #endif
+
   return NS_OK;
 }
 
@@ -393,10 +397,10 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   // appFilePath and workingDirPath are only used when the application will be
   // restarted.
   nsAutoCString appFilePath;
-  char workingDirPath[MAXPATHLEN];
+  nsAutoCString workingDirPath;
   if (restart) {
     // Get the path to the current working directory.
-    rv = GetCurrentWorkingDir(workingDirPath, sizeof(workingDirPath));
+    rv = GetCurrentWorkingDir(workingDirPath);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -516,7 +520,7 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   argv[3] = (char*)applyToDirPath.get();
   argv[4] = (char*)pid.get();
   if (restart && appArgc) {
-    argv[5] = workingDirPath;
+    argv[5] = (char*)workingDirPath.get();
     argv[6] = (char*)appFilePath.get();
     for (int i = 1; i < appArgc; ++i) {
       argv[6 + i] = appArgv[i];

@@ -13,6 +13,7 @@
 [Pref="dom.imagecapture.enabled", Constructor(MediaStreamTrack track)]
 interface ImageCapture : EventTarget {
   // readonly attribute PhotoSettingsOptions photoSettingsOptions;
+  [BinaryName="GetVideoStreamTrack"]
   readonly attribute MediaStreamTrack videoStreamTrack;
   attribute EventHandler onphoto;
   attribute EventHandler onerror;

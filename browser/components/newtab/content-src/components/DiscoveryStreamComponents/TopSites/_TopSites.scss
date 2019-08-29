@@ -1,3 +1,5 @@
+$top-sites-vertical-space-with-spoc: 20px;
+
 // ds topsites wraps the original topsites, with a few css changes.
 .ds-top-sites {
 
@@ -106,6 +108,36 @@
 
       .title {
         width: var(--rightPanelIconWidth);
+      }
+    }
+  }
+}
+
+.top-sites-spoc {
+  .top-sites-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    .top-site-outer {
+      margin: 0 0 $top-sites-vertical-space-with-spoc;
+
+      .top-site-spoc-label {
+        @include dark-theme-only {
+          color: $grey-40;
+        }
+
+        color: $grey-50;
+        font-size: 11px;
+        display: flex;
+        justify-content: center;
+        margin-top: -4px;
+      }
+
+      &.dragged {
+
+        .top-site-spoc-label {
+          visibility: hidden;
+        }
       }
     }
   }

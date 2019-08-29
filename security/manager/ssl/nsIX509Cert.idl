@@ -12,10 +12,18 @@ interface nsIASN1Object;
 interface nsICertVerificationListener;
 
 %{ C++
+namespace IPC {
+  class Message;
+}
+class PickleIterator;
+
  /* forward declaration */
  typedef struct CERTCertificateStr CERTCertificate;
 %}
+
 [ptr] native CERTCertificatePtr(CERTCertificate);
+[ptr] native IpcMessagePtr(IPC::Message);
+[ptr] native PickleIteratorPtr(PickleIterator);
 
 /**
  * This represents a X.509 certificate.
@@ -235,4 +243,10 @@ interface nsIX509Cert : nsISupports {
    */
   [must_use]
   void markForPermDeletion();
+
+  [notxpcom, noscript]
+  void SerializeToIPC(in IpcMessagePtr aMsg);
+
+  [notxpcom, noscript]
+  bool DeserializeFromIPC([const] in IpcMessagePtr aMsg, in PickleIteratorPtr aIter);
 };

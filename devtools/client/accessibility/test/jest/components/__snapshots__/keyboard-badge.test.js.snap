@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KeyboardBadge component: error render 1`] = `null`;
+
+exports[`KeyboardBadge component: fail render 1`] = `"<span class=\\"audit-badge badge\\" title=\\"accessibility.badge.keyboard.tooltip\\" aria-label=\\"accessibility.badge.keyboard\\">accessibility.badge.keyboard</span>"`;
+
+exports[`KeyboardBadge component: warning render 1`] = `"<span class=\\"audit-badge badge\\" title=\\"accessibility.badge.keyboard.tooltip\\" aria-label=\\"accessibility.badge.keyboard\\">accessibility.badge.keyboard</span>"`;
