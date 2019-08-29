@@ -128,11 +128,7 @@ function Spectrum(parentEl, rgb) {
   // Color spectrum dragger.
   this.dragger = this.element.querySelector(".spectrum-color");
   this.dragHelper = this.element.querySelector(".spectrum-dragger");
-  Spectrum.draggable(
-    this.dragger,
-    this.dragHelper,
-    this.onDraggerMove.bind(this)
-  );
+  draggable(this.dragger, this.dragHelper, this.onDraggerMove.bind(this));
 
   // Here we define the components for the "controls" section of the color picker.
   this.controls = this.element.querySelector(".spectrum-controls");
@@ -183,204 +179,6 @@ function Spectrum(parentEl, rgb) {
   }
 }
 
-module.exports.Spectrum = Spectrum;
-
-Spectrum.hsvToRgb = function(h, s, v, a) {
-  let r, g, b;
-
-  const i = Math.floor(h * 6);
-  const f = h * 6 - i;
-  const p = v * (1 - s);
-  const q = v * (1 - f * s);
-  const t = v * (1 - (1 - f) * s);
-
-  switch (i % 6) {
-    case 0:
-      r = v;
-      g = t;
-      b = p;
-      break;
-    case 1:
-      r = q;
-      g = v;
-      b = p;
-      break;
-    case 2:
-      r = p;
-      g = v;
-      b = t;
-      break;
-    case 3:
-      r = p;
-      g = q;
-      b = v;
-      break;
-    case 4:
-      r = t;
-      g = p;
-      b = v;
-      break;
-    case 5:
-      r = v;
-      g = p;
-      b = q;
-      break;
-  }
-
-  return [r * 255, g * 255, b * 255, a];
-};
-
-Spectrum.rgbToHsv = function(r, g, b, a) {
-  r = r / 255;
-  g = g / 255;
-  b = b / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-
-  const v = max;
-  const d = max - min;
-  const s = max == 0 ? 0 : d / max;
-
-  let h;
-  if (max == min) {
-    // achromatic
-    h = 0;
-  } else {
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-  return [h, s, v, a];
-};
-
-Spectrum.draggable = function(element, dragHelper, onmove) {
-  onmove = onmove || function() {};
-
-  const doc = element.ownerDocument;
-  let dragging = false;
-  let offset = {};
-  let maxHeight = 0;
-  let maxWidth = 0;
-
-  function setDraggerDimensionsAndOffset() {
-    maxHeight = element.offsetHeight;
-    maxWidth = element.offsetWidth;
-    offset = element.getBoundingClientRect();
-  }
-
-  function prevent(e) {
-    e.stopPropagation();
-    e.preventDefault();
-  }
-
-  function move(e) {
-    if (dragging) {
-      if (e.buttons === 0) {
-        // The button is no longer pressed but we did not get a mouseup event.
-        stop();
-        return;
-      }
-      const pageX = e.pageX;
-      const pageY = e.pageY;
-
-      const dragX = Math.max(0, Math.min(pageX - offset.left, maxWidth));
-      const dragY = Math.max(0, Math.min(pageY - offset.top, maxHeight));
-
-      onmove.apply(element, [dragX, dragY]);
-    }
-  }
-
-  function start(e) {
-    const rightClick = e.which === 3;
-
-    if (!rightClick && !dragging) {
-      dragging = true;
-      setDraggerDimensionsAndOffset();
-
-      move(e);
-
-      doc.addEventListener("selectstart", prevent);
-      doc.addEventListener("dragstart", prevent);
-      doc.addEventListener("mousemove", move);
-      doc.addEventListener("mouseup", stop);
-
-      prevent(e);
-    }
-  }
-
-  function stop() {
-    if (dragging) {
-      doc.removeEventListener("selectstart", prevent);
-      doc.removeEventListener("dragstart", prevent);
-      doc.removeEventListener("mousemove", move);
-      doc.removeEventListener("mouseup", stop);
-    }
-    dragging = false;
-  }
-
-  function onKeydown(e) {
-    const { key } = e;
-
-    if (!ARROW_KEYS.includes(key)) {
-      return;
-    }
-
-    setDraggerDimensionsAndOffset();
-    const { offsetHeight, offsetTop, offsetLeft } = dragHelper;
-    let dragX = offsetLeft + offsetHeight / 2;
-    let dragY = offsetTop + offsetHeight / 2;
-
-    if (key === ArrowLeft && dragX > 0) {
-      dragX -= 1;
-    } else if (key === ArrowRight && dragX < maxWidth) {
-      dragX += 1;
-    } else if (key === ArrowUp && dragY > 0) {
-      dragY -= 1;
-    } else if (key === ArrowDown && dragY < maxHeight) {
-      dragY += 1;
-    }
-
-    onmove.apply(element, [dragX, dragY]);
-  }
-
-  element.addEventListener("mousedown", start);
-  element.addEventListener("keydown", onKeydown);
-};
-
-/**
- * Calculates the contrast ratio for a DOM node's computed style against
- * a given background.
- *
- * @param  {Object} computedStyle
- *         The computed style for which we want to calculate the contrast ratio.
- * @param  {Object} backgroundColor
- *         Object with one or more of the following properties: value, min, max
- * @return {Object}
- *         An object that may contain one or more of the following fields: error,
- *         isLargeText, value, score for contrast.
- */
-function getContrastRatio(computedStyle, backgroundColor) {
-  const props = getTextProperties(computedStyle);
-
-  if (!props) {
-    return {
-      error: true,
-    };
-  }
-
-  return getContrastRatioAgainstBackground(backgroundColor, props);
-}
-
 Spectrum.prototype = {
   set textProps(style) {
     this._textProps = style
@@ -393,7 +191,7 @@ Spectrum.prototype = {
   },
 
   set rgb(color) {
-    this.hsv = Spectrum.rgbToHsv(color[0], color[1], color[2], color[3]);
+    this.hsv = rgbToHsv(color[0], color[1], color[2], color[3]);
   },
 
   set backgroundColorData(colorData) {
@@ -409,12 +207,7 @@ Spectrum.prototype = {
   },
 
   get rgb() {
-    const rgb = Spectrum.hsvToRgb(
-      this.hsv[0],
-      this.hsv[1],
-      this.hsv[2],
-      this.hsv[3]
-    );
+    const rgb = hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2], this.hsv[3]);
     return [
       Math.round(rgb[0]),
       Math.round(rgb[1]),
@@ -446,7 +239,7 @@ Spectrum.prototype = {
   },
 
   get rgbNoSatVal() {
-    const rgb = Spectrum.hsvToRgb(this.hsv[0], 1, 1);
+    const rgb = hsvToRgb(this.hsv[0], 1, 1);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
   },
 
@@ -791,3 +584,201 @@ Spectrum.prototype = {
     this.contrastLabel = null;
   },
 };
+
+function hsvToRgb(h, s, v, a) {
+  let r, g, b;
+
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+
+  switch (i % 6) {
+    case 0:
+      r = v;
+      g = t;
+      b = p;
+      break;
+    case 1:
+      r = q;
+      g = v;
+      b = p;
+      break;
+    case 2:
+      r = p;
+      g = v;
+      b = t;
+      break;
+    case 3:
+      r = p;
+      g = q;
+      b = v;
+      break;
+    case 4:
+      r = t;
+      g = p;
+      b = v;
+      break;
+    case 5:
+      r = v;
+      g = p;
+      b = q;
+      break;
+  }
+
+  return [r * 255, g * 255, b * 255, a];
+}
+
+function rgbToHsv(r, g, b, a) {
+  r = r / 255;
+  g = g / 255;
+  b = b / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+
+  const v = max;
+  const d = max - min;
+  const s = max == 0 ? 0 : d / max;
+
+  let h;
+  if (max == min) {
+    // achromatic
+    h = 0;
+  } else {
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+  return [h, s, v, a];
+}
+
+function draggable(element, dragHelper, onmove) {
+  onmove = onmove || function() {};
+
+  const doc = element.ownerDocument;
+  let dragging = false;
+  let offset = {};
+  let maxHeight = 0;
+  let maxWidth = 0;
+
+  function setDraggerDimensionsAndOffset() {
+    maxHeight = element.offsetHeight;
+    maxWidth = element.offsetWidth;
+    offset = element.getBoundingClientRect();
+  }
+
+  function prevent(e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  function move(e) {
+    if (dragging) {
+      if (e.buttons === 0) {
+        // The button is no longer pressed but we did not get a mouseup event.
+        stop();
+        return;
+      }
+      const pageX = e.pageX;
+      const pageY = e.pageY;
+
+      const dragX = Math.max(0, Math.min(pageX - offset.left, maxWidth));
+      const dragY = Math.max(0, Math.min(pageY - offset.top, maxHeight));
+
+      onmove.apply(element, [dragX, dragY]);
+    }
+  }
+
+  function start(e) {
+    const rightClick = e.which === 3;
+
+    if (!rightClick && !dragging) {
+      dragging = true;
+      setDraggerDimensionsAndOffset();
+
+      move(e);
+
+      doc.addEventListener("selectstart", prevent);
+      doc.addEventListener("dragstart", prevent);
+      doc.addEventListener("mousemove", move);
+      doc.addEventListener("mouseup", stop);
+
+      prevent(e);
+    }
+  }
+
+  function stop() {
+    if (dragging) {
+      doc.removeEventListener("selectstart", prevent);
+      doc.removeEventListener("dragstart", prevent);
+      doc.removeEventListener("mousemove", move);
+      doc.removeEventListener("mouseup", stop);
+    }
+    dragging = false;
+  }
+
+  function onKeydown(e) {
+    const { key } = e;
+
+    if (!ARROW_KEYS.includes(key)) {
+      return;
+    }
+
+    setDraggerDimensionsAndOffset();
+    const { offsetHeight, offsetTop, offsetLeft } = dragHelper;
+    let dragX = offsetLeft + offsetHeight / 2;
+    let dragY = offsetTop + offsetHeight / 2;
+
+    if (key === ArrowLeft && dragX > 0) {
+      dragX -= 1;
+    } else if (key === ArrowRight && dragX < maxWidth) {
+      dragX += 1;
+    } else if (key === ArrowUp && dragY > 0) {
+      dragY -= 1;
+    } else if (key === ArrowDown && dragY < maxHeight) {
+      dragY += 1;
+    }
+
+    onmove.apply(element, [dragX, dragY]);
+  }
+
+  element.addEventListener("mousedown", start);
+  element.addEventListener("keydown", onKeydown);
+}
+
+/**
+ * Calculates the contrast ratio for a DOM node's computed style against
+ * a given background.
+ *
+ * @param  {Object} computedStyle
+ *         The computed style for which we want to calculate the contrast ratio.
+ * @param  {Object} backgroundColor
+ *         Object with one or more of the following properties: value, min, max
+ * @return {Object}
+ *         An object that may contain one or more of the following fields: error,
+ *         isLargeText, value, score for contrast.
+ */
+function getContrastRatio(computedStyle, backgroundColor) {
+  const props = getTextProperties(computedStyle);
+
+  if (!props) {
+    return {
+      error: true,
+    };
+  }
+
+  return getContrastRatioAgainstBackground(backgroundColor, props);
+}
+
+module.exports.Spectrum = Spectrum;
