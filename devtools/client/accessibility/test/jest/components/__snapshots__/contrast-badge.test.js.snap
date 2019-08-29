@@ -2,7 +2,7 @@
 
 exports[`ContrastBadge component: error render 1`] = `null`;
 
-exports[`ContrastBadge component: fail render 1`] = `"<span class=\\"audit-badge badge\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast.warning\\">accessibility.badge.contrast</span>"`;
+exports[`ContrastBadge component: fail render 1`] = `"<span class=\\"audit-badge badge\\" data-score=\\"FAIL\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast.warning\\">accessibility.badge.contrast</span>"`;
 
 exports[`ContrastBadge component: success large text render 1`] = `null`;
 
