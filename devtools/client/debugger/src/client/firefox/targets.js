@@ -7,16 +7,18 @@
 import { addThreadEventListeners } from "./events";
 import { prefs } from "../../utils/prefs";
 import type { DebuggerClient, Target } from "./types";
+import type { ThreadType } from "../../types";
 
 type Args = {
   currentTarget: Target,
   debuggerClient: DebuggerClient,
-  targets: { [string]: Target },
+  targets: { [ThreadType]: { [string]: Target } },
   options: Object,
 };
 
-async function attachTargets(targetLists, { options, targets }: Args) {
+async function attachTargets(type, targetLists, args) {
   const newTargets = {};
+  const targets = args.targets[type] || {};
 
   for (const targetFront of targetLists) {
     try {
@@ -25,7 +27,7 @@ async function attachTargets(targetLists, { options, targets }: Args) {
       if (targets[threadActorID]) {
         newTargets[threadActorID] = targets[threadActorID];
       } else {
-        const [, threadFront] = await targetFront.attachThread(options);
+        const [, threadFront] = await targetFront.attachThread(args.options);
         // NOTE: resume is not necessary for ProcessDescriptors and can be removed
         // once we switch to WorkerDescriptors
         threadFront.resume();
@@ -44,17 +46,23 @@ async function attachTargets(targetLists, { options, targets }: Args) {
   return newTargets;
 }
 
-export async function updateWorkerTargets(args: Args) {
+export async function updateWorkerTargets(
+  type: ThreadType,
+  args: Args
+): Promise<{ string: Target }> {
   const { currentTarget } = args;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
     return {};
   }
 
   const { workers } = await currentTarget.listWorkers();
-  return attachTargets(workers, args);
+  return attachTargets(type, workers, args);
 }
 
-export async function updateProcessTargets(args: Args): Promise<*> {
+export async function updateProcessTargets(
+  type: ThreadType,
+  args: Args
+): Promise<{ string: Target }> {
   const { currentTarget, debuggerClient } = args;
   if (!prefs.fission || !currentTarget.chrome || currentTarget.isAddon) {
     return Promise.resolve({});
@@ -67,11 +75,17 @@ export async function updateProcessTargets(args: Args): Promise<*> {
       .map(descriptor => descriptor.getTarget())
   );
 
-  return attachTargets(targets, args);
+  return attachTargets(type, targets, args);
 }
 
-export async function updateTargets(args: Args) {
-  const workers = await updateWorkerTargets(args);
-  const processes = await updateProcessTargets(args);
-  return { ...workers, ...processes };
+export async function updateTargets(type: ThreadType, args: Args) {
+  if (type == "worker") {
+    return updateWorkerTargets(type, args);
+  }
+
+  if (type == "contentProcess") {
+    return updateProcessTargets(type, args);
+  }
+
+  throw new Error(`Unable to fetch targts for ${type}`);
 }
