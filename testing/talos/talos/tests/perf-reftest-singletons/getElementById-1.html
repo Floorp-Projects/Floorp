@@ -1,0 +1,42 @@
+<!doctype html>
+<script src="util.js"></script>
+<div id="x"></div>
+<div id="y"></div>
+<script>
+  /*
+   * Test the performance of getElementById.
+   */
+  onload = function() {
+    document.getElementById("x").counterProp = 0;
+    document.getElementById("y").counterProp = 0;
+    var count = 1000000;  // About 50-60ms
+    var ids = ["x", "y"];
+    perf_start();
+    for (var i = count; i > 0; --i) {
+      /*
+       * We jump through some hoops here, because the JIT knows that
+       * getElementById is side-effect-free.  That means we need to prevent it
+       * being dead-code eliminated or loop-hoisted.
+       *
+       * We avoid dead-code elimination by using the return value in a way that
+       * the JIT can't eliminate (i.e. by changing state on it that can be
+       * observed later).  The use of += instead of just assigning is to avoid
+       * issues with the JIT detecting that later writes dominate earlier ones
+       * and eliminating the earlier ones by having all writes contribute to the
+       * state.
+       *
+       * We avoid loop-hoisting by making the arg to the getElementById call
+       * depend on the loop variable, which is obviously not loop-invariant.
+       *
+       * A sufficiently smart compiler could probably still figure out that
+       * there are only two possible return values, loop-hoist them both, and
+       * just grab the right thing inside the loop based on the value of the
+       * loop variable, and if that starts happening we'll need to see what we
+       * can do to fool the compiler into actually doing the many getElementById
+       * calls involved.
+       */
+      document.getElementById(ids[i % 2]).counterProp += i;
+    }
+    perf_finish();
+  }
+</script>
