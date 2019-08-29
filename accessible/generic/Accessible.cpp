@@ -1508,6 +1508,18 @@ role Accessible::ARIATransformRole(role aRole) const {
                                            nsGkAtoms::_true, eCaseMatters)) {
       return roles::PARENT_MENUITEM;
     }
+
+  } else if (aRole == roles::CELL) {
+    // A cell inside an ancestor table element that has a grid role needs a
+    // gridcell role
+    // (https://www.w3.org/TR/html-aam-1.0/#html-element-role-mappings).
+    const TableCellAccessible* cell = AsTableCell();
+    if (cell) {
+      TableAccessible* table = cell->Table();
+      if (table && table->AsAccessible()->IsARIARole(nsGkAtoms::grid)) {
+        return roles::GRID_CELL;
+      }
+    }
   }
 
   return aRole;
