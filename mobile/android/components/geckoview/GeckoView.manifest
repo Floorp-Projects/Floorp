@@ -23,3 +23,7 @@ contract @mozilla.org/filepicker;1 {e4565e36-f101-4bf5-950b-4be0887785a9} proces
 # GeckoViewExternalAppService.js
 component {a89eeec6-6608-42ee-a4f8-04d425992f45} GeckoViewExternalAppService.js
 contract @mozilla.org/uriloader/external-helper-app-service;1 {a89eeec6-6608-42ee-a4f8-04d425992f45}
+
+# GeckoViewPush.js
+component {a54d84d7-98a4-4fec-b664-e42e512ae9cc} GeckoViewPush.js
+contract @mozilla.org/push/Service;1 {a54d84d7-98a4-4fec-b664-e42e512ae9cc}
