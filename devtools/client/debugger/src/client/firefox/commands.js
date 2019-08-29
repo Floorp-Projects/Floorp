@@ -23,6 +23,7 @@ import type {
   SourceActor,
   Range,
   Thread,
+  ThreadType,
 } from "../../types";
 
 import type {
@@ -39,7 +40,7 @@ import type {
   EventListenerActiveList,
 } from "../../actions/types";
 
-let targets: { [string]: Target };
+let targets: { [ThreadType]: { [string]: Target } };
 let currentThreadFront: ThreadFront;
 let currentTarget: Target;
 let debuggerClient: DebuggerClient;
@@ -60,7 +61,7 @@ function setupCommands(dependencies: Dependencies) {
   currentTarget = dependencies.tabTarget;
   debuggerClient = dependencies.debuggerClient;
   supportsWasm = dependencies.supportsWasm;
-  targets = {};
+  targets = { worker: {}, contentProcess: {} };
   sourceActors = {};
   breakpoints = {};
 }
@@ -97,16 +98,22 @@ function sendPacket(packet: Object) {
   return debuggerClient.request(packet);
 }
 
+// Transforms targets from {[ThreadType]: TargetMap} to TargetMap
+function getTargetsMap(): { string: Target } {
+  return Object.assign({}, ...Object.values(targets));
+}
+
 function lookupTarget(thread: string) {
   if (thread == currentThreadFront.actor) {
     return currentTarget;
   }
 
-  if (!targets[thread]) {
+  const targetsMap = getTargetsMap();
+  if (!targetsMap[thread]) {
     throw new Error(`Unknown thread front: ${thread}`);
   }
 
-  return targets[thread];
+  return targetsMap[thread];
 }
 
 function lookupThreadFront(thread: string) {
@@ -115,7 +122,8 @@ function lookupThreadFront(thread: string) {
 }
 
 function listThreadFronts() {
-  return (Object.values(targets): any).map(target => target.threadFront);
+  const targetList = (Object.values(getTargetsMap()): any);
+  return targetList.map(target => target.threadFront);
 }
 
 function forEachThread(iteratee) {
@@ -356,9 +364,7 @@ function setEventListenerBreakpoints(ids: string[]) {
 }
 
 // eslint-disable-next-line
-async function getEventListenerBreakpointTypes(): Promise<
-  EventListenerCategoryList
-> {
+async function getEventListenerBreakpointTypes(): Promise<EventListenerCategoryList> {
   let categories;
   try {
     categories = await currentThreadFront.getAvailableEventBreakpoints();
@@ -405,14 +411,24 @@ function getSourceForActor(actor: ActorId) {
   return sourceActors[actor];
 }
 
-async function fetchThreads(): Promise<Thread[]> {
+async function fetchThreads(type: ?ThreadType): Promise<Thread[]> {
+  if (!type) {
+    const workers = await updateThreads("worker");
+    const processes = await updateThreads("contentProcess");
+    return [...workers, ...processes];
+  }
+
+  return updateThreads(type);
+}
+
+async function updateThreads(type: ThreadType) {
   const options = {
     breakpoints,
     eventBreakpoints,
     observeAsmJS: true,
   };
 
-  const newTargets = await updateTargets({
+  const newTargets = await updateTargets(type, {
     currentTarget,
     debuggerClient,
     targets,
@@ -424,14 +440,17 @@ async function fetchThreads(): Promise<Thread[]> {
   // pretty easy for sources to throw during the fetch if their thread
   // shuts down, which would cause test failures.
   for (const actor in newTargets) {
-    if (!targets[actor]) {
+    if (!targets[type][actor]) {
       const { threadFront } = newTargets[actor];
       getSources(threadFront).catch(e => console.error(e));
     }
   }
 
-  targets = newTargets;
-  return Object.keys(targets).map(id => createThread(id, targets[id]));
+  targets = { ...targets, [type]: newTargets };
+
+  return Object.keys(newTargets).map(actor =>
+    createThread(actor, newTargets[actor])
+  );
 }
 
 function getMainThread() {

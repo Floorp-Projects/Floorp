@@ -59,7 +59,7 @@ export function connect(
         mainThread: {
           url,
           actor,
-          type: "main-thread",
+          type: "mainThread",
           name: L10N.getStr("mainThread"),
         },
         canRewind,

@@ -79,10 +79,10 @@ function getTargetType(target: Target) {
   }
 
   if (target.isContentProcess) {
-    return "content-process";
+    return "contentProcess";
   }
 
-  return "main-thread";
+  return "mainThread";
 }
 
 export function createThread(actor: string, target: Target): Thread {
