@@ -1674,16 +1674,6 @@ void MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG) {
         nsCOMPtr<nsIRunnable> event =
             new MediaStreamGraphShutDownRunnable(this);
         mAbstractMainThread->Dispatch(event.forget());
-
-        LOG(LogLevel::Debug, ("%p: Disconnecting MediaStreamGraph", this));
-
-        // Find the graph in the hash table and remove it.
-        for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
-          if (iter.UserData() == this) {
-            iter.Remove();
-            break;
-          }
-        }
       }
     } else {
       if (LifecycleStateRef() <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
@@ -1837,14 +1827,6 @@ void MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage) {
 #endif
     if (IsEmpty() &&
         LifecycleStateRef() >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
-      // Find the graph in the hash table and remove it.
-      for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
-        if (iter.UserData() == this) {
-          iter.Remove();
-          break;
-        }
-      }
-
       Destroy();
     }
     return;
@@ -2033,6 +2015,7 @@ void MediaStream::Destroy() {
     }
     void RunDuringShutdown() override { Run(); }
   };
+  GraphImpl()->RemoveStream(this);
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
   // Message::RunDuringShutdown may have removed this stream from the graph,
   // but our kungFuDeathGrip above will have kept this stream alive if
@@ -3544,7 +3527,25 @@ void MediaStreamGraph::AddStream(MediaStream* aStream) {
 #endif
   NS_ADDREF(aStream);
   aStream->SetGraphImpl(graph);
+  ++graph->mMainThreadStreamCount;
   graph->AppendMessage(MakeUnique<CreateMessage>(aStream));
+}
+
+void MediaStreamGraphImpl::RemoveStream(MediaStream* aStream) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mMainThreadStreamCount > 0);
+  if (--mMainThreadStreamCount == 0) {
+    LOG(LogLevel::Info, ("MediaStreamGraph %p, last stream %p removed from "
+                         "main thread. Graph will shut down.",
+                         this, aStream));
+    // Find the graph in the hash table and remove it.
+    for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.UserData() == this) {
+        iter.Remove();
+        break;
+      }
+    }
+  }
 }
 
 class GraphStartedRunnable final : public Runnable {
