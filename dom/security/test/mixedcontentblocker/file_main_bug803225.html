@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 -->
 
 <script>
+  const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
   //For tests that require setTimeout, set the timeout interval
   var TIMEOUT_INTERVAL = 100;
@@ -148,22 +149,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   mailtoProtocolStatus();
 
   // Test 7: wss protocol
-  var wss;
-  wss = new WebSocket("wss://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225_websocket");
+  // WebSocket tests are not supported on Android Yet. Bug 1566168.
+  if (AppConstants.platform !== "android") {
+    var wss;
+    wss = new WebSocket("wss://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225_websocket");
 
-  var status_wss = "started";
-  wss.onopen = function(e) {
-     status_wss = "opened";
-     wss.close();
-  }
-  wss.onclose = function(e) {
-    if(status_wss == "opened") {
-      parent.postMessage({"test": "wss", "msg": "resource with wss protocol loaded"}, "http://mochi.test:8888");
-    } else {
-      parent.postMessage({"test": "wss", "msg": "resource with wss protocol did not load"}, "http://mochi.test:8888");
+    var status_wss = "started";
+    wss.onopen = function(e) {
+       status_wss = "opened";
+       wss.close();
+    }
+    wss.onclose = function(e) {
+      if(status_wss == "opened") {
+        parent.postMessage({"test": "wss", "msg": "resource with wss protocol loaded"}, "http://mochi.test:8888");
+      } else {
+        parent.postMessage({"test": "wss", "msg": "resource with wss protocol did not load"}, "http://mochi.test:8888");
+      }
     }
   }
-
 </script>
 </body>
 </html>
