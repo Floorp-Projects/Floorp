@@ -84,7 +84,7 @@ input[type="url"][readOnly] {
 }
 
 .edit-button {
-  background-image: url("chrome://browser/content/aboutlogins/icons/edit.svg");
+  background-image: url("chrome://browser/skin/edit.svg");
   padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
 }
 
