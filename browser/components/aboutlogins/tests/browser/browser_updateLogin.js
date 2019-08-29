@@ -120,6 +120,15 @@ add_task(async function test_login_item() {
       editButton.click();
       await Promise.resolve();
 
+      let revealCheckbox = loginItem.shadowRoot.querySelector(
+        ".reveal-password-checkbox"
+      );
+      revealCheckbox.click();
+      ok(
+        revealCheckbox.checked,
+        "reveal-checkbox should be checked after clicking"
+      );
+
       usernameInput.value += "-saveme";
       passwordInput.value += "-saveme";
 
@@ -140,6 +149,10 @@ add_task(async function test_login_item() {
         );
       }, "Waiting for corresponding login in login list to update");
 
+      ok(
+        !revealCheckbox.checked,
+        "reveal-checkbox should be unchecked after saving changes"
+      );
       ok(
         !loginItem.dataset.editing,
         "LoginItem should not be in 'edit' mode after saving"
