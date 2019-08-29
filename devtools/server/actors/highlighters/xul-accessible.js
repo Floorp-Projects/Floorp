@@ -102,7 +102,13 @@ const ACCESSIBLE_BOUNDS_SHEET =
     color: hsl(210, 30%, 85%);
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::before {
+  .accessible-infobar-audit .accessible-contrast-ratio:empty::before,
+  .accessible-infobar-audit .accessible-contrast-ratio:empty::after,
+  .accessible-infobar-name:empty {
+    display: none;
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio::before {
     content: "";
     height: 8px;
     width: 8px;
@@ -115,25 +121,39 @@ const ACCESSIBLE_BOUNDS_SHEET =
     margin-inline-end: 9px;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::after {
+  .accessible-infobar-audit .accessible-contrast-ratio::after {
     margin-inline-start: 2px;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after,
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
+  .accessible-infobar-audit .accessible-contrast-ratio.AA::after,
+  .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
     color: #90E274;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).FAIL::after {
-    color: #E57180;
-    content: "⚠️";
+  .accessible-infobar-audit .accessible-audit::before,
+  .accessible-infobar-audit .accessible-contrast-ratio.FAIL::after {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    content: "";
+    vertical-align: -2px;
+    background-position: center;
+    background-repeat: no-repeat;
+    -moz-context-properties: fill;
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after {
+  .accessible-infobar-audit .accessible-contrast-ratio.FAIL:after {
+    color: #E57180;
+    margin-inline-start: 3px;
+    background-image: url(chrome://devtools/skin/images/error-small.svg);
+    fill: var(--red-40);
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio.AA::after {
     content: "AA\u2713";
   }
 
-  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
+  .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
     content: "AAA\u2713";
   }
 
@@ -147,12 +167,6 @@ const ACCESSIBLE_BOUNDS_SHEET =
     margin-inline-start: 3px;
   }
 
-  .accessible-infobar-name:not(:empty) {
-    border-inline-start: 1px solid #5a6169;
-    margin-inline-start: 6px;
-    padding-inline-start: 6px;
-  }
-
   .accessible-infobar-audit .accessible-audit {
     display: block;
     padding-block-end: 5px;
@@ -163,16 +177,8 @@ const ACCESSIBLE_BOUNDS_SHEET =
   }
 
   .accessible-infobar-audit .accessible-audit::before {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    content: "";
     margin-inline-end: 4px;
-    vertical-align: -2px;
     background-image: none;
-    background-position: center;
-    background-repeat: no-repeat;
-    -moz-context-properties: fill;
     fill: currentColor;
   }
 
@@ -188,6 +194,12 @@ const ACCESSIBLE_BOUNDS_SHEET =
 
   .accessible-infobar-audit .accessible-audit.BEST_PRACTICES::before {
     background-image: url(chrome://devtools/skin/images/info-small.svg);
+  }
+
+  .accessible-infobar-name {
+    border-inline-start: 1px solid #5a6169;
+    margin-inline-start: 6px;
+    padding-inline-start: 6px;
   }`);
 
 /**
