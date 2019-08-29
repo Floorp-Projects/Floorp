@@ -147,12 +147,11 @@ var AboutLoginsParent = {
         }
         break;
       }
-      case "AboutLogins:OpenFeedback": {
-        const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
-        const FEEDBACK_URL = Services.urlFormatter.formatURLPref(
-          FEEDBACK_URL_PREF
-        );
-        message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {
+      case "AboutLogins:GetHelp": {
+        const SUPPORT_URL =
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "firefox-lockwise";
+        message.target.ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
           relatedToCurrent: true,
         });
         break;

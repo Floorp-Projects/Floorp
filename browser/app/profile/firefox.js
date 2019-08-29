@@ -1785,8 +1785,6 @@ pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
   pref("signon.includeOtherSubdomainsInLookup", true);
 #endif
 pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
-pref("signon.management.page.feedbackURL",
-     "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");
 // The utm_creative value is appended within the code (specific to the location on
 // where it is clicked). Be sure that if these two prefs are updated, that
 // the utm_creative param be last.
