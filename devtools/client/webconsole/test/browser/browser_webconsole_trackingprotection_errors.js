@@ -7,12 +7,13 @@
 "use strict";
 requestLongerTimeout(2);
 
-const TEST_FILE =
-  "browser/devtools/client/webconsole/test/browser/" +
-  "test-trackingprotection-securityerrors.html";
+const TEST_PATH = "browser/devtools/client/webconsole/test/browser/";
+const TEST_FILE = TEST_PATH + "test-trackingprotection-securityerrors.html";
 const TEST_URI = "http://example.com/" + TEST_FILE;
 const TRACKER_URL = "http://tracking.example.org/";
-const BLOCKED_URL = `\u201c${TRACKER_URL}\u201d`;
+const BLOCKED_URL = `\u201c${TRACKER_URL +
+  TEST_PATH +
+  "cookieSetter.html"}\u201d`;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS = {

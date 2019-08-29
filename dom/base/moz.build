@@ -193,6 +193,7 @@ EXPORTS.mozilla.dom += [
     'IntlUtils.h',
     'Link.h',
     'Location.h',
+    'LocationBase.h',
     'MaybeCrossOriginObject.h',
     'MessageBroadcaster.h',
     'MessageListenerManager.h',
@@ -308,6 +309,7 @@ UNIFIED_SOURCES += [
     'IntlUtils.cpp',
     'Link.cpp',
     'Location.cpp',
+    'LocationBase.cpp',
     'MaybeCrossOriginObject.cpp',
     'MessageBroadcaster.cpp',
     'MessageListenerManager.cpp',
@@ -465,6 +467,12 @@ SOURCES += [
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsTextFragmentSSE2.cpp']
     SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+
+# Are we targeting PowerPC? If so, we can enable a SIMD version for
+# nsTextFragment.cpp as well.
+if CONFIG['CPU_ARCH'].startswith('ppc'):
+    SOURCES += ['nsTextFragmentVMX.cpp']
+    SOURCES['nsTextFragmentVMX.cpp'].flags += CONFIG['PPC_VMX_FLAGS']
 
 EXTRA_JS_MODULES += [
     'ContentAreaDropListener.jsm',

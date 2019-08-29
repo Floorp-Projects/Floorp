@@ -9,6 +9,7 @@
 #include "ServoCSSParser.h"
 #include "MainThreadUtils.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_devtools.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Document.h"
@@ -38,8 +39,23 @@ static void GetColor(const char* aPrefName, nscolor& aColor) {
 }
 
 bool PreferenceSheet::ShouldUseChromePrefs(const Document& aDoc) {
-  return aDoc.IsInChromeDocShell() ||
-         (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome());
+  // DevTools documents run in a content frame but should temporarily use
+  // chrome preferences, in particular to avoid applying High Contrast mode
+  // colors. See Bug 1575766.
+  if (aDoc.IsDevToolsDocument() &&
+      StaticPrefs::devtools_toolbox_force_chrome_prefs()) {
+    return true;
+  }
+
+  if (aDoc.IsInChromeDocShell()) {
+    return true;
+  }
+
+  if (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome()) {
+    return true;
+  }
+
+  return false;
 }
 
 static bool UseAccessibilityTheme(bool aIsChrome) {

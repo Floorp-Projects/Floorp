@@ -104,10 +104,6 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:Import");
         break;
       }
-      case "AboutLoginsOpenFAQ": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenFAQ");
-        break;
-      }
       case "AboutLoginsOpenMobileAndroid": {
         this.mm.sendAsyncMessage("AboutLogins:OpenMobileAndroid", {
           source: event.detail,
@@ -120,8 +116,8 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
-      case "AboutLoginsOpenFeedback": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenFeedback");
+      case "AboutLoginsGetHelp": {
+        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
         break;
       }
       case "AboutLoginsOpenPreferences": {

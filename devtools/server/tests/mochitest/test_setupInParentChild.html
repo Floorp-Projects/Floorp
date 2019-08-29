@@ -17,6 +17,10 @@ Bug 1181100 - Test DebuggerServerConnection.setupInParent and DebuggerServer.set
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/debugger-server");
+const {
+  connectToFrame,
+} = require("devtools/server/connectors/frame-connector");
+
 const Services = require("Services");
 
 window.onload = function() {
@@ -78,7 +82,7 @@ function runTests() {
   Services.obs.addObserver(onParent, "test:setupParent");
 
   // Instanciate e10s machinery and call setupInChild
-  DebuggerServer.connectToFrame(conn, iframe).then(actor => {
+  connectToFrame(conn, iframe).then(actor => {
     DebuggerServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
       setupChild: "setupChild",

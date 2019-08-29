@@ -45,6 +45,12 @@ const {
 const {
   browsingContextTargetSpec,
 } = require("devtools/shared/specs/targets/browsing-context");
+loader.lazyRequireGetter(
+  this,
+  "FrameDescriptorActor",
+  "devtools/server/actors/descriptors/frame",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
@@ -284,6 +290,7 @@ const browsingContextTargetPrototype = {
 
     this._workerTargetActorList = null;
     this._workerTargetActorPool = null;
+    this._frameDescriptorActorPool = null;
     this._onWorkerTargetActorListChanged = this._onWorkerTargetActorListChanged.bind(
       this
     );
@@ -355,6 +362,10 @@ const browsingContextTargetPrototype = {
       "`docShell` getter should be overridden by a subclass of " +
         "`BrowsingContextTargetActor`"
     );
+  },
+
+  get childBrowsingContexts() {
+    return this.docShell.browsingContext.getChildren();
   },
 
   /**
@@ -664,6 +675,49 @@ const browsingContextTargetPrototype = {
     return { frames: windows };
   },
 
+  listRemoteFrames() {
+    const frames = [];
+    const contextsToWalk = this.childBrowsingContexts;
+
+    if (contextsToWalk == 0) {
+      return { frames };
+    }
+
+    const pool = new Pool(this.conn);
+    while (contextsToWalk.length) {
+      const currentContext = contextsToWalk.pop();
+      let frameDescriptor = this._getKnownFrameDescriptor(currentContext.id);
+      if (!frameDescriptor) {
+        frameDescriptor = new FrameDescriptorActor(this.conn, currentContext);
+      }
+      pool.manage(frameDescriptor);
+      frames.push(frameDescriptor);
+      contextsToWalk.push(...currentContext.getChildren());
+    }
+    // Do not destroy the pool before transfering ownership to the newly created
+    // pool, so that we do not accidently destroy actors that are still in use.
+    if (this._frameDescriptorActorPool) {
+      this._frameDescriptorActorPool.destroy();
+    }
+
+    this._frameDescriptorActorPool = pool;
+
+    return { frames };
+  },
+
+  _getKnownFrameDescriptor(id) {
+    // if there is no pool, then we do not have any descriptors
+    if (!this._frameDescriptorActorPool) {
+      return null;
+    }
+    for (const descriptor of this._frameDescriptorActorPool.poolChildren()) {
+      if (descriptor.id === id) {
+        return descriptor;
+      }
+    }
+    return null;
+  },
+
   ensureWorkerTargetActorList() {
     if (this._workerTargetActorList === null) {
       this._workerTargetActorList = new WorkerTargetActorList(this.conn, {
@@ -959,6 +1013,11 @@ const browsingContextTargetPrototype = {
     if (this._workerTargetActorPool !== null) {
       this._workerTargetActorPool.destroy();
       this._workerTargetActorPool = null;
+    }
+
+    if (this._frameDescriptorActorPool !== null) {
+      this._frameDescriptorActorPool.destroy();
+      this._frameDescriptorActorPool = null;
     }
 
     this._attached = false;

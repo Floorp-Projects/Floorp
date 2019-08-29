@@ -9,7 +9,7 @@
 /*
  * Process script that listens for requests to start a `DebuggerServer` for an entire
  * content process.  Loaded into content processes by the main process during
- * `DebuggerServer.connectToContentProcess`.
+ * content-process-connector.js' `connectToContentProcess`.
  *
  * The actual server startup itself is in a JSM so that code can be cached.
  */

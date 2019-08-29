@@ -1306,6 +1306,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // testing or changing control UI.
   void DispatchEventsWhenPlayWasNotAllowed();
 
+  // When the doc is blocked permanantly, we would dispatch event to notify
+  // front-end side to show blocking icon.
+  void MaybeNotifyAutoplayBlocked();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;

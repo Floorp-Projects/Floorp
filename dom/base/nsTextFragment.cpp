@@ -19,6 +19,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SSE.h"
+#include "mozilla/ppc.h"
 #include "nsTextFragmentImpl.h"
 #include <algorithm>
 
@@ -166,6 +167,14 @@ int32_t FirstNon8Bit(const char16_t* str, const char16_t* end);
 }  // namespace mozilla
 #endif
 
+#ifdef __powerpc__
+namespace mozilla {
+namespace VMX {
+int32_t FirstNon8Bit(const char16_t* str, const char16_t* end);
+}  // namespace VMX
+}  // namespace mozilla
+#endif
+
 /*
  * This function returns -1 if all characters in str are 8 bit characters.
  * Otherwise, it returns a value less than or equal to the index of the first
@@ -177,6 +186,10 @@ static inline int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   if (mozilla::supports_sse2()) {
     return mozilla::SSE2::FirstNon8Bit(str, end);
+  }
+#elif defined(__powerpc__)
+  if (mozilla::supports_vmx()) {
+    return mozilla::VMX::FirstNon8Bit(str, end);
   }
 #endif
 

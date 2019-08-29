@@ -267,7 +267,8 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
                 sys.exit(1)
 
-            output = self.check_output(['/usr/bin/clang', '--version'])
+            output = self.check_output(['/usr/bin/clang', '--version'],
+                                       universal_newlines=True)
             match = RE_CLANG_VERSION.search(output)
             if match is None:
                 raise Exception('Could not determine Clang version.')
@@ -295,7 +296,8 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_homebrew_found()
         cmd = [self.brew] + extra_brew_args
 
-        installed = self.check_output(cmd + ['list']).split()
+        installed = self.check_output(cmd + ['list'],
+                                      universal_newlines=True).split()
 
         printed = False
 
@@ -386,7 +388,10 @@ class OSXBootstrapper(BaseBootstrapper):
         self.port = self.which('port')
         assert self.port is not None
 
-        installed = set(self.check_output([self.port, 'installed']).split())
+        installed = set(
+            self.check_output(
+                [self.port, 'installed'],
+                universal_newlines=True).split())
 
         missing = [package for package in packages if package not in installed]
         if missing:
@@ -407,7 +412,10 @@ class OSXBootstrapper(BaseBootstrapper):
 
         self._ensure_macports_packages(packages)
 
-        pythons = set(self.check_output([self.port, 'select', '--list', 'python']).split('\n'))
+        pythons = set(
+            self.check_output(
+                [self.port, 'select', '--list', 'python'],
+                universal_newlines=True).split('\n'))
         active = ''
         for python in pythons:
             if 'active' in python:
@@ -459,7 +467,7 @@ class OSXBootstrapper(BaseBootstrapper):
         one.
         '''
         installed = []
-        for name, cmd in PACKAGE_MANAGER.iteritems():
+        for name, cmd in PACKAGE_MANAGER.items():
             if self.which(cmd) is not None:
                 installed.append(name)
 

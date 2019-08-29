@@ -82,7 +82,7 @@ strong {
 /* Tooltip: Inactive CSS tooltip */
 
 .devtools-tooltip-inactive-css {
-  color: var(--theme-body-color);
+  color: var(--theme-arrowpanel-color);
   padding: 7px 14px 9px;
   font-size: 12px;
   margin: 0;

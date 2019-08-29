@@ -20,16 +20,16 @@
 /**
  * Experiments store info about an active or expired preference experiment.
  * @typedef {Object} Experiment
- * @property {string} name
- *   Unique name of the experiment
+ * @property {string} slug
+ *   A string uniquely identifying the experiment. Used for telemetry, and other
+ *   machine-oriented use cases. Used as a display name if `userFacingName` is
+ *   null.
  * @property {string|null} userFacingName
- *   A user-friendly name for the experiment. Null on old-style
- *   single-preference experiments, which do not have a
- *   userFacingName.
+ *   A user-friendly name for the experiment. Null on old-style single-preference
+ *   experiments, which do not have a userFacingName.
  * @property {string|null} userFacingDescription
  *   A user-friendly description of the experiment. Null on old-style
- *   single-preference experiments, which do not have a
- *   userFacingDescription.
+ *   single-preference experiments, which do not have a userFacingDescription.
  * @property {string} branch
  *   Experiment branch that the user was matched to
  * @property {boolean} expired
@@ -39,8 +39,8 @@
  *   recipe server.
  * @property {Object} preferences
  *   An object consisting of all the preferences that are set by this experiment.
- *   Keys are the name of each preference affected by this experiment.
- *   Values are Preference Objects, about which see below.
+ *   Keys are the name of each preference affected by this experiment. Values are
+ *   Preference Objects, about which see below.
  * @property {string} experimentType
  *   The type to report to Telemetry's experiment marker API.
  */
@@ -98,7 +98,7 @@ ChromeUtils.defineModuleGetter(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["PreferenceExperiments", "migrateStorage"];
+var EXPORTED_SYMBOLS = ["PreferenceExperiments"];
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
 const STARTUP_EXPERIMENT_PREFS_BRANCH = "app.normandy.startupExperimentPrefs.";
@@ -135,88 +135,10 @@ function ensureStorage() {
     const path = OS.Path.join(OS.Constants.Path.profileDir, EXPERIMENT_FILE);
     const storage = new JSONFile({ path });
     gStorePromise = storage.load().then(() => {
-      migrateStorage(storage);
       return storage;
     });
   }
   return gStorePromise;
-}
-
-/**
- * Migrate storage of experiments from old format (one preference per
- * experiment) to new format.
- *
- * This function is exported for testing purposes but should not be
- * called otherwise.
- */
-function migrateStorage(storage) {
-  if (storage.data.__version == 3) {
-    return;
-  }
-
-  // v1 doesn't have a __version; it's just experiments
-  const oldVersion = storage.data.__version || 1;
-
-  if (oldVersion == 1) {
-    // Add version field
-    storage.data = {
-      __version: 2,
-      experiments: storage.data,
-    };
-
-    // Migrate storage.data to multi-preference format
-    const oldExperiments = storage.data.experiments;
-    const v2Experiments = {};
-
-    for (let [expName, experiment] of Object.entries(oldExperiments)) {
-      if (expName == "__version") {
-        continue;
-      }
-
-      const {
-        name,
-        branch,
-        expired,
-        lastSeen,
-        preferenceName,
-        preferenceValue,
-        preferenceType,
-        previousPreferenceValue,
-        preferenceBranchType,
-        experimentType,
-      } = experiment;
-      const newExperiment = {
-        name,
-        branch,
-        expired,
-        lastSeen,
-        preferences: {
-          [preferenceName]: {
-            preferenceBranchType,
-            preferenceType,
-            preferenceValue,
-            previousPreferenceValue,
-          },
-        },
-        experimentType,
-      };
-      v2Experiments[expName] = newExperiment;
-    }
-    storage.data.experiments = v2Experiments;
-  }
-  if (oldVersion <= 2) {
-    // Add "actionName" field for experiments that don't have it
-    for (const experiment of Object.values(storage.data.experiments)) {
-      if (!experiment.actionName) {
-        // Assume SinglePreferenceExperimentAction because as of this
-        // writing, no multi-pref experiment recipe has launched.
-        experiment.actionName = "SinglePreferenceExperimentAction";
-      }
-    }
-
-    // Bump version
-    storage.data.__version = 3;
-  }
 }
 
 const log = LogManager.getLogger("preference-experiments");
@@ -324,9 +246,9 @@ var PreferenceExperiments = {
         ) {
           // if not, stop the experiment, and skip the remaining steps
           log.info(
-            `Stopping experiment "${experiment.name}" because its value changed`
+            `Stopping experiment "${experiment.slug}" because its value changed`
           );
-          await this.stop(experiment.name, {
+          await this.stop(experiment.slug, {
             resetValue: false,
             reason: "user-preference-changed-sideload",
           });
@@ -340,13 +262,13 @@ var PreferenceExperiments = {
 
       // Notify Telemetry of experiments we're running, since they don't persist between restarts
       TelemetryEnvironment.setExperimentActive(
-        experiment.name,
+        experiment.slug,
         experiment.branch,
         { type: EXPERIMENT_TYPE_PREFIX + experiment.experimentType }
       );
 
       // Watch for changes to the experiment's preference
-      this.startObserver(experiment.name, experiment.preferences);
+      this.startObserver(experiment.slug, experiment.preferences);
     }
   },
 
@@ -410,12 +332,15 @@ var PreferenceExperiments = {
         const experiments = {};
 
         for (const exp of mockExperiments) {
-          experiments[exp.name] = exp;
+          if (exp.name) {
+            throw new Error(
+              "Preference experiments 'name' field has been replaced by 'slug' and 'userFacingName', please update."
+            );
+          }
+
+          experiments[exp.slug] = exp;
         }
-        const data = {
-          __version: 2,
-          experiments,
-        };
+        const data = { experiments };
 
         const oldPromise = gStorePromise;
         gStorePromise = Promise.resolve({
@@ -441,7 +366,6 @@ var PreferenceExperiments = {
   async clearAllExperimentStorage() {
     const store = await ensureStorage();
     store.data = {
-      __version: 2,
       experiments: {},
     };
     store.saveSoon();
@@ -450,7 +374,7 @@ var PreferenceExperiments = {
   /**
    * Start a new preference experiment.
    * @param {Object} experiment
-   * @param {string} experiment.name
+   * @param {string} experiment.slug
    * @param {string} experiment.actionName  The action who knows about this
    *   experiment and is responsible for cleaning it up. This should
    *   correspond to the name of some BaseAction subclass.
@@ -464,7 +388,8 @@ var PreferenceExperiments = {
    *   - If the given preferenceType does not match the existing stored preference
    */
   async start({
-    name,
+    name = null, // To check if old code is still using `name` instead of `slug`, and provide a nice error message
+    slug,
     actionName,
     branch,
     preferences,
@@ -472,15 +397,21 @@ var PreferenceExperiments = {
     userFacingName = null,
     userFacingDescription = null,
   }) {
-    log.debug(`PreferenceExperiments.start(${name}, ${branch})`);
+    if (name) {
+      throw new Error(
+        "Preference experiments 'name' field has been replaced by 'slug' and 'userFacingName', please update."
+      );
+    }
+
+    log.debug(`PreferenceExperiments.start(${slug}, ${branch})`);
 
     const store = await ensureStorage();
-    if (name in store.data.experiments) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+    if (slug in store.data.experiments) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
         reason: "name-conflict",
       });
       throw new Error(
-        `A preference experiment named "${name}" already exists.`
+        `A preference experiment with the slug "${slug}" already exists.`
       );
     }
 
@@ -496,7 +427,7 @@ var PreferenceExperiments = {
     );
 
     if (preferencesWithConflicts.length > 0) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
         reason: "pref-conflict",
       });
       throw new Error(
@@ -507,7 +438,7 @@ var PreferenceExperiments = {
     }
 
     if (experimentType.length > MAX_EXPERIMENT_SUBTYPE_LENGTH) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
         reason: "experiment-type-too-long",
       });
       throw new Error(
@@ -523,7 +454,7 @@ var PreferenceExperiments = {
       const { preferenceBranchType, preferenceType } = preferenceInfo;
       const preferenceBranch = PreferenceBranchType[preferenceBranchType];
       if (!preferenceBranch) {
-        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
           reason: "invalid-branch",
         });
         throw new Error(
@@ -535,7 +466,7 @@ var PreferenceExperiments = {
       const givenPrefType = PREFERENCE_TYPE_MAP[preferenceType];
 
       if (!preferenceType || !givenPrefType) {
-        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
           reason: "invalid-type",
         });
         throw new Error(
@@ -547,7 +478,7 @@ var PreferenceExperiments = {
         prevPrefType !== Services.prefs.PREF_INVALID &&
         prevPrefType !== givenPrefType
       ) {
-        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", slug, {
           reason: "invalid-type",
         });
         throw new Error(
@@ -579,11 +510,11 @@ var PreferenceExperiments = {
         preferenceValue
       );
     }
-    PreferenceExperiments.startObserver(name, preferences);
+    PreferenceExperiments.startObserver(slug, preferences);
 
     /** @type {Experiment} */
     const experiment = {
-      name,
+      slug,
       actionName,
       branch,
       expired: false,
@@ -594,13 +525,13 @@ var PreferenceExperiments = {
       userFacingDescription,
     };
 
-    store.data.experiments[name] = experiment;
+    store.data.experiments[slug] = experiment;
     store.saveSoon();
 
-    TelemetryEnvironment.setExperimentActive(name, branch, {
+    TelemetryEnvironment.setExperimentActive(slug, branch, {
       type: EXPERIMENT_TYPE_PREFIX + experimentType,
     });
-    TelemetryEvents.sendEvent("enroll", "preference_study", name, {
+    TelemetryEvents.sendEvent("enroll", "preference_study", slug, {
       experimentType,
       branch,
     });
@@ -610,18 +541,18 @@ var PreferenceExperiments = {
   /**
    * Register a preference observer that stops an experiment when the user
    * modifies the preference.
-   * @param {string} experimentName
+   * @param {string} experimentSlug
    * @param {string} preferenceName
    * @param {string|integer|boolean} preferenceValue
    * @throws {Error}
-   *   If an observer for the named experiment is already active.
+   *   If an observer for the experiment is already active.
    */
-  startObserver(experimentName, preferences) {
-    log.debug(`PreferenceExperiments.startObserver(${experimentName})`);
+  startObserver(experimentSlug, preferences) {
+    log.debug(`PreferenceExperiments.startObserver(${experimentSlug})`);
 
-    if (experimentObservers.has(experimentName)) {
+    if (experimentObservers.has(experimentSlug)) {
       throw new Error(
-        `An observer for the preference experiment ${experimentName} is already active.`
+        `An observer for the preference experiment ${experimentSlug} is already active.`
       );
     }
 
@@ -635,14 +566,14 @@ var PreferenceExperiments = {
           preferenceType
         );
         if (newValue !== preferenceValue) {
-          PreferenceExperiments.stop(experimentName, {
+          PreferenceExperiments.stop(experimentSlug, {
             resetValue: false,
             reason: "user-preference-changed",
           }).catch(Cu.reportError);
         }
       },
     };
-    experimentObservers.set(experimentName, observerInfo);
+    experimentObservers.set(experimentSlug, observerInfo);
     for (const preferenceName of Object.keys(preferences)) {
       Services.prefs.addObserver(preferenceName, observerInfo);
     }
@@ -650,34 +581,34 @@ var PreferenceExperiments = {
 
   /**
    * Check if a preference observer is active for an experiment.
-   * @param {string} experimentName
+   * @param {string} experimentSlug
    * @return {Boolean}
    */
-  hasObserver(experimentName) {
-    log.debug(`PreferenceExperiments.hasObserver(${experimentName})`);
-    return experimentObservers.has(experimentName);
+  hasObserver(experimentSlug) {
+    log.debug(`PreferenceExperiments.hasObserver(${experimentSlug})`);
+    return experimentObservers.has(experimentSlug);
   },
 
   /**
-   * Disable a preference observer for the named experiment.
-   * @param {string} experimentName
+   * Disable a preference observer for an experiment.
+   * @param {string} experimentSlug
    * @throws {Error}
-   *   If there is no active observer for the named experiment.
+   *   If there is no active observer for the experiment.
    */
-  stopObserver(experimentName) {
-    log.debug(`PreferenceExperiments.stopObserver(${experimentName})`);
+  stopObserver(experimentSlug) {
+    log.debug(`PreferenceExperiments.stopObserver(${experimentSlug})`);
 
-    if (!experimentObservers.has(experimentName)) {
+    if (!experimentObservers.has(experimentSlug)) {
       throw new Error(
-        `No observer for the preference experiment ${experimentName} found.`
+        `No observer for the preference experiment ${experimentSlug} found.`
       );
     }
 
-    const observer = experimentObservers.get(experimentName);
+    const observer = experimentObservers.get(experimentSlug);
     for (const preferenceName of Object.keys(observer.preferences)) {
       Services.prefs.removeObserver(preferenceName, observer);
     }
-    experimentObservers.delete(experimentName);
+    experimentObservers.delete(experimentSlug);
   },
 
   /**
@@ -694,30 +625,30 @@ var PreferenceExperiments = {
   },
 
   /**
-   * Update the timestamp storing when Normandy last sent a recipe for the named
+   * Update the timestamp storing when Normandy last sent a recipe for the
    * experiment.
-   * @param {string} experimentName
+   * @param {string} experimentSlug
    * @rejects {Error}
-   *   If there is no stored experiment with the given name.
+   *   If there is no stored experiment with the given slug.
    */
-  async markLastSeen(experimentName) {
-    log.debug(`PreferenceExperiments.markLastSeen(${experimentName})`);
+  async markLastSeen(experimentSlug) {
+    log.debug(`PreferenceExperiments.markLastSeen(${experimentSlug})`);
 
     const store = await ensureStorage();
-    if (!(experimentName in store.data.experiments)) {
+    if (!(experimentSlug in store.data.experiments)) {
       throw new Error(
-        `Could not find a preference experiment named "${experimentName}"`
+        `Could not find a preference experiment with the slug "${experimentSlug}"`
       );
     }
 
-    store.data.experiments[experimentName].lastSeen = new Date().toJSON();
+    store.data.experiments[experimentSlug].lastSeen = new Date().toJSON();
     store.saveSoon();
   },
 
   /**
    * Stop an active experiment, deactivate preference watchers, and optionally
    * reset the associated preference to its previous value.
-   * @param {string} experimentName
+   * @param {string} experimentSlug
    * @param {Object} options
    * @param {boolean} [options.resetValue = true]
    *   If true, reset the preference to its original value prior to
@@ -726,45 +657,45 @@ var PreferenceExperiments = {
    *   Reason that the experiment is ending. Optional, defaults to
    *   "unknown".
    * @rejects {Error}
-   *   If there is no stored experiment with the given name, or if the
+   *   If there is no stored experiment with the given slug, or if the
    *   experiment has already expired.
    */
-  async stop(experimentName, { resetValue = true, reason = "unknown" } = {}) {
+  async stop(experimentSlug, { resetValue = true, reason = "unknown" } = {}) {
     log.debug(
-      `PreferenceExperiments.stop(${experimentName}, {resetValue: ${resetValue}, reason: ${reason}})`
+      `PreferenceExperiments.stop(${experimentSlug}, {resetValue: ${resetValue}, reason: ${reason}})`
     );
     if (reason === "unknown") {
-      log.warn(`experiment ${experimentName} ending for unknown reason`);
+      log.warn(`experiment ${experimentSlug} ending for unknown reason`);
     }
 
     const store = await ensureStorage();
-    if (!(experimentName in store.data.experiments)) {
+    if (!(experimentSlug in store.data.experiments)) {
       TelemetryEvents.sendEvent(
         "unenrollFailed",
         "preference_study",
-        experimentName,
+        experimentSlug,
         { reason: "does-not-exist" }
       );
       throw new Error(
-        `Could not find a preference experiment named "${experimentName}"`
+        `Could not find a preference experiment with the slug "${experimentSlug}"`
       );
     }
 
-    const experiment = store.data.experiments[experimentName];
+    const experiment = store.data.experiments[experimentSlug];
     if (experiment.expired) {
       TelemetryEvents.sendEvent(
         "unenrollFailed",
         "preference_study",
-        experimentName,
+        experimentSlug,
         { reason: "already-unenrolled" }
       );
       throw new Error(
-        `Cannot stop preference experiment "${experimentName}" because it is already expired`
+        `Cannot stop preference experiment "${experimentSlug}" because it is already expired`
       );
     }
 
-    if (PreferenceExperiments.hasObserver(experimentName)) {
-      PreferenceExperiments.stopObserver(experimentName);
+    if (PreferenceExperiments.hasObserver(experimentSlug)) {
+      PreferenceExperiments.stopObserver(experimentSlug);
     }
 
     if (resetValue) {
@@ -790,7 +721,7 @@ var PreferenceExperiments = {
           preferences.clearUserPref(preferenceName);
         } else {
           log.warn(
-            `Can't revert pref ${preferenceName} for experiment ${experimentName} ` +
+            `Can't revert pref ${preferenceName} for experiment ${experimentSlug} ` +
               `because it had no default value. ` +
               `Preference will be reset at the next restart.`
           );
@@ -803,8 +734,8 @@ var PreferenceExperiments = {
     experiment.expired = true;
     store.saveSoon();
 
-    TelemetryEnvironment.setExperimentInactive(experimentName);
-    TelemetryEvents.sendEvent("unenroll", "preference_study", experimentName, {
+    TelemetryEnvironment.setExperimentInactive(experimentSlug);
+    TelemetryEvents.sendEvent("unenroll", "preference_study", experimentSlug, {
       didResetValue: resetValue ? "true" : "false",
       branch: experiment.branch,
       reason,
@@ -829,22 +760,22 @@ var PreferenceExperiments = {
   },
 
   /**
-   * Get the experiment object for the named experiment.
-   * @param {string} experimentName
+   * Get the experiment object for the experiment.
+   * @param {string} experimentSlug
    * @resolves {Experiment}
    * @rejects {Error}
-   *   If no preference experiment exists with the given name.
+   *   If no preference experiment exists with the given slug.
    */
-  async get(experimentName) {
-    log.debug(`PreferenceExperiments.get(${experimentName})`);
+  async get(experimentSlug) {
+    log.debug(`PreferenceExperiments.get(${experimentSlug})`);
     const store = await ensureStorage();
-    if (!(experimentName in store.data.experiments)) {
+    if (!(experimentSlug in store.data.experiments)) {
       throw new Error(
-        `Could not find a preference experiment named "${experimentName}"`
+        `Could not find a preference experiment with the slug "${experimentSlug}"`
       );
     }
 
-    return this._cloneExperiment(store.data.experiments[experimentName]);
+    return this._cloneExperiment(store.data.experiments[experimentSlug]);
   },
 
   /**
@@ -853,7 +784,6 @@ var PreferenceExperiments = {
    */
   async getAll() {
     const store = await ensureStorage();
-
     return Object.values(store.data.experiments).map(experiment =>
       this._cloneExperiment(experiment)
     );
@@ -871,13 +801,104 @@ var PreferenceExperiments = {
   },
 
   /**
-   * Check if an experiment exists with the given name.
-   * @param {string} experimentName
+   * Check if an experiment exists with the given slug.
+   * @param {string} experimentSlug
    * @resolves {boolean} True if the experiment exists, false if it doesn't.
    */
-  async has(experimentName) {
-    log.debug(`PreferenceExperiments.has(${experimentName})`);
+  async has(experimentSlug) {
+    log.debug(`PreferenceExperiments.has(${experimentSlug})`);
     const store = await ensureStorage();
-    return experimentName in store.data.experiments;
+    return experimentSlug in store.data.experiments;
+  },
+
+  /**
+   * These migrations should only be called from `NormandyMigrations.jsm` and tests.
+   */
+  migrations: {
+    /** Move experiments into a specific key. */
+    async migration01MoveExperiments(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+      if (Object.hasOwnProperty.call(storage.data, "experiments")) {
+        return;
+      }
+      storage.data = {
+        experiments: storage.data,
+      };
+      delete storage.data.experiments.__version;
+      storage.saveSoon();
+    },
+
+    /** Migrate storage.data to multi-preference format */
+    async migration02MultiPreference(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+
+      const oldExperiments = storage.data.experiments;
+      const v2Experiments = {};
+
+      for (let [expName, oldExperiment] of Object.entries(oldExperiments)) {
+        if (expName == "__version") {
+          // A stray "__version" entry snuck in, likely from old migrations.
+          // Ignore it and continue. It won't be propagated to future
+          // migrations, since `v2Experiments` won't have it.
+          continue;
+        }
+        if (oldExperiment.preferences) {
+          // experiment is already migrated
+          v2Experiments[expName] = oldExperiment;
+          continue;
+        }
+        v2Experiments[expName] = {
+          name: oldExperiment.name,
+          branch: oldExperiment.branch,
+          expired: oldExperiment.expired,
+          lastSeen: oldExperiment.lastSeen,
+          preferences: {
+            [oldExperiment.preferenceName]: {
+              preferenceBranchType: oldExperiment.preferenceBranchType,
+              preferenceType: oldExperiment.preferenceType,
+              preferenceValue: oldExperiment.preferenceValue,
+              previousPreferenceValue: oldExperiment.previousPreferenceValue,
+            },
+          },
+          experimentType: oldExperiment.experimentType,
+        };
+      }
+      storage.data.experiments = v2Experiments;
+      storage.saveSoon();
+    },
+
+    /** Add "actionName" field for experiments that don't have it. */
+    async migration03AddActionName(storage = null) {
+      if (storage === null) {
+        storage = await ensureStorage();
+      }
+
+      for (const experiment of Object.values(storage.data.experiments)) {
+        if (!experiment.actionName) {
+          // Assume SinglePreferenceExperimentAction because as of this
+          // writing, no multi-pref experiment recipe has launched.
+          experiment.actionName = "SinglePreferenceExperimentAction";
+        }
+      }
+      storage.saveSoon();
+    },
+
+    async migration04RenameNameToSlug(storage = null) {
+      if (!storage) {
+        storage = await ensureStorage();
+      }
+      // Rename "name" to "slug" to match the intended purpose of the field.
+      for (const experiment of Object.values(storage.data.experiments)) {
+        if (experiment.name && !experiment.slug) {
+          experiment.slug = experiment.name;
+          delete experiment.name;
+        }
+      }
+      storage.saveSoon();
+    },
   },
 };

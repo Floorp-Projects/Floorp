@@ -41,7 +41,6 @@ ac_add_options --disable-jemalloc
 ac_add_options --enable-proxy-bypass-protection
 
 # These aren't supported on mingw at this time
-ac_add_options --disable-maintenance-service
 ac_add_options --disable-webrtc # Bug 1393901
 ac_add_options --disable-geckodriver # Bug 1489320
 

@@ -81,9 +81,11 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, Pref="dom.enable_window_print"]
   void print();
 
-  [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
+  [Throws, CrossOriginCallable, NeedsSubjectPrincipal,
+   BinaryName="postMessageMoz"]
   void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
-  [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
+  [Throws, CrossOriginCallable, NeedsSubjectPrincipal,
+   BinaryName="postMessageMoz"]
   void postMessage(any message, optional WindowPostMessageOptions options = {});
 
   // also has obsolete members

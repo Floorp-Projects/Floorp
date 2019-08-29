@@ -84,7 +84,8 @@ add_task(async function test_set_login() {
 
   ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
-  is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
+  let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
+  is(originInput.value, TEST_LOGIN_1.origin, "origin should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
@@ -92,6 +93,27 @@ add_task(async function test_set_login() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when viewing a login");
+
+  let openSiteEventDispatched = false;
+  document.addEventListener("AboutLoginsOpenSite", event => {
+    is(event.detail.guid, TEST_LOGIN_1.guid, "event should include guid");
+    openSiteEventDispatched = true;
+  }, {once: true});
+  originInput.click();
+  ok(openSiteEventDispatched, "Clicking the .origin-input should dispatch the AboutLoginsOpenSite event");
+
+  openSiteEventDispatched = false;
+  document.addEventListener("AboutLoginsOpenSite", event => {
+    is(event.detail.guid, TEST_LOGIN_1.guid, "event should include guid");
+    openSiteEventDispatched = true;
+  }, {once: true});
+  synthesizeMouseAtCenter(originInput, {button: 1});
+  ok(openSiteEventDispatched, "Middle-clicking the .origin-input should dispatch the AboutLoginsOpenSite event");
+
+  document.addEventListener("AboutLoginsOpenSite", event => {
+    ok(false, "right-clicking the .origin-input should not trigger the AboutLoginsOpenSite event");
+  }, {once: true});
+  synthesizeMouseAtCenter(originInput, {button: 2});
 });
 
 add_task(async function test_update_breaches() {

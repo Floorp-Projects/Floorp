@@ -3035,7 +3035,10 @@ void nsCookieService::GetCookiesForURI(
   // (but not if there was an error)
   switch (cookieStatus) {
     case STATUS_REJECTED:
-      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_READ);
+      // If we don't have any cookies from this host, fail silently.
+      if (priorCookieCount) {
+        NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_READ);
+      }
       return;
     default:
       break;

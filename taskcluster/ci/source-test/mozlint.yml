@@ -221,3 +221,45 @@ rustfmt:
     when:
         files-changed:
             - '**/*.rs'
+
+
+file-whitespace:
+    description: Check for trailing whitespaces and Windows CR
+    platform: lint/opt
+    treeherder:
+        symbol: file-whitespace
+    run:
+        mach: lint -l file-whitespace -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.py'
+            - '**/*.rs'
+
+
+file-perm:
+    description: Check for incorrect permissions on source files
+    platform: lint/opt
+    treeherder:
+        symbol: file-perm
+    run:
+        mach: lint -l file-perm -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.html'
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jsx'
+            - '**/*.m'
+            - '**/*.mm'
+            - '**/*.rs'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            - '**/*.xul'

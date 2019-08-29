@@ -20,11 +20,11 @@ var highlightedNodeFront, highlighterOptions;
 
 add_task(async function() {
   await addTab(TEST_URL);
-  const { toolbox, inspector, boxmodel } = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
   await selectNode("div", inspector);
 
   // Mock the highlighter by replacing the showBoxModel method.
-  toolbox.highlighter.showBoxModel = function(nodeFront, options) {
+  inspector.highlighter.showBoxModel = function(nodeFront, options) {
     highlightedNodeFront = nodeFront;
     highlighterOptions = options;
   };

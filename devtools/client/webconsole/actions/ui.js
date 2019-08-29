@@ -22,6 +22,7 @@ const {
   FILTERBAR_DISPLAY_MODE_SET,
   EDITOR_TOGGLE,
   EDITOR_SET_WIDTH,
+  EDITOR_ONBOARDING_DISMISS,
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
@@ -97,6 +98,15 @@ function editorToggle() {
   };
 }
 
+function editorOnboardingDismiss() {
+  return ({ dispatch, prefsService }) => {
+    dispatch({
+      type: EDITOR_ONBOARDING_DISMISS,
+    });
+    prefsService.setBoolPref(PREFS.UI.EDITOR_ONBOARDING, false);
+  };
+}
+
 function setEditorWidth(width) {
   return ({ dispatch, prefsService }) => {
     dispatch({
@@ -151,6 +161,7 @@ function filterBarDisplayModeSet(displayMode) {
 
 module.exports = {
   contentMessagesToggle,
+  editorOnboardingDismiss,
   editorToggle,
   filterBarDisplayModeSet,
   initialize,

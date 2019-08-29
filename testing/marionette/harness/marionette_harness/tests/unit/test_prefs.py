@@ -29,9 +29,6 @@ class TestPreferences(MarionetteTestCase):
         super(TestPreferences, self).tearDown()
 
     def test_gecko_instance_preferences(self):
-        ignored_prefs = [
-            "sanity-test.running",  # will be reset during each startup
-        ]
         required_prefs = geckoinstance.GeckoInstance.required_prefs
 
         for key, value in required_prefs.iteritems():
@@ -43,10 +40,8 @@ class TestPreferences(MarionetteTestCase):
             if key == "extensions.shield-recipe-client.api_url":
                 self.assertEqual(self.marionette.get_pref("app.normandy.api_url"), value)
             else:
-                if key not in ignored_prefs:
-                    self.assertEqual(
-                        self.marionette.get_pref(key), value,
-                        "Preference {} hasn't been set to {}".format(key, repr(value)))
+                self.assertEqual(self.marionette.get_pref(key), value,
+                                 "Preference {} hasn't been set to {}".format(key, repr(value)))
 
     @skip_if_mobile("Only runnable with Firefox")
     def test_desktop_instance_preferences(self):

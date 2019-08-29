@@ -417,7 +417,7 @@ int TestNrSocket::recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
     }
   }
 
-  // Kinda lame that we are forced to give the app a readable callback and then
+  // Kinda bad that we are forced to give the app a readable callback and then
   // say "Oh, never mind...", but the alternative is to totally decouple the
   // callbacks from STS and the callbacks the app sets. On the bright side, this
   // speeds up unit tests where we are verifying that ingress is forbidden,

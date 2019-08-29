@@ -1,7 +1,5 @@
 "use strict";
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const Cm = Components.manager;
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(

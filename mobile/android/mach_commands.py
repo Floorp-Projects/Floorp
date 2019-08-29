@@ -319,13 +319,21 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-findbugs'.""")
         if self.substs.get('MOZ_AUTOMATION'):
             gradle_flags += ['--console=plain']
 
+        env = os.environ.copy()
+        env.update({
+            'GRADLE_OPTS': '-Dfile.encoding=utf-8',
+            'JAVA_HOME': java_home,
+            'JAVA_TOOL_OPTIONS': '-Dfile.encoding=utf-8',
+        })
+        # Set ANDROID_SDK_ROOT if --with-android-sdk was set.
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1576471
+        android_sdk_root = self.substs.get('ANDROID_SDK_ROOT', '')
+        if android_sdk_root:
+            env['ANDROID_SDK_ROOT'] = android_sdk_root
+
         return self.run_process(
             [self.substs['GRADLE']] + gradle_flags + args,
-            append_env={
-                'GRADLE_OPTS': '-Dfile.encoding=utf-8',
-                'JAVA_HOME': java_home,
-                'JAVA_TOOL_OPTIONS': '-Dfile.encoding=utf-8',
-            },
+            explicit_env=env,
             pass_thru=True,  # Allow user to run gradle interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir))

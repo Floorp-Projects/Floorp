@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Non-static prefs that are specific to Firefox on Android belong in this file
+// (unless there is a compelling and documented reason for them to belong in
+// another file).
+//
 // Please indent all prefs defined within #ifdef/#ifndef conditions. This
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
@@ -609,8 +613,6 @@ pref("ui.scrolling.overscroll_snap_limit", -1);
 pref("ui.scrolling.min_scrollable_distance", -1);
 // The axis lock mode for panning behaviour - set between standard, free and sticky
 pref("ui.scrolling.axis_lock_mode", "standard");
-// Negate scroll, true will make the mouse scroll wheel move the screen the same direction as with most desktops or laptops.
-pref("ui.scrolling.negate_wheel_scroll", true);
 // Determine the dead zone for gamepad joysticks. Higher values result in larger dead zones; use a negative value to
 // auto-detect based on reported hardware values
 pref("ui.scrolling.gamepad_dead_zone", 115);
@@ -802,8 +804,6 @@ pref("media.block-autoplay-until-in-foreground", false);
 pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://support.mozilla.org https://install.mozilla.org");
 
 pref("media.openUnsupportedTypeWithExternalApp", true);
-
-pref("dom.keyboardevent.dispatch_during_composition", true);
 
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);

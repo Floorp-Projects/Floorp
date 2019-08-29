@@ -2640,10 +2640,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * first retrieve a reference to the walkerFront:
    *
    * // Make sure the inspector/walker have been initialized first.
-   * toolbox.initInspector().then(() => {
-   *  // Retrieve the walker.
-   *  let walker = toolbox.walker;
-   * });
+   * const inspectorFront = await toolbox.target.getFront("inspector");
+   * // Retrieve the walker.
+   * const walker = inspectorFront.walker;
    *
    * And then call this method:
    *

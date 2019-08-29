@@ -6,14 +6,15 @@
 
 import { differenceBy } from "lodash";
 import type { Action, ThunkArgs } from "./types";
+import type { ThreadType } from "../types";
 import { removeSourceActors } from "./source-actors";
 
 import { getContext, getThreads, getSourceActorsForThread } from "../selectors";
 
-export function updateThreads() {
+export function updateThreads(type: ?ThreadType) {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const cx = getContext(getState());
-    const threads = await client.fetchThreads();
+    const threads = await client.fetchThreads(type);
 
     const currentThreads = getThreads(getState());
 

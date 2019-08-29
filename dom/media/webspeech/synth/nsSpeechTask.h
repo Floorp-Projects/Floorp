@@ -60,6 +60,14 @@ class nsSpeechTask : public nsISpeechTask,
 
   bool IsChrome() { return mIsChrome; }
 
+  enum { STATE_PENDING, STATE_SPEAKING, STATE_ENDED };
+
+  uint32_t GetState() const { return mState; }
+
+  bool IsSpeaking() const { return mState == STATE_SPEAKING; }
+
+  bool IsPending() const { return mState == STATE_PENDING; }
+
  protected:
   virtual ~nsSpeechTask();
 
@@ -110,6 +118,8 @@ class nsSpeechTask : public nsISpeechTask,
   nsString mChosenVoiceURI;
 
   bool mIsChrome;
+
+  uint32_t mState;
 };
 
 }  // namespace dom

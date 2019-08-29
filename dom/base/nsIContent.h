@@ -492,6 +492,22 @@ class nsIContent : public nsINode {
    */
   inline nsIContent* GetFlattenedTreeParent() const;
 
+ protected:
+  // Handles getting inserted or removed directly under a <slot> element.
+  // This is meant to only be called from the two functions below.
+  inline void HandleInsertionToOrRemovalFromSlot();
+
+  // Handles Shadow-DOM-related state tracking. Meant to be called near the
+  // end of BindToTree(), only if the tree we're in actually changed, that is,
+  // after the subtree has been bound to the new parent.
+  inline void HandleShadowDOMRelatedInsertionSteps(bool aHadParent);
+
+  // Handles Shadow-DOM related state tracking. Meant to be called near the
+  // beginning of UnbindFromTree(), before the node has lost the reference to
+  // its parent.
+  inline void HandleShadowDOMRelatedRemovalSteps(bool aNullParent);
+
+ public:
   /**
    * API to check if this is a link that's traversed in response to user input
    * (e.g. a click event). Specializations for HTML/SVG/generic XML allow for

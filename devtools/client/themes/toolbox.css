@@ -427,15 +427,47 @@
   box-sizing: border-box;
   min-height: 29px;
 
-  --progress-recording-background: hsl(0, 100%, 97%);
-  --progress-playing-background: hsl(207, 100%, 97%);
-
-  --progress-bar-transition: 200ms;
-
-  --recording-marker-background: hsl(14.9, 100%, 67%);
-  --recording-marker-background-hover: hsl(14.9, 100%, 47%);
+  --progressbar-transition: 200ms;
   --command-button-size: 14px;
   --command-button-primary-size: 20px;
+}
+
+.theme-light .webreplay-player {
+  --commandbar-button-hover-background: #efefef;
+  --progress-recording-background: hsl(0, 100%, 97%);
+  --progress-playing-background: hsl(207, 100%, 97%);
+  --recording-marker-background: hsl(14.9, 100%, 67%);
+  --recording-marker-background-hover: hsl(14.9, 100%, 47%);
+  --replaying-marker-background: var(--blue-40);
+  --replaying-marker-background-hover: var(--blue-60);
+  --progress-recording-line: #d0021b;
+  --progressbar-background: #fff;
+  --progressbar-line-color: var(--blue-40);
+  --proggressbar-border-color: #bfc9d2;
+  --tick-future-background: #bfc9d2;
+  --tick-background: var(--blue-50);
+  --tick-recording-background: #d0021b;
+  --replay-head-background: var(--purple-50);
+  --command-button-background: #6a6a6a;
+}
+
+.theme-dark .webreplay-player {
+  --commandbar-button-hover-background: #1a1a1a;
+  --progress-recording-background: #310707;
+  --progress-playing-background: #071a2b;
+  --progress-recording-line: #ff2038;
+  --recording-marker-background: #9b3131;
+  --recording-marker-background-hover: #a82323;
+  --replaying-marker-background: #266fb1;
+  --replaying-marker-background-hover: #3a8edb;
+  --progressbar-background: #0c0c0d;
+  --proggressbar-border-color: #31313d;
+  --progressbar-line-color: #0a4786;
+  --tick-future-background: #bfc9d2;
+  --tick-background: var(--blue-50);
+  --tick-recording-background: #e77884;
+  --replay-head-background: var(--theme-highlight-purple);
+  --command-button-background: var(--grey-20);
 }
 
 .webreplay-player .overlay-container {
@@ -446,9 +478,9 @@
   position: relative;
   width: 100%;
   height: 20px;
-  background: #fff;
+  background: var(--progressbar-background);
   margin: 4px 10px 4px 0;
-  border: 1px solid #bfc9d2;
+  border: 1px solid var(--proggressbar-border-color);
   overflow: hidden;
 }
 
@@ -457,11 +489,11 @@
   width: 100%;
   height: 100%;
   background: var(--progress-playing-background);
-  transition-duration: var(--progress-bar-transition);
+  transition-duration: var(--progressbar-transition);
 }
 
 .webreplay-player #overlay:not(.recording) .progress::after {
-  background: var(--purple-50);
+  background: var(--replay-head-background);
   width: 1px;
   height: 100%;
   right: -0.5px;
@@ -473,7 +505,7 @@
 
 .webreplay-player .recording .progress {
   background: var(--progress-recording-background);
-  transition-duration: var(--progress-bar-transition);
+  transition-duration: var(--progressbar-transition);
 }
 
 .webreplay-player .message {
@@ -483,7 +515,7 @@
   height: 7px;
   border-radius: 4.5px;
   top: calc(50% - 3.5px);
-  background: var(--blue-40);
+  background: var(--replaying-marker-background);
   transition-duration: 100ms;
 }
 
@@ -493,7 +525,7 @@
 }
 
 .webreplay-player .message.overlayed.future {
-  border-color: #fff;
+  border-color: var(--progressbar-background);
 }
 
 .webreplay-player .message.highlighted {
@@ -523,7 +555,7 @@
 }
 
 .webreplay-player .message:hover {
-  background: var(--blue-60);
+  background: var(--replaying-marker-background-hover);
   cursor: pointer;
 }
 
@@ -549,7 +581,7 @@
   width: var(--command-button-size);
   height: var(--command-button-size);
   mask-size: var(--command-button-size);
-  background: #6a6a6a;
+  background: var(--command-button-background);
   align-self: center;
   margin: 0 auto;
 }
@@ -561,7 +593,7 @@
 }
 
 .webreplay-player .command-button.active:hover {
-  background: #efefef;
+  background: var(--commandbar-button-hover-background);
   cursor: pointer;
 }
 
@@ -585,11 +617,11 @@
 .webreplay-player .progress-line {
   width: 0%;
   height: 1px;
-  background: var(--blue-40);
+  background: var(--progressbar-line-color);
   position: absolute;
   left: 0;
   top: 50%;
-  transition-duration: var(--progress-bar-transition);
+  transition-duration: var(--progressbar-transition);
 }
 
 .webreplay-player .progress-line.end {
@@ -597,7 +629,7 @@
 }
 
 .webreplay-player .recording .progress-line {
-  background: #d0021b;
+  background: var(--progress-recording-line);
   opacity: 0.3;
 }
 
@@ -618,17 +650,17 @@
 
 .webreplay-player .recording .tick::before,
 .webreplay-player .recording .tick::after {
-  background: #d0021b;
+  background: var(--tick-recording-background);
 }
 
 .webreplay-player .tick.future::before,
 .webreplay-player .tick.future::after {
-  background: #bfc9d2;
+  background: var(--tick-future-background);
 }
 
 .webreplay-player .tick::before,
 .webreplay-player .tick::after {
-  background: var(--blue-50);
+  background: var(--tick-background);
 }
 
 .webreplay-player .tick::after {
@@ -638,7 +670,6 @@
 .webreplay-player .tick::before {
   top: 0;
 }
-
 
 .webreplay-player #overlay:hover .tick {
   opacity: 1;

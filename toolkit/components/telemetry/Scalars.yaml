@@ -682,6 +682,25 @@ sandbox:
     operating_systems:
       - "windows"
 
+os.environment:
+  is_admin_without_uac:
+    bug_numbers:
+      - 1567219
+    description: >
+      Indicates that the process is lauched with Admin privileges but without
+      UAC.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - tkikuchi@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+    operating_systems:
+      - "windows"
+
 pictureinpicture:
   opened_method:
     bug_numbers:

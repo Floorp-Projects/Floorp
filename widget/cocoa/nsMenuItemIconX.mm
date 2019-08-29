@@ -195,7 +195,7 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
   if (!hasImageAttr) {
     // Check if the icon has a specified image region so that it can be
     // cropped appropriately before being displayed.
-    const nsRect& r = sc->StyleList()->mImageRegion;
+    const nsRect r = sc->StyleList()->GetImageRegion();
 
     // Return NS_ERROR_FAILURE if the image region is invalid so the image
     // is not drawn, and behavior is similar to XUL menus.

@@ -21,6 +21,7 @@ add_task(async function() {
       childCount: 2,
       checks: {
         [AUDIT_TYPE.CONTRAST]: null,
+        [AUDIT_TYPE.KEYBOARD]: null,
         [AUDIT_TYPE.TEXT_LABEL]: {
           score: SCORES.FAIL,
           issue: ISSUE_TYPE.DOCUMENT_NO_TITLE,
@@ -35,6 +36,7 @@ add_task(async function() {
       childCount: 1,
       checks: {
         [AUDIT_TYPE.CONTRAST]: null,
+        [AUDIT_TYPE.KEYBOARD]: null,
         [AUDIT_TYPE.TEXT_LABEL]: null,
       },
     },
@@ -50,8 +52,9 @@ add_task(async function() {
           color: [255, 0, 0, 1],
           backgroundColor: [255, 255, 255, 1],
           isLargeText: false,
-          score: "fail",
+          score: SCORES.FAIL,
         },
+        [AUDIT_TYPE.KEYBOARD]: null,
         [AUDIT_TYPE.TEXT_LABEL]: null,
       },
     },
@@ -61,6 +64,7 @@ add_task(async function() {
       childCount: 1,
       checks: {
         [AUDIT_TYPE.CONTRAST]: null,
+        [AUDIT_TYPE.KEYBOARD]: null,
         [AUDIT_TYPE.TEXT_LABEL]: null,
       },
     },
@@ -74,8 +78,9 @@ add_task(async function() {
           color: [255, 0, 0, 1],
           backgroundColor: [255, 255, 255, 1],
           isLargeText: false,
-          score: "fail",
+          score: SCORES.FAIL,
         },
+        [AUDIT_TYPE.KEYBOARD]: null,
         [AUDIT_TYPE.TEXT_LABEL]: null,
       },
     },

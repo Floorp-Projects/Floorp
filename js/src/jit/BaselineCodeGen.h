@@ -768,6 +768,10 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   // Like interpretOpOffset_ but skips the debug trap for the current op.
   uint32_t interpretOpNoDebugTrapOffset_ = 0;
 
+  // Offset of the jump (tail call) to the debug trap handler trampoline code.
+  // When the debugger is enabled, NOPs are patched to calls to this location.
+  uint32_t debugTrapHandlerOffset_ = 0;
+
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx);
 

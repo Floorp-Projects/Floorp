@@ -5,7 +5,7 @@
 use mach::kern_return::{kern_return_t, KERN_SUCCESS};
 use mach::port::mach_port_t;
 use mach::message::mach_msg_type_number_t;
-use mach_sys::*;
+use crate::mach_sys::*;
 use std::mem::size_of;
 use mach::mach_time::{mach_timebase_info_data_t, mach_timebase_info};
 use libc::{pthread_t, pthread_self};

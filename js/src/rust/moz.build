@@ -18,8 +18,6 @@ if CONFIG['ENABLE_WASM_CRANELIFT']:
 
 RustLibrary('jsrust', features)
 
-CONFIGURE_SUBST_FILES += ['extra-bindgen-flags']
-
 if CONFIG['JS_SHARED_LIBRARY']:
     FINAL_LIBRARY = 'js'
 

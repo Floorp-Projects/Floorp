@@ -45,10 +45,12 @@ AntiTracking.runTestInNormalAndPrivateMode(
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
-    let shouldThrow =
-      SpecialPowers.Services.prefs.getIntPref(
-        "network.cookie.cookieBehavior"
-      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT;
+    let shouldThrow = [
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
+      SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    ].includes(
+      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
+    );
 
     let hasThrown;
     try {
@@ -62,7 +64,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
     is(
       hasThrown,
       shouldThrow,
-      "IDB should be allowed if not in BEHAVIOR_REJECT"
+      "IDB should be allowed if not in cookieBehavior pref value BEHAVIOR_REJECT/BEHAVIOR_REJECT_FOREIGN"
     );
   },
   // non-blocking callback

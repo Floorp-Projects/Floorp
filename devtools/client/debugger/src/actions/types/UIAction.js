@@ -31,6 +31,10 @@ export type UIAction =
       +value: boolean,
     |}
   | {|
+      +type: "TOGGLE_INLINE_PREVIEW",
+      +value: boolean,
+    |}
+  | {|
       +type: "SHOW_SOURCE",
       +source: Source,
     |}

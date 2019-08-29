@@ -109,8 +109,8 @@ async function attachAddon(addonId) {
 
   await client.connect();
 
-  const addonFront = await client.mainRoot.getAddon({ id: addonId });
-  const addonTarget = await addonFront.connect();
+  const addonDescriptor = await client.mainRoot.getAddon({ id: addonId });
+  const addonTarget = await addonDescriptor.getTarget();
 
   if (!addonTarget) {
     client.close();

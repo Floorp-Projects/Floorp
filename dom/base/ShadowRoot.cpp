@@ -36,15 +36,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ShadowRoot)
-  if (tmp->GetHost()) {
-    tmp->GetHost()->RemoveMutationObserver(tmp);
-  }
   DocumentOrShadowRoot::Unlink(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DocumentFragment)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ShadowRoot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
 NS_INTERFACE_MAP_END_INHERITING(DocumentFragment)
 
@@ -69,19 +65,9 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
 
   ExtendedDOMSlots()->mBindingParent = aElement;
   ExtendedDOMSlots()->mContainingShadow = this;
-
-  // Add the ShadowRoot as a mutation observer on the host to watch
-  // for mutations because the insertion points in this ShadowRoot
-  // may need to be updated when the host children are modified.
-  GetHost()->AddMutationObserver(this);
 }
 
 ShadowRoot::~ShadowRoot() {
-  if (auto* host = GetHost()) {
-    // mHost may have been unlinked.
-    host->RemoveMutationObserver(this);
-  }
-
   if (IsInComposedDoc()) {
     OwnerDoc()->RemoveComposedDocShadowRoot(*this);
   }
@@ -158,13 +144,11 @@ void ShadowRoot::Unattach() {
   MOZ_ASSERT(!HasSlots(), "Won't work!");
   if (!GetHost()) {
     // It is possible that we've been unlinked already. In such case host
-    // should have called Unbind and ShadowRoot's own unlink
-    // RemoveMutationObserver.
+    // should have called Unbind and ShadowRoot's own unlink.
     return;
   }
 
   Unbind();
-  GetHost()->RemoveMutationObserver(this);
   SetHost(nullptr);
 }
 
@@ -220,8 +204,8 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
     while (assignedNodes.Length() > 0) {
       nsINode* assignedNode = assignedNodes[0];
 
-      oldSlot->RemoveAssignedNode(assignedNode);
-      aSlot->AppendAssignedNode(assignedNode);
+      oldSlot->RemoveAssignedNode(*assignedNode->AsContent());
+      aSlot->AppendAssignedNode(*assignedNode->AsContent());
       doEnqueueSlotChange = true;
     }
 
@@ -245,7 +229,7 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
         continue;
       }
       doEnqueueSlotChange = true;
-      aSlot->AppendAssignedNode(child);
+      aSlot->AppendAssignedNode(*child);
     }
 
     if (doEnqueueSlotChange) {
@@ -299,8 +283,8 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
   while (!assignedNodes.IsEmpty()) {
     nsINode* assignedNode = assignedNodes[0];
 
-    aSlot->RemoveAssignedNode(assignedNode);
-    replacementSlot->AppendAssignedNode(assignedNode);
+    aSlot->RemoveAssignedNode(*assignedNode->AsContent());
+    replacementSlot->AppendAssignedNode(*assignedNode->AsContent());
   }
 
   aSlot->EnqueueSlotChangeEvent();
@@ -488,7 +472,7 @@ void ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   }
 }
 
-ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent* aContent) {
+ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent& aContent) {
   nsAutoString slotName;
   // Note that if slot attribute is missing, assign it to the first default
   // slot, if exists.
@@ -513,7 +497,7 @@ ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent* aContent) {
     // Seek through the host's explicit children until the
     // assigned content is found.
     while (currentContent && currentContent != assignedNodes[i]) {
-      if (currentContent == aContent) {
+      if (currentContent == &aContent) {
         insertionIndex.emplace(i);
         break;
       }
@@ -529,9 +513,9 @@ ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent* aContent) {
   return {slot, insertionIndex};
 }
 
-void ShadowRoot::MaybeReassignElement(Element* aElement) {
-  MOZ_ASSERT(aElement->GetParent() == GetHost());
-  HTMLSlotElement* oldSlot = aElement->GetAssignedSlot();
+void ShadowRoot::MaybeReassignElement(Element& aElement) {
+  MOZ_ASSERT(aElement.GetParent() == GetHost());
+  HTMLSlotElement* oldSlot = aElement.GetAssignedSlot();
   SlotAssignment assignment = SlotAssignmentFor(aElement);
 
   if (assignment.mSlot == oldSlot) {
@@ -541,7 +525,7 @@ void ShadowRoot::MaybeReassignElement(Element* aElement) {
 
   if (Document* doc = GetComposedDoc()) {
     if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
-      presShell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
+      presShell->SlotAssignmentWillChange(aElement, oldSlot, assignment.mSlot);
     }
   }
 
@@ -615,103 +599,56 @@ nsINode* ShadowRoot::CreateElementAndAppendChildAt(nsINode& aParentNode,
   return aParentNode.AppendChild(*node, rv);
 }
 
-void ShadowRoot::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                  nsAtom* aAttribute, int32_t aModType,
-                                  const nsAttrValue* aOldValue) {
-  if (aNameSpaceID != kNameSpaceID_None || aAttribute != nsGkAtoms::slot) {
+void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
+  // Need to null-check the host because we may be unlinked already.
+  MOZ_ASSERT(!GetHost() || aChild.GetParent() == GetHost());
+
+  HTMLSlotElement* slot = aChild.GetAssignedSlot();
+  if (!slot) {
     return;
   }
 
-  if (aElement->GetParent() != GetHost()) {
-    return;
+  MOZ_DIAGNOSTIC_ASSERT(!aChild.IsRootOfAnonymousSubtree(),
+                        "How did aChild end up assigned to a slot?");
+  // If the slot is going to start showing fallback content, we need to tell
+  // layout about it.
+  if (slot->AssignedNodes().Length() == 1) {
+    InvalidateStyleAndLayoutOnSubtree(slot);
   }
 
-  MaybeReassignElement(aElement);
+  slot->RemoveAssignedNode(aChild);
+  slot->EnqueueSlotChangeEvent();
 }
 
-void ShadowRoot::ContentAppended(nsIContent* aFirstNewContent) {
-  for (nsIContent* content = aFirstNewContent; content;
-       content = content->GetNextSibling()) {
-    ContentInserted(content);
-  }
-}
-
-void ShadowRoot::ContentInserted(nsIContent* aChild) {
-  // Check to ensure that the child not an anonymous subtree root because
-  // even though its parent could be the host it may not be in the host's child
-  // list.
-  if (aChild->IsRootOfAnonymousSubtree()) {
+void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
+  MOZ_ASSERT(aChild.GetParent() == GetHost());
+  // Check to ensure that the child not an anonymous subtree root because even
+  // though its parent could be the host it may not be in the host's child list.
+  if (aChild.IsRootOfAnonymousSubtree()) {
     return;
   }
 
-  if (!aChild->IsSlotable()) {
+  if (!aChild.IsSlotable()) {
     return;
   }
 
-  if (aChild->GetParent() == GetHost()) {
-    SlotAssignment assignment = SlotAssignmentFor(aChild);
-    if (!assignment.mSlot) {
-      return;
-    }
-
-    // Fallback content will go away, let layout know.
-    if (assignment.mSlot->AssignedNodes().IsEmpty()) {
-      InvalidateStyleAndLayoutOnSubtree(assignment.mSlot);
-    }
-
-    if (assignment.mIndex) {
-      assignment.mSlot->InsertAssignedNode(*assignment.mIndex, aChild);
-    } else {
-      assignment.mSlot->AppendAssignedNode(aChild);
-    }
-    assignment.mSlot->EnqueueSlotChangeEvent();
-
-    SlotStateChanged(assignment.mSlot);
+  SlotAssignment assignment = SlotAssignmentFor(aChild);
+  if (!assignment.mSlot) {
     return;
   }
 
-  // If parent's root is a shadow root, and parent is a slot whose assigned
-  // nodes is the empty list, then run signal a slot change for parent.
-  HTMLSlotElement* slot = HTMLSlotElement::FromNodeOrNull(aChild->GetParent());
-  if (slot && slot->GetContainingShadow() == this &&
-      slot->AssignedNodes().IsEmpty()) {
-    slot->EnqueueSlotChangeEvent();
-  }
-}
-
-void ShadowRoot::ContentRemoved(nsIContent* aChild,
-                                nsIContent* aPreviousSibling) {
-  // Check to ensure that the child not an anonymous subtree root because
-  // even though its parent could be the host it may not be in the host's child
-  // list.
-  if (aChild->IsRootOfAnonymousSubtree()) {
-    return;
+  // Fallback content will go away, let layout know.
+  if (assignment.mSlot->AssignedNodes().IsEmpty()) {
+    InvalidateStyleAndLayoutOnSubtree(assignment.mSlot);
   }
 
-  if (!aChild->IsSlotable()) {
-    return;
+  if (assignment.mIndex) {
+    assignment.mSlot->InsertAssignedNode(*assignment.mIndex, aChild);
+  } else {
+    assignment.mSlot->AppendAssignedNode(aChild);
   }
-
-  if (aChild->GetParent() == GetHost()) {
-    if (HTMLSlotElement* slot = aChild->GetAssignedSlot()) {
-      // If the slot is going to start showing fallback content, we need to tell
-      // layout about it.
-      if (slot->AssignedNodes().Length() == 1) {
-        InvalidateStyleAndLayoutOnSubtree(slot);
-      }
-      slot->RemoveAssignedNode(aChild);
-      slot->EnqueueSlotChangeEvent();
-    }
-    return;
-  }
-
-  // If parent's root is a shadow root, and parent is a slot whose assigned
-  // nodes is the empty list, then run signal a slot change for parent.
-  HTMLSlotElement* slot = HTMLSlotElement::FromNodeOrNull(aChild->GetParent());
-  if (slot && slot->GetContainingShadow() == this &&
-      slot->AssignedNodes().IsEmpty()) {
-    slot->EnqueueSlotChangeEvent();
-  }
+  assignment.mSlot->EnqueueSlotChangeEvent();
+  SlotStateChanged(assignment.mSlot);
 }
 
 ServoStyleRuleMap& ShadowRoot::ServoStyleRuleMap() {

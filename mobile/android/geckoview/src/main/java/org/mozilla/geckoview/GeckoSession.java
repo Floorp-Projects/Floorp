@@ -1065,7 +1065,7 @@ public class GeckoSession implements Parcelable {
                                        Compositor compositor, EventDispatcher dispatcher,
                                        SessionAccessibility.NativeProvider sessionAccessibility,
                                        GeckoBundle initData, String id, String chromeUri,
-                                       int screenId, boolean privateMode);
+                                       int screenId, boolean privateMode, boolean isRemote);
 
         @Override // JNIObject
         public void disposeNative() {
@@ -1386,6 +1386,7 @@ public class GeckoSession implements Parcelable {
         final String chromeUri = mSettings.getChromeUri();
         final int screenId = mSettings.getScreenId();
         final boolean isPrivate = mSettings.getUsePrivateMode();
+        final boolean isRemote = mSettings.getUseMultiprocess();
 
         mWindow = new Window(runtime, this, mNativeQueue);
 
@@ -1394,7 +1395,7 @@ public class GeckoSession implements Parcelable {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mNativeQueue, mCompositor, mEventDispatcher,
                         mAccessibility != null ? mAccessibility.nativeProvider : null,
-                        createInitData(), mId, chromeUri, screenId, isPrivate);
+                        createInitData(), mId, chromeUri, screenId, isPrivate, isRemote);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -1408,7 +1409,7 @@ public class GeckoSession implements Parcelable {
                 GeckoBundle.class, createInitData(),
                 String.class, mId,
                 String.class, chromeUri,
-                screenId, isPrivate);
+                screenId, isPrivate, isRemote);
         }
 
         onWindowChanged(WINDOW_OPEN, /* inProgress */ false);

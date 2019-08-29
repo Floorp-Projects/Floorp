@@ -1,0 +1,14 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GENERATED_FILES = ['fake_remote_dafsa.bin']
+
+fake_remote_dafsa = GENERATED_FILES['fake_remote_dafsa.bin']
+fake_remote_dafsa.script = '../../../prepare_tlds.py'
+fake_remote_dafsa.inputs = ['fake_public_suffix_list.dat']
+fake_remote_dafsa.flags = ['bin']
+
+TEST_HARNESS_FILES.xpcshell.netwerk.dns.tests.unit.data += ['!fake_remote_dafsa.bin']

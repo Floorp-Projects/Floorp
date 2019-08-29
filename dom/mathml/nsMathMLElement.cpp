@@ -111,10 +111,6 @@ bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   MOZ_ASSERT(IsMathMLElement());
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::color) {
-      WarnDeprecated(nsGkAtoms::color->GetUTF16String(),
-                     nsGkAtoms::mathcolor_->GetUTF16String(), OwnerDoc());
-    }
     if (aAttribute == nsGkAtoms::color || aAttribute == nsGkAtoms::mathcolor_ ||
         aAttribute == nsGkAtoms::background ||
         aAttribute == nsGkAtoms::mathbackground_) {
@@ -136,9 +132,6 @@ bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                              aMaybeScriptedPrincipal, aResult);
 }
 
-static Element::MappedAttributeEntry sMtableStyles[] = {{nsGkAtoms::width},
-                                                        {nullptr}};
-
 // https://mathml-refresh.github.io/mathml-core/#global-attributes
 static Element::MappedAttributeEntry sGlobalAttributes[] = {
     {nsGkAtoms::dir},
@@ -150,12 +143,11 @@ static Element::MappedAttributeEntry sGlobalAttributes[] = {
     // XXXfredw: Also map displaystyle to CSS math-style?
     {nullptr}};
 
-// XXXfredw: Add a runtime flag to disable these attributes.
-static Element::MappedAttributeEntry sMathML3Attributes[] = {
-    // XXXfredw(bug 1548471)
-    {nsGkAtoms::scriptminsize_},
-    {nsGkAtoms::scriptsizemultiplier_},
-    // XXXfredw(bug 1548524)
+// XXXfredw(bug 1548471): Add a runtime flag to disable these attributes.
+static Element::MappedAttributeEntry sDeprecatedScriptAttributes[] = {
+    {nsGkAtoms::scriptminsize_}, {nsGkAtoms::scriptsizemultiplier_}, {nullptr}};
+
+static Element::MappedAttributeEntry sDeprecatedStyleAttributes[] = {
     {nsGkAtoms::background},
     {nsGkAtoms::color},
     {nsGkAtoms::fontfamily_},
@@ -167,14 +159,16 @@ static Element::MappedAttributeEntry sMathML3Attributes[] = {
 bool nsMathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
 
-  static const MappedAttributeEntry* const mtableMap[] = {
-      sMtableStyles, sGlobalAttributes, sMathML3Attributes};
-  if (mNodeInfo->Equals(nsGkAtoms::mtable_))
-    return FindAttributeDependence(aAttribute, mtableMap);
+  static const MappedAttributeEntry* const globalMap[] = {
+      sGlobalAttributes, sDeprecatedScriptAttributes};
+  static const MappedAttributeEntry* const styleMap[] = {
+      sDeprecatedStyleAttributes};
 
-  static const MappedAttributeEntry* const mathmlMap[] = {sGlobalAttributes,
-                                                          sMathML3Attributes};
-  return FindAttributeDependence(aAttribute, mathmlMap);
+  return FindAttributeDependence(aAttribute, globalMap) ||
+         (!StaticPrefs::mathml_deprecated_style_attributes_disabled() &&
+          FindAttributeDependence(aAttribute, styleMap)) ||
+         (mNodeInfo->Equals(nsGkAtoms::mtable_) &&
+          aAttribute == nsGkAtoms::width);
 }
 
 nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
@@ -526,8 +520,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
     parseSizeKeywords = false;
     value = aAttributes->GetAttr(nsGkAtoms::fontsize_);
     if (value) {
-      WarnDeprecated(nsGkAtoms::fontsize_->GetUTF16String(),
-                     nsGkAtoms::mathsize_->GetUTF16String(), aDecls.Document());
+      aDecls.Document()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedStyleAttribute);
     }
   }
   if (value && value->Type() == nsAttrValue::eString &&
@@ -572,9 +566,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
   //
   value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
   if (value) {
-    WarnDeprecated(nsGkAtoms::fontfamily_->GetUTF16String(),
-                   nsGkAtoms::mathvariant_->GetUTF16String(),
-                   aDecls.Document());
+    aDecls.Document()->WarnOnceAbout(
+        dom::Document::eMathML_DeprecatedStyleAttribute);
   }
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty_font_family)) {
@@ -593,9 +586,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
   // -moz-math-variant is specified.
   value = aAttributes->GetAttr(nsGkAtoms::fontstyle_);
   if (value) {
-    WarnDeprecated(nsGkAtoms::fontstyle_->GetUTF16String(),
-                   nsGkAtoms::mathvariant_->GetUTF16String(),
-                   aDecls.Document());
+    aDecls.Document()->WarnOnceAbout(
+        dom::Document::eMathML_DeprecatedStyleAttribute);
     if (value->Type() == nsAttrValue::eString &&
         !aDecls.PropertyIsSet(eCSSProperty_font_style)) {
       nsAutoString str(value->GetStringValue());
@@ -622,9 +614,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
   // -moz-math-variant is specified.
   value = aAttributes->GetAttr(nsGkAtoms::fontweight_);
   if (value) {
-    WarnDeprecated(nsGkAtoms::fontweight_->GetUTF16String(),
-                   nsGkAtoms::mathvariant_->GetUTF16String(),
-                   aDecls.Document());
+    aDecls.Document()->WarnOnceAbout(
+        dom::Document::eMathML_DeprecatedStyleAttribute);
     if (value->Type() == nsAttrValue::eString &&
         !aDecls.PropertyIsSet(eCSSProperty_font_weight)) {
       nsAutoString str(value->GetStringValue());
@@ -722,9 +713,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
   if (!value) {
     value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value) {
-      WarnDeprecated(nsGkAtoms::background->GetUTF16String(),
-                     nsGkAtoms::mathbackground_->GetUTF16String(),
-                     aDecls.Document());
+      aDecls.Document()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedStyleAttribute);
     }
   }
   if (value) {
@@ -755,9 +745,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
   if (!value) {
     value = aAttributes->GetAttr(nsGkAtoms::color);
     if (value) {
-      WarnDeprecated(nsGkAtoms::color->GetUTF16String(),
-                     nsGkAtoms::mathcolor_->GetUTF16String(),
-                     aDecls.Document());
+      aDecls.Document()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedStyleAttribute);
     }
   }
   nscolor color;

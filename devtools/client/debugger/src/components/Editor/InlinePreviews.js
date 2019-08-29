@@ -54,6 +54,7 @@ class InlinePreviews extends Component<Props> {
           return (
             <InlinePreviewRow
               editor={editor}
+              key={line}
               line={lineNum}
               previews={previews[line]}
               numColumnBreakpoints={numColumnBreakpoints}

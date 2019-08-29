@@ -563,13 +563,14 @@ browserRect.height: ${browserRect.height}`);
       this.ensureFocus(win);
       await this.driver.listener.reftestWait(url, this.remote);
 
-      canvas = capture.canvas(
+      canvas = await capture.canvas(
         win,
+        win.docShell.browsingContext,
         0, // left
         0, // top
         browserRect.width,
         browserRect.height,
-        { canvas, flags }
+        { canvas, flags, readback: true }
       );
     }
     if (

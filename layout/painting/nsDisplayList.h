@@ -3874,8 +3874,8 @@ struct HitTestInfo {
   nsRect mArea;
   mozilla::gfx::CompositorHitTestInfo mFlags;
 
-  AnimatedGeometryRoot* mAGR;
-  const mozilla::ActiveScrolledRoot* mASR;
+  RefPtr<AnimatedGeometryRoot> mAGR;
+  RefPtr<const mozilla::ActiveScrolledRoot> mASR;
   RefPtr<const mozilla::DisplayItemClipChain> mClipChain;
   const mozilla::DisplayItemClip* mClip;
 };
@@ -3893,7 +3893,10 @@ class nsDisplayHitTestInfoItem : public nsPaintedDisplayItem {
                            const nsDisplayHitTestInfoItem& aOther)
       : nsPaintedDisplayItem(aBuilder, aOther) {}
 
-  const HitTestInfo& GetHitTestInfo() const { return *mHitTestInfo; }
+  const HitTestInfo& GetHitTestInfo() const {
+    MOZ_ASSERT(HasHitTestInfo());
+    return *mHitTestInfo;
+  }
 
   void SetActiveScrolledRoot(
       const ActiveScrolledRoot* aActiveScrolledRoot) override {

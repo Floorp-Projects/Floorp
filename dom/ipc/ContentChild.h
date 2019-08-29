@@ -522,13 +522,6 @@ class ContentChild final : public PContentChild,
 
   PBrowserOrId GetBrowserOrId(BrowserChild* aBrowserChild);
 
-  POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
-      const URIParams& manifestURI, const URIParams& documentURI,
-      const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument);
-
-  bool DeallocPOfflineCacheUpdateChild(
-      POfflineCacheUpdateChild* offlineCacheUpdate);
-
   PWebrtcGlobalChild* AllocPWebrtcGlobalChild();
 
   bool DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor);

@@ -22,6 +22,7 @@ interface SVGTransform {
   const unsigned short SVG_TRANSFORM_SKEWY = 6;
 
   readonly attribute unsigned short type;
+  [BinaryName="getMatrix"]
   readonly attribute SVGMatrix matrix;
   readonly attribute float angle;
 

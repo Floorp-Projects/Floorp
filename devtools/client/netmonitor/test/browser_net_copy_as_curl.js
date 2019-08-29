@@ -7,13 +7,41 @@
  * Tests if Copy as cURL works.
  */
 
+const POST_PAYLOAD = "Plaintext value as a payload";
+
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX
-  const QUOTE = Services.appinfo.OS == "WINNT" ? '"' : "'";
+  const QUOTE_WIN = '"';
+  const QUOTE_POSIX = "'";
 
+  const isWin = Services.appinfo.OS === "WINNT";
+  const testData = isWin
+    ? [
+        {
+          menuItemId: "request-list-context-copy-as-curl-win",
+          data: buildTestData(QUOTE_WIN),
+        },
+        {
+          menuItemId: "request-list-context-copy-as-curl-posix",
+          data: buildTestData(QUOTE_POSIX),
+        },
+      ]
+    : [
+        {
+          menuItemId: "request-list-context-copy-as-curl",
+          data: buildTestData(QUOTE_POSIX),
+        },
+      ];
+
+  await testForPlatform(tab, monitor, testData);
+
+  await teardown(monitor);
+});
+
+function buildTestData(QUOTE) {
   // Quote a string, escape the quotes inside the string
   function quote(str) {
     return QUOTE + str.replace(new RegExp(QUOTE, "g"), `\\${QUOTE}`) + QUOTE;
@@ -43,7 +71,6 @@ add_task(async function() {
 
   const COOKIE_PARTIAL_RESULT = [header("Cookie: bob=true; tom=cool")];
 
-  const POST_PAYLOAD = "Plaintext value as a payload";
   const POST_PARTIAL_RESULT = [
     "--data " + quote(POST_PAYLOAD),
     header("Content-Type: text/plain;charset=UTF-8"),
@@ -52,20 +79,45 @@ add_task(async function() {
 
   const HEAD_PARTIAL_RESULT = ["-I"];
 
+  return {
+    SIMPLE_BASE,
+    SLOW_BASE,
+    BASE_RESULT,
+    COOKIE_PARTIAL_RESULT,
+    POST_PAYLOAD,
+    POST_PARTIAL_RESULT,
+    ORIGIN_RESULT,
+    HEAD_PARTIAL_RESULT,
+  };
+}
+
+async function testForPlatform(tab, monitor, testData) {
   // GET request, no cookies (first request)
   await performRequest("GET");
-  await testClipboardContent([...SIMPLE_BASE, ...BASE_RESULT]);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SIMPLE_BASE,
+      ...test.data.BASE_RESULT,
+    ]);
+  }
   // Check to make sure it is still OK after we view the response (bug#1452442)
   await selectIndexAndWaitForSourceEditor(monitor, 0);
-  await testClipboardContent([...SIMPLE_BASE, ...BASE_RESULT]);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SIMPLE_BASE,
+      ...test.data.BASE_RESULT,
+    ]);
+  }
 
   // GET request, cookies set by previous response
   await performRequest("GET");
-  await testClipboardContent([
-    ...SIMPLE_BASE,
-    ...BASE_RESULT,
-    ...COOKIE_PARTIAL_RESULT,
-  ]);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SIMPLE_BASE,
+      ...test.data.BASE_RESULT,
+      ...test.data.COOKIE_PARTIAL_RESULT,
+    ]);
+  }
 
   // Unfinished request (bug#1378464, bug#1420513)
   const waitSlow = waitForNetworkEvents(monitor, 0);
@@ -73,32 +125,36 @@ add_task(async function() {
     content.wrappedJSObject.performRequest(url, "GET", null);
   });
   await waitSlow;
-  await testClipboardContent([
-    ...SLOW_BASE,
-    ...BASE_RESULT,
-    ...COOKIE_PARTIAL_RESULT,
-  ]);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SLOW_BASE,
+      ...test.data.BASE_RESULT,
+      ...test.data.COOKIE_PARTIAL_RESULT,
+    ]);
+  }
 
   // POST request
   await performRequest("POST", POST_PAYLOAD);
-  await testClipboardContent([
-    ...SIMPLE_BASE,
-    ...BASE_RESULT,
-    ...COOKIE_PARTIAL_RESULT,
-    ...POST_PARTIAL_RESULT,
-    ...ORIGIN_RESULT,
-  ]);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SIMPLE_BASE,
+      ...test.data.BASE_RESULT,
+      ...test.data.COOKIE_PARTIAL_RESULT,
+      ...test.data.POST_PARTIAL_RESULT,
+      ...test.data.ORIGIN_RESULT,
+    ]);
+  }
 
   // HEAD request
   await performRequest("HEAD");
-  await testClipboardContent([
-    ...SIMPLE_BASE,
-    ...BASE_RESULT,
-    ...COOKIE_PARTIAL_RESULT,
-    ...HEAD_PARTIAL_RESULT,
-  ]);
-
-  await teardown(monitor);
+  for (const test of testData) {
+    await testClipboardContent(test.menuItemId, [
+      ...test.data.SIMPLE_BASE,
+      ...test.data.BASE_RESULT,
+      ...test.data.COOKIE_PARTIAL_RESULT,
+      ...test.data.HEAD_PARTIAL_RESULT,
+    ]);
+  }
 
   async function performRequest(method, payload) {
     const waitRequest = waitForNetworkEvents(monitor, 1);
@@ -116,25 +172,23 @@ add_task(async function() {
     await waitRequest;
   }
 
-  async function testClipboardContent(expectedResult) {
+  async function testClipboardContent(menuItemId, expectedResult) {
     const { document } = monitor.panelWin;
 
     const items = document.querySelectorAll(".request-list-item");
-    EventUtils.sendMouseEvent({ type: "mousedown" }, items[items.length - 1]);
+    const itemIndex = items.length - 1;
+    EventUtils.sendMouseEvent({ type: "mousedown" }, items[itemIndex]);
     EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[0]
     );
 
     /* Ensure that the copy as cURL option is always visible */
-    const copyUrlParamsNode = getContextMenuItem(
-      monitor,
-      "request-list-context-copy-as-curl"
-    );
+    const copyUrlParamsNode = getContextMenuItem(monitor, menuItemId);
     is(
       !!copyUrlParamsNode,
       true,
-      'The "Copy as cURL" context menu item should not be hidden.'
+      `The "Copy as cURL" context menu item "${menuItemId}" should not be hidden.`
     );
 
     await waitForClipboardPromise(
@@ -169,6 +223,8 @@ add_task(async function() {
       }
     );
 
-    info("Clipboard contains a cURL command for item " + (items.length - 1));
+    info(
+      `Clipboard contains a cURL command for item ${itemIndex} by "${menuItemId}"`
+    );
   }
-});
+}

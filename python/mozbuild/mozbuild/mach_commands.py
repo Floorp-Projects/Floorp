@@ -418,27 +418,37 @@ class GTestCommands(MachCommandBase):
                      help='Output test results in a format that can be parsed by TBPL.')
     @CommandArgument('--shuffle', '-s', action='store_true',
                      help='Randomize the execution order of tests.')
+    @CommandArgument('--enable-webrender', action='store_true',
+                     default=False, dest='enable_webrender',
+                     help='Enable the WebRender compositor in Gecko.')
+    @CommandArgumentGroup('Android')
     @CommandArgument('--package',
                      default='org.mozilla.geckoview.test',
-                     help='(Android only) Package name of test app.')
+                     group='Android',
+                     help='Package name of test app.')
     @CommandArgument('--adbpath',
                      dest='adb_path',
-                     help='(Android only) Path to adb binary.')
+                     group='Android',
+                     help='Path to adb binary.')
     @CommandArgument('--deviceSerial',
                      dest='device_serial',
-                     help="(Android only) adb serial number of remote device. "
+                     group='Android',
+                     help="adb serial number of remote device. "
                      "Required when more than one device is connected to the host. "
                      "Use 'adb devices' to see connected devices.")
     @CommandArgument('--remoteTestRoot',
                      dest='remote_test_root',
-                     help='(Android only) Remote directory to use as test root '
+                     group='Android',
+                     help='Remote directory to use as test root '
                      '(eg. /mnt/sdcard/tests or /data/local/tests).')
     @CommandArgument('--libxul',
                      dest='libxul_path',
-                     help='(Android only) Path to gtest libxul.so.')
-    @CommandArgument('--enable-webrender', action='store_true',
-                     default=False, dest='enable_webrender',
-                     help='Enable the WebRender compositor in Gecko.')
+                     group='Android',
+                     help='Path to gtest libxul.so.')
+    @CommandArgument('--no-install', action='store_true',
+                     default=False,
+                     group='Android',
+                     help='Skip the installation of the APK.')
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
                      help='Enable the debugger. Not specifying a --debugger option will result in '
@@ -449,9 +459,9 @@ class GTestCommands(MachCommandBase):
                      group='debugging',
                      help='Command-line arguments to pass to the debugger itself; '
                      'split as the Bourne shell would.')
-    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser,
-              package, adb_path, device_serial, remote_test_root, libxul_path,
-              enable_webrender, debug, debugger, debugger_args):
+    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser, enable_webrender,
+              package, adb_path, device_serial, remote_test_root, libxul_path, no_install,
+              debug, debugger, debugger_args):
 
         # We lazy build gtest because it's slow to link
         try:
@@ -489,9 +499,9 @@ class GTestCommands(MachCommandBase):
             return self.android_gtest(cwd, shuffle, gtest_filter,
                                       package, adb_path, device_serial,
                                       remote_test_root, libxul_path,
-                                      enable_webrender)
+                                      enable_webrender, not no_install)
 
-        if package or adb_path or device_serial or remote_test_root or libxul_path:
+        if package or adb_path or device_serial or remote_test_root or libxul_path or no_install:
             print("One or more Android-only options will be ignored")
 
         app_path = self.get_binary_path('app')
@@ -575,7 +585,7 @@ class GTestCommands(MachCommandBase):
 
     def android_gtest(self, test_dir, shuffle, gtest_filter,
                       package, adb_path, device_serial, remote_test_root, libxul_path,
-                      enable_webrender):
+                      enable_webrender, install):
         # setup logging for mozrunner
         from mozlog.commandline import setup_logging
         format_args = {'level': self._mach_context.settings['test']['level']}
@@ -584,7 +594,7 @@ class GTestCommands(MachCommandBase):
 
         # ensure that a device is available and test app is installed
         from mozrunner.devices.android_device import (verify_android_device, get_adb_path)
-        verify_android_device(self, install=True, app=package, device_serial=device_serial)
+        verify_android_device(self, install=install, app=package, device_serial=device_serial)
 
         if not adb_path:
             adb_path = get_adb_path(self)

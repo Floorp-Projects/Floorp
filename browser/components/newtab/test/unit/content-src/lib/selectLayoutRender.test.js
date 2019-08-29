@@ -73,7 +73,7 @@ describe("selectLayoutRender", () => {
     });
   });
 
-  it("should return layout with placeholder data if feed isn't available", () => {
+  it("should return layout with placeholder data if feed doesn't have data", () => {
     store.dispatch({
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
       data: { layout: FAKE_LAYOUT },
@@ -92,6 +92,60 @@ describe("selectLayoutRender", () => {
       { placeholder: true },
       { placeholder: true },
     ]);
+  });
+
+  it("should return layout with empty spocs data if feed isn't defined but spocs is", () => {
+    const fakeLayout = [
+      {
+        width: 3,
+        components: [{ type: "foo", spocs: { positions: [{ index: 2 }] } }],
+      },
+    ];
+    store.dispatch({
+      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
+      data: { layout: fakeLayout },
+    });
+    store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
+
+    const { layoutRender } = selectLayoutRender(
+      store.getState().DiscoveryStream,
+      {},
+      []
+    );
+
+    assert.lengthOf(layoutRender, 1);
+    assert.propertyVal(layoutRender[0], "width", 3);
+    assert.deepEqual(layoutRender[0].components[0].data.spocs, []);
+  });
+
+  it("should return layout with spocs data if feed isn't defined but spocs is", () => {
+    const fakeLayout = [
+      {
+        width: 3,
+        components: [
+          { type: "foo", spocs: { probability: 1, positions: [{ index: 0 }] } },
+        ],
+      },
+    ];
+    store.dispatch({
+      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
+      data: { layout: fakeLayout },
+    });
+    store.dispatch({ type: at.DISCOVERY_STREAM_FEEDS_UPDATE });
+    store.dispatch({
+      type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
+      data: { lastUpdated: 0, spocs: { spocs: [1, 2, 3] } },
+    });
+
+    const { layoutRender } = selectLayoutRender(
+      store.getState().DiscoveryStream,
+      {},
+      []
+    );
+
+    assert.lengthOf(layoutRender, 1);
+    assert.propertyVal(layoutRender[0], "width", 3);
+    assert.deepEqual(layoutRender[0].components[0].data.spocs, [1]);
   });
 
   it("should return feed data offset by layout set prop", () => {

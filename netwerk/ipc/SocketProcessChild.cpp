@@ -23,6 +23,7 @@
 #endif
 
 #ifdef MOZ_WEBRTC
+#  include "mozilla/net/ProxyConfigLookupChild.h"
 #  include "mozilla/net/WebrtcProxyChannelChild.h"
 #endif
 
@@ -225,6 +226,19 @@ PDNSRequestChild* SocketProcessChild::AllocPDNSRequestChild(
 bool SocketProcessChild::DeallocPDNSRequestChild(PDNSRequestChild* aChild) {
   DNSRequestChild* p = static_cast<DNSRequestChild*>(aChild);
   p->ReleaseIPDLReference();
+  return true;
+}
+
+PProxyConfigLookupChild* SocketProcessChild::AllocPProxyConfigLookupChild() {
+  MOZ_CRASH("AllocPProxyConfigLookupChild should not be called");
+  return nullptr;
+}
+
+bool SocketProcessChild::DeallocPProxyConfigLookupChild(
+    PProxyConfigLookupChild* aActor) {
+#ifdef MOZ_WEBRTC
+  delete static_cast<ProxyConfigLookupChild*>(aActor);
+#endif
   return true;
 }
 

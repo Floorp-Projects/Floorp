@@ -1,0 +1,7 @@
+exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
+  -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin-ld \
+  -mmacosx-version-min=10.11 \
+  -target $TARGET \
+  -B $MOZ_FETCHES_DIR/cctools/bin \
+  -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk \
+  "$@"

@@ -33,25 +33,16 @@ class MockMediaEngineSource : public MediaEngineSource {
   MOCK_CONST_METHOD0(GetUUID, nsCString());
   MOCK_CONST_METHOD0(GetGroupId, nsString());
   MOCK_CONST_METHOD1(GetSettings, void(dom::MediaTrackSettings&));
-  MOCK_METHOD6(Allocate, nsresult(const dom::MediaTrackConstraints&,
-                                  const MediaEnginePrefs&, const nsString&,
-                                  const nsString&, const ipc::PrincipalInfo&,
-                                  const char**));
+  MOCK_METHOD4(Allocate, nsresult(const dom::MediaTrackConstraints&,
+                                  const MediaEnginePrefs&,
+                                  const ipc::PrincipalInfo&, const char**));
   MOCK_METHOD3(SetTrack, void(const RefPtr<SourceMediaStream>&, TrackID,
                               const PrincipalHandle&));
   MOCK_METHOD0(Start, nsresult());
-  MOCK_METHOD5(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
-                                     const MediaEnginePrefs&, const nsString&,
-                                     const nsString&, const char**));
+  MOCK_METHOD3(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
+                                     const MediaEnginePrefs&, const char**));
   MOCK_METHOD0(Stop, nsresult());
   MOCK_METHOD0(Deallocate, nsresult());
-  MOCK_CONST_METHOD3(GetBestFitnessDistance,
-                     uint32_t(const nsTArray<const NormalizedConstraintSet*>&,
-                              const nsString&, const nsString&));
-  MOCK_METHOD5(Pull,
-               void(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-                    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
-                    const PrincipalHandle& aPrincipalHandle));
 };
 
 RefPtr<AudioDeviceInfo> MakeAudioDeviceInfo(const nsString aName) {

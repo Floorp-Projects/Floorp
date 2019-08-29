@@ -67,6 +67,7 @@ job_description_schema = Schema({
     Exclusive('optimization', 'optimization'): task_description_schema['optimization'],
     Optional('needs-sccache'): task_description_schema['needs-sccache'],
     Optional('release-artifacts'): task_description_schema['release-artifacts'],
+    Optional('priority'): task_description_schema['priority'],
 
     # The "when" section contains descriptions of the circumstances under which
     # this task should be included in the task graph.  This will be converted
@@ -237,7 +238,8 @@ def use_fetches(config, jobs):
                         extract = artifact.get('extract', True)
 
                     fetch = {
-                        'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path),
+                        'artifact': '{prefix}/{path}'.format(prefix=prefix, path=path)
+                                    if not path.startswith('/') else path[1:],
                         'task': '<{dep}>'.format(dep=kind),
                         'extract': extract,
                     }

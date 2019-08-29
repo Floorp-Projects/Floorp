@@ -155,8 +155,13 @@ class StaticAnalysis(MachCommandBase):
     @Command('static-analysis', category='testing',
              description='Run C++ static analysis checks')
     def static_analysis(self):
-        # If not arguments are provided, just print a help message.
+        # If no arguments are provided, just print a help message.
         mach = Mach(os.getcwd())
+
+        def populate_context(context, key=None):
+            context.topdir = self.topsrcdir
+
+        mach.populate_context_handler = populate_context
         mach.run(['static-analysis', '--help'])
 
     @StaticAnalysisSubCommand('static-analysis', 'check',

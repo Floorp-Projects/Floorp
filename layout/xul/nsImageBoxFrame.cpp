@@ -617,7 +617,7 @@ void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   // Fetch our subrect.
   const nsStyleList* myList = StyleList();
-  mSubRect = myList->mImageRegion;  // before |mSuppressStyleCheck| test!
+  mSubRect = myList->GetImageRegion();  // before |mSuppressStyleCheck| test!
 
   if (mUseSrcAttr || mSuppressStyleCheck)
     return;  // No more work required, since the image isn't specified by style.

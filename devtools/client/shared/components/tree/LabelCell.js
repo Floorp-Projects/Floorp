@@ -18,6 +18,7 @@ define(function(require, exports, module) {
     static get propTypes() {
       return {
         id: PropTypes.string.isRequired,
+        title: PropTypes.string,
         member: PropTypes.object.isRequired,
         renderSuffix: PropTypes.func,
       };
@@ -25,6 +26,7 @@ define(function(require, exports, module) {
 
     render() {
       const id = this.props.id;
+      const title = this.props.title;
       const member = this.props.member;
       const level = member.level || 0;
       const renderSuffix = this.props.renderSuffix;
@@ -42,6 +44,7 @@ define(function(require, exports, module) {
       return dom.td(
         {
           className: "treeLabelCell",
+          title,
           style: {
             // Compute indentation dynamically. The deeper the item is
             // inside the hierarchy, the bigger is the left padding.
@@ -57,6 +60,7 @@ define(function(require, exports, module) {
         dom.span(
           {
             className: "treeLabel " + member.type + "Label",
+            title,
             "aria-labelledby": id,
             "data-level": level,
           },

@@ -63,6 +63,8 @@ child:
                            ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
                            int32_t aAppUnitsPerDevPixel);
 
+  async SubFrameCrashed(BrowsingContext aContext);
+
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.
   async __delete__();

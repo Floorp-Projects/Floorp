@@ -47,15 +47,25 @@ for stlfile in ['jsdate.*', 'jsnum.*']:
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    CONFIGURE_SUBST_FILES += ['rust/extra-bindgen-flags']
+
 if not CONFIG['JS_DISABLE_SHELL']:
-    DIRS += ['shell']
-
-TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
-
-if CONFIG['FUZZING_INTERFACES']:
-    TEST_DIRS += [
-        'fuzz-tests',
+    DIRS += [
+        'rust',
+        'shell',
     ]
+
+    TEST_DIRS += [
+        'gdb',
+        'jsapi-tests',
+        'tests',
+    ]
+
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'fuzz-tests',
+        ]
 
 if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
     # In addition to regular coverage provided by trace-pc-guard,
@@ -408,7 +418,6 @@ DIRS += [
     'frontend',
     'gc',
     'jit',
-    'rust',
     'wasm',
     'zydis',
 ]

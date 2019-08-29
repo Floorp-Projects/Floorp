@@ -96,7 +96,7 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   //
   // If this isn't big enough for the current contents of the shared UA
   // sheets, we'll crash under InitSharedSheetsInParent.
-  static constexpr size_t kSharedMemorySize = 1024 * 400;
+  static constexpr size_t kSharedMemorySize = 1024 * 450;
 
  private:
   // Shared memory header.

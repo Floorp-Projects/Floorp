@@ -39,36 +39,37 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const mozilla::Encoding* aEncoding, bool aIsCopying,
                   bool aRewriteEncodingDeclaration,
-                  bool* aNeedsPreformatScanning) override;
+                  bool* aNeedsPreformatScanning, nsAString& aOutput) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) override;
+                        int32_t aEndOffset) override;
 
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection, int32_t aStartOffset,
-                                int32_t aEndOffset, nsAString& aStr) override;
+                                int32_t aEndOffset) override;
 
   NS_IMETHOD AppendProcessingInstruction(
       mozilla::dom::ProcessingInstruction* aPI, int32_t aStartOffset,
-      int32_t aEndOffset, nsAString& aStr) override;
+      int32_t aEndOffset) override;
 
   NS_IMETHOD AppendComment(mozilla::dom::Comment* aComment,
-                           int32_t aStartOffset, int32_t aEndOffset,
-                           nsAString& aStr) override;
+                           int32_t aStartOffset, int32_t aEndOffset) override;
 
-  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype,
-                           nsAString& aStr) override;
+  NS_IMETHOD AppendDoctype(mozilla::dom::DocumentType* aDoctype) override;
 
-  NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
-                                mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) override;
+  NS_IMETHOD AppendElementStart(
+      mozilla::dom::Element* aElement,
+      mozilla::dom::Element* aOriginalElement) override;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr) override;
+                              mozilla::dom::Element* aOriginalElement) override;
 
-  NS_IMETHOD Flush(nsAString& aStr) override { return NS_OK; }
+  NS_IMETHOD FlushAndFinish() override { return NS_OK; }
 
-  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument,
-                                 nsAString& aStr) override;
+  NS_IMETHOD Finish() override;
+
+  NS_IMETHOD GetOutputLength(uint32_t& aLength) const override;
+
+  NS_IMETHOD AppendDocumentStart(mozilla::dom::Document* aDocument) override;
 
   NS_IMETHOD ScanElementForPreformat(mozilla::dom::Element* aElement) override {
     return NS_OK;
@@ -305,6 +306,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * @return boolean  true if the element can be output
    */
   virtual bool CheckElementEnd(mozilla::dom::Element* aElement,
+                               mozilla::dom::Element* aOriginalElement,
                                bool& aForceFormat, nsAString& aStr);
 
   /**
@@ -436,6 +438,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   bool mBodyOnly;
   int32_t mInBody;
+
+  // Non-owning.
+  nsAString* mOutput;
 
  private:
   // number of nested elements which have preformated content

@@ -67,9 +67,9 @@ class BasicCompositor : public Compositor {
       const gfx::IntRect& aRect, const CompositingRenderTarget* aSource,
       const gfx::IntPoint& aSourcePoint) override;
 
-  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetForWindow(
-      const gfx::IntRect& aRect, const gfx::IntRegion& aClearRegion,
-      BufferMode aBufferMode);
+  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetAndClear(
+      gfx::DrawTarget* aDrawTarget, const gfx::IntRect& aDrawTargetRect,
+      const gfx::IntRegion& aClearRegion);
 
   already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
@@ -116,12 +116,11 @@ class BasicCompositor : public Compositor {
 
   void ClearRect(const gfx::Rect& aRect) override;
 
-  void BeginFrame(const nsIntRegion& aInvalidRegion,
-                  const gfx::IntRect* aClipRectIn,
-                  const gfx::IntRect& aRenderBounds,
-                  const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer,
-                  gfx::IntRect* aClipRectOut = nullptr,
-                  gfx::IntRect* aRenderBoundsOut = nullptr) override;
+  Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
+                                 const Maybe<gfx::IntRect>& aClipRect,
+                                 const gfx::IntRect& aRenderBounds,
+                                 const nsIntRegion& aOpaqueRegion,
+                                 NativeLayer* aNativeLayer) override;
   void NormalDrawingDone() override;
   void EndFrame() override;
 
@@ -143,8 +142,6 @@ class BasicCompositor : public Compositor {
   LayersBackend GetBackendType() const override {
     return LayersBackend::LAYERS_BASIC;
   }
-
-  gfx::DrawTarget* GetDrawTarget() { return mDrawTarget; }
 
   bool IsPendingComposite() override { return mIsPendingEndRemoteDrawing; }
 
@@ -168,7 +165,8 @@ class BasicCompositor : public Compositor {
                    const gfx::Matrix4x4& aTransform,
                    const gfx::Rect& aVisibleRect) override;
 
-  void TryToEndRemoteDrawing(bool aForceToEnd = false);
+  void TryToEndRemoteDrawing();
+  void EndRemoteDrawing();
 
   bool NeedsToDeferEndRemoteDrawing();
 
@@ -177,7 +175,7 @@ class BasicCompositor : public Compositor {
    *
    * When this returns true, the BasicCompositor will keep the
    * |mFullWindowRenderTarget| as an up-to-date copy of the entire rendered
-   * window.
+   * window. This copy is maintained in NormalDrawingDone().
    *
    * This will be true when either we are recording a profile with screenshots
    * enabled or the |LayerManagerComposite| has requested us to record frames
@@ -185,10 +183,12 @@ class BasicCompositor : public Compositor {
    */
   bool ShouldRecordFrames() const;
 
-  // The final destination surface
-  RefPtr<gfx::DrawTarget> mDrawTarget;
-  // The bounds that mDrawTarget occupies in window space.
-  gfx::IntRect mDrawTargetBounds;
+  bool NeedToRecreateFullWindowRenderTarget() const;
+
+  // When rendering to a back buffer, this is the front buffer that the contents
+  // of the back buffer need to be copied to. Only non-null between BeginFrame
+  // and EndRemoteDrawing, and only when using a back buffer.
+  RefPtr<gfx::DrawTarget> mFrontBuffer;
 
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
@@ -204,7 +204,6 @@ class BasicCompositor : public Compositor {
   RefPtr<MacIOSurface> mCurrentIOSurface;
 #endif
 
-  gfx::IntRect mInvalidRect;
   gfx::IntRegion mInvalidRegion;
 
   uint32_t mMaxTextureSize;

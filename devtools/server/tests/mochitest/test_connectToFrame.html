@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 966991 - Test DebuggerServer.connectToFrame
+Bug 966991 - Test connectToFrame
 -->
 <head>
   <meta charset="utf-8">
@@ -20,6 +20,9 @@ Bug 966991 - Test DebuggerServer.connectToFrame
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/debugger-server");
+const {
+  connectToFrame,
+} = require("devtools/server/connectors/frame-connector");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -85,7 +88,7 @@ function runTests() {
     const transport = DebuggerServer.connectPipe();
     const conn = transport._serverConnection;
     const client = new DebuggerClient(transport);
-    const actor = await DebuggerServer.connectToFrame(conn, iframe);
+    const actor = await connectToFrame(conn, iframe);
     ok(actor.testActor, "Got the test actor");
 
     // Ensure sending at least one request to our actor,
@@ -129,7 +132,7 @@ function runTests() {
     const transport = DebuggerServer.connectPipe();
     const conn = transport._serverConnection;
     const client = new DebuggerClient(transport);
-    const actor = await DebuggerServer.connectToFrame(conn, iframe);
+    const actor = await connectToFrame(conn, iframe);
     ok(actor.testActor, "Got a test actor for the second connection");
     isnot(actor.testActor, firstActor,
           "We get different actor instances between two connections");

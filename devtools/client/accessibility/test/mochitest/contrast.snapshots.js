@@ -61,7 +61,7 @@ window._snapshots = {
           {
             type: "span",
             props: {
-              className: "accessibility-contrast-value fail",
+              className: "accessibility-contrast-value FAIL",
               role: "presentation",
               style: {
                 "--accessibility-contrast-color": "rgba(255,0,0,1)",
@@ -122,7 +122,7 @@ window._snapshots = {
           {
             type: "span",
             props: {
-              className: "accessibility-contrast-value fail",
+              className: "accessibility-contrast-value FAIL",
               role: "presentation",
               style: {
                 "--accessibility-contrast-color": "rgba(128,128,128,1)",
@@ -142,7 +142,7 @@ window._snapshots = {
           {
             type: "span",
             props: {
-              className: "accessibility-contrast-value fail",
+              className: "accessibility-contrast-value FAIL",
               role: "presentation",
               style: {
                 "--accessibility-contrast-color": "rgba(128,128,128,1)",

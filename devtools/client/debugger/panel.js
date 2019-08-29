@@ -24,8 +24,10 @@ async function getNodeFront(gripOrFront, toolbox) {
   if ("actorID" in gripOrFront) {
     return new Promise(resolve => resolve(gripOrFront));
   }
+  // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
   // Given a grip
-  return toolbox.walker.gripToNodeFront(gripOrFront);
+  const walkerFront = (await toolbox.target.getFront("inspector")).walker;
+  return walkerFront.gripToNodeFront(gripOrFront);
 }
 
 DebuggerPanel.prototype = {
@@ -91,7 +93,6 @@ DebuggerPanel.prototype = {
   },
 
   openElementInInspector: async function(gripOrFront) {
-    await this.toolbox.initInspector();
     const onSelectInspector = this.toolbox.selectTool("inspector");
     const onGripNodeToFront = getNodeFront(gripOrFront, this.toolbox);
 
@@ -109,18 +110,18 @@ DebuggerPanel.prototype = {
   },
 
   highlightDomElement: async function(gripOrFront) {
-    await this.toolbox.initInspector();
-    if (!this.toolbox.highlighter) {
-      return null;
-    }
-    const front = await getNodeFront(gripOrFront, this.toolbox);
-    return this.toolbox.highlighter.highlight(front);
+    const nodeFront = await getNodeFront(gripOrFront, this.toolbox);
+    nodeFront.highlighterFront.highlight(nodeFront);
   },
 
-  unHighlightDomElement: function() {
-    return this.toolbox.highlighter
-      ? this.toolbox.highlighter.unhighlight(false)
-      : null;
+  unHighlightDomElement: async function(gripOrFront) {
+    try {
+      const nodeFront = await getNodeFront(gripOrFront, this.toolbox);
+      nodeFront.highlighterFront.unhighlight();
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished
+      // closing.
+    }
   },
 
   getFrames: function() {

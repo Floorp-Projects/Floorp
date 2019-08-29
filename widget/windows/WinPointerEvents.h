@@ -162,7 +162,6 @@ class WinPointerEvents final {
 
   static HMODULE sLibraryHandle;
   static const wchar_t kPointerLibraryName[];
-  static bool sFirePointerEventsByWinPointerMessages;
   // Static function pointers
   static GetPointerTypePtr getPointerType;
   static GetPointerInfoPtr getPointerInfo;

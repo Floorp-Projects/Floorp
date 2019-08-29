@@ -1,7 +1,5 @@
 "use strict";
 
-PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
-
 const HOSTS = new Set(["example.com", "example.org"]);
 
 const server = createHttpServer({ hosts: HOSTS });

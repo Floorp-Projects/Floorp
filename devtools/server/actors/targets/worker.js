@@ -19,6 +19,13 @@ const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
 
+loader.lazyRequireGetter(
+  this,
+  "connectToWorker",
+  "devtools/server/connectors/worker-connector",
+  true
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "swm",
@@ -117,12 +124,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
       };
     }
 
-    return DebuggerServer.connectToWorker(
-      this.conn,
-      this._dbg,
-      this.actorID,
-      options
-    ).then(
+    return connectToWorker(this.conn, this._dbg, this.actorID, options).then(
       ({ threadActor, transport, consoleActor }) => {
         this._threadActor = threadActor;
         this._transport = transport;
