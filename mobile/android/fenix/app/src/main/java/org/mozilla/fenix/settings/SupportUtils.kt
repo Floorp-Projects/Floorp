@@ -34,7 +34,8 @@ object SupportUtils {
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
-        val appVersion = getAppVersion(context)
+        // Remove the whitespace so a search is not triggered:
+        val appVersion = getAppVersion(context).replace(" ", "")
         val osTarget = "Android"
         val langTag = getLanguageTag(Locale.getDefault())
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
