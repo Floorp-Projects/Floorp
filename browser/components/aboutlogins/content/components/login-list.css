@@ -45,13 +45,18 @@
   display: contents;
 }
 
+:host(.no-logins) .empty-search-message,
+:host(:not(.empty-search)) .empty-search-message,
+:host(.empty-search:not(.create-login-selected)) ol,
 :host(.no-logins:not(.create-login-selected)) ol,
 :host(:not(.no-logins)) .intro,
 :host(.create-login-selected) .intro,
+:host(.create-login-selected) .empty-search-message,
 :host(:not(.create-login-selected)) #new-login-list-item {
   display: none;
 }
 
+.empty-search-message,
 .intro {
   text-align: center;
   padding: 1em;
@@ -60,6 +65,7 @@
   border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
+.empty-search-message span,
 .intro span {
   font-size: 0.85em;
 }
