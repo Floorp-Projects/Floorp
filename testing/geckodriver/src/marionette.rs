@@ -482,7 +482,7 @@ impl MarionetteSession {
             | ExecuteAsyncScript(_)
             | GetAlertText
             | TakeScreenshot
-            | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
+            | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
             GetTimeouts => {
                 let script = match try_opt!(
                     resp.result.get("script"),
@@ -526,7 +526,7 @@ impl MarionetteSession {
                 })
             }
             Status => panic!("Got status command that should already have been handled"),
-            GetWindowHandles => WebDriverResponse::Generic(resp.to_value_response(false)?),
+            GetWindowHandles => WebDriverResponse::Generic(resp.into_value_response(false)?),
             NewWindow(_) => {
                 let handle: String = try_opt!(
                     try_opt!(
@@ -761,7 +761,7 @@ impl MarionetteSession {
             }
             DeleteSession => WebDriverResponse::DeleteSession,
             Extension(ref extension) => match extension {
-                GetContext => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                GetContext => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 SetContext(_) => WebDriverResponse::Void,
                 XblAnonymousChildren(_) => {
                     let els_vec = try_opt!(
@@ -784,9 +784,9 @@ impl MarionetteSession {
                     ))?;
                     WebDriverResponse::Generic(ValueResponse(serde_json::to_value(el)?))
                 }
-                InstallAddon(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                InstallAddon(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 UninstallAddon(_) => WebDriverResponse::Void,
-                TakeFullScreenshot => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                TakeFullScreenshot => WebDriverResponse::Generic(resp.into_value_response(true)?),
             },
         })
     }
@@ -1112,7 +1112,7 @@ impl<'de> Deserialize<'de> for MarionetteResponse {
 }
 
 impl MarionetteResponse {
-    fn to_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
+    fn into_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
         let value: &Value = if value_required {
             try_opt!(
                 self.result.get("value"),
