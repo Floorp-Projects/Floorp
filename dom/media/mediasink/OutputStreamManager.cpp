@@ -7,7 +7,7 @@
 #include "OutputStreamManager.h"
 
 #include "DOMMediaStream.h"
-#include "../MediaStreamGraphImpl.h"
+#include "../MediaStreamGraph.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -157,16 +157,17 @@ void OutputStreamData::SetPrincipal(nsIPrincipal* aPrincipal) {
   }
 }
 
-OutputStreamManager::OutputStreamManager(MediaStreamGraphImpl* aGraph,
+OutputStreamManager::OutputStreamManager(MediaStreamGraph* aGraph,
                                          nsIPrincipal* aPrincipal,
                                          AbstractThread* aAbstractMainThread)
     : mAbstractMainThread(aAbstractMainThread),
-      mGraph(aGraph),
+      mDummyStream(aGraph->CreateSourceStream()),
       mPrincipalHandle(
           aAbstractMainThread,
           aPrincipal ? MakePrincipalHandle(aPrincipal) : PRINCIPAL_HANDLE_NONE,
           "OutputStreamManager::mPrincipalHandle (Canonical)") {
   MOZ_ASSERT(NS_IsMainThread());
+  mDummyStream->Suspend();
 }
 
 void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
@@ -248,7 +249,8 @@ already_AddRefed<SourceMediaStream> OutputStreamManager::AddTrack(
   MOZ_ASSERT(!HasTrackType(aType),
              "Cannot have two tracks of the same type at the same time");
 
-  RefPtr<SourceMediaStream> stream = mGraph->CreateSourceStream();
+  RefPtr<SourceMediaStream> stream =
+      mDummyStream->Graph()->CreateSourceStream();
   if (!mPlaying) {
     stream->Suspend();
   }
@@ -346,7 +348,7 @@ void OutputStreamManager::SetPlaying(bool aPlaying) {
   }
 }
 
-OutputStreamManager::~OutputStreamManager() = default;
+OutputStreamManager::~OutputStreamManager() { mDummyStream->Destroy(); }
 
 #undef LOG
 

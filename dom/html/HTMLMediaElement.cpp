@@ -3304,13 +3304,14 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   MarkAsTainted();
 
   // We don't support routing to a different graph.
-  if (!mOutputStreams.IsEmpty() && aGraph != mOutputStreams[0].mGraph) {
+  if (!mOutputStreams.IsEmpty() &&
+      aGraph !=
+          mOutputStreams[0].mGraphKeepAliveDummyStream->mStream->Graph()) {
     return nullptr;
   }
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  out->mGraph = static_cast<MediaStreamGraphImpl*>(aGraph);
   out->mGraphKeepAliveDummyStream =
       mOutputStreams.Length() == 1
           ? MakeRefPtr<SharedDummyStream>(aGraph->CreateSourceStream())
@@ -3338,7 +3339,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
 
   if (mDecoder) {
     out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(out->mStream, out->mGraph);
+    mDecoder->AddOutputStream(
+        out->mStream, out->mGraphKeepAliveDummyStream->mStream->Graph());
   } else if (mSrcStream) {
     out->mCapturingMediaStream = true;
   }
@@ -4663,7 +4665,8 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
     }
 
     ms.mCapturingDecoder = true;
-    aDecoder->AddOutputStream(ms.mStream, ms.mGraph);
+    aDecoder->AddOutputStream(ms.mStream,
+                              ms.mGraphKeepAliveDummyStream->mStream->Graph());
   }
 
   if (mMediaKeys) {

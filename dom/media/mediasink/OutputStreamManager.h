@@ -59,7 +59,7 @@ class OutputStreamManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamManager);
 
  public:
-  OutputStreamManager(MediaStreamGraphImpl* aGraph, nsIPrincipal* aPrincipal,
+  OutputStreamManager(MediaStreamGraph* aGraph, nsIPrincipal* aPrincipal,
                       AbstractThread* aAbstractMainThread);
   // Add the output stream to the collection.
   void Add(DOMMediaStream* aDOMStream);
@@ -153,7 +153,7 @@ class OutputStreamManager {
   // Remove tracks sourced from aStream from all output streams.
   void RemoveTrack(SourceMediaStream* aStream);
 
-  const RefPtr<MediaStreamGraphImpl> mGraph;
+  const RefPtr<SourceMediaStream> mDummyStream;
   nsTArray<UniquePtr<OutputStreamData>> mStreams;
   nsTArray<UniquePtr<LiveTrack>> mLiveTracks;
   Canonical<PrincipalHandle> mPrincipalHandle;
