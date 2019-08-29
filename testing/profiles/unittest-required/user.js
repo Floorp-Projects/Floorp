@@ -86,7 +86,7 @@ user_pref("devtools.debugger.remote-port", 6023);
 user_pref("devtools.testing", true);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
-user_pref("dom.ipc.reportProcessHangs", false); // process hang monitor
+user_pref("dom.ipc.reportProcessHangs", true); // process hang monitor
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 user_pref("dom.min_background_timeout_value", 1000);

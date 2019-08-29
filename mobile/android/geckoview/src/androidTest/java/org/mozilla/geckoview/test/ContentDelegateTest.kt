@@ -36,13 +36,15 @@ import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.EditText
 import org.hamcrest.Matchers.*
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.GeckoAppShell
+import org.mozilla.geckoview.SlowScriptResponse
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -874,5 +876,149 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
             }
         })
+    }
+
+
+    /**
+     * Preferences to induce wanted behaviour.
+     */
+    private fun setHangReportTestPrefs(timeout: Int = 20000) {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "dom.max_script_run_time" to 1,
+                "dom.max_chrome_script_run_time" to 1,
+                "dom.max_ext_content_script_run_time" to 1,
+                "dom.ipc.cpow.timeout" to 100,
+                "browser.hangNotification.waitPeriod" to timeout
+        ))
+    }
+
+    /**
+     * With no delegate set, the default behaviour is to stop hung scripts.
+     */
+    @NullDelegate(GeckoSession.ContentDelegate::class)
+    @Test fun stopHungProcessDefault() {
+        setHangReportTestPrefs()
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The script did not complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Started"))
+            }
+        })
+        sessionRule.waitForPageStop(mainSession)
+    }
+
+    /**
+     * With no overriding implementation for onSlowScript, the default behaviour is to stop hung
+     * scripts.
+     */
+    @Test fun stopHungProcessNull() {
+        setHangReportTestPrefs()
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
+            // default onSlowScript returns null
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The script did not complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Started"))
+            }
+        })
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.waitForPageStop(mainSession)
+    }
+
+    /**
+     * Test that, with a 'do nothing' delegate, the hung process completes after its delay
+     */
+    @Test fun stopHungProcessDoNothing() {
+        setHangReportTestPrefs()
+        var scriptHungReportCount = 0
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
+            @AssertCalled()
+            override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
+                scriptHungReportCount += 1;
+                return GeckoResult.fromValue(null)
+            }
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The delegate was informed of the hang repeatedly", scriptHungReportCount, greaterThan(1))
+                assertThat("The script did complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Finished"))
+            }
+        })
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.waitForPageStop(mainSession)
+    }
+
+    /**
+     * Test that the delegate is called and can stop a hung script
+     */
+    @Test fun stopHungProcess() {
+        setHangReportTestPrefs()
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
+                return GeckoResult.fromValue(SlowScriptResponse.STOP)
+            }
+            @AssertCalled(count = 1, order = [2])
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The script did not complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Started"))
+            }
+        })
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.waitForPageStop(mainSession)
+    }
+
+    /**
+     * Test that the delegate is called and can continue executing hung scripts
+     */
+    @Test fun stopHungProcessWait() {
+        setHangReportTestPrefs()
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
+                return GeckoResult.fromValue(SlowScriptResponse.CONTINUE)
+            }
+            @AssertCalled(count = 1, order = [2])
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The script did complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Finished"))
+            }
+        })
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.waitForPageStop(mainSession)
+    }
+
+    /**
+     * Test that the delegate is called and paused scripts re-notify after the wait period
+     */
+    @Test fun stopHungProcessWaitThenStop() {
+        setHangReportTestPrefs(500)
+        var scriptWaited = false
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ContentDelegate, Callbacks.ProgressDelegate {
+            @AssertCalled(count = 2, order = [1, 2])
+            override fun onSlowScript(geckoSession: GeckoSession, scriptFileName: String): GeckoResult<SlowScriptResponse> {
+                return if (!scriptWaited) {
+                    scriptWaited = true;
+                    GeckoResult.fromValue(SlowScriptResponse.CONTINUE)
+                } else {
+                    GeckoResult.fromValue(SlowScriptResponse.STOP)
+                }
+            }
+            @AssertCalled(count = 1, order = [3])
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("The script did not complete.",
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        equalTo("Started"))
+            }
+        })
+        mainSession.loadTestPath(HUNG_SCRIPT)
+        sessionRule.waitForPageStop(mainSession)
     }
 }
