@@ -16,7 +16,19 @@ loader.lazyRequireGetter(
   "devtools/server/actors/accessibility/walker",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "SimulatorActor",
+  "devtools/server/actors/accessibility/simulator",
+  true
+);
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "isWebRenderEnabled",
+  "devtools/server/actors/utils/accessibility",
+  true
+);
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
@@ -260,6 +272,29 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       this.walker = new AccessibleWalkerActor(this.conn, this.targetActor);
     }
     return this.walker;
+  },
+
+  /**
+   * Get or create Simulator actor, managed by AccessibilityActor,
+   * only if webrender is enabled. Simulator applies color filters on an entire viewport.
+   * This needs to be done using webrender and not an SVG <feColorMatrix> since it is
+   * accelerated and scrolling with filter applied needs to be smooth (Bug1431466).
+   *
+   * @return {Object|null}
+   *         SimulatorActor for the current tab.
+   */
+  getSimulator() {
+    // TODO: Remove this check after Bug1570667
+    if (!isWebRenderEnabled(this.targetActor.window)) {
+      return null;
+    }
+
+    if (!this.simulator) {
+      this.simulator = new SimulatorActor(this.conn, this.targetActor);
+      this.manage(this.simulator);
+    }
+
+    return this.simulator;
   },
 
   /**
