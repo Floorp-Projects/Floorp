@@ -474,6 +474,7 @@
   value: true
   mirror: always
 
+# Fetch displayport updates early from the message queue.
 - name: apz.pinch_lock.mode
   type: RelaxedAtomicInt32
   value: 1
@@ -600,7 +601,7 @@
 
 - name: apz.relative-update.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------

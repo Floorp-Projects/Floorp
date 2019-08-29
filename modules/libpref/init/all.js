@@ -708,19 +708,8 @@ pref("apz.max_tap_time", 300);
 pref("apz.max_velocity_inches_per_ms", "-1.0");
 pref("apz.min_skate_speed", "1.0");
 pref("apz.minimap.enabled", false);
-pref("apz.one_touch_pinch.enabled", true);
-pref("apz.overscroll.enabled", false);
-pref("apz.overscroll.min_pan_distance_ratio", "1.0");
-pref("apz.overscroll.stop_distance_threshold", "5.0");
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 pref("apz.overscroll.stretch_factor", "0.35");
-pref("apz.paint_skipping.enabled", true);
-// Fetch displayport updates early from the message queue
-pref("apz.peek_messages.enabled", true);
-pref("apz.pinch_lock.mode", 1);
-pref("apz.pinch_lock.span_breakout_threshold", "0.03125");  // 1/32 inches
-pref("apz.pinch_lock.span_lock_threshold", "0.03125");  // 1/32 inches
-pref("apz.relative-update.enabled", true);
 
 #ifdef XP_MACOSX
   // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI
