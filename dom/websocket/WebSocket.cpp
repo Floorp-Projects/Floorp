@@ -2701,8 +2701,14 @@ nsresult WebSocketImpl::GetLoadingPrincipal(nsIPrincipal** aPrincipal) {
 
     // We are at the top. Let's see if we have an opener window.
     if (innerWindow == currentInnerWindow) {
-      parentWindow = nsGlobalWindowOuter::Cast(innerWindow->GetOuterWindow())
-                         ->GetSameProcessOpener();
+      ErrorResult error;
+      parentWindow =
+          nsGlobalWindowInner::Cast(innerWindow)->GetOpenerWindow(error);
+      if (NS_WARN_IF(error.Failed())) {
+        error.SuppressException();
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+
       if (!parentWindow) {
         break;
       }
