@@ -22,7 +22,6 @@
 }
 
 .frames [role="list"] [role="listitem"] * {
-  -moz-user-select: none;
   user-select: none;
 }
 
