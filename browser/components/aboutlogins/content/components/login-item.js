@@ -143,7 +143,7 @@ export default class LoginItem extends HTMLElement {
         ? "login-item-save-new-button"
         : "login-item-save-changes-button"
     );
-    await this._updatePasswordRevealState();
+    this._updatePasswordRevealState();
   }
 
   updateBreaches(breachesByLoginGUID) {
@@ -198,7 +198,16 @@ export default class LoginItem extends HTMLElement {
       case "click": {
         let classList = event.currentTarget.classList;
         if (classList.contains("reveal-password-checkbox")) {
-          await this._updatePasswordRevealState();
+          if (this._revealCheckbox.checked) {
+            let masterPasswordAuth = await new Promise(resolve => {
+              window.AboutLoginsUtils.promptForMasterPassword(resolve);
+            });
+            if (!masterPasswordAuth) {
+              this._revealCheckbox.checked = false;
+              return;
+            }
+          }
+          this._updatePasswordRevealState();
 
           let method = this._revealCheckbox.checked ? "show" : "hide";
           recordTelemetryEvent({ object: "password", method });
@@ -461,7 +470,7 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this._login = login;
+    this.setLogin(login);
     this.dispatchEvent(
       new CustomEvent("AboutLoginsLoginSelected", {
         bubbles: true,
@@ -483,9 +492,8 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this._login = login;
+    this.setLogin(login);
     this._toggleEditing(false);
-    this.render();
   }
 
   /**
@@ -586,20 +594,12 @@ export default class LoginItem extends HTMLElement {
       this._originInput.focus();
     } else {
       delete this.dataset.editing;
+      // Only reset the reveal checkbox when exiting 'edit' mode
+      this._revealCheckbox.checked = false;
     }
   }
 
-  async _updatePasswordRevealState() {
-    if (this._revealCheckbox.checked) {
-      let masterPasswordAuth = await new Promise(resolve => {
-        window.AboutLoginsUtils.promptForMasterPassword(resolve);
-      });
-      if (!masterPasswordAuth) {
-        this._revealCheckbox.checked = false;
-        return;
-      }
-    }
-
+  _updatePasswordRevealState() {
     let titleId = this._revealCheckbox.checked
       ? "login-item-password-reveal-checkbox-hide"
       : "login-item-password-reveal-checkbox-show";
