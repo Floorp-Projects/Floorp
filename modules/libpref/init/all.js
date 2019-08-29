@@ -686,7 +686,6 @@ pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
 pref("apz.disable_for_scroll_linked_effects", false);
 pref("apz.displayport_expiry_ms", 15000);
-pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fixed-margin-override.enabled", false);  // test only
 pref("apz.fixed-margin-override.bottom", 0);       // test only
 pref("apz.fixed-margin-override.top", 0);          // test only
@@ -739,22 +738,6 @@ pref("apz.touch_start_tolerance", "0.1");
 pref("apz.touch_move_tolerance", "0.1");
 pref("apz.velocity_bias", "0.0");
 pref("apz.velocity_relevance_time_ms", 150);
-pref("apz.x_skate_highmem_adjust", "0.0");
-pref("apz.y_skate_highmem_adjust", "0.0");
-pref("apz.x_skate_size_multiplier", "1.25");
-pref("apz.y_skate_size_multiplier", "3.5");
-pref("apz.x_stationary_size_multiplier", "1.5");
-pref("apz.y_stationary_size_multiplier", "3.5");
-pref("apz.zoom_animation_duration_ms", 250);
-pref("apz.scale_repaint_delay_ms", 500);
-
-#if defined(MOZ_WIDGET_ANDROID)
-  // Mobile prefs
-  pref("apz.allow_zooming", true);
-  pref("apz.enlarge_displayport_when_clipped", true);
-  pref("apz.y_skate_size_multiplier", "1.5");
-  pref("apz.y_stationary_size_multiplier", "1.5");
-#endif
 
 #ifdef XP_MACOSX
   // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI
