@@ -28,6 +28,7 @@ gElements.loginFilter.focus();
 function updateNoLogins() {
   document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
   gElements.loginList.classList.toggle("no-logins", numberOfLogins == 0);
+  gElements.loginItem.classList.toggle("no-logins", numberOfLogins == 0);
 }
 
 window.addEventListener("AboutLoginsChromeToContent", event => {
