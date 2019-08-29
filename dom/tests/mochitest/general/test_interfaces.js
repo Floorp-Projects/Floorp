@@ -918,13 +918,14 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PublicKeyCredential" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushManager", insecureContext: true },
+  { name: "PushManager", insecureContext: true, fennecOrDesktop: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PushSubscription", insecureContext: true },
+  { name: "PushSubscription", insecureContext: true, fennecOrDesktop: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "PushSubscriptionOptions",
     insecureContext: true,
+    fennecOrDesktop: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RadioNodeList", insecureContext: true },
