@@ -209,7 +209,7 @@ impl MarionetteHandler {
 
         for &(ref name, ref value) in prefs::DEFAULT.iter() {
             if !custom_profile || !prefs.contains_key(name) {
-                prefs.insert((*name).clone(), (*value).clone());
+                prefs.insert((*name).to_string(), (*value).clone());
             }
         }
 
@@ -1187,7 +1187,7 @@ impl MarionetteConnection {
         );
         loop {
             // immediately abort connection attempts if process disappears
-            if let &mut Some(ref mut runner) = browser {
+            if let Some(ref mut runner) = *browser {
                 let exit_status = match runner.try_wait() {
                     Ok(Some(status)) => Some(
                         status
