@@ -187,9 +187,6 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:SendFavicons":
         this.sendToContent("SendFavicons", message.data);
         break;
-      case "AboutLogins:ShowLoginItemError":
-        this.sendToContent("ShowLoginItemError", message.data);
-        break;
       case "AboutLogins:SyncState":
         this.sendToContent("SyncState", message.data);
         break;
