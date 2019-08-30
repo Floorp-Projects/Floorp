@@ -39,10 +39,11 @@ class TrustedWebActivityIntentProcessor(
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase,
     httpClient: Client,
     packageManager: PackageManager,
+    apiKey: String?,
     private val store: CustomTabsServiceStore
 ) : IntentProcessor {
 
-    private val verifier = OriginVerifierFeature(httpClient, packageManager) { store.dispatch(it) }
+    private val verifier = OriginVerifierFeature(httpClient, packageManager, apiKey) { store.dispatch(it) }
     private val scope = MainScope()
 
     override fun matches(intent: Intent): Boolean {

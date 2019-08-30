@@ -21,13 +21,14 @@ import org.mockito.Mockito.doReturn
 @ExperimentalCoroutinesApi
 class DigitalAssetLinksHandlerTest {
 
+    private val apiKey = "XXXXXXXXXXX"
     private lateinit var client: Client
-    private lateinit var handler: mozilla.components.feature.customtabs.verify.DigitalAssetLinksHandler
+    private lateinit var handler: DigitalAssetLinksHandler
 
     @Before
     fun setup() {
         client = mock()
-        handler = mozilla.components.feature.customtabs.verify.DigitalAssetLinksHandler(client)
+        handler = DigitalAssetLinksHandler(client, apiKey)
     }
 
     @Test

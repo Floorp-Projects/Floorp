@@ -38,12 +38,13 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     abstract val engine: Engine
     open val customTabsServiceStore: CustomTabsServiceStore? = null
     open val httpClient: Client? = null
+    open val apiKey: String? = null
 
     private val verifier by lazy {
         val client = httpClient
         val store = customTabsServiceStore
         if (client != null && store != null) {
-            OriginVerifierFeature(client, packageManager) { store.dispatch(it) }
+            OriginVerifierFeature(client, packageManager, apiKey) { store.dispatch(it) }
         } else {
             null
         }

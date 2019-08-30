@@ -32,9 +32,11 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class TrustedWebActivityIntentProcessorTest {
 
+    private val apiKey = "XXXXXXXXX"
+
     @Test
     fun `matches checks if intent is a trusted web activity intent`() {
-        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), mock())
+        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), apiKey, mock())
 
         assertFalse(processor.matches(Intent(ACTION_VIEW_PWA)))
         assertFalse(processor.matches(Intent(ACTION_VIEW)))
@@ -57,7 +59,7 @@ class TrustedWebActivityIntentProcessorTest {
 
     @Test
     fun `process checks if intent action is not valid`() = runBlockingTest {
-        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), mock())
+        val processor = TrustedWebActivityIntentProcessor(mock(), mock(), mock(), mock(), apiKey, mock())
 
         assertFalse(processor.process(Intent(ACTION_VIEW_PWA)))
         assertFalse(processor.process(Intent(ACTION_VIEW)))
@@ -94,7 +96,7 @@ class TrustedWebActivityIntentProcessorTest {
         val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase = mock()
         val store: CustomTabsServiceStore = mock()
 
-        val processor = spy(TrustedWebActivityIntentProcessor(mock(), loadUrlUseCase, mock(), mock(), store))
+        val processor = spy(TrustedWebActivityIntentProcessor(mock(), loadUrlUseCase, mock(), mock(), apiKey, store))
 
         assertTrue(processor.process(intent))
 
