@@ -28,18 +28,24 @@ var fileURI = chromeReg.convertChromeURL(chromeURI);
 fileURI.QueryInterface(Ci.nsIFileURL);
 var self = fileURI.file;
 
-// Check if the non-ascii-named icon is still hanging around from a previous test
-var dest = self.parent;
-dest.append("\u263a.ico");
-if (dest.exists()) {
-  dest.remove(false);
+// Check if the ref or test icon are still hanging around from a previous test
+var testDest = self.parent;
+var refDest = self.parent;
+testDest.append("\u263a.ico");
+refDest.append("bug415761-ref.ico");
+if (testDest.exists()) {
+  testDest.remove(false);
+}
+if (refDest.exists()) {
+  refDest.remove(false);
 }
 
-// Copy the source icon so that we have an identical icon with non-ascii characters
-// in its name
+// Copy the source icon so that we have two identical icons with, one with
+// non-ascii characters in its name.
 var src = self.parent;
 src.append("bug415761.ico");
-src.copyTo(null, dest.leafName);
+src.copyTo(null, testDest.leafName);
+src.copyTo(null, refDest.leafName);
 
 // Now load both icons in an Image() with a moz-icon URI
 var testImage = new Image();
@@ -74,19 +80,22 @@ function finishTest() {
   testCanvas.getContext('2d').drawImage(testImage, 0, 0, 32, 32);
 
   // Assert that they should be the same.
-  assertSnapshots(refCanvas, testCanvas, true, 0, "icon", "reference icon");
+  assertSnapshots(testCanvas, refCanvas, true, 0, "icon", "reference icon");
   SimpleTest.finish();
 };
 
-var testURI = io.newFileURI(dest).spec;
-var refURI = io.newFileURI(src).spec;
+var testURI = io.newFileURI(testDest).spec;
+var refURI = io.newFileURI(refDest).spec;
 testImage.src = "moz-icon:" + testURI;
 refImage.src = "moz-icon:" + refURI;
 
 SimpleTest.registerCleanupFunction(function() {
-  // Remove the copied file if it exists.
-  if (dest.exists()) {
-    dest.remove(false);
+  // Remove the copied files if they exist.
+  if (testDest.exists()) {
+    testDest.remove(false);
+  }
+  if (refDest.exists()) {
+    refDest.remove(false);
   }
 });
 
