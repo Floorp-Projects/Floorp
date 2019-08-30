@@ -754,12 +754,16 @@ body {
   margin-inline-end: 4px;
 }
 
-.accessibility-check .icon.FAIL {
+.accessibility-check .icon[data-score="FAIL"] {
   fill: var(--theme-icon-error-color);
 }
 
-.accessibility-check .icon.WARNING {
+.accessibility-check .icon[data-score="WARNING"] {
   fill: var(--theme-icon-warning-color);
+}
+
+.accessibility-check .icon[data-score="BEST_PRACTICES"] {
+  fill: currentColor;
 }
 
 .accessibility-check,
