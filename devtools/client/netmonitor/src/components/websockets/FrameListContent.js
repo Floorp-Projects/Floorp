@@ -51,7 +51,6 @@ class FrameListContent extends Component {
       selectFrame: PropTypes.func.isRequired,
       columns: PropTypes.object.isRequired,
       channelId: PropTypes.number,
-      onSelectFrameDelta: PropTypes.func.isRequired,
     };
   }
 
@@ -59,7 +58,6 @@ class FrameListContent extends Component {
     super(props);
 
     this.onContextMenu = this.onContextMenu.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
     this.framesLimit = Services.prefs.getIntPref(
       "devtools.netmonitor.ws.displayed-frames.limit"
     );
@@ -85,7 +83,7 @@ class FrameListContent extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { startPanelContainer, channelId, frames } = this.props;
+    const { startPanelContainer, channelId } = this.props;
     const scrollAnchor = this.refs.scrollAnchor;
 
     // When frames are cleared, the previous scrollAnchor would be destroyed, so we need to reset this boolean.
@@ -98,37 +96,7 @@ class FrameListContent extends Component {
       scrollAnchor.scrollIntoView();
     }
 
-    // Do not autoscroll if the selection changed. This would cause
-    // the newly selected frame to jump just after clicking in.
-    // (not user friendly)
-    //
-    // If the selection changed, we need to ensure that the newly
-    // selected frame is properly scrolled into the visible area.
-    if (prevProps.selectedFrame === this.props.selectedFrame) {
-      this.setupScrollToBottom(startPanelContainer, scrollAnchor);
-    } else {
-      const head = document.querySelector("thead.ws-frames-list-headers-group");
-      const selectedRow = document.querySelector(
-        "tr.ws-frame-list-item.selected"
-      );
-
-      if (selectedRow) {
-        const rowRect = selectedRow.getBoundingClientRect();
-        const scrollableRect = startPanelContainer.getBoundingClientRect();
-        const headRect = head.getBoundingClientRect();
-
-        if (rowRect.top <= scrollableRect.top) {
-          selectedRow.scrollIntoView(true);
-
-          // We need to scroll a bit more to get the row out
-          // of the header. The header is sticky and overlaps
-          // part of the scrollable area.
-          startPanelContainer.scrollTop -= headRect.height;
-        } else if (rowRect.bottom > scrollableRect.bottom) {
-          selectedRow.scrollIntoView(false);
-        }
-      }
-    }
+    this.setupScrollToBottom(startPanelContainer, scrollAnchor);
   }
 
   componentWillUnmount() {
@@ -191,43 +159,6 @@ class FrameListContent extends Component {
     this.contextMenu.open(evt, item);
   }
 
-  /**
-   * Handler for keyboard events. For arrow up/down, page up/down, home/end,
-   * move the selection up or down.
-   */
-  onKeyDown(evt) {
-    evt.preventDefault();
-    evt.stopPropagation();
-    let delta;
-
-    switch (evt.key) {
-      case "ArrowUp":
-      case "ArrowLeft":
-        delta = -1;
-        break;
-      case "ArrowDown":
-      case "ArrowRight":
-        delta = +1;
-        break;
-      case "PageUp":
-        delta = "PAGE_UP";
-        break;
-      case "PageDown":
-        delta = "PAGE_DOWN";
-        break;
-      case "Home":
-        delta = -Infinity;
-        break;
-      case "End":
-        delta = +Infinity;
-        break;
-    }
-
-    if (delta) {
-      this.props.onSelectFrameDelta(delta);
-    }
-  }
-
   render() {
     const { frames, selectedFrame, connector, columns } = this.props;
 
@@ -269,7 +200,6 @@ class FrameListContent extends Component {
         tbody(
           {
             className: "ws-frames-list-body",
-            onKeyDown: this.onKeyDown,
           },
           tr(
             {
@@ -347,6 +277,5 @@ module.exports = connect(
   }),
   dispatch => ({
     selectFrame: item => dispatch(Actions.selectFrame(item)),
-    onSelectFrameDelta: delta => dispatch(Actions.selectFrameDelta(delta)),
   })
 )(FrameListContent);
