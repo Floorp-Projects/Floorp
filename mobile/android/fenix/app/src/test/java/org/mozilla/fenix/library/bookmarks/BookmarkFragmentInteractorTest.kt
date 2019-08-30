@@ -24,7 +24,7 @@ class BookmarkFragmentInteractorTest {
 
     private lateinit var interactor: BookmarkFragmentInteractor
 
-    private val bookmarkStore = spyk(BookmarkStore(BookmarkState(null)))
+    private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
     private val sharedViewModel: BookmarksSharedViewModel = mockk(relaxed = true)
     private val bookmarkController: DefaultBookmarkController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -57,7 +57,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onBookmarksChanged(tree)
 
         verify {
-            bookmarkStore.dispatch(BookmarkAction.Change(tree))
+            bookmarkStore.dispatch(BookmarkFragmentAction.Change(tree))
         }
     }
 
@@ -87,7 +87,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `switch between bookmark selection modes`() {
-        interactor.onSelectionModeSwitch(BookmarkState.Mode.Normal)
+        interactor.onSelectionModeSwitch(BookmarkFragmentState.Mode.Normal)
 
         verify {
             bookmarkController.handleSelectionModeSwitch()
@@ -108,7 +108,7 @@ class BookmarkFragmentInteractorTest {
         interactor.select(item)
 
         verify {
-            bookmarkStore.dispatch(BookmarkAction.Select(item))
+            bookmarkStore.dispatch(BookmarkFragmentAction.Select(item))
         }
     }
 
@@ -117,7 +117,7 @@ class BookmarkFragmentInteractorTest {
         interactor.deselect(item)
 
         verify {
-            bookmarkStore.dispatch(BookmarkAction.Deselect(item))
+            bookmarkStore.dispatch(BookmarkFragmentAction.Deselect(item))
         }
     }
 
@@ -126,7 +126,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onAllBookmarksDeselected()
 
         verify {
-            bookmarkStore.dispatch(BookmarkAction.DeselectAll)
+            bookmarkStore.dispatch(BookmarkFragmentAction.DeselectAll)
         }
     }
 

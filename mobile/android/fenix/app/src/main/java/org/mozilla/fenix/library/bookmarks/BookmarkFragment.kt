@@ -54,7 +54,7 @@ import org.mozilla.fenix.utils.allowUndo
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, AccountObserver {
 
-    private lateinit var bookmarkStore: BookmarkStore
+    private lateinit var bookmarkStore: BookmarkFragmentStore
     private lateinit var bookmarkView: BookmarkView
     private lateinit var signInView: SignInView
     private lateinit var bookmarkInteractor: BookmarkFragmentInteractor
@@ -86,7 +86,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
 
         bookmarkStore = StoreProvider.get(this) {
-            BookmarkStore(BookmarkState(null))
+            BookmarkFragmentStore(BookmarkFragmentState(null))
         }
         bookmarkInteractor = BookmarkFragmentInteractor(
             bookmarkStore = bookmarkStore,
@@ -167,10 +167,10 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         when (val mode = bookmarkStore.state.mode) {
-            BookmarkState.Mode.Normal -> {
+            BookmarkFragmentState.Mode.Normal -> {
                 inflater.inflate(R.menu.bookmarks_menu, menu)
             }
-            is BookmarkState.Mode.Selecting -> {
+            is BookmarkFragmentState.Mode.Selecting -> {
                 if (mode.selectedItems.any { it.type != BookmarkNodeType.ITEM }) {
                     inflater.inflate(R.menu.bookmarks_select_multi_not_item, menu)
                 } else {

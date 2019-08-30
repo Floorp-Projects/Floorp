@@ -34,7 +34,7 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      * @param mode the multi-select mode to switch to
      */
-    fun onSelectionModeSwitch(mode: BookmarkState.Mode)
+    fun onSelectionModeSwitch(mode: BookmarkFragmentState.Mode)
 
     /**
      * Opens up an interface to edit a bookmark node.
@@ -99,7 +99,7 @@ class BookmarkView(
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_bookmark, container, true)
 
-    private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
+    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal
     private var tree: BookmarkNode? = null
     private var canGoBack = false
 
@@ -112,7 +112,7 @@ class BookmarkView(
         }
     }
 
-    fun update(state: BookmarkState) {
+    fun update(state: BookmarkFragmentState) {
         canGoBack = BookmarkRoot.Root.matches(state.tree)
         tree = state.tree
         if (state.mode != mode) {
@@ -122,16 +122,16 @@ class BookmarkView(
 
         bookmarkAdapter.updateData(state.tree, mode)
         when (mode) {
-            is BookmarkState.Mode.Normal ->
+            is BookmarkFragmentState.Mode.Normal ->
                 setUiForNormalMode(state.tree)
-            is BookmarkState.Mode.Selecting ->
+            is BookmarkFragmentState.Mode.Selecting ->
                 setUiForSelectingMode(context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size))
         }
     }
 
     override fun onBackPressed(): Boolean {
         return when {
-            mode is BookmarkState.Mode.Selecting -> {
+            mode is BookmarkFragmentState.Mode.Selecting -> {
                 interactor.onAllBookmarksDeselected()
                 true
             }

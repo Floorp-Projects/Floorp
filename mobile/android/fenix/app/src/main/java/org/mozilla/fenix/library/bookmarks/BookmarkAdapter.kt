@@ -25,11 +25,11 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     RecyclerView.Adapter<BookmarkNodeViewHolder>(), SelectionHolder<BookmarkNode> {
 
     private var tree: List<BookmarkNode> = listOf()
-    private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
+    private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal
     override val selectedItems: Set<BookmarkNode> get() = mode.selectedItems
     private var isFirstRun = true
 
-    fun updateData(tree: BookmarkNode?, mode: BookmarkState.Mode) {
+    fun updateData(tree: BookmarkNode?, mode: BookmarkFragmentState.Mode) {
         val diffUtil = DiffUtil.calculateDiff(
             BookmarkDiffUtil(
                 this.tree,
@@ -52,8 +52,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     private class BookmarkDiffUtil(
         val old: List<BookmarkNode>,
         val new: List<BookmarkNode>,
-        val oldMode: BookmarkState.Mode,
-        val newMode: BookmarkState.Mode
+        val oldMode: BookmarkFragmentState.Mode,
+        val newMode: BookmarkFragmentState.Mode
     ) : DiffUtil.Callback() {
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
             old[oldItemPosition].guid == new[newItemPosition].guid

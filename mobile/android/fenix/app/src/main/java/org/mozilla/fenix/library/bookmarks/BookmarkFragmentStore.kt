@@ -9,10 +9,10 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
-class BookmarkStore(
-    initalState: BookmarkState
-) : Store<BookmarkState, BookmarkAction>(
-    initalState, ::bookmarkStateReducer
+class BookmarkFragmentStore(
+    initalState: BookmarkFragmentState
+) : Store<BookmarkFragmentState, BookmarkFragmentAction>(
+    initalState, ::bookmarkFragmentStateReducer
 )
 
 /**
@@ -20,7 +20,7 @@ class BookmarkStore(
  * @property tree The current tree of bookmarks, if one is loaded
  * @property mode The current bookmark multi-selection mode
  */
-data class BookmarkState(val tree: BookmarkNode?, val mode: Mode = Mode.Normal) : State {
+data class BookmarkFragmentState(val tree: BookmarkNode?, val mode: Mode = Mode.Normal) : State {
     sealed class Mode {
         open val selectedItems = emptySet<BookmarkNode>()
 
@@ -32,11 +32,11 @@ data class BookmarkState(val tree: BookmarkNode?, val mode: Mode = Mode.Normal) 
 /**
  * Actions to dispatch through the `BookmarkStore` to modify `BookmarkState` through the reducer.
  */
-sealed class BookmarkAction : Action {
-    data class Change(val tree: BookmarkNode) : BookmarkAction()
-    data class Select(val item: BookmarkNode) : BookmarkAction()
-    data class Deselect(val item: BookmarkNode) : BookmarkAction()
-    object DeselectAll : BookmarkAction()
+sealed class BookmarkFragmentAction : Action {
+    data class Change(val tree: BookmarkNode) : BookmarkFragmentAction()
+    data class Select(val item: BookmarkNode) : BookmarkFragmentAction()
+    data class Deselect(val item: BookmarkNode) : BookmarkFragmentAction()
+    object DeselectAll : BookmarkFragmentAction()
 }
 
 /**
@@ -45,25 +45,25 @@ sealed class BookmarkAction : Action {
  * @param action the action to perform
  * @return the new bookmarks state
  */
-fun bookmarkStateReducer(state: BookmarkState, action: BookmarkAction): BookmarkState {
+fun bookmarkFragmentStateReducer(state: BookmarkFragmentState, action: BookmarkFragmentAction): BookmarkFragmentState {
     return when (action) {
-        is BookmarkAction.Change -> {
+        is BookmarkFragmentAction.Change -> {
             val items = state.mode.selectedItems.filter { it in action.tree }
             state.copy(
                 tree = action.tree,
-                mode = if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items.toSet())
+                mode = if (items.isEmpty()) BookmarkFragmentState.Mode.Normal else BookmarkFragmentState.Mode.Selecting(items.toSet())
             )
         }
-        is BookmarkAction.Select ->
-            state.copy(mode = BookmarkState.Mode.Selecting(state.mode.selectedItems + action.item))
-        is BookmarkAction.Deselect -> {
+        is BookmarkFragmentAction.Select ->
+            state.copy(mode = BookmarkFragmentState.Mode.Selecting(state.mode.selectedItems + action.item))
+        is BookmarkFragmentAction.Deselect -> {
             val items = state.mode.selectedItems - action.item
             state.copy(
-                mode = if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items)
+                mode = if (items.isEmpty()) BookmarkFragmentState.Mode.Normal else BookmarkFragmentState.Mode.Selecting(items)
             )
         }
-        BookmarkAction.DeselectAll ->
-            state.copy(mode = BookmarkState.Mode.Normal)
+        BookmarkFragmentAction.DeselectAll ->
+            state.copy(mode = BookmarkFragmentState.Mode.Normal)
     }
 }
 
