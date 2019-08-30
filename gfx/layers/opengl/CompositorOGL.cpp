@@ -638,8 +638,8 @@ already_AddRefed<CompositingRenderTarget> CompositorOGL::CreateRenderTarget(
   IntRect rect = aRect;
   IntSize FBOSize;
   CreateFBOWithTexture(rect, false, 0, &fbo, &tex, &FBOSize);
-  RefPtr<CompositingRenderTargetOGL> surface =
-      new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
+  RefPtr<CompositingRenderTargetOGL> surface = new CompositingRenderTargetOGL(
+      this, aRect.TopLeft(), aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(), FBOSize, mFBOTextureTarget, aInit);
   return surface.forget();
 }
@@ -667,8 +667,8 @@ CompositorOGL::CreateRenderTargetFromSource(
   IntRect sourceRect(aSourcePoint, aRect.Size());
   CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
 
-  RefPtr<CompositingRenderTargetOGL> surface =
-      new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
+  RefPtr<CompositingRenderTargetOGL> surface = new CompositingRenderTargetOGL(
+      this, aRect.TopLeft(), aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(), sourceRect.Size(), mFBOTextureTarget,
                       INIT_MODE_NONE);
   return surface.forget();
@@ -803,8 +803,8 @@ void CompositorOGL::RegisterIOSurface(IOSurfacePtr aSurface) {
                                       LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex, 0);
   }
 
-  RefPtr<CompositingRenderTargetOGL> rt =
-      new CompositingRenderTargetOGL(this, gfx::IntPoint(), tex, fbo);
+  RefPtr<CompositingRenderTargetOGL> rt = new CompositingRenderTargetOGL(
+      this, gfx::IntPoint(), gfx::IntPoint(), tex, fbo);
   rt->Initialize(size, size, LOCAL_GL_TEXTURE_RECTANGLE_ARB, INIT_MODE_NONE);
 
   mRegisteredIOSurfaceRenderTargets.insert({aSurface, rt});
@@ -1286,10 +1286,11 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   IntPoint offset = mCurrentRenderTarget->GetOrigin();
   IntSize size = mCurrentRenderTarget->GetSize();
+  Rect renderBound(mCurrentRenderTarget->GetRect());
 
-  Rect renderBound(0, 0, size.width, size.height);
-  renderBound.IntersectRect(renderBound, Rect(aClipRect));
-  renderBound.MoveBy(offset);
+  // Convert aClipRect into render target space.
+  IntRect clipRect = aClipRect + mCurrentRenderTarget->GetClipSpaceOrigin();
+  renderBound.IntersectRect(renderBound, Rect(clipRect));
 
   Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
 
@@ -1308,8 +1309,6 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   LayerScope::DrawBegin();
 
-  IntRect clipRect = aClipRect;
-
   EffectMask* effectMask;
   Rect maskBounds;
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
@@ -1327,14 +1326,17 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     maskBounds = Rect(Point(), Size(maskSize));
     maskBounds = maskTransform.As2D().TransformBounds(maskBounds);
 
-    clipRect = clipRect.Intersect(RoundedOut(maskBounds) - offset);
+    clipRect = clipRect.Intersect(RoundedOut(maskBounds));
   }
 
   if (Maybe<IntRect> rtClip = mCurrentRenderTarget->GetClipRect()) {
     clipRect = clipRect.Intersect(*rtClip);
   }
 
-  // aClipRect is in destination coordinate space (after all
+  // Move clipRect into device space.
+  clipRect -= offset;
+
+  // clipRect is in destination coordinate space (after all
   // transforms and offsets have been applied) so if our
   // drawing is going to be shifted by mRenderOffset then we need
   // to shift the clip rect by the same amount.
@@ -1435,7 +1437,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       gl()->fTextureBarrier();
       mixBlendBackdrop = mCurrentRenderTarget->GetTextureHandle();
     } else {
-      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform,
+      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, clipRect, aTransform,
                                                   &backdropTransform);
       mixBlendBackdrop =
           CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
