@@ -23,7 +23,6 @@
 #include "LoadInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "nsRedirectHistoryEntry.h"
-#include "nsHttpHandler.h"
 
 using namespace mozilla;
 
@@ -67,8 +66,6 @@ nsBaseChannel::nsBaseChannel()
       mContentLength(-1),
       mWasOpened(false) {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
-  RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
-  Unused << handler->NewChannelId(mChannelId);
 }
 
 nsBaseChannel::~nsBaseChannel() {
@@ -350,11 +347,22 @@ void nsBaseChannel::ClassifyURI() {
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(
-    nsBaseChannel, nsHashPropertyBag, nsIRequest, nsIChannel, nsIIdentChannel,
-    nsIThreadRetargetableRequest, nsIInterfaceRequestor, nsITransportEventSink,
-    nsIRequestObserver, nsIStreamListener, nsIThreadRetargetableStreamListener,
-    nsIAsyncVerifyRedirectCallback, nsIPrivateBrowsingChannel)
+NS_IMPL_ADDREF(nsBaseChannel)
+NS_IMPL_RELEASE(nsBaseChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsBaseChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mChannelId.isSome())
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateBrowsingChannel)
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest
@@ -705,13 +713,19 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
 
 NS_IMETHODIMP
 nsBaseChannel::GetChannelId(uint64_t* aChannelId) {
-  *aChannelId = mChannelId;
+  if (!mChannelId) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *aChannelId = *mChannelId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseChannel::SetChannelId(uint64_t aChannelId) {
-  mChannelId = aChannelId;
+  if (!mChannelId) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *mChannelId = aChannelId;
   return NS_OK;
 }
 

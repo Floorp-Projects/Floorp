@@ -15,12 +15,13 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentSecurityManager.h"
 #include "nsDocShellLoadState.h"
+#include "nsHttpHandler.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsStringStream.h"
-#include "mozilla/net/UrlClassifierCommon.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -60,6 +61,10 @@ DocumentChannelChild::DocumentChannelChild(
   SetURI(aLoadState->URI());
   SetLoadInfo(aLoadInfo);
   SetLoadFlags(aLoadFlags);
+  RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
+  uint64_t channelId;
+  Unused << handler->NewChannelId(channelId);
+  mChannelId.emplace(channelId);
 }
 
 NS_IMETHODIMP
@@ -141,7 +146,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.cacheKey() = mCacheKey;
   args.isActive() = mIsActive;
   args.isTopLevelDoc() = mIsTopLevelDoc;
-  args.channelId() = mChannelId;
+  args.channelId() = *mChannelId;
 
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
