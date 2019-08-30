@@ -243,7 +243,7 @@ int32_t BasicCompositor::GetMaxTextureSize() const { return mMaxTextureSize; }
 
 void BasicCompositingRenderTarget::BindRenderTarget() {
   if (mClearOnBind) {
-    mDrawTarget->ClearRect(Rect(0, 0, mSize.width, mSize.height));
+    mDrawTarget->ClearRect(Rect(GetRect()));
     mClearOnBind = false;
   }
 }
@@ -283,7 +283,9 @@ already_AddRefed<CompositingRenderTarget> BasicCompositor::CreateRenderTarget(
   }
 
   RefPtr<BasicCompositingRenderTarget> rt =
-      new BasicCompositingRenderTarget(target, aRect);
+      new BasicCompositingRenderTarget(target, aRect, aRect.TopLeft());
+
+  rt->mDrawTarget->SetTransform(Matrix::Translation(-rt->GetOrigin()));
 
   return rt.forget();
 }
@@ -297,11 +299,11 @@ BasicCompositor::CreateRenderTargetFromSource(
 }
 
 already_AddRefed<CompositingRenderTarget>
-BasicCompositor::CreateRenderTargetAndClear(DrawTarget* aDrawTarget,
-                                            const IntRect& aDrawTargetRect,
-                                            const IntRegion& aClearRegion) {
-  RefPtr<BasicCompositingRenderTarget> rt =
-      new BasicCompositingRenderTarget(aDrawTarget, aDrawTargetRect);
+BasicCompositor::CreateRootRenderTarget(DrawTarget* aDrawTarget,
+                                        const IntRect& aDrawTargetRect,
+                                        const IntRegion& aClearRegion) {
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(
+      aDrawTarget, aDrawTargetRect, IntPoint());
 
   rt->mDrawTarget->SetTransform(Matrix::Translation(-rt->GetOrigin()));
 
@@ -661,12 +663,15 @@ void BasicCompositor::DrawGeometry(
     new3DTransform.PreTranslate(aRect.X(), aRect.Y(), 0);
   }
 
-  // XXX the transform is probably just an integer offset so this whole
-  // business here is a bit silly.
-  Rect transformedClipRect =
-      buffer->GetTransform().TransformBounds(Rect(aClipRect));
-
-  buffer->PushClipRect(Rect(aClipRect));
+  // The current transform on buffer is always only a translation by `-offset`.
+  // aClipRect is relative to mRenderTarget->GetClipSpaceOrigin().
+  // For non-root render targets, the clip space origin is equal to `offset`.
+  // For the root render target, the clip space origin is at (0, 0) and the
+  // offset can be anywhere.
+  IntRect clipRectInRenderTargetSpace =
+      aClipRect + mRenderTarget->GetClipSpaceOrigin();
+  buffer->PushClipRect(Rect(clipRectInRenderTargetSpace));
+  Rect deviceSpaceClipRect(clipRectInRenderTargetSpace - offset);
 
   newTransform.PostTranslate(-offset.x, -offset.y);
   buffer->SetTransform(newTransform);
@@ -717,14 +722,14 @@ void BasicCompositor::DrawGeometry(
             AttemptVideoConvertAndScale(texturedEffect->mTexture, sourceMask,
                                         aOpacity, blendMode, texturedEffect,
                                         newTransform, aRect,
-                                        transformedClipRect, dest, buffer)) {
+                                        deviceSpaceClipRect, dest, buffer)) {
           // we succeeded in convert and scaling
         } else if (source->mFromYCBCR && !source->GetSurface(dest)) {
           gfxWarning() << "Failed to get YCbCr to rgb surface.";
         } else if (source->mFromYCBCR &&
                    AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
                                      texturedEffect, newTransform, aRect,
-                                     transformedClipRect, dest, buffer)) {
+                                     deviceSpaceClipRect, dest, buffer)) {
           // we succeeded in scaling
         } else {
           DrawSurfaceWithTextureCoords(
@@ -900,7 +905,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     IntRegion clearRegion;
     clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
     // Set up a render target for drawing directly to mTarget.
-    target = CreateRenderTargetAndClear(mTarget, mTargetBounds, clearRegion);
+    target = CreateRootRenderTarget(mTarget, mTargetBounds, clearRegion);
   } else if (aNativeLayer) {
 #ifdef XP_MACOSX
     if (mInvalidRegion.IsEmpty()) {
@@ -925,7 +930,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     IntRegion clearRegion;
     clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
     // Set up a render target for drawing directly to dt.
-    target = CreateRenderTargetAndClear(dt, dtBounds, clearRegion);
+    target = CreateRootRenderTarget(dt, dtBounds, clearRegion);
 #else
     MOZ_CRASH("Unexpected native layer on this platform");
 #endif
@@ -959,8 +964,8 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
         return Nothing();
       }
       // Set up a render target for drawirg to the back buffer.
-      target = CreateRenderTargetAndClear(
-          backBuffer, backBufferRect, isCleared ? IntRegion() : clearRegion);
+      target = CreateRootRenderTarget(backBuffer, backBufferRect,
+                                      isCleared ? IntRegion() : clearRegion);
       mFrontBuffer = dt;
       // We will copy the drawing from the back buffer into mFrontBuffer (the
       // widget) in EndRemoteDrawing().
@@ -977,7 +982,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
       IntRect dtBounds(dtLocation, dt->GetSize());
 
       // Set up a render target for drawing directly to dt.
-      target = CreateRenderTargetAndClear(dt, dtBounds, clearRegion);
+      target = CreateRootRenderTarget(dt, dtBounds, clearRegion);
     }
   }
 
@@ -1009,7 +1014,7 @@ void BasicCompositor::EndFrame() {
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
-  // Reset the translation that was applied in CreateRenderTargetAndClear.
+  // Reset the translation that was applied in CreateRootRenderTarget.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
   if (mTarget) {
@@ -1108,7 +1113,7 @@ void BasicCompositor::NormalDrawingDone() {
             windowRect.Size(), mRenderTarget->mDrawTarget->GetFormat());
 
     mFullWindowRenderTarget =
-        new BasicCompositingRenderTarget(drawTarget, windowRect);
+        new BasicCompositingRenderTarget(drawTarget, windowRect, IntPoint());
   }
 
   RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();

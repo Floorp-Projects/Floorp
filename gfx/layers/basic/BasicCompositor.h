@@ -23,14 +23,20 @@ namespace layers {
 class BasicCompositingRenderTarget : public CompositingRenderTarget {
  public:
   BasicCompositingRenderTarget(gfx::DrawTarget* aDrawTarget,
-                               const gfx::IntRect& aRect)
+                               const gfx::IntRect& aRect,
+                               const gfx::IntPoint& aClipSpaceOrigin)
       : CompositingRenderTarget(aRect.TopLeft()),
         mDrawTarget(aDrawTarget),
-        mSize(aRect.Size()) {}
+        mSize(aRect.Size()),
+        mClipSpaceOrigin(aClipSpaceOrigin) {}
 
   const char* Name() const override { return "BasicCompositingRenderTarget"; }
 
   gfx::IntSize GetSize() const override { return mSize; }
+
+  // The point that DrawGeometry's aClipRect is relative to. Will be (0, 0) for
+  // root render targets and equal to GetOrigin() for non-root render targets.
+  gfx::IntPoint GetClipSpaceOrigin() const { return mClipSpaceOrigin; }
 
   void BindRenderTarget();
 
@@ -41,6 +47,7 @@ class BasicCompositingRenderTarget : public CompositingRenderTarget {
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
+  gfx::IntPoint mClipSpaceOrigin;
 };
 
 class BasicCompositor : public Compositor {
@@ -67,7 +74,7 @@ class BasicCompositor : public Compositor {
       const gfx::IntRect& aRect, const CompositingRenderTarget* aSource,
       const gfx::IntPoint& aSourcePoint) override;
 
-  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetAndClear(
+  virtual already_AddRefed<CompositingRenderTarget> CreateRootRenderTarget(
       gfx::DrawTarget* aDrawTarget, const gfx::IntRect& aDrawTargetRect,
       const gfx::IntRegion& aClearRegion);
 
