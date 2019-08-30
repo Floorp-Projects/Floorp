@@ -290,6 +290,13 @@ function OnLDBLoad() {
         ["default"],
         ["GeckoMain", "Compositor", "Renderer", "RenderBackend", "StyleThread"]
       );
+      if (gArgs.url) {
+        // Switch to the right kind of content process, and wait a bit so that
+        // the profiler has had a chance to attach to it.
+        updateBrowserRemotenessByURL(gArgs.url);
+        setTimeout(() => loadURI(gArgs.url), 3000);
+        return;
+      }
     } else {
       dump("Cannot profile Layout Debugger; profiler was not compiled in.\n");
     }
