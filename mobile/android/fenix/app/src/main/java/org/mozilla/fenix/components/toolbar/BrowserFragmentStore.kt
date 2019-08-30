@@ -53,7 +53,7 @@ sealed class QuickActionSheetAction : BrowserFragmentAction() {
  * A top level reducer that receives the current [BrowserFragmentState] and an [Action] and then delegates to the proper child
  *
  */
-fun browserStateReducer(
+private fun browserStateReducer(
     state: BrowserFragmentState,
     action: BrowserFragmentAction
 ): BrowserFragmentState {

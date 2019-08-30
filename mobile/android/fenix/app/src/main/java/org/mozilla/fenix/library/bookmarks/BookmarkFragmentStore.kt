@@ -45,7 +45,7 @@ sealed class BookmarkFragmentAction : Action {
  * @param action the action to perform
  * @return the new bookmarks state
  */
-fun bookmarkFragmentStateReducer(state: BookmarkFragmentState, action: BookmarkFragmentAction): BookmarkFragmentState {
+private fun bookmarkFragmentStateReducer(state: BookmarkFragmentState, action: BookmarkFragmentAction): BookmarkFragmentState {
     return when (action) {
         is BookmarkFragmentAction.Change -> {
             val items = state.mode.selectedItems.filter { it in action.tree }

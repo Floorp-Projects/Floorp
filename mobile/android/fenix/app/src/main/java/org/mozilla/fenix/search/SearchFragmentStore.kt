@@ -63,7 +63,7 @@ sealed class SearchFragmentAction : Action {
 /**
  * The SearchState Reducer.
  */
-fun searchStateReducer(state: SearchFragmentState, action: SearchFragmentAction): SearchFragmentState {
+private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmentAction): SearchFragmentState {
     return when (action) {
         is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
