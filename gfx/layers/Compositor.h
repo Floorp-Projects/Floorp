@@ -172,8 +172,9 @@ enum SurfaceInitMode { INIT_MODE_NONE, INIT_MODE_CLEAR };
  *    call DrawQuad,
  *  call EndFrame.
  *
- * By default, the compositor will render to the screen, to render to a target,
- * call SetTargetContext or SetRenderTarget, the latter with a target created
+ * By default, the compositor will render to the screen if BeginFrameForWindow
+ * is called. To render to a target, call BeginFrameForTarget or
+ * or SetRenderTarget, the latter with a target created
  * by CreateRenderTarget or CreateRenderTargetFromSource.
  *
  * The target and viewport methods can be called before any DrawQuad call and
@@ -202,20 +203,6 @@ class Compositor : public TextureSourceProvider {
    * Properties of the compositor.
    */
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) = 0;
-
-  /**
-   * Set the target for rendering. Results will have been written to aTarget by
-   * the time that EndFrame returns.
-   *
-   * If this method is not used, or we pass in nullptr, we target the
-   * compositor's usual swap chain and render to the screen.
-   */
-  void SetTargetContext(gfx::DrawTarget* aTarget, const gfx::IntRect& aRect) {
-    mTarget = aTarget;
-    mTargetBounds = aRect;
-  }
-  gfx::DrawTarget* GetTargetContext() const { return mTarget; }
-  void ClearTargetContext() { mTarget = nullptr; }
 
   typedef uint32_t MakeCurrentFlags;
   static const MakeCurrentFlags ForceMakeCurrent = 0x1;
@@ -398,15 +385,13 @@ class Compositor : public TextureSourceProvider {
   virtual void ClearRect(const gfx::Rect& aRect) = 0;
 
   /**
-   * Start a new frame.
+   * Start a new frame for rendering to the window.
    *
-   * aInvalidRect is the invalid region of the screen; it can be ignored for
-   * compositors where the performance for compositing the entire window is
-   * sufficient.
-   *
-   * aClipRect is the clip rect for the window in window space (optional).
-   * aRenderBounds bounding rect for rendering, in user space.
+   * aInvalidRegion is the invalid region of the window.
+   * aClipRect is the clip rect for all drawing (optional).
+   * aRenderBounds is the bounding rect for rendering.
    * aOpaqueRegion is the area that contains opaque content.
+   * All coordinates are in window space.
    *
    * Returns the non-empty render bounds actually used by the compositor in
    * window space, or Nothing() if composition should be aborted.
@@ -415,6 +400,32 @@ class Compositor : public TextureSourceProvider {
       const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
       const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
       NativeLayer* aNativeLayer) = 0;
+
+  /**
+   * Start a new frame for rendering to a DrawTarget. Rendering can happen
+   * directly into the DrawTarget, or it can happen in an offscreen GPU buffer
+   * and read back into the DrawTarget in EndFrame, or it can happen inside the
+   * window and read back into the DrawTarget in EndFrame.
+   *
+   * aInvalidRegion is the invalid region in the target.
+   * aClipRect is the clip rect for all drawing (optional).
+   * aRenderBounds is the bounding rect for rendering.
+   * aOpaqueRegion is the area that contains opaque content.
+   * aTarget is the DrawTarget which should contain the rendering after
+   *         EndFrame() has been called.
+   * aTargetBounds are the DrawTarget's bounds.
+   * All coordinates are in window space.
+   *
+   * Returns the non-empty render bounds actually used by the compositor in
+   * window space, or Nothing() if composition should be aborted.
+   *
+   * If BeginFrame succeeds, the compositor keeps a reference to aTarget until
+   * EndFrame is called.
+   */
+  virtual Maybe<gfx::IntRect> BeginFrameForTarget(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) = 0;
 
   /**
    * Notification that we've finished issuing draw commands for normal
@@ -593,9 +604,6 @@ class Compositor : public TextureSourceProvider {
   size_t mPixelsFilled;
 
   ScreenRotation mScreenRotation;
-
-  RefPtr<gfx::DrawTarget> mTarget;
-  gfx::IntRect mTargetBounds;
 
   widget::CompositorWidget* mWidget;
 

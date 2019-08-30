@@ -1096,11 +1096,25 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
 
 Maybe<IntRect> CompositorD3D11::BeginFrameForWindow(
     const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
-    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    NativeLayer* aNativeLayer) {
-  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
-
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion) {
+  MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
   return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
+}
+
+Maybe<IntRect> CompositorD3D11::BeginFrameForTarget(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    DrawTarget* aTarget, const IntRect& aTargetBounds) {
+  MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
+  mTarget = aTarget;  // Will be cleared in EndFrame().
+  mTargetBounds = aTargetBounds;
+  Maybe<IntRect> result =
+      BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
+  if (!result) {
+    // Composition has been aborted. Reset mTarget.
+    mTarget = nullptr;
+  }
+  return result;
 }
 
 Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
@@ -1218,12 +1232,14 @@ void CompositorD3D11::EndFrame() {
 
   if (!mDefaultRT) {
     Compositor::EndFrame();
+    mTarget = nullptr;
     return;
   }
 
   if (XRE_IsParentProcess() && mDevice->GetDeviceRemovedReason() != S_OK) {
     gfxCriticalNote << "GFX: D3D11 skip EndFrame with device-removed.";
     Compositor::EndFrame();
+    mTarget = nullptr;
     mCurrentRT = nullptr;
     return;
   }
@@ -1232,6 +1248,7 @@ void CompositorD3D11::EndFrame() {
   EnsureSize();
   if (mSize.width <= 0 || mSize.height <= 0) {
     Compositor::EndFrame();
+    mTarget = nullptr;
     return;
   }
 
@@ -1260,7 +1277,7 @@ void CompositorD3D11::EndFrame() {
   mQuery = query;
 
   Compositor::EndFrame();
-
+  mTarget = nullptr;
   mCurrentRT = nullptr;
 }
 

@@ -881,6 +881,9 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
     MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
   }
 
+  MOZ_RELEASE_ASSERT(!mFrameIsForTarget,
+                     "mFrameIsForTarget not cleared properly");
+
   IntRect rect;
   if (aNativeLayer) {
     rect = aNativeLayer->GetRect();
@@ -901,17 +904,7 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
   }
 
   RefPtr<CompositingRenderTarget> target;
-  if (mTarget) {
-    MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
-
-    // If we have a copy target, render into that DrawTarget directly without
-    // any intermediate buffer. We don't need to call StartRemoteDrawingInRegion
-    // because we don't need a widget-provided DrawTarget.
-    IntRegion clearRegion;
-    clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
-    // Set up a render target for drawing directly to mTarget.
-    target = CreateRootRenderTarget(mTarget, mTargetBounds, clearRegion);
-  } else if (aNativeLayer) {
+  if (aNativeLayer) {
 #ifdef XP_MACOSX
     if (mInvalidRegion.IsEmpty()) {
       return Nothing();
@@ -1002,6 +995,40 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
   return Some(rect);
 }
 
+Maybe<gfx::IntRect> BasicCompositor::BeginFrameForTarget(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    DrawTarget* aTarget, const IntRect& aTargetBounds) {
+  if (mIsPendingEndRemoteDrawing) {
+    // Force to end previous remote drawing.
+    EndRemoteDrawing();
+    MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
+  }
+
+  MOZ_RELEASE_ASSERT(!mFrameIsForTarget,
+                     "mFrameIsForTarget not cleared properly");
+  mFrameIsForTarget = true;
+
+  mInvalidRegion.And(aInvalidRegion, aTargetBounds);
+  MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
+
+  IntRegion clearRegion;
+  clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
+
+  // Set up a render target for drawing directly to aTarget.
+  RefPtr<CompositingRenderTarget> target =
+      CreateRootRenderTarget(aTarget, aTargetBounds, clearRegion);
+  MOZ_RELEASE_ASSERT(target);
+  SetRenderTarget(target);
+
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, mInvalidRegion);
+
+  mRenderTarget->mDrawTarget->PushClipRect(
+      Rect(aClipRect.valueOr(aTargetBounds)));
+
+  return Some(aTargetBounds);
+}
+
 void BasicCompositor::EndFrame() {
   Compositor::EndFrame();
 
@@ -1023,8 +1050,9 @@ void BasicCompositor::EndFrame() {
   // Reset the translation that was applied in CreateRootRenderTarget.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
-  if (mTarget) {
+  if (mFrameIsForTarget) {
     mRenderTarget = nullptr;
+    mFrameIsForTarget = false;
   } else if (mCurrentNativeLayer) {
 #ifdef XP_MACOSX
     NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();

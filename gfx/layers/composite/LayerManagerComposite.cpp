@@ -230,7 +230,6 @@ void LayerManagerComposite::BeginTransactionWithDrawTarget(
   }
 
   mIsCompositorReady = true;
-  mCompositor->SetTargetContext(aTarget, aRect);
   mTarget = aTarget;
   mTargetBounds = aRect;
 }
@@ -541,7 +540,6 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     mCompositor->FlushPendingNotifyNotUsed();
   }
 
-  mCompositor->ClearTargetContext();
   mTarget = nullptr;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -987,9 +985,16 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
-  Maybe<IntRect> maybeBounds = mCompositor->BeginFrameForWindow(
-      aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion,
-      mNativeLayerForEntireWindow);
+  Maybe<IntRect> maybeBounds;
+  if (mTarget) {
+    maybeBounds = mCompositor->BeginFrameForTarget(
+        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion, mTarget,
+        mTargetBounds);
+  } else {
+    maybeBounds = mCompositor->BeginFrameForWindow(
+        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion,
+        mNativeLayerForEntireWindow);
+  }
   if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -1250,9 +1255,9 @@ ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
   if (!jni::IsFennec()) {
     return result;
   }
-  // If GetTargetContext return is not null we are not drawing to the screen so
+  // If mTarget not null we are not drawing to the screen so
   // there will not be any content offset.
-  if (mCompositor->GetTargetContext() != nullptr) {
+  if (mTarget) {
     return result;
   }
 
@@ -1267,9 +1272,9 @@ ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
 }
 
 void LayerManagerComposite::RenderToolbar() {
-  // If GetTargetContext return is not null we are not drawing to the screen so
+  // If mTarget is not null we are not drawing to the screen so
   // don't draw the toolbar.
-  if (mCompositor->GetTargetContext() != nullptr) {
+  if (mTarget) {
     return;
   }
 
@@ -1406,12 +1411,7 @@ LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect() {
   mCompositable->RemoveMaskEffect();
 }
 
-bool LayerManagerComposite::IsCompositingToScreen() const {
-  if (!mCompositor) {
-    return true;
-  }
-  return !mCompositor->GetTargetContext();
-}
+bool LayerManagerComposite::IsCompositingToScreen() const { return !mTarget; }
 
 LayerComposite::LayerComposite(LayerManagerComposite* aManager)
     : HostLayer(aManager),
