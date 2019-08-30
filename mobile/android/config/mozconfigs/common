@@ -30,6 +30,9 @@ if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
     CC="$MOZ_FETCHES_DIR/clang/bin/clang"
     CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
     ac_add_options --with-android-ndk="$MOZ_FETCHES_DIR/android-ndk"
+    # Make sure that any host binaries we build use whatever libraries clang
+    # linked against, rather than what's on the system.
+    mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
     # Enable static analysis plugin
     export ENABLE_CLANG_PLUGIN=1
 fi

@@ -1,0 +1,38 @@
+<div id="foo">BAR</div>
+<script>
+const cpmm = SpecialPowers.Services.cpmm;
+function recordingFinished() {
+  cpmm.sendAsyncMessage("RecordingFinished");
+}
+
+function foo() {
+// Create various objects which the debugger must be able to show in the scopes
+// pane using only the pause data, i.e. without additional debugger requests.
+// Not performing debugger requests allows the debugger to finish updating the
+// UI using cached pause data, and without any replaying process actually being
+// at the point where we are pausing.
+var a = Array();
+var b = new Uint8Array(20);
+var c = new Set([{a:0},{b:1}]);
+var d = new Map([[{a:0},{b:1}]]);
+var e = new WeakSet();
+var f = new WeakMap();
+var g = { a:0 };
+for (let i = 0; i < 20; i++) {
+  a.push(i);
+  b[i] = i;
+  c.add(i);
+  d.set(i, i + 1);
+  e.add({ i });
+  f.set({ i }, { j: i + 1 });
+  g[`a${i}`] = i;
+}
+var h = /abc/gi;
+var i = new Date();
+var j = RangeError();
+var k = document.getElementById("foo");
+console.log("Done");
+window.setTimeout(recordingFinished);
+}
+foo();
+</script>

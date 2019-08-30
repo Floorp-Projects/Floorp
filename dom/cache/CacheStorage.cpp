@@ -31,6 +31,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsMixedContentBlocker.h"
 #include "nsURLParsers.h"
 
 namespace mozilla {
@@ -132,8 +133,7 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
 
   nsDependentCSubstring hostname(url + authPos + hostPos, hostLen);
 
-  return hostname.EqualsLiteral("localhost") ||
-         hostname.EqualsLiteral("127.0.0.1") || hostname.EqualsLiteral("::1");
+  return nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(hostname);
 }
 
 }  // namespace

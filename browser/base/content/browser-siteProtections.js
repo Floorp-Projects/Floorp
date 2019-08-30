@@ -665,7 +665,20 @@ var ThirdPartyCookies = {
   },
 
   isDetected(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED) != 0;
+    if (this.behaviorPref == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER) {
+      // We don't have a state that specifically represents loaded tracker cookies,
+      // so use loaded tracking content as a proxy - it's not perfect but it
+      // yields fewer false-positives than the generic loaded cookies state.
+      return (
+        (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0
+      );
+    }
+
+    // We don't have any proxies for the other cookie behaviors unfortunately.
+    return (
+      this.isBlocking(state) ||
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED) != 0
+    );
   },
 
   async updateSubView() {
@@ -678,7 +691,10 @@ var ThirdPartyCookies = {
 
     for (let category of ["firstParty", "trackers", "thirdParty"]) {
       let itemsToShow;
-      if (category == "trackers" && gProtectionsHandler.hasException) {
+      if (
+        category == "trackers" &&
+        (gProtectionsHandler.hasException || !this.enabled)
+      ) {
         itemsToShow = categories[category];
       } else {
         itemsToShow = categories[category].filter(
@@ -1288,6 +1304,24 @@ var gProtectionsHandler = {
       "protections-popup-tp-switch"
     ));
   },
+  get _protectionsPopupBlockingHeader() {
+    delete this._protectionsPopupBlockingHeader;
+    return (this._protectionsPopupBlockingHeader = document.getElementById(
+      "protections-popup-blocking-section-header"
+    ));
+  },
+  get _protectionsPopupNotBlockingHeader() {
+    delete this._protectionsPopupNotBlockingHeader;
+    return (this._protectionsPopupNotBlockingHeader = document.getElementById(
+      "protections-popup-not-blocking-section-header"
+    ));
+  },
+  get _protectionsPopupNotFoundHeader() {
+    delete this._protectionsPopupNotFoundHeader;
+    return (this._protectionsPopupNotFoundHeader = document.getElementById(
+      "protections-popup-not-found-section-header"
+    ));
+  },
   get _protectionsPopupSettingsButton() {
     delete this._protectionsPopupSettingsButton;
     return (this._protectionsPopupSettingsButton = document.getElementById(
@@ -1405,10 +1439,11 @@ var gProtectionsHandler = {
   //
   // It may also contain an init() and uninit() function, which will be called
   // on gProtectionsHandler.init() and gProtectionsHandler.uninit().
+  // The buttons in the protections panel will appear in the same order as this array.
   blockers: [
-    TrackingProtection,
     SocialTracking,
     ThirdPartyCookies,
+    TrackingProtection,
     Fingerprinting,
     Cryptomining,
   ],
@@ -1484,10 +1519,6 @@ var gProtectionsHandler = {
   },
 
   async showTrackersSubview(event) {
-    if (event.target.classList.contains("notFound")) {
-      return;
-    }
-
     await TrackingProtection.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-trackersView"
@@ -1495,10 +1526,6 @@ var gProtectionsHandler = {
   },
 
   async showSocialblockerSubview(event) {
-    if (event.target.classList.contains("notFound")) {
-      return;
-    }
-
     await SocialTracking.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-socialblockView"
@@ -1506,10 +1533,6 @@ var gProtectionsHandler = {
   },
 
   async showCookiesSubview(event) {
-    if (event.target.classList.contains("notFound")) {
-      return;
-    }
-
     await ThirdPartyCookies.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cookiesView"
@@ -1517,10 +1540,6 @@ var gProtectionsHandler = {
   },
 
   async showFingerprintersSubview(event) {
-    if (event.target.classList.contains("notFound")) {
-      return;
-    }
-
     await Fingerprinting.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-fingerprintersView"
@@ -1528,10 +1547,6 @@ var gProtectionsHandler = {
   },
 
   async showCryptominersSubview(event) {
-    if (event.target.classList.contains("notFound")) {
-      return;
-    }
-
     await Cryptomining.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cryptominersView"
@@ -1596,6 +1611,8 @@ var gProtectionsHandler = {
       // Insert the info message if needed. This will be shown once and then
       // remain collapsed.
       ToolbarPanelHub.insertProtectionPanelMessage(event);
+
+      this.reorderCategoryItems();
 
       if (!event.target.hasAttribute("toast")) {
         Services.telemetry.recordEvent(
@@ -1716,6 +1733,11 @@ var gProtectionsHandler = {
       blocker.categoryItem.classList.toggle("notFound", !detected);
       anyDetected = anyDetected || detected;
       anyBlocking = anyBlocking || blocker.activated;
+    }
+
+    this._categoryItemOrderInvalidated = true;
+    if (this._protectionsPopup.state == "open") {
+      this.reorderCategoryItems();
     }
 
     if (anyDetected) {
@@ -1905,6 +1927,64 @@ var gProtectionsHandler = {
 
     // Update the tooltip of the blocked tracker counter.
     this.maybeUpdateEarliestRecordedDateTooltip();
+  },
+
+  /*
+   * This function sorts the category items into the Blocked/Allowed/None Detected
+   * sections. It's called immediately in onContentBlockingEvent if the popup
+   * is presently open. Otherwise, the next time the popup is shown.
+   */
+  reorderCategoryItems() {
+    if (!this._categoryItemOrderInvalidated) {
+      return;
+    }
+
+    delete this._categoryItemOrderInvalidated;
+
+    // Hide all the headers to start with.
+    this._protectionsPopupBlockingHeader.hidden = true;
+    this._protectionsPopupNotBlockingHeader.hidden = true;
+    this._protectionsPopupNotFoundHeader.hidden = true;
+
+    for (let { categoryItem } of this.blockers) {
+      if (categoryItem.classList.contains("notFound")) {
+        // Add the item to the bottom of the list. This will be under
+        // the "None Detected" section.
+        categoryItem.parentNode.insertAdjacentElement(
+          "beforeend",
+          categoryItem
+        );
+        categoryItem.setAttribute("disabled", true);
+        // We have an undetected category, show the header.
+        this._protectionsPopupNotFoundHeader.hidden = false;
+        continue;
+      }
+
+      // Clear the disabled attribute in case we are moving the item out of
+      // "None Detected"
+      categoryItem.removeAttribute("disabled");
+
+      if (categoryItem.classList.contains("blocked") && !this.hasException) {
+        // Add the item just above the "Allowed" section - this will be the
+        // bottom of the "Blocked" section.
+        categoryItem.parentNode.insertBefore(
+          categoryItem,
+          this._protectionsPopupNotBlockingHeader
+        );
+        // We have a blocking category, show the header.
+        this._protectionsPopupBlockingHeader.hidden = false;
+        continue;
+      }
+
+      // Add the item just above the "None Detected" section - this will be the
+      // bottom of the "Allowed" section.
+      categoryItem.parentNode.insertBefore(
+        categoryItem,
+        this._protectionsPopupNotFoundHeader
+      );
+      // We have an allowing category, show the header.
+      this._protectionsPopupNotBlockingHeader.hidden = false;
+    }
   },
 
   disableForCurrentPage(shouldReload = true) {

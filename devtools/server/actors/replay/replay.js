@@ -1293,6 +1293,7 @@ function unknownObjectProperties(why) {
   ];
 }
 
+// eslint-disable-next-line complexity
 function getObjectData(id) {
   const object = gPausedObjects.getObject(id);
   if (object instanceof Debugger.Object) {
@@ -1338,6 +1339,56 @@ function getObjectData(id) {
     if (object.errorColumnNumber) {
       rv.errorColumnNumber = object.errorColumnNumber;
     }
+
+    const raw = object.unsafeDereference();
+    switch (object.class) {
+      case "Uint8Array":
+      case "Uint8ClampedArray":
+      case "Uint16Array":
+      case "Uint32Array":
+      case "Int8Array":
+      case "Int16Array":
+      case "Int32Array":
+      case "Float32Array":
+      case "Float64Array": {
+        const typedProto = Object.getPrototypeOf(Uint8Array.prototype);
+        const { get } = Object.getOwnPropertyDescriptor(typedProto, "length");
+        rv.typedArrayLength = get.call(raw);
+        break;
+      }
+      case "Set": {
+        const { get } = Object.getOwnPropertyDescriptor(Set.prototype, "size");
+        rv.containerSize = get.call(raw);
+        break;
+      }
+      case "Map": {
+        const { get } = Object.getOwnPropertyDescriptor(Map.prototype, "size");
+        rv.containerSize = get.call(raw);
+        break;
+      }
+      case "RegExp":
+        rv.regExpString = RegExp.prototype.toString.call(raw);
+        break;
+      case "Date":
+        rv.dateTime = Date.prototype.getTime.call(raw);
+        break;
+      case "Error":
+      case "EvalError":
+      case "RangeError":
+      case "ReferenceError":
+      case "SyntaxError":
+      case "TypeError":
+      case "URIError":
+        rv.errorProperties = {
+          name: raw.name,
+          message: raw.message,
+          stack: raw.stack,
+          fileName: raw.fileName,
+          lineNumber: raw.lineNumber,
+          columnNumber: raw.columnNumber,
+        };
+        break;
+    }
     return rv;
   }
   if (object instanceof Debugger.Environment) {
@@ -1382,6 +1433,36 @@ function getObjectProperties(object) {
     rv[name] = desc;
   });
   return rv;
+}
+
+function getObjectContainerContents(object) {
+  const raw = object.unsafeDereference();
+  switch (object.class) {
+    case "Set": {
+      const iter = Cu.waiveXrays(Set.prototype.values.call(raw));
+      return [...iter].map(v => convertValue(makeDebuggeeValue(v)));
+    }
+    case "Map": {
+      const iter = Cu.waiveXrays(Map.prototype.entries.call(raw));
+      return [...iter].map(([k, v]) => [
+        convertValue(makeDebuggeeValue(k)),
+        convertValue(makeDebuggeeValue(v)),
+      ]);
+    }
+    case "WeakSet": {
+      const keys = ChromeUtils.nondeterministicGetWeakSetKeys(raw);
+      return keys.map(k => convertValue(makeDebuggeeValue(Cu.waiveXrays(k))));
+    }
+    case "WeakMap": {
+      const keys = ChromeUtils.nondeterministicGetWeakMapKeys(raw);
+      return keys.map(k => [
+        convertValue(makeDebuggeeValue(k)),
+        convertValue(makeDebuggeeValue(WeakMap.prototype.get.call(raw, k))),
+      ]);
+    }
+    default:
+      return null;
+  }
 }
 
 function getEnvironmentNames(env) {
@@ -1507,6 +1588,17 @@ function getPauseData() {
         }
       }
       preview.enumerableOwnProperties = enumerableOwnProperties;
+
+      // The server is interested in at most OBJECT_PREVIEW_MAX_ITEMS items in
+      // set and map containers.
+      const containerContents = getObjectContainerContents(object);
+      if (containerContents) {
+        preview.containerContents = containerContents.slice(
+          0,
+          OBJECT_PREVIEW_MAX_ITEMS
+        );
+        preview.containerContents.forEach(v => addContainerValue(v));
+      }
     }
   }
 
@@ -1519,6 +1611,15 @@ function getPauseData() {
     }
     if (desc.set) {
       addObject(desc.set, includeProperties);
+    }
+  }
+
+  function addContainerValue(value) {
+    // Watch for [key, value] pairs in maps.
+    if (value.length == 2) {
+      value.forEach(v => addValue(v));
+    } else {
+      addValue(value);
     }
   }
 
@@ -1646,6 +1747,11 @@ const gRequestHandlers = {
     divergeFromRecording();
     const object = gPausedObjects.getObject(request.id);
     return getObjectProperties(object);
+  },
+
+  getObjectContainerContents(request) {
+    const object = gPausedObjects.getObject(request.id);
+    return getObjectContainerContents(object);
   },
 
   objectApply(request) {
