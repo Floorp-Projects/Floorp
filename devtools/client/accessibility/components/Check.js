@@ -88,7 +88,7 @@ function Icon({ score }) {
 
   return Localized(
     { id: l10nId, attrs: { alt: true } },
-    ReactDOM.img({ src, className: `icon ${score}` })
+    ReactDOM.img({ src, "data-score": score, className: "icon" })
   );
 }
 
