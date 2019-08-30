@@ -21,6 +21,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/Stream.h"
+#include "builtin/streams/QueueingStrategies.h"  // js::{ByteLength,Count}QueueingStrategy
 #include "builtin/Symbol.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
