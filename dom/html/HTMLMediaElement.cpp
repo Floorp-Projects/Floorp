@@ -484,7 +484,6 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mWatchManager.Unwatch(mGraphTimeDummy->mStream->Graph()->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
-    mGraphTimeOffset = Nothing();
 
     for (const auto& t : mAudioTracks) {
       if (t) {
@@ -636,9 +635,8 @@ class HTMLMediaElement::MediaStreamRenderer
   // GraphTime units.
   Watchable<GraphTime> mGraphTime = {0, "MediaStreamRenderer::mGraphTime"};
 
-  // Nothing while we're not rendering. While rendering, the current GraphTime
-  // at the time when rendering was Start()ed, possibly delayed until the first
-  // track appeared.
+  // Nothing until a track has been added. Then, the current GraphTime at the
+  // time when we were last Start()ed.
   Maybe<GraphTime> mGraphTimeOffset;
 
   // Currently enabled (and rendered) audio tracks.
