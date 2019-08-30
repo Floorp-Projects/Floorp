@@ -175,7 +175,6 @@
               <html:li>&protections.siteNotWorkingView.issueList.videos;</html:li>
             </html:ul>
           </label>
-          <label id="protections-popup-siteNotWorkingView-siteStillBroken">&protections.siteNotWorkingView.siteStillBroken.label;</label>
           <label id="protections-popup-siteNotWorkingView-sendReport"
             onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('send_report_link');"
             class="text-link">&protections.siteNotWorkingView.sendReport.label;</label>
@@ -187,7 +186,7 @@
                role="document"
                descriptionheightworkaround="true">
         <vbox id="protections-popup-trackersView-description" class="protections-popup-description">
-          <description>&protections.trackingContent.description;</description>
+          <description>&protections.trackingContent2.description;</description>
         </vbox>
         <vbox id="protections-popup-trackersView-list" class="protections-popup-list">
         </vbox>

@@ -276,8 +276,7 @@
 /* Search one-offs. */
 #urlbar .search-one-offs {
   -moz-box-orient: horizontal;
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding-block: 16px;
 }
 
 .urlbarView.megabar .search-one-offs {
@@ -290,8 +289,7 @@
 }
 
 #urlbar .search-panel-one-offs {
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-inline: 12px;
 }
 
 #urlbar .search-panel-header {

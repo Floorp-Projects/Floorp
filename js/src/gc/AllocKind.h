@@ -209,6 +209,10 @@ static inline bool IsBackgroundFinalized(AllocKind kind) {
   return map[size_t(kind)];
 }
 
+static inline bool IsForegroundFinalized(AllocKind kind) {
+  return !IsBackgroundFinalized(kind);
+}
+
 static inline bool IsCompactingKind(AllocKind kind) {
   MOZ_ASSERT(IsValidAllocKind(kind));
 

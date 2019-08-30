@@ -5492,20 +5492,40 @@ static void InitStaticPrefsFromShared() {
   MOZ_DIAGNOSTIC_ASSERT(gSharedMap,
                         "Must be called once gSharedMap has been created");
 
-  // For mirrored prefs we generate some initialization code.
+  // For mirrored static prefs we generate some initialization code. Each
+  // mirror variable is already initialized in the binary with the default
+  // value. If the pref value hasn't changed from the default in the main
+  // process (the common case) then the overwriting here won't change the
+  // mirror variable's value.
+  //
+  // Note that the MOZ_ALWAYS_TRUE calls below can fail in one obscure case:
+  // when a Firefox update occurs and we get a main process from the old binary
+  // (with static prefs {A,B,C,D}) plus a new content process from the new
+  // binary (with static prefs {A,B,C,D,E}). The content process' call to
+  // GetSharedPrefValue() for pref E will fail because the shared pref map was
+  // created by the main process, which doesn't have pref E. (This failure will
+  // be silent because MOZ_ALWAYS_TRUE is a no-op in non-debug builds.)
+  //
+  // This silent failure is safe. The mirror variable for pref E is already
+  // initialized to the default value in the content process, and the main
+  // process cannot have changed pref E because it doesn't know about it!
+  //
+  // Nonetheless, it's useful to have the MOZ_ALWAYS_TRUE here for testing of
+  // debug builds, where this scenario involving inconsistent binaries should
+  // not occur.
 #define NEVER_PREF(name, cpp_type, value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
   {                                                          \
     StripAtomic<cpp_type> val;                               \
     nsresult rv = Internals::GetSharedPrefValue(name, &val); \
-    MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));            \
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));                       \
     StaticPrefs::sMirror_##full_id = val;                    \
   }
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)                   \
   {                                                                          \
     cpp_type val;                                                            \
     nsresult rv = Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val); \
-    MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));                            \
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));                                       \
     StaticPrefs::sMirror_##full_id = val;                                    \
   }
 #include "mozilla/StaticPrefListAll.h"

@@ -65,13 +65,8 @@
   color: #30e60b;
 }
 
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:not(:-moz-lwtheme),
-.urlbar-label:not(:-moz-lwtheme) {
-  color: GrayText;
-}
-
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:-moz-lwtheme,
-.urlbar-label:-moz-lwtheme {
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels,
+.urlbar-label {
   opacity: .6;
 }
 
@@ -158,16 +153,13 @@
 #identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
-  -moz-context-properties: fill;
-  fill: #12BC00;
 }
 
-#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon[lock-icon-gray],
-#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon[lock-icon-gray],
-#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon[lock-icon-gray] {
-  fill-opacity: 0.6;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon:not([lock-icon-gray]),
+#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon:not([lock-icon-gray]),
+#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon:not([lock-icon-gray]) {
+  fill-opacity: 1;
+  fill: #12BC00;
 }
 
 #identity-box[pageproxystate="valid"].weakCipher > #identity-icon,
@@ -176,7 +168,6 @@
 #identity-box[pageproxystate="valid"].certUserOverridden > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   fill: unset;
-  -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-box[pageproxystate="valid"].notSecure > #identity-icon,
