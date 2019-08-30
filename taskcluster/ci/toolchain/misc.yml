@@ -92,6 +92,7 @@ linux64-mar-tools:
         toolchain-artifact: public/build/mar-tools.tar.xz
         resources:
             - build/moz.configure
+            - 'config/milestone.txt'
             - mfbt
             - modules/libmar/
             - moz.configure
