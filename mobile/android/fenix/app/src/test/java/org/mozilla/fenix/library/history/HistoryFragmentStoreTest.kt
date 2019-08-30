@@ -9,55 +9,55 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 
-class HistoryStoreTest {
+class HistoryFragmentStoreTest {
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
     private val newHistoryItem = HistoryItem(1, "title", "url", 0.toLong())
 
     @Test
     fun exitEditMode() = runBlocking {
         val initialState = oneItemEditState()
-        val store = HistoryStore(initialState)
+        val store = HistoryFragmentStore(initialState)
 
-        store.dispatch(HistoryAction.ExitEditMode).join()
+        store.dispatch(HistoryFragmentAction.ExitEditMode).join()
         assertNotSame(initialState, store.state)
-        assertEquals(store.state.mode, HistoryState.Mode.Normal)
+        assertEquals(store.state.mode, HistoryFragmentState.Mode.Normal)
     }
 
     @Test
     fun itemAddedForRemoval() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = HistoryStore(initialState)
+        val store = HistoryFragmentStore(initialState)
 
-        store.dispatch(HistoryAction.AddItemForRemoval(newHistoryItem)).join()
+        store.dispatch(HistoryFragmentAction.AddItemForRemoval(newHistoryItem)).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            HistoryState.Mode.Editing(setOf(newHistoryItem))
+            HistoryFragmentState.Mode.Editing(setOf(newHistoryItem))
         )
     }
 
     @Test
     fun removeItemForRemoval() = runBlocking {
         val initialState = twoItemEditState()
-        val store = HistoryStore(initialState)
+        val store = HistoryFragmentStore(initialState)
 
-        store.dispatch(HistoryAction.RemoveItemForRemoval(newHistoryItem)).join()
+        store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(newHistoryItem)).join()
         assertNotSame(initialState, store.state)
-        assertEquals(store.state.mode, HistoryState.Mode.Editing(setOf(historyItem)))
+        assertEquals(store.state.mode, HistoryFragmentState.Mode.Editing(setOf(historyItem)))
     }
 
-    private fun emptyDefaultState(): HistoryState = HistoryState(
+    private fun emptyDefaultState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryState.Mode.Normal
+        mode = HistoryFragmentState.Mode.Normal
     )
 
-    private fun oneItemEditState(): HistoryState = HistoryState(
+    private fun oneItemEditState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryState.Mode.Editing(setOf(historyItem))
+        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem))
     )
 
-    private fun twoItemEditState(): HistoryState = HistoryState(
+    private fun twoItemEditState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
-        mode = HistoryState.Mode.Editing(setOf(historyItem, newHistoryItem))
+        mode = HistoryFragmentState.Mode.Editing(setOf(historyItem, newHistoryItem))
     )
 }

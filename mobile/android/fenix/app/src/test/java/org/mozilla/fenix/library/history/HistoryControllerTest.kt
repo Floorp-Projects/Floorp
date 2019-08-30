@@ -16,8 +16,8 @@ import org.junit.Test
 class HistoryControllerTest {
 
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-    private val store: HistoryStore = mockk(relaxed = true)
-    private val state: HistoryState = mockk(relaxed = true)
+    private val store: HistoryFragmentStore = mockk(relaxed = true)
+    private val state: HistoryFragmentState = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -28,7 +28,7 @@ class HistoryControllerTest {
     fun onPressHistoryItemInNormalMode() {
         var historyItemReceived: HistoryItem? = null
 
-        every { state.mode } returns HistoryState.Mode.Normal
+        every { state.mode } returns HistoryFragmentState.Mode.Normal
 
         val controller = DefaultHistoryController(
             store,
@@ -44,7 +44,7 @@ class HistoryControllerTest {
 
     @Test
     fun onPressHistoryItemInEditMode() {
-        every { state.mode } returns HistoryState.Mode.Editing(setOf())
+        every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf())
 
         val controller = DefaultHistoryController(
             store,
@@ -57,13 +57,13 @@ class HistoryControllerTest {
         controller.handleSelect(historyItem)
 
         verify {
-            store.dispatch(HistoryAction.AddItemForRemoval(historyItem))
+            store.dispatch(HistoryFragmentAction.AddItemForRemoval(historyItem))
         }
     }
 
     @Test
     fun onPressSelectedHistoryItemInEditMode() {
-        every { state.mode } returns HistoryState.Mode.Editing(setOf(historyItem))
+        every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf(historyItem))
 
         val controller = DefaultHistoryController(
             store,
@@ -76,13 +76,13 @@ class HistoryControllerTest {
         controller.handleDeselect(historyItem)
 
         verify {
-            store.dispatch(HistoryAction.RemoveItemForRemoval(historyItem))
+            store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(historyItem))
         }
     }
 
     @Test
     fun onBackPressedInNormalMode() {
-        every { state.mode } returns HistoryState.Mode.Normal
+        every { state.mode } returns HistoryFragmentState.Mode.Normal
 
         val controller = DefaultHistoryController(store, mockk(), mockk(), mockk(), mockk())
         assertFalse(controller.handleBackPressed())
@@ -90,13 +90,13 @@ class HistoryControllerTest {
 
     @Test
     fun onBackPressedInEditMode() {
-        every { state.mode } returns HistoryState.Mode.Editing(setOf())
+        every { state.mode } returns HistoryFragmentState.Mode.Editing(setOf())
 
         val controller = DefaultHistoryController(store, mockk(), mockk(), mockk(), mockk())
         assertTrue(controller.handleBackPressed())
 
         verify {
-            store.dispatch(HistoryAction.ExitEditMode)
+            store.dispatch(HistoryFragmentAction.ExitEditMode)
         }
     }
 

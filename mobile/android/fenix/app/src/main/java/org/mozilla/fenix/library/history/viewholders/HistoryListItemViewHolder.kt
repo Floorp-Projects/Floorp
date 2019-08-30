@@ -13,7 +13,7 @@ import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
-import org.mozilla.fenix.library.history.HistoryState
+import org.mozilla.fenix.library.history.HistoryFragmentState
 
 class HistoryListItemViewHolder(
     view: View,
@@ -40,14 +40,14 @@ class HistoryListItemViewHolder(
         item: HistoryItem,
         timeGroup: HistoryItemTimeGroup?,
         showDeleteButton: Boolean,
-        mode: HistoryState.Mode
+        mode: HistoryFragmentState.Mode
     ) {
         this.item = item
 
         itemView.history_layout.titleView.text = item.title
         itemView.history_layout.urlView.text = item.url
 
-        toggleDeleteButton(showDeleteButton, mode === HistoryState.Mode.Normal)
+        toggleDeleteButton(showDeleteButton, mode === HistoryFragmentState.Mode.Normal)
 
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)

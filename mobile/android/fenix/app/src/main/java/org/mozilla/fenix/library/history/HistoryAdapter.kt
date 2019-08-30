@@ -31,7 +31,7 @@ class HistoryAdapter(
     private val historyInteractor: HistoryInteractor
 ) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback), SelectionHolder<HistoryItem> {
 
-    private var mode: HistoryState.Mode = HistoryState.Mode.Normal
+    private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
     override val selectedItems get() = mode.selectedItems
 
     override fun getItemViewType(position: Int): Int = HistoryListItemViewHolder.LAYOUT_ID
@@ -41,7 +41,7 @@ class HistoryAdapter(
         return HistoryListItemViewHolder(view, historyInteractor, this)
     }
 
-    fun updateMode(mode: HistoryState.Mode) {
+    fun updateMode(mode: HistoryFragmentState.Mode) {
         this.mode = mode
         // Update the delete button alpha that the first item holds
         if (itemCount > 0) notifyItemChanged(0)

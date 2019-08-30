@@ -17,7 +17,7 @@ interface HistoryController {
 }
 
 class DefaultHistoryController(
-    private val store: HistoryStore,
+    private val store: HistoryFragmentStore,
     private val openToBrowser: (item: HistoryItem) -> Unit,
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
@@ -28,16 +28,16 @@ class DefaultHistoryController(
     }
 
     override fun handleSelect(item: HistoryItem) {
-        store.dispatch(HistoryAction.AddItemForRemoval(item))
+        store.dispatch(HistoryFragmentAction.AddItemForRemoval(item))
     }
 
     override fun handleDeselect(item: HistoryItem) {
-        store.dispatch(HistoryAction.RemoveItemForRemoval(item))
+        store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(item))
     }
 
     override fun handleBackPressed(): Boolean {
-        return if (store.state.mode is HistoryState.Mode.Editing) {
-            store.dispatch(HistoryAction.ExitEditMode)
+        return if (store.state.mode is HistoryFragmentState.Mode.Editing) {
+            store.dispatch(HistoryFragmentAction.ExitEditMode)
             true
         } else {
             false

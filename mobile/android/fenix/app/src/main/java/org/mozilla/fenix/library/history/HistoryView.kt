@@ -57,7 +57,7 @@ class HistoryView(
         .inflate(R.layout.component_history, container, true)
 
     private var items: List<HistoryItem> = listOf()
-    var mode: HistoryState.Mode = HistoryState.Mode.Normal
+    var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
         private set
 
     val historyAdapter = HistoryAdapter(interactor)
@@ -71,10 +71,10 @@ class HistoryView(
         }
     }
 
-    fun update(state: HistoryState) {
+    fun update(state: HistoryFragmentState) {
         val oldMode = mode
 
-        view.progress_bar.isVisible = state.mode === HistoryState.Mode.Deleting
+        view.progress_bar.isVisible = state.mode === HistoryFragmentState.Mode.Deleting
         items = state.items
         mode = state.mode
 
@@ -88,7 +88,7 @@ class HistoryView(
             }
         }
 
-        if (state.mode is HistoryState.Mode.Editing) {
+        if (state.mode is HistoryFragmentState.Mode.Editing) {
             val unselectedItems = oldMode.selectedItems - state.mode.selectedItems
 
             state.mode.selectedItems.union(unselectedItems).forEach { item ->
@@ -97,9 +97,9 @@ class HistoryView(
         }
 
         when (val mode = state.mode) {
-            is HistoryState.Mode.Normal ->
+            is HistoryFragmentState.Mode.Normal ->
                 setUiForNormalMode(context.getString(R.string.library_history))
-            is HistoryState.Mode.Editing ->
+            is HistoryFragmentState.Mode.Editing ->
                 setUiForSelectingMode(context.getString(R.string.history_multi_select_title, mode.selectedItems.size))
         }
     }

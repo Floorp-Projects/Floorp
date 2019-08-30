@@ -42,7 +42,7 @@ import org.mozilla.fenix.share.ShareTab
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
-    private lateinit var historyStore: HistoryStore
+    private lateinit var historyStore: HistoryFragmentStore
     private lateinit var historyView: HistoryView
     private lateinit var historyInteractor: HistoryInteractor
     private lateinit var viewModel: HistoryViewModel
@@ -54,9 +54,9 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
         historyStore = StoreProvider.get(this) {
-            HistoryStore(
-                HistoryState(
-                    items = listOf(), mode = HistoryState.Mode.Normal
+            HistoryFragmentStore(
+                HistoryFragmentState(
+                    items = listOf(), mode = HistoryFragmentState.Mode.Normal
                 )
             )
         }
@@ -106,7 +106,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
                 }
             }
             viewModel.invalidate()
-            historyStore.dispatch(HistoryAction.ExitDeletionMode)
+            historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
         }
     }
 
@@ -135,12 +135,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         val mode = historyStore.state.mode
         when (mode) {
-            HistoryState.Mode.Normal -> R.menu.library_menu
-            is HistoryState.Mode.Editing -> R.menu.history_select_multi
+            HistoryFragmentState.Mode.Normal -> R.menu.library_menu
+            is HistoryFragmentState.Mode.Editing -> R.menu.history_select_multi
             else -> null
         }?.let { inflater.inflate(it, menu) }
 
-        if (mode is HistoryState.Mode.Editing) {
+        if (mode is HistoryFragmentState.Mode.Editing) {
             menu.findItem(R.id.share_history_multi_select)?.run {
                 isVisible = true
                 icon.colorFilter = PorterDuffColorFilter(
@@ -174,7 +174,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
             lifecycleScope.launch(Main) {
                 deleteSelectedHistory(historyStore.state.mode.selectedItems, components)
                 viewModel.invalidate()
-                historyStore.dispatch(HistoryAction.ExitDeletionMode)
+                historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
             }
             true
         }
@@ -228,13 +228,13 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
-                    historyStore.dispatch(HistoryAction.EnterDeletionMode)
+                    historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
                     lifecycleScope.launch {
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
                         requireComponents.core.historyStorage.deleteEverything()
                         launch(Main) {
                             viewModel.invalidate()
-                            historyStore.dispatch(HistoryAction.ExitDeletionMode)
+                            historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
                         }
                     }
 
