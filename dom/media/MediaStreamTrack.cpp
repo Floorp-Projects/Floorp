@@ -188,10 +188,6 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
       mInputStream(aInputStream),
-      mStream(aReadyState == MediaStreamTrackState::Live
-                  ? mInputStream->Graph()->CreateTrackUnionStream()
-                  : nullptr),
-      mPort(mStream ? mStream->AllocateInputPort(mInputStream) : nullptr),
       mTrackID(aTrackID),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
@@ -201,9 +197,23 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
       mMuted(false),
       mConstraints(aConstraints) {
   if (!Ended()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mInputStream->IsDestroyed());
     GetSource().RegisterSink(mSink.get());
 
+    // Even if the input stream is destroyed we need mStream so that methods
+    // like AddListener still work. Keeping the number of paths to a minimum
+    // also helps prevent bugs elsewhere. We'll be ended through the
+    // MediaStreamTrackSource soon enough.
+    auto graph = mInputStream->IsDestroyed()
+                     ? MediaStreamGraph::GetInstanceIfExists(
+                           mWindow, mInputStream->GraphRate())
+                     : mInputStream->Graph();
+    MOZ_DIAGNOSTIC_ASSERT(graph,
+                          "A destroyed input stream is only expected when "
+                          "cloning, but since we're live there must be another "
+                          "live track that is keeping the graph alive");
+
+    mStream = graph->CreateTrackUnionStream();
+    mPort = mStream->AllocateInputPort(mInputStream);
     mMSGListener = new MSGListener(this);
     AddListener(mMSGListener);
   }
