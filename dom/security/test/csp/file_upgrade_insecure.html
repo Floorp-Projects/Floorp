@@ -49,28 +49,24 @@
 
   <!-- websockets: upgrade ws:// to wss://-->
   <script type="application/javascript">
-    // WebSocket tests are not supported on Android yet. Bug 1566168
-    const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-    if (AppConstants.platform !== "android") {
-      var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");
-      mySocket.onopen = function(e) {
-        if (mySocket.url.includes("wss://")) {
-          window.parent.postMessage({result: "websocket-ok"}, "*");
-        }
-        else {
-          window.parent.postMessage({result: "websocket-error"}, "*");
-        }
-        mySocket.close();
-      };
-      mySocket.onerror = function(e) {
-        // debug information for Bug 1316305
-        dump("  xxx mySocket.onerror: (mySocket): " + mySocket + "\n");
-        dump("  xxx mySocket.onerror: (mySocket.url): " + mySocket.url + "\n");
-        dump("  xxx mySocket.onerror: (e): " + e + "\n");
-        dump("  xxx mySocket.onerror: (e.message): " + e.message + "\n");
-        window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
-      };
-    }
+    var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");
+    mySocket.onopen = function(e) {
+      if (mySocket.url.includes("wss://")) {
+        window.parent.postMessage({result: "websocket-ok"}, "*");
+      }
+      else {
+        window.parent.postMessage({result: "websocket-error"}, "*");
+      }
+      mySocket.close();
+    };
+    mySocket.onerror = function(e) {
+      // debug information for Bug 1316305
+      dump("  xxx mySocket.onerror: (mySocket): " + mySocket + "\n");
+      dump("  xxx mySocket.onerror: (mySocket.url): " + mySocket.url + "\n");
+      dump("  xxx mySocket.onerror: (e): " + e + "\n");
+      dump("  xxx mySocket.onerror: (e.message): " + e.message + "\n");
+      window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
+    };
   </script>
 
   <!-- form action: (upgrade POST from http:// to https://) -->
