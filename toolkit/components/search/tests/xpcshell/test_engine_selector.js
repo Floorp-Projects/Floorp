@@ -21,7 +21,7 @@ const CONFIG_URL =
           },
           {
             included: { regions: ["us"] },
-            webExtensionLocale: "us",
+            webExtensionLocale: "$USER_LOCALE",
           },
         ],
       },
@@ -80,7 +80,7 @@ add_task(async function() {
   Assert.deepEqual(names, ["lycos", "altavista", "aol"], "Correct order");
   Assert.equal(
     engines[2].webExtensionLocale,
-    "us",
+    "en-US",
     "Subsequent matches in applies to can override default"
   );
 
