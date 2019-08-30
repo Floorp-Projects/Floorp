@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const EXT_SEARCH_PREFIX = "resource://search-extensions/";
 const ENGINE_CONFIG_URL = `${EXT_SEARCH_PREFIX}engines.json`;
+const USER_LOCALE = "$USER_LOCALE";
 
 function log(str) {
   SearchUtils.log("SearchEngineSelector " + str + "\n");
@@ -77,6 +78,11 @@ class SearchEngineSelector {
         for (let section of applies) {
           this._copyObject(baseConfig, section);
         }
+
+        if (baseConfig.webExtensionLocale == USER_LOCALE) {
+          baseConfig.webExtensionLocale = locale;
+        }
+
         engines.push(baseConfig);
       }
     }

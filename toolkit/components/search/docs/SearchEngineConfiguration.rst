@@ -109,6 +109,29 @@ In this case users identified as being in the US region would use the WebExtensi
 with identifier ``webext-engine1``, version 1.1. GB region users would get
 ``webext-gb`` version 1.2, and all other users would get ``webext`` version 1.0.
 
+Special Attributes
+------------------
+
+If a ``webExtensionLocale`` attribute is specified with the value
+``"$USER_LOCALE"`` then the special value will be replaced in the
+configuration object with the users locale. For example:
+
+.. code-block:: js
+
+    "engine1": {
+      "webExtensionId": "webext",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [{
+        "included": {
+          "locales": {
+            "matches": ["us", "gb"]
+          },
+          "webExtensionLocale": "$USER_LOCALE",
+        },
+
+Will report either ``us`` or ``gb`` as the ``webExtensionLocale``
+depending on the user.
+
 Engine Defaults
 ---------------
 

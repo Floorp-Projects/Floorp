@@ -808,6 +808,78 @@
       "webExtensionId": "zoznam-sk@search.mozilla.org",
       "webExtensionVersion": "1.2",
       "appliesTo": [{ "included": { "locales": { "matches": ["sk"]}}}]
+    },
+    {
+      "engineName": "wikipedia",
+      "webExtensionId": "wikipedia@search.mozilla.org",
+      "webExtensionVersion": "1.0",
+      "appliesTo": [ {
+        "included": { "locales": { "matches": [
+          "af", "an", "ar", "as", "ast", "az", "be", "bg",
+          "br", "bs", "ca", "crh", "cy", "da", "de", "dsb",
+          "el", "eo", "et", "eu", "fa", "fi", "fy-NL", "ga-IE",
+          "gd", "gl", "gn", "he", "hr", "hsb", "hu", "ia",
+          "id", "is", "it", "ka", "kab", "kk", "km", "kn",
+          "lij", "lo", "lt", "ltg", "lv", "mk", "ml", "mr",
+          "ms", "my", "nl", "oc", "or", "pl", "rm", "ro", "ru",
+          "si", "sk", "sl", "sq", "sr", "sv-SE", "ta", "te",
+          "th", "tl", "tr", "uk", "ur", "uz", "vi", "wo",
+          "zh-CN", "zh-TW"
+        ]}},
+        "webExtensionLocale": "$USER_LOCALE"
+      }, {
+        "included": { "locales": { "matches": [
+          "en-CA", "en-GB", "en-US", "en-ZA", "ach", "xh"
+          ]}},
+          "webExtensionLocale": "en"
+      }, {
+        "included": { "locales": { "matches": [ "bn", "bn-BD", "bn-IN" ] } },
+        "webExtensionLocale": "bn"
+      }, {
+        "included": { "locales": { "matches": [
+          "cak", "es-AR", "es-CL", "es-ES", "es-MX", "trs"
+        ]}},
+        "webExtensionLocale": "es"
+      }, {
+        "included": { "locales": { "matches": [ "cs" ] } },
+        "webExtensionLocale": "cz"
+      }, {
+        "included": { "locales": { "matches": [ "ff", "fr", "son" ] } },
+        "webExtensionLocale": "fr"
+      }, {
+        "included": { "locales": { "matches": [ "gu-IN" ] } },
+        "webExtensionLocale": "gu"
+      }, {
+        "included": { "locales": { "matches": [ "hi-IN" ] } },
+        "webExtensionLocale": "hi"
+      }, {
+        "included": { "locales": { "matches": [ "hy-AM" ] } },
+        "webExtensionLocale": "hy"
+      }, {
+        "included": { "locales": { "matches": [ "ja-JP-macos", "ja" ] } },
+        "webExtensionLocale": "ja"
+      }, {
+        "included": { "locales": { "matches": [ "ko" ] } },
+        "webExtensionLocale": "kr"
+      }, {
+        "included": { "locales": { "matches": [ "mai" ] } },
+        "webExtensionLocale": "hi"
+      }, {
+        "included": { "locales": { "matches": [ "nb-NO" ] } },
+        "webExtensionLocale": "NO"
+      }, {
+        "included": { "locales": { "matches": [ "ne-NP" ] } },
+        "webExtensionLocale": "ne"
+      }, {
+        "included": { "locales": { "matches": [ "nn-NO" ] } },
+        "webExtensionLocale": "NN"
+      }, {
+        "included": { "locales": { "matches": [ "pa-IN" ] } },
+        "webExtensionLocale": "pa"
+      }, {
+        "included": { "locales": { "matches": [ "pt-BR", "pt-PT" ] } },
+        "webExtensionLocale": "pt"
+      }]
     }
   ]
 }
