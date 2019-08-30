@@ -242,9 +242,11 @@ struct HuffmanTableIndexedSymbolsBool {
   explicit HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
 };
 
+// A Huffman table that may only ever contain two values:
+// `BinASTKind::_Null` and another `BinASTKind`.
 struct HuffmanTableIndexedSymbolsMaybeInterface {
-  using Contents = Nullable;
-  HuffmanTableImpl<Nullable, 2> impl;
+  using Contents = BinASTKind;
+  HuffmanTableImpl<BinASTKind, 2> impl;
   explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx) : impl(cx) {}
 
   // `true` if this table only contains values for `null`.
@@ -257,7 +259,7 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
       return false;
     }
     // Otherwise, check the single value.
-    return impl.begin()->value == Nullable::Null;
+    return impl.begin()->value == BinASTKind::_Null;
   }
 };
 
@@ -400,7 +402,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     BestEffort
   };
 
- private:
+ protected:
   // A buffer of bits used to lookup data from the Huffman tables.
   // It may contain up to 64 bits.
   //
@@ -604,6 +606,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   MOZ_MUST_USE JS::Result<uint32_t> readUnpackedLong();
 
  private:
+  MOZ_MUST_USE JS::Result<BinASTKind> readTagFromTable(const Context&);
+
   template <typename Table>
   MOZ_MUST_USE JS::Result<typename Table::Contents> readFieldFromTable(
       const Context&);
@@ -659,6 +663,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
  protected:
   friend class HuffmanPreludeReader;
+  friend struct TagReader;
 
  public:
   // The following classes are used whenever we encounter a tuple/tagged
