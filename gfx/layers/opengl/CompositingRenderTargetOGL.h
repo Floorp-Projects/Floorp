@@ -68,12 +68,14 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
 
  public:
   CompositingRenderTargetOGL(CompositorOGL* aCompositor,
-                             const gfx::IntPoint& aOrigin, GLuint aTexure,
-                             GLuint aFBO)
+                             const gfx::IntPoint& aOrigin,
+                             const gfx::IntPoint& aClipSpaceOrigin,
+                             GLuint aTexure, GLuint aFBO)
       : CompositingRenderTarget(aOrigin),
         mInitParams(),
         mCompositor(aCompositor),
         mGL(aCompositor->gl()),
+        mClipSpaceOrigin(aClipSpaceOrigin),
         mTextureHandle(aTexure),
         mFBO(aFBO) {
     MOZ_ASSERT(mGL);
@@ -89,8 +91,8 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
    */
   static already_AddRefed<CompositingRenderTargetOGL> RenderTargetForWindow(
       CompositorOGL* aCompositor, const gfx::IntSize& aSize) {
-    RefPtr<CompositingRenderTargetOGL> result =
-        new CompositingRenderTargetOGL(aCompositor, gfx::IntPoint(), 0, 0);
+    RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
+        aCompositor, gfx::IntPoint(), gfx::IntPoint(), 0, 0);
     result->mInitParams = InitParams(aSize, aSize, 0, INIT_MODE_NONE);
     result->mInitParams.mStatus = InitParams::INITIALIZED;
     return result.forget();
@@ -136,12 +138,18 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   }
   gfx::IntSize GetSize() const override { return mInitParams.mSize; }
 
+  // The point that DrawGeometry's aClipRect is relative to. Will be (0, 0) for
+  // root render targets and equal to GetOrigin() for non-root render targets.
+  gfx::IntPoint GetClipSpaceOrigin() const { return mClipSpaceOrigin; }
+
   gfx::SurfaceFormat GetFormat() const override {
     // XXX - Should it be implemented ? is the above assert true ?
     MOZ_ASSERT(false, "Not implemented");
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
+  // In render target coordinates, i.e. the same space as GetOrigin().
+  // NOT relative to mClipSpaceOrigin!
   void SetClipRect(const Maybe<gfx::IntRect>& aRect) { mClipRect = aRect; }
   const Maybe<gfx::IntRect>& GetClipRect() const { return mClipRect; }
 
@@ -168,6 +176,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<GLContext> mGL;
   Maybe<gfx::IntRect> mClipRect;
+  gfx::IntPoint mClipSpaceOrigin;
   GLuint mTextureHandle;
   GLuint mFBO;
 };
