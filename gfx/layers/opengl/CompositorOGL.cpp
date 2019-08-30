@@ -1288,9 +1288,6 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   MakeCurrent();
 
-  IntPoint offset = mCurrentRenderTarget->GetOrigin();
-  IntSize size = mCurrentRenderTarget->GetSize();
-
   // Convert aClipRect into render target space, and intersect it with the
   // render target's clip.
   IntRect clipRect = aClipRect + mCurrentRenderTarget->GetClipSpaceOrigin();
@@ -1298,22 +1295,15 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     clipRect = clipRect.Intersect(*rtClip);
   }
 
-  Rect renderBound(mCurrentRenderTarget->GetRect().Intersect(clipRect));
-
-  Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
+  Rect destRect = aTransform.TransformAndClipBounds(
+      aRect, Rect(mCurrentRenderTarget->GetRect().Intersect(clipRect)));
+  if (destRect.IsEmpty()) {
+    return;
+  }
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
   mPixelsFilled += destRect.Area();
-
-  // Do a simple culling if this rect is out of target buffer.
-  // Inflate a small size to avoid some numerical imprecision issue.
-  destRect.Inflate(1, 1);
-  destRect.MoveBy(-offset);
-  renderBound = Rect(0, 0, size.width, size.height);
-  if (!renderBound.Intersects(destRect)) {
-    return;
-  }
 
   LayerScope::DrawBegin();
 
@@ -1338,6 +1328,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   }
 
   // Move clipRect into device space.
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
   clipRect -= offset;
 
   // clipRect is in destination coordinate space (after all
