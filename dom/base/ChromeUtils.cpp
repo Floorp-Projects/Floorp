@@ -789,7 +789,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                   // parent, basic info.
                   procInfo.mPid = parentPid;
                   procInfo.mFilename.Assign(parentInfo.filename);
-                  procInfo.mType = mozilla::dom::ProcType::Browser;
+                  procInfo.mType = mozilla::dom::WebIDLProcType::Browser;
                   procInfo.mVirtualMemorySize = parentInfo.virtualMemorySize;
                   procInfo.mResidentSetSize = parentInfo.residentSetSize;
                   procInfo.mCpuUser = parentInfo.cpuUser;
@@ -822,7 +822,8 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     }
                     // Basic info.
                     childProcInfo->mChildID = info.childId;
-                    childProcInfo->mType = static_cast<ProcType>(info.type);
+                    childProcInfo->mType =
+                        static_cast<WebIDLProcType>(info.type);
                     childProcInfo->mPid = info.pid;
                     childProcInfo->mFilename.Assign(info.filename);
                     childProcInfo->mVirtualMemorySize = info.virtualMemorySize;
