@@ -195,6 +195,8 @@ class CompositorOGL final : public Compositor {
 
   bool SupportsLayerGeometry() const override;
 
+  void NormalDrawingDone() override;
+
   void EndFrame() override;
 
   void WaitForGPU() override;
@@ -301,6 +303,8 @@ class CompositorOGL final : public Compositor {
 
   void InsertFrameDoneSync();
 
+  bool NeedToRecreateFullWindowRenderTarget() const;
+
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
@@ -333,7 +337,15 @@ class CompositorOGL final : public Compositor {
   // Begin/EndRenderingToNativeLayer. Created on demand.
   RefPtr<CompositingRenderTarget> mNativeLayersReferenceRT;
 
-  CompositingRenderTargetOGL* mWindowRenderTarget;
+  // The render target that profiler screenshots / frame recording read from.
+  // This will be the actual window framebuffer when rendering to a window, and
+  // it will be mFullWindowRenderTarget when rendering to native layers.
+  RefPtr<CompositingRenderTargetOGL> mWindowRenderTarget;
+
+  // Non-null when using native layers and frame recording is requested.
+  // EndNormalDrawing() maintains a copy of the entire window contents in this
+  // render target, by copying from the native layer render targets.
+  RefPtr<CompositingRenderTargetOGL> mFullWindowRenderTarget;
 
   /**
    * VBO that has some basics in it for a textured quad, including vertex
@@ -363,6 +375,10 @@ class CompositorOGL final : public Compositor {
    * Have we had DrawQuad calls since the last frame was rendered?
    */
   bool mFrameInProgress;
+
+  // Only true between BeginFromeForNativeLayers and EndFrame, and only if the
+  // full window render target needed to be recreated in the current frame.
+  bool mShouldInvalidateWindow = false;
 
   /*
    * Clear aRect on current render target.
