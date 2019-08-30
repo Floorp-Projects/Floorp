@@ -881,7 +881,12 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
   }
 
-  IntRect rect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
+  IntRect rect;
+  if (aNativeLayer) {
+    rect = aNativeLayer->GetRect();
+  } else {
+    rect = IntRect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
+  }
 
   const bool shouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
 
@@ -918,19 +923,20 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
     if (!surf) {
       return Nothing();
     }
-    nativeLayer->InvalidateRegionThroughoutSwapchain(mInvalidRegion);
-    mInvalidRegion = nativeLayer->CurrentSurfaceInvalidRegion();
+    IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
+    nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+    invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
+    mInvalidRegion = invalidRelativeToLayer.MovedBy(rect.TopLeft());
     MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
     mCurrentNativeLayer = aNativeLayer;
     mCurrentIOSurface = new MacIOSurface(std::move(surf));
     mCurrentIOSurface->Lock(false);
     RefPtr<DrawTarget> dt =
         mCurrentIOSurface->GetAsDrawTargetLocked(BackendType::SKIA);
-    IntRect dtBounds(IntPoint(0, 0), dt->GetSize());
     IntRegion clearRegion;
     clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
     // Set up a render target for drawing directly to dt.
-    target = CreateRootRenderTarget(dt, dtBounds, clearRegion);
+    target = CreateRootRenderTarget(dt, rect, clearRegion);
 #else
     MOZ_CRASH("Unexpected native layer on this platform");
 #endif
