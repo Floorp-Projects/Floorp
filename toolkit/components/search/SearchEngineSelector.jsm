@@ -96,6 +96,9 @@ class SearchEngineSelector {
       result.privateDefault = privateEngine.engineName;
     }
 
+    if (SearchUtils.loggingEnabled) {
+      log("fetchEngineConfiguration: " + JSON.stringify(result));
+    }
     return result;
   }
 

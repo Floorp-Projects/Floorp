@@ -27,6 +27,7 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
 
 EXTRA_JS_MODULES += [
     'SearchEngine.jsm',
+    'SearchEngineSelector.jsm',
     'SearchService.jsm',
     'SearchStaticData.jsm',
     'SearchSuggestionController.jsm',
@@ -43,7 +44,6 @@ XPCOM_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
-    'SearchEngineSelector.jsm',
     'tests/SearchTestUtils.jsm',
 ]
 
