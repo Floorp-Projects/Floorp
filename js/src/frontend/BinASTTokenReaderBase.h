@@ -52,7 +52,28 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   };
 
   // The context in which we read a token.
-  typedef mozilla::Variant<RootContext, ListContext, FieldContext> Context;
+  using Context = mozilla::Variant<RootContext, ListContext, FieldContext>;
+
+#ifdef DEBUG
+  // Utility matcher, used to print a `Context` during debugging.
+  struct ContextPrinter {
+    static void print(const char* text, const Context& context) {
+      fprintf(stderr, "%s ", text);
+      context.match(ContextPrinter());
+      fprintf(stderr, "\n");
+    }
+    void operator()(const RootContext&) { fprintf(stderr, "<Root context>"); }
+    void operator()(const ListContext& context) {
+      fprintf(stderr, "<List context>: %s => %s",
+              describeBinASTInterfaceAndField(context.position),
+              describeBinASTList(context.content));
+    }
+    void operator()(const FieldContext& context) {
+      fprintf(stderr, "<Field context>: %s",
+              describeBinASTInterfaceAndField(context.position));
+    }
+  };
+#endif  // DEBUG
 
   // The information needed to skip a subtree.
   class SkippableSubTree {

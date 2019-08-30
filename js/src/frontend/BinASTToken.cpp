@@ -39,6 +39,23 @@ const BinaryASTSupport::CharSlice BINASTVARIANT_DESCRIPTIONS[] = {
 #undef WITH_VARIANT
 };
 
+const BinaryASTSupport::CharSlice BINASTLIST_DESCRIPTIONS[] = {
+#define NOTHING(_)
+#define EMIT_NAME(_list_name, _content, SPEC_NAME, _type_name) \
+  BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
+    FOR_EACH_BIN_LIST(EMIT_NAME, NOTHING, NOTHING, NOTHING, NOTHING, NOTHING,
+                      NOTHING, NOTHING, NOTHING)
+#undef EMIT_NAME
+#undef NOTHING
+};
+
+const BinaryASTSupport::CharSlice BINASTINTERFACEANDFIELD_DESCRIPTIONS[] = {
+#define WITH_VARIANT(_, SPEC_NAME) \
+  BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
+    FOR_EACH_BIN_INTERFACE_AND_FIELD(WITH_VARIANT)
+#undef WITH_VARIANT
+};
+
 const BinaryASTSupport::CharSlice& getBinASTKind(const BinASTKind& variant) {
   return BINASTKIND_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
@@ -52,6 +69,16 @@ const BinaryASTSupport::CharSlice& getBinASTField(const BinASTField& variant) {
   return BINASTFIELD_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
 
+const BinaryASTSupport::CharSlice& getBinASTList(const BinASTList& list) {
+  return BINASTLIST_DESCRIPTIONS[static_cast<size_t>(list)];
+}
+
+const BinaryASTSupport::CharSlice& getBinASTInterfaceAndField(
+    const BinASTInterfaceAndField& interfaceAndField) {
+  return BINASTINTERFACEANDFIELD_DESCRIPTIONS[static_cast<size_t>(
+      interfaceAndField)];
+}
+
 const char* describeBinASTKind(const BinASTKind& kind) {
   return getBinASTKind(kind).begin();
 }
@@ -62,6 +89,15 @@ const char* describeBinASTField(const BinASTField& field) {
 
 const char* describeBinASTVariant(const BinASTVariant& variant) {
   return getBinASTVariant(variant).begin();
+}
+
+const char* describeBinASTList(const BinASTList& list) {
+  return getBinASTList(list).begin();
+}
+
+const char* describeBinASTInterfaceAndField(
+    const BinASTInterfaceAndField& interfaceAndField) {
+  return getBinASTInterfaceAndField(interfaceAndField).begin();
 }
 
 }  // namespace frontend
