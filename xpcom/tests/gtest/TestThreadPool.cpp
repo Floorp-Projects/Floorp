@@ -28,7 +28,7 @@ class Task final : public nsIRunnable {
   NS_IMETHOD Run() override {
     printf("###(%d) running from thread: %p\n", mIndex,
            (void*)PR_GetCurrentThread());
-    int r = (int)((float)rand() * 200 / RAND_MAX);
+    int r = (int)((float)rand() * 200 / float(RAND_MAX));
     PR_Sleep(PR_MillisecondsToInterval(r));
     printf("###(%d) exiting from thread: %p\n", mIndex,
            (void*)PR_GetCurrentThread());
