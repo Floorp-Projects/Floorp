@@ -98,7 +98,8 @@ media/openmax_il/
 media/webrtc/signaling/src/sdp/sipcc/
 media/webrtc/trunk/
 mfbt/double-conversion/double-conversion/
-mfbt/lz4.*
+mfbt/lz4.c
+mfbt/lz4.h
 mobile/android/geckoview/src/thirdparty/
 mobile/android/thirdparty/
 modules/brotli/
