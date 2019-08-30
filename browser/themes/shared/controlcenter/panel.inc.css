@@ -149,6 +149,12 @@
 #identity-popup-permissions-header {
   background-image: url(chrome://browser/skin/permissions.svg);
   background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#identity-popup-permissions-header:-moz-locale-dir(rtl) {
+  background-position-x: right;
 }
 
 #identity-popup-permissions-header,
