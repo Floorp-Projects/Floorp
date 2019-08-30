@@ -29,6 +29,8 @@ newtab-unit-tests:
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
             npm install &&
             node bin/try-runner.js
+    attributes:
+        code-review: true
     when:
         files-changed:
             - "browser/components/newtab/**"
