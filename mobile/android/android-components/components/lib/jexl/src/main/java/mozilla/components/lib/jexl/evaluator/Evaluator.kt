@@ -4,8 +4,8 @@
 
 package mozilla.components.lib.jexl.evaluator
 
-import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.ast.AstNode
+import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.value.JexlArray
 import mozilla.components.lib.jexl.value.JexlBoolean
 import mozilla.components.lib.jexl.value.JexlDouble
@@ -29,10 +29,10 @@ internal class Evaluator(
     internal val transforms: Map<String, Transform> = emptyMap(),
     internal val relativeContext: JexlObject = JexlObject()
 ) {
+
     @Throws(EvaluatorException::class)
-    fun evaluate(node: AstNode): JexlValue {
-        return EvaluatorHandlers.get(node.type).invoke(this, node)
-    }
+    fun evaluate(node: AstNode): JexlValue =
+        EvaluatorHandlers.evaluateWith(this, node)
 
     internal fun evaluateArray(nodes: List<AstNode>): List<JexlValue> {
         return nodes.map { evaluate(it) }
