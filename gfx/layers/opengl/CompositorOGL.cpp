@@ -856,6 +856,7 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
   MOZ_RELEASE_ASSERT(match != mRegisteredIOSurfaceRenderTargets.end(),
                      "IOSurface has not been registered with this Compositor");
   RefPtr<CompositingRenderTargetOGL> rt = match->second;
+  rt->SetOrigin(layerRect.TopLeft());
 
   // Clip the render target to the invalid rect. This conserves memory bandwidth
   // and power.
@@ -879,7 +880,9 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
              "frame still in progress (should have called EndFrame");
 
   IntRect rect;
-  if (mUseExternalSurfaceSize) {
+  if (aNativeLayer && !mTarget) {
+    rect = aNativeLayer->GetRect();
+  } else if (mUseExternalSurfaceSize) {
     rect = IntRect(IntPoint(), mSurfaceSize);
   } else {
     rect = aRenderBounds;
@@ -966,7 +969,8 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     IntRegion clearRegion;
     clearRegion.Sub(*rtClip, aOpaqueRegion);
     if (!clearRegion.IsEmpty()) {
-      IntRect clearRect = clearRegion.GetBounds();
+      IntRect clearRect =
+          clearRegion.GetBounds() - mCurrentRenderTarget->GetOrigin();
       ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST,
                                            true);
       ScopedScissorRect autoScissorRect(mGLContext, clearRect.x,
