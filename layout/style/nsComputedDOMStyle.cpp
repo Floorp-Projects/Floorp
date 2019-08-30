@@ -899,17 +899,10 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
     case eCSSProperty_margin_right:
     case eCSSProperty_margin_bottom:
     case eCSSProperty_margin_left: {
-      // NOTE(emilio): We could do the commented out thing below, but it is not
-      // clear whether it's correct. It does change behavior and cause a new
-      // test to _pass_. But it's unclear whether it is the right thing, see:
-      //
-      // https://github.com/w3c/csswg-drafts/issues/2328
-      //
-      // Bug 1570759 tracks maybe changing the behavior here.
-      //
-      // Side side = SideForPaddingOrMarginOrInsetProperty(aPropID);
-      // return !style->StyleMargin()->mMargin.Get(side).ConvertsToLength();
-      return true;
+      // NOTE(emilio): This is dubious, but matches other browsers.
+      // See https://github.com/w3c/csswg-drafts/issues/2328
+      Side side = SideForPaddingOrMarginOrInsetProperty(aPropID);
+      return !style->StyleMargin()->mMargin.Get(side).ConvertsToLength();
     }
     default:
       return false;
