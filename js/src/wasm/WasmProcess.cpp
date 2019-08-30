@@ -21,7 +21,6 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ScopeExit.h"
 
-#include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
 #include "wasm/cranelift/clifapi.h"
 #include "wasm/WasmBuiltins.h"
@@ -283,55 +282,8 @@ bool wasm::InCompiledCode(void* pc) {
   return LookupBuiltinThunk(pc, &codeRange, &codeBase);
 }
 
-/**
- * ReadLockFlag maintains a flag that can be mutated multiple times before it
- * is read, at which point it maintains the same value.
- */
-class ReadLockFlag {
- private:
-  bool enabled_;
-  bool read_;
-
- public:
-  ReadLockFlag() : enabled_(false), read_(false) {}
-
-  bool get() {
-    read_ = true;
-    return enabled_;
-  }
-
-  bool set(bool enabled) {
-    if (read_) {
-      return false;
-    }
-    enabled_ = enabled;
-    return true;
-  }
-};
-
-ExclusiveData<ReadLockFlag> sHugeMemoryEnabled(mutexid::WasmHugeMemoryEnabled);
-
-bool wasm::IsHugeMemoryEnabled() {
-  auto state = sHugeMemoryEnabled.lock();
-  return state->get();
-}
-
-bool wasm::DisableHugeMemory() {
-  auto state = sHugeMemoryEnabled.lock();
-  return state->set(false);
-}
-
 bool wasm::Init() {
   MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
-
-#ifdef WASM_SUPPORTS_HUGE_MEMORY
-  {
-    auto state = sHugeMemoryEnabled.lock();
-    if (!state->set(true)) {
-      return false;
-    }
-  }
-#endif
 
 #ifdef ENABLE_WASM_CRANELIFT
   cranelift_initialize();

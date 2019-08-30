@@ -1,1 +1,1 @@
-|jit-test| test-also=--wasm-gc; test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--wasm-gc --wasm-compiler=baseline; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemoryIsSupported(); include:wasm.js
+|jit-test| test-also=--wasm-gc; test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--wasm-gc --wasm-compiler=baseline; include:wasm.js

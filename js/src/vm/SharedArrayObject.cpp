@@ -29,39 +29,40 @@ using mozilla::Nothing;
 
 using namespace js;
 
+static size_t SharedArrayMappedSizeForWasm(size_t declaredMaxSize) {
+#ifdef WASM_HUGE_MEMORY
+  return wasm::HugeMappedSize;
+#else
+  return wasm::ComputeMappedSize(declaredMaxSize);
+#endif
+}
+
 static uint32_t SharedArrayAccessibleSize(uint32_t length) {
   return AlignBytes(length, gc::SystemPageSize());
 }
 
-// `maxSize` must be something for wasm, nothing for other cases.
+// `max` must be something for wasm, nothing for other cases.
 SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
-    uint32_t length, const Maybe<uint32_t>& maxSize,
-    const Maybe<size_t>& mappedSize) {
+    uint32_t length, const Maybe<uint32_t>& max) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::MaxBufferByteLength);
+
+  bool preparedForWasm = max.isSome();
 
   uint32_t accessibleSize = SharedArrayAccessibleSize(length);
   if (accessibleSize < length) {
     return nullptr;
   }
 
-  bool preparedForWasm = maxSize.isSome();
-  uint32_t computedMaxSize;
-  size_t computedMappedSize;
+  uint32_t maxSize = max.isSome() ? *max : accessibleSize;
 
+  size_t mappedSize;
   if (preparedForWasm) {
-    computedMaxSize = *maxSize;
-    computedMappedSize = mappedSize.isSome()
-                             ? *mappedSize
-                             : wasm::ComputeMappedSize(computedMaxSize);
+    mappedSize = SharedArrayMappedSizeForWasm(maxSize);
   } else {
-    computedMappedSize = accessibleSize;
-    computedMaxSize = accessibleSize;
+    mappedSize = accessibleSize;
   }
 
-  MOZ_ASSERT(accessibleSize <= computedMaxSize);
-  MOZ_ASSERT(accessibleSize <= computedMappedSize);
-
-  uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
+  uint64_t mappedSizeWithHeader = mappedSize + gc::SystemPageSize();
   uint64_t accessibleSizeWithHeader = accessibleSize + gc::SystemPageSize();
 
   void* p = MapBufferMemory(mappedSizeWithHeader, accessibleSizeWithHeader);
@@ -72,18 +73,19 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
   uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
   uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
   SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(
-      buffer, length, computedMaxSize, computedMappedSize, preparedForWasm);
+      buffer, length, maxSize, mappedSize, preparedForWasm);
   MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
   return rawbuf;
 }
 
+#ifndef WASM_HUGE_MEMORY
 void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint32_t deltaMaxSize) {
   CheckedInt<uint32_t> newMaxSize = maxSize_;
   newMaxSize += deltaMaxSize;
   MOZ_ASSERT(newMaxSize.isValid());
   MOZ_ASSERT(newMaxSize.value() % wasm::PageSize == 0);
 
-  size_t newMappedSize = wasm::ComputeMappedSize(newMaxSize.value());
+  size_t newMappedSize = SharedArrayMappedSizeForWasm(newMaxSize.value());
   MOZ_ASSERT(mappedSize_ <= newMappedSize);
   if (mappedSize_ == newMappedSize) {
     return;
@@ -96,6 +98,7 @@ void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint32_t deltaMaxSize) {
   mappedSize_ = newMappedSize;
   maxSize_ = newMaxSize.value();
 }
+#endif
 
 bool SharedArrayRawBuffer::wasmGrowToSizeInPlace(const Lock&,
                                                  uint32_t newLength) {
@@ -222,7 +225,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::New(JSContext* cx,
                                                       uint32_t length,
                                                       HandleObject proto) {
   SharedArrayRawBuffer* buffer =
-      SharedArrayRawBuffer::Allocate(length, Nothing(), Nothing());
+      SharedArrayRawBuffer::Allocate(length, Nothing());
   if (!buffer) {
     return nullptr;
   }
@@ -284,6 +287,15 @@ void SharedArrayBufferObject::Finalize(JSFreeOp* fop, JSObject* obj) {
     buf.dropRawBuffer();
   }
 }
+
+#ifndef WASM_HUGE_MEMORY
+uint32_t SharedArrayBufferObject::wasmBoundsCheckLimit() const {
+  if (isWasm()) {
+    return rawBufferObject()->boundsCheckLimit();
+  }
+  return byteLength();
+}
+#endif
 
 /* static */
 void SharedArrayBufferObject::addSizeOfExcludingThis(

@@ -1223,7 +1223,8 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 
   tlsData()->memoryBase =
       memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
-  tlsData()->boundsCheckLimit = memory ? memory->boundsCheckLimit() : 0;
+  tlsData()->boundsCheckLimit =
+      memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
   tlsData()->instance = this;
   tlsData()->realm = realm_;
   tlsData()->cx = cx;
@@ -1894,7 +1895,7 @@ void Instance::onMovingGrowMemory() {
 
   ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
   tlsData()->memoryBase = buffer.dataPointer();
-  tlsData()->boundsCheckLimit = memory_->boundsCheckLimit();
+  tlsData()->boundsCheckLimit = buffer.wasmBoundsCheckLimit();
 }
 
 void Instance::onMovingGrowTable(const Table* theTable) {

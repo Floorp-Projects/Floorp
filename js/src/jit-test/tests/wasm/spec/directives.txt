@@ -1,1 +1,1 @@
-|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; include:wasm-testharness.js
+|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm-testharness.js

@@ -41,7 +41,6 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmModule.h"
-#include "wasm/WasmProcess.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
@@ -494,10 +493,6 @@ bool wasm::CompileAndSerialize(const ShareableBytes& bytecode,
   // JS::OptimizedEncodingListener::storeOptimizedEncoding().
   compileArgs->baselineEnabled = false;
   compileArgs->ionEnabled = true;
-
-  // The caller must ensure that huge memory support is configured the same in
-  // the receiving process of this serialized module.
-  compileArgs->hugeMemory = wasm::IsHugeMemoryEnabled();
 
   SerializeListener listener(serialized);
 
@@ -1824,29 +1819,12 @@ WasmMemoryObject::InstanceSet* WasmMemoryObject::getOrCreateObservers(
   return &observers();
 }
 
-bool WasmMemoryObject::isHuge() const {
-#ifdef WASM_SUPPORTS_HUGE_MEMORY
-  static_assert(ArrayBufferObject::MaxBufferByteLength < HugeMappedSize,
-                "Non-huge buffer may be confused as huge");
-  return buffer().wasmMappedSize() >= HugeMappedSize;
-#else
-  return false;
-#endif
-}
-
 bool WasmMemoryObject::movingGrowable() const {
-  return !isHuge() && !buffer().wasmMaxSize();
-}
-
-uint32_t WasmMemoryObject::boundsCheckLimit() const {
-  if (!buffer().isWasm() || isHuge()) {
-    return buffer().byteLength();
-  }
-  size_t mappedSize = buffer().wasmMappedSize();
-  MOZ_ASSERT(mappedSize <= UINT32_MAX);
-  MOZ_ASSERT(mappedSize >= wasm::GuardSize);
-  MOZ_ASSERT(wasm::IsValidBoundsCheckImmediate(mappedSize - wasm::GuardSize));
-  return mappedSize - wasm::GuardSize;
+#ifdef WASM_HUGE_MEMORY
+  return false;
+#else
+  return !buffer().wasmMaxSize();
+#endif
 }
 
 bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
@@ -1917,23 +1895,28 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   RootedArrayBufferObject newBuf(cx);
 
-  if (memory->movingGrowable()) {
-    MOZ_ASSERT(!memory->isHuge());
-    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
-                                                 &newBuf, cx)) {
+  if (Maybe<uint32_t> maxSize = oldBuf->wasmMaxSize()) {
+    if (newSize.value() > maxSize.value()) {
       return -1;
-    }
-  } else {
-    if (Maybe<uint32_t> maxSize = oldBuf->wasmMaxSize()) {
-      if (newSize.value() > maxSize.value()) {
-        return -1;
-      }
     }
 
     if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
                                                   &newBuf, cx)) {
       return -1;
     }
+  } else {
+#ifdef WASM_HUGE_MEMORY
+    if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
+                                                  &newBuf, cx)) {
+      return -1;
+    }
+#else
+    MOZ_ASSERT(memory->movingGrowable());
+    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
+                                                 &newBuf, cx)) {
+      return -1;
+    }
+#endif
   }
 
   memory->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuf));

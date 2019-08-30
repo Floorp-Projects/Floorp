@@ -94,7 +94,6 @@
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "wasm/WasmModule.h"
-#include "wasm/WasmProcess.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
@@ -5873,7 +5872,10 @@ JS_PUBLIC_API RefPtr<JS::WasmModule> JS::GetWasmModule(HandleObject obj) {
   return const_cast<wasm::Module*>(&mobj.module());
 }
 
-bool JS::DisableWasmHugeMemory() { return wasm::DisableHugeMemory(); }
+JS_PUBLIC_API RefPtr<JS::WasmModule> JS::DeserializeWasmModule(
+    const uint8_t* bytecode, size_t bytecodeLength) {
+  return wasm::DeserializeModule(bytecode, bytecodeLength);
+}
 
 JS_PUBLIC_API void JS::SetProcessLargeAllocationFailureCallback(
     JS::LargeAllocationFailureCallback lafc) {

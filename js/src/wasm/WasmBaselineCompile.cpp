@@ -5245,10 +5245,8 @@ class BaseCompiler final : public BaseCompilerInterface {
       return;
     }
 
-    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
-
     if ((bceSafe_ & (BCESet(1) << local)) &&
-        access->offset() < offsetGuardLimit) {
+        access->offset() < wasm::OffsetGuardLimit) {
       check->omitBoundsCheck = true;
     }
 
@@ -5266,10 +5264,9 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr) {
-    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
-
     // Fold offset if necessary for further computations.
-    if (access->offset() >= offsetGuardLimit ||
+
+    if (access->offset() >= OffsetGuardLimit ||
         (access->isAtomic() && !check->omitAlignmentCheck &&
          !check->onlyPointerAlignment)) {
       Label ok;
@@ -5295,11 +5292,11 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // Ensure no tls if we don't need it.
 
-    if (env_.hugeMemoryEnabled()) {
-      // We have HeapReg and no bounds checking and need load neither
-      // memoryBase nor boundsCheckLimit from tls.
-      MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
-    }
+#ifdef WASM_HUGE_MEMORY
+    // We have HeapReg and no bounds checking and need load neither
+    // memoryBase nor boundsCheckLimit from tls.
+    MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
+#endif
 #ifdef JS_CODEGEN_ARM
     // We have HeapReg on ARM and don't need to load the memoryBase from tls.
     MOZ_ASSERT_IF(check->omitBoundsCheck, tls.isInvalid());
@@ -5307,7 +5304,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // Bounds check if required.
 
-    if (!env_.hugeMemoryEnabled() && !check->omitBoundsCheck) {
+#ifndef WASM_HUGE_MEMORY
+    if (!check->omitBoundsCheck) {
       Label ok;
       masm.wasmBoundsCheck(Assembler::Below, ptr,
                            Address(tls, offsetof(TlsData, boundsCheckLimit)),
@@ -5315,6 +5313,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
       masm.bind(&ok);
     }
+#endif
   }
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) ||      \
@@ -5369,11 +5368,13 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   MOZ_MUST_USE bool needTlsForAccess(const AccessCheck& check) {
-#if defined(JS_CODEGEN_X86)
-    // x86 requires Tls for memory base
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
+    defined(JS_CODEGEN_MIPS64)
+    return !check.omitBoundsCheck;
+#elif defined(JS_CODEGEN_X86)
     return true;
 #else
-    return !env_.hugeMemoryEnabled() && !check.omitBoundsCheck;
+    return false;
 #endif
   }
 
@@ -9339,10 +9340,9 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
   if (popConstI32(&addrTemp)) {
     uint32_t addr = addrTemp;
 
-    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
-
     uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-    uint64_t limit = uint64_t(env_.minMemoryLength) + offsetGuardLimit;
+    uint64_t limit =
+        uint64_t(env_.minMemoryLength) + uint64_t(wasm::OffsetGuardLimit);
 
     check->omitBoundsCheck = ea < limit;
     check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
