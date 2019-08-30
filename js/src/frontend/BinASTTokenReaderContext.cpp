@@ -393,19 +393,6 @@ class HuffmanPreludeReader {
     };
   };
 
-#ifdef DEBUG
-  // Utility struct, designed to inspect an `Entry` while debugging.
-  struct PrintEntry {
-    const char* text;
-    explicit PrintEntry(const char* text) : text(text) {}
-    void print(const NormalizedInterfaceAndField& identity) {
-      fprintf(stderr, "Context: %s, Identity: %hu\n", text, identity.identity);
-    }
-    void operator()(const EntryBase& entry) { print(entry.identity); }
-    PrintEntry() = delete;
-  };
-#endif  // DEBUG
-
  public:
   // The entries in the grammar.
   using Entry = mozilla::Variant<
@@ -413,6 +400,21 @@ class HuffmanPreludeReader {
       Boolean, String, MaybeString, Number, UnsignedLong, Lazy,
       // Combinators
       Interface, MaybeInterface, List, Sum, MaybeSum, StringEnum>;
+
+#ifdef DEBUG
+  // Utility struct, designed to inspect an `Entry` while debugging.
+  struct PrintEntry {
+    static void print(const char* text, const Entry& entry) {
+      fprintf(stderr, "%s ", text);
+      entry.match(PrintEntry());
+      fprintf(stderr, "\n");
+    }
+    void operator()(const EntryBase& entry) {
+      fprintf(stderr, "%s",
+              describeBinASTInterfaceAndField(entry.identity.identity));
+    }
+  };
+#endif  // DEBUG
 
  private:
   // A stack of entries to process. We always process the latest entry added.
@@ -669,13 +671,20 @@ class HuffmanPreludeReader {
       // Read the length immediately.
       MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
 
-      auto& length = table.as<HuffmanTableExplicitSymbolsListLength>();
-      if ((length.impl.length() == 0) ||
-          (length.impl.length() == 1 && length.impl.begin()->value == 0)) {
-        // Spec:
-        // 3. If the field has a FrozenArray type
-        //   a. Determine if the array type is always empty
-        //   b. If so, stop
+      // Spec:
+      // 3. If the field has a FrozenArray type
+      //   a. Determine if the array type is always empty
+      //   b. If so, stop
+      auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
+      bool isEmpty = true;
+      for (const auto& iter : lengthTable.impl) {
+        if (iter.value != 0) {
+          isEmpty = false;
+          break;
+        }
+      }
+
+      if (isEmpty) {
         return Ok();
       }
 
@@ -735,8 +744,9 @@ class HuffmanPreludeReader {
       // Spec:
       // 2. Add the field to the set of visited fields
       table = {mozilla::VariantType<HuffmanTableInitializing>{}};
-#ifdef DEBUG_BINAST
-      entry.match(PrintEntry("pushValue"));
+#ifdef DEBUG
+      fprintf(stderr, "pushing entry %s\n",
+              describeBinASTInterfaceAndField(entry.identity.identity));
 #endif  // DEBUG_BINAST
 
       // Spec:
@@ -1338,7 +1348,7 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
 
     if ((byte & 0x80) == 0) {
       const uint8_t* end = current_;
-      fprintf(stderr, "readVarU32: %ld => %ud\n", end - start, result);
+      fprintf(stderr, "readVarU32: %ld bytes => %ud\n", end - start, result);
       return result;
     }
 
@@ -1502,11 +1512,11 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::run(size_t initialCapacity) {
   while (stack.length() > 0) {
     const Entry entry = stack.popCopy();
 #ifdef DEBUG
-    entry.match(PrintEntry("pop"));
+    PrintEntry::print("popping", entry);
 #endif  // DEBUG_BINAST
     MOZ_TRY(entry.match(ReadPoppedEntryMatcher(*this)));
 #ifdef DEBUG
-    entry.match(PrintEntry("pop complete"));
+    PrintEntry::print("pop complete", entry);
 #endif  // DEBUG_BINAST
   }
   return Ok();
@@ -1702,6 +1712,7 @@ template <>
 MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
     const List& list) {
   BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  //  BINJS_MOZ_TRY_DECL(length, reader.readUnpackedLong());
   if (length > MAX_NUMBER_OF_SYMBOLS) {
     return raiseInvalidTableData(list.identity);
   }
