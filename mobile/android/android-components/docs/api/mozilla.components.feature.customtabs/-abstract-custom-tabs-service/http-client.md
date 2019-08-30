@@ -2,4 +2,4 @@
 
 # httpClient
 
-`open val httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L36)
+`open val httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/AbstractCustomTabsService.kt#L40)
