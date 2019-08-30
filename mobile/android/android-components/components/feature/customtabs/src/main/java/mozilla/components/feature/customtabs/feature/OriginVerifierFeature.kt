@@ -22,6 +22,7 @@ import mozilla.components.feature.customtabs.verify.OriginVerifier
 class OriginVerifierFeature(
     private val httpClient: Client,
     private val packageManager: PackageManager,
+    private val apiKey: String?,
     private val dispatch: (CustomTabsAction) -> Unit
 ) {
 
@@ -51,5 +52,5 @@ class OriginVerifierFeature(
 
     @VisibleForTesting
     internal fun getVerifier(packageName: String, @Relation relation: Int) =
-        OriginVerifier(packageName, relation, packageManager, httpClient)
+        OriginVerifier(packageName, relation, packageManager, httpClient, apiKey)
 }

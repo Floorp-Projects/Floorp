@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit
  * relationship declared by a web site with an Android application
  */
 internal class DigitalAssetLinksHandler(
-    private val httpClient: Client
+    private val httpClient: Client,
+    private val apiKey: String?
 ) {
 
     fun checkDigitalAssetLinkRelationship(
@@ -31,12 +32,13 @@ internal class DigitalAssetLinksHandler(
         fingerprint: String?,
         relationship: String
     ): Boolean {
-        val requestUrl = getUrlForCheckingRelationship(webDomain, packageName, fingerprint, relationship)
+        val requestUrl = getUrlForCheckingRelationship(webDomain, packageName, fingerprint, relationship, apiKey)
         val response = fetch(requestUrl) ?: return false
 
         val responseBody = response.use { response.body.string() }
         return try {
-            JSONObject(responseBody).getBoolean(DIGITAL_ASSET_LINKS_CHECK_RESPONSE_KEY_LINKED)
+            val responseJson = JSONObject(responseBody)
+            responseJson.getBoolean(DIGITAL_ASSET_LINKS_CHECK_RESPONSE_KEY_LINKED)
         } catch (e: JSONException) {
             false
         }
@@ -64,6 +66,8 @@ internal class DigitalAssetLinksHandler(
         private const val SOURCE_PACKAGE_NAME_PARAM = "target.androidApp.packageName"
         private const val SOURCE_PACKAGE_FINGERPRINT_PARAM = "target.androidApp.certificate.sha256Fingerprint"
         private const val RELATIONSHIP_PARAM = "relation"
+        private const val PRETTY_PRINT_PARAM = "prettyPrint"
+        private const val KEY_PARAM = "key"
         private const val DIGITAL_ASSET_LINKS_CHECK_RESPONSE_KEY_LINKED = "linked"
         private const val HTTP_OK = 200
         private val TIMEOUT = 3L to TimeUnit.SECONDS
@@ -79,12 +83,15 @@ internal class DigitalAssetLinksHandler(
             webDomain: String,
             packageName: String,
             fingerprint: String?,
-            relationship: String
+            relationship: String,
+            key: String?
         ) = URL.toUri().buildUpon()
             .appendQueryParameter(TARGET_ORIGIN_PARAM, webDomain)
             .appendQueryParameter(SOURCE_PACKAGE_NAME_PARAM, packageName)
             .appendQueryParameter(SOURCE_PACKAGE_FINGERPRINT_PARAM, fingerprint)
             .appendQueryParameter(RELATIONSHIP_PARAM, relationship)
+            .appendQueryParameter(PRETTY_PRINT_PARAM, false.toString())
+            .appendQueryParameter(KEY_PARAM, key.orEmpty())
             .build()
             .toString()
     }

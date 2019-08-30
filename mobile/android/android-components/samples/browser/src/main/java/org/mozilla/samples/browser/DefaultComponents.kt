@@ -130,6 +130,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 sessionUseCases.loadUrl,
                 client,
                 applicationContext.packageManager,
+                null,
                 customTabsStore
             ),
             CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)

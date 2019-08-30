@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit
 @ExperimentalCoroutinesApi
 class OriginVerifierTest {
 
+    private val apiKey = "XXXXXXXXX"
     @Mock private lateinit var client: Client
     @Mock private lateinit var packageManager: PackageManager
     @Mock private lateinit var response: Response
@@ -45,9 +46,9 @@ class OriginVerifierTest {
     fun setup() {
         initMocks(this)
         handleAllUrlsVerifier =
-            spy(OriginVerifier(testContext.packageName, RELATION_HANDLE_ALL_URLS, packageManager, client))
+            spy(OriginVerifier(testContext.packageName, RELATION_HANDLE_ALL_URLS, packageManager, client, apiKey))
         useAsOriginVerifier =
-            spy(OriginVerifier(testContext.packageName, RELATION_USE_AS_ORIGIN, packageManager, client))
+            spy(OriginVerifier(testContext.packageName, RELATION_USE_AS_ORIGIN, packageManager, client, apiKey))
 
         doReturn(response).`when`(client).fetch(any())
         doReturn(body).`when`(response).body
@@ -81,7 +82,8 @@ class OriginVerifierTest {
                     "https://www.example.com",
                     testContext.packageName,
                     "AA:BB:CC:10:20:30:01:02",
-                    "delegate_permission/common.use_as_origin"
+                    "delegate_permission/common.use_as_origin",
+                    apiKey
                 ),
                 connectTimeout = 3L to TimeUnit.SECONDS,
                 readTimeout = 3L to TimeUnit.SECONDS
