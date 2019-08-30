@@ -86,7 +86,7 @@ def listfiles(path, ext = None):
     _,_,files = os.walk(path).next()
     if (ext):
       files = [fileName for fileName in files if fileName.endswith(ext)]
-  except StopIteration:
+  except StopIteration, e:
     files = []
   return files
 
@@ -95,7 +95,7 @@ def listdirs(path):
   """
   try:
     _,dirs,_ = os.walk(path).next()
-  except StopIteration:
+  except StopIteration, e:
     dirs = []
   return dirs
 
