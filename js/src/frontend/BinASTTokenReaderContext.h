@@ -411,12 +411,12 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     //
     // If `result.bitLength == 0`, you have reached the end of the stream.
     template <Compression Compression>
-    HuffmanLookup getHuffmanLookup();
+    MOZ_MUST_USE JS::Result<HuffmanLookup> getHuffmanLookup(
+        BinASTTokenReaderContext& owner);
 
     // Advance the bit buffer by `bitLength` bits.
     template <Compression Compression>
-    MOZ_MUST_USE JS::Result<Ok> advanceBitBuffer(
-        BinASTTokenReaderContext& owner, const uint8_t bitLength);
+    void advanceBitBuffer(const uint8_t bitLength);
 
    private:
     // The contents of the buffer.
@@ -444,6 +444,9 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     // If `bitLength < BIT_BUFFER_SIZE = 64`, some of the highest
     // bits of `bits` are unused.
     uint8_t bitLength;
+
+    // `true` once we have called `advanceBitBuffer` at least once.
+    bool initialized;
   } bitBuffer;
 
   // Returns true if the brotli stream finished.
@@ -679,9 +682,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     friend BinASTTokenReaderContext;
     void init();
 
-    // Set to `true` if `init()` has been called. Reset to `false` once
-    // all conditions have been checked.
-    bool initialized_;
     BinASTTokenReaderContext& reader_;
   };
 
