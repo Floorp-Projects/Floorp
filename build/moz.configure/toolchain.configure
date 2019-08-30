@@ -302,6 +302,7 @@ js_option(env='RUSTC_WRAPPER', nargs=1,
 
 @depends(ccache, ccache_is_sccache, 'RUSTC_WRAPPER')
 @imports(_from='textwrap', _import='dedent')
+@imports('os')
 def check_sccache_version(ccache, ccache_is_sccache, rustc_wrapper):
     sccache_min_version = Version('0.2.10')
 
@@ -322,7 +323,7 @@ def check_sccache_version(ccache, ccache_is_sccache, rustc_wrapper):
     if (rustc_wrapper and
         (os.path.splitext(os.path.basename(rustc_wrapper[0]))[0].lower() ==
          'sccache')):
-        check_version(rustc_wrapper)
+        check_version(rustc_wrapper[0])
 
 set_config('MOZ_USING_CCACHE', using_ccache)
 set_config('MOZ_USING_SCCACHE', using_sccache)
