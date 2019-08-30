@@ -5245,8 +5245,10 @@ class BaseCompiler final : public BaseCompilerInterface {
       return;
     }
 
+    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
+
     if ((bceSafe_ & (BCESet(1) << local)) &&
-        access->offset() < wasm::OffsetGuardLimit) {
+        access->offset() < offsetGuardLimit) {
       check->omitBoundsCheck = true;
     }
 
@@ -5264,9 +5266,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegI32 tls, RegI32 ptr) {
-    // Fold offset if necessary for further computations.
+    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
 
-    if (access->offset() >= OffsetGuardLimit ||
+    // Fold offset if necessary for further computations.
+    if (access->offset() >= offsetGuardLimit ||
         (access->isAtomic() && !check->omitAlignmentCheck &&
          !check->onlyPointerAlignment)) {
       Label ok;
@@ -9336,9 +9339,10 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
   if (popConstI32(&addrTemp)) {
     uint32_t addr = addrTemp;
 
+    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
+
     uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-    uint64_t limit =
-        uint64_t(env_.minMemoryLength) + uint64_t(wasm::OffsetGuardLimit);
+    uint64_t limit = uint64_t(env_.minMemoryLength) + offsetGuardLimit;
 
     check->omitBoundsCheck = ea < limit;
     check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;

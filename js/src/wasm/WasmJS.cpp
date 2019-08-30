@@ -1824,12 +1824,29 @@ WasmMemoryObject::InstanceSet* WasmMemoryObject::getOrCreateObservers(
   return &observers();
 }
 
-bool WasmMemoryObject::movingGrowable() const {
-#ifdef WASM_HUGE_MEMORY
-  return false;
+bool WasmMemoryObject::isHuge() const {
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+  static_assert(ArrayBufferObject::MaxBufferByteLength < HugeMappedSize,
+                "Non-huge buffer may be confused as huge");
+  return buffer().wasmMappedSize() >= HugeMappedSize;
 #else
-  return !buffer().wasmMaxSize();
+  return false;
 #endif
+}
+
+bool WasmMemoryObject::movingGrowable() const {
+  return !isHuge() && !buffer().wasmMaxSize();
+}
+
+uint32_t WasmMemoryObject::boundsCheckLimit() const {
+  if (!buffer().isWasm() || isHuge()) {
+    return buffer().byteLength();
+  }
+  size_t mappedSize = buffer().wasmMappedSize();
+  MOZ_ASSERT(mappedSize <= UINT32_MAX);
+  MOZ_ASSERT(mappedSize >= wasm::GuardSize);
+  MOZ_ASSERT(wasm::IsValidBoundsCheckImmediate(mappedSize - wasm::GuardSize));
+  return mappedSize - wasm::GuardSize;
 }
 
 bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
@@ -1900,28 +1917,23 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   RootedArrayBufferObject newBuf(cx);
 
-  if (Maybe<uint32_t> maxSize = oldBuf->wasmMaxSize()) {
-    if (newSize.value() > maxSize.value()) {
+  if (memory->movingGrowable()) {
+    MOZ_ASSERT(!memory->isHuge());
+    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
+                                                 &newBuf, cx)) {
       return -1;
+    }
+  } else {
+    if (Maybe<uint32_t> maxSize = oldBuf->wasmMaxSize()) {
+      if (newSize.value() > maxSize.value()) {
+        return -1;
+      }
     }
 
     if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
                                                   &newBuf, cx)) {
       return -1;
     }
-  } else {
-#ifdef WASM_HUGE_MEMORY
-    if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
-                                                  &newBuf, cx)) {
-      return -1;
-    }
-#else
-    MOZ_ASSERT(memory->movingGrowable());
-    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
-                                                 &newBuf, cx)) {
-      return -1;
-    }
-#endif
   }
 
   memory->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuf));
