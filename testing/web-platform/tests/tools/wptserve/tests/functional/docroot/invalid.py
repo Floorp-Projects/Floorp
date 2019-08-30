@@ -1,3 +1,3 @@
 # Oops...
-def main(request, response
+def main(request, response):
     return "FAIL"
