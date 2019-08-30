@@ -109,7 +109,9 @@
               <label id="protections-popup-not-blocking-section-why"
                      class="text-link"
                      onmouseover="document.getElementById(event.target.tooltip).openPopup(event.target);"
-                     onmouseout="document.getElementById(event.target.tooltip).hidePopup()">&protections.notBlocking.why.label;</label>
+                     onfocus="document.getElementById(event.target.tooltip).openPopup(event.target);"
+                     onmouseout="document.getElementById(event.target.tooltip).hidePopup()"
+                     onblur="document.getElementById(event.target.tooltip).hidePopup()">&protections.notBlocking.why.label;</label>
             </hbox>
             <description id="protections-popup-not-found-section-header"
                          role="heading"
