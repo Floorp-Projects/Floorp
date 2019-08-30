@@ -800,6 +800,16 @@ void MacroAssembler::branch32(Condition cond, Register lhs, Imm32 imm,
   B(label, cond);
 }
 
+void MacroAssembler::branch32(Condition cond, Register lhs, const Address& rhs,
+                              Label* label) {
+  vixl::UseScratchRegisterScope temps(this);
+  const Register scratch = temps.AcquireX().asUnsized();
+  MOZ_ASSERT(scratch != lhs);
+  MOZ_ASSERT(scratch != rhs.base);
+  load32(rhs, scratch);
+  branch32(cond, lhs, scratch, label);
+}
+
 void MacroAssembler::branch32(Condition cond, const Address& lhs, Register rhs,
                               Label* label) {
   vixl::UseScratchRegisterScope temps(this);
