@@ -9,6 +9,8 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.PageVisit
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
@@ -28,14 +30,17 @@ class InMemoryHistoryStorage : HistoryStorage {
     @VisibleForTesting
     internal val pageMeta: HashMap<String, PageObservation> = hashMapOf()
 
-    override suspend fun recordVisit(uri: String, visitType: VisitType) {
+    override suspend fun recordVisit(uri: String, visit: PageVisit) {
         val now = System.currentTimeMillis()
+        if (visit.redirectSource != RedirectSource.NOT_A_SOURCE) {
+            return
+        }
 
         synchronized(pages) {
             if (!pages.containsKey(uri)) {
-                pages[uri] = mutableListOf(Visit(now, visitType))
+                pages[uri] = mutableListOf(Visit(now, visit.visitType))
             } else {
-                pages[uri]!!.add(Visit(now, visitType))
+                pages[uri]!!.add(Visit(now, visit.visitType))
             }
         }
     }

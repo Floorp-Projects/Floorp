@@ -7,6 +7,8 @@ package mozilla.components.feature.awesomebar.provider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.storage.PageVisit
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.eq
@@ -32,7 +34,7 @@ class HistoryStorageSuggestionProviderTest {
         val history = InMemoryHistoryStorage()
         val provider = HistoryStorageSuggestionProvider(history, mock())
 
-        history.recordVisit("http://www.mozilla.com", VisitType.TYPED)
+        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
 
         val suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
@@ -45,7 +47,7 @@ class HistoryStorageSuggestionProviderTest {
         val provider = HistoryStorageSuggestionProvider(history, mock())
 
         for (i in 1..100) {
-            history.recordVisit("http://www.mozilla.com/$i", VisitType.TYPED)
+            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
         val suggestions = provider.onInputChanged("moz")

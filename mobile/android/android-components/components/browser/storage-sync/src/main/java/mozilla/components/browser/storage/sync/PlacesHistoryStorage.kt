@@ -11,7 +11,9 @@ import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
+import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
@@ -30,12 +32,22 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
 
     override val logger = Logger("PlacesHistoryStorage")
 
-    override suspend fun recordVisit(uri: String, visitType: VisitType) {
+    override suspend fun recordVisit(uri: String, visit: PageVisit) {
         withContext(scope.coroutineContext) {
             // Ignore exceptions related to uris. This means we may drop some of the data on the floor
             // if the underlying storage layer refuses it.
             ignoreUrlExceptions("recordVisit") {
-                places.writer().noteObservation(VisitObservation(uri, visitType = visitType.into()))
+                places.writer().noteObservation(VisitObservation(uri,
+                    visitType = visit.visitType.into(),
+                    isRedirectSource = when (visit.redirectSource) {
+                        RedirectSource.PERMANENT, RedirectSource.TEMPORARY -> true
+                        RedirectSource.NOT_A_SOURCE -> false
+                    },
+                    isPermanentRedirectSource = when (visit.redirectSource) {
+                        RedirectSource.PERMANENT -> true
+                        RedirectSource.TEMPORARY, RedirectSource.NOT_A_SOURCE -> false
+                    }
+                ))
             }
         }
     }
