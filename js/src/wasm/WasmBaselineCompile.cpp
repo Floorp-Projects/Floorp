@@ -5368,11 +5368,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   MOZ_MUST_USE bool needTlsForAccess(const AccessCheck& check) {
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64)
-    return !check.omitBoundsCheck;
-#elif defined(JS_CODEGEN_X86)
+#if defined(JS_CODEGEN_X86)
     return true;
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
+    defined(JS_CODEGEN_MIPS64) || !defined(WASM_HUGE_MEMORY)
+    return !check.omitBoundsCheck;
 #else
     return false;
 #endif
