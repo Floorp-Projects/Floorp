@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", e => {
       "data-l10n-args",
       JSON.stringify({ count: data.sumEvents, earliestDate: dateInMS })
     );
-    summary.setAttribute("data-l10n-id", "graph-total-summary");
+    summary.setAttribute("data-l10n-id", "graph-total-tracker-summary");
 
     // Set a default top size for the height of the graph bars so that small
     // numbers don't fill the whole graph.
