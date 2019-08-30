@@ -79,7 +79,7 @@ class ExceptionsView(
         view.exceptions_empty_view.text = textWithLink
     }
 
-    fun update(state: ExceptionsState) {
+    fun update(state: ExceptionsFragmentState) {
         view.exceptions_empty_view.visibility =
             if (state.items.isEmpty()) View.VISIBLE else View.GONE
         view.exceptions_list.visibility = if (state.items.isEmpty()) View.GONE else View.VISIBLE

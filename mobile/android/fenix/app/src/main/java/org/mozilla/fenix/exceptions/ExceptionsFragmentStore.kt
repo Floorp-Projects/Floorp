@@ -15,29 +15,29 @@ import mozilla.components.lib.state.Store
 data class ExceptionsItem(val url: String)
 
 /**
- * The [Store] for holding the [ExceptionsState] and applying [ExceptionsAction]s.
+ * The [Store] for holding the [ExceptionsFragmentState] and applying [ExceptionsFragmentAction]s.
  */
-class ExceptionsStore(initialState: ExceptionsState) :
-    Store<ExceptionsState, ExceptionsAction>(initialState, ::exceptionsStateReducer)
+class ExceptionsFragmentStore(initialState: ExceptionsFragmentState) :
+    Store<ExceptionsFragmentState, ExceptionsFragmentAction>(initialState, ::exceptionsStateReducer)
 
 /**
  * Actions to dispatch through the `ExceptionsStore` to modify `ExceptionsState` through the reducer.
  */
-sealed class ExceptionsAction : Action {
-    data class Change(val list: List<ExceptionsItem>) : ExceptionsAction()
+sealed class ExceptionsFragmentAction : Action {
+    data class Change(val list: List<ExceptionsItem>) : ExceptionsFragmentAction()
 }
 
 /**
  * The state for the Exceptions Screen
  * @property items List of exceptions to display
  */
-data class ExceptionsState(val items: List<ExceptionsItem>) : State
+data class ExceptionsFragmentState(val items: List<ExceptionsItem>) : State
 
 /**
  * The ExceptionsState Reducer.
  */
-fun exceptionsStateReducer(state: ExceptionsState, action: ExceptionsAction): ExceptionsState {
+fun exceptionsStateReducer(state: ExceptionsFragmentState, action: ExceptionsFragmentAction): ExceptionsFragmentState {
     return when (action) {
-        is ExceptionsAction.Change -> state.copy(items = action.list)
+        is ExceptionsFragmentAction.Change -> state.copy(items = action.list)
     }
 }

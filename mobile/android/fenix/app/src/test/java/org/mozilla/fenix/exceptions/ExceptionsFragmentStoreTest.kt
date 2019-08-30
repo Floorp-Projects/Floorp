@@ -9,14 +9,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 
-class ExceptionsStoreTest {
+class ExceptionsFragmentStoreTest {
     @Test
     fun onChange() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = ExceptionsStore(initialState)
+        val store = ExceptionsFragmentStore(initialState)
         val newExceptionsItem = ExceptionsItem("URL")
 
-        store.dispatch(ExceptionsAction.Change(listOf(newExceptionsItem))).join()
+        store.dispatch(ExceptionsFragmentAction.Change(listOf(newExceptionsItem))).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.items,
@@ -24,7 +24,7 @@ class ExceptionsStoreTest {
         )
     }
 
-    private fun emptyDefaultState(): ExceptionsState = ExceptionsState(
+    private fun emptyDefaultState(): ExceptionsFragmentState = ExceptionsFragmentState(
         items = listOf()
     )
 }

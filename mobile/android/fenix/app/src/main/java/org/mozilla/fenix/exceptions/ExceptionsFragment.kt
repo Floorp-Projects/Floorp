@@ -26,7 +26,7 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.settings.SupportUtils
 
 class ExceptionsFragment : Fragment() {
-    private lateinit var exceptionsStore: ExceptionsStore
+    private lateinit var exceptionsStore: ExceptionsFragmentStore
     private lateinit var exceptionsView: ExceptionsView
     private lateinit var exceptionsInteractor: ExceptionsInteractor
 
@@ -43,8 +43,8 @@ class ExceptionsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
         exceptionsStore = StoreProvider.get(this) {
-            ExceptionsStore(
-                ExceptionsState(
+            ExceptionsFragmentStore(
+                ExceptionsFragmentState(
                     items = loadAndMapExceptions()
                 )
             )
@@ -102,7 +102,7 @@ class ExceptionsFragment : Fragment() {
 
         coroutineScope {
             launch(Main) {
-                exceptionsStore.dispatch(ExceptionsAction.Change(items))
+                exceptionsStore.dispatch(ExceptionsFragmentAction.Change(items))
             }
         }
     }
