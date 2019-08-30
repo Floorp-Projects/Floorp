@@ -4,6 +4,21 @@
 
 var EXPORTED_SYMBOLS = ["FirstStartup"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Normandy: "resource://normandy/Normandy.jsm",
+});
+
+const PREF_TIMEOUT = "first-startup.timeout";
+const PROBE_NAME = "firstStartup.statusCode";
+
 /**
  * Service for blocking application startup, to be used on the first install. The intended
  * use case is for `FirstStartup` to be invoked when the application is called by an installer,
@@ -27,7 +42,32 @@ var FirstStartup = {
    *
    * In the latter case, services are expected to run post-UI instead as usual.
    */
-  init() {},
+  init() {
+    this._state = this.IN_PROGRESS;
+    const timeout = Services.prefs.getIntPref(PREF_TIMEOUT, 5000); // default to 5 seconds
+    let expiredTime = Date.now() + timeout;
+
+    if (AppConstants.MOZ_NORMANDY) {
+      let normandyInitialized = false;
+
+      Normandy.init({ runAsync: false }).then(
+        () => (normandyInitialized = true)
+      );
+
+      Services.tm.spinEventLoopUntil(() => {
+        if (Date.now() >= expiredTime) {
+          this._state = this.TIMED_OUT;
+          return true;
+        } else if (normandyInitialized) {
+          this._state = this.SUCCESS;
+          return true;
+        }
+        return false;
+      });
+
+      Services.telemetry.scalarSet(PROBE_NAME, this._state);
+    }
+  },
 
   get state() {
     return this._state;
