@@ -873,8 +873,25 @@ Maybe<IntRect> CompositorOGL::BeginFrameForWindow(
     const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
     const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
     NativeLayer* aNativeLayer) {
+  MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
   return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion,
                     aNativeLayer);
+}
+
+Maybe<IntRect> CompositorOGL::BeginFrameForTarget(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    DrawTarget* aTarget, const IntRect& aTargetBounds) {
+  MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
+  mTarget = aTarget;  // Will be cleared in EndFrame().
+  mTargetBounds = aTargetBounds;
+  Maybe<IntRect> result = BeginFrame(aInvalidRegion, aClipRect, aRenderBounds,
+                                     aOpaqueRegion, nullptr);
+  if (!result) {
+    // Composition has been aborted. Reset mTarget.
+    mTarget = nullptr;
+  }
+  return result;
 }
 
 Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
@@ -1927,6 +1944,7 @@ void CompositorOGL::EndFrame() {
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    mTarget = nullptr;
     mWindowRenderTarget = nullptr;
     mCurrentRenderTarget = nullptr;
     Compositor::EndFrame();

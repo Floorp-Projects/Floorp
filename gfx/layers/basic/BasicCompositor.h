@@ -128,6 +128,11 @@ class BasicCompositor : public Compositor {
                                           const gfx::IntRect& aRenderBounds,
                                           const nsIntRegion& aOpaqueRegion,
                                           NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForTarget(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
   void NormalDrawingDone() override;
   void EndFrame() override;
 
@@ -203,8 +208,7 @@ class BasicCompositor : public Compositor {
 
   // The native layer that we're currently rendering to, if any.
   // Non-null only between BeginFrameForWindow and EndFrame if
-  // BeginFrameForWindow has been called with a non-null aNativeLayer and
-  // mTarget is null.
+  // BeginFrameForWindow has been called with a non-null aNativeLayer.
   RefPtr<NativeLayer> mCurrentNativeLayer;
 
 #ifdef XP_MACOSX
@@ -218,6 +222,10 @@ class BasicCompositor : public Compositor {
   uint32_t mMaxTextureSize;
   bool mIsPendingEndRemoteDrawing;
   bool mRecordFrames;
+
+  // Only true between BeginFrameForTarget and EndFrame. Tells EndFrame which of
+  // the BeginFrameForXYZ methods has been called.
+  bool mFrameIsForTarget = false;
 
   // mDrawTarget will not be the full window on all platforms. We therefore need
   // to keep a full window render target around when we are capturing
