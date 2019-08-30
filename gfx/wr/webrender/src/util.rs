@@ -825,7 +825,7 @@ pub fn project_rect<F, T>(
 
     // Note: we only do the full frustum collision when the polygon approaches the camera plane.
     // Otherwise, it will be clamped to the screen bounds anyway.
-    if homogens.iter().any(|h| h.w <= 0.0) {
+    if homogens.iter().any(|h| h.w <= 0.0 || h.w.is_nan()) {
         let mut clipper = Clipper::new();
         let polygon = Polygon::from_rect(*rect, 1);
 
