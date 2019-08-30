@@ -10,6 +10,7 @@
 
 #include <stdint.h>  // int32_t
 
+#include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
@@ -408,28 +409,6 @@ class TeeState : public NativeObject {
 const JSClass TeeState::class_ = {"TeeState",
                                   JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
-#define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags, classFlags, classOps)  \
-  const ClassSpec cls::classSpec_ = {                                        \
-      GenericCreateConstructor<cls::constructor, nCtorArgs,                  \
-                               gc::AllocKind::FUNCTION>,                     \
-      GenericCreatePrototype<cls>,                                           \
-      nullptr,                                                               \
-      nullptr,                                                               \
-      cls##_methods,                                                         \
-      cls##_properties,                                                      \
-      nullptr,                                                               \
-      specFlags};                                                            \
-                                                                             \
-  const JSClass cls::class_ = {#cls,                                         \
-                               JSCLASS_HAS_RESERVED_SLOTS(nSlots) |          \
-                                   JSCLASS_HAS_CACHED_PROTO(JSProto_##cls) | \
-                                   classFlags,                               \
-                               classOps, &cls::classSpec_};                  \
-                                                                             \
-  const JSClass cls::protoClass_ = {"object",                                \
-                                    JSCLASS_HAS_CACHED_PROTO(JSProto_##cls), \
-                                    JS_NULL_CLASS_OPS, &cls::classSpec_};
-
 /*** 3.2. Class ReadableStream **********************************************/
 
 static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
@@ -778,9 +757,9 @@ static const JSFunctionSpec ReadableStream_methods[] = {
 static const JSPropertySpec ReadableStream_properties[] = {
     JS_PSG("locked", ReadableStream_locked, 0), JS_PS_END};
 
-CLASS_SPEC(ReadableStream, 0, SlotCount, 0,
-           JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
-           JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(ReadableStream, 0, SlotCount, 0,
+                      JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
+                      JS_NULL_CLASS_OPS);
 
 /*** 3.3. ReadableStreamAsyncIteratorPrototype ******************************/
 
@@ -1995,8 +1974,8 @@ static const JSPropertySpec ReadableStreamDefaultReader_properties[] = {
 
 const JSClass ReadableStreamReader::class_ = {"ReadableStreamReader"};
 
-CLASS_SPEC(ReadableStreamDefaultReader, 1, SlotCount,
-           ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(ReadableStreamDefaultReader, 1, SlotCount,
+                      ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
 /*** 3.7. Class ReadableStreamBYOBReader ************************************/
 
@@ -2494,8 +2473,8 @@ static const JSFunctionSpec ReadableStreamDefaultController_methods[] = {
     JS_FN("enqueue", ReadableStreamDefaultController_enqueue, 1, 0),
     JS_FN("error", ReadableStreamDefaultController_error, 1, 0), JS_FS_END};
 
-CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount,
-           ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount,
+                      ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
 static MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx, HandleValue F,
                                           HandleValue V, HandleValue arg);
@@ -3627,9 +3606,10 @@ static const JSClassOps ReadableByteStreamControllerClassOps = {
     nullptr, /* trace   */
 };
 
-CLASS_SPEC(ReadableByteStreamController, 0, SlotCount,
-           ClassSpec::DontDefineConstructor, JSCLASS_BACKGROUND_FINALIZE,
-           &ReadableByteStreamControllerClassOps);
+JS_STREAMS_CLASS_SPEC(ReadableByteStreamController, 0, SlotCount,
+                      ClassSpec::DontDefineConstructor,
+                      JSCLASS_BACKGROUND_FINALIZE,
+                      &ReadableByteStreamControllerClassOps);
 
 // Streams spec, 3.11.5.1. [[CancelSteps]] ()
 // Unified with 3.9.5.1 above.
@@ -4095,7 +4075,7 @@ static const JSPropertySpec ByteLengthQueuingStrategy_properties[] = {
 static const JSFunctionSpec ByteLengthQueuingStrategy_methods[] = {
     JS_FN("size", ByteLengthQueuingStrategy_size, 1, 0), JS_FS_END};
 
-CLASS_SPEC(ByteLengthQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(ByteLengthQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 // Streams spec, 6.1.3.2. new CountQueuingStrategy({ highWaterMark })
 bool js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc,
@@ -4154,9 +4134,7 @@ static const JSPropertySpec CountQueuingStrategy_properties[] = {JS_PS_END};
 static const JSFunctionSpec CountQueuingStrategy_methods[] = {
     JS_FN("size", CountQueuingStrategy_size, 0, 0), JS_FS_END};
 
-CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
-
-#undef CLASS_SPEC
+JS_STREAMS_CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 /*** 6.3. Miscellaneous operations ******************************************/
 
