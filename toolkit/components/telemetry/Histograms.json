@@ -5378,6 +5378,18 @@
     "n_values": 6,
     "description": "Network identification (0=None, 1=New Ipv4, 2=Same, 3=New IPv6, 4=New dual)"
   },
+  "NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1570932],
+    "expires_in_version": "76",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 600000,
+    "n_buckets": 50,
+    "description": "Time in ms between two NS_NETWORK_LINK_DATA_CHANGED events sent"
+  },
   "IDLE_NOTIFY_IDLE_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
