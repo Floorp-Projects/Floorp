@@ -134,7 +134,6 @@ toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
-toolkit/components/url-classifier/protobuf/
 toolkit/components/utils/mozjexl.js
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/
