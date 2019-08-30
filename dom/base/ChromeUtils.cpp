@@ -667,6 +667,42 @@ void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
 }
 #endif  // NIGHTLY_BUILD
 
+#define PROCTYPE_TO_WEBIDL_CASE(_procType, _webidl) \
+  case mozilla::ProcType::_procType:                \
+    return WebIDLProcType::_webidl
+
+static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
+  // |strings| contains an extra non-enum value, so subtract one.
+  // Max is the value of the last enum, not the length, so add one.
+  static_assert(ArrayLength(WebIDLProcTypeValues::strings) - 1 ==
+                    static_cast<size_t>(ProcType::Max) + 1,
+                "In order for this static cast to be okay, "
+                "WebIDLProcType must match ProcType exactly");
+
+  switch (aType) {
+    PROCTYPE_TO_WEBIDL_CASE(Web, Web);
+    PROCTYPE_TO_WEBIDL_CASE(File, File);
+    PROCTYPE_TO_WEBIDL_CASE(Extension, Extension);
+    PROCTYPE_TO_WEBIDL_CASE(PrivilegedAbout, Privilegedabout);
+    PROCTYPE_TO_WEBIDL_CASE(WebLargeAllocation, WebLargeAllocation);
+    PROCTYPE_TO_WEBIDL_CASE(Browser, Browser);
+    PROCTYPE_TO_WEBIDL_CASE(Plugin, Plugin);
+    PROCTYPE_TO_WEBIDL_CASE(IPDLUnitTest, IpdlUnitTest);
+    PROCTYPE_TO_WEBIDL_CASE(GMPlugin, GmpPlugin);
+    PROCTYPE_TO_WEBIDL_CASE(GPU, Gpu);
+    PROCTYPE_TO_WEBIDL_CASE(VR, Vr);
+    PROCTYPE_TO_WEBIDL_CASE(RDD, Rdd);
+    PROCTYPE_TO_WEBIDL_CASE(Socket, Socket);
+    PROCTYPE_TO_WEBIDL_CASE(RemoteSandboxBroker, RemoteSandboxBroker);
+    PROCTYPE_TO_WEBIDL_CASE(Unknown, Unknown);
+  }
+
+  MOZ_ASSERT(false, "Unhandled case in ProcTypeToWebIDL");
+  return WebIDLProcType::Unknown;
+}
+
+#undef PROCTYPE_TO_WEBIDL_CASE
+
 /* static */
 already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                                                        ErrorResult& aRv) {
@@ -822,8 +858,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     }
                     // Basic info.
                     childProcInfo->mChildID = info.childId;
-                    childProcInfo->mType =
-                        static_cast<WebIDLProcType>(info.type);
+                    childProcInfo->mType = ProcTypeToWebIDL(info.type);
                     childProcInfo->mPid = info.pid;
                     childProcInfo->mFilename.Assign(info.filename);
                     childProcInfo->mVirtualMemorySize = info.virtualMemorySize;
