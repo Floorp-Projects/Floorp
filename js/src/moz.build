@@ -224,6 +224,7 @@ UNIFIED_SOURCES += [
     'builtin/Reflect.cpp',
     'builtin/ReflectParse.cpp',
     'builtin/Stream.cpp',
+    'builtin/streams/QueueingStrategies.cpp',
     'builtin/streams/QueueWithSizes.cpp',
     'builtin/String.cpp',
     'builtin/Symbol.cpp',

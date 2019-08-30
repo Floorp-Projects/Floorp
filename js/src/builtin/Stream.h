@@ -431,24 +431,6 @@ class ReadableByteStreamController : public ReadableStreamController {
   static const JSClass protoClass_;
 };
 
-class ByteLengthQueuingStrategy : public NativeObject {
- public:
-  static bool constructor(JSContext* cx, unsigned argc, Value* vp);
-  static const ClassSpec classSpec_;
-  static const JSClass class_;
-  static const ClassSpec protoClassSpec_;
-  static const JSClass protoClass_;
-};
-
-class CountQueuingStrategy : public NativeObject {
- public:
-  static bool constructor(JSContext* cx, unsigned argc, Value* vp);
-  static const ClassSpec classSpec_;
-  static const JSClass class_;
-  static const ClassSpec protoClassSpec_;
-  static const JSClass protoClass_;
-};
-
 }  // namespace js
 
 template <>
