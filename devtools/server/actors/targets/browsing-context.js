@@ -33,10 +33,6 @@ const InspectorUtils = require("InspectorUtils");
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/shared/locales/browsing-context.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
-
 const { ActorClassWithSpec, Actor, Pool } = require("devtools/shared/protocol");
 const {
   LazyPool,
@@ -1149,14 +1145,6 @@ const browsingContextTargetPrototype = {
           })
         );
       }
-
-      Promise.all(promises).then(() => {
-        this.logInPage({
-          text: L10N.getStr("cssSheetsReparsedWarning"),
-          category: "CSS Parser",
-          flags: Ci.nsIScriptError.warningFlag,
-        });
-      });
     }
 
     return {};
