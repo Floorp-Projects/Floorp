@@ -2093,7 +2093,8 @@ struct GenericPattern {
                 &mStorage->mStorage);
         mPattern = new (mLinGradPat) LinearGradientPattern(
             storage->mBegin, storage->mEnd,
-            mTranslator->LookupGradientStops(storage->mStops),
+            storage->mStops ? mTranslator->LookupGradientStops(storage->mStops)
+                            : nullptr,
             storage->mMatrix);
         return mPattern;
       }
@@ -2104,7 +2105,8 @@ struct GenericPattern {
         mPattern = new (mRadGradPat) RadialGradientPattern(
             storage->mCenter1, storage->mCenter2, storage->mRadius1,
             storage->mRadius2,
-            mTranslator->LookupGradientStops(storage->mStops),
+            storage->mStops ? mTranslator->LookupGradientStops(storage->mStops)
+                            : nullptr,
             storage->mMatrix);
         return mPattern;
       }
