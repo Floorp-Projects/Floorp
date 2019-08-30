@@ -15,6 +15,9 @@ const {
   WS_RESET_COLUMNS,
 } = require("../constants");
 
+const { getDisplayedFrames } = require("../selectors/index");
+const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
+
 /**
  * Add frame into state.
  */
@@ -104,6 +107,37 @@ function toggleWebSocketsColumn(column) {
   };
 }
 
+/**
+ * Move the selection up to down according to the "delta" parameter. Possible values:
+ * - Number: positive or negative, move up or down by specified distance
+ * - "PAGE_UP" | "PAGE_DOWN" (String): page up or page down
+ * - +Infinity | -Infinity: move to the start or end of the list
+ */
+function selectFrameDelta(delta) {
+  return (dispatch, getState) => {
+    const state = getState();
+    const frames = getDisplayedFrames(state);
+
+    if (frames.length === 0) {
+      return;
+    }
+
+    const selIndex = frames.findIndex(
+      r => r === state.webSockets.selectedFrame
+    );
+
+    if (delta === "PAGE_DOWN") {
+      delta = Math.ceil(frames.length / PAGE_SIZE_ITEM_COUNT_RATIO);
+    } else if (delta === "PAGE_UP") {
+      delta = -Math.ceil(frames.length / PAGE_SIZE_ITEM_COUNT_RATIO);
+    }
+
+    const newIndex = Math.min(Math.max(0, selIndex + delta), frames.length - 1);
+    const newItem = frames[newIndex];
+    dispatch(selectFrame(newItem));
+  };
+}
+
 module.exports = {
   addFrame,
   selectFrame,
@@ -113,4 +147,5 @@ module.exports = {
   setFrameFilterText,
   resetWebSocketsColumns,
   toggleWebSocketsColumn,
+  selectFrameDelta,
 };
