@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.layout_quick_action_sheet.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.toolbar.BrowserState
+import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.utils.Settings
 
 interface QuickActionSheetViewInteractor {
@@ -110,7 +110,7 @@ class QuickActionSheetView(
         }
     }
 
-    fun update(state: BrowserState) {
+    fun update(state: BrowserFragmentState) {
         val quickActionSheetState = state.quickActionSheetState
         view.quick_action_read.isVisible = quickActionSheetState.readable
         view.quick_action_read.isSelected = quickActionSheetState.readerActive

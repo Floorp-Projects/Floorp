@@ -58,8 +58,8 @@ import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.toolbar.BrowserState
-import org.mozilla.fenix.components.toolbar.BrowserStore
+import org.mozilla.fenix.components.toolbar.BrowserFragmentState
+import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarController
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
@@ -81,7 +81,7 @@ import org.mozilla.fenix.utils.Settings
  */
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Observer {
-    protected lateinit var browserStore: BrowserStore
+    protected lateinit var browserStore: BrowserFragmentStore
     protected lateinit var browserInteractor: BrowserToolbarViewInteractor
     protected lateinit var browserToolbarView: BrowserToolbarView
 
@@ -122,8 +122,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
         val appLink = requireComponents.useCases.appLinksUseCases.appLinkRedirect
         browserStore = StoreProvider.get(this) {
-            BrowserStore(
-                BrowserState(
+            BrowserFragmentStore(
+                BrowserFragmentState(
                     quickActionSheetState = QuickActionSheetState(
                         readable = getSessionById()?.readerable ?: false,
                         bookmarked = false,

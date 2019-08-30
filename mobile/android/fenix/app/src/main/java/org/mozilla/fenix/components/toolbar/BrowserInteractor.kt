@@ -28,7 +28,7 @@ open class BrowserToolbarInteractor(
 
 class BrowserInteractor(
     private val context: Context,
-    private val store: BrowserStore,
+    private val store: BrowserFragmentStore,
     browserToolbarController: BrowserToolbarController,
     private val quickActionSheetController: QuickActionSheetController,
     private val readerModeController: ReaderModeController,

@@ -8,14 +8,14 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
-class BrowserStore(initialState: BrowserState) :
-    Store<BrowserState, BrowserAction>(initialState, ::browserStateReducer)
+class BrowserFragmentStore(initialState: BrowserFragmentState) :
+    Store<BrowserFragmentState, BrowserFragmentAction>(initialState, ::browserStateReducer)
 
 /**
  * The state for the Browser Screen
  * @property quickActionSheetState: state of the quick action sheet
  */
-data class BrowserState(
+data class BrowserFragmentState(
     val quickActionSheetState: QuickActionSheetState
 ) : State
 
@@ -34,12 +34,12 @@ data class QuickActionSheetState(
     val isAppLink: Boolean
 ) : State
 
-sealed class BrowserAction : Action
+sealed class BrowserFragmentAction : Action
 
 /**
  * Actions to dispatch through the [QuickActionSheetStore] to modify [QuickActionSheetState] through the reducer.
  */
-sealed class QuickActionSheetAction : BrowserAction() {
+sealed class QuickActionSheetAction : BrowserFragmentAction() {
     data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionSheetAction()
     data class ReadableStateChange(val readable: Boolean) : QuickActionSheetAction()
     data class ReaderActiveStateChange(val active: Boolean) : QuickActionSheetAction()
@@ -48,15 +48,15 @@ sealed class QuickActionSheetAction : BrowserAction() {
 }
 
 /**
- * Reducers for [BrowserStore].
+ * Reducers for [BrowserFragmentStore].
  *
- * A top level reducer that receives the current [BrowserState] and an [Action] and then delegates to the proper child
+ * A top level reducer that receives the current [BrowserFragmentState] and an [Action] and then delegates to the proper child
  *
  */
 fun browserStateReducer(
-    state: BrowserState,
-    action: BrowserAction
-): BrowserState {
+    state: BrowserFragmentState,
+    action: BrowserFragmentAction
+): BrowserFragmentState {
     return when (action) {
         is QuickActionSheetAction -> {
             QuickActionSheetStateReducer.reduce(state, action)
@@ -65,10 +65,10 @@ fun browserStateReducer(
 }
 
 /**
- * Reduces [QuickActionSheetAction]s to update [BrowserState].
+ * Reduces [QuickActionSheetAction]s to update [BrowserFragmentState].
  */
 internal object QuickActionSheetStateReducer {
-    fun reduce(state: BrowserState, action: QuickActionSheetAction): BrowserState {
+    fun reduce(state: BrowserFragmentState, action: QuickActionSheetAction): BrowserFragmentState {
         return when (action) {
             is QuickActionSheetAction.BookmarkedStateChange ->
                 state.copy(quickActionSheetState = state.quickActionSheetState.copy(bookmarked = action.bookmarked))

@@ -111,7 +111,7 @@ class BrowserToolbarView(
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun update(state: BrowserState) {
+    fun update(state: BrowserFragmentState) {
         // Intentionally leaving this as a stub for now since we don't actually want to update currently
     }
 

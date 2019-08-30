@@ -18,7 +18,7 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.toolbar.BrowserStore
+import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.QuickActionSheetAction
 
 @ExperimentalCoroutinesApi
@@ -27,7 +27,7 @@ class QuickActionSheetSessionObserverTest {
 
     private lateinit var components: Components
     private lateinit var appLinkRedirect: AppLinksUseCases.GetAppLinkRedirect
-    private lateinit var store: BrowserStore
+    private lateinit var store: BrowserFragmentStore
     private lateinit var dispatch: (QuickActionSheetAction) -> Unit
 
     @Before

@@ -168,7 +168,7 @@ class BrowserInteractorTest {
         val metrics: MetricController = mockk()
         val session: Session = mockk()
         val readerModeController: ReaderModeController = mockk(relaxed = true)
-        val browserStore: BrowserStore = mockk(relaxed = true)
+        val browserStore: BrowserFragmentStore = mockk(relaxed = true)
         val interactor = BrowserInteractor(
             context,
             browserStore,
@@ -195,7 +195,7 @@ class BrowserInteractorTest {
         val metrics: MetricController = mockk()
         val session: Session = mockk()
         val readerModeController: ReaderModeController = mockk(relaxed = true)
-        val browserStore: BrowserStore = mockk(relaxed = true)
+        val browserStore: BrowserFragmentStore = mockk(relaxed = true)
 
         val interactor = BrowserInteractor(
             context,
