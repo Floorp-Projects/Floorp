@@ -66,10 +66,6 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginList.addFavicons(event.detail.value);
       break;
     }
-    case "ShowLoginItemError": {
-      gElements.loginItem.showLoginItemError(event.detail.value);
-      break;
-    }
     case "SyncState": {
       gElements.fxAccountsButton.updateState(event.detail.value);
       gElements.loginFooter.hidden = event.detail.value.hideMobileFooter;
