@@ -91,8 +91,9 @@ class SharedArrayRawBuffer {
   };
 
   // max must be Something for wasm, Nothing for other uses
-  static SharedArrayRawBuffer* Allocate(uint32_t initial,
-                                        const mozilla::Maybe<uint32_t>& max);
+  static SharedArrayRawBuffer* Allocate(
+      uint32_t length, const mozilla::Maybe<uint32_t>& maxSize,
+      const mozilla::Maybe<size_t>& mappedSize);
 
   // This may be called from multiple threads.  The caller must take
   // care of mutual exclusion.
@@ -114,15 +115,9 @@ class SharedArrayRawBuffer {
 
   size_t mappedSize() const { return mappedSize_; }
 
-#ifndef WASM_HUGE_MEMORY
-  uint32_t boundsCheckLimit() const { return mappedSize_ - wasm::GuardSize; }
-#endif
-
   bool isWasm() const { return preparedForWasm_; }
 
-#ifndef WASM_HUGE_MEMORY
   void tryGrowMaxSizeInPlace(uint32_t deltaMaxSize);
-#endif
 
   bool wasmGrowToSizeInPlace(const Lock&, uint32_t newLength);
 
@@ -232,10 +227,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   }
 
   size_t wasmMappedSize() const { return rawBufferObject()->mappedSize(); }
-
-#ifndef WASM_HUGE_MEMORY
-  uint32_t wasmBoundsCheckLimit() const;
-#endif
 
  private:
   void acceptRawBuffer(SharedArrayRawBuffer* buffer, uint32_t length);

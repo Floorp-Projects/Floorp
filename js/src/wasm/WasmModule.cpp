@@ -793,6 +793,8 @@ bool Module::instantiateMemory(JSContext* cx,
     }
   }
 
+  MOZ_RELEASE_ASSERT(memory->isHuge() == metadata().omitsBoundsChecks);
+
   return true;
 }
 

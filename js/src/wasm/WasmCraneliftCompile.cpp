@@ -233,6 +233,9 @@ class AutoCranelift {
       // In the huge memory configuration, we always reserve the full 4 GB
       // index space for a heap.
       staticEnv_.staticMemoryBound = HugeIndexRange;
+      staticEnv_.memoryGuardSize = HugeOffsetGuardLimit;
+    } else {
+      staticEnv_.memoryGuardSize = OffsetGuardLimit;
     }
 #endif
     // Otherwise, heap bounds are stored in the `boundsCheckLimit` field
@@ -289,7 +292,7 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
       platformIsWindows(false),
 #endif
       staticMemoryBound(0),
-      memoryGuardSize(OffsetGuardLimit),
+      memoryGuardSize(0),
       instanceTlsOffset(offsetof(TlsData, instance)),
       interruptTlsOffset(offsetof(TlsData, interrupt)),
       cxTlsOffset(offsetof(TlsData, cx)),
