@@ -5225,7 +5225,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFunctionBody(
 
   const auto start = tokenizer_->offset();
   const Context childContext(Context(ListContext(
-      context.as<FieldContext>().position, BinASTList::FunctionBody)));
+      context.as<FieldContext>().position, BinASTList::ListOfStatement)));
   MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
