@@ -34,7 +34,7 @@ const TEST_DATA = [
   {
     functionDisplayName: "makePromise",
     line: 16,
-    column: 30,
+    column: 17,
   },
 ];
 
