@@ -11,30 +11,50 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
 import mozilla.components.lib.state.reducer
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class StoreExtensionsKtTest {
+    @Before
+    @ExperimentalCoroutinesApi
+    fun setUp() {
+        Dispatchers.setMain(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+    }
+
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun `Observer will not get registered if lifecycle is already destroyed`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.DESTROYED)
@@ -126,7 +146,6 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi // Channel
-    @ObsoleteCoroutinesApi // consumeEach
     fun `Reading state updates from channel`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
@@ -182,7 +201,7 @@ class StoreExtensionsKtTest {
 
     @Test(expected = IllegalArgumentException::class)
     @ExperimentalCoroutinesApi // Channel
-    fun `Creating broadcast channel throws if lifecycle is already DESTROYED`() {
+    fun `Creating channel throws if lifecycle is already DESTROYED`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.DESTROYED)
 
         val store = Store(
@@ -191,6 +210,118 @@ class StoreExtensionsKtTest {
         )
 
         store.channel(owner)
+    }
+
+    @Test
+    @Synchronized
+    @ExperimentalCoroutinesApi
+    fun `Reading state updates from Flow`() {
+        val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
+
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        var receivedValue = 0
+        var latch = CountDownLatch(1)
+
+        val flow = store.flow(owner)
+
+        val job = GlobalScope.launch {
+            flow.collect { state ->
+                receivedValue = state.counter
+                latch.countDown()
+            }
+        }
+
+        // Nothing received yet.
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(0, receivedValue)
+
+        // Updating state: Nothing received yet.
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(0, receivedValue)
+
+        // Switching to STARTED state: Receiving initial state
+        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(24, receivedValue)
+        latch = CountDownLatch(1)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(25, receivedValue)
+        latch = CountDownLatch(1)
+
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+        latch = CountDownLatch(1)
+
+        runBlocking { job.cancelAndJoin() }
+
+        // Receiving nothing anymore since coroutine is cancelled
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+    }
+
+    @Test
+    @Synchronized
+    @ExperimentalCoroutinesApi
+    fun `Reading state from scoped flow`() {
+        val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
+
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        var receivedValue = 0
+        var latch = CountDownLatch(1)
+
+        val scope = store.flowScoped(owner) { flow ->
+            flow.collect { state ->
+                receivedValue = state.counter
+                latch.countDown()
+            }
+        }
+
+        // Nothing received yet.
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(0, receivedValue)
+
+        // Updating state: Nothing received yet.
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(0, receivedValue)
+
+        // Switching to STARTED state: Receiving initial state
+        latch = CountDownLatch(1)
+        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(24, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(25, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+
+        scope.cancel()
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
     }
 
     @Test
