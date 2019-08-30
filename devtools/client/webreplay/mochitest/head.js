@@ -111,7 +111,8 @@ function newRecordingFile() {
 }
 
 function findMessage(hud, text, selector = ".message") {
-  return findMessages(hud, text, selector)[0];
+  const messages = findMessages(hud, text, selector);
+  return messages ? messages[0] : null;
 }
 
 function findMessages(hud, text, selector = ".message") {
@@ -125,6 +126,10 @@ function findMessages(hud, text, selector = ".message") {
   }
 
   return elements;
+}
+
+function waitForMessage(hud, text, selector = ".message") {
+  return waitUntilPredicate(() => findMessage(hud, text, selector));
 }
 
 function waitForMessages(hud, text, selector = ".message") {
