@@ -41,6 +41,7 @@ export default class LoginItem extends HTMLElement {
     );
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
+    this._errorMessage = this.shadowRoot.querySelector(".error-message");
     this._form = this.shadowRoot.querySelector("form");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector(
@@ -88,7 +89,9 @@ export default class LoginItem extends HTMLElement {
   }
 
   async render() {
-    this._breachAlert.hidden = true;
+    [this._errorMessage, this._breachAlert].forEach(el => {
+      el.hidden = true;
+    });
     if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       const breachAlertLink = this._breachAlert.querySelector(
@@ -158,6 +161,30 @@ export default class LoginItem extends HTMLElement {
         detail: this._login,
       })
     );
+  }
+
+  showLoginItemError(error) {
+    const errorMessageText = this._errorMessage.querySelector(
+      ".error-message-text"
+    );
+    if (!error.errorMessage) {
+      return;
+    }
+    if (error.errorMessage.includes("This login already exists")) {
+      document.l10n.setAttributes(
+        errorMessageText,
+        "about-logins-error-message-duplicate-login",
+        {
+          loginTitle: error.login.title,
+        }
+      );
+    } else {
+      document.l10n.setAttributes(
+        errorMessageText,
+        "about-logins-error-message-default"
+      );
+    }
+    this._errorMessage.hidden = false;
   }
 
   async handleEvent(event) {

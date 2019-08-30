@@ -294,6 +294,26 @@ a.breach-alert-link {
   background-color: transparent;
 }
 
+.error-message {
+  color: #fff;
+  background-color: var(--red-60);
+  border: 1px solid transparent;
+  padding-block: 6px;
+  display: inline-block;
+  padding-inline-start: 32px;
+  padding-inline-end: 16px;
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  background-repeat: no-repeat;
+  background-position: left 10px center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-bottom: 38px;
+}
+
+.error-message:dir(rtl) {
+  background-position-x: right 10px;
+}
+
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
   @media (prefers-color-scheme: dark) {
     :host {
