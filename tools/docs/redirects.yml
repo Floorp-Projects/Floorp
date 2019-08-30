@@ -3,3 +3,4 @@ redirects:
     browser/browser: browser
     testing/geckodriver/geckodriver: testing/geckodriver
     testing/marionette/marionette: testing/marionette
+    toolkit/components/telemetry/telemetry: toolkit/components/telemetry
