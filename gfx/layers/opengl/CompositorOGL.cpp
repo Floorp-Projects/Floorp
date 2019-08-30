@@ -869,6 +869,14 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
 #endif
 }
 
+Maybe<IntRect> CompositorOGL::BeginFrameForWindow(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    NativeLayer* aNativeLayer) {
+  return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion,
+                    aNativeLayer);
+}
+
 Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                                          const Maybe<IntRect>& aClipRect,
                                          const IntRect& aRenderBounds,

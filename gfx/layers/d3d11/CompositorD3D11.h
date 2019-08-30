@@ -92,11 +92,11 @@ class CompositorD3D11 : public Compositor {
   /**
    * Start a new frame.
    */
-  Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const Maybe<gfx::IntRect>& aClipRect,
-                                 const gfx::IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
+                                          const Maybe<gfx::IntRect>& aClipRect,
+                                          const gfx::IntRect& aRenderBounds,
+                                          const nsIntRegion& aOpaqueRegion,
+                                          NativeLayer* aNativeLayer) override;
 
   void NormalDrawingDone() override;
 
@@ -163,6 +163,10 @@ class CompositorD3D11 : public Compositor {
 
   ID3D11PixelShader* GetPSForEffect(Effect* aEffect, const bool aUseBlendShader,
                                     const MaskType aMaskType);
+  Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
+                                 const Maybe<gfx::IntRect>& aClipRect,
+                                 const gfx::IntRect& aRenderBounds,
+                                 const nsIntRegion& aOpaqueRegion);
   void PaintToTarget();
   RefPtr<ID3D11Texture2D> CreateTexture(const gfx::IntRect& aRect,
                                         const CompositingRenderTarget* aSource,

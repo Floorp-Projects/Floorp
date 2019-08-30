@@ -987,9 +987,9 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
-  Maybe<IntRect> maybeBounds =
-      mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
-                              aOpaqueRegion, mNativeLayerForEntireWindow);
+  Maybe<IntRect> maybeBounds = mCompositor->BeginFrameForWindow(
+      aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion,
+      mNativeLayerForEntireWindow);
   if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -1225,8 +1225,8 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   nsIntRegion invalid;
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  Unused << mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(),
-                                    nullptr);
+  Unused << mCompositor->BeginFrameForWindow(invalid, Nothing(), bounds,
+                                             nsIntRegion(), nullptr);
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer
