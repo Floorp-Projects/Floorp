@@ -18,13 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "loggingEnabled",
-  BROWSER_SEARCH_PREF + "log",
-  false
-);
-
 var SearchUtils = {
   APP_SEARCH_PREFIX: "resource://search-plugins/",
 
@@ -95,7 +88,7 @@ var SearchUtils = {
    *   The message to log.
    */
   log(text) {
-    if (loggingEnabled) {
+    if (SearchUtils.loggingEnabled) {
       dump("*** Search: " + text + "\n");
       Services.console.logStringMessage(text);
     }
@@ -152,3 +145,10 @@ var SearchUtils = {
     return null;
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SearchUtils,
+  "loggingEnabled",
+  BROWSER_SEARCH_PREF + "log",
+  false
+);

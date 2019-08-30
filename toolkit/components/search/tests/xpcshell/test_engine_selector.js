@@ -4,7 +4,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  SearchEngineSelector: "resource://testing-common/SearchEngineSelector.jsm",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
 });
 
 const CONFIG_URL =

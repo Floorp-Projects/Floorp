@@ -38,7 +38,7 @@ async function assertSitesListed(testCase) {
     [true, false, false, 4, 1, 1, 1, 1],
     [true, true, false, 5, 1, 1, 2, 2],
     [true, true, true, 6, 2, 2, 3, 3],
-    [false, false, false, 3, 0, 0, 0, 0],
+    [false, false, false, 3, 1, 1, 1, 1],
   ];
   let [
     trackersBlocked,

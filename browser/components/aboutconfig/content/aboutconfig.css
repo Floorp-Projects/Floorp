@@ -71,6 +71,8 @@ body.config-warning {
   background-color: var(--in-content-box-background);
   color: var(--in-content-text-color);
   margin: 10px;
+  table-layout: fixed;
+  width: calc(100% - 20px);
   min-width: 644px;
   /* To stay consistent with about:preferences (664px - 20px margin). */
   border: 1px solid var(--in-content-box-border-color);
@@ -107,7 +109,6 @@ body.config-warning {
 #prefs > tr > td,
 #prefs > tr > th {
   padding: 4px;
-  width: 50%;
   font-weight: inherit;
 }
 
@@ -123,6 +124,7 @@ body.config-warning {
 
 #prefs > tr > td.cell-edit,
 #prefs > tr > td.cell-reset {
+  width: 40px;
   padding: 0;
 }
 
@@ -135,6 +137,7 @@ body.config-warning {
 td.cell-value > form > input[type="text"],
 td.cell-value > form > input[type="number"] {
   -moz-appearance: textfield;
+  margin: 0;
   width: 100%;
   box-sizing: border-box;
 }

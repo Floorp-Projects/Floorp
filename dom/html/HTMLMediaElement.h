@@ -54,8 +54,8 @@ class MediaDecoder;
 class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
-class MediaStreamGraphImpl;
 class MediaStreamWindowCapturer;
+struct SharedDummyStream;
 class VideoFrameContainer;
 namespace dom {
 class MediaKeys;
@@ -741,15 +741,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
   void SetDecoder(MediaDecoder* aDecoder);
-
-  struct SharedDummyStream {
-    NS_INLINE_DECL_REFCOUNTING(SharedDummyStream)
-    explicit SharedDummyStream(MediaStream* aStream);
-    const RefPtr<MediaStream> mStream;
-
-   private:
-    ~SharedDummyStream();
-  };
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.

@@ -1598,7 +1598,9 @@ already_AddRefed<DrawTarget> DrawTargetSkia::CreateSimilarDrawTarget(
 
 bool DrawTargetSkia::CanCreateSimilarDrawTarget(const IntSize& aSize,
                                                 SurfaceFormat aFormat) const {
-  return size_t(std::max(aSize.width, aSize.height)) < GetMaxSurfaceSize();
+  auto minmaxPair = std::minmax(aSize.width, aSize.height);
+  return minmaxPair.first >= 0 &&
+         size_t(minmaxPair.second) < GetMaxSurfaceSize();
 }
 
 RefPtr<DrawTarget> DrawTargetSkia::CreateClippedDrawTarget(

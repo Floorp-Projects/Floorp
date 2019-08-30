@@ -48,7 +48,7 @@ class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
 struct MediaPlaybackEvent;
-class MediaStreamGraph;
+struct SharedDummyStream;
 
 enum class Visibility : uint8_t;
 
@@ -176,7 +176,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
-  void AddOutputStream(DOMMediaStream* aStream, MediaStreamGraph* aGraph);
+  void AddOutputStream(DOMMediaStream* aStream,
+                       SharedDummyStream* aDummyStream);
   // Remove an output stream added with AddOutputStream.
   void RemoveOutputStream(DOMMediaStream* aStream);
 

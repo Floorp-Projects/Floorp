@@ -26,7 +26,6 @@ py2commands="
     cargo
     check-spidermonkey
     clang-format
-    clobber
     compare-locales
     compileflags
     configure
