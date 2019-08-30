@@ -2013,6 +2013,10 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked");
     Services.obs.addObserver(
       gXPInstallObserver,
+      "addon-install-fullscreen-blocked"
+    );
+    Services.obs.addObserver(
+      gXPInstallObserver,
       "addon-install-origin-blocked"
     );
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed");
@@ -2530,6 +2534,10 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
+      Services.obs.removeObserver(
+        gXPInstallObserver,
+        "addon-install-fullscreen-blocked"
+      );
       Services.obs.removeObserver(
         gXPInstallObserver,
         "addon-install-origin-blocked"
