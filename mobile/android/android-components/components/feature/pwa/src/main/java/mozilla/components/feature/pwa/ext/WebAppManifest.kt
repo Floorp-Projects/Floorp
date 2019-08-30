@@ -9,7 +9,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import androidx.core.net.toUri
-import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.utils.ColorUtils.isDark
 

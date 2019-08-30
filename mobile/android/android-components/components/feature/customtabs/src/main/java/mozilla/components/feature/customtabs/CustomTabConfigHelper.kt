@@ -31,10 +31,10 @@ import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
 import androidx.browser.customtabs.CustomTabsSessionToken
 import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
-import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
-import mozilla.components.browser.session.tab.CustomTabMenuItem
+import mozilla.components.browser.state.state.CustomTabActionButtonConfig
+import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
+import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
 import mozilla.components.support.utils.toSafeIntent

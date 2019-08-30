@@ -13,8 +13,8 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.toSecurityInfoState
-import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
