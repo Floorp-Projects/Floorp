@@ -31,6 +31,8 @@ class TreeOrderedArray {
 
   bool RemoveElement(Node& aNode) { return mList.RemoveElement(&aNode); }
 
+  void Clear() { mList.Clear(); }
+
  private:
   AutoTArray<Node*, 1> mList;
 };
