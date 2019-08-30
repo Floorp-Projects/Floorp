@@ -933,7 +933,7 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
   MOZ_TRY(readStringPrelude());
   MOZ_TRY(readHuffmanPrelude());
 
-  return raiseError("Not Yet Implemented");
+  return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
