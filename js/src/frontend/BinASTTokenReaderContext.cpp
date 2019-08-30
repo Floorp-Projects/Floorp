@@ -1659,6 +1659,22 @@ HuffmanPreludeReader::readSingleValueTable<StringEnum>(
   return Ok();
 }
 
+HuffmanDictionary::HuffmanDictionary(JSContext* cx)
+    : fields(cx), listLengths(cx) {
+  // Initialize `fields`. We have reserved space statically, this cannot fail.
+  for (size_t i = 0; i < BINAST_INTERFACE_AND_FIELD_LIMIT; ++i) {
+    HuffmanTable fieldDefaultValue(HuffmanTableUnreachable{});
+    fields.infallibleAppend(std::move(fieldDefaultValue));
+  }
+
+  // Initialize `listLengths`. We have reserved space statically, this cannot
+  // fail.
+  for (size_t i = 0; i < BINAST_INTERFACE_AND_FIELD_LIMIT; ++i) {
+    HuffmanTableListLength listLengthDefaultValue(HuffmanTableUnreachable{});
+    listLengths.infallibleAppend(std::move(listLengthDefaultValue));
+  }
+}
+
 HuffmanTable& HuffmanDictionary::tableForField(
     NormalizedInterfaceAndField index) {
   return fields[static_cast<size_t>(index.identity)];
