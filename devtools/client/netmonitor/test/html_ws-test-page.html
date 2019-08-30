@@ -12,7 +12,7 @@
   <body>
     <h1>WebSocket Inspection Test Page</h1>
     <script type="text/javascript">
-      /* exported openConnection, closeConnection */
+      /* exported openConnection, closeConnection, sendData */
       "use strict";
 
       let ws;
@@ -37,6 +37,10 @@
           }
           ws.close();
         })
+      }
+
+      function sendData(payload) {
+        ws.send(payload);
       }
     </script>
   </body>

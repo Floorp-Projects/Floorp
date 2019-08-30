@@ -9,6 +9,7 @@ job-defaults:
     treeherder:
         kind: test
         tier: 1
+    platform: lint/opt
     worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
@@ -31,7 +32,6 @@ job-defaults:
 
 codespell:
     description: Checks for misspellings in text files
-    platform: lint/opt
     treeherder:
         symbol: text(spell)
     run:
@@ -55,7 +55,6 @@ codespell:
 
 cpp-virtual-final:
     description: lint C++ virtual function declarations
-    platform: lint/opt
     treeherder:
         symbol: cpp(Cvf)
     run:
@@ -68,7 +67,6 @@ cpp-virtual-final:
 
 eslint:
     description: JS lint check
-    platform: lint/opt
     treeherder:
         symbol: js(ES)
     run:
@@ -95,9 +93,32 @@ eslint:
             - 'tools/lint/eslint/eslint-plugin-mozilla/**'
             - 'tools/lint/eslint/eslint-plugin-spidermonkey-js/**'
 
+license:
+    description: Check for license blocks in source files.
+    treeherder:
+        symbol: pedantic(license)
+    run:
+        mach: lint -l license -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.html'
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jsx'
+            - '**/*.m'
+            - '**/*.mm'
+            - '**/*.py'
+            - '**/*.rs'
+            - '**/*.xhtml'
+            - '**/*.xml'
+            - '**/*.xul'
+
 mingw-cap:
     description: lint for MinGW Capitalization issues
-    platform: lint/opt
     treeherder:
         symbol: misc(mingw)
     run:
@@ -111,7 +132,6 @@ mingw-cap:
 
 py-compat:
     description: lint for python 2/3 compatibility issues
-    platform: lint/opt
     treeherder:
         symbol: py(py-compat)
     run:
@@ -123,7 +143,6 @@ py-compat:
 
 py-flake8:
     description: flake8 run over the gecko codebase
-    platform: lint/opt
     treeherder:
         symbol: py(f8)
     run:
@@ -137,7 +156,6 @@ py-flake8:
 
 test-manifest:
     description: lint test manifests
-    platform: lint/opt
     treeherder:
         symbol: misc(tm)
     run:
@@ -150,7 +168,6 @@ test-manifest:
 
 wptlint-gecko:
     description: web-platform-tests linter
-    platform: lint/opt
     treeherder:
         symbol: misc(W)
     run:
@@ -162,7 +179,6 @@ wptlint-gecko:
 
 yaml:
     description: yamllint run over the gecko codebase
-    platform: lint/opt
     treeherder:
         symbol: pedantic(yaml)
     run:
@@ -175,7 +191,6 @@ yaml:
 
 rst:
     description: rst lint run over the gecko codebase
-    platform: lint/opt
     treeherder:
         symbol: text(rst)
     run:
@@ -186,7 +201,6 @@ rst:
 
 shellcheck:
     description: shellcheck run over the gecko codebase
-    platform: lint/opt
     treeherder:
         symbol: misc(shell)
     run:
@@ -198,7 +212,6 @@ shellcheck:
 
 localization:
     description: l10n tests for strings with errors and conflicts with cross-channel
-    platform: lint/opt
     treeherder:
         symbol: text(l1nt)
     run:
@@ -213,7 +226,6 @@ localization:
 
 rustfmt:
     description: rustfmt on the Rust code
-    platform: lint/opt
     treeherder:
         symbol: misc(rustfmt)
     run:

@@ -136,6 +136,7 @@ treeherder:
         'py': 'Python checks'
         'java': 'Java checks'
         'SS': 'Shadow scheduler'
+        'test-info': 'Test manifest skip/fail information'
 
 index:
     products:
