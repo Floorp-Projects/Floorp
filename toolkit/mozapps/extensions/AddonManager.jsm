@@ -2307,7 +2307,7 @@ var AddonManagerInternal = {
         aInstall.cancel();
 
         this.installNotifyObservers(
-          "addon-install-blocked-silent",
+          "addon-install-fullscreen-blocked",
           topBrowser,
           aInstallingPrincipal.URI,
           aInstall
