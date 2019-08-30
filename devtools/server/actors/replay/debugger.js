@@ -120,6 +120,10 @@ ReplayDebugger.prototype = {
     return this._control.cachedPoints();
   },
 
+  replayDebuggerRequests() {
+    return this._control.debuggerRequests();
+  },
+
   addDebuggee() {},
   removeAllDebuggees() {},
 
