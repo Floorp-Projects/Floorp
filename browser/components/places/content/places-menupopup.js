@@ -32,6 +32,12 @@
       }
 
       this.attachShadow({ mode: "open" });
+      this.shadowRoot.appendChild(this.fragment);
+
+      this._indicatorBar = this.shadowRoot.querySelector(
+        "[part=drop-indicator-bar]"
+      );
+      this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
     }
 
     get fragment() {
@@ -62,14 +68,6 @@
       if (this.delayConnectedCallback()) {
         return;
       }
-
-      this.shadowRoot.textContent = "";
-      this.shadowRoot.appendChild(this.fragment);
-
-      this._indicatorBar = this.shadowRoot.querySelector(
-        "[part=drop-indicator-bar]"
-      );
-      this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
 
       /**
        * Sub-menus should be opened when the mouse drags over them, and closed
