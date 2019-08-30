@@ -20,7 +20,6 @@
 #define wasm_process_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 
 namespace js {
 namespace wasm {
@@ -53,12 +52,6 @@ extern mozilla::Atomic<bool> CodeExists;
 bool RegisterCodeSegment(const CodeSegment* cs);
 
 void UnregisterCodeSegment(const CodeSegment* cs);
-
-// Whether this process is configured to use huge memory or not.
-
-bool IsHugeMemoryEnabled();
-
-MOZ_MUST_USE bool DisableHugeMemory();
 
 // Called once before/after the last VM execution which could execute or compile
 // wasm.

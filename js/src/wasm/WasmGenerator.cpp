@@ -1075,7 +1075,6 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   metadata_->nameCustomSectionIndex = env_->nameCustomSectionIndex;
   metadata_->moduleName = env_->moduleName;
   metadata_->funcNames = std::move(env_->funcNames);
-  metadata_->omitsBoundsChecks = env_->hugeMemoryEnabled();
 
   // Copy over additional debug information.
 

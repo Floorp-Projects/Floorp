@@ -5818,7 +5818,7 @@ static int sArgc;
 static char** sArgv;
 static const char sWasmCompileAndSerializeFlag[] =
     "--wasm-compile-and-serialize";
-static Vector<const char*, 5, js::SystemAllocPolicy> sCompilerProcessFlags;
+static Vector<const char*, 4, js::SystemAllocPolicy> sCompilerProcessFlags;
 
 static bool CompileAndSerializeInSeparateProcess(JSContext* cx,
                                                  const uint8_t* bytecode,
@@ -10939,8 +10939,6 @@ int main(int argc, char** argv, char** envp) {
           "none/baseline/ion/cranelift/baseline+ion/baseline+cranelift)") ||
       !op.addBoolOption('\0', "wasm-verbose",
                         "Enable WebAssembly verbose logging") ||
-      !op.addBoolOption('\0', "disable-wasm-huge-memory",
-                        "Disable WebAssembly huge memory") ||
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||
@@ -11361,14 +11359,6 @@ int main(int argc, char** argv, char** envp) {
   JS::SetModuleResolveHook(cx->runtime(), ShellModuleResolveHook);
   JS::SetModuleDynamicImportHook(cx->runtime(), ShellModuleDynamicImportHook);
   JS::SetModuleMetadataHook(cx->runtime(), CallModuleMetadataHook);
-
-  if (op.getBoolOption("disable-wasm-huge-memory")) {
-    if (!sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
-      return EXIT_FAILURE;
-    }
-    bool disabledHugeMemory = JS::DisableWasmHugeMemory();
-    MOZ_RELEASE_ASSERT(disabledHugeMemory);
-  }
 
   result = Shell(cx, &op, envp);
 
