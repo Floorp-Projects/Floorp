@@ -98,6 +98,11 @@ class CompositorD3D11 : public Compositor {
                                           const nsIntRegion& aOpaqueRegion,
                                           NativeLayer* aNativeLayer) override;
 
+  Maybe<gfx::IntRect> BeginFrameForTarget(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
   void NormalDrawingDone() override;
 
   /**
@@ -227,6 +232,12 @@ class CompositorD3D11 : public Compositor {
    * for the |CompositionRecorder|.
    */
   bool ShouldAllowFrameRecording() const;
+
+  // The DrawTarget from BeginFrameForTarget, which EndFrame needs to copy the
+  // window contents into.
+  // Only non-null between BeginFrameForTarget and EndFrame.
+  RefPtr<gfx::DrawTarget> mTarget;
+  gfx::IntRect mTargetBounds;
 
   RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<ID3D11Device> mDevice;

@@ -372,6 +372,11 @@ class CompositorOGL final : public Compositor {
                                           const nsIntRegion& aOpaqueRegion,
                                           NativeLayer* aNativeLayer) override;
 
+  Maybe<gfx::IntRect> BeginFrameForTarget(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
   Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const Maybe<gfx::IntRect>& aClipRect,
                                  const gfx::IntRect& aRenderBounds,
@@ -476,6 +481,12 @@ class CompositorOGL final : public Compositor {
    * scrolled downwards. So, some flipping has to take place; FlippedY does it.
    */
   GLint FlipY(GLint y) const { return mViewportSize.height - y; }
+
+  // The DrawTarget from BeginFrameForTarget, which EndFrame needs to copy the
+  // window contents into.
+  // Only non-null between BeginFrameForTarget and EndFrame.
+  RefPtr<gfx::DrawTarget> mTarget;
+  gfx::IntRect mTargetBounds;
 
   RefPtr<CompositorTexturePoolOGL> mTexturePool;
 
