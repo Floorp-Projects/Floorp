@@ -12,10 +12,10 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.settings.account.AccountSettingsAction
+import org.mozilla.fenix.settings.account.AccountSettingsFragmentAction
 import org.mozilla.fenix.settings.account.AccountSettingsFragmentDirections
 import org.mozilla.fenix.settings.account.AccountSettingsInteractor
-import org.mozilla.fenix.settings.account.AccountSettingsStore
+import org.mozilla.fenix.settings.account.AccountSettingsFragmentStore
 
 class AccountSettingsInteractorTest {
 
@@ -37,7 +37,7 @@ class AccountSettingsInteractorTest {
 
     @Test
     fun onChangeDeviceName() {
-        val store: AccountSettingsStore = mockk(relaxed = true)
+        val store: AccountSettingsFragmentStore = mockk(relaxed = true)
 
         val interactor = AccountSettingsInteractor(
             mockk(),
@@ -48,7 +48,7 @@ class AccountSettingsInteractorTest {
 
         interactor.onChangeDeviceName("New Name") {}
 
-        verify { store.dispatch(AccountSettingsAction.UpdateDeviceName("New Name")) }
+        verify { store.dispatch(AccountSettingsFragmentAction.UpdateDeviceName("New Name")) }
     }
 
     @Test

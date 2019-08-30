@@ -35,7 +35,7 @@ import org.mozilla.fenix.ext.requireComponents
 @SuppressWarnings("TooManyFunctions")
 class AccountSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var accountManager: FxaAccountManager
-    private lateinit var accountSettingsStore: AccountSettingsStore
+    private lateinit var accountSettingsStore: AccountSettingsFragmentStore
     private lateinit var accountSettingsInteractor: AccountSettingsInteractor
 
     // Navigate away from this fragment when we encounter auth problems or logout events.
@@ -97,8 +97,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 
         accountSettingsStore = StoreProvider.get(this) {
-            AccountSettingsStore(
-                AccountSettingsState(
+            AccountSettingsFragmentStore(
+                AccountSettingsFragmentState(
                     lastSyncedDate =
                     if (getLastSynced(requireContext()) == 0L)
                         LastSyncTime.Never
@@ -140,7 +140,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             deviceConstellation?.state()?.currentDevice?.let { device ->
                 summary = device.displayName
                 text = device.displayName
-                accountSettingsStore.dispatch(AccountSettingsAction.UpdateDeviceName(device.displayName))
+                accountSettingsStore.dispatch(AccountSettingsFragmentAction.UpdateDeviceName(device.displayName))
             }
             setOnBindEditTextListener { editText ->
                 editText.filters = arrayOf(InputFilter.LengthFilter(DEVICE_NAME_MAX_LENGTH))
@@ -227,7 +227,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     pref.isEnabled = true
 
                     val time = getLastSynced(requireContext())
-                    accountSettingsStore.dispatch(AccountSettingsAction.SyncEnded(time))
+                    accountSettingsStore.dispatch(AccountSettingsFragmentAction.SyncEnded(time))
                 }
             }
         }
@@ -241,7 +241,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     pref.isEnabled = true
 
                     val failedTime = getLastSynced(requireContext())
-                    accountSettingsStore.dispatch(AccountSettingsAction.SyncFailed(failedTime))
+                    accountSettingsStore.dispatch(AccountSettingsFragmentAction.SyncFailed(failedTime))
                 }
             }
         }
@@ -250,18 +250,18 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     private val deviceConstellationObserver = object : DeviceConstellationObserver {
         override fun onDevicesUpdate(constellation: ConstellationState) {
             constellation.currentDevice?.displayName?.also {
-                accountSettingsStore.dispatch(AccountSettingsAction.UpdateDeviceName(it))
+                accountSettingsStore.dispatch(AccountSettingsFragmentAction.UpdateDeviceName(it))
             }
         }
     }
 
-    private fun updateDeviceName(state: AccountSettingsState) {
+    private fun updateDeviceName(state: AccountSettingsFragmentState) {
         val deviceNameKey = getPreferenceKey(R.string.pref_key_sync_device_name)
         val preferenceDeviceName = findPreference<Preference>(deviceNameKey)
         preferenceDeviceName?.summary = state.deviceName
     }
 
-    private fun updateLastSyncTimePref(state: AccountSettingsState) {
+    private fun updateLastSyncTimePref(state: AccountSettingsFragmentState) {
         val value = when (state.lastSyncedDate) {
             LastSyncTime.Never -> getString(R.string.sync_never_synced_summary)
             is LastSyncTime.Failed -> {

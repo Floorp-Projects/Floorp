@@ -8,42 +8,42 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
-import org.mozilla.fenix.settings.account.AccountSettingsAction
-import org.mozilla.fenix.settings.account.AccountSettingsState
-import org.mozilla.fenix.settings.account.AccountSettingsStore
+import org.mozilla.fenix.settings.account.AccountSettingsFragmentAction
+import org.mozilla.fenix.settings.account.AccountSettingsFragmentState
+import org.mozilla.fenix.settings.account.AccountSettingsFragmentStore
 import org.mozilla.fenix.settings.account.LastSyncTime
 
-class AccountSettingsStoreTest {
+class AccountSettingsFragmentStoreTest {
 
     @Test
     fun syncFailed() = runBlocking {
-        val initialState = AccountSettingsState()
-        val store = AccountSettingsStore(initialState)
+        val initialState = AccountSettingsFragmentState()
+        val store = AccountSettingsFragmentStore(initialState)
         val duration = 1L
 
-        store.dispatch(AccountSettingsAction.SyncFailed(duration)).join()
+        store.dispatch(AccountSettingsFragmentAction.SyncFailed(duration)).join()
         assertNotSame(initialState, store.state)
         assertEquals(LastSyncTime.Failed(duration), store.state.lastSyncedDate)
     }
 
     @Test
     fun syncEnded() = runBlocking {
-        val initialState = AccountSettingsState()
-        val store = AccountSettingsStore(initialState)
+        val initialState = AccountSettingsFragmentState()
+        val store = AccountSettingsFragmentStore(initialState)
         val duration = 1L
 
-        store.dispatch(AccountSettingsAction.SyncEnded(duration)).join()
+        store.dispatch(AccountSettingsFragmentAction.SyncEnded(duration)).join()
         assertNotSame(initialState, store.state)
         assertEquals(LastSyncTime.Success(duration), store.state.lastSyncedDate)
     }
 
     @Test
     fun signOut() = runBlocking {
-        val initialState = AccountSettingsState()
-        val store = AccountSettingsStore(initialState)
+        val initialState = AccountSettingsFragmentState()
+        val store = AccountSettingsFragmentStore(initialState)
         val deviceName = "testing"
 
-        store.dispatch(AccountSettingsAction.UpdateDeviceName(deviceName)).join()
+        store.dispatch(AccountSettingsFragmentAction.UpdateDeviceName(deviceName)).join()
         assertNotSame(initialState, store.state)
         assertEquals(deviceName, store.state.deviceName)
     }

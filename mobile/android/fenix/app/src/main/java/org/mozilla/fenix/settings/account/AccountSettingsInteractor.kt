@@ -32,7 +32,7 @@ class AccountSettingsInteractor(
     private val navController: NavController,
     private val syncNow: () -> Unit,
     private val syncDeviceName: (String) -> Boolean,
-    private val store: AccountSettingsStore
+    private val store: AccountSettingsFragmentStore
 ) : AccountSettingsUserActions {
 
     override fun onSyncNow() {
@@ -50,7 +50,7 @@ class AccountSettingsInteractor(
         // So, in case of a network (or other) failure when talking to the server,
         // we'll have a discrepancy - the UI will reflect new value, but actually the value never changed.
         // So, when user presses "sync now", we'll fetch the old value, and reset the UI.
-        store.dispatch(AccountSettingsAction.UpdateDeviceName(newDeviceName))
+        store.dispatch(AccountSettingsFragmentAction.UpdateDeviceName(newDeviceName))
 
         return true
     }
