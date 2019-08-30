@@ -528,8 +528,8 @@ NativeObject::createWithTemplate(JSContext* cx, HandleObject templateObject) {
   RootedShape shape(cx, templateObject->as<NativeObject>().lastProperty());
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, shape->getObjectClass()));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, shape->getObjectClass()));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   return create(cx, kind, heap, shape, group);
 }
@@ -593,10 +593,10 @@ inline js::gc::AllocKind NativeObject::allocKindForTenure() const {
   using namespace js::gc;
   AllocKind kind = GetGCObjectFixedSlotsKind(numFixedSlots());
   MOZ_ASSERT(!IsBackgroundFinalized(kind));
-  if (!CanBeFinalizedInBackground(kind, getClass())) {
+  if (!CanChangeToBackgroundAllocKind(kind, getClass())) {
     return kind;
   }
-  return GetBackgroundAllocKind(kind);
+  return ForegroundToBackgroundAllocKind(kind);
 }
 
 inline js::GlobalObject& NativeObject::global() const { return nonCCWGlobal(); }
@@ -605,8 +605,8 @@ inline js::gc::AllocKind PlainObject::allocKindForTenure() const {
   using namespace js::gc;
   AllocKind kind = GetGCObjectFixedSlotsKind(numFixedSlots());
   MOZ_ASSERT(!IsBackgroundFinalized(kind));
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, getClass()));
-  return GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, getClass()));
+  return ForegroundToBackgroundAllocKind(kind);
 }
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
@@ -617,7 +617,7 @@ static inline PlainObject* CopyInitializerObject(
 
   gc::AllocKind allocKind =
       gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
-  allocKind = gc::GetBackgroundAllocKind(allocKind);
+  allocKind = gc::ForegroundToBackgroundAllocKind(allocKind);
   MOZ_ASSERT_IF(baseobj->isTenured(),
                 allocKind == baseobj->asTenured().getAllocKind());
   RootedPlainObject obj(

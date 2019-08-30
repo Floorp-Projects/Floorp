@@ -39,7 +39,7 @@ const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 function evaluateExpression(expression) {
   return async ({ dispatch, services }) => {
     if (!expression) {
-      expression = services.getInputValue();
+      expression = services.getInputSelection() || services.getInputValue();
     }
     if (!expression) {
       return null;

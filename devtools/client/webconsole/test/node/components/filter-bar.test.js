@@ -186,7 +186,12 @@ describe("FilterBar component:", () => {
       dom.div({
         className: "devtools-separator",
       }),
-      filterBtn({ label: "CSS", filterKey: "css", active: false }),
+      filterBtn({
+        label: "CSS",
+        filterKey: "css",
+        active: false,
+        title: "webconsole.cssFilterButton.inactive.tooltip",
+      }),
       filterBtn({ label: "XHR", filterKey: "netxhr", active: false }),
       filterBtn({ label: "Requests", filterKey: "net", active: false }),
     ];

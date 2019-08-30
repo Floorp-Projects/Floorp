@@ -40,7 +40,6 @@ DevToolsModules(
     'key-shortcuts.js',
     'keycodes.js',
     'link.js',
-    'natural-sort.js',
     'node-attribute-parser.js',
     'options-view.js',
     'output-parser.js',

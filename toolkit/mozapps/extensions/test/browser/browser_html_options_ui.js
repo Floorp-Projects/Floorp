@@ -131,21 +131,14 @@ add_task(async function testInlineOptions() {
     "The preferences option is hidden now"
   );
 
-  let lastHeight;
-  let waitForHeightChange = () =>
-    TestUtils.waitForCondition(() => {
-      if (browser.clientHeight !== lastHeight) {
-        lastHeight = browser.clientHeight;
-        return true;
-      }
-      return false;
-    });
+  let waitForHeightChange = expectedHeight =>
+    TestUtils.waitForCondition(() => browser.clientHeight === expectedHeight);
 
   // The expected heights are 1px taller, to work around bug 1548687.
   const EXPECTED_HEIGHT_SHORT = HEIGHT_SHORT + 1;
   const EXPECTED_HEIGHT_TALL = HEIGHT_TALL + 1;
 
-  await waitForHeightChange();
+  await waitForHeightChange(EXPECTED_HEIGHT_SHORT);
 
   // Check resizing the browser through extension CSS.
   await extension.sendMessage("get-height");
@@ -155,7 +148,7 @@ add_task(async function testInlineOptions() {
 
   info("Resize the browser to be taller");
   await extension.sendMessage("toggle-class");
-  await waitForHeightChange();
+  await waitForHeightChange(EXPECTED_HEIGHT_TALL);
   await extension.sendMessage("get-height");
   height = await extension.awaitMessage("height");
   is(height, EXPECTED_HEIGHT_TALL, "The height is bigger now");
@@ -163,7 +156,7 @@ add_task(async function testInlineOptions() {
 
   info("Shrink the browser again");
   await extension.sendMessage("toggle-class");
-  await waitForHeightChange();
+  await waitForHeightChange(EXPECTED_HEIGHT_SHORT);
   await extension.sendMessage("get-height");
   height = await extension.awaitMessage("height");
   is(height, EXPECTED_HEIGHT_SHORT, "The browser shrunk back");

@@ -78,7 +78,7 @@ CheckedInt64 TimeUnitToFrames(const TimeUnit& aTime, uint32_t aRate) {
 }
 
 nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs) {
-  if (aSeconds * double(USECS_PER_S) > INT64_MAX) {
+  if (aSeconds * double(USECS_PER_S) > double(INT64_MAX)) {
     return NS_ERROR_FAILURE;
   }
   aOutUsecs = int64_t(aSeconds * double(USECS_PER_S));
@@ -87,7 +87,8 @@ nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs) {
 
 static int32_t ConditionDimension(float aValue) {
   // This will exclude NaNs and too-big values.
-  if (aValue > 1.0 && aValue <= INT32_MAX) return int32_t(NS_round(aValue));
+  if (aValue > 1.0 && aValue <= float(INT32_MAX))
+    return int32_t(NS_round(aValue));
   return 0;
 }
 

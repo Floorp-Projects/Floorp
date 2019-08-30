@@ -36,6 +36,10 @@ loader.lazyRequireGetter(
   "devtools/client/shared/vendor/react-prop-types"
 );
 
+const disabledCssFilterButtonTitle = l10n.getStr(
+  "webconsole.cssFilterButton.inactive.tooltip"
+);
+
 class FilterBar extends Component {
   static get propTypes() {
     return {
@@ -262,6 +266,7 @@ class FilterBar extends Component {
       }),
       FilterButton({
         active: filter[FILTERS.CSS],
+        title: filter[FILTERS.CSS] ? undefined : disabledCssFilterButtonTitle,
         label: l10n.getStr("webconsole.cssFilterButton.label"),
         filterKey: FILTERS.CSS,
         dispatch,

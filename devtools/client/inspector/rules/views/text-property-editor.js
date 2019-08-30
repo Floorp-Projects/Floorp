@@ -344,7 +344,6 @@ TextPropertyEditor.prototype = {
           this.rule.elementStyle.variablesMap.get(this.rule.pseudoElement) ||
           [],
         getGridLineNames: this.getGridlineNames,
-        showSuggestCompletionOnEmpty: true,
       });
     }
   },

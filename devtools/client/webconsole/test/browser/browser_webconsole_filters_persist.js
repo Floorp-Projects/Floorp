@@ -31,11 +31,8 @@ add_task(async function() {
     filterButton.click();
   });
 
-  // Wait for the confirmation message about CSS warnings so we don't have a pending
-  // promise.
-  await waitFor(() =>
-    findMessage(hud, "Stylesheets without CSSOM changes reparsed")
-  );
+  // Wait for the CSS warning to be displayed so we don't have a pending promise.
+  await waitFor(() => findMessage(hud, "Expected color but found ‘blouge’"));
 
   info("Close and re-open the console");
   await closeTabAndToolbox();

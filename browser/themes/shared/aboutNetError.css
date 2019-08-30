@@ -146,13 +146,8 @@ body:not(.neterror) #advancedButton {
   flex-shrink: 0;
 }
 
-#errorCode:not([href]) {
-  color: var(--in-content-page-color);
-  cursor: text;
-  text-decoration: none;
-}
-
-#errorCode[href] {
+#errorCode {
+  cursor: pointer;
   white-space: nowrap;
 }
 
@@ -269,7 +264,7 @@ body:not(.neterror) #advancedButton {
     margin: 0 10px;
   }
 
-  #errorCode[href] {
+  #errorCode {
     /* Break the error code to avoid long codes overflowing the screen */
     white-space: normal;
     word-wrap: anywhere;

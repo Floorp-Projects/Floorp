@@ -1080,7 +1080,7 @@ var SocialTracking = {
     this.subViewList.append(fragment);
     this.subView.setAttribute(
       "title",
-      this.enabled
+      this.enabled && !gProtectionsHandler.hasException
         ? this.strings.subViewTitleBlocking
         : this.strings.subViewTitleNotBlocking
     );
