@@ -19,7 +19,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "naturalSortCaseInsensitive",
-  "devtools/client/shared/natural-sort",
+  "devtools/shared/natural-sort",
   true
 );
 const { KeyCodes } = require("devtools/client/shared/keycodes");
