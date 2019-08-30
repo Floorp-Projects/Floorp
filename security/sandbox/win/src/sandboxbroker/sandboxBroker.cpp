@@ -1229,6 +1229,15 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel) {
       result,
       "With these static arguments AddRule should never fail, what happened?");
 
+  // The GMP process needs to be able to share memory with the main process for
+  // crash reporting.
+  result =
+      mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                       sandbox::TargetPolicy::HANDLES_DUP_BROKER, L"Section");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
   return true;
 }
 #undef SANDBOX_ENSURE_SUCCESS
