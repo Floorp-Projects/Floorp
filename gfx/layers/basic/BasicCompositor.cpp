@@ -885,9 +885,9 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
 
   IntRect rect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
 
-  const bool shouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
+  mShouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
 
-  if (shouldInvalidateWindow) {
+  if (mShouldInvalidateWindow) {
     mInvalidRegion = rect;
   } else {
     IntRegion invalidRegionSafe;
@@ -1005,6 +1005,8 @@ void BasicCompositor::BeginFrameForNativeLayers() {
   MOZ_RELEASE_ASSERT(mCurrentFrameDest == FrameDestination::NO_CURRENT_FRAME,
                      "mCurrentFrameDest not restored properly");
 
+  mShouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
+
   // Make a 1x1 dummy render target so that GetCurrentRenderTarget() returns
   // something non-null even outside of calls to
   // Begin/EndRenderingToNativeLayer.
@@ -1023,7 +1025,13 @@ Maybe<gfx::IntRect> BasicCompositor::BeginRenderingToNativeLayer(
     const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
     const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) {
   IntRect rect = aNativeLayer->GetRect();
-  mInvalidRegion.And(aInvalidRegion, rect);
+
+  if (mShouldInvalidateWindow) {
+    mInvalidRegion = rect;
+  } else {
+    mInvalidRegion.And(aInvalidRegion, rect);
+  }
+
   if (mInvalidRegion.IsEmpty()) {
     return Nothing();
   }
@@ -1124,6 +1132,7 @@ void BasicCompositor::EndFrame() {
       break;
   }
   mCurrentFrameDest = FrameDestination::NO_CURRENT_FRAME;
+  mShouldInvalidateWindow = false;
 }
 
 void BasicCompositor::TryToEndRemoteDrawing() {
