@@ -34,21 +34,21 @@ p {
 
 .logo {
   background: url("chrome://branding/content/icon128.png") no-repeat center center;
-  background-size: 97px;
+  background-size: 96px;
   display: inline-block;
-  height: 97px;
-  width: 97px;
+  height: 96px;
+  width: 96px;
 }
 
 .wordmark {
   background: url("resource://activity-stream/data/content/assets/firefox-wordmark.svg") no-repeat center center;
-  background-size: 175px;
+  background-size: 172px;
   -moz-context-properties: fill;
   display: inline-block;
   fill: #fff;
-  height: 97px;
+  height: 96px;
   margin-inline-start: 15px;
-  width: 175px;
+  width: 172px;
 }
 
 .search-inner-wrapper {
