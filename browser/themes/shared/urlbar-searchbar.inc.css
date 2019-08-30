@@ -87,7 +87,9 @@
 
 #urlbar[breakout] {
   position: absolute;
-  z-index: 2;
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. 3 is used in the tab bar. */
+  z-index: 3;
   top: 0;
   margin-top: -@urlbarBreakoutVerticalExtend@;
   margin-inline-start: -@urlbarBreakoutHorizontalExtend@;
