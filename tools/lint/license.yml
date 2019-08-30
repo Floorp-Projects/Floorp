@@ -4,6 +4,9 @@ license:
     include:
         - .
     exclude:
+        # These paths need to be triaged.
+        - build/pgo/js-input
+        - build/workspace-hack/src/lib.rs
         - browser/app/blocklist.xml
         - browser/components/pocket/
         - config/external/nspr/_pl_bld.h
