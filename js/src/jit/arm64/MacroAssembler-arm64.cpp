@@ -1091,14 +1091,21 @@ CodeOffset MacroAssembler::wasmTrapInstruction() {
 
 void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
                                      Register boundsCheckLimit, Label* label) {
-  // Not used on ARM64, we rely on signal handling instead
-  MOZ_CRASH("NYI - wasmBoundsCheck");
+  branch32(cond, index, boundsCheckLimit, label);
+  if (JitOptions.spectreIndexMasking) {
+    csel(ARMRegister(index, 32), vixl::wzr, ARMRegister(index, 32), cond);
+  }
 }
 
 void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
                                      Address boundsCheckLimit, Label* label) {
-  // Not used on ARM64, we rely on signal handling instead
-  MOZ_CRASH("NYI - wasmBoundsCheck");
+  MOZ_ASSERT(boundsCheckLimit.offset ==
+             offsetof(wasm::TlsData, boundsCheckLimit));
+
+  branch32(cond, index, boundsCheckLimit, label);
+  if (JitOptions.spectreIndexMasking) {
+    csel(ARMRegister(index, 32), vixl::wzr, ARMRegister(index, 32), cond);
+  }
 }
 
 // FCVTZU behaves as follows:
