@@ -377,6 +377,7 @@ MSG_DEF(JSMSG_USE_ASM_TYPE_OK_NO_TIME, 0, JSEXN_WARN,    "Successfully compiled 
 // wasm
 MSG_DEF(JSMSG_WASM_VERBOSE,            1, JSEXN_WARN,    "WebAssembly verbose: {0}")
 MSG_DEF(JSMSG_WASM_COMPILE_WARNING,    1, JSEXN_WARN,    "WebAssembly module validated with warning: {0}")
+MSG_DEF(JSMSG_WASM_HUGE_MEMORY_FAILED, 0, JSEXN_WARN,    "WebAssembly.Memory failed to reserve a large virtual memory region. This may be due to low configured virtual memory limits on this system.")
 MSG_DEF(JSMSG_WASM_COMPILE_ERROR,      1, JSEXN_WASMCOMPILEERROR, "{0}")
 MSG_DEF(JSMSG_WASM_NO_SHMEM_COMPILE,   0, JSEXN_WASMCOMPILEERROR, "shared memory is disabled")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_TYPE,    2, JSEXN_WASMLINKERROR, "import object field '{0}' is not a {1}")
