@@ -873,23 +873,17 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
 
 Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
     const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
-    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    NativeLayer* aNativeLayer) {
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion) {
   if (mIsPendingEndRemoteDrawing) {
     // Force to end previous remote drawing.
     EndRemoteDrawing();
     MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
   }
 
-  MOZ_RELEASE_ASSERT(!mFrameIsForTarget,
-                     "mFrameIsForTarget not cleared properly");
+  MOZ_RELEASE_ASSERT(mCurrentFrameDest == FrameDestination::NO_CURRENT_FRAME,
+                     "mCurrentFrameDest not restored properly");
 
-  IntRect rect;
-  if (aNativeLayer) {
-    rect = aNativeLayer->GetRect();
-  } else {
-    rect = IntRect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
-  }
+  IntRect rect(IntPoint(), mWidget->GetClientSize().ToUnknownSize());
 
   const bool shouldInvalidateWindow = NeedToRecreateFullWindowRenderTarget();
 
@@ -903,87 +897,58 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
     mInvalidRegion = invalidRegionSafe;
   }
 
+  LayoutDeviceIntRegion invalidRegion =
+      LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion);
+  BufferMode bufferMode = BufferMode::BUFFERED;
+  // StartRemoteDrawingInRegion can mutate invalidRegion.
+  RefPtr<DrawTarget> dt =
+      mWidget->StartRemoteDrawingInRegion(invalidRegion, &bufferMode);
+  if (!dt) {
+    return Nothing();
+  }
+  if (invalidRegion.IsEmpty()) {
+    mWidget->EndRemoteDrawingInRegion(dt, invalidRegion);
+    return Nothing();
+  }
+
+  mInvalidRegion = invalidRegion.ToUnknownRegion();
+  IntRegion clearRegion;
+  clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
+
   RefPtr<CompositingRenderTarget> target;
-  if (aNativeLayer) {
-#ifdef XP_MACOSX
-    if (mInvalidRegion.IsEmpty()) {
-      return Nothing();
-    }
-    NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
-    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-    nativeLayer->SetSurfaceIsFlipped(false);
-    CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
-    if (!surf) {
-      return Nothing();
-    }
-    IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
-    nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
-    invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
-    mInvalidRegion = invalidRelativeToLayer.MovedBy(rect.TopLeft());
-    MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
-    mCurrentNativeLayer = aNativeLayer;
-    mCurrentIOSurface = new MacIOSurface(std::move(surf));
-    mCurrentIOSurface->Lock(false);
-    RefPtr<DrawTarget> dt =
-        mCurrentIOSurface->GetAsDrawTargetLocked(BackendType::SKIA);
-    IntRegion clearRegion;
-    clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
-    // Set up a render target for drawing directly to dt.
-    target = CreateRootRenderTarget(dt, rect, clearRegion);
-#else
-    MOZ_CRASH("Unexpected native layer on this platform");
-#endif
-  } else {
-    LayoutDeviceIntRegion invalidRegion =
-        LayoutDeviceIntRegion::FromUnknownRegion(mInvalidRegion);
-    BufferMode bufferMode = BufferMode::BUFFERED;
-    // StartRemoteDrawingInRegion can mutate invalidRegion.
-    RefPtr<DrawTarget> dt =
-        mWidget->StartRemoteDrawingInRegion(invalidRegion, &bufferMode);
-    if (!dt) {
-      return Nothing();
-    }
-    mInvalidRegion = invalidRegion.ToUnknownRegion();
-    if (mInvalidRegion.IsEmpty()) {
+  if (bufferMode == BufferMode::BUFFERED) {
+    // Buffer drawing via a back buffer.
+    IntRect backBufferRect = mInvalidRegion.GetBounds();
+    bool isCleared = false;
+    RefPtr<DrawTarget> backBuffer =
+        mWidget->GetBackBufferDrawTarget(dt, backBufferRect, &isCleared);
+    if (!backBuffer) {
       mWidget->EndRemoteDrawingInRegion(dt, invalidRegion);
       return Nothing();
     }
+    // Set up a render target for drawirg to the back buffer.
+    target = CreateRootRenderTarget(backBuffer, backBufferRect,
+                                    isCleared ? IntRegion() : clearRegion);
+    mFrontBuffer = dt;
+    // We will copy the drawing from the back buffer into mFrontBuffer (the
+    // widget) in EndRemoteDrawing().
+  } else {
+    // In BufferMode::BUFFER_NONE, the DrawTarget returned by
+    // StartRemoteDrawingInRegion can cover different rectangles in window
+    // space. It can either cover the entire window, or it can cover just the
+    // invalid region. We discern between the two cases by comparing the
+    // DrawTarget's size with the invalild region's size.
+    IntRect invalidRect = mInvalidRegion.GetBounds();
+    IntPoint dtLocation = dt->GetSize() == invalidRect.Size()
+                              ? invalidRect.TopLeft()
+                              : IntPoint(0, 0);
+    IntRect dtBounds(dtLocation, dt->GetSize());
 
-    IntRegion clearRegion;
-    clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
-
-    if (bufferMode == BufferMode::BUFFERED) {
-      // Buffer drawing via a back buffer.
-      IntRect backBufferRect = mInvalidRegion.GetBounds();
-      bool isCleared = false;
-      RefPtr<DrawTarget> backBuffer =
-          mWidget->GetBackBufferDrawTarget(dt, backBufferRect, &isCleared);
-      if (!backBuffer) {
-        mWidget->EndRemoteDrawingInRegion(dt, invalidRegion);
-        return Nothing();
-      }
-      // Set up a render target for drawirg to the back buffer.
-      target = CreateRootRenderTarget(backBuffer, backBufferRect,
-                                      isCleared ? IntRegion() : clearRegion);
-      mFrontBuffer = dt;
-      // We will copy the drawing from the back buffer into mFrontBuffer (the
-      // widget) in EndRemoteDrawing().
-    } else {
-      // In BufferMode::BUFFER_NONE, the DrawTarget returned by
-      // StartRemoteDrawingInRegion can cover different rectangles in window
-      // space. It can either cover the entire window, or it can cover just the
-      // invalid region. We discern between the two cases by comparing the
-      // DrawTarget's size with the invalild region's size.
-      IntRect invalidRect = mInvalidRegion.GetBounds();
-      IntPoint dtLocation = dt->GetSize() == invalidRect.Size()
-                                ? invalidRect.TopLeft()
-                                : IntPoint(0, 0);
-      IntRect dtBounds(dtLocation, dt->GetSize());
-
-      // Set up a render target for drawing directly to dt.
-      target = CreateRootRenderTarget(dt, dtBounds, clearRegion);
-    }
+    // Set up a render target for drawing directly to dt.
+    target = CreateRootRenderTarget(dt, dtBounds, clearRegion);
   }
+
+  mCurrentFrameDest = FrameDestination::WINDOW;
 
   MOZ_RELEASE_ASSERT(target);
   SetRenderTarget(target);
@@ -1005,9 +970,8 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForTarget(
     MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
   }
 
-  MOZ_RELEASE_ASSERT(!mFrameIsForTarget,
-                     "mFrameIsForTarget not cleared properly");
-  mFrameIsForTarget = true;
+  MOZ_RELEASE_ASSERT(mCurrentFrameDest == FrameDestination::NO_CURRENT_FRAME,
+                     "mCurrentFrameDest not restored properly");
 
   mInvalidRegion.And(aInvalidRegion, aTargetBounds);
   MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
@@ -1021,6 +985,8 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForTarget(
   MOZ_RELEASE_ASSERT(target);
   SetRenderTarget(target);
 
+  mCurrentFrameDest = FrameDestination::TARGET;
+
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, mInvalidRegion);
 
   mRenderTarget->mDrawTarget->PushClipRect(
@@ -1029,45 +995,135 @@ Maybe<gfx::IntRect> BasicCompositor::BeginFrameForTarget(
   return Some(aTargetBounds);
 }
 
-void BasicCompositor::EndFrame() {
-  Compositor::EndFrame();
+void BasicCompositor::BeginFrameForNativeLayers() {
+  if (mIsPendingEndRemoteDrawing) {
+    // Force to end previous remote drawing.
+    EndRemoteDrawing();
+    MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
+  }
 
+  MOZ_RELEASE_ASSERT(mCurrentFrameDest == FrameDestination::NO_CURRENT_FRAME,
+                     "mCurrentFrameDest not restored properly");
+
+  // Make a 1x1 dummy render target so that GetCurrentRenderTarget() returns
+  // something non-null even outside of calls to
+  // Begin/EndRenderingToNativeLayer.
+  if (!mNativeLayersReferenceRT) {
+    RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(
+        gfxVars::ContentBackend(), IntSize(1, 1), SurfaceFormat::B8G8R8A8);
+    mNativeLayersReferenceRT =
+        new BasicCompositingRenderTarget(dt, IntRect(0, 0, 1, 1), IntPoint());
+  }
+  SetRenderTarget(mNativeLayersReferenceRT);
+
+  mCurrentFrameDest = FrameDestination::NATIVE_LAYERS;
+}
+
+Maybe<gfx::IntRect> BasicCompositor::BeginRenderingToNativeLayer(
+    const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+    const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) {
+  IntRect rect = aNativeLayer->GetRect();
+  mInvalidRegion.And(aInvalidRegion, rect);
+  if (mInvalidRegion.IsEmpty()) {
+    return Nothing();
+  }
+
+  RefPtr<CompositingRenderTarget> target;
+#ifdef XP_MACOSX
+  NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
+  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+  nativeLayer->SetSurfaceIsFlipped(false);
+  CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
+  if (!surf) {
+    return Nothing();
+  }
+  IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
+  nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
+  mInvalidRegion = invalidRelativeToLayer.MovedBy(rect.TopLeft());
+  MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
+  mCurrentNativeLayer = aNativeLayer;
+  mCurrentIOSurface = new MacIOSurface(std::move(surf));
+  mCurrentIOSurface->Lock(false);
+  RefPtr<DrawTarget> dt =
+      mCurrentIOSurface->GetAsDrawTargetLocked(BackendType::SKIA);
+  IntRegion clearRegion;
+  clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
+  // Set up a render target for drawing directly to dt.
+  target = CreateRootRenderTarget(dt, rect, clearRegion);
+#else
+  MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+
+  MOZ_RELEASE_ASSERT(target);
+  SetRenderTarget(target);
+
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, mInvalidRegion);
+
+  mRenderTarget->mDrawTarget->PushClipRect(Rect(aClipRect.valueOr(rect)));
+
+  return Some(rect);
+}
+
+void BasicCompositor::EndRenderingToNativeLayer() {
   // Pop aClipRect/bounds rect
   mRenderTarget->mDrawTarget->PopClip();
 
-  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
-    float r = float(rand()) / float(RAND_MAX);
-    float g = float(rand()) / float(RAND_MAX);
-    float b = float(rand()) / float(RAND_MAX);
-    // We're still clipped to mInvalidRegion, so just fill the bounds.
-    mRenderTarget->mDrawTarget->FillRect(Rect(mInvalidRegion.GetBounds()),
-                                         ColorPattern(Color(r, g, b, 0.2f)));
-  }
-
-  // Pop aInvalidregion
+  // Pop mInvalidRegion
   mRenderTarget->mDrawTarget->PopClip();
+
+  MOZ_RELEASE_ASSERT(mCurrentNativeLayer);
+
+  SetRenderTarget(mNativeLayersReferenceRT);
+
+#ifdef XP_MACOSX
+  NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
+  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+  mCurrentIOSurface->Unlock(false);
+  mCurrentIOSurface = nullptr;
+  nativeLayer->NotifySurfaceReady();
+  mCurrentNativeLayer = nullptr;
+#else
+  MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+}
+
+void BasicCompositor::EndFrame() {
+  Compositor::EndFrame();
+
+  if (mCurrentFrameDest != FrameDestination::NATIVE_LAYERS) {
+    // Pop aClipRect/bounds rect
+    mRenderTarget->mDrawTarget->PopClip();
+
+    if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
+      float r = float(rand()) / float(RAND_MAX);
+      float g = float(rand()) / float(RAND_MAX);
+      float b = float(rand()) / float(RAND_MAX);
+      // We're still clipped to mInvalidRegion, so just fill the bounds.
+      mRenderTarget->mDrawTarget->FillRect(Rect(mInvalidRegion.GetBounds()),
+                                           ColorPattern(Color(r, g, b, 0.2f)));
+    }
+
+    // Pop aInvalidRegion
+    mRenderTarget->mDrawTarget->PopClip();
+  }
 
   // Reset the translation that was applied in CreateRootRenderTarget.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
-  if (mFrameIsForTarget) {
-    mRenderTarget = nullptr;
-    mFrameIsForTarget = false;
-  } else if (mCurrentNativeLayer) {
-#ifdef XP_MACOSX
-    NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
-    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-    mRenderTarget = nullptr;
-    mCurrentIOSurface->Unlock(false);
-    mCurrentIOSurface = nullptr;
-    nativeLayer->NotifySurfaceReady();
-    mCurrentNativeLayer = nullptr;
-#else
-    MOZ_CRASH("Unexpected native layer on this platform");
-#endif
-  } else {
-    TryToEndRemoteDrawing();
+  switch (mCurrentFrameDest) {
+    case FrameDestination::NO_CURRENT_FRAME:
+      MOZ_CRASH("EndFrame being called without BeginFrameForXYZ?");
+      break;
+    case FrameDestination::WINDOW:
+      TryToEndRemoteDrawing();
+      break;
+    case FrameDestination::TARGET:
+    case FrameDestination::NATIVE_LAYERS:
+      mRenderTarget = nullptr;
+      break;
   }
+  mCurrentFrameDest = FrameDestination::NO_CURRENT_FRAME;
 }
 
 void BasicCompositor::TryToEndRemoteDrawing() {

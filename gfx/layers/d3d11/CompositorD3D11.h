@@ -92,16 +92,23 @@ class CompositorD3D11 : public Compositor {
   /**
    * Start a new frame.
    */
-  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
-                                          const Maybe<gfx::IntRect>& aClipRect,
-                                          const gfx::IntRect& aRenderBounds,
-                                          const nsIntRegion& aOpaqueRegion,
-                                          NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForWindow(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds,
+      const nsIntRegion& aOpaqueRegion) override;
 
   Maybe<gfx::IntRect> BeginFrameForTarget(
       const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
       const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
       gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
+  void BeginFrameForNativeLayers() override;
+
+  Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) override;
+
+  void EndRenderingToNativeLayer() override;
 
   void NormalDrawingDone() override;
 
