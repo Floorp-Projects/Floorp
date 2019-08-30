@@ -2091,6 +2091,28 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
+  simulation_activated:
+    bug_numbers:
+      - 1567200
+    description: >
+      Number of times accessibility simulation was activated (with mouse or keyboard)
+      from the accessibility panel's toolbar. Keyed by the simulation type
+      (e.g. "DEUTERANOMALY").
+    expires: "74"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+      - mislam@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+
 devtools.application:
   opened_count:
     bug_numbers:
