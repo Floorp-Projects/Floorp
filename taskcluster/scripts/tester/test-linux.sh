@@ -5,10 +5,13 @@ set -x -e
 echo "running as" $(id)
 
 # Detect release version.
-. /etc/lsb-release
-if [ "${DISTRIB_RELEASE}" != "16.04" ]; then
-    echo "Ubuntu 16.04 required"
-    exit 1
+. /etc/os-release
+if [ "${ID}" == "ubuntu" ]; then
+    DISTRIBUTION="Ubuntu"
+elif [ "${ID}" == "debian" ]; then
+    DISTRIBUTION="Debian"
+else
+    DISTRIBUTION="Unknown"
 fi
 
 ####
@@ -43,10 +46,36 @@ fail() {
     exit 1
 }
 
+# start pulseaudio
 maybe_start_pulse() {
     if $NEED_PULSEAUDIO; then
-        pulseaudio --fail --daemonize --start
-        pactl load-module module-null-sink
+        # call pulseaudio with varying parameters
+        if [ $DISTRIBUTION == "Ubuntu" ]; then
+            pulseaudio --fail --daemonize --start
+        elif [ $DISTRIBUTION == "Debian" ]; then
+            # kill existing daemons/processes if exist
+            set +e
+            pulseaudio --kill
+
+            # Debian needs additional stabilization and debugging
+            # turn off errexit temporarily
+            ps ax | grep 'pulseaudio'
+            ps -ef | grep 'pulseaudio' | grep -v grep | awk '{print $2}' | xargs -r kill -9
+            ps ax | grep 'pulseaudio'
+
+            # check and start pulseaudio (debugging)
+            pulseaudio --check; echo $?
+            pulseaudio --fail --daemonize --start -vvvv --exit-idle-time=-1 --log-level=4 --log-time=1
+        else
+            :
+        fi
+
+        pulseaudio --check
+        if [ $? -eq 0 ]; then
+            echo "Pulseaudio successfully initialized"
+        else
+            echo "Pulseaudio failed to initialize, trying again"
+        fi
     fi
 }
 
@@ -148,15 +177,24 @@ if $NEED_WINDOW_MANAGER; then
     # This starts the gnome-keyring-daemon with an unlocked login keyring. libsecret uses this to
     # store secrets. Firefox uses libsecret to store a key that protects sensitive information like
     # credit card numbers.
-    eval `dbus-launch --sh-syntax`
+    if test -z "$DBUS_SESSION_BUS_ADDRESS" ; then
+        # if not found, launch a new one
+        eval `dbus-launch --sh-syntax`
+    fi
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 fi
 
 if $NEED_COMPIZ; then
-    compiz 2>&1 &
+    if [ $DISTRIBUTION == "Ubuntu" ]; then
+        compiz 2>&1 &
+    fi
 fi
 
 maybe_start_pulse
+
+# Load null-sink using pactl
+pactl load-module module-null-sink
+pactl list modules short
 
 # For telemetry purposes, the build process wants information about the
 # source it is running

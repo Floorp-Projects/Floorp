@@ -811,12 +811,13 @@ class MochitestArguments(ArgumentContainer):
                     '--use-test-media-devices is only supported on Linux currently')
 
             gst01 = spawn.find_executable("gst-launch-0.1")
+            gst010 = spawn.find_executable("gst-launch-0.10")
             gst10 = spawn.find_executable("gst-launch-1.0")
             pactl = spawn.find_executable("pactl")
 
-            if not (gst01 or gst10):
+            if not (gst01 or gst10 or gst010):
                 parser.error(
-                    'Missing gst-launch-{0.1,1.0}, required for '
+                    'Missing gst-launch-{0.1,0.10,1.0}, required for '
                     '--use-test-media-devices')
 
             if not pactl:
