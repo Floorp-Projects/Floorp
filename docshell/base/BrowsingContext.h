@@ -211,7 +211,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   already_AddRefed<BrowsingContext> GetOpener() const {
     RefPtr<BrowsingContext> opener(Get(mOpenerId));
-    if (opener && !opener->mIsDiscarded) {
+    if (!mIsDiscarded && opener && !opener->mIsDiscarded) {
       return opener.forget();
     }
     return nullptr;
