@@ -366,11 +366,17 @@ class CompositorOGL final : public Compositor {
 
   /* Start a new frame.
    */
+  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
+                                          const Maybe<gfx::IntRect>& aClipRect,
+                                          const gfx::IntRect& aRenderBounds,
+                                          const nsIntRegion& aOpaqueRegion,
+                                          NativeLayer* aNativeLayer) override;
+
   Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const Maybe<gfx::IntRect>& aClipRect,
                                  const gfx::IntRect& aRenderBounds,
                                  const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer) override;
+                                 NativeLayer* aNativeLayer);
 
   ShaderConfigOGL GetShaderConfigFor(
       Effect* aEffect, TextureSourceOGL* aSourceMask = nullptr,

@@ -123,11 +123,11 @@ class BasicCompositor : public Compositor {
 
   void ClearRect(const gfx::Rect& aRect) override;
 
-  Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
-                                 const Maybe<gfx::IntRect>& aClipRect,
-                                 const gfx::IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
+                                          const Maybe<gfx::IntRect>& aClipRect,
+                                          const gfx::IntRect& aRenderBounds,
+                                          const nsIntRegion& aOpaqueRegion,
+                                          NativeLayer* aNativeLayer) override;
   void NormalDrawingDone() override;
   void EndFrame() override;
 
@@ -193,16 +193,18 @@ class BasicCompositor : public Compositor {
   bool NeedToRecreateFullWindowRenderTarget() const;
 
   // When rendering to a back buffer, this is the front buffer that the contents
-  // of the back buffer need to be copied to. Only non-null between BeginFrame
-  // and EndRemoteDrawing, and only when using a back buffer.
+  // of the back buffer need to be copied to. Only non-null between
+  // BeginFrameForWindow and EndRemoteDrawing, and only when using a back
+  // buffer.
   RefPtr<gfx::DrawTarget> mFrontBuffer;
 
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
 
   // The native layer that we're currently rendering to, if any.
-  // Non-null only between BeginFrame and EndFrame if BeginFrame has been called
-  // with a non-null aNativeLayer and mTarget is null.
+  // Non-null only between BeginFrameForWindow and EndFrame if
+  // BeginFrameForWindow has been called with a non-null aNativeLayer and
+  // mTarget is null.
   RefPtr<NativeLayer> mCurrentNativeLayer;
 
 #ifdef XP_MACOSX

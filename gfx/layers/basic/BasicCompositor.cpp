@@ -871,7 +871,7 @@ bool BasicCompositor::BlitRenderTarget(CompositingRenderTarget* aSource,
   return true;
 }
 
-Maybe<gfx::IntRect> BasicCompositor::BeginFrame(
+Maybe<gfx::IntRect> BasicCompositor::BeginFrameForWindow(
     const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
     const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
     NativeLayer* aNativeLayer) {
