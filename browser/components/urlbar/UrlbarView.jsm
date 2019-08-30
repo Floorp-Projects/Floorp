@@ -1045,10 +1045,6 @@ class UrlbarView {
   }
 
   _on_resize() {
-    if (this.megabar) {
-      return;
-    }
-
     if (this._windowOuterWidth == this.window.outerWidth) {
       // Sometimes a resize event is fired when the window's size doesn't
       // actually change; at least, browser_tabMatchesInAwesomebar.js triggers
