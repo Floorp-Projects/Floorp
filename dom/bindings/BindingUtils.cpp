@@ -2461,6 +2461,11 @@ bool InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
     return true;
   }
 
+  if (IsRemoteObjectProxy(instance, clasp->mPrototypeID)) {
+    args.rval().setBoolean(true);
+    return true;
+  }
+
   return CallOrdinaryHasInstance(cx, args);
 }
 

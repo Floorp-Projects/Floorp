@@ -16,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
   function go() {
     var sowin = $('soifr').contentWindow;
     var xowin = $('xoifr').contentWindow;
+    var xosswin = $('xossifr').contentWindow;
 
     check(window, sowin, 'HTMLBodyElement', function(win) { return win.document.body; });
     check(window, sowin, 'HTMLDocument', function(win) { return win.document; });
@@ -24,6 +25,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
 
     ok(xowin instanceof Window, "Cross-origin instanceof should work");
     ok(xowin.location instanceof Location, "Cross-origin instanceof should work");
+
+    // cross-origin same-site.
+    ok(xosswin instanceof Window, "Cross-origin instanceof should work");
+    ok(xosswin.location instanceof Location, "Cross-origin instanceof should work");
 
     SimpleTest.finish();
   }
@@ -45,6 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870423
 </div>
 <iframe id="soifr" src="file_empty.html"></iframe>
 <iframe id="xoifr" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<!-- cross origin, same site -->
+<iframe id="xossifr" src="//test1.mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
 <pre id="test">
 </pre>
 </body>
