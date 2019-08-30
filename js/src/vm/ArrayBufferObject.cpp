@@ -764,7 +764,12 @@ static bool CreateSpecificWasmBuffer(
   RawbufT* buffer = RawbufT::Allocate(initialSize, clampedMaxSize, mappedSize);
   if (!buffer) {
     if (useHugeMemory) {
-      wasm::Log(cx, "huge Memory allocation failed");
+      JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
+                                        nullptr, JSMSG_WASM_HUGE_MEMORY_FAILED);
+      if (cx->isExceptionPending()) {
+        cx->clearPendingException();
+      }
+
       ReportOutOfMemory(cx);
       return false;
     }
