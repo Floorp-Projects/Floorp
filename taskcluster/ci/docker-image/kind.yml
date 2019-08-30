@@ -22,6 +22,8 @@ jobs:
         symbol: I(ib)
     desktop1604-test:
         symbol: I(dt16t)
+    debian10-test:
+        symbol: I(deb10-test)
     # Neither the debian7-*raw nor the debian7-*packages images can have
     # packages dependencies.
     debian7-raw:
