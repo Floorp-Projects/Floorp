@@ -825,6 +825,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool spectreJitToCxxCalls =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.jit_to_C++_calls");
 
+  bool disableWasmHugeMemory =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_disable_huge_memory");
+
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
     bool safeMode = false;
@@ -879,6 +882,10 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
                                 spectreValueMasking);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS,
                                 spectreJitToCxxCalls);
+  if (disableWasmHugeMemory) {
+    bool disabledHugeMemory = JS::DisableWasmHugeMemory();
+    MOZ_RELEASE_ASSERT(disabledHugeMemory);
+  }
 }
 
 static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
