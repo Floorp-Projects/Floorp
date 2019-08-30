@@ -514,6 +514,19 @@ void IdentifierMapEntry::SetImageElement(Element* aElement) {
   }
 }
 
+void IdentifierMapEntry::ClearAndNotify() {
+  Element* currentElement = mIdContentList->SafeElementAt(0);
+  mIdContentList.Clear();
+  if (currentElement) {
+    FireChangeCallbacks(currentElement, nullptr);
+  }
+  mNameContentList = nullptr;
+  if (mImageElement) {
+    SetImageElement(nullptr);
+  }
+  mChangeCallbacks = nullptr;
+}
+
 namespace dom {
 
 class SimpleHTMLCollection final : public nsSimpleContentList,
@@ -10987,6 +11000,10 @@ void Document::DestroyElementMaps() {
   mStyledLinksCleared = true;
 #endif
   mStyledLinks.Clear();
+  // Notify ID change listeners before clearing the identifier map.
+  for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->ClearAndNotify();
+  }
   mIdentifierMap.Clear();
   mComposedShadowRoots.Clear();
   mResponsiveContent.Clear();
