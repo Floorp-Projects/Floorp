@@ -86,7 +86,8 @@
       @include full-width-styles;
     }
 
-    @media (max-width: 1120px) {
+    // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
+    @media (max-width: $break-point-widest + 1px) {
       margin: 0 60px;
     }
 
@@ -175,7 +176,8 @@
         box-shadow: none;
       }
 
-      @media (max-width: 1120px) {
+      // There is an off-by-one gap between breakpoints; this is to prevent weirdness at exactly 1121px.
+      @media (max-width: $break-point-widest + 1px) {
         inset-inline-end: 2%;
       }
 
