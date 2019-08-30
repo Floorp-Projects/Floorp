@@ -1094,13 +1094,19 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
   }
 }
 
+Maybe<IntRect> CompositorD3D11::BeginFrameForWindow(
+    const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+    NativeLayer* aNativeLayer) {
+  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
+
+  return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
+}
+
 Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                                            const Maybe<IntRect>& aClipRect,
                                            const IntRect& aRenderBounds,
-                                           const nsIntRegion& aOpaqueRegion,
-                                           NativeLayer* aNativeLayer) {
-  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
-
+                                           const nsIntRegion& aOpaqueRegion) {
   // Don't composite if we are minimised. Other than for the sake of efficency,
   // this is important because resizing our buffers when mimised will fail and
   // cause a crash when we're restored.

@@ -411,11 +411,10 @@ class Compositor : public TextureSourceProvider {
    * Returns the non-empty render bounds actually used by the compositor in
    * window space, or Nothing() if composition should be aborted.
    */
-  virtual Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
-                                         const Maybe<gfx::IntRect>& aClipRect,
-                                         const gfx::IntRect& aRenderBounds,
-                                         const nsIntRegion& aOpaqueRegion,
-                                         NativeLayer* aNativeLayer) = 0;
+  virtual Maybe<gfx::IntRect> BeginFrameForWindow(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      NativeLayer* aNativeLayer) = 0;
 
   /**
    * Notification that we've finished issuing draw commands for normal
