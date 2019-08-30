@@ -1664,7 +1664,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return IsDisplayTypeInlineOutside(mDisplay);
   }
 
-  bool IsOriginalDisplayInlineOutsideStyle() const {
+  bool IsOriginalDisplayInlineOutside() const {
     return IsDisplayTypeInlineOutside(mOriginalDisplay);
   }
 
@@ -1806,8 +1806,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   // SVG text.
   inline bool IsBlockOutside(const nsIFrame* aContextFrame) const;
   inline bool IsInlineOutside(const nsIFrame* aContextFrame) const;
-  inline bool IsOriginalDisplayInlineOutside(
-      const nsIFrame* aContextFrame) const;
   inline mozilla::StyleDisplay GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
   inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
