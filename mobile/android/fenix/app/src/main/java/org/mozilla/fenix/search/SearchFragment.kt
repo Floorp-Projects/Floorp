@@ -208,7 +208,11 @@ class SearchFragment : Fragment(), BackHandler {
         // The user has the option to go to 'Shortcuts' -> 'Search engine settings' to modify the default search engine.
         // When returning from that settings screen we need to update it to account for any changes.
         val currentDefaultEngine =
-            requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+            requireComponents.search.searchEngineManager.getDefaultSearchEngine(
+                requireContext(),
+                Settings.getInstance(requireContext()).defaultSearchEngineName
+            )
+
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
             searchStore.dispatch(
                 SearchAction.SelectNewDefaultSearchEngine

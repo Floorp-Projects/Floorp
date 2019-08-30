@@ -82,6 +82,7 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.FragmentPreDrawManager
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -206,8 +207,10 @@ class HomeFragment : Fragment(), AccountObserver {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
-            val searchEngine =
-                requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+            val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngineAsync(
+                requireContext(),
+                Settings.getInstance(requireContext()).defaultSearchEngineName
+            )
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
