@@ -295,17 +295,17 @@
 
 - name: apz.drag.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.drag.initial.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.drag.touch.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: apz.enlarge_displayport_when_clipped
@@ -489,17 +489,17 @@
 
 - name: apz.pinch_lock.scroll_lock_threshold
   type: AtomicFloat
-  value: 1.0f / 32.0f
+  value: 1.0f / 32.0f   # 1/32 inches
   mirror: always
 
 - name: apz.pinch_lock.span_breakout_threshold
   type: AtomicFloat
-  value: 1.0f / 32.0f
+  value: 1.0f / 32.0f   # 1/32 inches
   mirror: always
 
 - name: apz.pinch_lock.span_lock_threshold
   type: AtomicFloat
-  value: 1.0f / 32.0f
+  value: 1.0f / 32.0f   # 1/32 inches
   mirror: always
 
 - name: apz.pinch_lock.buffer_max_age
