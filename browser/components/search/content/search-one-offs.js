@@ -306,7 +306,10 @@ class SearchOneOffs {
       if (val) {
         this.textbox.setAttribute("aria-activedescendant", val.id);
       } else {
-        this.textbox.removeAttribute("aria-activedescendant");
+        let active = this.textbox.getAttribute("aria-activedescendant");
+        if (active && active.includes("-engine-one-off-item-")) {
+          this.textbox.removeAttribute("aria-activedescendant");
+        }
       }
     }
 
