@@ -575,6 +575,11 @@ class InactivePropertyHelper {
   }
 
   getParentGridElement(node) {
+    // The documentElement can't be a grid item, only a container, so bail out.
+    if (node.flattenedTreeParentNode === node.ownerDocument) {
+      return null;
+    }
+
     if (node.nodeType === node.ELEMENT_NODE) {
       const display = this.style ? this.style.display : null;
 
