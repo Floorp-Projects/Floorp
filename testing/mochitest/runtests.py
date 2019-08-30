@@ -791,9 +791,12 @@ def findTestMediaDevices(log):
 
     # Feed it a frame of output so it has something to display
     gst01 = spawn.find_executable("gst-launch-0.1")
+    gst010 = spawn.find_executable("gst-launch-0.10")
     gst10 = spawn.find_executable("gst-launch-1.0")
     if gst01:
         gst = gst01
+    if gst010:
+        gst = gst010
     else:
         gst = gst10
     subprocess.check_call([gst, 'videotestsrc',
@@ -801,22 +804,29 @@ def findTestMediaDevices(log):
                            'v4l2sink', 'device=%s' % device])
     info['video'] = name
 
-    pactl = spawn.find_executable("pactl")
+    if platform.linux_distribution()[0] == 'debian':
+        # Debian 10 doesn't seem to appreciate starting pactl here.
+        # Still WIP (bug 1565332)
+        pass
+    else:
+        # Use pactl to see if the PulseAudio module-null-sink module is loaded.
+        pactl = spawn.find_executable("pactl")
 
-    # Use pactl to see if the PulseAudio module-null-sink module is loaded.
-    def null_sink_loaded():
-        o = subprocess.check_output(
-            [pactl, 'list', 'short', 'modules'])
-        return filter(lambda x: 'module-null-sink' in x, o.splitlines())
+        def null_sink_loaded():
+            o = subprocess.check_output(
+                [pactl, 'list', 'short', 'modules'])
+            return filter(lambda x: 'module-null-sink' in x, o.splitlines())
 
-    if not null_sink_loaded():
-        # Load module-null-sink
-        subprocess.check_call([pactl, 'load-module',
-                               'module-null-sink'])
+        if not null_sink_loaded():
+            subprocess.check_call([
+                pactl,
+                'load-module',
+                'module-null-sink'
+            ])
 
-    if not null_sink_loaded():
-        log.error('Couldn\'t load module-null-sink')
-        return None
+        if not null_sink_loaded():
+            log.error('Couldn\'t load module-null-sink')
+            return None
 
     # Hardcode the name since it's always the same.
     info['audio'] = 'Monitor of Null Output'
