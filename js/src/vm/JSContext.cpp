@@ -1356,6 +1356,10 @@ void JSContext::setRuntime(JSRuntime* rt) {
   runtime_ = rt;
 }
 
+static bool IsOutOfMemoryException(JSContext* cx, const Value& v) {
+  return v == StringValue(cx->names().outOfMemory);
+}
+
 void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
 #if defined(NIGHTLY_BUILD)
   do {
@@ -1368,6 +1372,13 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
 
     // Check whether we have an interceptor at all.
     if (!this->runtime()->errorInterception.interceptor) {
+      break;
+    }
+
+    // Don't report OOM exceptions. The interceptor isn't interested in those
+    // and they can confuse the interceptor because OOM can be thrown when we
+    // are not in a realm (atom allocation, for example).
+    if (IsOutOfMemoryException(this, v)) {
       break;
     }
 
@@ -1433,7 +1444,7 @@ SavedFrame* JSContext::getPendingExceptionStack() {
 }
 
 bool JSContext::isThrowingOutOfMemory() {
-  return throwing && unwrappedException() == StringValue(names().outOfMemory);
+  return throwing && IsOutOfMemoryException(this, unwrappedException());
 }
 
 bool JSContext::isClosingGenerator() {
