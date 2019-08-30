@@ -1,6 +1,5 @@
 == counter-name-case-sensitive.html counter-name-case-sensitive-ref.html
 == t1202-counter-00-b-test.html t1202-counter-00-b-reference.html
-== t1202-counter-01-b-test.html t1202-counter-01-b-reference.html
 == t1202-counter-02-b-test.html t1202-counter-02-b-reference.html
 == t1202-counter-03-b-test.html t1202-counter-03-b-reference.html
 == t1202-counter-04-b-test.html t1202-counter-04-b-reference.html
@@ -17,7 +16,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == t1202-counter-10-b-test.
 == t1202-counter-15-b-test.html t1202-counter-15-b-reference.html
 == t1202-counter-16-f-test.html t1202-counter-16-f-reference.html
 == t1202-counters-00-b-test.html t1202-counters-00-b-reference.html
-== t1202-counters-01-b-test.html t1202-counters-01-b-reference.html
+== t1202-counters-01-b-test.html about:blank
 == t1202-counters-02-b-test.html t1202-counters-02-b-reference.html
 == t1202-counters-03-b-test.html t1202-counters-03-b-reference.html
 == t1202-counters-04-b-test.html t1202-counters-04-b-reference.html
