@@ -62,7 +62,7 @@ def repackage_mar(
         make_full_update = mozpath.join(topsrcdir, 'tools/update-packaging/make_full_update.sh')
 
         env = os.environ.copy()
-        env['MOZ_FULL_PRODUCT_VERSION'] = get_application_ini_value(tmpdir, 'App', 'Version')
+        env['MOZ_PRODUCT_VERSION'] = get_application_ini_value(tmpdir, 'App', 'Version')
         env['MAR'] = mozpath.normpath(mar)
         if arch:
             env['BCJ_OPTIONS'] = ' '.join(_BCJ_OPTIONS[arch])
