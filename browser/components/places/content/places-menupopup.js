@@ -35,9 +35,8 @@
     }
 
     get commonStyles() {
-      let s = "";
       if (this.closest("#BMB_bookmarksPopup")) {
-        s = `
+        return `
         /* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
         arrowscrollbox.popup-internal-box {
           padding-bottom: 0px;
@@ -50,56 +49,7 @@
         }
       `;
       }
-
-      switch (AppConstants.platform) {
-        case "macosx":
-          return `${s}
-          .menupopup-drop-indicator-bar {
-            position: relative;
-            /* these two margins must together compensate the indicator's height */
-            margin-top: -1px;
-            margin-bottom: -1px;
-          }
-          .menupopup-drop-indicator {
-            list-style-image: none;
-            height: 2px;
-            margin-inline-end: -4em;
-            background-color: Highlight;
-          }
-        `;
-        case "linux":
-          return `${s}
-          .menupopup-drop-indicator-bar {
-            position: relative;
-            /* these two margins must together compensate the indicator's height */
-            margin-top: -1px;
-            margin-bottom: -1px;
-          }
-          .menupopup-drop-indicator {
-            list-style-image: none;
-            height: 2px;
-            margin-inline-end: -4em;
-            background-color: Highlight;
-          }
-        `;
-        case "win":
-          return `${s}
-          .menupopup-drop-indicator-bar {
-            position: relative;
-            /* these two margins must together compensate the indicator's height */
-            margin-top: -1px;
-            margin-bottom: -1px;
-          }
-          .menupopup-drop-indicator {
-            list-style-image: none;
-            height: 2px;
-            margin-inline-end: -4em;
-            background-color: Highlight;
-          }
-        `;
-        default:
-          return s;
-      }
+      return "";
     }
 
     get styles() {
@@ -137,11 +87,11 @@
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
       <html:style>${this.commonStyles}${this.styles}</html:style>
       <hbox flex="1" part="innerbox">
-        <vbox class="menupopup-drop-indicator-bar" hidden="true">
-          <image class="menupopup-drop-indicator" mousethrough="always"></image>
+        <vbox part="drop-indicator-bar" hidden="true">
+          <image part="drop-indicator" mousethrough="always"></image>
         </vbox>
         <arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
-                        smoothscroll="false">
+                        smoothscroll="false" part="popupbox">
           <html:slot></html:slot>
         </arrowscrollbox>
       </hbox>
@@ -159,7 +109,7 @@
       );
 
       this._indicatorBar = this.shadowRoot.querySelector(
-        ".menupopup-drop-indicator-bar"
+        "[part=drop-indicator-bar]"
       );
       this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
 
@@ -704,8 +654,8 @@
           <image class="panel-arrow"></image>
         </box>
         <box class="panel-arrowcontent" part="arrowcontent" flex="1">
-          <vbox class="menupopup-drop-indicator-bar" hidden="true">
-            <image class="menupopup-drop-indicator" mousethrough="always"></image>
+          <vbox part="drop-indicator-bar" hidden="true">
+            <image part="drop-indicator" mousethrough="always"></image>
           </vbox>
           <arrowscrollbox class="popup-internal-box" flex="1"
                           orient="vertical" smoothscroll="false"
