@@ -1965,6 +1965,23 @@ SPAN_TEST(as_writable_bytes) {
   }
 }
 
+SPAN_TEST(as_chars) {
+  const uint8_t a[] = {1, 2, 3, 4};
+  Span<const uint8_t> u = MakeSpan(a);
+  Span<const char> c = AsChars(u);
+  ASSERT_EQ(static_cast<const void*>(u.data()),
+            static_cast<const void*>(c.data()));
+  ASSERT_EQ(u.size(), c.size());
+}
+
+SPAN_TEST(as_writable_chars) {
+  uint8_t a[] = {1, 2, 3, 4};
+  Span<uint8_t> u = MakeSpan(a);
+  Span<char> c = AsWritableChars(u);
+  ASSERT_EQ(static_cast<void*>(u.data()), static_cast<void*>(c.data()));
+  ASSERT_EQ(u.size(), c.size());
+}
+
 SPAN_TEST(fixed_size_conversions) {
   int arr[] = {1, 2, 3, 4};
 
