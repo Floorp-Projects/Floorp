@@ -29,9 +29,9 @@
 
           <vbox class="identity-popup-security-connection">
             <description class="identity-popup-connection-not-secure"
-                         when-connection="not-secure secure-cert-user-overridden secure-custom-root">&identity.connectionNotSecure;</description>
+                         when-connection="not-secure secure-cert-user-overridden secure-custom-root">&identity.connectionNotSecure2;</description>
             <description class="identity-popup-connection-secure"
-                         when-connection="secure secure-ev">&identity.connectionSecure2;</description>
+                         when-connection="secure secure-ev">&identity.connectionSecure3;</description>
             <description when-connection="chrome">&identity.connectionInternal;</description>
             <description when-connection="file">&identity.connectionFile;</description>
             <description when-connection="extension">&identity.extensionPage;</description>
@@ -103,7 +103,7 @@
       <vbox id="identity-popup-securityView-body" class="panel-view-body-unscrollable">
         <!-- (EV) Certificate Information -->
         <description id="identity-popup-content-owner-label"
-                     when-connection="secure-ev">&identity.evOwnerLabel;</description>
+                     when-connection="secure-ev">&identity.evOwnerLabel2;</description>
         <description id="identity-popup-content-owner"
                      when-connection="secure-ev"
                      class="header"/>

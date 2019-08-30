@@ -4024,8 +4024,8 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(
     JSContext* cx, uint32_t length, HandleObject protoArg,
     NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = GuessArrayGCKind(length);
-  MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayObject::class_));
-  allocKind = GetBackgroundAllocKind(allocKind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
   RootedObject proto(cx, protoArg);
   if (!proto) {
@@ -4162,8 +4162,8 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
     JSContext* cx, uint32_t length, JSObject* templateObject) {
   AutoSetNewObjectMetadata metadata(cx);
   gc::AllocKind allocKind = GuessArrayGCKind(length);
-  MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayObject::class_));
-  allocKind = GetBackgroundAllocKind(allocKind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
   RootedObjectGroup group(cx, templateObject->group());
   RootedShape shape(cx, templateObject->as<ArrayObject>().lastProperty());
