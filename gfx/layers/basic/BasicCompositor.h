@@ -167,10 +167,6 @@ class BasicCompositor : public Compositor {
 
   void FinishPendingComposite() override;
 
-  virtual void RequestAllowFrameRecording(bool aWillRecord) override {
-    mRecordFrames = aWillRecord;
-  }
-
  private:
   template <typename Geometry>
   void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,
@@ -189,19 +185,6 @@ class BasicCompositor : public Compositor {
   void EndRemoteDrawing();
 
   bool NeedsToDeferEndRemoteDrawing();
-
-  /**
-   * Whether or not the compositor should be recording frames.
-   *
-   * When this returns true, the BasicCompositor will keep the
-   * |mFullWindowRenderTarget| as an up-to-date copy of the entire rendered
-   * window. This copy is maintained in NormalDrawingDone().
-   *
-   * This will be true when either we are recording a profile with screenshots
-   * enabled or the |LayerManagerComposite| has requested us to record frames
-   * for the |CompositionRecorder|.
-   */
-  bool ShouldRecordFrames() const;
 
   bool NeedToRecreateFullWindowRenderTarget() const;
 
@@ -229,7 +212,6 @@ class BasicCompositor : public Compositor {
 
   uint32_t mMaxTextureSize;
   bool mIsPendingEndRemoteDrawing;
-  bool mRecordFrames;
   bool mShouldInvalidateWindow = false;
 
   // Where the current frame is being rendered to.
