@@ -1074,7 +1074,7 @@ var gIdentityHandler = {
     );
 
     this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(
-      "identity.ev.contentOwner",
+      "identity.ev.contentOwner2",
       [owner]
     );
 

@@ -672,8 +672,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY editBookmark.showForNewBookmarks.label       "Show editor when saving">
 <!ENTITY editBookmark.showForNewBookmarks.accesskey   "S">
 
-<!ENTITY identity.connectionSecure2 "Connection Secure">
-<!ENTITY identity.connectionNotSecure "Connection Is Not Secure">
+<!ENTITY identity.connectionSecure3 "Connection secure">
+<!ENTITY identity.connectionNotSecure2 "Connection not secure">
 <!ENTITY identity.connectionNotSecureSecurityView "You are not securely connected to this site.">
 <!ENTITY identity.connectionFile "This page is stored on your computer.">
 <!ENTITY identity.connectionVerified3 "You are securely connected to this site.">
@@ -682,7 +682,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.insecureLoginForms2 "Logins entered on this page could be compromised.">
 <!ENTITY identity.customRoot "Connection verified by a certificate issuer that is not recognized by Mozilla.">
 
-<!ENTITY identity.evOwnerLabel "Site owned by:">
+<!ENTITY identity.evOwnerLabel2 "Certificate issued to:">
 
 <!-- Strings for connection state warnings. -->
 <!ENTITY identity.activeBlocked "&brandShortName; has blocked parts of this page that are not secure.">
