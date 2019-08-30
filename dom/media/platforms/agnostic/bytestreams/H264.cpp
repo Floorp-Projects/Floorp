@@ -534,7 +534,7 @@ class SPSNALIterator {
 
 static int32_t ConditionDimension(float aValue) {
   // This will exclude NaNs and too-big values.
-  if (aValue > 1.0 && aValue <= INT32_MAX / 2) {
+  if (aValue > 1.0 && aValue <= float(INT32_MAX) / 2) {
     return int32_t(aValue);
   }
   return 0;

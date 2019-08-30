@@ -32,7 +32,7 @@ class DelayBuffer final {
     // 1 << MEDIA_TIME_FRAC_BITS limit on sample rate provide a limit on the
     // maximum delay.
     MOZ_ASSERT(aMaxDelayTicks <=
-               std::numeric_limits<decltype(mMaxDelayTicks)>::max());
+               float(std::numeric_limits<decltype(mMaxDelayTicks)>::max()));
   }
 
   // Write a WEBAUDIO_BLOCK_SIZE block for aChannelCount channels.
