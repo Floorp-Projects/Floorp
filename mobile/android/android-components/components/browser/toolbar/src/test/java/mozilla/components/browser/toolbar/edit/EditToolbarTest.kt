@@ -222,26 +222,46 @@ class EditToolbarTest {
 
         assertEquals(1024, editToolbar.measuredWidth)
         assertEquals(56, editToolbar.measuredHeight)
+        assertEquals(0, editToolbar.paddingLeft)
+        assertEquals(0, editToolbar.paddingRight)
+        assertEquals(0, editToolbar.paddingTop)
+        assertEquals(0, editToolbar.paddingBottom)
 
         val clearView = extractClearView(editToolbar)
 
         assertEquals(56, clearView.measuredWidth)
         assertEquals(56, clearView.measuredHeight)
+        assertEquals(16, clearView.paddingLeft)
+        assertEquals(16, clearView.paddingRight)
+        assertEquals(16, clearView.paddingTop)
+        assertEquals(16, clearView.paddingBottom)
 
         val microphoneView = extractActionView(editToolbar, "Microphone")
 
         assertEquals(56, microphoneView.measuredWidth)
         assertEquals(56, microphoneView.measuredHeight)
+        assertEquals(16, microphoneView.paddingLeft)
+        assertEquals(16, microphoneView.paddingRight)
+        assertEquals(16, microphoneView.paddingTop)
+        assertEquals(16, microphoneView.paddingBottom)
 
         val qrView = extractActionView(editToolbar, "QR code scanner")
 
         assertEquals(56, qrView.measuredWidth)
         assertEquals(56, qrView.measuredHeight)
+        assertEquals(16, qrView.paddingLeft)
+        assertEquals(16, qrView.paddingRight)
+        assertEquals(16, qrView.paddingTop)
+        assertEquals(16, qrView.paddingBottom)
 
         val urlView = extractUrlView(editToolbar)
 
         assertEquals(856, urlView.measuredWidth)
         assertEquals(56, urlView.measuredHeight)
+        assertEquals(8, urlView.paddingLeft)
+        assertEquals(8, urlView.paddingRight)
+        assertEquals(0, urlView.paddingTop)
+        assertEquals(0, urlView.paddingBottom)
     }
 
     @Test
