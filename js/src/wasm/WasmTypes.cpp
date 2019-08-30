@@ -34,9 +34,9 @@ using namespace js::wasm;
 using mozilla::IsPowerOfTwo;
 using mozilla::MakeEnumeratedRange;
 
-// We have only tested WASM_HUGE_MEMORY on x64 and arm64.
+// We have only tested huge memory on x64 and arm64.
 
-#if defined(WASM_HUGE_MEMORY)
+#if defined(WASM_SUPPORTS_HUGE_MEMORY)
 #  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64))
 #    error "Not an expected configuration"
 #  endif
