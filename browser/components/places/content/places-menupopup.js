@@ -34,6 +34,15 @@
       this.attachShadow({ mode: "open" });
     }
 
+    get fragment() {
+      if (!this.constructor.hasOwnProperty("_fragment")) {
+        this.constructor._fragment = MozXULElement.parseXULToFragment(
+          this.markup
+        );
+      }
+      return document.importNode(this.constructor._fragment, true);
+    }
+
     get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
@@ -55,9 +64,7 @@
       }
 
       this.shadowRoot.textContent = "";
-      this.shadowRoot.appendChild(
-        MozXULElement.parseXULToFragment(this.markup)
-      );
+      this.shadowRoot.appendChild(this.fragment);
 
       this._indicatorBar = this.shadowRoot.querySelector(
         "[part=drop-indicator-bar]"
