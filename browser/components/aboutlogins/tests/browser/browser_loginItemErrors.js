@@ -15,8 +15,8 @@ add_task(async function setup() {
 add_task(async function test_showLoginItemErrors() {
   const browser = gBrowser.selectedBrowser;
   let LOGIN_TO_UPDATE = new nsLoginInfo(
-    "https://example.com/",
-    "https://example.com/",
+    "https://example.com",
+    "https://example.com",
     null,
     "user2",
     "pass2"
@@ -41,7 +41,7 @@ add_task(async function test_showLoginItemErrors() {
       createButton.click();
 
       const loginUpdates = {
-        origin: "https://example.com/",
+        origin: "https://example.com",
         password: "my1GoodPassword",
         username: "user1",
       };
@@ -55,7 +55,7 @@ add_task(async function test_showLoginItemErrors() {
       );
 
       content.dispatchEvent(
-        // adds first lgoin
+        // adds first login
         new content.CustomEvent("AboutLoginsCreateLogin", event)
       );
 
@@ -104,12 +104,20 @@ add_task(async function test_showLoginItemErrors() {
       const editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
 
-      content.dispatchEvent(
-        // attempt to update LOGIN_TO_UPDATE to a username/origin combination that already exists.
-        new content.CustomEvent("AboutLoginsUpdateLogin", event)
+      const updateEvent = Cu.cloneInto(
+        {
+          bubbles: true,
+          detail: Object.assign({guid: loginToUpdate.guid}, loginUpdates),
+        },
+        content
       );
 
-      const loginAlreadyExistsErrorShownAfterUpdate = ContentTaskUtils.waitForCondition(
+      content.dispatchEvent(
+        // attempt to update LOGIN_TO_UPDATE to a username/origin combination that already exists.
+        new content.CustomEvent("AboutLoginsUpdateLogin", updateEvent)
+      );
+
+      const loginAlreadyExistsErrorShownAfterUpdate = await ContentTaskUtils.waitForCondition(
         () => {
           return !loginItemErrorMessage.hidden;
         },
