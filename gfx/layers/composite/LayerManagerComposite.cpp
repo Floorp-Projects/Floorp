@@ -975,27 +975,19 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   }
 #endif
 
-  if (mNativeLayerForEntireWindow) {
-    mNativeLayerForEntireWindow->SetRect(mRenderBounds);
-#ifdef XP_MACOSX
-    mNativeLayerForEntireWindow->SetOpaqueRegion(
-        mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
-#endif
-  }
-
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
   Maybe<IntRect> maybeBounds;
+  bool usingNativeLayers = false;
   if (mTarget) {
     maybeBounds = mCompositor->BeginFrameForTarget(
         aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion, mTarget,
         mTargetBounds);
-  } else if (mNativeLayerForEntireWindow) {
+  } else if (mNativeLayerRoot) {
     if (aInvalidRegion.Intersects(mRenderBounds)) {
       mCompositor->BeginFrameForNativeLayers();
-      maybeBounds = mCompositor->BeginRenderingToNativeLayer(
-          aInvalidRegion, rootLayerClip, aOpaqueRegion,
-          mNativeLayerForEntireWindow);
+      maybeBounds = Some(mRenderBounds);
+      usingNativeLayers = true;
     }
   } else {
     maybeBounds = mCompositor->BeginFrameForWindow(
@@ -1031,8 +1023,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  {
-    Diagnostics::Record record;
+  auto RenderOnce = [&](const IntRect& aClipRect) {
     RefPtr<CompositingRenderTarget> previousTarget;
     if (haveLayerEffects) {
       previousTarget = PushGroupForLayerEffects();
@@ -1041,12 +1032,12 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
 
     // Execute draw commands.
-    RootLayer()->RenderLayer(clipRect, Nothing());
+    RootLayer()->RenderLayer(aClipRect, Nothing());
 
     if (mTwoPassTmpTarget) {
       MOZ_ASSERT(haveLayerEffects);
-      PopGroupForLayerEffects(previousTarget, clipRect, grayscaleVal, invertVal,
-                              contrastVal);
+      PopGroupForLayerEffects(previousTarget, aClipRect, grayscaleVal,
+                              invertVal, contrastVal);
     }
     if (!mRegionToClear.IsEmpty()) {
       for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
@@ -1054,6 +1045,41 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       }
     }
     mCompositor->NormalDrawingDone();
+  };
+
+  {
+    Diagnostics::Record record;
+
+    if (usingNativeLayers) {
+      mNativeLayerForEntireWindow->SetRect(mRenderBounds);
+#ifdef XP_MACOSX
+      IntRegion opaqueRegion =
+          mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion();
+      opaqueRegion.AndWith(mRenderBounds);
+      mNativeLayerForEntireWindow->SetOpaqueRegion(
+          opaqueRegion.MovedBy(-mRenderBounds.TopLeft());
+#endif
+
+      do {
+        Maybe<IntRect> maybeLayerRect =
+            mCompositor->BeginRenderingToNativeLayer(
+                aInvalidRegion, rootLayerClip, aOpaqueRegion,
+                mNativeLayerForEntireWindow);
+        if (!maybeLayerRect) {
+          continue;
+        }
+
+        if (rootLayerClip) {
+          RenderOnce(rootLayerClip->Intersect(*maybeLayerRect));
+        } else {
+          RenderOnce(*maybeLayerRect);
+        }
+        mCompositor->EndRenderingToNativeLayer();
+      } while (0);
+    } else {
+      RenderOnce(clipRect);
+    }
+
     if (record.Recording()) {
       mDiagnostics->RecordCompositeTime(record.Duration());
     }
@@ -1077,28 +1103,33 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  // Allow widget to render a custom foreground.
-  mCompositor->GetWidget()->DrawWindowOverlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
+  if (!usingNativeLayers) {
+    // Allow widget to render a custom foreground.
+    mCompositor->GetWidget()->DrawWindowOverlay(
+        &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
 
 #if defined(MOZ_WIDGET_ANDROID)
-  // Depending on the content shift the toolbar may be rendered on top of
-  // some of the content so it must be rendered after the content.
-  if (jni::IsFennec()) {
-    RenderToolbar();
-  }
-  HandlePixelsTarget();
+    // Depending on the content shift the toolbar may be rendered on top of
+    // some of the content so it must be rendered after the content.
+    if (jni::IsFennec()) {
+      RenderToolbar();
+    }
+    HandlePixelsTarget();
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-  // Debugging
-  RenderDebugOverlay(bounds);
+    // Debugging
+    // FIXME: We should render the debug overlay when using native layers, too.
+    // But we can't split the debug overlay rendering into multiple tiles
+    // because of a cyclic dependency: We want to display stats about the
+    // rendering of the entire window, but at the time when we render into the
+    // native layers, we do not know all the information about this frame yet.
+    // So we need to render the debug layer into an additional native layer on
+    // top, probably.
+    RenderDebugOverlay(bounds);
+  }
 
   {
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
-
-    if (mNativeLayerForEntireWindow) {
-      mCompositor->EndRenderingToNativeLayer();
-    }
 
     mCompositor->EndFrame();
   }
