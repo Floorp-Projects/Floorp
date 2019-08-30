@@ -148,12 +148,13 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     @Suppress("ComplexMethod", "LongMethod")
     @CallSuper
     protected open fun initializeUI(view: View): Session? {
-        val sessionManager = requireComponents.core.sessionManager
+        val context = requireContext()
+        val sessionManager = context.components.core.sessionManager
 
         return getSessionById()?.also { session ->
 
             val browserToolbarController = DefaultBrowserToolbarController(
-                context!!,
+                context,
                 findNavController(),
                 (activity as HomeActivity).browsingModeManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
@@ -162,13 +163,13 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 viewModel = viewModel,
                 getSupportUrl = {
                     SupportUtils.getSumoURLForTopic(
-                        context!!,
+                        context,
                         SupportUtils.SumoTopic.HELP
                     )
                 },
-                openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).also {
-                    it.action = Intent.ACTION_VIEW
-                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 },
                 bottomSheetBehavior = QuickActionSheetBehavior.from(nestedScrollQuickAction)
             )
@@ -192,7 +193,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             findInPageIntegration.set(
                 feature = FindInPageIntegration(
-                    sessionManager = requireComponents.core.sessionManager,
+                    sessionManager = sessionManager,
                     sessionId = customTabSessionId,
                     stub = view.stubFindInPage,
                     engineView = view.engineView,
@@ -211,8 +212,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     requireFragmentManager(),
                     sessionManager,
                     FenixContextMenuCandidate.defaultCandidates(
-                        requireContext(),
-                        requireComponents.useCases.tabsUseCases,
+                        context,
+                        context.components.useCases.tabsUseCases,
                         view,
                         FenixSnackbarDelegate(
                             view,
@@ -226,19 +227,19 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             )
 
             windowFeature.set(
-                feature = WindowFeature(requireComponents.core.sessionManager),
+                feature = WindowFeature(sessionManager),
                 owner = this,
                 view = view
             )
 
             downloadsFeature.set(
                 feature = DownloadsFeature(
-                    requireContext().applicationContext,
+                    context.applicationContext,
                     sessionManager = sessionManager,
                     fragmentManager = childFragmentManager,
                     sessionId = customTabSessionId,
                     downloadManager = FetchDownloadManager(
-                        requireContext().applicationContext,
+                        context.applicationContext,
                         DownloadService::class
                     ),
                     onNeedToRequestPermissions = { permissions ->
@@ -250,7 +251,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             appLinksFeature.set(
                 feature = AppLinksFeature(
-                    requireContext(),
+                    context,
                     sessionManager = sessionManager,
                     sessionId = customTabSessionId,
                     interceptLinkClicks = true,
@@ -285,11 +286,11 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             )
 
             val accentHighContrastColor =
-                ThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
+                ThemeManager.resolveAttribute(R.attr.accentHighContrast, context)
 
             sitePermissionsFeature.set(
                 feature = SitePermissionsFeature(
-                    context = requireContext(),
+                    context = context,
                     sessionManager = sessionManager,
                     fragmentManager = requireFragmentManager(),
                     promptsStyling = SitePermissionsFeature.PromptsStyling(
@@ -347,12 +348,12 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
                 val primaryTextColor =
-                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
                 view.swipeRefresh.setColorSchemeColors(primaryTextColor)
                 swipeRefreshFeature.set(
                     feature = SwipeRefreshFeature(
-                        requireComponents.core.sessionManager,
-                        requireComponents.useCases.sessionUseCases.reload,
+                        sessionManager,
+                        context.components.useCases.sessionUseCases.reload,
                         view.swipeRefresh,
                         customTabSessionId
                     ),
@@ -472,9 +473,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
      */
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
-            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(
-                session
-            )
+            if (session.source == Session.Source.ACTION_VIEW) {
+                requireComponents.core.sessionManager.remove(session)
+            }
         }
         return false
     }
