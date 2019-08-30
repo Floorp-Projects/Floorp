@@ -596,7 +596,9 @@ class Compositor : public TextureSourceProvider {
    *
    * This is a noop on |CompositorOGL|.
    */
-  virtual void RequestAllowFrameRecording(bool aWillRecord) {}
+  virtual void RequestAllowFrameRecording(bool aWillRecord) {
+    mRecordFrames = aWillRecord;
+  }
 
   /**
    * Record the current frame for readback by the |CompositionRecorder|.
@@ -650,6 +652,18 @@ class Compositor : public TextureSourceProvider {
                            const gfx::Rect& aVisibleRect);
 
   /**
+   * Whether or not the compositor should be prepared to record frames. While
+   * this returns true, compositors are expected to maintain a full window
+   * render target that they return from GetWindowRenderTarget() between
+   * NormalDrawingDone() and EndFrame().
+   *
+   * This will be true when either we are recording a profile with screenshots
+   * enabled or the |LayerManagerComposite| has requested us to record frames
+   * for the |CompositionRecorder|.
+   */
+  bool ShouldRecordFrames() const;
+
+  /**
    * Last Composition end time.
    */
   TimeStamp mLastCompositionEndTime;
@@ -673,6 +687,8 @@ class Compositor : public TextureSourceProvider {
 
   gfx::Color mClearColor;
   gfx::Color mDefaultClearColor;
+
+  bool mRecordFrames = false;
 
  private:
   static LayersBackend sBackend;

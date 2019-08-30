@@ -1242,14 +1242,5 @@ bool BasicCompositor::NeedToRecreateFullWindowRenderTarget() const {
   return mFullWindowRenderTarget->mDrawTarget->GetSize() != windowSize;
 }
 
-bool BasicCompositor::ShouldRecordFrames() const {
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_feature_active(ProfilerFeature::Screenshots)) {
-    return true;
-  }
-#endif
-  return mRecordFrames;
-}
-
 }  // namespace layers
 }  // namespace mozilla
