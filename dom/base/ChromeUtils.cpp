@@ -744,7 +744,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                   base::ProcessId childPid =
                       base::GetProcId(aGeckoProcess->GetChildProcessHandle());
                   int32_t childId = 0;
-                  mozilla::ProcType type;
+                  mozilla::ProcType type = mozilla::ProcType::Unknown;
                   switch (aGeckoProcess->GetProcessType()) {
                     case GeckoProcessType::GeckoProcessType_Content: {
                       ContentParent* contentParent = nullptr;
@@ -805,7 +805,8 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       type = mozilla::ProcType::RemoteSandboxBroker;
                       break;
                     default:
-                      type = mozilla::ProcType::Unknown;
+                      // Leave the default Unknown value in |type|.
+                      break;
                   }
 
                   promises.AppendElement(
