@@ -23,7 +23,7 @@ update:
 		--use-sync \
 		--js ../jit-test/tests/wasm/spec \
 		--html ../../../testing/web-platform/mozilla/tests/wasm
-	echo "|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
+	echo "|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm-testharness.js" > ../jit-test/tests/wasm/spec/directives.txt
 	echo "|jit-test| skip-if:true" > ../jit-test/tests/wasm/spec/harness/directives.txt
 
 run:

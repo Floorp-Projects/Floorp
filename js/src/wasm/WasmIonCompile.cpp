@@ -575,9 +575,11 @@ class FunctionCompiler {
   }
 
   MWasmLoadTls* maybeLoadBoundsCheckLimit() {
-    if (env_.hugeMemoryEnabled()) {
+#ifdef WASM_HUGE_MEMORY
+    if (!env_.isAsmJS()) {
       return nullptr;
     }
+#endif
     AliasSet aliases = env_.maxMemoryLength.isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
@@ -614,8 +616,6 @@ class FunctionCompiler {
                                         MDefinition** base) {
     MOZ_ASSERT(!inDeadCode());
 
-    uint32_t offsetGuardLimit = GetOffsetGuardLimit(env_.hugeMemoryEnabled());
-
     // Fold a constant base into the offset (so the base is 0 in which case
     // the codegen is optimized), if it doesn't wrap or trigger an
     // MWasmAddOffset.
@@ -623,7 +623,11 @@ class FunctionCompiler {
       uint32_t basePtr = (*base)->toConstant()->toInt32();
       uint32_t offset = access->offset();
 
-      if (offset < offsetGuardLimit && basePtr < offsetGuardLimit - offset) {
+      static_assert(
+          OffsetGuardLimit < UINT32_MAX,
+          "checking for overflow against OffsetGuardLimit is enough.");
+
+      if (offset < OffsetGuardLimit && basePtr < OffsetGuardLimit - offset) {
         auto* ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
         curBlock_->add(ins);
         *base = ins;
@@ -639,7 +643,7 @@ class FunctionCompiler {
     //
     // Also add the offset if we have a Wasm atomic access that needs
     // alignment checking and the offset affects alignment.
-    if (access->offset() >= offsetGuardLimit || mustAdd ||
+    if (access->offset() >= OffsetGuardLimit || mustAdd ||
         !JitOptions.wasmFoldOffsets) {
       *base = computeEffectiveAddress(*base, access);
     }

@@ -3033,12 +3033,12 @@ extern JS_PUBLIC_API bool IsWasmModuleObject(HandleObject obj);
 extern JS_PUBLIC_API RefPtr<WasmModule> GetWasmModule(HandleObject obj);
 
 /**
- * Attempt to disable Wasm's usage of reserving a large virtual memory
- * allocation to avoid bounds checking overhead. This must be called before any
- * Wasm module or memory is created in this process, or else this function will
- * fail.
+ * This function will be removed when bug 1487479 expunges the last remaining
+ * bits of wasm IDB support.
  */
-extern JS_PUBLIC_API MOZ_MUST_USE bool DisableWasmHugeMemory();
+
+extern JS_PUBLIC_API RefPtr<WasmModule> DeserializeWasmModule(
+    const uint8_t* bytecode, size_t bytecodeLength);
 
 /**
  * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS

@@ -4206,6 +4206,9 @@ void LIRGenerator::visitWasmLoadTls(MWasmLoadTls* ins) {
 }
 
 void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
+#ifdef WASM_HUGE_MEMORY
+  MOZ_CRASH("No bounds checking on huge memory");
+#else
   MOZ_ASSERT(!ins->isRedundant());
 
   MDefinition* index = ins->index();
@@ -4223,6 +4226,7 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
         useRegisterAtStart(index), useRegisterAtStart(boundsCheckLimit));
     add(lir, ins);
   }
+#endif
 }
 
 void LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins) {
