@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+win64-ffmpeg-4.1.1:
+    description: 'Win64 ffmpeg'
+    fetch:
+        type: static-url
+        # url: https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.1.1-win64-static.zip is 403 (from AWS only?).
+        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-win64-static.zip
+        sha256: 2c19658d69de08ea7ef585fbf801ef6a364795b5288e23d79066876ff0465df6
+        size: 66347524
+
+linux64-ffmpeg-4.1.4:
+    description: 'Linux64 ffmpeg'
+    fetch:
+        type: static-url
+        # url: https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-4.1.4-i686-static.tar.xz is 406 (from AWS only?).
+        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.4-i686-static.tar.xz
+        sha256: f7a2f0f8f91506d67f80fbe5b8a5c264d0fb60cb3cd258d03344890fbd55e6fd
+        size: 16633296
+
+mac64-ffmpeg-4.1.1:
+    description: 'Mac64 ffmpeg'
+    fetch:
+        type: static-url
+        # url: https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip is 403 (from AWS only?).
+        url: https://github.com/ncalexan/geckodriver/releases/download/v0.24.0-android/ffmpeg-4.1.1-macos64-static.zip
+        sha256: 8612d1e07901779e7ed0eeb5433aea37c7bbaf308d725741f432f454a9f97275
+        size: 66853411
+
+win32-chromedriver:
+    description: 'Win32 chromedriver'
+    fetch:
+        type: static-url
+        url: https://chromedriver.storage.googleapis.com/2.46/chromedriver_win32.zip
+        sha256: 85a53c6794ea2262a21fa7720158f1434f69e7cd04105fe1be3cb62c59308c37
+        size: 4631571
+
+linux64-chromedriver:
+    description: 'Linux64 chromedriver'
+    fetch:
+        type: static-url
+        url: https://chromedriver.storage.googleapis.com/2.46/chromedriver_linux64.zip
+        sha256: 461919e080e19335a34224e2d353b96b07c7d068621aa940f9c136e86d090047
+        size: 5404417
+
+mac64-chromedriver:
+    description: 'Mac64 chromedriver'
+    fetch:
+        type: static-url
+        url: https://chromedriver.storage.googleapis.com/2.46/chromedriver_mac64.zip
+        sha256: 2aa256d17e4b2cc21f888b0e1b9ed211b925bf40f371d369fa0b9fbecf4bc52d
+        size: 7057233
