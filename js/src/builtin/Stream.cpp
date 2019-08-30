@@ -10,6 +10,7 @@
 
 #include <stdint.h>  // int32_t
 
+#include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/PropertySpec.h"
@@ -117,9 +118,6 @@ inline static MOZ_MUST_USE T* TargetFromHandler(CallArgs& args) {
               .toObject()
               .as<T>();
 }
-
-inline static MOZ_MUST_USE bool ResetQueue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer);
 
 inline static MOZ_MUST_USE bool InvokeOrNoop(JSContext* cx, HandleValue O,
                                              HandlePropertyName P,
@@ -268,32 +266,6 @@ class PullIntoDescriptor : public NativeObject {
 
 const JSClass PullIntoDescriptor::class_ = {
     "PullIntoDescriptor", JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
-
-class QueueEntry : public NativeObject {
- private:
-  enum Slots { Slot_Value = 0, Slot_Size, SlotCount };
-
- public:
-  static const JSClass class_;
-
-  Value value() { return getFixedSlot(Slot_Value); }
-  double size() { return getFixedSlot(Slot_Size).toNumber(); }
-
-  static QueueEntry* create(JSContext* cx, HandleValue value, double size) {
-    Rooted<QueueEntry*> entry(cx, NewBuiltinClassInstance<QueueEntry>(cx));
-    if (!entry) {
-      return nullptr;
-    }
-
-    entry->setFixedSlot(Slot_Value, value);
-    entry->setFixedSlot(Slot_Size, NumberValue(size));
-
-    return entry;
-  }
-};
-
-const JSClass QueueEntry::class_ = {"QueueEntry",
-                                    JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
 /**
  * TeeState objects implement the local variables in Streams spec 3.3.9
@@ -2653,10 +2625,6 @@ static MOZ_MUST_USE JSObject* ReadableStreamControllerCancelSteps(
   return result;
 }
 
-inline static MOZ_MUST_USE bool DequeueValue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
-    MutableHandleValue chunk);
-
 /**
  * Streams spec, 3.9.5.2.
  *     ReadableStreamDefaultController [[PullSteps]]( forAuthorCode )
@@ -3041,10 +3009,6 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
 
   return true;
 }
-
-static MOZ_MUST_USE bool EnqueueValueWithSize(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
-    HandleValue value, HandleValue sizeVal);
 
 /**
  * Streams spec, 3.10.6.
@@ -4193,119 +4157,6 @@ static const JSFunctionSpec CountQueuingStrategy_methods[] = {
 CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 #undef CLASS_SPEC
-
-/*** 6.2. Queue-with-sizes operations ***************************************/
-
-/**
- * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
- */
-inline static MOZ_MUST_USE bool DequeueValue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
-    MutableHandleValue chunk) {
-  // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
-  //         slots (implicit).
-  // Step 2: Assert: queue is not empty.
-  Rooted<ListObject*> unwrappedQueue(cx, unwrappedContainer->queue());
-  MOZ_ASSERT(unwrappedQueue->length() > 0);
-
-  // Step 3. Let pair be the first element of queue.
-  // Step 4. Remove pair from queue, shifting all other elements downward
-  //         (so that the second becomes the first, and so on).
-  Rooted<QueueEntry*> unwrappedPair(
-      cx, &unwrappedQueue->popFirstAs<QueueEntry>(cx));
-  MOZ_ASSERT(unwrappedPair);
-
-  // Step 5: Set container.[[queueTotalSize]] to
-  //         container.[[queueTotalSize]] − pair.[[size]].
-  // Step 6: If container.[[queueTotalSize]] < 0, set
-  //         container.[[queueTotalSize]] to 0.
-  //         (This can occur due to rounding errors.)
-  double totalSize = unwrappedContainer->queueTotalSize();
-  totalSize -= unwrappedPair->size();
-  if (totalSize < 0) {
-    totalSize = 0;
-  }
-  unwrappedContainer->setQueueTotalSize(totalSize);
-
-  // Step 7: Return pair.[[value]].
-  RootedValue val(cx, unwrappedPair->value());
-  if (!cx->compartment()->wrap(cx, &val)) {
-    return false;
-  }
-  chunk.set(val);
-  return true;
-}
-
-/**
- * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
- */
-static MOZ_MUST_USE bool EnqueueValueWithSize(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer,
-    HandleValue value, HandleValue sizeVal) {
-  cx->check(value, sizeVal);
-
-  // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
-  //         slots (implicit).
-  // Step 2: Let size be ? ToNumber(size).
-  double size;
-  if (!ToNumber(cx, sizeVal, &size)) {
-    return false;
-  }
-
-  // Step 3: If ! IsFiniteNonNegativeNumber(size) is false, throw a RangeError
-  //         exception.
-  if (size < 0 || mozilla::IsNaN(size) || mozilla::IsInfinite(size)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NUMBER_MUST_BE_FINITE_NON_NEGATIVE, "size");
-    return false;
-  }
-
-  // Step 4: Append Record {[[value]]: value, [[size]]: size} as the last
-  //         element of container.[[queue]].
-  {
-    AutoRealm ar(cx, unwrappedContainer);
-    Rooted<ListObject*> queue(cx, unwrappedContainer->queue());
-    RootedValue wrappedVal(cx, value);
-    if (!cx->compartment()->wrap(cx, &wrappedVal)) {
-      return false;
-    }
-
-    QueueEntry* entry = QueueEntry::create(cx, wrappedVal, size);
-    if (!entry) {
-      return false;
-    }
-    RootedValue val(cx, ObjectValue(*entry));
-    if (!queue->append(cx, val)) {
-      return false;
-    }
-  }
-
-  // Step 5: Set container.[[queueTotalSize]] to
-  //         container.[[queueTotalSize]] + size.
-  unwrappedContainer->setQueueTotalSize(unwrappedContainer->queueTotalSize() +
-                                        size);
-
-  return true;
-}
-
-/**
- * Streams spec, 6.2.4. ResetQueue ( container ) nothrow
- */
-inline static MOZ_MUST_USE bool ResetQueue(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer) {
-  // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
-  //         slots (implicit).
-  // Step 2: Set container.[[queue]] to a new empty List.
-  if (!StoreNewListInFixedSlot(cx, unwrappedContainer,
-                               StreamController::Slot_Queue)) {
-    return false;
-  }
-
-  // Step 3: Set container.[[queueTotalSize]] to 0.
-  unwrappedContainer->setQueueTotalSize(0);
-
-  return true;
-}
 
 /*** 6.3. Miscellaneous operations ******************************************/
 
