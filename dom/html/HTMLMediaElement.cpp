@@ -484,7 +484,6 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mWatchManager.Unwatch(mGraphTimeDummy->mStream->Graph()->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
-    mGraphTimeOffset = Nothing();
 
     for (const auto& t : mAudioTracks) {
       if (t) {
@@ -636,9 +635,8 @@ class HTMLMediaElement::MediaStreamRenderer
   // GraphTime units.
   Watchable<GraphTime> mGraphTime = {0, "MediaStreamRenderer::mGraphTime"};
 
-  // Nothing while we're not rendering. While rendering, the current GraphTime
-  // at the time when rendering was Start()ed, possibly delayed until the first
-  // track appeared.
+  // Nothing until a track has been added. Then, the current GraphTime at the
+  // time when we were last Start()ed.
   Maybe<GraphTime> mGraphTimeOffset;
 
   // Currently enabled (and rendered) audio tracks.
@@ -3339,8 +3337,7 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
 
   if (mDecoder) {
     out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(
-        out->mStream, out->mGraphKeepAliveDummyStream->mStream->Graph());
+    mDecoder->AddOutputStream(out->mStream, out->mGraphKeepAliveDummyStream);
   } else if (mSrcStream) {
     out->mCapturingMediaStream = true;
   }
@@ -4052,14 +4049,6 @@ void HTMLMediaElement::ReleaseAudioWakeLockIfExists() {
 
 void HTMLMediaElement::WakeLockRelease() { ReleaseAudioWakeLockIfExists(); }
 
-HTMLMediaElement::SharedDummyStream::SharedDummyStream(MediaStream* aStream)
-    : mStream(aStream) {
-  mStream->Suspend();
-}
-HTMLMediaElement::SharedDummyStream::~SharedDummyStream() {
-  mStream->Destroy();
-}
-
 HTMLMediaElement::OutputMediaStream::OutputMediaStream()
     : mFinishWhenEnded(false),
       mCapturingAudioOnly(false),
@@ -4665,8 +4654,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
     }
 
     ms.mCapturingDecoder = true;
-    aDecoder->AddOutputStream(ms.mStream,
-                              ms.mGraphKeepAliveDummyStream->mStream->Graph());
+    aDecoder->AddOutputStream(ms.mStream, ms.mGraphKeepAliveDummyStream);
   }
 
   if (mMediaKeys) {

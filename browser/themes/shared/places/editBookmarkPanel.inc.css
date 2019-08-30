@@ -25,6 +25,11 @@
   background-color: var(--toolbarbutton-hover-background);
 }
 
+.panel-info-button:focus {
+  background-color: var(--toolbarbutton-hover-background);
+  box-shadow: var(--focus-ring-box-shadow);
+}
+
 .panel-info-button > image {
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
   -moz-context-properties: fill, fill-opacity;
