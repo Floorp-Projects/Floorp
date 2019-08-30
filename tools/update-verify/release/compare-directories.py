@@ -39,6 +39,16 @@ TRANSFORMS = [
         'deletion': '//@line 6 "',
     },
     {
+        # warning comments from bug 1576546
+        'files': [
+            'defaults/pref/channel-prefs.js',
+            'Contents/Resources/defaults/pref/channel-prefs.js',
+        ],
+        'channel_prefix': ['aurora', 'beta', 'release', 'esr'],
+        'side': 'target',
+        'deletion': '//',
+    },
+    {
         # updates from a beta to an RC build, the latter specifies the release channel
         'files': [
             'defaults/pref/channel-prefs.js',
