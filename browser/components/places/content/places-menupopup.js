@@ -34,58 +34,9 @@
       this.attachShadow({ mode: "open" });
     }
 
-    get commonStyles() {
-      if (this.closest("#BMB_bookmarksPopup")) {
-        return `
-        /* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
-        arrowscrollbox.popup-internal-box {
-          padding-bottom: 0px;
-        }
-        .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-up,
-        .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-down {
-          -moz-appearance: none;
-          margin-top: 0;
-          margin-bottom: 0;
-        }
-      `;
-      }
-      return "";
-    }
-
-    get styles() {
-      if (!this.closest("#BMB_bookmarksPopup")) {
-        return "";
-      }
-
-      let s = `
-      /* Popups with only one item don't have a footer */
-      :host([singleitempopup=true]) > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-      /* These popups never have a footer */
-      :host(#BMB_bookmarksToolbarPopup) > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-      :host(#BMB_unsortedBookmarksPopup) > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-      :host(#BMB_mobileBookmarksPopup) > hbox > .popup-internal-box > .arrowscrollbox-scrollbox {
-        /* And so they need some bottom padding: */
-        padding-bottom: 4px;
-      }
-    `;
-      switch (AppConstants.platform) {
-        case "linux":
-        case "win":
-          return `${s}
-          /* Add some space at the top because there are no headers: */
-          :host > hbox > .popup-internal-box > .arrowscrollbox-scrollbox  {
-            padding-top: 4px;
-          }
-        `;
-        default:
-          return s;
-      }
-    }
-
     get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
-      <html:style>${this.commonStyles}${this.styles}</html:style>
       <hbox flex="1" part="innerbox">
         <vbox part="drop-indicator-bar" hidden="true">
           <image part="drop-indicator" mousethrough="always"></image>
@@ -648,7 +599,6 @@
     get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
-      <html:style>${this.commonStyles}</html:style>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox">
           <image class="panel-arrow"></image>
