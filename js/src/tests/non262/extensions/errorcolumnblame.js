@@ -38,7 +38,7 @@ test(function(){
 
 //       1         2         3
 //3456789012345678901234567890123456
-test(function() { var tmp = null; tmp(); }, 38)
+test(function() { var tmp = null; tmp(); }, 35)
 test(function() { var tmp = null;  tmp.foo; }, 36)
 
 /* Just a generic 'throw'. */

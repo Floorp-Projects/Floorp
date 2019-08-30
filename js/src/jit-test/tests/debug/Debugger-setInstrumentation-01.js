@@ -175,8 +175,8 @@ function trycatch(f) {
 }
 `);
 
-testFunction(() => g.trycatch(() => { throw 3 }), [4, 4, 6]);
-testFunction(() => g.trycatch(() => {}), [4, 4, 8]);
+testFunction(() => g.trycatch(() => { throw 3 }), [4, 6]);
+testFunction(() => g.trycatch(() => {}), [4, 8]);
 
 g.eval(`
 function tryfinally(f) {
@@ -192,5 +192,5 @@ function tryfinally(f) {
 
 testFunction(() => {
   try { g.tryfinally(() => { throw 3 }); } catch (e) {}
-}, [5, 5, 7]);
-testFunction(() => g.tryfinally(() => {}), [5, 5, 7, 9, 10]);
+}, [5, 7]);
+testFunction(() => g.tryfinally(() => {}), [5, 7, 9, 10]);
