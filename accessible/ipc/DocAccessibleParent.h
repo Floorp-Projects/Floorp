@@ -310,6 +310,15 @@ class DocAccessibleParent : public ProxyAccessible,
   bool mTopLevelInContentProcess;
   bool mShutdown;
 
+  struct PendingChildDoc {
+    PendingChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID)
+        : mChildDoc(aChildDoc), mParentID(aParentID) {}
+    RefPtr<DocAccessibleParent> mChildDoc;
+    uint64_t mParentID;
+  };
+  // We use nsTArray because there will be very few entries.
+  nsTArray<PendingChildDoc> mPendingChildDocs;
+
   static uint64_t sMaxDocID;
   static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
     static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*> sLiveDocs;
