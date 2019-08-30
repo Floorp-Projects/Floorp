@@ -990,11 +990,18 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     maybeBounds = mCompositor->BeginFrameForTarget(
         aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion, mTarget,
         mTargetBounds);
+  } else if (mNativeLayerForEntireWindow) {
+    if (aInvalidRegion.Intersects(mRenderBounds)) {
+      mCompositor->BeginFrameForNativeLayers();
+      maybeBounds = mCompositor->BeginRenderingToNativeLayer(
+          aInvalidRegion, rootLayerClip, aOpaqueRegion,
+          mNativeLayerForEntireWindow);
+    }
   } else {
     maybeBounds = mCompositor->BeginFrameForWindow(
-        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion,
-        mNativeLayerForEntireWindow);
+        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion);
   }
+
   if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -1088,6 +1095,10 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   {
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
+
+    if (mNativeLayerForEntireWindow) {
+      mCompositor->EndRenderingToNativeLayer();
+    }
 
     mCompositor->EndFrame();
   }
@@ -1231,7 +1242,7 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
   Unused << mCompositor->BeginFrameForWindow(invalid, Nothing(), bounds,
-                                             nsIntRegion(), nullptr);
+                                             nsIntRegion());
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer

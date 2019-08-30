@@ -123,15 +123,23 @@ class BasicCompositor : public Compositor {
 
   void ClearRect(const gfx::Rect& aRect) override;
 
-  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
-                                          const Maybe<gfx::IntRect>& aClipRect,
-                                          const gfx::IntRect& aRenderBounds,
-                                          const nsIntRegion& aOpaqueRegion,
-                                          NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForWindow(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds,
+      const nsIntRegion& aOpaqueRegion) override;
+
   Maybe<gfx::IntRect> BeginFrameForTarget(
       const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
       const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
       gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
+  void BeginFrameForNativeLayers() override;
+
+  Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) override;
+
+  void EndRenderingToNativeLayer() override;
 
   void NormalDrawingDone() override;
   void EndFrame() override;
@@ -223,14 +231,24 @@ class BasicCompositor : public Compositor {
   bool mIsPendingEndRemoteDrawing;
   bool mRecordFrames;
 
-  // Only true between BeginFrameForTarget and EndFrame. Tells EndFrame which of
-  // the BeginFrameForXYZ methods has been called.
-  bool mFrameIsForTarget = false;
+  // Where the current frame is being rendered to.
+  enum class FrameDestination : uint8_t {
+    NO_CURRENT_FRAME,  // before BeginFrameForXYZ or after EndFrame
+    WINDOW,            // between BeginFrameForWindow and EndFrame
+    TARGET,            // between BeginFrameForTarget and EndFrame
+    NATIVE_LAYERS      // between BeginFrameForNativeLayers and EndFrame
+  };
+  FrameDestination mCurrentFrameDest = FrameDestination::NO_CURRENT_FRAME;
 
   // mDrawTarget will not be the full window on all platforms. We therefore need
   // to keep a full window render target around when we are capturing
   // screenshots on those platforms.
   RefPtr<BasicCompositingRenderTarget> mFullWindowRenderTarget;
+
+  // The 1x1 dummy render target that's the "current" render target between
+  // BeginFrameForNativeLayers and EndFrame but outside pairs of
+  // Begin/EndRenderingToNativeLayer. Created on demand.
+  RefPtr<CompositingRenderTarget> mNativeLayersReferenceRT;
 };
 
 BasicCompositor* AssertBasicCompositor(Compositor* aCompositor);

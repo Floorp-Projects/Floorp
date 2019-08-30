@@ -1117,6 +1117,20 @@ Maybe<IntRect> CompositorD3D11::BeginFrameForTarget(
   return result;
 }
 
+void CompositorD3D11::BeginFrameForNativeLayers() {
+  MOZ_CRASH("Native layers are not implemented on Windows.");
+}
+
+Maybe<gfx::IntRect> CompositorD3D11::BeginRenderingToNativeLayer(
+    const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+    const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) {
+  MOZ_CRASH("Native layers are not implemented on Windows.");
+}
+
+void CompositorD3D11::EndRenderingToNativeLayer() {
+  MOZ_CRASH("Native layers are not implemented on Windows.");
+}
+
 Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                                            const Maybe<IntRect>& aClipRect,
                                            const IntRect& aRenderBounds,

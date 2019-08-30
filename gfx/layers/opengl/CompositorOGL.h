@@ -328,6 +328,11 @@ class CompositorOGL final : public Compositor {
   /** Currently bound render target */
   RefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
 
+  // The 1x1 dummy render target that's the "current" render target between
+  // BeginFrameForNativeLayers and EndFrame but outside pairs of
+  // Begin/EndRenderingToNativeLayer. Created on demand.
+  RefPtr<CompositingRenderTarget> mNativeLayersReferenceRT;
+
   CompositingRenderTargetOGL* mWindowRenderTarget;
 
   /**
@@ -366,22 +371,28 @@ class CompositorOGL final : public Compositor {
 
   /* Start a new frame.
    */
-  Maybe<gfx::IntRect> BeginFrameForWindow(const nsIntRegion& aInvalidRegion,
-                                          const Maybe<gfx::IntRect>& aClipRect,
-                                          const gfx::IntRect& aRenderBounds,
-                                          const nsIntRegion& aOpaqueRegion,
-                                          NativeLayer* aNativeLayer) override;
+  Maybe<gfx::IntRect> BeginFrameForWindow(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds,
+      const nsIntRegion& aOpaqueRegion) override;
 
   Maybe<gfx::IntRect> BeginFrameForTarget(
       const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
       const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
       gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
 
+  void BeginFrameForNativeLayers() override;
+
+  Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) override;
+
+  void EndRenderingToNativeLayer() override;
+
   Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const Maybe<gfx::IntRect>& aClipRect,
                                  const gfx::IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer);
+                                 const nsIntRegion& aOpaqueRegion);
 
   ShaderConfigOGL GetShaderConfigFor(
       Effect* aEffect, TextureSourceOGL* aSourceMask = nullptr,

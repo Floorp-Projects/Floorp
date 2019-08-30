@@ -304,6 +304,7 @@ void CompositorOGL::CleanupResources() {
     mThisFrameDoneSync = nullptr;
     mGLContext = nullptr;
     mPrograms.clear();
+    mNativeLayersReferenceRT = nullptr;
     return;
   }
 
@@ -313,6 +314,7 @@ void CompositorOGL::CleanupResources() {
     delete iter->second;
   }
   mPrograms.clear();
+  mNativeLayersReferenceRT = nullptr;
 
 #ifdef MOZ_WIDGET_GTK
   // TextureSources might hold RefPtr<gl::GLContext>.
@@ -871,11 +873,9 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
 
 Maybe<IntRect> CompositorOGL::BeginFrameForWindow(
     const nsIntRegion& aInvalidRegion, const Maybe<IntRect>& aClipRect,
-    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-    NativeLayer* aNativeLayer) {
+    const IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion) {
   MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
-  return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion,
-                    aNativeLayer);
+  return BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
 }
 
 Maybe<IntRect> CompositorOGL::BeginFrameForTarget(
@@ -885,8 +885,8 @@ Maybe<IntRect> CompositorOGL::BeginFrameForTarget(
   MOZ_RELEASE_ASSERT(!mTarget, "mTarget not cleared properly");
   mTarget = aTarget;  // Will be cleared in EndFrame().
   mTargetBounds = aTargetBounds;
-  Maybe<IntRect> result = BeginFrame(aInvalidRegion, aClipRect, aRenderBounds,
-                                     aOpaqueRegion, nullptr);
+  Maybe<IntRect> result =
+      BeginFrame(aInvalidRegion, aClipRect, aRenderBounds, aOpaqueRegion);
   if (!result) {
     // Composition has been aborted. Reset mTarget.
     mTarget = nullptr;
@@ -894,20 +894,118 @@ Maybe<IntRect> CompositorOGL::BeginFrameForTarget(
   return result;
 }
 
+void CompositorOGL::BeginFrameForNativeLayers() {
+  MakeCurrent();
+  mPixelsPerFrame = 0;
+  mPixelsFilled = 0;
+
+  // Default blend function implements "OVER"
+  mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+  mGLContext->fEnable(LOCAL_GL_BLEND);
+
+  mFrameInProgress = true;
+
+  // Make a 1x1 dummy render target so that GetCurrentRenderTarget() returns
+  // something non-null even outside of calls to
+  // Begin/EndRenderingToNativeLayer.
+  if (!mNativeLayersReferenceRT) {
+    mNativeLayersReferenceRT =
+        CreateRenderTarget(IntRect(0, 0, 1, 1), INIT_MODE_CLEAR);
+  }
+  SetRenderTarget(mNativeLayersReferenceRT);
+}
+
+Maybe<gfx::IntRect> CompositorOGL::BeginRenderingToNativeLayer(
+    const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+    const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) {
+  MOZ_RELEASE_ASSERT(aNativeLayer);
+  MOZ_RELEASE_ASSERT(mCurrentRenderTarget == mNativeLayersReferenceRT,
+                     "Please restore the current render target to the one that "
+                     "was in place after the call to BeginFrameForNativeLayers "
+                     "before calling BeginRenderingToNativeLayer.");
+
+  IntRect rect = aNativeLayer->GetRect();
+  IntRegion layerInvalid;
+  layerInvalid.And(aInvalidRegion, rect);
+
+  RefPtr<CompositingRenderTarget> rt =
+      RenderTargetForNativeLayer(aNativeLayer, layerInvalid);
+  if (!rt) {
+    return Nothing();
+  }
+  SetRenderTarget(rt);
+  mCurrentNativeLayer = aNativeLayer;
+  mPixelsPerFrame += rect.Area();
+
+  mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
+                          mClearColor.a);
+  if (const Maybe<IntRect>& rtClip = mCurrentRenderTarget->GetClipRect()) {
+    // We need to apply a scissor rect during the clear. And since clears with
+    // scissor rects are usually treated differently by the GPU than regular
+    // clears, let's try to clear as little as possible in order to conserve
+    // memory bandwidth.
+    IntRegion clearRegion;
+    clearRegion.Sub(*rtClip, aOpaqueRegion);
+    if (!clearRegion.IsEmpty()) {
+      IntRect clearRect =
+          clearRegion.GetBounds() - mCurrentRenderTarget->GetOrigin();
+      ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST,
+                                           true);
+      ScopedScissorRect autoScissorRect(mGLContext, clearRect.x,
+                                        FlipY(clearRect.YMost()),
+                                        clearRect.Width(), clearRect.Height());
+      mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+    }
+  } else {
+    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+  }
+
+  return Some(rect);
+}
+
+void CompositorOGL::EndRenderingToNativeLayer() {
+  MOZ_RELEASE_ASSERT(mCurrentNativeLayer,
+                     "EndRenderingToNativeLayer not paired with a call to "
+                     "BeginRenderingToNativeLayer?");
+
+  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    EffectChain effectChain;
+    effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
+    // If we're clipping the render target to the invalid rect, then the
+    // current render target is still clipped, so just fill the bounds.
+    IntRect rect = mCurrentRenderTarget->GetRect();
+    DrawQuad(Rect(rect), rect - rect.TopLeft(), effectChain, 1.0, Matrix4x4(),
+             Rect(rect));
+  }
+
+  mCurrentRenderTarget->SetClipRect(Nothing());
+  SetRenderTarget(mNativeLayersReferenceRT);
+
+#ifdef XP_MACOSX
+  NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
+  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
+  nativeLayer->NotifySurfaceReady();
+  mCurrentNativeLayer = nullptr;
+#else
+  MOZ_CRASH("Unexpected native layer on this platform");
+#endif
+}
+
 Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
                                          const Maybe<IntRect>& aClipRect,
                                          const IntRect& aRenderBounds,
-                                         const nsIntRegion& aOpaqueRegion,
-                                         NativeLayer* aNativeLayer) {
+                                         const nsIntRegion& aOpaqueRegion) {
   AUTO_PROFILER_LABEL("CompositorOGL::BeginFrame", GRAPHICS);
 
   MOZ_ASSERT(!mFrameInProgress,
              "frame still in progress (should have called EndFrame");
 
   IntRect rect;
-  if (aNativeLayer && !mTarget) {
-    rect = aNativeLayer->GetRect();
-  } else if (mUseExternalSurfaceSize) {
+  if (mUseExternalSurfaceSize) {
     rect = IntRect(IntPoint(), mSurfaceSize);
   } else {
     rect = aRenderBounds;
@@ -943,24 +1041,15 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   RefPtr<CompositingRenderTarget> rt;
-  if (mTarget) {
-    if (mCanRenderToDefaultFramebuffer) {
-      rt = CompositingRenderTargetOGL::RenderTargetForWindow(this, rect.Size());
-    } else {
-      rt = CreateRenderTarget(rect, INIT_MODE_CLEAR);
-    }
-  } else if (aNativeLayer) {
-    IntRegion layerInvalid;
-    layerInvalid.And(aInvalidRegion, rect);
-    rt = RenderTargetForNativeLayer(aNativeLayer, layerInvalid);
-    mCurrentNativeLayer = aNativeLayer;
-  } else {
-    MOZ_RELEASE_ASSERT(mCanRenderToDefaultFramebuffer);
+  if (mCanRenderToDefaultFramebuffer) {
     rt = CompositingRenderTargetOGL::RenderTargetForWindow(this, rect.Size());
+  } else if (mTarget) {
+    rt = CreateRenderTarget(rect, INIT_MODE_CLEAR);
+  } else {
+    MOZ_CRASH("Unexpected call");
   }
 
   if (!rt) {
-    mCurrentNativeLayer = nullptr;
     return Nothing();
   }
 
@@ -985,27 +1074,7 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
                           mClearColor.a);
 #endif  // defined(MOZ_WIDGET_ANDROID)
-
-  if (const Maybe<IntRect>& rtClip = mCurrentRenderTarget->GetClipRect()) {
-    // We need to apply a scissor rect during the clear. And since clears with
-    // scissor rects are usually treated differently by the GPU than regular
-    // clears, let's try to clear as little as possible in order to conserve
-    // memory bandwidth.
-    IntRegion clearRegion;
-    clearRegion.Sub(*rtClip, aOpaqueRegion);
-    if (!clearRegion.IsEmpty()) {
-      IntRect clearRect =
-          clearRegion.GetBounds() - mCurrentRenderTarget->GetOrigin();
-      ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST,
-                                           true);
-      ScopedScissorRect autoScissorRect(mGLContext, clearRect.x,
-                                        FlipY(clearRect.YMost()),
-                                        clearRect.Width(), clearRect.Height());
-      mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-    }
-  } else {
-    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-  }
+  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   return Some(rect);
 }
@@ -1892,9 +1961,6 @@ void CompositorOGL::InitializeVAO(const GLuint aAttrib, const GLint aComponents,
 void CompositorOGL::EndFrame() {
   AUTO_PROFILER_LABEL("CompositorOGL::EndFrame", GRAPHICS);
 
-  MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget,
-             "Rendering target not properly restored");
-
 #ifdef MOZ_DUMP_PAINTING
   if (gfxEnv::DumpCompositorTextures()) {
     LayoutDeviceIntSize size;
@@ -1913,33 +1979,7 @@ void CompositorOGL::EndFrame() {
   }
 #endif
 
-  if (StaticPrefs::nglayout_debug_widget_update_flashing()) {
-    float r = float(rand()) / float(RAND_MAX);
-    float g = float(rand()) / float(RAND_MAX);
-    float b = float(rand()) / float(RAND_MAX);
-    EffectChain effectChain;
-    effectChain.mPrimaryEffect = new EffectSolidColor(Color(r, g, b, 0.2f));
-    // If we're clipping the render target to the invalid rect, then the
-    // current render target is still clipped, so just fill the bounds.
-    IntRect rect = mCurrentRenderTarget->GetRect();
-    DrawQuad(Rect(rect), rect - rect.TopLeft(), effectChain, 1.0, Matrix4x4(),
-             Rect(rect));
-  }
-
-  mCurrentRenderTarget->SetClipRect(Nothing());
-
   mFrameInProgress = false;
-
-  if (mCurrentNativeLayer) {
-#ifdef XP_MACOSX
-    NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
-    MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-    nativeLayer->NotifySurfaceReady();
-    mCurrentNativeLayer = nullptr;
-#else
-    MOZ_CRASH("Unexpected native layer on this platform");
-#endif
-  }
 
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
