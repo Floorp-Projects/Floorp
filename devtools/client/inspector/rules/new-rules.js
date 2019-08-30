@@ -628,6 +628,7 @@ class RulesView {
       multiline: true,
       popup: this.autocompletePopup,
       property: declaration,
+      showSuggestCompletionOnEmpty: true,
     });
   }
 
