@@ -31,23 +31,15 @@ add_task(async function() {
     waitForRecording: true,
     disableLogging: true,
   });
-  const { threadFront } = dbg;
-
-  await threadFront.interrupt();
-  await threadFront.resume();
-
-  await threadFront.interrupt();
 
   const { inspector, view } = await openComputedView();
   await checkBackgroundColor("body", "rgb(0, 128, 0)");
   await checkBackgroundColor("#maindiv", "rgb(0, 0, 255)");
 
-  const bp = await setBreakpoint(threadFront, "doc_inspector_styles.html", 11);
-
-  await rewindToLine(threadFront, 11);
+  await addBreakpoint(dbg, "doc_inspector_styles.html", 11);
+  await rewindToLine(dbg, 11);
   await checkBackgroundColor("#maindiv", "rgb(255, 0, 0)");
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 
   async function checkBackgroundColor(node, color) {
