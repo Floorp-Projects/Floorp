@@ -444,6 +444,9 @@ class HuffmanPreludeReader {
 
     switch (tag) {
 #define EMIT_FIELD(TAG_NAME, FIELD_NAME, FIELD_INDEX, FIELD_TYPE, _)    \
+  fprintf(stderr, "pushFields %s\n",                                    \
+          describeBinASTInterfaceAndField(                              \
+              BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME));      \
   MOZ_TRY(                                                              \
       pushValue(NormalizedInterfaceAndField(                            \
                     BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME), \
@@ -680,33 +683,31 @@ class HuffmanPreludeReader {
         : cx_(cx_), owner(owner), identity(identity) {}
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const List& list) {
+      fprintf(stderr, "PushEntryMatcher visiting List %s\n",
+              describeBinASTList(list.contents));
       auto& table = owner.dictionary.tableForListLength(list.contents);
-      if (!table.is<HuffmanTableUnreachable>()) {
+      if (table.is<HuffmanTableUnreachable>()) {
         // Spec:
-        // 1. If the field is in the set of visited contexts, stop.
-        return Ok();
-      }
-      // Spec:
-      // 2. Add the field to the set of visited fields
-      table = {mozilla::VariantType<HuffmanTableInitializing>{}};
+        // 2. Add the field to the set of visited fields
+        table = {mozilla::VariantType<HuffmanTableInitializing>{}};
 
-      // Read the length immediately.
-      MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
+        // Read the length immediately.
+        MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
+      }
 
       // Spec:
       // 3. If the field has a FrozenArray type
       //   a. Determine if the array type is always empty
       //   b. If so, stop
       auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
-      bool isEmpty = true;
+      uint32_t length = 0;
       for (const auto& iter : lengthTable.impl) {
-        if (iter.value != 0) {
-          isEmpty = false;
-          break;
-        }
+        length += iter.value;
       }
 
-      if (isEmpty) {
+      if (length == 0) {
+        fprintf(stderr, "PushEntryMatcher: List empty %s\n",
+                describeBinASTList(list.contents));
         return Ok();
       }
 
@@ -714,6 +715,11 @@ class HuffmanPreludeReader {
       // To determine a field’s effective type:
       // 1. If the field’s type is an array type, the effective type is the
       // array element type. Stop.
+
+#ifdef DEBUG
+      fprintf(stderr, "PushEntryMatcher: Proceeding with List contents of %s\n",
+              describeBinASTInterfaceAndField(identity.identity));
+#endif  // DEBUG_BINAST
 
       // We now recurse with the contents of the list/array, *without checking
       // whether the field has already been visited*.
@@ -734,6 +740,11 @@ class HuffmanPreludeReader {
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& interface) {
+#ifdef DEBUG
+      fprintf(stderr, "PushEntryMatcher: Visiting interface %s\n",
+              describeBinASTInterfaceAndField(interface.identity.identity));
+#endif  // DEBUG_BINAST
+
       // Note: In this case, for compatibility, we do *not* check whether
       // the interface has already been visited.
       auto& table = owner.dictionary.tableForField(identity);
@@ -755,6 +766,8 @@ class HuffmanPreludeReader {
     // Generic implementation for other cases.
     template <class Entry>
     MOZ_MUST_USE JS::Result<Ok> operator()(const Entry& entry) {
+      fprintf(stderr, "PushEntryMatcher: Entry %s\n",
+              describeBinASTInterfaceAndField(entry.identity.identity));
       // Spec:
       // 1. If the field is in the set of visited contexts, stop.
       auto& table = owner.dictionary.tableForField(identity);
@@ -766,13 +779,15 @@ class HuffmanPreludeReader {
       // Spec:
       // 2. Add the field to the set of visited fields
       table = {mozilla::VariantType<HuffmanTableInitializing>{}};
-#ifdef DEBUG
-      fprintf(stderr, "pushing entry %s\n",
-              describeBinASTInterfaceAndField(entry.identity.identity));
-#endif  // DEBUG_BINAST
 
       // Spec:
       // 5. Otherwise, push the field onto the stack
+#ifdef DEBUG
+      fprintf(stderr, "pushing entry %s (%zu entries)\n",
+              describeBinASTInterfaceAndField(entry.identity.identity),
+              owner.stack.length() + 1);
+#endif  // DEBUG_BINAST
+
       BINJS_TRY(owner.stack.append(entry));
       return Ok();
     }
