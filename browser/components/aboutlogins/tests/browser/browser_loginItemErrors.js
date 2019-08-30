@@ -107,7 +107,7 @@ add_task(async function test_showLoginItemErrors() {
       const updateEvent = Cu.cloneInto(
         {
           bubbles: true,
-          detail: Object.assign({guid: loginToUpdate.guid}, loginUpdates),
+          detail: Object.assign({ guid: loginToUpdate.guid }, loginUpdates),
         },
         content
       );
