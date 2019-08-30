@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -42,6 +43,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gGeoSpecificDefaultsEnabled",
   SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gModernConfig",
+  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
   false
 );
 
@@ -145,7 +153,7 @@ var ensureKnownRegion = async function(ss) {
       // storeRegion if it gets a result (even if that happens after the
       // promise resolves) and fetchRegionDefault.
       await fetchRegion(ss);
-    } else if (gGeoSpecificDefaultsEnabled) {
+    } else if (gGeoSpecificDefaultsEnabled && !gModernConfig) {
       // The territory default we have already fetched may have expired.
       let expired = (ss.getGlobalAttr("searchDefaultExpir") || 0) <= Date.now();
       // If we have a default engine or a list of visible default engines
@@ -336,7 +344,7 @@ function fetchRegion(ss) {
         resolve();
       };
 
-      if (result && gGeoSpecificDefaultsEnabled) {
+      if (result && gGeoSpecificDefaultsEnabled && !gModernConfig) {
         fetchRegionDefault(ss)
           .then(callback)
           .catch(err => {
@@ -1113,11 +1121,14 @@ SearchService.prototype = {
       let enginesFromURLs = await this._loadFromChromeURLs(engines, isReload);
       enginesFromURLs.forEach(this._addEngineToStore, this);
     } else {
-      let engineList = this._enginesToLocales(engines);
-      for (let [id, locales] of engineList) {
-        await this.ensureBuiltinExtension(id, locales);
+      if (gModernConfig) {
+        await this._loadEnginesFromConfig(engines);
+      } else {
+        let engineList = this._enginesToLocales(engines);
+        for (let [id, locales] of engineList) {
+          await this.ensureBuiltinExtension(id, locales);
+        }
       }
-
       SearchUtils.log(
         "_loadEngines: loading " +
           this._startupExtensions.size +
@@ -1136,6 +1147,19 @@ SearchService.prototype = {
     this._loadEnginesMetadataFromCache(cache);
 
     SearchUtils.log("_loadEngines: done using rebuilt cache");
+  },
+
+  async _loadEnginesFromConfig(engineConfigs) {
+    for (let config of engineConfigs) {
+      // TODO: Support multiple locales per engine
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1575555
+      SearchUtils.log("_loadEnginesFromConfig: " + JSON.stringify(config));
+      let locales =
+        "webExtensionLocale" in config
+          ? [config.webExtensionLocale]
+          : [DEFAULT_TAG];
+      await this.ensureBuiltinExtension(config.webExtensionId, locales);
+    }
   },
 
   /**
@@ -1221,7 +1245,7 @@ SearchService.prototype = {
   async _maybeReloadEngines() {
     // There's no point in already reloading the list of engines, when the service
     // hasn't even initialized yet.
-    if (!gInitialized) {
+    if (!gInitialized || gModernConfig) {
       return;
     }
 
@@ -1622,6 +1646,30 @@ SearchService.prototype = {
     return engines;
   },
 
+  async _findEngineSelectorEngines() {
+    SearchUtils.log("_findEngineSelectorEngines: init");
+
+    let engineSelector = new SearchEngineSelector();
+    let locale = Services.locale.appLocaleAsBCP47;
+    // TODO: engineSelector needs to support default region, we cant
+    // just use "us" as a default region.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1575554
+    let region = Services.prefs.getCharPref("browser.search.region", "us");
+
+    await engineSelector.init();
+    let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
+      region,
+      locale
+    );
+
+    this._searchDefault = engines[0].engineName;
+    this._searchOrder = engines.map(e => e.engineName);
+    if (privateDefault) {
+      this._searchPrivateDefault = privateDefault;
+    }
+    return engines;
+  },
+
   /**
    * Loads the list of engines from list.json
    *
@@ -1629,6 +1677,9 @@ SearchService.prototype = {
    *   Returns an array of engine names.
    */
   async _findEngines() {
+    if (gModernConfig) {
+      return this._findEngineSelectorEngines();
+    }
     SearchUtils.log("_findEngines: looking for engines in list.json");
 
     let chan = SearchUtils.makeChannel(this._listJSONURL);
