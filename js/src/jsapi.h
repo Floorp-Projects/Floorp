@@ -3033,14 +3033,6 @@ extern JS_PUBLIC_API bool IsWasmModuleObject(HandleObject obj);
 extern JS_PUBLIC_API RefPtr<WasmModule> GetWasmModule(HandleObject obj);
 
 /**
- * This function will be removed when bug 1487479 expunges the last remaining
- * bits of wasm IDB support.
- */
-
-extern JS_PUBLIC_API RefPtr<WasmModule> DeserializeWasmModule(
-    const uint8_t* bytecode, size_t bytecodeLength);
-
-/**
  * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS
  * engine may call the large-allocation-failure callback, if set, to allow the
  * embedding to flush caches, possibly perform shrinking GCs, etc. to make some
