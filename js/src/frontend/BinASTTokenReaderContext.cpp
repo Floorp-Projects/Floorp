@@ -194,6 +194,8 @@ class HuffmanPreludeReader {
 
   // A 32-bit integer. May not be null.
   struct UnsignedLong : EntryBase {
+    using SymbolType = uint32_t;
+    using Table = HuffmanTableExplicitSymbolsU32;
     explicit UnsignedLong(const NormalizedInterfaceAndField identity)
         : EntryBase(identity) {}
   };
@@ -909,10 +911,7 @@ class HuffmanPreludeReader {
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const UnsignedLong& entry) {
-      // FIXME: Read table.
-      // FIXME: Initialize table.
-      MOZ_CRASH("Unimplemented");
-      return Ok();
+      return owner.readTable<UnsignedLong>(entry);
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const List&) {
@@ -947,6 +946,7 @@ using Number = HuffmanPreludeReader::Number;
 using String = HuffmanPreludeReader::String;
 using StringEnum = HuffmanPreludeReader::StringEnum;
 using Sum = HuffmanPreludeReader::Sum;
+using UnsignedLong = HuffmanPreludeReader::UnsignedLong;
 
 BinASTTokenReaderContext::BinASTTokenReaderContext(JSContext* cx,
                                                    ErrorReporter* er,
@@ -1753,7 +1753,6 @@ template <>
 MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
     const List& list) {
   BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
-  //  BINJS_MOZ_TRY_DECL(length, reader.readUnpackedLong());
   if (length > MAX_NUMBER_OF_SYMBOLS) {
     return raiseInvalidTableData(list.identity);
   }
@@ -1904,6 +1903,41 @@ HuffmanPreludeReader::readSingleValueTable<StringEnum>(
   MOZ_TRY(table.impl.initWithSingleValue(
       cx_,
       /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
+  return Ok();
+}
+
+// ------ Unsigned Longs
+// Unpacked 32-bit
+
+// Read the number of symbols from the stream.
+template <>
+MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
+    const UnsignedLong& entry) {
+  BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  if (length > MAX_NUMBER_OF_SYMBOLS) {
+    return raiseInvalidTableData(entry.identity);
+  }
+  return length;
+}
+
+// Read a single symbol from the stream.
+template <>
+MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
+    const UnsignedLong& entry, size_t) {
+  return reader.readUnpackedLong();
+}
+
+// Reading a single-value table of string indices.
+template <>
+MOZ_MUST_USE JS::Result<Ok>
+HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
+    HuffmanTableExplicitSymbolsU32& table, const UnsignedLong& entry) {
+  BINJS_MOZ_TRY_DECL(index, reader.readUnpackedLong());
+  // Note: The `std::move` is useless for performance, but necessary to keep
+  // a consistent API.
+  MOZ_TRY(table.impl.initWithSingleValue(
+      cx_,
+      /* NOLINT(performance-move-const-arg) */ std::move(index)));
   return Ok();
 }
 
