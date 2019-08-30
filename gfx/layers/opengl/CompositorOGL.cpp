@@ -1290,11 +1290,15 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   IntPoint offset = mCurrentRenderTarget->GetOrigin();
   IntSize size = mCurrentRenderTarget->GetSize();
-  Rect renderBound(mCurrentRenderTarget->GetRect());
 
-  // Convert aClipRect into render target space.
+  // Convert aClipRect into render target space, and intersect it with the
+  // render target's clip.
   IntRect clipRect = aClipRect + mCurrentRenderTarget->GetClipSpaceOrigin();
-  renderBound.IntersectRect(renderBound, Rect(clipRect));
+  if (Maybe<IntRect> rtClip = mCurrentRenderTarget->GetClipRect()) {
+    clipRect = clipRect.Intersect(*rtClip);
+  }
+
+  Rect renderBound(mCurrentRenderTarget->GetRect().Intersect(clipRect));
 
   Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
 
@@ -1331,10 +1335,6 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     maskBounds = maskTransform.As2D().TransformBounds(maskBounds);
 
     clipRect = clipRect.Intersect(RoundedOut(maskBounds));
-  }
-
-  if (Maybe<IntRect> rtClip = mCurrentRenderTarget->GetClipRect()) {
-    clipRect = clipRect.Intersect(*rtClip);
   }
 
   // Move clipRect into device space.
