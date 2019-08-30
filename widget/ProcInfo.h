@@ -16,9 +16,10 @@ namespace ipc {
 class GeckoChildProcessHost;
 }
 
-// Process types
+// Process types. When updating this enum, please make sure to update
+// WebIDLProcType and ProcTypeToWebIDL to mirror the changes.
 enum class ProcType {
-  // These must match the ones in ContentParent.h and E10SUtils.jsm
+  // These must match the ones in ContentParent.h, and E10SUtils.jsm
   Web,
   File,
   Extension,
@@ -35,7 +36,8 @@ enum class ProcType {
   Socket,
   RemoteSandboxBroker,
   // Unknown type of process
-  Unknown
+  Unknown,
+  Max = Unknown,
 };
 
 struct ThreadInfo {

@@ -446,11 +446,16 @@ enum WebIDLProcType {
  "extension",
  "privilegedabout",
  "webLargeAllocation",
+ "browser",
+ "plugin",
+ "ipdlUnitTest",
+ "gmpPlugin",
  "gpu",
+ "vr",
  "rdd",
  "socket",
- "browser",
- "unknown"
+ "remoteSandboxBroker",
+ "unknown",
 };
 
 /**
