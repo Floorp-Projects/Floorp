@@ -12,6 +12,7 @@ transforms:
 
 jobs-from:
     - benchmarks.yml
+    - browsertime.yml
     - toolchains.yml
     - chromium-fetch.yml
     - visual-metrics.yml
