@@ -575,11 +575,9 @@ class FunctionCompiler {
   }
 
   MWasmLoadTls* maybeLoadBoundsCheckLimit() {
-#ifdef WASM_HUGE_MEMORY
-    if (!env_.isAsmJS()) {
+    if (env_.hugeMemoryEnabled()) {
       return nullptr;
     }
-#endif
     AliasSet aliases = env_.maxMemoryLength.isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
