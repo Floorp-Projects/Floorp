@@ -25,7 +25,7 @@
   --popup-width: 32rem;
 }
 
-#protections-popoup[infoMessageShowing] {
+#protections-popup[infoMessageShowing] {
   --height-offset: 260px;
 }
 
