@@ -52,14 +52,21 @@ data class HistoryFragmentState(val items: List<HistoryItem>, val mode: Mode) : 
 /**
  * The HistoryState Reducer.
  */
-private fun historyStateReducer(state: HistoryFragmentState, action: HistoryFragmentAction): HistoryFragmentState {
+private fun historyStateReducer(
+    state: HistoryFragmentState,
+    action: HistoryFragmentAction
+): HistoryFragmentState {
     return when (action) {
         is HistoryFragmentAction.AddItemForRemoval ->
             state.copy(mode = HistoryFragmentState.Mode.Editing(state.mode.selectedItems + action.item))
         is HistoryFragmentAction.RemoveItemForRemoval -> {
             val selected = state.mode.selectedItems - action.item
             state.copy(
-                mode = if (selected.isEmpty()) HistoryFragmentState.Mode.Normal else HistoryFragmentState.Mode.Editing(selected)
+                mode = if (selected.isEmpty()) {
+                    HistoryFragmentState.Mode.Normal
+                } else {
+                    HistoryFragmentState.Mode.Editing(selected)
+                }
             )
         }
         is HistoryFragmentAction.ExitEditMode -> state.copy(mode = HistoryFragmentState.Mode.Normal)

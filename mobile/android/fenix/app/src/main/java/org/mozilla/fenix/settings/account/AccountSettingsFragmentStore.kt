@@ -44,7 +44,10 @@ sealed class AccountSettingsFragmentAction : Action {
 /**
  * The SearchState Reducer.
  */
-private fun accountStateReducer(state: AccountSettingsFragmentState, action: AccountSettingsFragmentAction): AccountSettingsFragmentState {
+private fun accountStateReducer(
+    state: AccountSettingsFragmentState,
+    action: AccountSettingsFragmentAction
+): AccountSettingsFragmentState {
     return when (action) {
         is AccountSettingsFragmentAction.SyncFailed -> state.copy(lastSyncedDate = LastSyncTime.Failed(action.time))
         is AccountSettingsFragmentAction.SyncEnded -> state.copy(lastSyncedDate = LastSyncTime.Success(action.time))

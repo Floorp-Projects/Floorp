@@ -50,8 +50,8 @@ sealed class QuickActionSheetAction : BrowserFragmentAction() {
 /**
  * Reducers for [BrowserFragmentStore].
  *
- * A top level reducer that receives the current [BrowserFragmentState] and an [Action] and then delegates to the proper child
- *
+ * A top level reducer that receives the current [BrowserFragmentState] and an [Action] and then
+ * delegates to the proper child
  */
 private fun browserStateReducer(
     state: BrowserFragmentState,

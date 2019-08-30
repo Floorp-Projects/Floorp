@@ -45,13 +45,20 @@ sealed class BookmarkFragmentAction : Action {
  * @param action the action to perform
  * @return the new bookmarks state
  */
-private fun bookmarkFragmentStateReducer(state: BookmarkFragmentState, action: BookmarkFragmentAction): BookmarkFragmentState {
+private fun bookmarkFragmentStateReducer(
+    state: BookmarkFragmentState,
+    action: BookmarkFragmentAction
+): BookmarkFragmentState {
     return when (action) {
         is BookmarkFragmentAction.Change -> {
             val items = state.mode.selectedItems.filter { it in action.tree }
             state.copy(
                 tree = action.tree,
-                mode = if (items.isEmpty()) BookmarkFragmentState.Mode.Normal else BookmarkFragmentState.Mode.Selecting(items.toSet())
+                mode = if (items.isEmpty()) {
+                    BookmarkFragmentState.Mode.Normal
+                } else {
+                    BookmarkFragmentState.Mode.Selecting(items.toSet())
+                }
             )
         }
         is BookmarkFragmentAction.Select ->
@@ -59,7 +66,11 @@ private fun bookmarkFragmentStateReducer(state: BookmarkFragmentState, action: B
         is BookmarkFragmentAction.Deselect -> {
             val items = state.mode.selectedItems - action.item
             state.copy(
-                mode = if (items.isEmpty()) BookmarkFragmentState.Mode.Normal else BookmarkFragmentState.Mode.Selecting(items)
+                mode = if (items.isEmpty()) {
+                    BookmarkFragmentState.Mode.Normal
+                } else {
+                    BookmarkFragmentState.Mode.Selecting(items)
+                }
             )
         }
         BookmarkFragmentAction.DeselectAll ->

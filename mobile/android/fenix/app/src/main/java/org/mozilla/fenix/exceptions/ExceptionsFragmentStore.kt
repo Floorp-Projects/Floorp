@@ -36,7 +36,10 @@ data class ExceptionsFragmentState(val items: List<ExceptionsItem>) : State
 /**
  * The ExceptionsState Reducer.
  */
-private fun exceptionsStateReducer(state: ExceptionsFragmentState, action: ExceptionsFragmentAction): ExceptionsFragmentState {
+private fun exceptionsStateReducer(
+    state: ExceptionsFragmentState,
+    action: ExceptionsFragmentAction
+): ExceptionsFragmentState {
     return when (action) {
         is ExceptionsFragmentAction.Change -> state.copy(items = action.list)
     }
