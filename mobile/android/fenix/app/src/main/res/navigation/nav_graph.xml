@@ -513,4 +513,6 @@
     <dialog
         android:id="@+id/signOutFragment"
         android:name="org.mozilla.fenix.settings.SignOutFragment" />
+    <action android:id="@+id/action_global_shareFragment"
+            app:destination="@id/shareFragment"/>
 </navigation>

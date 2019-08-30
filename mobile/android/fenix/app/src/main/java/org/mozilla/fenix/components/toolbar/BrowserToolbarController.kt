@@ -16,6 +16,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -96,8 +97,8 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Share -> {
                 val currentUrl = currentSession?.url
                 currentUrl?.apply {
-                    val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(this)
-                    navController.nav(R.id.browserFragment, directions)
+                    val directions = NavGraphDirections.actionGlobalShareFragment(this)
+                    navController.navigate(directions)
                 }
             }
             ToolbarMenu.Item.NewTab -> {
