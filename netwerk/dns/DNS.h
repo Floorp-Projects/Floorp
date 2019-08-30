@@ -173,6 +173,8 @@ bool IsLoopBackAddress(const NetAddr* addr);
 
 bool IsIPAddrAny(const NetAddr* addr);
 
+bool IsIPAddrV4(const NetAddr* addr);
+
 bool IsIPAddrV4Mapped(const NetAddr* addr);
 
 bool IsIPAddrLocal(const NetAddr* addr);

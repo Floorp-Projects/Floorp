@@ -140,7 +140,9 @@ bool NetAddrToString(const NetAddr* addr, char* buf, uint32_t bufSize) {
 
 bool IsLoopBackAddress(const NetAddr* addr) {
   if (addr->raw.family == AF_INET) {
-    return (addr->inet.ip == htonl(INADDR_LOOPBACK));
+    // Consider 127.0.0.1/8 as loopback
+    uint32_t ipv4Addr = ntohl(addr->inet.ip);
+    return (ipv4Addr >> 24) == 127;
   }
   if (addr->raw.family == AF_INET6) {
     if (IPv6ADDR_IS_LOOPBACK(&addr->inet6.ip)) {
@@ -171,6 +173,8 @@ bool IsIPAddrAny(const NetAddr* addr) {
   }
   return false;
 }
+
+bool IsIPAddrV4(const NetAddr* addr) { return addr->raw.family == AF_INET; }
 
 bool IsIPAddrV4Mapped(const NetAddr* addr) {
   if (addr->raw.family == AF_INET6) {
