@@ -675,15 +675,6 @@ pref("layers.geometry.d3d11.enabled", true);
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
-pref("apz.axis_lock.lock_angle", "0.5235987");        // PI / 6 (30 degrees)
-pref("apz.axis_lock.breakout_threshold", "0.03125");  // 1/32 inches
-pref("apz.axis_lock.breakout_angle", "0.3926991");    // PI / 8 (22.5 degrees)
-pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
-pref("apz.drag.enabled", true);
-pref("apz.drag.initial.enabled", true);
-pref("apz.drag.touch.enabled", true);
-pref("apz.danger_zone_x", 50);
-pref("apz.danger_zone_y", 100);
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 pref("apz.overscroll.stretch_factor", "0.35");
 
