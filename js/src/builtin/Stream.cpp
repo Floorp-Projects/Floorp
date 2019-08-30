@@ -10,7 +10,8 @@
 
 #include <stdint.h>  // int32_t
 
-#include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
+#include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
+#include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::MakeSizeAlgorithmFromSizeFunction, js::PromiseCall, js::PromiseRejectedWithPendingError, js::ReturnPromiseRejectedWithPendingError, js::ValidateAndNormalizeHighWaterMark
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
@@ -118,34 +119,6 @@ inline static MOZ_MUST_USE T* TargetFromHandler(CallArgs& args) {
   return &func.getExtendedSlot(StreamHandlerFunctionSlot_Target)
               .toObject()
               .as<T>();
-}
-
-inline static MOZ_MUST_USE bool InvokeOrNoop(JSContext* cx, HandleValue O,
-                                             HandlePropertyName P,
-                                             HandleValue arg,
-                                             MutableHandleValue rval);
-
-static MOZ_MUST_USE JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
-  RootedValue exn(cx);
-  if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
-    // Uncatchable error. This happens when a slow script is killed or a
-    // worker is terminated. Propagate the uncatchable error. This will
-    // typically kill off the calling asynchronous process: the caller
-    // can't hook its continuation to the new rejected promise.
-    return nullptr;
-  }
-  return PromiseObject::unforgeableReject(cx, exn);
-}
-
-static MOZ_MUST_USE bool ReturnPromiseRejectedWithPendingError(
-    JSContext* cx, const CallArgs& args) {
-  JSObject* promise = PromiseRejectedWithPendingError(cx);
-  if (!promise) {
-    return false;
-  }
-
-  args.rval().setObject(*promise);
-  return true;
 }
 
 #if 0  // disable user-defined byte streams
@@ -431,12 +404,6 @@ ReadableStream* ReadableStream::createExternalSourceStream(
 
   return stream;
 }
-
-static MOZ_MUST_USE bool MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
-                                                           HandleValue size);
-
-static MOZ_MUST_USE bool ValidateAndNormalizeHighWaterMark(
-    JSContext* cx, HandleValue highWaterMarkVal, double* highWaterMark);
 
 static MOZ_MUST_USE bool
 SetUpReadableStreamDefaultControllerFromUnderlyingSource(
@@ -1305,10 +1272,6 @@ static MOZ_MUST_USE bool ReadableStreamTee(
 
 /*** 3.5. The interface between readable streams and controllers ************/
 
-inline static MOZ_MUST_USE bool AppendToListAtSlot(
-    JSContext* cx, HandleNativeObject unwrappedContainer, uint32_t slot,
-    HandleObject obj);
-
 /**
  * Streams spec, 3.5.1.
  *      ReadableStreamAddReadIntoRequest ( stream, forAuthorCode )
@@ -1350,8 +1313,8 @@ static MOZ_MUST_USE JSObject* ReadableStreamAddReadOrReadIntoRequest(
   // Since we don't need the [[forAuthorCode]] field (see the comment on
   // `ReadableStreamReader::forAuthorCode()`), we elide the Record and store
   // only the promise.
-  if (!AppendToListAtSlot(cx, unwrappedReader,
-                          ReadableStreamReader::Slot_Requests, promise)) {
+  if (!AppendToListInFixedSlot(cx, unwrappedReader,
+                               ReadableStreamReader::Slot_Requests, promise)) {
     return nullptr;
   }
 
@@ -2476,9 +2439,6 @@ static const JSFunctionSpec ReadableStreamDefaultController_methods[] = {
 JS_STREAMS_CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount,
                       ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
-static MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx, HandleValue F,
-                                          HandleValue V, HandleValue arg);
-
 static void ReadableStreamControllerClearAlgorithms(
     Handle<ReadableStreamController*> controller);
 
@@ -3264,11 +3224,6 @@ static MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
   return true;
 }
 
-static MOZ_MUST_USE bool CreateAlgorithmFromUnderlyingMethod(
-    JSContext* cx, HandleValue underlyingObject,
-    const char* methodNameForErrorMessage, HandlePropertyName methodName,
-    MutableHandleValue method);
-
 /**
  * Streams spec, 3.10.12.
  *      SetUpReadableStreamDefaultControllerFromUnderlyingSource( stream,
@@ -3773,9 +3728,10 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
 
     // Step 5.d: Append pullIntoDescriptor as the last element of
     //           this.[[pendingPullIntos]].
-    if (!AppendToListAtSlot(cx, unwrappedController,
-                            ReadableByteStreamController::Slot_PendingPullIntos,
-                            pullIntoDescriptor)) {
+    if (!AppendToListInFixedSlot(
+            cx, unwrappedController,
+            ReadableByteStreamController::Slot_PendingPullIntos,
+            pullIntoDescriptor)) {
       return nullptr;
     }
   }
@@ -4001,194 +3957,6 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
 // Streams spec, 3.13.25.
 //      ReadableByteStreamControllerShouldCallPull ( controller )
 // Unified with 3.10.3 above.
-
-/*** 6.3. Miscellaneous operations ******************************************/
-
-/**
- * Appends the given |obj| to the given list |container|'s list.
- */
-inline static MOZ_MUST_USE bool AppendToListAtSlot(
-    JSContext* cx, HandleNativeObject unwrappedContainer, uint32_t slot,
-    HandleObject obj) {
-  Rooted<ListObject*> list(
-      cx, &unwrappedContainer->getFixedSlot(slot).toObject().as<ListObject>());
-
-  AutoRealm ar(cx, list);
-  RootedValue val(cx, ObjectValue(*obj));
-  if (!cx->compartment()->wrap(cx, &val)) {
-    return false;
-  }
-  return list->append(cx, val);
-}
-
-/**
- * Streams spec, 6.3.1.
- *      CreateAlgorithmFromUnderlyingMethod ( underlyingObject, methodName,
- *                                            algoArgCount, extraArgs )
- *
- * This function only partly implements the standard algorithm. We do not
- * actually create a new JSFunction completely encapsulating the new algorithm.
- * Instead, this just gets the specified method and checks for errors. It's the
- * caller's responsibility to make sure that later, when the algorithm is
- * "performed", the appropriate steps are carried out.
- */
-static MOZ_MUST_USE bool CreateAlgorithmFromUnderlyingMethod(
-    JSContext* cx, HandleValue underlyingObject,
-    const char* methodNameForErrorMessage, HandlePropertyName methodName,
-    MutableHandleValue method) {
-  // Step 1: Assert: underlyingObject is not undefined.
-  MOZ_ASSERT(!underlyingObject.isUndefined());
-
-  // Step 2: Assert: ! IsPropertyKey(methodName) is true (implicit).
-  // Step 3: Assert: algoArgCount is 0 or 1 (omitted).
-  // Step 4: Assert: extraArgs is a List (omitted).
-
-  // Step 5: Let method be ? GetV(underlyingObject, methodName).
-  if (!GetProperty(cx, underlyingObject, methodName, method)) {
-    return false;
-  }
-
-  // Step 6: If method is not undefined,
-  if (!method.isUndefined()) {
-    // Step a: If ! IsCallable(method) is false, throw a TypeError
-    //         exception.
-    if (!IsCallable(method)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_NOT_FUNCTION, methodNameForErrorMessage);
-      return false;
-    }
-
-    // Step b: If algoArgCount is 0, return an algorithm that performs the
-    //         following steps:
-    //     Step i: Return ! PromiseCall(method, underlyingObject,
-    //             extraArgs).
-    // Step c: Otherwise, return an algorithm that performs the following
-    //         steps, taking an arg argument:
-    //     Step i: Let fullArgs be a List consisting of arg followed by the
-    //             elements of extraArgs in order.
-    //     Step ii: Return ! PromiseCall(method, underlyingObject,
-    //                                   fullArgs).
-    // (These steps are deferred to the code that performs the algorithm.
-    // See ReadableStreamControllerCancelSteps and
-    // ReadableStreamControllerCallPullIfNeeded.)
-    return true;
-  }
-
-  // Step 7: Return an algorithm which returns a promise resolved with
-  //         undefined (implicit).
-  return true;
-}
-
-/**
- * Streams spec, 6.3.2. InvokeOrNoop ( O, P, args )
- * As it happens, all callers pass exactly one argument.
- */
-inline static MOZ_MUST_USE bool InvokeOrNoop(JSContext* cx, HandleValue O,
-                                             HandlePropertyName P,
-                                             HandleValue arg,
-                                             MutableHandleValue rval) {
-  cx->check(O, P, arg);
-
-  // Step 1: Assert: O is not undefined.
-  MOZ_ASSERT(!O.isUndefined());
-
-  // Step 2: Assert: ! IsPropertyKey(P) is true (implicit).
-  // Step 3: Assert: args is a List (implicit).
-  // Step 4: Let method be ? GetV(O, P).
-  RootedValue method(cx);
-  if (!GetProperty(cx, O, P, &method)) {
-    return false;
-  }
-
-  // Step 5: If method is undefined, return.
-  if (method.isUndefined()) {
-    return true;
-  }
-
-  // Step 6: Return ? Call(method, O, args).
-  return Call(cx, method, O, arg, rval);
-}
-
-/**
- * Streams spec, 6.3.5. PromiseCall ( F, V, args )
- * As it happens, all callers pass exactly one argument.
- */
-static MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx, HandleValue F,
-                                          HandleValue V, HandleValue arg) {
-  cx->check(F, V, arg);
-
-  // Step 1: Assert: ! IsCallable(F) is true.
-  MOZ_ASSERT(IsCallable(F));
-
-  // Step 2: Assert: V is not undefined.
-  MOZ_ASSERT(!V.isUndefined());
-
-  // Step 3: Assert: args is a List (implicit).
-  // Step 4: Let returnValue be Call(F, V, args).
-  RootedValue rval(cx);
-  if (!Call(cx, F, V, arg, &rval)) {
-    // Step 5: If returnValue is an abrupt completion, return a promise rejected
-    // with returnValue.[[Value]].
-    return PromiseRejectedWithPendingError(cx);
-  }
-
-  // Step 6: Otherwise, return a promise resolved with returnValue.[[Value]].
-  return PromiseObject::unforgeableResolve(cx, rval);
-}
-
-/**
- * Streams spec, 6.3.7. ValidateAndNormalizeHighWaterMark ( highWaterMark )
- */
-static MOZ_MUST_USE bool ValidateAndNormalizeHighWaterMark(
-    JSContext* cx, HandleValue highWaterMarkVal, double* highWaterMark) {
-  // Step 1: Set highWaterMark to ? ToNumber(highWaterMark).
-  if (!ToNumber(cx, highWaterMarkVal, highWaterMark)) {
-    return false;
-  }
-
-  // Step 2: If highWaterMark is NaN or highWaterMark < 0, throw a RangeError
-  // exception.
-  if (mozilla::IsNaN(*highWaterMark) || *highWaterMark < 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STREAM_INVALID_HIGHWATERMARK);
-    return false;
-  }
-
-  // Step 3: Return highWaterMark.
-  return true;
-}
-
-/**
- * Streams spec, 6.3.8. MakeSizeAlgorithmFromSizeFunction ( size )
- *
- * The standard makes a big deal of turning JavaScript functions (grubby,
- * touched by users, covered with germs) into algorithms (pristine,
- * respectable, purposeful). We don't bother. Here we only check for errors and
- * leave `size` unchanged. Then, in ReadableStreamDefaultControllerEnqueue,
- * where this value is used, we have to check for undefined and behave as if we
- * had "made" an "algorithm" as described below.
- */
-static MOZ_MUST_USE bool MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
-                                                           HandleValue size) {
-  // Step 1: If size is undefined, return an algorithm that returns 1.
-  if (size.isUndefined()) {
-    // Deferred. Size algorithm users must check for undefined.
-    return true;
-  }
-
-  // Step 2: If ! IsCallable(size) is false, throw a TypeError exception.
-  if (!IsCallable(size)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION,
-                              "ReadableStream argument options.size");
-    return false;
-  }
-
-  // Step 3: Return an algorithm that performs the following steps, taking a
-  //         chunk argument:
-  //     a. Return ? Call(size, undefined, « chunk »).
-  // Deferred. Size algorithm users must know how to call the size function.
-  return true;
-}
 
 /*** API entry points *******************************************************/
 

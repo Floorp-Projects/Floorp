@@ -14,14 +14,15 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "gc/Rooting.h"
-#include "js/Value.h"  // JS::Value, JS::ObjectValue
-#include "vm/JSContext.h"
-#include "vm/NativeObject.h"
+#include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
+#include "js/Value.h"         // JS::Value, JS::ObjectValue
+#include "vm/JSContext.h"     // JSContext
+#include "vm/NativeObject.h"  // js::NativeObject
 
-#include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
-#include "vm/Realm-inl.h"  // js::AutoRealm
+#include "vm/Compartment-inl.h"   // JS::Compartment::wrap
+#include "vm/JSObject-inl.h"      // js::NewObjectWithNullTaggedProto
+#include "vm/NativeObject-inl.h"  // js::NativeObject::*
+#include "vm/Realm-inl.h"         // js::AutoRealm
 
 inline /* static */ js::ListObject* js::ListObject::create(JSContext* cx) {
   return NewObjectWithNullTaggedProto<ListObject>(cx);
@@ -75,6 +76,24 @@ inline MOZ_MUST_USE bool StoreNewListInFixedSlot(JSContext* cx,
 
   obj->setFixedSlot(slot, JS::ObjectValue(*list));
   return true;
+}
+
+/**
+ * Given an object |obj| whose fixed slot |slot| contains a ListObject, append
+ * |toAppend| to that list.
+ */
+inline MOZ_MUST_USE bool AppendToListInFixedSlot(
+    JSContext* cx, JS::Handle<NativeObject*> obj, uint32_t slot,
+    JS::Handle<JSObject*> toAppend) {
+  JS::Rooted<ListObject*> list(
+      cx, &obj->getFixedSlot(slot).toObject().as<ListObject>());
+
+  AutoRealm ar(cx, list);
+  JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*toAppend));
+  if (!cx->compartment()->wrap(cx, &val)) {
+    return false;
+  }
+  return list->append(cx, val);
 }
 
 }  // namespace js
