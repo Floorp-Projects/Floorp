@@ -1409,7 +1409,7 @@ void ReflowInput::CalculateHypotheticalPosition(
       // would have been inline-level or block-level
       LogicalRect lineBounds = lineBox->GetBounds().ConvertTo(
           wm, lineBox->mWritingMode, lineBox->mContainerSize);
-      if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
+      if (mStyleDisplay->IsOriginalDisplayInlineOutside()) {
         // Use the block-start of the inline box which the placeholder lives in
         // as the hypothetical box's block-start.
         aHypotheticalPos.mBStart = lineBounds.BStart(wm) + blockOffset.B(wm);
@@ -1476,7 +1476,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // Second, determine the hypothetical box's mIStart.
   // How we determine the hypothetical box depends on whether the element
   // would have been inline-level or block-level
-  if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle() ||
+  if (mStyleDisplay->IsOriginalDisplayInlineOutside() ||
       mFlags.mIOffsetsNeedCSSAlign) {
     // The placeholder represents the IStart edge of the hypothetical box.
     // (Or if mFlags.mIOffsetsNeedCSSAlign is set, it represents the IStart
