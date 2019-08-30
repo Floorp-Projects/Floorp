@@ -16,6 +16,8 @@ import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
@@ -71,13 +73,20 @@ class Core(private val context: Context) {
     }
 
     /**
+     * The [BrowserStore] holds the global [BrowserState].
+     */
+    val store by lazy {
+        BrowserStore()
+    }
+
+    /**
      * The session manager component provides access to a centralized registry of
      * all browser sessions (i.e. tabs). It is initialized here to persist and restore
      * sessions from the [SessionStorage], and with a default session (about:blank) in
      * case all sessions/tabs are closed.
      */
     val sessionManager by lazy {
-        SessionManager(engine).also { sessionManager ->
+        SessionManager(engine, store).also { sessionManager ->
             // Install the "icons" WebExtension to automatically load icons for every visited website.
             icons.install(engine, sessionManager)
 

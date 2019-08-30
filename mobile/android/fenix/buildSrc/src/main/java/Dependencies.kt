@@ -102,6 +102,7 @@ object Deps {
     const val mozilla_browser_icons = "org.mozilla.components:browser-icons:${Versions.mozilla_android_components}"
     const val mozilla_browser_search = "org.mozilla.components:browser-search:${Versions.mozilla_android_components}"
     const val mozilla_browser_session = "org.mozilla.components:browser-session:${Versions.mozilla_android_components}"
+    const val mozilla_browser_state = "org.mozilla.components:browser-state:${Versions.mozilla_android_components}"
     const val mozilla_browser_tabstray = "org.mozilla.components:browser-tabstray:${Versions.mozilla_android_components}"
     const val mozilla_browser_toolbar = "org.mozilla.components:browser-toolbar:${Versions.mozilla_android_components}"
     const val mozilla_browser_menu = "org.mozilla.components:browser-menu:${Versions.mozilla_android_components}"
