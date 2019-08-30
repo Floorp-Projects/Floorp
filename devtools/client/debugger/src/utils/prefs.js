@@ -70,7 +70,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.log-points", true);
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.log-actions", true);
-  pref("devtools.debugger.features.overlay-step-buttons", false);
+  pref("devtools.debugger.features.overlay-step-buttons", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
