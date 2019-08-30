@@ -1033,6 +1033,13 @@ let gPausePoint = null;
 // In ARRIVING mode, the requests must be sent once the child arrives.
 const gDebuggerRequests = [];
 
+function addDebuggerRequest(request) {
+  gDebuggerRequests.push({
+    request,
+    stack: Error().stack,
+  });
+}
+
 function setPauseState(mode, point, child) {
   assert(mode);
   const idString = child ? ` #${child.id}` : "";
@@ -1077,7 +1084,7 @@ function sendActiveChildToPausePoint() {
           gActiveChild.sendManifest({
             contents: {
               kind: "batchDebuggerRequest",
-              requests: gDebuggerRequests,
+              requests: gDebuggerRequests.map(r => r.request),
             },
             onFinished(finishData) {
               assert(!finishData || !finishData.restoredCheckpoint);
@@ -1823,7 +1830,7 @@ const gControl = {
       gActiveChild.divergedFromRecording = true;
     }
 
-    gDebuggerRequests.push(request);
+    addDebuggerRequest(request);
     return data.response;
   },
 
@@ -1860,6 +1867,10 @@ const gControl = {
   unscannedRegions,
   cachedPoints,
 
+  debuggerRequests() {
+    return gDebuggerRequests;
+  },
+
   getPauseData() {
     // If the child has not arrived at the pause point yet, see if there is
     // cached pause data for this point already which we can immediately return.
@@ -1868,7 +1879,7 @@ const gControl = {
       if (data) {
         // After the child pauses, it will need to generate the pause data so
         // that any referenced objects will be instantiated.
-        gDebuggerRequests.push({ type: "pauseData" });
+        addDebuggerRequest({ type: "pauseData" });
         return data;
       }
     }
