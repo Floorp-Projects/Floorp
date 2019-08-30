@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 
 #ifdef XP_LINUX
 #  include <dlfcn.h>
@@ -26,7 +27,6 @@
 #include "nss.h"
 #include "sechash.h"
 
-using std::auto_ptr;
 using std::ifstream;
 using std::ios;
 using std::istream;
@@ -35,6 +35,7 @@ using std::ofstream;
 using std::ostream;
 using std::ostringstream;
 using std::string;
+using std::unique_ptr;
 using std::vector;
 
 namespace CrashReporter {
@@ -49,7 +50,7 @@ bool gAutoSubmit;
 
 enum SubmissionResult { Succeeded, Failed };
 
-static auto_ptr<ofstream> gLogStream(nullptr);
+static unique_ptr<ofstream> gLogStream(nullptr);
 static string gReporterDumpFile;
 static string gExtraFile;
 static string gMemoryFile;
