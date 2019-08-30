@@ -11,6 +11,12 @@ license:
         - browser/components/pocket/
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
+        - devtools/client/debugger/bin
+        - devtools/client/debugger/dist
+        - devtools/client/jsonview/lib/require.js
+        - devtools/client/shared
+        - devtools/server/actors/utils/shapes-utils.js
+        - devtools/shared
         - gfx/2d/MMIHelpers.h
         - gfx/2d/ShadersD2D1.h
         - gfx/layers/protobuf/LayerScopePacket.pb.cc
