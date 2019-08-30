@@ -28,6 +28,7 @@
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmOpIter.h"
+#include "wasm/WasmProcess.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
 
@@ -141,6 +142,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->sharedMemoryEnabled = sharedMemory;
   target->forceTiering = forceTiering;
   target->gcEnabled = gc;
+  target->hugeMemory = wasm::IsHugeMemoryEnabled();
 
   return target;
 }
@@ -436,14 +438,16 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
                                          OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
                                          bool refTypesConfigured,
-                                         bool gcTypesConfigured)
+                                         bool gcTypesConfigured,
+                                         bool hugeMemory)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
       optimizedBackend_(optimizedBackend),
       debug_(debugEnabled),
       refTypes_(refTypesConfigured),
-      gcTypes_(gcTypesConfigured) {}
+      gcTypes_(gcTypesConfigured),
+      hugeMemory_(hugeMemory) {}
 
 void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
@@ -468,6 +472,7 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   bool debugEnabled = args_->debugEnabled;
   bool craneliftEnabled = args_->craneliftEnabled;
   bool forceTiering = args_->forceTiering;
+  bool hugeMemory = args_->hugeMemory;
 
   bool hasSecondTier = ionEnabled || craneliftEnabled;
   MOZ_ASSERT_IF(gcEnabled || debugEnabled, baselineEnabled);
@@ -498,6 +503,7 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
   refTypes_ = !craneliftEnabled;
+  hugeMemory_ = hugeMemory;
   state_ = Computed;
 }
 
@@ -604,7 +610,8 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False,
-                                  refTypesConfigured, gcTypesConfigured);
+                                  refTypesConfigured, gcTypesConfigured,
+                                  args.hugeMemory);
 
   ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
                                           ? Shareable::True
