@@ -2127,6 +2127,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const loc = this.sources.getFrameLocation(frame);
     dump(`${prefix} (${loc.line}, ${loc.column})\n`);
   },
+
+  debuggerRequests() {
+    return this.dbg.replayDebuggerRequests();
+  },
 });
 
 Object.assign(ThreadActor.prototype.requestTypes, {

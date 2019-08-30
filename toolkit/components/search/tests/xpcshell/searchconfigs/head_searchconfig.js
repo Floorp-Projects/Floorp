@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
-  SearchEngineSelector: "resource://testing-common/SearchEngineSelector.jsm",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",

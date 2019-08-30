@@ -544,8 +544,8 @@ add_task(async function testSubViewTelemetry() {
 
   for (let [item, telemetryId] of items) {
     await BrowserTestUtils.withNewTab("http://www.example.com", async () => {
-      await openProtectionsPanel();
       item.classList.remove("notFound"); // Force visible for test
+      await openProtectionsPanel();
       let viewShownEvent = BrowserTestUtils.waitForEvent(
         gProtectionsHandler._protectionsPopupMultiView,
         "ViewShown"

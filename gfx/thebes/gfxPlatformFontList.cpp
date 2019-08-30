@@ -400,6 +400,9 @@ nsresult gfxPlatformFontList::InitFontList() {
 
   gfxPlatform::PurgeSkiaFontCache();
 
+  mAliasTable.Clear();
+  mLocalNameTable.Clear();
+
   CancelInitOtherFamilyNamesTask();
   MutexAutoLock lock(mFontFamiliesMutex);
   mFontFamilies.Clear();
@@ -2117,7 +2120,7 @@ void gfxPlatformFontList::CancelInitOtherFamilyNamesTask() {
     mPendingOtherFamilyNameTask = nullptr;
   }
   auto list = SharedFontList();
-  if (list) {
+  if (list && XRE_IsParentProcess()) {
     bool forceReflow = false;
     if (!mAliasTable.IsEmpty()) {
       list->SetAliases(mAliasTable);

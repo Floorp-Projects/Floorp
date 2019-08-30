@@ -72,16 +72,6 @@ bool nsStyleDisplay::IsInlineOutside(const nsIFrame* aContextFrame) const {
   return IsInlineOutsideStyle();
 }
 
-bool nsStyleDisplay::IsOriginalDisplayInlineOutside(
-    const nsIFrame* aContextFrame) const {
-  NS_ASSERTION(aContextFrame->StyleDisplay() == this,
-               "unexpected aContextFrame");
-  if (nsSVGUtils::IsInSVGTextSubtree(aContextFrame)) {
-    return !aContextFrame->IsBlockFrame();
-  }
-  return IsOriginalDisplayInlineOutsideStyle();
-}
-
 mozilla::StyleDisplay nsStyleDisplay::GetDisplay(
     const nsIFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,

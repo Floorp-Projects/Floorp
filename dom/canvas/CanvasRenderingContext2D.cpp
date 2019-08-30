@@ -359,6 +359,14 @@ class AdjustedTargetForFilter {
       mSourceGraphicRect.SizeTo(1, 1);
     }
 
+    if (!mFinalTarget->CanCreateSimilarDrawTarget(mSourceGraphicRect.Size(),
+                                                  SurfaceFormat::B8G8R8A8)) {
+      mTarget = mFinalTarget;
+      mCtx = nullptr;
+      mFinalTarget = nullptr;
+      return;
+    }
+
     mTarget = mFinalTarget->CreateSimilarDrawTarget(mSourceGraphicRect.Size(),
                                                     SurfaceFormat::B8G8R8A8);
 
@@ -480,6 +488,14 @@ class AdjustedTargetForShadow {
     bounds.Inflate(blurRadius);
     bounds.RoundOut();
     bounds.ToIntRect(&mTempRect);
+
+    if (!mFinalTarget->CanCreateSimilarDrawTarget(mTempRect.Size(),
+                                                  SurfaceFormat::B8G8R8A8)) {
+      mTarget = mFinalTarget;
+      mCtx = nullptr;
+      mFinalTarget = nullptr;
+      return;
+    }
 
     mTarget = mFinalTarget->CreateShadowDrawTarget(
         mTempRect.Size(), SurfaceFormat::B8G8R8A8, mSigma);

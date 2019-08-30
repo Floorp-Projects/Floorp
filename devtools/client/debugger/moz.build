@@ -18,3 +18,7 @@ BROWSER_CHROME_MANIFESTS += [
 DevToolsModules(
     'panel.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Debugger')
+

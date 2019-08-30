@@ -24,6 +24,9 @@
 namespace js {
 namespace frontend {
 
+#ifdef BINAST_CX_MAGIC_HEADER  // Context 0.1 doesn't implement the planned
+                               // magic header.
+
 // The magic header, at the start of every binjs file.
 const char CX_MAGIC_HEADER[] =
     "\x89"
@@ -31,6 +34,8 @@ const char CX_MAGIC_HEADER[] =
 
 // The latest format version understood by this tokenizer.
 const uint32_t MAGIC_FORMAT_VERSION = 2;
+
+#endif  // BINAST_CX_MAGIC_HEADER
 
 // The maximal length of a single Huffman code, in bits.
 //
@@ -816,6 +821,7 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
   // Check that we don't call this function twice.
   MOZ_ASSERT(!posBeforeTree_);
 
+#if BINAST_CX_MAGIC_HEADER
   // Read global headers.
   MOZ_TRY(readConst(CX_MAGIC_HEADER));
   BINJS_MOZ_TRY_DECL(version, readVarU32<Compression::No>());
@@ -823,6 +829,7 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
   if (version != MAGIC_FORMAT_VERSION) {
     return raiseError("Format version not implemented");
   }
+#endif  // BINAST_CX_MAGIC_HEADER
 
   MOZ_TRY(readStringPrelude());
   MOZ_TRY(readHuffmanPrelude());

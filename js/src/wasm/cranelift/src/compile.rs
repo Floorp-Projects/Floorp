@@ -25,8 +25,7 @@ use cranelift_codegen::binemit::{
     Addend, CodeInfo, CodeOffset, NullStackmapSink, NullTrapSink, Reloc, RelocSink,
 };
 use cranelift_codegen::entity::EntityRef;
-use cranelift_codegen::ir;
-use cranelift_codegen::ir::stackslot::StackSize;
+use cranelift_codegen::ir::{self, constant::ConstantOffset, stackslot::StackSize};
 use cranelift_codegen::isa::TargetIsa;
 use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
@@ -542,6 +541,7 @@ impl<'a> RelocSink for EmitEnv<'a> {
                 self.metadata
                     .push(bindings::MetadataEntry::symbolic_access(offset, sym));
             }
+
             _ => {
                 panic!("Don't understand external {}", name);
             }
@@ -557,5 +557,14 @@ impl<'a> RelocSink for EmitEnv<'a> {
                 panic!("Unhandled/unexpected reloc type");
             }
         }
+    }
+
+    fn reloc_constant(
+        &mut self,
+        _offset: CodeOffset,
+        _reloc: Reloc,
+        _constant_pool_offset: ConstantOffset,
+    ) {
+        unimplemented!("constant pools NYI");
     }
 }

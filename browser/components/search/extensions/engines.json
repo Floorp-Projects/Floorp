@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "engineName": "google",
+      "engineName": "Google",
       "orderHint": 1000,
       "webExtensionId": "google@search.mozilla.org",
       "webExtensionVersion": "1.0",
@@ -33,7 +33,7 @@
       "aliases": ["@google"]
     },
     {
-      "engineName": "bing",
+      "engineName": "Bing",
       "webExtensionId": "bing@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "appliesTo": [{
@@ -57,7 +57,7 @@
       "aliases": ["@bing"]
     },
     {
-      "engineName": "baidu",
+      "engineName": "\u767E\u5EA6",
       "webExtensionId": "baidu@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "appliesTo": [{
@@ -72,7 +72,7 @@
       "aliases": ["@\u767E\u5EA6", "@baidu"]
     },
     {
-      "engineName": "amazon",
+      "engineName": "Amazon.com",
       "orderHint": 500,
       "webExtensionId": "amazondotcom@search.mozilla.org",
       "webExtensionVersion": "1.1",
@@ -101,7 +101,8 @@
         },
         "webExtensionId": "amazon@search.mozilla.org",
         "webExtensionVersion": "1.1",
-        "webExtensionLocale": "au"
+        "webExtensionLocale": "au",
+        "engineName": "Amazon.com.au"
       }, {
         "included": {
           "regions": ["ca"],
@@ -116,7 +117,8 @@
         },
         "webExtensionId": "amazon@search.mozilla.org",
         "webExtensionVersion": "1.1",
-        "webExtensionLocale": "ca"
+        "webExtensionLocale": "ca",
+        "engineName": "Amazon.ca"
       }, {
         "included": {
           "regions": ["fr"],
@@ -131,7 +133,8 @@
         },
         "webExtensionId": "amazon@search.mozilla.org",
         "webExtensionVersion": "1.1",
-        "webExtensionLocale": "france"
+        "webExtensionLocale": "france",
+        "engineName": "Amazon.fr"
       }, {
         "included": {
           "regions": ["gb"],
@@ -146,12 +149,13 @@
         },
         "webExtensionId": "amazon@search.mozilla.org",
         "webExtensionVersion": "1.1",
-        "webExtensionLocale": "en-GB"
+        "webExtensionLocale": "en-GB",
+        "engineName": "Amazon.co.uk"
       }],
       "aliases": ["amazon"]
     },
     {
-      "engineName": "amazon",
+      "engineName": "Amazon",
       "orderHint": 500,
       "webExtensionId": "amazon@search.mozilla.org",
       "webExtensionVersion": "1.1",
@@ -162,30 +166,37 @@
             "or", "pa-IN", "ta", "te", "ur"
           ]}
         },
-        "webExtensionLocale": "in"
+        "webExtensionLocale": "in",
+        "engineName": "Amazon.in"
       }, {
         "included": {
           "locales": { "matches": ["br", "ff", "fr", "son", "wo"] }
         },
-        "webExtensionLocale": "france"
+        "webExtensionLocale": "france",
+        "engineName": "Amazon.fr"
       }, {
         "included": {
           "regions": ["ca"],
           "locales": { "matches": ["br", "ff", "fr", "son", "wo"] }
         },
-        "webExtensionLocale": "ca"
+        "webExtensionLocale": "ca",
+        "engineName": "Amazon.ca"
       }, {
         "included": { "locales": { "matches": ["en-CA"] } },
-        "webExtensionLocale": "ca"
+        "webExtensionLocale": "ca",
+        "engineName": "Amazon.ca"
       }, {
         "included": { "locales": { "matches": ["ja-JP-mac", "ja"] } },
-        "webExtensionLocale": "jp"
+        "webExtensionLocale": "jp",
+        "engineName": "Amazon.jp"
       }, {
         "included": { "locales": { "matches": ["it", "lij"] } },
-        "webExtensionLocale": "it"
+        "webExtensionLocale": "it",
+        "engineName": "Amazon.it"
       }, {
         "included": { "locales": { "matches": ["de", "dsb", "hsb"] } },
-        "webExtensionLocale": "de"
+        "webExtensionLocale": "de",
+        "engineName": "Amazon.de"
       }, {
         "included": {
           "locales": {
@@ -195,7 +206,8 @@
             ]
           }
         },
-        "webExtensionLocale": "en-GB"
+        "webExtensionLocale": "en-GB",
+        "engineName": "Amazon.co.uk"
       }, {
         "included": {
           "regions": ["au"],
@@ -206,12 +218,13 @@
             ]
           }
         },
-        "webExtensionLocale": "au"
+        "webExtensionLocale": "au",
+        "engineName": "Amazon.au"
       }],
       "aliases": ["amazon"]
     },
     {
-      "engineName": "amazon",
+      "engineName": "\u4E9A\u9A6C\u900A",
       "orderHint": 500,
       "webExtensionId": "amazondotcn@search.mozilla.org",
       "webExtensionVersion": "1.0",
@@ -221,7 +234,7 @@
       "aliases": ["amazon"]
     },
     {
-      "engineName": "ebay",
+      "engineName": "eBay",
       "orderHint": 500,
       "webExtensionId": "ebay@search.mozilla.org",
       "webExtensionVersion": "1.0",
@@ -327,7 +340,7 @@
       "aliases": ["@ebay"]
     },
     {
-      "engineName": "ddg",
+      "engineName": "DuckDuckGo",
       "orderHint": 500,
       "webExtensionId": "ddg@search.mozilla.org",
       "webExtensionVersion": "1.0",
@@ -337,7 +350,7 @@
       "aliases": ["@duckduckgo", "@ddg"]
     },
     {
-      "engineName": "yandex",
+      "engineName": "Yandex",
       "webExtensionId": "yandex@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "appliesTo": [{
@@ -355,13 +368,16 @@
         "webExtensionLocale": "az"
       }, {
         "included": { "locales": { "matches": ["be"] }},
-        "webExtensionLocale": "by"
+        "webExtensionLocale": "by",
+        "engineName": "\u044F\u043D\u0434\u0435\u043A\u0441"
       }, {
         "included": { "locales": { "matches": ["kk"] }},
-        "webExtensionLocale": "kk"
+        "webExtensionLocale": "kk",
+        "engineName": "\u044F\u043D\u0434\u0435\u043A\u0441"
       }, {
         "included": { "locales": { "matches": ["ru"] }},
-        "webExtensionLocale": "ru"
+        "webExtensionLocale": "ru",
+        "engineName": "\u044F\u043D\u0434\u0435\u043A\u0441"
       }, {
         "included": { "locales": { "matches": ["tr"] }},
         "webExtensionLocale": "tr"

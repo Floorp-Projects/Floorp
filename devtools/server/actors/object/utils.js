@@ -203,12 +203,37 @@ function getArrayLength(object) {
     return DevToolsUtils.getProperty(object, "length");
   }
 
+  // When replaying, we use a special API to get typed array lengths. We can't
+  // invoke getters on the proxy returned by unsafeDereference().
+  if (isReplaying) {
+    return object.getTypedArrayLength();
+  }
+
   // For typed arrays, `DevToolsUtils.getProperty` is not reliable because the `length`
   // getter could be shadowed by an own property, and `getOwnPropertyNames` is
   // unnecessarily slow. Obtain the `length` getter safely and call it manually.
   const typedProto = Object.getPrototypeOf(Uint8Array.prototype);
   const getter = Object.getOwnPropertyDescriptor(typedProto, "length").get;
   return getter.call(object.unsafeDereference());
+}
+
+/**
+ * Returns the number of elements in a Set or Map.
+ *
+ * @param object Debugger.Object
+ *        The debuggee object of the Set or Map.
+ * @return Number
+ */
+function getContainerSize(object) {
+  if (object.class != "Set" && object.class != "Map") {
+    throw new Error(`Expected a set/map, got a ${object.class}`);
+  }
+
+  if (isReplaying) {
+    return object.getContainerSize();
+  }
+
+  return DevToolsUtils.getProperty(object, "size");
 }
 
 /**
@@ -254,6 +279,41 @@ function getStorageLength(object) {
   return DevToolsUtils.getProperty(object, "length");
 }
 
+// Get the string representation of a Debugger.Object for a RegExp.
+function getRegExpString(object) {
+  if (isReplaying) {
+    return object.getRegExpString();
+  }
+
+  return DevToolsUtils.callPropertyOnObject(object, "toString");
+}
+
+// Get the time associated with a Debugger.Object for a Date.
+function getDateTime(object) {
+  if (isReplaying) {
+    return object.getDateTime();
+  }
+
+  return DevToolsUtils.callPropertyOnObject(object, "getTime");
+}
+
+// Get the properties of a Debugger.Object for an Error which are needed to
+// preview the object.
+function getErrorProperties(object) {
+  if (isReplaying) {
+    return object.getErrorProperties();
+  }
+
+  return {
+    name: DevToolsUtils.getProperty(object, "name"),
+    message: DevToolsUtils.getProperty(object, "message"),
+    stack: DevToolsUtils.getProperty(object, "stack"),
+    fileName: DevToolsUtils.getProperty(object, "fileName"),
+    lineNumber: DevToolsUtils.getProperty(object, "lineNumber"),
+    columnNumber: DevToolsUtils.getProperty(object, "columnNumber"),
+  };
+}
+
 module.exports = {
   getPromiseState,
   makeDebuggeeValueIfNeeded,
@@ -265,5 +325,9 @@ module.exports = {
   isStorage,
   getArrayLength,
   getStorageLength,
+  getContainerSize,
   isArrayIndex,
+  getRegExpString,
+  getDateTime,
+  getErrorProperties,
 };

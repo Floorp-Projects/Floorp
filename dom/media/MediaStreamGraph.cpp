@@ -2934,7 +2934,7 @@ void MediaInputPort::Init() {
     mDest->AddInput(this);
   }
   // mPortCount decremented via MediaInputPort::Destroy's message
-  ++mDest->GraphImpl()->mPortCount;
+  ++mGraph->mPortCount;
 }
 
 void MediaInputPort::Disconnect() {
