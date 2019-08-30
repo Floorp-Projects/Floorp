@@ -386,6 +386,8 @@ class Compositor : public TextureSourceProvider {
 
   /**
    * Start a new frame for rendering to the window.
+   * Needs to be paired with a call to EndFrame() if the return value is not
+   * Nothing().
    *
    * aInvalidRegion is the invalid region of the window.
    * aClipRect is the clip rect for all drawing (optional).
@@ -398,14 +400,15 @@ class Compositor : public TextureSourceProvider {
    */
   virtual Maybe<gfx::IntRect> BeginFrameForWindow(
       const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
-      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
-      NativeLayer* aNativeLayer) = 0;
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion) = 0;
 
   /**
    * Start a new frame for rendering to a DrawTarget. Rendering can happen
    * directly into the DrawTarget, or it can happen in an offscreen GPU buffer
    * and read back into the DrawTarget in EndFrame, or it can happen inside the
    * window and read back into the DrawTarget in EndFrame.
+   * Needs to be paired with a call to EndFrame() if the return value is not
+   * Nothing().
    *
    * aInvalidRegion is the invalid region in the target.
    * aClipRect is the clip rect for all drawing (optional).
@@ -428,14 +431,73 @@ class Compositor : public TextureSourceProvider {
       gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) = 0;
 
   /**
+   * Start a new frame for rendering to one or more native layers. Needs to be
+   * paired with a call to EndFrame().
+   *
+   * This puts the compositor in a state where offscreen rendering is allowed.
+   * Rendering an actual native layer is only possible via a call to
+   * BeginRenderingToNativeLayer(), after BeginFrameForNativeLayers() has run.
+   *
+   * The following is true for the entire time between
+   * BeginFrameForNativeLayers() and EndFrame(), even outside pairs of calls to
+   * Begin/EndRenderingToNativeLayer():
+   *  - GetCurrentRenderTarget() will return something non-null.
+   *  - CreateRenderTarget() and SetRenderTarget() can be called, in order to
+   *    facilitate offscreen rendering.
+   * The render target that this method sets as the current render target is not
+   * useful. Do not render to it. It exists so that calls of the form
+   * SetRenderTarget(previousTarget) do not crash.
+   *
+   * Do not call on platforms that do not support native layers.
+   */
+  virtual void BeginFrameForNativeLayers() = 0;
+
+  /**
+   * Start rendering into aNativeLayer.
+   * Needs to be paired with a call to EndRenderingToNativeLayer() if the return
+   * value is not Nothing().
+   *
+   * Must be called between BeginFrameForNativeLayers() and EndFrame().
+   *
+   * aInvalidRegion is the invalid region in the native layer.
+   * aClipRect is the clip rect for all drawing (optional).
+   * aOpaqueRegion is the area that contains opaque content.
+   * aNativeLayer is the native layer.
+   * All coordinates, including aNativeLayer->GetRect(), are in window space.
+   *
+   * Returns the non-empty layer rect, or Nothing() if rendering to this layer
+   * should be skipped.
+   *
+   * If BeginRenderingToNativeLayer succeeds, the compositor keeps a reference
+   * to aNativeLayer until EndRenderingToNativeLayer is called.
+   *
+   * Do not call on platforms that do not support native layers.
+   */
+  virtual Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) = 0;
+
+  /**
+   * Stop rendering to the native layer and submit the rendering as the layer's
+   * new content.
+   *
+   * Do not call on platforms that do not support native layers.
+   */
+  virtual void EndRenderingToNativeLayer() = 0;
+
+  /**
    * Notification that we've finished issuing draw commands for normal
    * layers (as opposed to the diagnostic overlay which comes after).
-   * This is called between BeginFrame and EndFrame, and it's called before
+   * This is called between BeginFrame* and EndFrame, and it's called before
    * GetWindowRenderTarget() is called for the purposes of screenshot capturing.
    * That next call to GetWindowRenderTarget() expects up-to-date contents for
    * the current frame.
-   * Called at a time when the current render target is the one that BeginFrame
-   * put in place.
+   * When rendering to native layers, this should be called for every layer,
+   * between BeginRenderingToNativeLayer and EndRenderingToNativeLayer, at a
+   * time at which the current render target is the one that
+   * BeginRenderingToNativeLayer has put in place.
+   * When not rendering to native layers, this should be called at a time when
+   * the current render target is the one that BeginFrameForWindow put in place.
    */
   virtual void NormalDrawingDone() {}
 
