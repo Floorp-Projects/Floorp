@@ -44,11 +44,11 @@ class SearchEngineManager(
      */
     @Synchronized
     suspend fun loadAsync(context: Context): Deferred<SearchEngineList> = coroutineScope {
-        // We might have previous 'load' calls still running; cancel them.
-        deferredSearchEngines?.cancel()
-        scope.async {
+        deferredSearchEngines ?: scope.async {
             loadSearchEngines(context)
-        }.also { deferredSearchEngines = it }
+        }.also {
+            deferredSearchEngines = it
+        }
     }
 
     /**
@@ -77,8 +77,7 @@ class SearchEngineManager(
      * a load asynchronously.
      */
     private suspend fun getSearchEngineListAsync(context: Context): SearchEngineList =
-        (deferredSearchEngines ?: loadAsync(context))
-                .await()
+        loadAsync(context).await()
 
     /**
      * Returns all search engines.
