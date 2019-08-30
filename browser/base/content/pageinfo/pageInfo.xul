@@ -47,7 +47,6 @@
   <commandset id="pageInfoCommandSet">
     <command id="cmd_close"     oncommand="window.close();"/>
     <command id="cmd_help"      oncommand="doHelpButton();"/>
-    <command id="cmd_copy"      oncommand="doCopy();"/>
     <command id="cmd_selectall" oncommand="doSelectAll();"/>
   </commandset>
 
@@ -59,14 +58,12 @@
 #else
     <key keycode="VK_F1" command="cmd_help"/>
 #endif
-    <key data-l10n-id="copy"       data-l10n-attrs="key" modifiers="accel" command="cmd_copy"/>
     <key data-l10n-id="select-all" data-l10n-attrs="key" modifiers="accel" command="cmd_selectall"/>
     <key data-l10n-id="select-all" data-l10n-attrs="key" modifiers="alt"   command="cmd_selectall"/>
   </keyset>
 
   <menupopup id="picontext">
     <menuitem id="menu_selectall" data-l10n-id="menu-select-all" command="cmd_selectall"/>
-    <menuitem id="menu_copy"      data-l10n-id="menu-copy"       command="cmd_copy"/>
   </menupopup>
 
   <vbox id="topBar">
