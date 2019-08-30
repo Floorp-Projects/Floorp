@@ -452,6 +452,15 @@
                     preference="signon.generation.enabled"
                     flex="1" />
         </hbox>
+        <hbox class="indent" id="breachAlertsBox" flex="1" align="center">
+          <checkbox id="breachAlerts"
+                    class="tail-with-learn-more"
+                    data-l10n-id="forms-breach-alerts"
+                    search-l10n-ids="breach-alerts.label"
+                    preference="signon.management.page.breach-alerts.enabled"/>
+          <label id="breachAlertsLearnMoreLink" class="learnMore" is="text-link"
+              data-l10n-id="forms-breach-alerts-learn-more-link"/>
+        </hbox>
       </vbox>
       <vbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
