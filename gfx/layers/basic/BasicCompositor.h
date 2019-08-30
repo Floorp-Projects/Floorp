@@ -230,6 +230,7 @@ class BasicCompositor : public Compositor {
   uint32_t mMaxTextureSize;
   bool mIsPendingEndRemoteDrawing;
   bool mRecordFrames;
+  bool mShouldInvalidateWindow = false;
 
   // Where the current frame is being rendered to.
   enum class FrameDestination : uint8_t {
