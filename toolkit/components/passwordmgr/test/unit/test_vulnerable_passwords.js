@@ -35,4 +35,13 @@ add_task(async function test_vulnerable_password_methods() {
         " with a single argument"
     );
   }
+
+  storageJSON.clearAllPotentiallyVulnerablePasswords();
+
+  for (let loginInfo of logins) {
+    Assert.ok(
+      !storageJSON.isPotentiallyVulnerablePassword(loginInfo),
+      "No logins should be vulnerable when clearAllPotentiallyVulnerablePasswords is called."
+    );
+  }
 });
