@@ -2219,7 +2219,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   auto& margin = StyleMargin()->mMargin.Get(aSide);
-  if (!mInnerFrame) {
+  if (!mInnerFrame || margin.ConvertsToLength()) {
     SetValueToLengthPercentageOrAuto(val, margin, false);
   } else {
     AssertFlushedPendingReflows();
