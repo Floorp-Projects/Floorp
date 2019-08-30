@@ -38,6 +38,8 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,6 +73,7 @@ import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
@@ -295,20 +298,23 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
             }
 
+        val context = requireContext()
+        val components = context.components
+
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.Change(
                 tabs = getListOfSessions().toTabs(),
-                mode = currentMode(context!!),
-                collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
+                mode = currentMode(context),
+                collections = components.core.tabCollectionStorage.cachedTabCollections
             )
         )
 
         (activity as AppCompatActivity).supportActionBar?.hide()
+        components.backgroundServices.accountManager.register(this, owner = this)
 
-        requireComponents.backgroundServices.accountManager.register(this, owner = this)
-
-        if (requireContext().settings.showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate) {
+        if (context.settings.showPrivateModeContextualFeatureRecommender &&
+            browsingModeManager.mode.isPrivate
+        ) {
             recommendPrivateBrowsingShortcut()
         }
     }
@@ -326,7 +332,7 @@ class HomeFragment : Fragment(), AccountObserver {
             is OnboardingAction.Finish -> {
                 onboarding.finish()
                 homeLayout?.progress = 0F
-                val mode = currentMode(context!!)
+                val mode = currentMode(requireContext())
                 getManagedEmitter<SessionControlChange>().onNext(
                     SessionControlChange.ModeChange(
                         mode
@@ -450,25 +456,24 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun createDeleteCollectionPrompt(tabCollection: TabCollection) {
-        context?.let {
-            AlertDialog.Builder(it).apply {
-                val message =
-                    context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
-                setMessage(message)
-                setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
-                    dialog.cancel()
+        val context = context ?: return
+        AlertDialog.Builder(context).apply {
+            val message =
+                context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
+            setMessage(message)
+            setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
+                dialog.cancel()
+            }
+            setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
+                viewLifecycleOwner.lifecycleScope.launch(IO) {
+                    context.components.core.tabCollectionStorage.removeCollection(tabCollection)
+                    context.components.analytics.metrics.track(Event.CollectionRemoved)
+                }.invokeOnCompletion {
+                    dialog.dismiss()
                 }
-                setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                        requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
-                        requireComponents.analytics.metrics.track(Event.CollectionRemoved)
-                    }.invokeOnCompletion {
-                        dialog.dismiss()
-                    }
-                }
-                create()
-            }.show()
-        }
+            }
+            create()
+        }.show()
     }
 
     @SuppressWarnings("LongMethod")
@@ -495,9 +500,13 @@ class HomeFragment : Fragment(), AccountObserver {
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteJobs()
+
+                val context = requireContext()
+                val components = context.components
+
                 val session = action.tab.restore(
-                    context = context!!,
-                    engine = requireComponents.core.engine,
+                    context = context,
+                    engine = components.core.engine,
                     tab = action.tab,
                     restoreSessionId = false
                 )
@@ -509,38 +518,42 @@ class HomeFragment : Fragment(), AccountObserver {
                         from = BrowserDirection.FromHome
                     )
                 } else {
-                    requireComponents.core.sessionManager.add(
+                    components.core.sessionManager.add(
                         session,
                         true
                     )
                     (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
                 }
-                requireComponents.analytics.metrics.track(Event.CollectionTabRestored)
+                components.analytics.metrics.track(Event.CollectionTabRestored)
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
+
+                val context = requireContext()
+                val components = context.components
+
                 action.collection.tabs.forEach {
                     val session = it.restore(
-                        context = context!!,
-                        engine = requireComponents.core.engine,
+                        context = context,
+                        engine = components.core.engine,
                         tab = it,
                         restoreSessionId = false
                     )
                     if (session == null) {
                         // We were unable to create a snapshot, so just load the tab instead
-                        requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
+                        components.useCases.tabsUseCases.addTab.invoke(it.url)
                     } else {
-                        requireComponents.core.sessionManager.add(
+                        components.core.sessionManager.add(
                             session,
-                            requireComponents.core.sessionManager.selectedSession == null
+                            context.components.core.sessionManager.selectedSession == null
                         )
                     }
                 }
-                viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.lifecycleScope.launch(Main) {
                     delay(ANIM_SCROLL_DELAY)
                     sessionControlComponent.view.smoothScrollToPosition(0)
                 }
-                requireComponents.analytics.metrics.track(Event.CollectionAllTabsRestored)
+                components.analytics.metrics.track(Event.CollectionAllTabsRestored)
             }
             is CollectionAction.ShareTabs -> {
                 val shareTabs = action.collection.tabs.map { ShareTab(it.url, it.title) }
@@ -548,7 +561,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 requireComponents.analytics.metrics.track(Event.CollectionShared)
             }
             is CollectionAction.RemoveTab -> {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                viewLifecycleOwner.lifecycleScope.launch(IO) {
                     requireComponents.core.tabCollectionStorage.removeTabFromCollection(
                         action.collection,
                         action.tab
@@ -610,7 +623,8 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun setupHomeMenu() {
-        homeMenu = HomeMenu(requireContext()) {
+        val context = requireContext()
+        homeMenu = HomeMenu(context) {
             when (it) {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteJobs()
@@ -633,7 +647,7 @@ class HomeFragment : Fragment(), AccountObserver {
                     hideOnboardingIfNeeded()
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            context!!,
+                            context,
                             SupportUtils.SumoTopic.HELP
                         ),
                         newTab = true,
@@ -643,11 +657,11 @@ class HomeFragment : Fragment(), AccountObserver {
                 HomeMenu.Item.WhatsNew -> {
                     invokePendingDeleteJobs()
                     hideOnboardingIfNeeded()
-                    WhatsNew.userViewedWhatsNew(context!!)
-                    context!!.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.HOME))
+                    WhatsNew.userViewedWhatsNew(context)
+                    context.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.HOME))
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            context!!,
+                            context,
                             SupportUtils.SumoTopic.WHATS_NEW
                         ),
                         newTab = true,
@@ -656,14 +670,6 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
             }
         }
-    }
-
-    private fun contentDescriptionForPrivateBrowsingButton(isPrivate: Boolean): String {
-        val resourceId =
-            if (isPrivate) R.string.content_description_disable_private_browsing_button else
-                R.string.content_description_private_browsing_button
-
-        return getString(resourceId)
     }
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
@@ -761,13 +767,13 @@ class HomeFragment : Fragment(), AccountObserver {
         }
 
         val tabs = getListOfSessions().toTabs()
-        val cachedTabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections
-        setupViewModel(viewModel, tabs, cachedTabCollections)
+        val storage = requireComponents.core.tabCollectionStorage
+        setupViewModel(viewModel, tabs, storage.cachedTabCollections)
 
         viewModel.previousFragmentId = R.id.homeFragment
 
         // Only register the observer right before moving to collection creation
-        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
+        storage.register(collectionStorageObserver, this)
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
