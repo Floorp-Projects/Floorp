@@ -36,7 +36,7 @@ interface SearchController {
 
 class DefaultSearchController(
     private val context: Context,
-    private val store: SearchStore,
+    private val store: SearchFragmentStore,
     private val navController: NavController
 ) : SearchController {
 
@@ -68,10 +68,10 @@ class DefaultSearchController(
     }
 
     override fun handleTextChanged(text: String) {
-        store.dispatch(SearchAction.UpdateQuery(text))
+        store.dispatch(SearchFragmentAction.UpdateQuery(text))
 
         if (userTypingCheck.ranOnTextChanged && !userTypingCheck.userHasTyped) {
-            store.dispatch(SearchAction.ShowSearchShortcutEnginePicker(false))
+            store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false))
             handleTurnOnStartedTyping()
         }
 
@@ -102,7 +102,7 @@ class DefaultSearchController(
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
-        store.dispatch(SearchAction.SearchShortcutEngineSelected(searchEngine))
+        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
         context.metrics.track(Event.SearchShortcutSelected(searchEngine.name))
     }
 

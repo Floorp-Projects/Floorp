@@ -17,7 +17,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
-import org.mozilla.fenix.search.SearchState
+import org.mozilla.fenix.search.SearchFragmentState
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
@@ -109,7 +109,7 @@ class ToolbarView(
         }
     }
 
-    fun update(searchState: SearchState) {
+    fun update(searchState: SearchFragmentState) {
         if (!isInitialized) {
             view.url = searchState.query
             view.setSearchTerms(searchState.session?.searchTerms ?: "")

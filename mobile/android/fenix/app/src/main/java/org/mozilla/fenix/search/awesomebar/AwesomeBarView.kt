@@ -29,7 +29,7 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.search.SearchEngineSource
-import org.mozilla.fenix.search.SearchState
+import org.mozilla.fenix.search.SearchFragmentState
 
 /**
  * Interface for the AwesomeBarView Interactor. This interface is implemented by objects that want
@@ -171,7 +171,7 @@ class AwesomeBarView(
         }
     }
 
-    fun update(state: SearchState) {
+    fun update(state: SearchFragmentState) {
         view.removeAllProviders()
 
         if (state.showShortcutEnginePicker) {

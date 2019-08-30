@@ -28,8 +28,8 @@ class SearchInteractorTest {
     @Test
     fun onUrlCommitted() {
         val context: HomeActivity = mockk()
-        val store: SearchStore = mockk()
-        val state: SearchState = mockk()
+        val store: SearchFragmentStore = mockk()
+        val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
         val searchEngine = SearchEngineSource.Default(mockk())
 
@@ -64,7 +64,7 @@ class SearchInteractorTest {
     @Test
     fun onEditingCanceled() {
         val navController: NavController = mockk(relaxed = true)
-        val store: SearchStore = mockk()
+        val store: SearchFragmentStore = mockk()
 
         every { store.state } returns mockk(relaxed = true)
 
@@ -84,7 +84,7 @@ class SearchInteractorTest {
 
     @Test
     fun onTextChanged() {
-        val store: SearchStore = mockk(relaxed = true)
+        val store: SearchFragmentStore = mockk(relaxed = true)
 
         every { store.state } returns mockk(relaxed = true)
 
@@ -97,14 +97,14 @@ class SearchInteractorTest {
 
         interactor.onTextChanged("test")
 
-        verify { store.dispatch(SearchAction.UpdateQuery("test")) }
+        verify { store.dispatch(SearchFragmentAction.UpdateQuery("test")) }
     }
 
     @Test
     fun onUrlTapped() {
         val context: HomeActivity = mockk()
-        val store: SearchStore = mockk()
-        val state: SearchState = mockk()
+        val store: SearchFragmentStore = mockk()
+        val state: SearchFragmentState = mockk()
 
         every { context.metrics } returns mockk(relaxed = true)
         every { context.openToBrowserAndLoad(any(), any(), any()) } just Runs
@@ -134,8 +134,8 @@ class SearchInteractorTest {
     @Test
     fun onSearchTermsTapped() {
         val context: HomeActivity = mockk()
-        val store: SearchStore = mockk()
-        val state: SearchState = mockk()
+        val store: SearchFragmentStore = mockk()
+        val state: SearchFragmentState = mockk()
         val searchEngineManager: SearchEngineManager = mockk(relaxed = true)
         val searchEngine = SearchEngineSource.Default(mockk())
 
@@ -174,8 +174,8 @@ class SearchInteractorTest {
 
         every { context.metrics } returns mockk(relaxed = true)
 
-        val store: SearchStore = mockk(relaxed = true)
-        val state: SearchState = mockk(relaxed = true)
+        val store: SearchFragmentStore = mockk(relaxed = true)
+        val state: SearchFragmentState = mockk(relaxed = true)
 
         every { store.state } returns state
 
@@ -189,13 +189,13 @@ class SearchInteractorTest {
 
         interactor.onSearchShortcutEngineSelected(searchEngine)
 
-        verify { store.dispatch(SearchAction.SearchShortcutEngineSelected(searchEngine)) }
+        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)) }
     }
 
     @Test
     fun onClickSearchEngineSettings() {
         val navController: NavController = mockk()
-        val store: SearchStore = mockk()
+        val store: SearchFragmentStore = mockk()
 
         every { store.state } returns mockk(relaxed = true)
 
@@ -224,7 +224,7 @@ class SearchInteractorTest {
         val context: Context = mockk(relaxed = true)
         val applicationContext: FenixApplication = mockk(relaxed = true)
         every { context.applicationContext } returns applicationContext
-        val store: SearchStore = mockk()
+        val store: SearchFragmentStore = mockk()
         every { store.state } returns mockk(relaxed = true)
 
         val searchController: SearchController = DefaultSearchController(

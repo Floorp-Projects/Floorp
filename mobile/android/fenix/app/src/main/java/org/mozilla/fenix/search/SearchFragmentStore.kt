@@ -11,11 +11,11 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
- * The [Store] for holding the [SearchState] and applying [SearchAction]s.
+ * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
  */
-class SearchStore(
-    initialState: SearchState
-) : Store<SearchState, SearchAction>(
+class SearchFragmentStore(
+    initialState: SearchFragmentState
+) : Store<SearchFragmentState, SearchFragmentAction>(
     initialState,
     ::searchStateReducer
 )
@@ -40,7 +40,7 @@ sealed class SearchEngineSource {
  * @property showVisitedSitesBookmarks Whether or not to show history and bookmark suggestions in the AwesomeBar
  * @property session The current session if available
  */
-data class SearchState(
+data class SearchFragmentState(
     val query: String,
     val showShortcutEnginePicker: Boolean,
     val searchEngineSource: SearchEngineSource,
@@ -53,28 +53,28 @@ data class SearchState(
 /**
  * Actions to dispatch through the `SearchStore` to modify `SearchState` through the reducer.
  */
-sealed class SearchAction : Action {
-    data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchAction()
-    data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchAction()
-    data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchAction()
-    data class UpdateQuery(val query: String) : SearchAction()
+sealed class SearchFragmentAction : Action {
+    data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
+    data class SelectNewDefaultSearchEngine(val engine: SearchEngine) : SearchFragmentAction()
+    data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
+    data class UpdateQuery(val query: String) : SearchFragmentAction()
 }
 
 /**
  * The SearchState Reducer.
  */
-fun searchStateReducer(state: SearchState, action: SearchAction): SearchState {
+fun searchStateReducer(state: SearchFragmentState, action: SearchFragmentAction): SearchFragmentState {
     return when (action) {
-        is SearchAction.SearchShortcutEngineSelected ->
+        is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Shortcut(action.engine),
                 showShortcutEnginePicker = false
             )
-        is SearchAction.ShowSearchShortcutEnginePicker ->
+        is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
             state.copy(showShortcutEnginePicker = action.show)
-        is SearchAction.UpdateQuery ->
+        is SearchFragmentAction.UpdateQuery ->
             state.copy(query = action.query)
-        is SearchAction.SelectNewDefaultSearchEngine ->
+        is SearchFragmentAction.SelectNewDefaultSearchEngine ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Default(action.engine),
                 showShortcutEnginePicker = false

@@ -11,15 +11,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 
-class SearchStoreTest {
+class SearchFragmentStoreTest {
 
     @Test
     fun updateQuery() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState)
+        val store = SearchFragmentStore(initialState)
         val query = "test query"
 
-        store.dispatch(SearchAction.UpdateQuery(query)).join()
+        store.dispatch(SearchFragmentAction.UpdateQuery(query)).join()
         assertNotSame(initialState, store.state)
         assertEquals(query, store.state.query)
     }
@@ -27,10 +27,10 @@ class SearchStoreTest {
     @Test
     fun selectSearchShortcutEngine() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState)
+        val store = SearchFragmentStore(initialState)
         val searchEngine: SearchEngine = mockk()
 
-        store.dispatch(SearchAction.SearchShortcutEngineSelected(searchEngine)).join()
+        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)).join()
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
     }
@@ -38,14 +38,14 @@ class SearchStoreTest {
     @Test
     fun showSearchShortcutEnginePicker() = runBlocking {
         val initialState = emptyDefaultState()
-        val store = SearchStore(initialState)
+        val store = SearchFragmentStore(initialState)
 
-        store.dispatch(SearchAction.ShowSearchShortcutEnginePicker(true)).join()
+        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(true)).join()
         assertNotSame(initialState, store.state)
         assertEquals(true, store.state.showShortcutEnginePicker)
     }
 
-    private fun emptyDefaultState(): SearchState = SearchState(
+    private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
         query = "",
         searchEngineSource = mockk(),
         defaultEngineSource = mockk(),

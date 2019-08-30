@@ -28,7 +28,7 @@ import org.mozilla.fenix.ext.searchEngineManager
 class DefaultSearchControllerTest {
 
     private val context: HomeActivity = mockk(relaxed = true)
-    private val store: SearchStore = mockk(relaxed = true)
+    private val store: SearchFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val defaultSearchEngine: SearchEngine? = mockk(relaxed = true)
     private val session: Session? = mockk(relaxed = true)
@@ -82,9 +82,9 @@ class DefaultSearchControllerTest {
 
         controller.handleTextChanged(text)
 
-        verify { store.dispatch(SearchAction.UpdateQuery(text)) }
+        verify { store.dispatch(SearchFragmentAction.UpdateQuery(text)) }
         verify(inverse = true) {
-            store.dispatch(SearchAction.ShowSearchShortcutEnginePicker(false))
+            store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false))
         }
         assertTrue(controller.userTypingCheck.ranOnTextChanged)
     }
@@ -124,7 +124,7 @@ class DefaultSearchControllerTest {
 
         controller.handleSearchShortcutEngineSelected(searchEngine)
 
-        verify { store.dispatch(SearchAction.SearchShortcutEngineSelected(searchEngine)) }
+        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)) }
         verify { metrics.track(Event.SearchShortcutSelected(searchEngine.name)) }
     }
 
