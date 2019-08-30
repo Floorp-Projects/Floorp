@@ -186,6 +186,7 @@ UNIFIED_SOURCES += [
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
+    'IMEData.cpp',
     'InProcessCompositorWidget.cpp',
     'InputData.cpp',
     'nsAutoRollup.cpp',
