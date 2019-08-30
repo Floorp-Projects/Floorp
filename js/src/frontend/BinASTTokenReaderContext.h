@@ -227,6 +227,7 @@ struct HuffmanTableExplicitSymbolsF64 {
 struct HuffmanTableExplicitSymbolsU32 {
   using Contents = uint32_t;
   HuffmanTableImpl<uint32_t> impl;
+  explicit HuffmanTableExplicitSymbolsU32(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsSum {
