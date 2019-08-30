@@ -519,7 +519,7 @@ class MuxClient(object):
 
         try:
             send_quota = self._channel_slots.popleft()
-        except IndexError as e:
+        except IndexError, e:
             raise Exception('No channel slots: %r' % e)
 
         # Create AddChannel request
@@ -632,7 +632,7 @@ class MuxClient(object):
         try:
             inner_frame = self._logical_channels[channel_id].queue.get(
                 timeout=self._timeout)
-        except Queue.Empty as e:
+        except Queue.Empty, e:
             raise Exception('Cannot receive message from channel id %d' %
                             channel_id)
 
@@ -666,7 +666,7 @@ class MuxClient(object):
         try:
             inner_frame = self._logical_channels[channel_id].queue.get(
                 timeout=self._timeout)
-        except Queue.Empty as e:
+        except Queue.Empty, e:
             raise Exception('Cannot receive message from channel id %d' %
                             channel_id)
         if inner_frame.opcode != client_for_testing.OPCODE_CLOSE:
