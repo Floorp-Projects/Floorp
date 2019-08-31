@@ -155,10 +155,6 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
   mDiagnostics = MakeUnique<Diagnostics>();
   MOZ_ASSERT(aCompositor);
   mNativeLayerRoot = aCompositor->GetWidget()->GetNativeLayerRoot();
-  if (mNativeLayerRoot) {
-    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
-    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
-  }
 
 #ifdef USE_SKIA
   mPaintCounter = nullptr;
@@ -178,8 +174,10 @@ void LayerManagerComposite::Destroy() {
     mClonedLayerTreeProperties = nullptr;
     mProfilerScreenshotGrabber.Destroy();
     if (mNativeLayerRoot) {
-      mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
-      mNativeLayerForEntireWindow = nullptr;
+      for (const auto& nativeLayer : mNativeLayers) {
+        mNativeLayerRoot->RemoveLayer(nativeLayer);
+      }
+      mNativeLayers.clear();
       mNativeLayerRoot = nullptr;
     }
     mDestroyed = true;
@@ -870,6 +868,38 @@ void LayerManagerComposite::PopGroupForLayerEffects(
                         aClipRect, effectChain, 1., Matrix4x4());
 }
 
+void LayerManagerComposite::PlaceNativeLayers(
+    const IntRegion& aRegion, bool aOpaque,
+    std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+    IntRegion* aWindowInvalidRegion) {
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    PlaceNativeLayer(iter.Get(), aOpaque, aLayersToRecycle,
+                     aWindowInvalidRegion);
+  }
+}
+
+void LayerManagerComposite::PlaceNativeLayer(
+    const IntRect& aRect, bool aOpaque,
+    std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+    IntRegion* aWindowInvalidRegion) {
+  RefPtr<NativeLayer> layer;
+  if (aLayersToRecycle->empty()) {
+    layer = mNativeLayerRoot->CreateLayer();
+    mNativeLayerRoot->AppendLayer(layer);
+  } else {
+    layer = aLayersToRecycle->front();
+    aLayersToRecycle->pop_front();
+  }
+  IntRect oldRect = layer->GetRect();
+  if (!aRect.IsEqualInterior(oldRect)) {
+    aWindowInvalidRegion->OrWith(oldRect);
+    aWindowInvalidRegion->OrWith(aRect);
+  }
+  layer->SetRect(aRect);
+  layer->SetOpaqueRegion(aOpaque ? aRect - aRect.TopLeft() : IntRect());
+  mNativeLayers.push_back(layer);
+}
+
 // Used to clear the 'mLayerComposited' flag at the beginning of each Render().
 static void ClearLayerFlags(Layer* aLayer) {
   ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
@@ -1051,20 +1081,37 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     Diagnostics::Record record;
 
     if (usingNativeLayers) {
-      mNativeLayerForEntireWindow->SetRect(mRenderBounds);
+      // Update the placement of our native layers, so that transparent and
+      // opaque parts of the window are covered by different layers and we can
+      // update those parts separately.
+      IntRegion opaqueRegion;
 #ifdef XP_MACOSX
-      IntRegion opaqueRegion =
+      opaqueRegion =
           mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion();
-      opaqueRegion.AndWith(mRenderBounds);
-      mNativeLayerForEntireWindow->SetOpaqueRegion(
-          opaqueRegion.MovedBy(-mRenderBounds.TopLeft()));
 #endif
+      opaqueRegion.AndWith(mRenderBounds);
 
-      do {
+      // Limit the complexity of these regions. Usually, opaqueRegion should be
+      // only one or two rects, so this SimplifyInward call will not change the
+      // region if everything looks as expected.
+      opaqueRegion.SimplifyInward(4);
+
+      IntRegion transparentRegion;
+      transparentRegion.Sub(mRenderBounds, opaqueRegion);
+      std::deque<RefPtr<NativeLayer>> layersToRecycle =
+          std::move(mNativeLayers);
+      IntRegion invalidRegion = aInvalidRegion;
+      PlaceNativeLayers(opaqueRegion, true, &layersToRecycle, &invalidRegion);
+      PlaceNativeLayers(transparentRegion, false, &layersToRecycle,
+                        &invalidRegion);
+      for (const auto& unusedLayer : layersToRecycle) {
+        mNativeLayerRoot->RemoveLayer(unusedLayer);
+      }
+
+      for (const auto& nativeLayer : mNativeLayers) {
         Maybe<IntRect> maybeLayerRect =
             mCompositor->BeginRenderingToNativeLayer(
-                aInvalidRegion, rootLayerClip, aOpaqueRegion,
-                mNativeLayerForEntireWindow);
+                invalidRegion, rootLayerClip, aOpaqueRegion, nativeLayer);
         if (!maybeLayerRect) {
           continue;
         }
@@ -1075,7 +1122,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
           RenderOnce(*maybeLayerRect);
         }
         mCompositor->EndRenderingToNativeLayer();
-      } while (0);
+      }
     } else {
       RenderOnce(clipRect);
     }
