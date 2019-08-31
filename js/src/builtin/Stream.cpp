@@ -13,7 +13,7 @@
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::MakeSizeAlgorithmFromSizeFunction, js::PromiseCall, js::PromiseRejectedWithPendingError, js::ReturnPromiseRejectedWithPendingError, js::ValidateAndNormalizeHighWaterMark
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
-#include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::CreateReadableStreamDefaultReader, js::ReadableStreamReaderGeneric{Cancel,Initialize,Release}, js::ReadableStreamDefaultReaderRead
+#include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::CreateReadableStreamDefaultReader, js::ReadableStreamReaderGeneric{Cancel,Initialize,Release}, js::ReadableStreamDefaultReaderRead, js::ReadableStream{Cancel,CreateReadResult}
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/PropertySpec.h"
@@ -21,6 +21,7 @@
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
+#include "builtin/streams/ReadableStreamReader-inl.h"  // js::Unwrap{ReaderFromStream{,NoThrow},StreamFromReader}
 #include "vm/Compartment-inl.h"
 #include "vm/List-inl.h"  // js::ListObject, js::StoreNewListInFixedSlot
 #include "vm/NativeObject-inl.h"
@@ -47,49 +48,6 @@ JS::ReadableStreamMode ReadableStream::mode() const {
   return controller->as<ReadableByteStreamController>().hasExternalSource()
              ? JS::ReadableStreamMode::ExternalSource
              : JS::ReadableStreamMode::Byte;
-}
-
-/**
- * Returns the stream associated with the given reader.
- */
-static MOZ_MUST_USE ReadableStream* UnwrapStreamFromReader(
-    JSContext* cx, Handle<ReadableStreamReader*> reader) {
-  MOZ_ASSERT(reader->hasStream());
-  return UnwrapInternalSlot<ReadableStream>(cx, reader,
-                                            ReadableStreamReader::Slot_Stream);
-}
-
-/**
- * Returns the reader associated with the given stream.
- *
- * Must only be called on ReadableStreams that already have a reader
- * associated with them.
- *
- * If the reader is a wrapper, it will be unwrapped, so the result might not be
- * an object from the currently active compartment.
- */
-static MOZ_MUST_USE ReadableStreamReader* UnwrapReaderFromStream(
-    JSContext* cx, Handle<ReadableStream*> stream) {
-  return UnwrapInternalSlot<ReadableStreamReader>(cx, stream,
-                                                  ReadableStream::Slot_Reader);
-}
-
-static MOZ_MUST_USE ReadableStreamReader* UnwrapReaderFromStreamNoThrow(
-    ReadableStream* stream) {
-  JSObject* readerObj =
-      &stream->getFixedSlot(ReadableStream::Slot_Reader).toObject();
-  if (IsProxy(readerObj)) {
-    if (JS_IsDeadWrapper(readerObj)) {
-      return nullptr;
-    }
-
-    readerObj = readerObj->maybeUnwrapAs<ReadableStreamReader>();
-    if (!readerObj) {
-      return nullptr;
-    }
-  }
-
-  return &readerObj->as<ReadableStreamReader>();
 }
 
 constexpr size_t StreamHandlerFunctionSlot_Target = 0;
@@ -548,9 +506,6 @@ static bool ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static MOZ_MUST_USE JSObject* ReadableStreamCancel(
-    JSContext* cx, Handle<ReadableStream*> unwrappedStream, HandleValue reason);
-
 /**
  * Streams spec, 3.2.5.2. cancel ( reason )
  */
@@ -576,7 +531,7 @@ static MOZ_MUST_USE bool ReadableStream_cancel(JSContext* cx, unsigned argc,
 
   // Step 3: Return ! ReadableStreamCancel(this, reason).
   RootedObject cancelPromise(
-      cx, ::ReadableStreamCancel(cx, unwrappedStream, args.get(0)));
+      cx, js::ReadableStreamCancel(cx, unwrappedStream, args.get(0)));
   if (!cancelPromise) {
     return false;
   }
@@ -1091,7 +1046,7 @@ static MOZ_MUST_USE JSObject* ReadableStreamTee_Cancel(
     // In our implementation, this can fail with OOM. The best course then
     // is to reject cancelPromise with an OOM error.
     RootedObject cancelResult(
-        cx, ::ReadableStreamCancel(cx, unwrappedStream, compositeReasonVal));
+        cx, js::ReadableStreamCancel(cx, unwrappedStream, compositeReasonVal));
     {
       Rooted<PromiseObject*> cancelPromise(cx,
                                            unwrappedTeeState->cancelPromise());
@@ -1333,7 +1288,7 @@ MOZ_MUST_USE bool ReadableStreamCloseInternal(
 /**
  * Streams spec, 3.5.3. ReadableStreamCancel ( stream, reason )
  */
-static MOZ_MUST_USE JSObject* ReadableStreamCancel(
+MOZ_MUST_USE JSObject* js::ReadableStreamCancel(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream,
     HandleValue reason) {
   AssertSameCompartment(cx, reason);
@@ -1385,10 +1340,6 @@ static MOZ_MUST_USE JSObject* ReadableStreamCancel(
                                      nullptr);
 }
 
-static MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
-    JSContext* cx, HandleValue value, bool done,
-    ForAuthorCodeBool forAuthorCode);
-
 /**
  * Streams spec, 3.5.4. ReadableStreamClose ( stream )
  */
@@ -1432,8 +1383,8 @@ MOZ_MUST_USE bool ReadableStreamCloseInternal(
         return false;
       }
 
-      resultObj = ReadableStreamCreateReadResult(cx, UndefinedHandleValue, true,
-                                                 forAuthorCode);
+      resultObj = js::ReadableStreamCreateReadResult(cx, UndefinedHandleValue,
+                                                     true, forAuthorCode);
       if (!resultObj) {
         return false;
       }
@@ -1471,7 +1422,7 @@ MOZ_MUST_USE bool ReadableStreamCloseInternal(
  * Streams spec, 3.5.5. ReadableStreamCreateReadResult ( value, done,
  *                                                       forAuthorCode )
  */
-static MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
+MOZ_MUST_USE JSObject* js::ReadableStreamCreateReadResult(
     JSContext* cx, HandleValue value, bool done,
     ForAuthorCodeBool forAuthorCode) {
   // Step 1: Let prototype be null.
@@ -1699,247 +1650,6 @@ static MOZ_MUST_USE bool ReadableStreamHasDefaultReader(
 /*** 3.7. Class ReadableStreamBYOBReader ************************************/
 
 // Not implemented.
-
-/*** 3.8. Readable stream reader abstract operations ************************/
-
-// Streams spec, 3.8.1. IsReadableStreamDefaultReader ( x )
-// Implemented via is<ReadableStreamDefaultReader>()
-
-// Streams spec, 3.8.2. IsReadableStreamBYOBReader ( x )
-// Implemented via is<ReadableStreamBYOBReader>()
-
-/**
- * Streams spec, 3.8.3. ReadableStreamReaderGenericCancel ( reader, reason )
- */
-MOZ_MUST_USE JSObject* js::ReadableStreamReaderGenericCancel(
-    JSContext* cx, Handle<ReadableStreamReader*> unwrappedReader,
-    HandleValue reason) {
-  // Step 1: Let stream be reader.[[ownerReadableStream]].
-  // Step 2: Assert: stream is not undefined (implicit).
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, UnwrapStreamFromReader(cx, unwrappedReader));
-  if (!unwrappedStream) {
-    return nullptr;
-  }
-
-  // Step 3: Return ! ReadableStreamCancel(stream, reason).
-  return ::ReadableStreamCancel(cx, unwrappedStream, reason);
-}
-
-/**
- * Streams spec, 3.8.4.
- *      ReadableStreamReaderGenericInitialize ( reader, stream )
- */
-MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
-    JSContext* cx, Handle<ReadableStreamReader*> reader,
-    Handle<ReadableStream*> unwrappedStream, ForAuthorCodeBool forAuthorCode) {
-  cx->check(reader);
-
-  // Step 1: Set reader.[[ownerReadableStream]] to stream.
-  {
-    RootedObject readerCompartmentStream(cx, unwrappedStream);
-    if (!cx->compartment()->wrap(cx, &readerCompartmentStream)) {
-      return false;
-    }
-    reader->setStream(readerCompartmentStream);
-  }
-
-  // Step 2 is moved to the end.
-
-  // Step 3: If stream.[[state]] is "readable",
-  RootedObject promise(cx);
-  if (unwrappedStream->readable()) {
-    // Step a: Set reader.[[closedPromise]] to a new promise.
-    promise = PromiseObject::createSkippingExecutor(cx);
-  } else if (unwrappedStream->closed()) {
-    // Step 4: Otherwise, if stream.[[state]] is "closed",
-    // Step a: Set reader.[[closedPromise]] to a new promise resolved with
-    //         undefined.
-    promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
-  } else {
-    // Step 5: Otherwise,
-    // Step a: Assert: stream.[[state]] is "errored".
-    MOZ_ASSERT(unwrappedStream->errored());
-
-    // Step b: Set reader.[[closedPromise]] to a promise rejected with
-    //         stream.[[storedError]].
-    RootedValue storedError(cx, unwrappedStream->storedError());
-    if (!cx->compartment()->wrap(cx, &storedError)) {
-      return false;
-    }
-    promise = PromiseObject::unforgeableReject(cx, storedError);
-    if (!promise) {
-      return false;
-    }
-
-    // Step c. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-    promise->as<PromiseObject>().setHandled();
-    cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
-  }
-
-  if (!promise) {
-    return false;
-  }
-
-  reader->setClosedPromise(promise);
-
-  // Extra step not in the standard. See the comment on
-  // `ReadableStreamReader::forAuthorCode()`.
-  reader->setForAuthorCode(forAuthorCode);
-
-  // Step 4 of caller 3.6.3. new ReadableStreamDefaultReader(stream):
-  // Step 5 of caller 3.7.3. new ReadableStreamBYOBReader(stream):
-  //     Set this.[[read{Into}Requests]] to a new empty List.
-  if (!StoreNewListInFixedSlot(cx, reader,
-                               ReadableStreamReader::Slot_Requests)) {
-    return false;
-  }
-
-  // Step 2: Set stream.[[reader]] to reader.
-  // Doing this last prevents a partially-initialized reader from being
-  // attached to the stream (and possibly left there on OOM).
-  {
-    AutoRealm ar(cx, unwrappedStream);
-    RootedObject streamCompartmentReader(cx, reader);
-    if (!cx->compartment()->wrap(cx, &streamCompartmentReader)) {
-      return false;
-    }
-    unwrappedStream->setReader(streamCompartmentReader);
-  }
-
-  return true;
-}
-
-/**
- * Streams spec, 3.8.5. ReadableStreamReaderGenericRelease ( reader )
- */
-MOZ_MUST_USE bool js::ReadableStreamReaderGenericRelease(
-    JSContext* cx, Handle<ReadableStreamReader*> unwrappedReader) {
-  // Step 1: Assert: reader.[[ownerReadableStream]] is not undefined.
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, UnwrapStreamFromReader(cx, unwrappedReader));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  // Step 2: Assert: reader.[[ownerReadableStream]].[[reader]] is reader.
-#ifdef DEBUG
-  // The assertion is weakened a bit to allow for nuked wrappers.
-  ReadableStreamReader* unwrappedReader2 =
-      UnwrapReaderFromStreamNoThrow(unwrappedStream);
-  MOZ_ASSERT_IF(unwrappedReader2, unwrappedReader2 == unwrappedReader);
-#endif
-
-  // Create an exception to reject promises with below. We don't have a
-  // clean way to do this, unfortunately.
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_READABLESTREAMREADER_RELEASED);
-  RootedValue exn(cx);
-  if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
-    // Uncatchable error. Die immediately without resolving
-    // reader.[[closedPromise]].
-    return false;
-  }
-
-  // Step 3: If reader.[[ownerReadableStream]].[[state]] is "readable", reject
-  //         reader.[[closedPromise]] with a TypeError exception.
-  Rooted<PromiseObject*> unwrappedClosedPromise(cx);
-  if (unwrappedStream->readable()) {
-    unwrappedClosedPromise = UnwrapInternalSlot<PromiseObject>(
-        cx, unwrappedReader, ReadableStreamReader::Slot_ClosedPromise);
-    if (!unwrappedClosedPromise) {
-      return false;
-    }
-
-    AutoRealm ar(cx, unwrappedClosedPromise);
-    if (!cx->compartment()->wrap(cx, &exn)) {
-      return false;
-    }
-    if (!PromiseObject::reject(cx, unwrappedClosedPromise, exn)) {
-      return false;
-    }
-  } else {
-    // Step 4: Otherwise, set reader.[[closedPromise]] to a new promise
-    //         rejected with a TypeError exception.
-    RootedObject closedPromise(cx, PromiseObject::unforgeableReject(cx, exn));
-    if (!closedPromise) {
-      return false;
-    }
-    unwrappedClosedPromise = &closedPromise->as<PromiseObject>();
-
-    AutoRealm ar(cx, unwrappedReader);
-    if (!cx->compartment()->wrap(cx, &closedPromise)) {
-      return false;
-    }
-    unwrappedReader->setClosedPromise(closedPromise);
-  }
-
-  // Step 5: Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-  unwrappedClosedPromise->setHandled();
-  cx->runtime()->removeUnhandledRejectedPromise(cx, unwrappedClosedPromise);
-
-  // Step 6: Set reader.[[ownerReadableStream]].[[reader]] to undefined.
-  unwrappedStream->clearReader();
-
-  // Step 7: Set reader.[[ownerReadableStream]] to undefined.
-  unwrappedReader->clearStream();
-
-  return true;
-}
-
-static MOZ_MUST_USE JSObject* ReadableStreamControllerPullSteps(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedController);
-
-/**
- * Streams spec, 3.8.7.
- *      ReadableStreamDefaultReaderRead ( reader [, forAuthorCode ] )
- */
-MOZ_MUST_USE JSObject* js::ReadableStreamDefaultReaderRead(
-    JSContext* cx, Handle<ReadableStreamDefaultReader*> unwrappedReader) {
-  // Step 1: If forAuthorCode was not passed, set it to false (implicit).
-
-  // Step 2: Let stream be reader.[[ownerReadableStream]].
-  // Step 3: Assert: stream is not undefined.
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, UnwrapStreamFromReader(cx, unwrappedReader));
-  if (!unwrappedStream) {
-    return nullptr;
-  }
-
-  // Step 4: Set stream.[[disturbed]] to true.
-  unwrappedStream->setDisturbed();
-
-  // Step 5: If stream.[[state]] is "closed", return a promise resolved with
-  //         ! ReadableStreamCreateReadResult(undefined, true, forAuthorCode).
-  if (unwrappedStream->closed()) {
-    RootedObject iterResult(
-        cx, ReadableStreamCreateReadResult(cx, UndefinedHandleValue, true,
-                                           unwrappedReader->forAuthorCode()));
-    if (!iterResult) {
-      return nullptr;
-    }
-    RootedValue iterResultVal(cx, ObjectValue(*iterResult));
-    return PromiseObject::unforgeableResolve(cx, iterResultVal);
-  }
-
-  // Step 6: If stream.[[state]] is "errored", return a promise rejected
-  //         with stream.[[storedError]].
-  if (unwrappedStream->errored()) {
-    RootedValue storedError(cx, unwrappedStream->storedError());
-    if (!cx->compartment()->wrap(cx, &storedError)) {
-      return nullptr;
-    }
-    return PromiseObject::unforgeableReject(cx, storedError);
-  }
-
-  // Step 7: Assert: stream.[[state]] is "readable".
-  MOZ_ASSERT(unwrappedStream->readable());
-
-  // Step 8: Return ! stream.[[readableStreamController]].[[PullSteps]]().
-  Rooted<ReadableStreamController*> unwrappedController(
-      cx, unwrappedStream->controller());
-  return ReadableStreamControllerPullSteps(cx, unwrappedController);
-}
 
 /*** 3.9. Class ReadableStreamDefaultController *****************************/
 
@@ -3516,7 +3226,7 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
  * and
  * Streams spec, 3.11.5.2. [[PullSteps]] ( forAuthorCode )
  */
-static MOZ_MUST_USE JSObject* ReadableStreamControllerPullSteps(
+MOZ_MUST_USE JSObject* js::ReadableStreamControllerPullSteps(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
   if (unwrappedController->is<ReadableStreamDefaultController>()) {
     Rooted<ReadableStreamDefaultController*> unwrappedDefaultController(
@@ -3842,7 +3552,7 @@ JS_PUBLIC_API JSObject* JS::ReadableStreamCancel(JSContext* cx,
     return nullptr;
   }
 
-  return ::ReadableStreamCancel(cx, unwrappedStream, reason);
+  return js::ReadableStreamCancel(cx, unwrappedStream, reason);
 }
 
 JS_PUBLIC_API bool JS::ReadableStreamGetMode(JSContext* cx,

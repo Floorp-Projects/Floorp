@@ -366,6 +366,9 @@ inline void ReadableStream::setController(
   setFixedSlot(Slot_Controller, JS::ObjectValue(*controller));
 }
 
+extern MOZ_MUST_USE JSObject* ReadableStreamControllerPullSteps(
+    JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController);
+
 }  // namespace js
 
 #endif /* builtin_Stream_h */
