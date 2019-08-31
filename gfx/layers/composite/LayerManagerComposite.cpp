@@ -872,9 +872,18 @@ void LayerManagerComposite::PlaceNativeLayers(
     const IntRegion& aRegion, bool aOpaque,
     std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
     IntRegion* aWindowInvalidRegion) {
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    PlaceNativeLayer(iter.Get(), aOpaque, aLayersToRecycle,
-                     aWindowInvalidRegion);
+  IntSize tileSize(StaticPrefs::layers_compositing_tiles_width(),
+                   StaticPrefs::layers_compositing_tiles_height());
+  IntRect regionBounds = aRegion.GetBounds();
+  for (int32_t y = 0; y < regionBounds.YMost(); y += tileSize.height) {
+    for (int32_t x = 0; x < regionBounds.XMost(); x += tileSize.width) {
+      IntRegion tileRegion;
+      tileRegion.And(aRegion, IntRect(IntPoint(x, y), tileSize));
+      for (auto iter = tileRegion.RectIter(); !iter.Done(); iter.Next()) {
+        PlaceNativeLayer(iter.Get(), aOpaque, aLayersToRecycle,
+                         aWindowInvalidRegion);
+      }
+    }
   }
 }
 

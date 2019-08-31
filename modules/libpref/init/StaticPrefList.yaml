@@ -3924,6 +3924,16 @@
   value: false
   mirror: always
 
+- name: layers.compositing-tiles.width
+  type: RelaxedAtomicInt32
+  value: 1024
+  mirror: always
+
+- name: layers.compositing-tiles.height
+  type: RelaxedAtomicInt32
+  value: 1024
+  mirror: always
+
 # 0 is "no change" for contrast, positive values increase it, negative values
 # decrease it until we hit mid gray at -1 contrast, after that it gets weird.
 - name: layers.effect.contrast
