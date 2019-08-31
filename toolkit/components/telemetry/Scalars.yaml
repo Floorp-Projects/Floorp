@@ -4586,6 +4586,22 @@ blocklist:
     record_in_processes:
       - main
 
+firstStartup:
+  statusCode:
+    bug_numbers:
+      - 1515712
+    description: >-
+      Status of the FirstRun service, which runs post-install/early-startup in Firefox.
+    expires: "75"
+    kind: uint
+    notification_emails:
+      - rhelmer@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
