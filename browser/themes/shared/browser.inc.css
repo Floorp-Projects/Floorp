@@ -238,6 +238,11 @@
   margin-inline-end: 4px;
 }
 
+#contextual-feature-recommendation-notification .cfr-doorhanger-large-icon {
+  width: 64px;
+  height: 64px;
+}
+
 #contextual-feature-recommendation-notification .popup-notification-body-container {
   padding-bottom: 0;
 }
@@ -257,10 +262,33 @@
   font-size: 13px;
 }
 
-#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] .popup-notification-body-container,
-#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] #cfr-notification-footer-addon-info,
-#contextual-feature-recommendation-notification[data-notification-category="cfrAddons"] #cfr-notification-feature-steps {
+#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] .popup-notification-body-container,
+#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-addon-info,
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-feature-steps,
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-footer-container {
   display: none;
+}
+
+/*
+ * `icon_and_message` CFR doorhanger with: icon, title and subtitle.
+ * No panel header is shown
+ */
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] #cfr-notification-header {
+  display: none;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-description {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] popupnotificationcontent {
+  display: block; /* This forces the subtitle content to wrap */
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-body-container {
+  padding-bottom: 20px;
 }
 
 #cfr-notification-feature-steps {
@@ -284,7 +312,7 @@
   inset-inline-start: 0;
 }
 
-#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] #cfr-notification-footer-text {
+#contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-text {
   font-size: 14px;
   font-weight: 600;
 }
@@ -370,7 +398,7 @@
   }
 }
 
-#contextual-feature-recommendation-notification[data-notification-category="cfrAddons"] #cfr-notification-footer-pintab-animation-container {
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-footer-pintab-animation-container {
   display: none;
 }
 

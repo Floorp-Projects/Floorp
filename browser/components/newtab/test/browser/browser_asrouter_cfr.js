@@ -8,8 +8,14 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-const createDummyRecommendation = ({ action, category, heading_text }) => ({
+const createDummyRecommendation = ({
+  action,
+  category,
+  heading_text,
+  layout,
+}) => ({
   content: {
+    layout: layout || "addon_recommendation",
     category,
     notification_text: "Mochitest",
     heading_text: heading_text || "Mochitest",
@@ -63,9 +69,10 @@ const createDummyRecommendation = ({ action, category, heading_text }) => ({
 
 function checkCFRFeaturesElements(notification) {
   Assert.ok(notification.hidden === false, "Panel should be visible");
-  Assert.ok(
-    notification.getAttribute("data-notification-category") === "cfrFeatures",
-    "Panel have corret data attribute"
+  Assert.equal(
+    notification.getAttribute("data-notification-category"),
+    "message_and_animation",
+    "Panel have correct data attribute"
   );
   Assert.ok(
     notification.querySelector(
@@ -81,9 +88,10 @@ function checkCFRFeaturesElements(notification) {
 
 function checkCFRAddonsElements(notification) {
   Assert.ok(notification.hidden === false, "Panel should be visible");
-  Assert.ok(
-    notification.getAttribute("data-notification-category") === "cfrAddons",
-    "Panel have corret data attribute"
+  Assert.equal(
+    notification.getAttribute("data-notification-category"),
+    "addon_recommendation",
+    "Panel have correct data attribute"
   );
   Assert.ok(
     notification.querySelector("#cfr-notification-footer-text-and-addon-info"),
@@ -115,13 +123,19 @@ function clearNotifications() {
 function trigger_cfr_panel(
   browser,
   trigger,
-  { action = { type: "FOO" }, heading_text, category = "cfrAddons" } = {}
+  {
+    action = { type: "FOO" },
+    heading_text,
+    category = "cfrAddons",
+    layout,
+  } = {}
 ) {
   // a fake action type will result in the action being ignored
   const recommendation = createDummyRecommendation({
     action,
     category,
     heading_text,
+    layout,
   });
   if (category !== "cfrAddons") {
     delete recommendation.content.addon;
@@ -340,6 +354,7 @@ add_task(async function test_cfr_pin_tab_notification_show() {
   const response = await trigger_cfr_panel(browser, "example.com", {
     action: { type: "PIN_CURRENT_TAB" },
     category: "cfrFeatures",
+    layout: "message_and_animation",
   });
   Assert.ok(
     response,
@@ -395,6 +410,7 @@ add_task(async function test_cfr_features_and_addon_show() {
   let response = await trigger_cfr_panel(browser, "example.com", {
     action: { type: "PIN_CURRENT_TAB" },
     category: "cfrFeatures",
+    layout: "message_and_animation",
   });
   Assert.ok(
     response,
@@ -522,7 +538,7 @@ add_task(async function test_cfr_addon_and_features_show() {
   // Trigger Addon CFR
   response = await trigger_cfr_panel(browser, "example.com", {
     action: { type: "PIN_CURRENT_TAB" },
-    category: "cfrFeatures",
+    category: "cfrAddons",
   });
   Assert.ok(
     response,
@@ -542,7 +558,7 @@ add_task(async function test_cfr_addon_and_features_show() {
       .hidden === false,
     "Panel should be visible"
   );
-  checkCFRFeaturesElements(
+  checkCFRAddonsElements(
     document.getElementById("contextual-feature-recommendation-notification")
   );
 
