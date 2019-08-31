@@ -12,6 +12,8 @@
 
 namespace mozilla {
 
+LazyLogModule sPEMLog("PlatformEncoderModule");
+
 PEMFactory::PEMFactory() {
 #ifdef MOZ_APPLEMEDIA
   RefPtr<PlatformEncoderModule> m(new AppleEncoderModule());
