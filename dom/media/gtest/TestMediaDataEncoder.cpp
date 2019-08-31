@@ -260,29 +260,20 @@ static MediaDataEncoder::EncodedData Encode(
   }
 
   size_t pending = 0;
-  media::Await(
-      GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Drain(),
-      [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
-        pending = encoded.Length();
-        output.AppendElements(std::move(encoded));
-        succeeded = true;
-      },
-      [&succeeded](MediaResult r) { succeeded = false; });
-  EXPECT_TRUE(succeeded);
-  if (!succeeded) {
-    return output;
-  }
-
-  if (pending > 0) {
+  do {
     media::Await(
         GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Drain(),
-        [&succeeded](MediaDataEncoder::EncodedData encoded) {
-          EXPECT_EQ(encoded.Length(), 0UL);
+        [&pending, &output, &succeeded](MediaDataEncoder::EncodedData encoded) {
+          pending = encoded.Length();
+          output.AppendElements(std::move(encoded));
           succeeded = true;
         },
         [&succeeded](MediaResult r) { succeeded = false; });
     EXPECT_TRUE(succeeded);
-  }
+    if (!succeeded) {
+      return output;
+    }
+  } while (pending > 0);
 
   return output;
 }
