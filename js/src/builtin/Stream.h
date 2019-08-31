@@ -390,11 +390,6 @@ extern MOZ_MUST_USE bool ReadableByteStreamControllerClose(
     JSContext* cx,
     JS::Handle<ReadableByteStreamController*> unwrappedController);
 
-extern MOZ_MUST_USE bool ReadableStreamTee(
-    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
-    bool cloneForBranch2, JS::MutableHandle<ReadableStream*> branch1Stream,
-    JS::MutableHandle<ReadableStream*> branch2Stream);
-
 extern uint32_t ReadableStreamGetNumReadRequests(ReadableStream* stream);
 
 extern MOZ_MUST_USE bool ReadableStreamFulfillReadOrReadIntoRequest(
