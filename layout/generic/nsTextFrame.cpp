@@ -5677,6 +5677,7 @@ struct nsTextFrame::PaintDecorationLineParams
   const nscolor* overrideColor = nullptr;
   nscolor color = NS_RGBA(0, 0, 0, 0);
   gfxFloat icoordInFrame = 0.0f;
+  gfxFloat baselineOffset = 0.0f;
   DecorationType decorationType = DecorationType::Normal;
   DrawPathCallbacks* callbacks = nullptr;
 };
@@ -5689,6 +5690,7 @@ void nsTextFrame::PaintDecorationLine(
   params.pt = aParams.pt;
   params.color = aParams.overrideColor ? *aParams.overrideColor : aParams.color;
   params.icoordInFrame = Float(aParams.icoordInFrame);
+  params.baselineOffset = Float(aParams.baselineOffset);
   if (aParams.callbacks) {
     Rect path = nsCSSRendering::DecorationLineToPath(params);
     if (aParams.decorationType == DecorationType::Normal) {
@@ -7031,6 +7033,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
     params.color = dec.mColor;
     params.defaultLineThickness = params.lineSize.height;
     params.offset = metrics.*lineOffset;
+    params.baselineOffset = dec.mBaselineOffset / app;
 
     bool swapUnderline = verticalDec && IsUnderlineRight(this);
     if (swapUnderline ? lineType == StyleTextDecorationLine_OVERLINE
