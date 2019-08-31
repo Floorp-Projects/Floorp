@@ -257,6 +257,13 @@ nsNotifyAddrListener::nextCoalesceWaitTime() {
   // check if coalescing period should continue
   double period = (TimeStamp::Now() - mChangeTime).ToMilliseconds();
   if (period >= kNetworkChangeCoalescingPeriod) {
+    if (!mNetworkChangeTime.IsNull()) {
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
+          mNetworkChangeTime);
+    }
+    mNetworkChangeTime = TimeStamp::Now();
+
     SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
     mCoalescingActive = false;
     return INFINITE;  // return default

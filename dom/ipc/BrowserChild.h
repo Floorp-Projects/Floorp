@@ -546,7 +546,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool AsyncPanZoomEnabled() const;
 
   ScreenIntSize GetInnerSize();
-  CSSIntSize GetUnscaledInnerSize() { return RoundedToInt(mUnscaledInnerSize); }
+  CSSSize GetUnscaledInnerSize() { return mUnscaledInnerSize; }
 
   Maybe<LayoutDeviceIntRect> GetVisibleRect() const;
 

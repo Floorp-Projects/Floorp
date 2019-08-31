@@ -329,7 +329,9 @@ class WasmMemoryObject : public NativeObject {
   uint32_t volatileMemoryLength() const;
 
   bool isShared() const;
+  bool isHuge() const;
   bool movingGrowable() const;
+  uint32_t boundsCheckLimit() const;
 
   // If isShared() is true then obtain the underlying buffer object.
   SharedArrayRawBuffer* sharedArrayRawBuffer() const;

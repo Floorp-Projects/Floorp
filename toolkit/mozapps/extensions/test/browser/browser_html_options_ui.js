@@ -381,7 +381,7 @@ add_task(async function testUpgradeTemporary() {
               browser.test.sendMessage("version", version);
             }
           });
-          browser.test.sendMessage("options-loaded");
+          window.onload = () => browser.test.sendMessage("options-loaded");
         },
       },
       useAddonManager: "temporary",

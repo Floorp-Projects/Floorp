@@ -2035,6 +2035,11 @@ BrowserGlue.prototype = {
       }
     }, 3000);
 
+    // Add breach alerts pref observer reasonably early so the pref flip works
+    Services.tm.idleDispatchToMainThread(() => {
+      this._addBreachAlertsPrefObserver();
+    });
+
     // It's important that SafeBrowsing is initialized reasonably
     // early, so we use a maximum timeout for it.
     Services.tm.idleDispatchToMainThread(() => {
@@ -2198,6 +2203,20 @@ BrowserGlue.prototype = {
         }
       );
     }
+  },
+
+  _addBreachAlertsPrefObserver() {
+    const BREACH_ALERTS_PREF = "signon.management.page.breach-alerts.enabled";
+    const clearVulnerablePasswordsIfBreachAlertsDisabled = async function() {
+      if (!Services.prefs.getBoolPref(BREACH_ALERTS_PREF)) {
+        await LoginBreaches.clearAllPotentiallyVulnerablePasswords();
+      }
+    };
+    clearVulnerablePasswordsIfBreachAlertsDisabled();
+    Services.prefs.addObserver(
+      BREACH_ALERTS_PREF,
+      clearVulnerablePasswordsIfBreachAlertsDisabled
+    );
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

@@ -11,21 +11,27 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { threadFront, target } = dbg;
-  const console = await getDebuggerSplitConsole(dbg);
-  const hud = console.hud;
-
-  const bp1 = await setBreakpoint(threadFront, "doc_rr_basic.html", 21, {
+  await selectSource(dbg, "doc_rr_basic.html");
+  await addBreakpoint(dbg, "doc_rr_basic.html", 21, undefined, {
     logValue: `"Logpoint Number " + number`,
   });
-  const bp2 = await setBreakpoint(threadFront, "doc_rr_basic.html", 6, {
+  await addBreakpoint(dbg, "doc_rr_basic.html", 6, undefined, {
     logValue: `"Logpoint Beginning"`,
   });
-  const bp3 = await setBreakpoint(threadFront, "doc_rr_basic.html", 8, {
+  await addBreakpoint(dbg, "doc_rr_basic.html", 8, undefined, {
     logValue: `"Logpoint Ending"`,
   });
 
+  const console = await getDebuggerSplitConsole(dbg);
+  const hud = console.hud;
+
   const messages = await waitForMessageCount(hud, "Logpoint", 12);
+
+  ok(
+    !findMessages(hud, "Loading"),
+    "Loading messages should have been removed"
+  );
+
   ok(messages[0].textContent.includes("Beginning"));
   for (let i = 1; i <= 10; i++) {
     ok(messages[i].textContent.includes("Number " + i));
@@ -33,13 +39,9 @@ add_task(async function() {
   ok(messages[11].textContent.includes("Ending"));
 
   await warpToMessage(hud, dbg, "Number 5");
-  await threadFront.interrupt();
 
-  await checkEvaluateInTopFrame(target, "number", 5);
-  await reverseStepOverToLine(threadFront, 20);
+  await checkEvaluateInTopFrame(dbg, "number", 5);
+  await reverseStepOverToLine(dbg, 20);
 
-  await threadFront.removeBreakpoint(bp1);
-  await threadFront.removeBreakpoint(bp2);
-  await threadFront.removeBreakpoint(bp3);
   await shutdownDebugger(dbg);
 });
