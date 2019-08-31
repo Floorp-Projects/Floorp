@@ -286,17 +286,12 @@ extern MOZ_MUST_USE bool ReadableByteStreamControllerClose(
     JSContext* cx,
     JS::Handle<ReadableByteStreamController*> unwrappedController);
 
-extern uint32_t ReadableStreamGetNumReadRequests(ReadableStream* stream);
-
-extern MOZ_MUST_USE bool ReadableStreamFulfillReadOrReadIntoRequest(
-    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
-    JS::Handle<JS::Value> chunk, bool done);
-
-extern MOZ_MUST_USE bool ReadableStreamHasDefaultReader(
-    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream, bool* result);
-
 extern MOZ_MUST_USE JSObject* ReadableStreamControllerPullSteps(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController);
+
+extern MOZ_MUST_USE JSObject* ReadableStreamControllerCancelSteps(
+    JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController,
+    JS::Handle<JS::Value> reason);
 
 }  // namespace js
 
