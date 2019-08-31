@@ -86,6 +86,13 @@ def js_quote(quote, s):
 os.path.relpath = _relpath
 
 
+def extend_condition(condition, value):
+    if condition:
+        condition += " || "
+    condition += "({})".format(value)
+    return condition
+
+
 class JitTest:
 
     VALGRIND_CMD = []
@@ -147,6 +154,7 @@ class JitTest:
         # Skip-if condition. We don't have a xulrunner, but we can ask the shell
         # directly.
         self.skip_if_cond = ''
+        self.skip_variant_if_cond = {}
 
         # Expected by the test runner. Always true for jit-tests.
         self.enable = True
@@ -171,11 +179,15 @@ class JitTest:
         t.is_module = self.is_module
         t.is_binast = self.is_binast
         t.skip_if_cond = self.skip_if_cond
+        t.skip_variant_if_cond = self.skip_variant_if_cond
         return t
 
     def copy_and_extend_jitflags(self, variant):
         t = self.copy()
         t.jitflags.extend(variant)
+        for flags in variant:
+            if flags in self.skip_variant_if_cond:
+                t.skip_if_cond = extend_condition(t.skip_if_cond, self.skip_variant_if_cond[flags])
         return t
 
     def copy_variants(self, variants):
@@ -273,10 +285,15 @@ class JitTest:
                     elif name == 'include':
                         test.other_includes.append(value)
                     elif name == 'skip-if':
-                        # Ensure that skip-ifs are composable
-                        if test.skip_if_cond:
-                            test.skip_if_cond += " || "
-                        test.skip_if_cond += "({})".format(value)
+                        test.skip_if_cond = extend_condition(test.skip_if_cond, value)
+                    elif name == 'skip-variant-if':
+                        try:
+                            [variant, condition] = value.split(',')
+                            test.skip_variant_if_cond[variant] = extend_condition(
+                                test.skip_if_cond,
+                                condition)
+                        except ValueError:
+                            print("warning: couldn't parse skip-variant-if")
                     else:
                         print('{}: warning: unrecognized |jit-test| attribute'
                               ' {}'.format(path, part))

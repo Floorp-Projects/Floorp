@@ -3726,10 +3726,11 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
     const Document& aDocument) {
   // RDM device size should reflect the simulated device resolution, and
   // be independent of any full zoom or resolution zoom applied to the
-  // content. To get this value, we get the unscaled browser child size.
+  // content. To get this value, we get the "unscaled" browser child size,
+  // and divide by the full zoom. "Unscaled" in this case means unscaled
+  // from device to screen but it has been affected (multipled) by the
+  // full zoom and we need to compensate for that.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  Maybe<CSSIntSize> deviceSize;
 
   // Bug 1576256: This does not work for cross-process subframes.
   const Document* topInProcessContentDoc =
@@ -3737,14 +3738,23 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
   if (topInProcessContentDoc && topInProcessContentDoc->InRDMPane()) {
     nsIDocShell* docShell = topInProcessContentDoc->GetDocShell();
     if (docShell) {
-      nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild();
-      if (child) {
-        BrowserChild* bc = static_cast<BrowserChild*>(child.get());
-        deviceSize = Some(bc->GetUnscaledInnerSize());
+      nsPresContext* presContext = docShell->GetPresContext();
+      if (presContext) {
+        nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild();
+        if (child) {
+          // We intentionally use GetFullZoom here instead of
+          // GetDeviceFullZoom, because the unscaledInnerSize is based
+          // on the full zoom and not the device full zoom (which is
+          // rounded to result in integer device pixels).
+          float zoom = presContext->GetFullZoom();
+          BrowserChild* bc = static_cast<BrowserChild*>(child.get());
+          CSSSize unscaledSize = bc->GetUnscaledInnerSize();
+          return Some(CSSIntSize(gfx::RoundedToInt(unscaledSize / zoom)));
+        }
       }
     }
   }
-  return deviceSize;
+  return Nothing();
 }
 
 float nsGlobalWindowOuter::GetMozInnerScreenXOuter(CallerType aCallerType) {

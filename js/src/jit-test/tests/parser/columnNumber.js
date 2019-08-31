@@ -2,10 +2,10 @@
 
 load(libdir + 'asserts.js');
 
-assertEq(evaluate("saveStack().column"), 10);
-assertEq(evaluate("saveStack().column", { columnNumber: 1729 }), 1739);
-assertEq(evaluate("\nsaveStack().column", { columnNumber: 1729 }), 10);
-assertEq(evaluate("saveStack().column", { columnNumber: "42" }), 52);
+assertEq(evaluate("saveStack().column"), 1);
+assertEq(evaluate("saveStack().column", { columnNumber: 1729 }), 1730);
+assertEq(evaluate("\nsaveStack().column", { columnNumber: 1729 }), 1);
+assertEq(evaluate("saveStack().column", { columnNumber: "42" }), 43);
 assertThrowsInstanceOf(() => evaluate("saveStack().column", { columnNumber: -10 }),
                        RangeError);
 assertThrowsInstanceOf(() => evaluate("saveStack().column", { columnNumber: Math.pow(2,30) }),
@@ -22,7 +22,7 @@ if (helperThreadCount() > 0) {
 
   print("offThreadCompileScript 3");
   offThreadCompileScript("saveStack().column", { columnNumber: 10000 });
-  assertEq(runOffThreadScript(), 10010);
+  assertEq(runOffThreadScript(), 10001);
 }
 
 // Check handling of columns near the limit of our ability to represent them.
@@ -30,7 +30,7 @@ if (helperThreadCount() > 0) {
 // it's probably not worth it to be thorough.)
 const maxColumn = Math.pow(2, 30) - 1;
 assertEq(evaluate("saveStack().column", { columnNumber: maxColumn }),
-         maxColumn + 1 + 9);
+         maxColumn + 1);
 
 // Check the 'silently zero' behavior when we reach the limit of the srcnotes
 // column encoding.

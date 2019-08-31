@@ -7,20 +7,15 @@
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const { threadFront } = dbg;
 
-  await threadFront.interrupt();
-  const bp1 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 19);
-  await resumeToLine(threadFront, 19);
-  await reverseStepOverToLine(threadFront, 18);
-  await stepInToLine(threadFront, 22);
-  const bp2 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 24);
-  await resumeToLine(threadFront, 24);
-  const bp3 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 22);
-  await rewindToLine(threadFront, 22);
+  await addBreakpoint(dbg, "doc_rr_continuous.html", 19);
+  await resumeToLine(dbg, 19);
+  await reverseStepOverToLine(dbg, 18);
+  await stepInToLine(dbg, 22);
+  await addBreakpoint(dbg, "doc_rr_continuous.html", 24);
+  await resumeToLine(dbg, 24);
+  await addBreakpoint(dbg, "doc_rr_continuous.html", 22);
+  await rewindToLine(dbg, 22);
 
-  await threadFront.removeBreakpoint(bp1);
-  await threadFront.removeBreakpoint(bp2);
-  await threadFront.removeBreakpoint(bp3);
   await shutdownDebugger(dbg);
 });

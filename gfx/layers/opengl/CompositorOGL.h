@@ -195,6 +195,8 @@ class CompositorOGL final : public Compositor {
 
   bool SupportsLayerGeometry() const override;
 
+  void NormalDrawingDone() override;
+
   void EndFrame() override;
 
   void WaitForGPU() override;
@@ -301,6 +303,8 @@ class CompositorOGL final : public Compositor {
 
   void InsertFrameDoneSync();
 
+  bool NeedToRecreateFullWindowRenderTarget() const;
+
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
@@ -328,7 +332,20 @@ class CompositorOGL final : public Compositor {
   /** Currently bound render target */
   RefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
 
-  CompositingRenderTargetOGL* mWindowRenderTarget;
+  // The 1x1 dummy render target that's the "current" render target between
+  // BeginFrameForNativeLayers and EndFrame but outside pairs of
+  // Begin/EndRenderingToNativeLayer. Created on demand.
+  RefPtr<CompositingRenderTarget> mNativeLayersReferenceRT;
+
+  // The render target that profiler screenshots / frame recording read from.
+  // This will be the actual window framebuffer when rendering to a window, and
+  // it will be mFullWindowRenderTarget when rendering to native layers.
+  RefPtr<CompositingRenderTargetOGL> mWindowRenderTarget;
+
+  // Non-null when using native layers and frame recording is requested.
+  // EndNormalDrawing() maintains a copy of the entire window contents in this
+  // render target, by copying from the native layer render targets.
+  RefPtr<CompositingRenderTargetOGL> mFullWindowRenderTarget;
 
   /**
    * VBO that has some basics in it for a textured quad, including vertex
@@ -359,6 +376,10 @@ class CompositorOGL final : public Compositor {
    */
   bool mFrameInProgress;
 
+  // Only true between BeginFromeForNativeLayers and EndFrame, and only if the
+  // full window render target needed to be recreated in the current frame.
+  bool mShouldInvalidateWindow = false;
+
   /*
    * Clear aRect on current render target.
    */
@@ -366,11 +387,28 @@ class CompositorOGL final : public Compositor {
 
   /* Start a new frame.
    */
+  Maybe<gfx::IntRect> BeginFrameForWindow(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds,
+      const nsIntRegion& aOpaqueRegion) override;
+
+  Maybe<gfx::IntRect> BeginFrameForTarget(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const gfx::IntRect& aRenderBounds, const nsIntRegion& aOpaqueRegion,
+      gfx::DrawTarget* aTarget, const gfx::IntRect& aTargetBounds) override;
+
+  void BeginFrameForNativeLayers() override;
+
+  Maybe<gfx::IntRect> BeginRenderingToNativeLayer(
+      const nsIntRegion& aInvalidRegion, const Maybe<gfx::IntRect>& aClipRect,
+      const nsIntRegion& aOpaqueRegion, NativeLayer* aNativeLayer) override;
+
+  void EndRenderingToNativeLayer() override;
+
   Maybe<gfx::IntRect> BeginFrame(const nsIntRegion& aInvalidRegion,
                                  const Maybe<gfx::IntRect>& aClipRect,
                                  const gfx::IntRect& aRenderBounds,
-                                 const nsIntRegion& aOpaqueRegion,
-                                 NativeLayer* aNativeLayer) override;
+                                 const nsIntRegion& aOpaqueRegion);
 
   ShaderConfigOGL GetShaderConfigFor(
       Effect* aEffect, TextureSourceOGL* aSourceMask = nullptr,
@@ -470,6 +508,12 @@ class CompositorOGL final : public Compositor {
    * scrolled downwards. So, some flipping has to take place; FlippedY does it.
    */
   GLint FlipY(GLint y) const { return mViewportSize.height - y; }
+
+  // The DrawTarget from BeginFrameForTarget, which EndFrame needs to copy the
+  // window contents into.
+  // Only non-null between BeginFrameForTarget and EndFrame.
+  RefPtr<gfx::DrawTarget> mTarget;
+  gfx::IntRect mTargetBounds;
 
   RefPtr<CompositorTexturePoolOGL> mTexturePool;
 

@@ -7,18 +7,15 @@
 // Test stepping back while recording, then resuming recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const { threadFront, target } = dbg;
 
-  await threadFront.interrupt();
-  const bp = await setBreakpoint(threadFront, "doc_rr_continuous.html", 13);
-  await resumeToLine(threadFront, 13);
-  const value = await evaluateInTopFrame(target, "number");
-  await reverseStepOverToLine(threadFront, 12);
-  await checkEvaluateInTopFrame(target, "number", value - 1);
-  await resumeToLine(threadFront, 13);
-  await resumeToLine(threadFront, 13);
-  await checkEvaluateInTopFrame(target, "number", value + 1);
+  await addBreakpoint(dbg, "doc_rr_continuous.html", 13);
+  await resumeToLine(dbg, 13);
+  const value = await evaluateInTopFrame(dbg, "number");
+  await reverseStepOverToLine(dbg, 12);
+  await checkEvaluateInTopFrame(dbg, "number", value - 1);
+  await resumeToLine(dbg, 13);
+  await resumeToLine(dbg, 13);
+  await checkEvaluateInTopFrame(dbg, "number", value + 1);
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 });
