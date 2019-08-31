@@ -115,6 +115,10 @@ class ReadableStreamDefaultReader : public ReadableStreamReader {
   static const JSClass protoClass_;
 };
 
+extern MOZ_MUST_USE JSObject* ReadableStreamCancel(
+    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
+    JS::Handle<JS::Value> reason);
+
 extern MOZ_MUST_USE ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
@@ -135,6 +139,10 @@ extern MOZ_MUST_USE bool ReadableStreamReaderGenericRelease(
 
 extern MOZ_MUST_USE JSObject* ReadableStreamDefaultReaderRead(
     JSContext* cx, JS::Handle<ReadableStreamDefaultReader*> unwrappedReader);
+
+extern MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
+    JSContext* cx, JS::Handle<JS::Value> value, bool done,
+    ForAuthorCodeBool forAuthorCode);
 
 }  // namespace js
 
