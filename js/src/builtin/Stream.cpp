@@ -12,6 +12,7 @@
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::MakeSizeAlgorithmFromSizeFunction, js::PromiseCall, js::PromiseRejectedWithPendingError, js::ReturnPromiseRejectedWithPendingError, js::ValidateAndNormalizeHighWaterMark
+#include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee, js::ReadableStreamTee_Cancel, js::SetUpReadableStreamDefaultController
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::CreateReadableStreamDefaultReader, js::ReadableStreamReaderGeneric{Cancel,Initialize,Release}, js::ReadableStreamDefaultReaderRead, js::ReadableStream{Cancel,CreateReadResult}
@@ -30,8 +31,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-
-enum class ReaderType : int32_t { Default = 0, BYOB = 1 };
 
 template <class T>
 bool Is(const HandleValue v) {
@@ -101,77 +100,6 @@ const JSClass ByteStreamChunk::class_ = {
 };
 
 #endif  // user-defined byte streams
-
-class PullIntoDescriptor : public NativeObject {
- private:
-  enum Slots {
-    Slot_buffer,
-    Slot_ByteOffset,
-    Slot_ByteLength,
-    Slot_BytesFilled,
-    Slot_ElementSize,
-    Slot_Ctor,
-    Slot_ReaderType,
-    SlotCount
-  };
-
- public:
-  static const JSClass class_;
-
-  ArrayBufferObject* buffer() {
-    return &getFixedSlot(Slot_buffer).toObject().as<ArrayBufferObject>();
-  }
-  void setBuffer(ArrayBufferObject* buffer) {
-    setFixedSlot(Slot_buffer, ObjectValue(*buffer));
-  }
-  JSObject* ctor() { return getFixedSlot(Slot_Ctor).toObjectOrNull(); }
-  uint32_t byteOffset() const {
-    return getFixedSlot(Slot_ByteOffset).toInt32();
-  }
-  uint32_t byteLength() const {
-    return getFixedSlot(Slot_ByteLength).toInt32();
-  }
-  uint32_t bytesFilled() const {
-    return getFixedSlot(Slot_BytesFilled).toInt32();
-  }
-  void setBytesFilled(int32_t bytes) {
-    setFixedSlot(Slot_BytesFilled, Int32Value(bytes));
-  }
-  uint32_t elementSize() const {
-    return getFixedSlot(Slot_ElementSize).toInt32();
-  }
-  ReaderType readerType() const {
-    int32_t n = getFixedSlot(Slot_ReaderType).toInt32();
-    MOZ_ASSERT(n == int32_t(ReaderType::Default) ||
-               n == int32_t(ReaderType::BYOB));
-    return ReaderType(n);
-  }
-
-  static PullIntoDescriptor* create(JSContext* cx,
-                                    HandleArrayBufferObject buffer,
-                                    uint32_t byteOffset, uint32_t byteLength,
-                                    uint32_t bytesFilled, uint32_t elementSize,
-                                    HandleObject ctor, ReaderType readerType) {
-    Rooted<PullIntoDescriptor*> descriptor(
-        cx, NewBuiltinClassInstance<PullIntoDescriptor>(cx));
-    if (!descriptor) {
-      return nullptr;
-    }
-
-    descriptor->setFixedSlot(Slot_buffer, ObjectValue(*buffer));
-    descriptor->setFixedSlot(Slot_Ctor, ObjectOrNullValue(ctor));
-    descriptor->setFixedSlot(Slot_ByteOffset, Int32Value(byteOffset));
-    descriptor->setFixedSlot(Slot_ByteLength, Int32Value(byteLength));
-    descriptor->setFixedSlot(Slot_BytesFilled, Int32Value(bytesFilled));
-    descriptor->setFixedSlot(Slot_ElementSize, Int32Value(elementSize));
-    descriptor->setFixedSlot(Slot_ReaderType,
-                             Int32Value(static_cast<int32_t>(readerType)));
-    return descriptor;
-  }
-};
-
-const JSClass PullIntoDescriptor::class_ = {
-    "PullIntoDescriptor", JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
 /*** 3.2. Class ReadableStream **********************************************/
 
