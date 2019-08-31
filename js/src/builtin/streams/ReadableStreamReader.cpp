@@ -14,7 +14,7 @@
 #include "jsfriendapi.h"  // JS_ReportErrorNumberASCII, js::GetErrorMessage
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "builtin/Stream.h"   // js::ReadableStreamController
+#include "builtin/Stream.h"  // js::ReadableStreamController, js::ReadableStreamControllerPullSteps
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{Cancel,CreateReadResult}
