@@ -16,6 +16,7 @@
 #include "builtin/Promise.h"  // js::PromiseObject
 #include "builtin/Stream.h"   // js::ReadableStreamController
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{Cancel,CreateReadResult}
 #include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
 #include "js/Value.h"         // JS::Value, JS::UndefinedHandleValue

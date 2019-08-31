@@ -229,6 +229,7 @@ UNIFIED_SOURCES += [
     'builtin/streams/QueueingStrategies.cpp',
     'builtin/streams/QueueWithSizes.cpp',
     'builtin/streams/ReadableStream.cpp',
+    'builtin/streams/ReadableStreamDefaultController.cpp',
     'builtin/streams/ReadableStreamDefaultReader.cpp',
     'builtin/streams/ReadableStreamInternals.cpp',
     'builtin/streams/ReadableStreamOperations.cpp',
