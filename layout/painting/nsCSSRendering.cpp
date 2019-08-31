@@ -4070,7 +4070,7 @@ void nsCSSRendering::PaintDecorationLine(
   gfxTextRun::CompressedGlyph* characterGlyphs = textRun->GetCharacterGlyphs();
 
   // get positioning info
-  SkPoint textPos = {0, 0};
+  SkPoint textPos = {0, aParams.baselineOffset};
   SkScalar bounds[] = {0, 0};
   Float oneCSSPixel = aFrame->PresContext()->CSSPixelsToDevPixels(1.0f);
   if (!textRun->UseCenterBaseline()) {
