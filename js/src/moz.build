@@ -227,6 +227,7 @@ UNIFIED_SOURCES += [
     'builtin/streams/MiscellaneousOperations.cpp',
     'builtin/streams/QueueingStrategies.cpp',
     'builtin/streams/QueueWithSizes.cpp',
+    'builtin/streams/ReadableStreamDefaultReader.cpp',
     'builtin/String.cpp',
     'builtin/Symbol.cpp',
     'builtin/TestingFunctions.cpp',
