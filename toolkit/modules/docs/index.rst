@@ -8,4 +8,3 @@ The ``/toolkit/modules`` directory contains a number of self-contained toolkit m
   :maxdepth: 1
 
   AsyncShutdown
-  FirstStartup

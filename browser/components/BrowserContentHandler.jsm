@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HeadlessShell: "resource:///modules/HeadlessShell.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
-  FirstStartup: "resource://gre/modules/FirstStartup.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
@@ -559,10 +558,6 @@ nsBrowserContentHandler.prototype = {
       ShellService.setDefaultBrowser(true, true);
     }
 
-    if (cmdLine.handleFlag("first-startup", false)) {
-      FirstStartup.init();
-    }
-
     var fileParam = cmdLine.handleFlagWithParam("file", false);
     if (fileParam) {
       var file = cmdLine.resolveFile(fileParam);
@@ -604,8 +599,6 @@ nsBrowserContentHandler.prototype = {
     info +=
       "  --search <term>    Search <term> with your default search engine.\n";
     info += "  --setDefaultBrowser Set this app as the default browser.\n";
-    info +=
-      "  --first-startup    Run post-install actions before opening a new window.\n";
     return info;
   },
 

@@ -43,7 +43,7 @@ var Normandy = {
   studyPrefsChanged: {},
   rolloutPrefsChanged: {},
 
-  async init({ runAsync = true } = {}) {
+  async init() {
     // Initialization that needs to happen before the first paint on startup.
     await NormandyMigrations.applyAll();
     this.rolloutPrefsChanged = this.applyStartupPrefs(
@@ -53,16 +53,8 @@ var Normandy = {
       STARTUP_EXPERIMENT_PREFS_BRANCH
     );
 
-    if (runAsync) {
-      Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
-    } else {
-      // Remove any observers, if present.
-      try {
-        Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-      } catch (e) {}
-
-      await this.finishInit();
-    }
+    // Wait until the UI is available before finishing initialization.
+    Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
   },
 
   observe(subject, topic, data) {
