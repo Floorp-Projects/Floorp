@@ -207,6 +207,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
         self.benchmark_zip = None
+        self.webextensions_zip = None
 
     # We accept some configuration options from the try commit message in the format
     # mozharness: <options>
@@ -264,6 +265,18 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             self.benchmark_zip = self.talos_json_config['suites'][self.suite].get('benchmark_zip')
             self.benchmark_zip_manifest = 'jetstream-benchmark.manifest'
             return self.benchmark_zip
+
+    def query_webextensions_zip(self):
+        """Certain suites require external WebExtension sets to be downloaded and
+        extracted.
+        """
+        if self.webextensions_zip:
+            return self.webextensions_zip
+        if self.query_talos_json_config() and self.suite is not None:
+            self.webextensions_zip = \
+                self.talos_json_config['suites'][self.suite].get('webextensions_zip')
+            self.webextensions_zip_manifest = 'webextensions.manifest'
+            return self.webextensions_zip
 
     def get_suite_from_test(self):
         """ Retrieve the talos suite name from a given talos test name."""
@@ -367,31 +380,40 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             self.suite = self.config['suite']
 
         tooltool_artifacts = []
+        src_talos_pageset_dest = os.path.join(self.talos_path, 'talos', 'tests')
+        webextension_dest = os.path.join(self.talos_path, 'talos', 'webextensions')
+
         if self.query_pagesets_name():
             tooltool_artifacts.append({'name': self.pagesets_name,
-                                       'manifest': self.pagesets_name_manifest})
+                                       'manifest': self.pagesets_name_manifest,
+                                       'dest': src_talos_pageset_dest})
 
         if self.query_benchmark_zip():
             tooltool_artifacts.append({'name': self.benchmark_zip,
-                                       'manifest': self.benchmark_zip_manifest})
+                                       'manifest': self.benchmark_zip_manifest,
+                                       'dest': src_talos_pageset_dest})
+
+        if self.query_webextensions_zip():
+            tooltool_artifacts.append({'name': self.webextensions_zip,
+                                       'manifest': self.webextensions_zip_manifest,
+                                       'dest': webextension_dest})
 
         # now that have the suite name, check if artifact is required, if so download it
         # the --no-download option will override this
         for artifact in tooltool_artifacts:
             if '--no-download' not in self.config.get('talos_extra_options', []):
                 self.info("Downloading %s with tooltool..." % artifact)
-                self.src_talos_webdir = os.path.join(self.talos_path, 'talos')
-                src_talos_pageset = os.path.join(self.src_talos_webdir, 'tests')
-                if not os.path.exists(os.path.join(src_talos_pageset, artifact['name'])):
+
+                if not os.path.exists(os.path.join(artifact['dest'], artifact['name'])):
                     manifest_file = os.path.join(self.talos_path, artifact['manifest'])
                     self.tooltool_fetch(
                         manifest_file,
-                        output_dir=src_talos_pageset,
+                        output_dir=artifact['dest'],
                         cache=self.config.get('tooltool_cache')
                     )
-                    archive = os.path.join(src_talos_pageset, artifact['name'])
+                    archive = os.path.join(artifact['dest'], artifact['name'])
                     unzip = self.query_exe('unzip')
-                    unzip_cmd = [unzip, '-q', '-o', archive, '-d', src_talos_pageset]
+                    unzip_cmd = [unzip, '-q', '-o', archive, '-d', artifact['dest']]
                     self.run_command(unzip_cmd, halt_on_failure=True)
                 else:
                     self.info("%s already available" % artifact)

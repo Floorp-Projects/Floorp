@@ -151,13 +151,21 @@ class FFSetup(object):
         profile.addons.install(extensions)
 
         # installing webextensions
+        webextensions_to_install = []
+        webextensions_folder = self.test_config.get('webextensions_folder', None)
+        if isinstance(webextensions_folder, basestring):
+            folder = utils.interpolate(webextensions_folder)
+            for file in os.listdir(folder):
+                if file.endswith(".xpi"):
+                    webextensions_to_install.append(os.path.join(folder, file))
+
         webextensions = self.test_config.get('webextensions', None)
         if isinstance(webextensions, basestring):
-            webextensions = [webextensions]
+            webextensions_to_install.append(webextensions)
 
-        if webextensions is not None:
+        if webextensions_to_install is not None:
             LOG.info("Installing Webextensions:")
-            for webext in webextensions:
+            for webext in webextensions_to_install:
                 filename = utils.interpolate(webext)
                 if mozinfo.os == 'win':
                     filename = filename.replace('/', '\\')
