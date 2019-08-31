@@ -1,6 +1,15 @@
 .ds-image {
   display: block;
   position: relative;
+  opacity: 0;
+
+  &.use-transition {
+    transition: opacity 0.8s;
+  }
+
+  &.loaded {
+    opacity: 1;
+  }
 
   img,
   .broken-image {

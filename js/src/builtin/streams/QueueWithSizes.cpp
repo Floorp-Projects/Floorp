@@ -14,7 +14,7 @@
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
-#include "builtin/Stream.h"   // js::ReadableStreamController
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
 #include "js/Class.h"         // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Conversions.h"   // JS::ToNumber
 #include "js/RootingAPI.h"    // JS::Rooted

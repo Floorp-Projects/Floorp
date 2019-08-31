@@ -9711,7 +9711,6 @@ void nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
     // Note: scrollable overflow is a subset of visual overflow,
     // so this has the same affect as unioning the child's visual and
     // scrollable overflow with the parent's visual overflow.
-    // XXX doesn't work correctly for floats - bug 1481951
     nsRect childVisual = aChildFrame->GetVisualOverflowRect();
     nsOverflowAreas combined = nsOverflowAreas(childVisual, nsRect());
     aOverflowAreas.UnionWith(combined + aChildFrame->GetPosition());

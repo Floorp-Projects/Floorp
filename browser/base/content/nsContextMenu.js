@@ -43,7 +43,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   let actor = aActor;
   let spellInfo = data.spellInfo;
   let frameReferrerInfo = data.frameReferrerInfo;
-  let targetReferrerInfo = data.targetReferrerInfo;
+  let linkReferrerInfo = data.linkReferrerInfo;
   let principal = data.principal;
   let storagePrincipal = data.storagePrincipal;
 
@@ -61,8 +61,8 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     frameReferrerInfo = E10SUtils.deserializeReferrerInfo(frameReferrerInfo);
   }
 
-  if (targetReferrerInfo) {
-    targetReferrerInfo = E10SUtils.deserializeReferrerInfo(targetReferrerInfo);
+  if (linkReferrerInfo) {
+    linkReferrerInfo = E10SUtils.deserializeReferrerInfo(linkReferrerInfo);
   }
 
   // For now, JS Window Actors don't deserialize Principals automatically, so we
@@ -100,7 +100,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     charSet: data.charSet,
     referrerInfo: E10SUtils.deserializeReferrerInfo(data.referrerInfo),
     frameReferrerInfo,
-    targetReferrerInfo,
+    linkReferrerInfo,
     contentType: data.contentType,
     contentDisposition: data.contentDisposition,
     frameOuterWindowID: data.frameOuterWindowID,
@@ -1095,7 +1095,9 @@ nsContextMenu.prototype = {
       params[p] = extra[p];
     }
 
-    let referrerInfo = gContextMenuContentData.referrerInfo;
+    let referrerInfo = this.onLink
+      ? gContextMenuContentData.linkReferrerInfo
+      : gContextMenuContentData.referrerInfo;
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.
     if (
@@ -1342,7 +1344,7 @@ nsContextMenu.prototype = {
     }
 
     // Cache this because we fetch the data async
-    let { targetReferrerInfo } = gContextMenuContentData;
+    let referrerInfo = gContextMenuContentData.referrerInfo;
 
     this.actor.saveVideoFrameAsImage(this.targetIdentifier).then(dataURL => {
       // FIXME can we switch this to a blob URL?
@@ -1352,7 +1354,7 @@ nsContextMenu.prototype = {
         "SaveImageTitle",
         true, // bypass cache
         false, // don't skip prompt for where to save
-        targetReferrerInfo, // referrer info
+        referrerInfo, // referrer info
         null, // document
         null, // content type
         null, // content disposition
@@ -1620,6 +1622,10 @@ nsContextMenu.prototype = {
 
   // Save URL of clicked-on link.
   saveLink() {
+    let referrerInfo = this.onLink
+      ? gContextMenuContentData.linkReferrerInfo
+      : gContextMenuContentData.referrerInfo;
+
     let isContentWindowPrivate = this.ownerDoc.isPrivate;
     this.saveHelper(
       this.linkURL,
@@ -1627,7 +1633,7 @@ nsContextMenu.prototype = {
       null,
       true,
       this.ownerDoc,
-      gContextMenuContentData.referrerInfo,
+      referrerInfo,
       this.frameOuterWindowID,
       this.linkDownload,
       isContentWindowPrivate
@@ -1645,7 +1651,7 @@ nsContextMenu.prototype = {
   saveMedia() {
     let doc = this.ownerDoc;
     let isContentWindowPrivate = this.ownerDoc.isPrivate;
-    let referrerInfo = gContextMenuContentData.targetReferrerInfo;
+    let referrerInfo = gContextMenuContentData.referrerInfo;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.

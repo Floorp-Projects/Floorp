@@ -126,6 +126,7 @@ const CFR_MESSAGES = [
     id: "FACEBOOK_CONTAINER_3",
     template: "cfr_doorhanger",
     content: {
+      layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -194,6 +195,7 @@ const CFR_MESSAGES = [
     id: "GOOGLE_TRANSLATE_3",
     template: "cfr_doorhanger",
     content: {
+      layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -263,6 +265,7 @@ const CFR_MESSAGES = [
     id: "YOUTUBE_ENHANCE_3",
     template: "cfr_doorhanger",
     content: {
+      layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -333,6 +336,7 @@ const CFR_MESSAGES = [
     template: "cfr_doorhanger",
     exclude: true,
     content: {
+      layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -406,6 +410,7 @@ const CFR_MESSAGES = [
     template: "cfr_doorhanger",
     exclude: true,
     content: {
+      layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -475,6 +480,7 @@ const CFR_MESSAGES = [
     id: "PIN_TAB",
     template: "cfr_doorhanger",
     content: {
+      layout: "message_and_animation",
       category: "cfrFeatures",
       bucket_id: "CFR_PIN_TAB",
       notification_text: { string_id: "cfr-doorhanger-extension-notification" },
@@ -525,6 +531,78 @@ const CFR_MESSAGES = [
     )} && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
     frequency: { lifetime: 3 },
     trigger: { id: "frequentVisits", params: PINNED_TABS_TARGET_SITES },
+  },
+  {
+    id: "SAVE_LOGIN",
+    frequency: {
+      lifetime: 3,
+    },
+    targeting: "usesFirefoxSync == false",
+    template: "cfr_doorhanger",
+    last_modified: 1565907636313,
+    content: {
+      layout: "icon_and_message",
+      text: {
+        string_id: "cfr-doorhanger-sync-logins-body",
+      },
+      icon: "chrome://browser/content/aboutlogins/icons/intro-illustration.svg",
+      buttons: {
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-cancel-button",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: {
+                category: "general-cfrfeatures",
+              },
+            },
+          },
+        ],
+        primary: {
+          label: {
+            string_id: "cfr-doorhanger-sync-logins-ok-button",
+          },
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {
+              category: "sync",
+            },
+          },
+        },
+      },
+      bucket_id: "CFR_SAVE_LOGIN",
+      heading_text: {
+        string_id: "cfr-doorhanger-sync-logins-header",
+      },
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      notification_text: {
+        string_id: "cfr-doorhanger-extension-notification",
+      },
+      category: "cfrFeatures",
+    },
+    trigger: {
+      id: "newSavedLogin",
+    },
   },
 ];
 

@@ -22,12 +22,14 @@ const EXAMPLE_URL =
 async function attachDebugger(tab) {
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "jsdebugger");
-  return { toolbox, tab, target };
+  const dbg = createDebuggerContext(toolbox);
+  const threadFront = dbg.toolbox.threadFront;
+  return { ...dbg, tab, threadFront };
 }
 
 async function attachRecordingDebugger(
   url,
-  { waitForRecording, disableLogging } = {}
+  { waitForRecording, disableLogging, skipInterrupt } = {}
 ) {
   if (!disableLogging) {
     await pushPref("devtools.recordreplay.logging", true);
@@ -40,41 +42,41 @@ async function attachRecordingDebugger(
   if (waitForRecording) {
     await once(Services.ppmm, "RecordingFinished");
   }
-  const { target, toolbox } = await attachDebugger(tab);
-  const dbg = createDebuggerContext(toolbox);
-  const threadFront = dbg.toolbox.threadFront;
+  const dbg = await attachDebugger(tab);
 
-  await threadFront.interrupt();
-  return { ...dbg, tab, threadFront, target };
+  if (!skipInterrupt) {
+    await interrupt(dbg);
+  }
+
+  return dbg;
+}
+
+async function waitForPausedNoSource(dbg) {
+  await waitForState(dbg, state => isPaused(dbg), "paused");
 }
 
 async function shutdownDebugger(dbg) {
+  await dbg.actions.removeAllBreakpoints(getContext(dbg));
   await waitForRequestsToSettle(dbg);
   await dbg.toolbox.destroy();
   await gBrowser.removeTab(dbg.tab);
 }
 
-// Return a promise that resolves when a breakpoint has been set.
-async function setBreakpoint(threadFront, expectedFile, lineno, options = {}) {
-  const { sources } = await threadFront.getSources();
-  ok(sources.length == 1, "Got one source");
-  ok(RegExp(expectedFile).test(sources[0].url), "Source is " + expectedFile);
-  const location = { sourceUrl: sources[0].url, line: lineno };
-  await threadFront.setBreakpoint(location, options);
-  return location;
+async function interrupt(dbg) {
+  await dbg.actions.breakOnNext(getThreadContext(dbg));
+  await waitForPausedNoSource(dbg);
 }
 
 function resumeThenPauseAtLineFunctionFactory(method) {
-  return async function(threadFront, lineno) {
-    threadFront[method]();
-    await threadFront.once("paused");
-
-    const { frames } = await threadFront.getFrames(0, 1);
-    const frameLine = frames[0] ? frames[0].where.line : undefined;
-    ok(
-      frameLine == lineno,
-      "Paused at line " + frameLine + " expected " + lineno
-    );
+  return async function(dbg, lineno) {
+    await dbg.actions[method](getThreadContext(dbg));
+    if (lineno !== undefined) {
+      await waitForPaused(dbg);
+    } else {
+      await waitForPausedNoSource(dbg);
+    }
+    const pauseLine = getVisibleSelectedFrameLine(dbg);
+    ok(pauseLine == lineno, `Paused at line ${pauseLine} expected ${lineno}`);
   };
 }
 
@@ -91,9 +93,9 @@ var stepOutToLine = resumeThenPauseAtLineFunctionFactory("stepOut");
 
 // Return a promise that resolves when a thread evaluates a string in the
 // topmost frame, with the result throwing an exception.
-async function checkEvaluateInTopFrameThrows(target, text) {
-  const threadFront = target.threadFront;
-  const consoleFront = await target.getFront("console");
+async function checkEvaluateInTopFrameThrows(dbg, text) {
+  const threadFront = dbg.toolbox.target.threadFront;
+  const consoleFront = await dbg.toolbox.target.getFront("console");
   const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
   const options = { thread: threadFront.actor, frameActor: frames[0].actor };

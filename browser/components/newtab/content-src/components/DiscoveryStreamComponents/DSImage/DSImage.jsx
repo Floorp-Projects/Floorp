@@ -15,6 +15,7 @@ export class DSImage extends React.PureComponent {
     this.state = {
       isSeen: false,
       optimizedImageFailed: false,
+      useTransition: false,
     };
   }
 
@@ -25,8 +26,9 @@ export class DSImage extends React.PureComponent {
       if (entry) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: entry.boundingClientRect.width,
-            containerHeight: entry.boundingClientRect.height,
+            // Thumbor doesn't handle subpixels and just errors out, so rounding...
+            containerWidth: Math.round(entry.boundingClientRect.width),
+            containerHeight: Math.round(entry.boundingClientRect.height),
           });
         }
 
@@ -40,6 +42,14 @@ export class DSImage extends React.PureComponent {
     }
   }
 
+  onIdleCallback() {
+    if (!this.state.isSeen) {
+      this.setState({
+        useTransition: true,
+      });
+    }
+  }
+
   reformatImageURL(url, width, height) {
     // Change the image URL to request a size tailored for the parent container width
     // Also: force JPEG, quality 60, no upscaling, no EXIF data
@@ -50,7 +60,15 @@ export class DSImage extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.observer = new IntersectionObserver(this.onSeen.bind(this));
+    this.idleCallbackId = window.requestIdleCallback(
+      this.onIdleCallback.bind(this)
+    );
+    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
+      // Assume an image will be eventually seen if it is within
+      // half the average Desktop vertical screen size:
+      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
+      rootMargin: `540px`,
+    });
     this.observer.observe(ReactDOM.findDOMNode(this));
   }
 
@@ -62,9 +80,11 @@ export class DSImage extends React.PureComponent {
   }
 
   render() {
-    const classNames = `ds-image${
-      this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``
-    }`;
+    let classNames = `ds-image
+      ${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}
+      ${this.state && this.state.useTransition ? ` use-transition` : ``}
+      ${this.state && this.state.isSeen ? ` loaded` : ``}
+    `;
 
     let img;
 
@@ -94,7 +114,7 @@ export class DSImage extends React.PureComponent {
 
           img = (
             <img
-              alt=""
+              alt={this.props.alt_text}
               crossOrigin="anonymous"
               onError={this.onOptimizedImageError}
               src={source}
@@ -105,7 +125,7 @@ export class DSImage extends React.PureComponent {
       } else if (!this.state.nonOptimizedImageFailed) {
         img = (
           <img
-            alt=""
+            alt={this.props.alt_text}
             crossOrigin="anonymous"
             onError={this.onNonOptimizedImageError}
             src={this.props.source}
@@ -139,4 +159,5 @@ DSImage.defaultProps = {
   rawSource: null, // Unadulterated image URL to filter through Thumbor
   extraClassNames: null, // Additional classnames to append to component
   optimize: true, // Measure parent container to request exact sizes
+  alt_text: null,
 };

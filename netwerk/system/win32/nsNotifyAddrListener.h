@@ -93,6 +93,9 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
 
   // Time stamp for first event during coalescing
   mozilla::TimeStamp mChangeTime;
+
+  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
+  mozilla::TimeStamp mNetworkChangeTime;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */

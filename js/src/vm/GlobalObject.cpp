@@ -22,6 +22,9 @@
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/Stream.h"
 #include "builtin/streams/QueueingStrategies.h"  // js::{ByteLength,Count}QueueingStrategy
+#include "builtin/streams/ReadableStream.h"      // js::ReadableStream
+#include "builtin/streams/ReadableStreamController.h"  // js::Readable{StreamDefault,ByteStream}Controller
+#include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStreamDefaultReader
 #include "builtin/Symbol.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"

@@ -42,7 +42,7 @@
       ok(!!s, "has second frame");
       ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
       is(s.line, 18, "line is correct");
-      is(s.column, 19, "column is correct");
+      is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "failingStack");
       // We shouldn't have any more frame as we used setTimeout
       ok(!s.parent, "has no more frames");

@@ -7,5 +7,5 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,0-151,0-111) fuzzy-if(webrender,0-65,0-
 fuzzy-if(skiaContent,0-1,0-500) needs-focus == select.html select-ref.html
 == intrinsic-size.html intrinsic-size-ref.html
 == line-height-0.5.html line-height-1.0.html
-!= line-height-1.5.html line-height-1.0.html
+!= line-height-1.8.html line-height-1.0.html
 == shadow-rules.html shadow-rules-ref.html
