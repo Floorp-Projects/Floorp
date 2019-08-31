@@ -175,6 +175,21 @@ class WindowSurfaceWayland : public WindowSurface {
   void FrameCallbackHandler();
   void DelayedCommitHandler();
 
+  // Image cache mode can be set by widget.wayland_cache_mode
+  typedef enum {
+    // Cache and clip all drawings, default. It's slowest
+    // but also without any rendered artifacts.
+    CACHE_ALL = 0,
+    // Cache drawing only when back buffer is missing. May produce
+    // some rendering artifacts and flickering when partial screen update
+    // is rendered.
+    CACHE_MISSING = 1,
+    // Don't cache anything, draw only when back buffer is available.
+    // Suitable for fullscreen content only like fullscreen video playback and
+    // may work well with dmabuf backend.
+    CACHE_NONE = 2
+  } RenderingCacheMode;
+
  private:
   WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
   WindowBackBuffer* GetWaylandBufferToDraw(bool aCanSwitchBuffer);
@@ -215,6 +230,7 @@ class WindowSurfaceWayland : public WindowSurface {
   bool mBufferNeedsClear;
   bool mIsMainThread;
   bool mNeedScaleFactorUpdate;
+  RenderingCacheMode mRenderingCacheMode;
 
   static bool UseDMABufBackend();
   static bool mUseDMABufInitialized;

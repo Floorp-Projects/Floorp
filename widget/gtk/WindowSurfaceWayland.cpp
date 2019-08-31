@@ -189,7 +189,7 @@ It owns wl_buffer object, owns WaylandDMABufSurface
 (which provides the DMA Buffer) and ties them together.
 
 WindowBackBufferDMABuf backend is used only when WaylandDMABufSurface is
-available and gfx.wayland_dmabuf_backend.enabled preference is set.
+available and widget.wayland_dmabuf_backend.enabled preference is set.
 
 */
 
@@ -504,6 +504,8 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mIsMainThread(NS_IsMainThread()),
       mNeedScaleFactorUpdate(true) {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) mBackupBuffer[i] = nullptr;
+  mRenderingCacheMode = static_cast<RenderingCacheMode>(
+      mWaylandDisplay->GetRenderingCacheModePref());
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
@@ -810,10 +812,12 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mBufferScreenRect = lockedScreenRect;
   }
 
-  if (mWholeWindowBufferDamage) {
+  if (mWholeWindowBufferDamage || mRenderingCacheMode != CACHE_ALL) {
     // We can lock/commit entire buffer direcly.
     mDrawToWaylandBufferDirectly = true;
+  }
 
+  if (mDrawToWaylandBufferDirectly) {
     // If there's any pending image commit scratch them as we're going
     // to redraw the whole sceen anyway.
     mDelayedImageCommits.Clear();
@@ -821,8 +825,27 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(
         /* aCanSwitchBuffer */ mWholeWindowBufferDamage);
     if (dt) {
+      // TODO: Try to set clip regions according to given area provided by
+      // compositor, not sure it has any effect. Also disable when drawing
+      // without any cache to speed up rendering.
+      if (!mWholeWindowBufferDamage && mRenderingCacheMode != CACHE_NONE) {
+        uint32_t numRects = aRegion.GetNumRects();
+        if (numRects != 1) {
+          AutoTArray<IntRect, 32> rects;
+          rects.SetCapacity(numRects);
+          for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+            rects.AppendElement(iter.Get().ToUnknownRect());
+          }
+          dt->PushDeviceSpaceClipRects(rects.Elements(), rects.Length());
+        }
+      }
       return dt.forget();
     }
+  }
+
+  // Any caching is disabled and we don't have any back buffer available.
+  if (mRenderingCacheMode == CACHE_NONE) {
+    return nullptr;
   }
 
   // We do indirect drawing due to:

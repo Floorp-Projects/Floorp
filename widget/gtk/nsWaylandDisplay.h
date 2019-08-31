@@ -77,6 +77,9 @@ class nsWaylandDisplay {
                          uint32_t mModifierLo);
   static bool IsDMABufEnabled();
 
+  // See WindowSurfaceWayland::CacheMode for details.
+  int GetRenderingCacheModePref() { return mRenderingCacheModePref; };
+
  private:
   bool ConfigureGbm();
 
@@ -100,6 +103,7 @@ class nsWaylandDisplay {
   static bool mIsDMABufEnabled;
   static int mIsDMABufPrefState;
   static bool mIsDMABufConfigured;
+  static int mRenderingCacheModePref;
 };
 
 void WaylandDispatchDisplays();
