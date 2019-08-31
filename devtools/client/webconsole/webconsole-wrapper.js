@@ -242,13 +242,7 @@ class WebConsoleWrapper {
         },
         getMappedExpression: this.hud.getMappedExpression.bind(this.hud),
         getPanelWindow: () => webConsoleUI.window,
-        inspectObjectActor: objectActor => {
-          if (this.toolbox) {
-            this.toolbox.inspectObjectActor(objectActor);
-          } else {
-            webConsoleUI.inspectObjectActor(objectActor);
-          }
-        },
+        inspectObjectActor: webConsoleUI.inspectObjectActor.bind(webConsoleUI),
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable
