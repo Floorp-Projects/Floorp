@@ -20,7 +20,6 @@
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;
-using namespace std;
 
 // We rely on invariants about the lifetime of the transport:
 //
