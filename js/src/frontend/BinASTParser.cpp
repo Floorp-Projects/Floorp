@@ -3136,8 +3136,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceExpressionStatement(
       parseExpression(Context(FieldContext(
           BinASTInterfaceAndField::ExpressionStatement__Expression))));
 
-  BINJS_TRY_DECL(result,
-                 handler_.newExprStatement(expression, tokenizer_->offset()));
+  BINJS_TRY_DECL(result, handler_.newExprStatement(expression));
   return result;
 }
 
