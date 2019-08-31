@@ -17,6 +17,7 @@
 
 #include "builtin/Stream.h"  // js::ReadableStreamController{,Error,GetDesiredSizeUnchecked}, js::ReadableByteStreamController{,Close}, js::ReadableStreamDefaultController{,Close}, js::StreamController
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
+#include "builtin/streams/ReadableStreamController.h"  // js::CheckReadableStreamControllerCanCloseOrEnqueue
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{Cancel,FulfillReadOrReadIntoRequest,GetNumReadRequests,HasDefaultReader}
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
