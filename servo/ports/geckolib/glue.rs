@@ -253,8 +253,10 @@ fn traverse_subtree(
     debug!("Traversing subtree from {:?}", element);
 
     let thread_pool_holder = &*STYLE_THREAD_POOL;
+    let pool;
     let thread_pool = if traversal_flags.contains(TraversalFlags::ParallelTraversal) {
-        thread_pool_holder.style_thread_pool.as_ref()
+        pool = thread_pool_holder.pool();
+        pool.as_ref()
     } else {
         None
     };
@@ -1415,7 +1417,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
         should_record_use_counters,
     );
 
-    if let Some(thread_pool) = STYLE_THREAD_POOL.style_thread_pool.as_ref() {
+    if let Some(thread_pool) = STYLE_THREAD_POOL.pool().as_ref() {
         thread_pool.spawn(|| {
             profiler_label!(Parse);
             async_parser.parse();
@@ -1423,6 +1425,12 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     } else {
         async_parser.parse();
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_ShutdownThreadPool() {
+    debug_assert!(is_main_thread() && !is_in_servo_traversal());
+    STYLE_THREAD_POOL.shutdown();
 }
 
 #[no_mangle]

@@ -12,6 +12,7 @@ use crate::shared_lock::SharedRwLock;
 use crate::thread_state;
 use rayon;
 use std::env;
+use parking_lot::{RwLock, RwLockReadGuard};
 
 /// Global style data
 pub struct GlobalStyleData {
@@ -22,13 +23,16 @@ pub struct GlobalStyleData {
     pub options: StyleSystemOptions,
 }
 
-/// Global thread pool
+/// Global thread pool.
 pub struct StyleThreadPool {
     /// How many threads parallel styling can use.
     pub num_threads: usize,
 
     /// The parallel styling thread pool.
-    pub style_thread_pool: Option<rayon::ThreadPool>,
+    ///
+    /// For leak-checking purposes, we want to terminate the thread-pool, which
+    /// waits for all the async jobs to complete. Thus the RwLock.
+    style_thread_pool: RwLock<Option<rayon::ThreadPool>>,
 }
 
 fn thread_name(index: usize) -> String {
@@ -54,6 +58,21 @@ fn thread_shutdown(_: usize) {
     unsafe {
         bindings::Gecko_UnregisterProfilerThread();
         bindings::Gecko_SetJemallocThreadLocalArena(false);
+    }
+}
+
+impl StyleThreadPool {
+    /// Shuts down the thread pool, waiting for all work to complete.
+    pub fn shutdown(&self) {
+        let _ = self.style_thread_pool.write().take();
+    }
+
+    /// Returns a reference to the thread pool.
+    ///
+    /// We only really want to give read-only access to the pool, except
+    /// for shutdown().
+    pub fn pool(&self) -> RwLockReadGuard<Option<rayon::ThreadPool>> {
+        self.style_thread_pool.read()
     }
 }
 
@@ -113,10 +132,11 @@ lazy_static! {
         };
 
         StyleThreadPool {
-            num_threads: num_threads,
-            style_thread_pool: pool,
+            num_threads,
+            style_thread_pool: RwLock::new(pool),
         }
     };
+
     /// Global style data
     pub static ref GLOBAL_STYLE_DATA: GlobalStyleData = GlobalStyleData {
         shared_lock: SharedRwLock::new_leaked(),
