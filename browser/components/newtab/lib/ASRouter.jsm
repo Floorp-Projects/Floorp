@@ -1346,7 +1346,7 @@ class _ASRouter {
         } else {
           CFRPageActions.addRecommendation(
             target,
-            trigger.param.host,
+            trigger.param && trigger.param.host,
             message,
             this.dispatch
           );
