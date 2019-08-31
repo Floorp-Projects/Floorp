@@ -11,7 +11,7 @@
 #include <stdint.h>  // int32_t
 
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
-#include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::PromiseCall, js::PromiseRejectedWithPendingError
+#include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::IsMaybeWrapped, js::PromiseCall, js::PromiseRejectedWithPendingError
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,EnqueueValueWithSize,ResetQueue}
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController, js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
@@ -32,16 +32,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-
-template <class T>
-bool Is(const HandleValue v) {
-  return v.isObject() && v.toObject().is<T>();
-}
-
-template <class T>
-bool IsMaybeWrapped(const HandleValue v) {
-  return v.isObject() && v.toObject().canUnwrapAs<T>();
-}
 
 JS::ReadableStreamMode ReadableStream::mode() const {
   ReadableStreamController* controller = this->controller();
