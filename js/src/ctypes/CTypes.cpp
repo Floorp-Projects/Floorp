@@ -54,7 +54,7 @@
 
 #include "vm/JSObject-inl.h"
 
-using namespace std;
+using std::numeric_limits;
 
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
