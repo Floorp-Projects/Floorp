@@ -886,16 +886,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
       mozilla::dom::WindowGlobalChild* aActor = nullptr) = 0;
 
   /**
-   * Set the opener window.  aOriginalOpener is true if and only if this is the
-   * original opener for the window.  That is, it can only be true at most once
-   * during the life cycle of a window, and then only the first time
-   * SetOpenerWindow is called.  It might never be true, of course, if the
-   * window does not have an opener when it's created.
-   */
-  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                               bool aOriginalOpener) = 0;
-
-  /**
    * Ensure the size and position of this window are up-to-date by doing
    * a layout flush in the parent (which will in turn, do a layout flush
    * in its parent, etc.).
@@ -1047,7 +1037,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
   virtual already_AddRefed<mozilla::dom::Selection> GetSelection() = 0;
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
+  virtual mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder>
+  GetOpener() = 0;
 
   // aLoadState will be passed on through to the windowwatcher.
   // aForceNoOpener will act just like a "noopener" feature in aOptions except

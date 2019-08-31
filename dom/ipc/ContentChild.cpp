@@ -962,16 +962,17 @@ nsresult ContentChild::ProvideWindowCommon(
   // parent. Otherwise, the parent could send messages to us before we have a
   // proper TabGroup for that actor.
   RefPtr<TabGroup> tabGroup;
+  RefPtr<BrowsingContext> openerBC;
   if (aTabOpener && !aForceNoOpener) {
     // The new actor will use the same tab group as the opener.
     tabGroup = aTabOpener->TabGroup();
+    if (aParent) {
+      openerBC = nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext();
+    }
   } else {
     tabGroup = new TabGroup();
   }
 
-  RefPtr<BrowsingContext> openerBC =
-      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
-              : nullptr;
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
@@ -1099,17 +1100,25 @@ nsresult ContentChild::ProvideWindowCommon(
     newChild->SetMaxTouchPoints(maxTouchPoints);
     newChild->SetHasSiblings(hasSiblings);
 
-    // Set the opener window for this window before we start loading the
-    // document inside of it. We have to do this before loading the remote
-    // scripts, because they can poke at the document and cause the Document
-    // to be created before the openerwindow
-    nsCOMPtr<mozIDOMWindowProxy> windowProxy =
-        do_GetInterface(newChild->WebNavigation());
-    if (!aForceNoOpener && windowProxy && aParent) {
-      nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
-      nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
-      outer->SetOpenerWindow(parent, *aWindowIsNew);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    if (nsCOMPtr<nsPIDOMWindowOuter> outer =
+            do_GetInterface(newChild->WebNavigation())) {
+      BrowsingContext* bc = outer->GetBrowsingContext();
+      auto parentBC =
+          aParent
+              ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()->Id()
+              : 0;
+
+      if (aForceNoOpener) {
+        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew || !bc->HadOriginalOpener());
+        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == 0);
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew ||
+                              bc->HadOriginalOpener() == !!parentBC);
+        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == parentBC);
+      }
     }
+#endif
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
