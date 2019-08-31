@@ -14,7 +14,7 @@
 #include <stdint.h>  // uint32_t
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "builtin/Stream.h"   // js::ReadableStreamDefaultController
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamDefaultController
 #include "js/Class.h"         // JSClass
 #include "js/Value.h"         // JS::{Int32,Object}Value
 #include "vm/NativeObject.h"  // js::NativeObject

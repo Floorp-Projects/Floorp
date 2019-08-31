@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"  // js::AssertSameCompartment
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "builtin/Stream.h"   // js::ReadableStreamController{,CancelSteps}
+#include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController{,CancelSteps}
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
 #include "gc/AllocKind.h"  // js::gc::AllocKind
 #include "js/CallArgs.h"   // JS::CallArgs{,FromVp}
