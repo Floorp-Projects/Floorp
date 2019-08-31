@@ -1,6 +1,16 @@
-function postMsg(message) {
-  var l = SpecialPowers.wrap(parent.window.location);
-  parent.postMessage(message, l.protocol + "//" + l.host);
+let parentLocation = "";
+
+// The first time this gets called in a page, the location of the parent
+// should be passed in. This will be used as the target origin argument
+// for the postMessage call for all subsequent calls to postMsg().
+function postMsg(message, newParentLocation) {
+  if (newParentLocation) {
+    parentLocation = newParentLocation;
+  } else if (parentLocation == "") {
+    throw new Error("Failed to pass in newParentLocation");
+  }
+
+  parent.postMessage(message, parentLocation);
 }
 
 window.addEventListener("message", onMessageReceived);
