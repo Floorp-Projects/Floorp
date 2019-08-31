@@ -41,6 +41,7 @@ input[type="url"][readOnly] {
   background-color: transparent !important; /* override common.inc.css */
   text-overflow: ellipsis;
   overflow: hidden;
+  text-align: match-parent !important;
 }
 
 .detail-cell input:not([type="checkbox"]),
@@ -166,6 +167,10 @@ input[type="url"][readOnly]:hover:active {
   -moz-context-properties: fill;
   fill: currentColor;
   padding-inline-start: 22px;
+}
+
+.copied-button-text:dir(rtl) {
+  background-position-x: right;
 }
 
 .meta-info {
