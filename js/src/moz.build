@@ -229,6 +229,7 @@ UNIFIED_SOURCES += [
     'builtin/streams/QueueWithSizes.cpp',
     'builtin/streams/ReadableStreamDefaultReader.cpp',
     'builtin/streams/ReadableStreamReader.cpp',
+    'builtin/streams/StreamAPI.cpp',
     'builtin/String.cpp',
     'builtin/Symbol.cpp',
     'builtin/TestingFunctions.cpp',

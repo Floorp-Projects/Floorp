@@ -364,11 +364,6 @@ ReadableStream* ReadableStream::createExternalSourceStream(
   return stream;
 }
 
-static MOZ_MUST_USE bool
-SetUpReadableStreamDefaultControllerFromUnderlyingSource(
-    JSContext* cx, Handle<ReadableStream*> stream, HandleValue underlyingSource,
-    double highWaterMark, HandleValue sizeAlgorithm);
-
 /**
  * Streams spec, 3.2.3. new ReadableStream(underlyingSource = {}, strategy = {})
  */
@@ -623,11 +618,6 @@ static bool ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp) {
 //
 // Not implemented.
 
-static MOZ_MUST_USE bool ReadableStreamTee(
-    JSContext* cx, Handle<ReadableStream*> unwrappedStream,
-    bool cloneForBranch2, MutableHandle<ReadableStream*> branch1,
-    MutableHandle<ReadableStream*> branch2);
-
 /**
  * Streams spec, 3.2.5.7. tee()
  */
@@ -819,14 +809,6 @@ bool ReadableStream::locked() const {
 // Streams spec, 3.4.9. IsReadableStreamAsyncIterator ( x )
 //
 // Not implemented.
-
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
-    JSContext* cx,
-    Handle<ReadableStreamDefaultController*> unwrappedController);
-
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
-    JSContext* cx, Handle<ReadableStreamDefaultController*> unwrappedController,
-    HandleValue chunk);
 
 /**
  * Streams spec, 3.4.10. ReadableStreamTee steps 12.c.i-ix.
@@ -1078,10 +1060,6 @@ static MOZ_MUST_USE JSObject* ReadableStreamTee_Cancel(
   return cancelPromise;
 }
 
-static MOZ_MUST_USE bool ReadableStreamControllerError(
-    JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
-    HandleValue e);
-
 /**
  * Streams spec, 3.4.10. step 18:
  * Upon rejection of reader.[[closedPromise]] with reason r,
@@ -1122,7 +1100,7 @@ static bool TeeReaderErroredHandler(JSContext* cx, unsigned argc, Value* vp) {
 /**
  * Streams spec, 3.4.10. ReadableStreamTee ( stream, cloneForBranch2 )
  */
-static MOZ_MUST_USE bool ReadableStreamTee(
+MOZ_MUST_USE bool js::ReadableStreamTee(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream,
     bool cloneForBranch2, MutableHandle<ReadableStream*> branch1Stream,
     MutableHandle<ReadableStream*> branch2Stream) {
@@ -1558,7 +1536,7 @@ MOZ_MUST_USE bool ReadableStreamErrorInternal(
  *      ReadableStreamFulfillReadRequest ( stream, chunk, done )
  * These two spec functions are identical in our implementation.
  */
-static MOZ_MUST_USE bool ReadableStreamFulfillReadOrReadIntoRequest(
+MOZ_MUST_USE bool js::ReadableStreamFulfillReadOrReadIntoRequest(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream, HandleValue chunk,
     bool done) {
   cx->check(chunk);
@@ -1602,7 +1580,7 @@ static MOZ_MUST_USE bool ReadableStreamFulfillReadOrReadIntoRequest(
  * Streams spec, 3.5.10. ReadableStreamGetNumReadRequests ( stream )
  * (Identical implementation.)
  */
-static uint32_t ReadableStreamGetNumReadRequests(ReadableStream* stream) {
+uint32_t js::ReadableStreamGetNumReadRequests(ReadableStream* stream) {
   // Step 1: Return the number of elements in
   //         stream.[[reader]].[[read{Into}Requests]].
   if (!stream->hasReader()) {
@@ -1627,7 +1605,7 @@ static uint32_t ReadableStreamGetNumReadRequests(ReadableStream* stream) {
 /**
  * Streams spec 3.5.12. ReadableStreamHasDefaultReader ( stream )
  */
-static MOZ_MUST_USE bool ReadableStreamHasDefaultReader(
+MOZ_MUST_USE bool js::ReadableStreamHasDefaultReader(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream, bool* result) {
   // Step 1: Let reader be stream.[[reader]].
   // Step 2: If reader is undefined, return false.
@@ -1723,9 +1701,6 @@ bool ReadableStreamDefaultController::constructor(JSContext* cx, unsigned argc,
   return false;
 }
 
-static MOZ_MUST_USE double ReadableStreamControllerGetDesiredSizeUnchecked(
-    ReadableStreamController* controller);
-
 /**
  * Streams spec, 3.9.4.1. get desiredSize
  */
@@ -1765,15 +1740,11 @@ static bool ReadableStreamDefaultController_desiredSize(JSContext* cx,
   return true;
 }
 
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
-    JSContext* cx,
-    Handle<ReadableStreamDefaultController*> unwrappedController);
-
 /**
  * Unified implementation of step 2 of 3.9.4.2 and 3.9.4.3,
  * and steps 2-3 of 3.11.4.3.
  */
-static MOZ_MUST_USE bool CheckReadableStreamControllerCanCloseOrEnqueue(
+MOZ_MUST_USE bool js::CheckReadableStreamControllerCanCloseOrEnqueue(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
     const char* action) {
   // 3.9.4.2. close(), step 2, and
@@ -2176,9 +2147,6 @@ static bool ControllerPullFailedHandler(JSContext* cx, unsigned argc,
 static bool ReadableStreamControllerShouldCallPull(
     ReadableStreamController* unwrappedController);
 
-static MOZ_MUST_USE double ReadableStreamControllerGetDesiredSizeUnchecked(
-    ReadableStreamController* unwrappedController);
-
 /**
  * Streams spec, 3.10.2
  *      ReadableStreamDefaultControllerCallPullIfNeeded ( controller )
@@ -2386,7 +2354,7 @@ static void ReadableStreamControllerClearAlgorithms(
 /**
  * Streams spec, 3.10.5. ReadableStreamDefaultControllerClose ( controller )
  */
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
+MOZ_MUST_USE bool js::ReadableStreamDefaultControllerClose(
     JSContext* cx,
     Handle<ReadableStreamDefaultController*> unwrappedController) {
   // Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -2419,7 +2387,7 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
  * Streams spec, 3.10.6.
  *      ReadableStreamDefaultControllerEnqueue ( controller, chunk )
  */
-static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
+MOZ_MUST_USE bool js::ReadableStreamDefaultControllerEnqueue(
     JSContext* cx, Handle<ReadableStreamDefaultController*> unwrappedController,
     HandleValue chunk) {
   AssertSameCompartment(cx, chunk);
@@ -2505,7 +2473,7 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClearPendingPullIntos(
  * Streams spec, 3.10.7. ReadableStreamDefaultControllerError ( controller, e )
  * Streams spec, 3.13.11. ReadableByteStreamControllerError ( controller, e )
  */
-static MOZ_MUST_USE bool ReadableStreamControllerError(
+MOZ_MUST_USE bool js::ReadableStreamControllerError(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
     HandleValue e) {
   MOZ_ASSERT(!cx->isExceptionPending());
@@ -2551,7 +2519,7 @@ static MOZ_MUST_USE bool ReadableStreamControllerError(
  * Streams spec 3.13.14.
  *      ReadableByteStreamControllerGetDesiredSize ( controller )
  */
-static MOZ_MUST_USE double ReadableStreamControllerGetDesiredSizeUnchecked(
+MOZ_MUST_USE double js::ReadableStreamControllerGetDesiredSizeUnchecked(
     ReadableStreamController* controller) {
   // Steps 1-4 done at callsites, so only assert that they have been done.
 #if DEBUG
@@ -2695,8 +2663,7 @@ static MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
  *      SetUpReadableStreamDefaultControllerFromUnderlyingSource( stream,
  *          underlyingSource, highWaterMark, sizeAlgorithm )
  */
-static MOZ_MUST_USE bool
-SetUpReadableStreamDefaultControllerFromUnderlyingSource(
+MOZ_MUST_USE bool js::SetUpReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* cx, Handle<ReadableStream*> stream, HandleValue underlyingSource,
     double highWaterMark, HandleValue sizeAlgorithm) {
   // Step 1: Assert: underlyingSource is not undefined.
@@ -3277,7 +3244,7 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClearPendingPullIntos(
 /**
  * Streams spec, 3.13.6. ReadableByteStreamControllerClose ( controller )
  */
-static MOZ_MUST_USE bool ReadableByteStreamControllerClose(
+MOZ_MUST_USE bool js::ReadableByteStreamControllerClose(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController) {
   // Step 1: Let stream be controller.[[controlledReadableByteStream]].
   Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
@@ -3423,538 +3390,3 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
 // Streams spec, 3.13.25.
 //      ReadableByteStreamControllerShouldCallPull ( controller )
 // Unified with 3.10.3 above.
-
-/*** API entry points *******************************************************/
-
-JS_FRIEND_API JSObject* js::UnwrapReadableStream(JSObject* obj) {
-  return obj->maybeUnwrapIf<ReadableStream>();
-}
-
-JS_PUBLIC_API JSObject* JS::NewReadableDefaultStreamObject(
-    JSContext* cx, JS::HandleObject underlyingSource /* = nullptr */,
-    JS::HandleFunction size /* = nullptr */, double highWaterMark /* = 1 */,
-    JS::HandleObject proto /* = nullptr */) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(underlyingSource, size, proto);
-  MOZ_ASSERT(highWaterMark >= 0);
-
-  // A copy of ReadableStream::constructor, with most of the
-  // argument-checking done implicitly by C++ type checking.
-  Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx));
-  if (!stream) {
-    return nullptr;
-  }
-  RootedValue sourceVal(cx);
-  if (underlyingSource) {
-    sourceVal.setObject(*underlyingSource);
-  } else {
-    JSObject* source = NewBuiltinClassInstance<PlainObject>(cx);
-    if (!source) {
-      return nullptr;
-    }
-    sourceVal.setObject(*source);
-  }
-  RootedValue sizeVal(cx, size ? ObjectValue(*size) : UndefinedValue());
-
-  if (!SetUpReadableStreamDefaultControllerFromUnderlyingSource(
-          cx, stream, sourceVal, highWaterMark, sizeVal)) {
-    return nullptr;
-  }
-
-  return stream;
-}
-
-JS_PUBLIC_API JSObject* JS::NewReadableExternalSourceStreamObject(
-    JSContext* cx, JS::ReadableStreamUnderlyingSource* underlyingSource,
-    void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
-    HandleObject proto /* = nullptr */) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  MOZ_ASSERT(underlyingSource);
-  MOZ_ASSERT((uintptr_t(underlyingSource) & 1) == 0,
-             "external underlying source pointers must be aligned");
-  cx->check(proto);
-
-  return ReadableStream::createExternalSourceStream(
-      cx, underlyingSource, nsISupportsObject_alreadyAddreffed, proto);
-}
-
-JS_PUBLIC_API bool JS::IsReadableStream(JSObject* obj) {
-  return obj->canUnwrapAs<ReadableStream>();
-}
-
-JS_PUBLIC_API bool JS::IsReadableStreamReader(JSObject* obj) {
-  return obj->canUnwrapAs<ReadableStreamDefaultReader>();
-}
-
-JS_PUBLIC_API bool JS::IsReadableStreamDefaultReader(JSObject* obj) {
-  return obj->canUnwrapAs<ReadableStreamDefaultReader>();
-}
-
-template <class T>
-static MOZ_MUST_USE T* APIUnwrapAndDowncast(JSContext* cx, JSObject* obj) {
-  cx->check(obj);
-  return UnwrapAndDowncastObject<T>(cx, obj);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamIsReadable(JSContext* cx,
-                                                HandleObject streamObj,
-                                                bool* result) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  *result = unwrappedStream->readable();
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamIsLocked(JSContext* cx,
-                                              HandleObject streamObj,
-                                              bool* result) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  *result = unwrappedStream->locked();
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamIsDisturbed(JSContext* cx,
-                                                 HandleObject streamObj,
-                                                 bool* result) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  *result = unwrappedStream->disturbed();
-  return true;
-}
-
-JS_PUBLIC_API JSObject* JS::ReadableStreamCancel(JSContext* cx,
-                                                 HandleObject streamObj,
-                                                 HandleValue reason) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(reason);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return nullptr;
-  }
-
-  return js::ReadableStreamCancel(cx, unwrappedStream, reason);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamGetMode(JSContext* cx,
-                                             HandleObject streamObj,
-                                             JS::ReadableStreamMode* mode) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  *mode = unwrappedStream->mode();
-  return true;
-}
-
-JS_PUBLIC_API JSObject* JS::ReadableStreamGetReader(
-    JSContext* cx, HandleObject streamObj, ReadableStreamReaderMode mode) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return nullptr;
-  }
-
-  JSObject* result = CreateReadableStreamDefaultReader(cx, unwrappedStream);
-  MOZ_ASSERT_IF(result, IsObjectInContextCompartment(result, cx));
-  return result;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamGetExternalUnderlyingSource(
-    JSContext* cx, HandleObject streamObj,
-    JS::ReadableStreamUnderlyingSource** source) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  MOZ_ASSERT(unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource);
-  if (unwrappedStream->locked()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_LOCKED);
-    return false;
-  }
-  if (!unwrappedStream->readable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "ReadableStreamGetExternalUnderlyingSource");
-    return false;
-  }
-
-  auto unwrappedController =
-      &unwrappedStream->controller()->as<ReadableByteStreamController>();
-  unwrappedController->setSourceLocked();
-  *source = unwrappedController->externalSource();
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamReleaseExternalUnderlyingSource(
-    JSContext* cx, HandleObject streamObj) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  MOZ_ASSERT(unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource);
-  MOZ_ASSERT(unwrappedStream->locked());
-  MOZ_ASSERT(unwrappedStream->controller()->sourceLocked());
-  unwrappedStream->controller()->clearSourceLocked();
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamUpdateDataAvailableFromSource(
-    JSContext* cx, JS::HandleObject streamObj, uint32_t availableData) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  // This is based on Streams spec 3.11.4.4. enqueue(chunk) steps 1-3 and
-  // 3.13.9. ReadableByteStreamControllerEnqueue(controller, chunk) steps
-  // 8-9.
-  //
-  // Adapted to handling updates signaled by the embedding for streams with
-  // external underlying sources.
-  //
-  // The remaining steps of those two functions perform checks and asserts
-  // that don't apply to streams with external underlying sources.
-
-  Rooted<ReadableByteStreamController*> unwrappedController(
-      cx, &unwrappedStream->controller()->as<ReadableByteStreamController>());
-
-  // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
-  if (unwrappedController->closeRequested()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_CLOSED, "enqueue");
-    return false;
-  }
-
-  // Step 3: If this.[[controlledReadableStream]].[[state]] is not "readable",
-  //         throw a TypeError exception.
-  if (!unwrappedController->stream()->readable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
-                              "enqueue");
-    return false;
-  }
-
-  unwrappedController->clearPullFlags();
-
-#if DEBUG
-  uint32_t oldAvailableData =
-      unwrappedController->getFixedSlot(StreamController::Slot_TotalSize)
-          .toInt32();
-#endif  // DEBUG
-  unwrappedController->setQueueTotalSize(availableData);
-
-  // 3.139. ReadableByteStreamControllerEnqueue
-  // Step 8.a: If ! ReadableStreamGetNumReadRequests(stream) is 0,
-  // Reordered because for externally-sourced streams it applies regardless
-  // of reader type.
-  if (ReadableStreamGetNumReadRequests(unwrappedStream) == 0) {
-    return true;
-  }
-
-  // Step 8: If ! ReadableStreamHasDefaultReader(stream) is true
-  bool hasDefaultReader;
-  if (!ReadableStreamHasDefaultReader(cx, unwrappedStream, &hasDefaultReader)) {
-    return false;
-  }
-  if (hasDefaultReader) {
-    // Step b: Otherwise,
-    // Step i: Assert: controller.[[queue]] is empty.
-    MOZ_ASSERT(oldAvailableData == 0);
-
-    // Step ii: Let transferredView be
-    //          ! Construct(%Uint8Array%, transferredBuffer,
-    //                      byteOffset, byteLength).
-    JSObject* viewObj = JS_NewUint8Array(cx, availableData);
-    if (!viewObj) {
-      return false;
-    }
-    Rooted<ArrayBufferViewObject*> transferredView(
-        cx, &viewObj->as<ArrayBufferViewObject>());
-    if (!transferredView) {
-      return false;
-    }
-
-    JS::ReadableStreamUnderlyingSource* source =
-        unwrappedController->externalSource();
-
-    size_t bytesWritten;
-    {
-      AutoRealm ar(cx, unwrappedStream);
-      JS::AutoSuppressGCAnalysis suppressGC(cx);
-      JS::AutoCheckCannotGC noGC;
-      bool dummy;
-      void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
-      source->writeIntoReadRequestBuffer(cx, unwrappedStream, buffer,
-                                         availableData, &bytesWritten);
-    }
-
-    // Step iii: Perform ! ReadableStreamFulfillReadRequest(stream,
-    //                                                      transferredView,
-    //                                                      false).
-    RootedValue chunk(cx, ObjectValue(*transferredView));
-    if (!ReadableStreamFulfillReadOrReadIntoRequest(cx, unwrappedStream, chunk,
-                                                    false)) {
-      return false;
-    }
-
-    unwrappedController->setQueueTotalSize(availableData - bytesWritten);
-  } else {
-    // Step 9: Otherwise, if ! ReadableStreamHasBYOBReader(stream) is true,
-    //         [...]
-    // (Omitted. BYOB readers are not implemented.)
-
-    // Step 10: Otherwise,
-    // Step a: Assert: ! IsReadableStreamLocked(stream) is false.
-    MOZ_ASSERT(!unwrappedStream->locked());
-
-    // Step b: Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(
-    //         controller, transferredBuffer, byteOffset, byteLength).
-    // (Not needed for external underlying sources.)
-  }
-
-  return true;
-}
-
-JS_PUBLIC_API void JS::ReadableStreamReleaseCCObject(JSObject* streamObj) {
-  MOZ_ASSERT(JS::IsReadableStream(streamObj));
-  JS_SetPrivate(streamObj, nullptr);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
-                                         MutableHandleObject branch1Obj,
-                                         MutableHandleObject branch2Obj) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  Rooted<ReadableStream*> branch1Stream(cx);
-  Rooted<ReadableStream*> branch2Stream(cx);
-  if (!ReadableStreamTee(cx, unwrappedStream, false, &branch1Stream,
-                         &branch2Stream)) {
-    return false;
-  }
-
-  branch1Obj.set(branch1Stream);
-  branch2Obj.set(branch2Stream);
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamGetDesiredSize(JSContext* cx,
-                                                    JSObject* streamObj,
-                                                    bool* hasValue,
-                                                    double* value) {
-  ReadableStream* unwrappedStream =
-      APIUnwrapAndDowncast<ReadableStream>(cx, streamObj);
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  if (unwrappedStream->errored()) {
-    *hasValue = false;
-    return true;
-  }
-
-  *hasValue = true;
-
-  if (unwrappedStream->closed()) {
-    *value = 0;
-    return true;
-  }
-
-  *value = ReadableStreamControllerGetDesiredSizeUnchecked(
-      unwrappedStream->controller());
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamClose(JSContext* cx,
-                                           HandleObject streamObj) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  Rooted<ReadableStreamController*> unwrappedControllerObj(
-      cx, unwrappedStream->controller());
-  if (!CheckReadableStreamControllerCanCloseOrEnqueue(
-          cx, unwrappedControllerObj, "close")) {
-    return false;
-  }
-
-  if (unwrappedControllerObj->is<ReadableStreamDefaultController>()) {
-    Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
-    unwrappedController =
-        &unwrappedControllerObj->as<ReadableStreamDefaultController>();
-    return ReadableStreamDefaultControllerClose(cx, unwrappedController);
-  }
-
-  Rooted<ReadableByteStreamController*> unwrappedController(cx);
-  unwrappedController =
-      &unwrappedControllerObj->as<ReadableByteStreamController>();
-  return ReadableByteStreamControllerClose(cx, unwrappedController);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamEnqueue(JSContext* cx,
-                                             HandleObject streamObj,
-                                             HandleValue chunk) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(chunk);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  if (unwrappedStream->mode() != JS::ReadableStreamMode::Default) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_READABLESTREAM_NOT_DEFAULT_CONTROLLER,
-                              "JS::ReadableStreamEnqueue");
-    return false;
-  }
-
-  Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
-  unwrappedController =
-      &unwrappedStream->controller()->as<ReadableStreamDefaultController>();
-
-  MOZ_ASSERT(!unwrappedController->closeRequested());
-  MOZ_ASSERT(unwrappedStream->readable());
-
-  return ReadableStreamDefaultControllerEnqueue(cx, unwrappedController, chunk);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamError(JSContext* cx,
-                                           HandleObject streamObj,
-                                           HandleValue error) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(error);
-
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, APIUnwrapAndDowncast<ReadableStream>(cx, streamObj));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  Rooted<ReadableStreamController*> unwrappedController(
-      cx, unwrappedStream->controller());
-  return ReadableStreamControllerError(cx, unwrappedController, error);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamReaderIsClosed(JSContext* cx,
-                                                    HandleObject readerObj,
-                                                    bool* result) {
-  Rooted<ReadableStreamReader*> unwrappedReader(
-      cx, APIUnwrapAndDowncast<ReadableStreamReader>(cx, readerObj));
-  if (!unwrappedReader) {
-    return false;
-  }
-
-  *result = unwrappedReader->isClosed();
-  return true;
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamReaderCancel(JSContext* cx,
-                                                  HandleObject readerObj,
-                                                  HandleValue reason) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(reason);
-
-  Rooted<ReadableStreamReader*> unwrappedReader(
-      cx, APIUnwrapAndDowncast<ReadableStreamReader>(cx, readerObj));
-  if (!unwrappedReader) {
-    return false;
-  }
-  MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
-             "C++ code should not touch readers created by scripts");
-
-  return ReadableStreamReaderGenericCancel(cx, unwrappedReader, reason);
-}
-
-JS_PUBLIC_API bool JS::ReadableStreamReaderReleaseLock(JSContext* cx,
-                                                       HandleObject readerObj) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStreamReader*> unwrappedReader(
-      cx, APIUnwrapAndDowncast<ReadableStreamReader>(cx, readerObj));
-  if (!unwrappedReader) {
-    return false;
-  }
-  MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
-             "C++ code should not touch readers created by scripts");
-
-#ifdef DEBUG
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, UnwrapStreamFromReader(cx, unwrappedReader));
-  if (!unwrappedStream) {
-    return false;
-  }
-  MOZ_ASSERT(ReadableStreamGetNumReadRequests(unwrappedStream) == 0);
-#endif  // DEBUG
-
-  return ReadableStreamReaderGenericRelease(cx, unwrappedReader);
-}
-
-JS_PUBLIC_API JSObject* JS::ReadableStreamDefaultReaderRead(
-    JSContext* cx, HandleObject readerObj) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<ReadableStreamDefaultReader*> unwrappedReader(
-      cx, APIUnwrapAndDowncast<ReadableStreamDefaultReader>(cx, readerObj));
-  if (!unwrappedReader) {
-    return nullptr;
-  }
-  MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
-             "C++ code should not touch readers created by scripts");
-
-  return js::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
-}
