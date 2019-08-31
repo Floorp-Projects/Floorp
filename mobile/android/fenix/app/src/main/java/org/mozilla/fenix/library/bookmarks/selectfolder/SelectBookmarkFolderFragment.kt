@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
@@ -41,7 +42,9 @@ import org.mozilla.fenix.library.bookmarks.SignInView
 @SuppressWarnings("TooManyFunctions")
 class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
 
-    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
     private var folderGuid: String? = null
     private var bookmarkNode: BookmarkNode? = null
     private lateinit var signInView: SignInView

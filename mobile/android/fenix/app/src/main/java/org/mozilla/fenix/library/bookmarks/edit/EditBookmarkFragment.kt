@@ -21,6 +21,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.core.view.MenuItemCompat.setContentDescription
+import androidx.lifecycle.ViewModelProvider
 import com.jakewharton.rxbinding3.widget.textChanges
 import com.uber.autodispose.AutoDispose
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
@@ -53,7 +54,9 @@ import java.util.concurrent.TimeUnit
 class EditBookmarkFragment : Fragment() {
 
     private lateinit var guidToEdit: String
-    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
     private var bookmarkNode: BookmarkNode? = null
     private var bookmarkParent: BookmarkNode? = null
 

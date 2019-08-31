@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -58,7 +59,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     private lateinit var signInView: SignInView
     private lateinit var bookmarkInteractor: BookmarkFragmentInteractor
 
-    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels()
+    private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
 
     var currentRoot: BookmarkNode? = null
     private val navigation by lazy { findNavController() }

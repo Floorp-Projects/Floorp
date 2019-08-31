@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +29,9 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 
 class CreateCollectionFragment : DialogFragment() {
     private lateinit var collectionCreationComponent: CollectionCreationComponent
-    private val viewModel: CreateCollectionViewModel by activityViewModels()
+    private val viewModel: CreateCollectionViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
