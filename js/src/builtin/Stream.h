@@ -14,7 +14,6 @@
 
 namespace js {
 
-class ReadableStreamReader;
 class ReadableStreamController;
 
 class ReadableStream : public NativeObject {
@@ -113,97 +112,6 @@ class ReadableStream : public NativeObject {
       void* nsISupportsObject_alreadyAddreffed = nullptr,
       HandleObject proto = nullptr);
 
-  static bool constructor(JSContext* cx, unsigned argc, Value* vp);
-  static const ClassSpec classSpec_;
-  static const JSClass class_;
-  static const ClassSpec protoClassSpec_;
-  static const JSClass protoClass_;
-};
-
-/**
- * Tells whether or not read() result objects inherit from Object.prototype.
- * Generally, they should do so only if the reader was created by author code.
- * See <https://streams.spec.whatwg.org/#readable-stream-create-read-result>.
- */
-enum class ForAuthorCodeBool { No, Yes };
-
-class ReadableStreamReader : public NativeObject {
- public:
-  /**
-   * Memory layout of Stream Reader instances.
-   *
-   * See https://streams.spec.whatwg.org/#default-reader-internal-slots and
-   * https://streams.spec.whatwg.org/#byob-reader-internal-slots for details.
-   *
-   * Note that [[readRequests]] and [[readIntoRequests]] are treated the same
-   * in our implementation.
-   *
-   * Of the stored values, Stream and ClosedPromise might be
-   * cross-compartment wrapper wrappers.
-   *
-   * For Stream, this can happen if the Reader was created by applying a
-   * different compartment's ReadableStream.prototype.getReader method.
-   *
-   * For ClosedPromise, it can be caused by applying a different
-   * compartment's ReadableStream*Reader.prototype.releaseLock method.
-   *
-   * Requests is guaranteed to be in the same compartment as the Reader, but
-   * can contain wrapped request objects from other globals.
-   */
-  enum Slots {
-    Slot_Stream,
-    Slot_Requests,
-    Slot_ClosedPromise,
-    Slot_ForAuthorCode,
-    SlotCount,
-  };
-
-  bool hasStream() const { return !getFixedSlot(Slot_Stream).isUndefined(); }
-  void setStream(JSObject* stream) {
-    setFixedSlot(Slot_Stream, ObjectValue(*stream));
-  }
-  void clearStream() { setFixedSlot(Slot_Stream, UndefinedValue()); }
-  bool isClosed() { return !hasStream(); }
-
-  /**
-   * Tells whether this reader was created by author code.
-   *
-   * This returns Yes for readers created using `stream.getReader()`, and No
-   * for readers created for the internal use of algorithms like
-   * `stream.tee()` and `new Response(stream)`.
-   *
-   * The standard does not have this field. Instead, eight algorithms take a
-   * forAuthorCode parameter, and a [[forAuthorCode]] field is part of each
-   * read request. But the behavior is always equivalent to treating readers
-   * created by author code as having a bit set on them. We implement it that
-   * way for simplicity.
-   */
-  ForAuthorCodeBool forAuthorCode() const {
-    return getFixedSlot(Slot_ForAuthorCode).toBoolean() ? ForAuthorCodeBool::Yes
-                                                        : ForAuthorCodeBool::No;
-  }
-  void setForAuthorCode(ForAuthorCodeBool value) {
-    setFixedSlot(Slot_ForAuthorCode,
-                 BooleanValue(value == ForAuthorCodeBool::Yes));
-  }
-
-  ListObject* requests() const {
-    return &getFixedSlot(Slot_Requests).toObject().as<ListObject>();
-  }
-  void clearRequests() { setFixedSlot(Slot_Requests, UndefinedValue()); }
-
-  JSObject* closedPromise() const {
-    return &getFixedSlot(Slot_ClosedPromise).toObject();
-  }
-  void setClosedPromise(JSObject* wrappedPromise) {
-    setFixedSlot(Slot_ClosedPromise, ObjectValue(*wrappedPromise));
-  }
-
-  static const JSClass class_;
-};
-
-class ReadableStreamDefaultReader : public ReadableStreamReader {
- public:
   static bool constructor(JSContext* cx, unsigned argc, Value* vp);
   static const ClassSpec classSpec_;
   static const JSClass class_;
@@ -443,11 +351,6 @@ template <>
 inline bool JSObject::is<js::ReadableStreamController>() const {
   return is<js::ReadableStreamDefaultController>() ||
          is<js::ReadableByteStreamController>();
-}
-
-template <>
-inline bool JSObject::is<js::ReadableStreamReader>() const {
-  return is<js::ReadableStreamDefaultReader>();
 }
 
 namespace js {
