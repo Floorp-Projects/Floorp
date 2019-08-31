@@ -736,7 +736,8 @@ bool CompositorOGL::BlitRenderTarget(CompositingRenderTarget* aSource,
   GLuint srcFBO = source->GetFBO();
   GLuint destFBO = mCurrentRenderTarget->GetFBO();
   mGLContext->BlitHelper()->BlitFramebufferToFramebuffer(
-      srcFBO, destFBO, aSourceSize, aDestSize, LOCAL_GL_LINEAR);
+      srcFBO, destFBO, IntRect(IntPoint(), aSourceSize),
+      IntRect(IntPoint(), aDestSize), LOCAL_GL_LINEAR);
   return true;
 }
 
