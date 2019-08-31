@@ -129,12 +129,6 @@ class ReadableStream : public NativeObject {
   static const JSClass protoClass_;
 };
 
-extern MOZ_MUST_USE bool
-SetUpReadableStreamDefaultControllerFromUnderlyingSource(
-    JSContext* cx, JS::Handle<ReadableStream*> stream,
-    JS::Handle<JS::Value> underlyingSource, double highWaterMark,
-    JS::Handle<JS::Value> sizeAlgorithm);
-
 extern MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
     JSContext* cx, JS::Handle<ReadableStream*> stream,
     JS::ReadableStreamUnderlyingSource* source);

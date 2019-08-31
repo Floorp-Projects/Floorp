@@ -17,6 +17,7 @@
 #include "builtin/Array.h"                   // js::NewDenseFullyAllocatedArray
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::MakeSizeAlgorithmFromSizeFunction, js::ValidateAndNormalizeHighWaterMark, js::ReturnPromiseRejectedWithPendingError
+#include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool
