@@ -9,6 +9,9 @@
 #ifdef MOZ_APPLEMEDIA
 #  include "AppleEncoderModule.h"
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#  include "AndroidEncoderModule.h"
+#endif
 
 namespace mozilla {
 
@@ -18,6 +21,9 @@ PEMFactory::PEMFactory() {
 #ifdef MOZ_APPLEMEDIA
   RefPtr<PlatformEncoderModule> m(new AppleEncoderModule());
   mModules.AppendElement(m);
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+  mModules.AppendElement(new AndroidEncoderModule());
 #endif
 }
 
