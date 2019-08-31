@@ -1057,7 +1057,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
           mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion();
       opaqueRegion.AndWith(mRenderBounds);
       mNativeLayerForEntireWindow->SetOpaqueRegion(
-          opaqueRegion.MovedBy(-mRenderBounds.TopLeft());
+          opaqueRegion.MovedBy(-mRenderBounds.TopLeft()));
 #endif
 
       do {
