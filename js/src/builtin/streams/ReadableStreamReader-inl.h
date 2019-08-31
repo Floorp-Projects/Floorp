@@ -14,7 +14,7 @@
 
 #include "jsfriendapi.h"  // JS_IsDeadWrapper
 
-#include "builtin/Stream.h"   // js::ReadableStream
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "js/Proxy.h"         // js::IsProxy
 #include "js/RootingAPI.h"    // JS::Handle
 #include "vm/NativeObject.h"  // js::NativeObject::getFixedSlot

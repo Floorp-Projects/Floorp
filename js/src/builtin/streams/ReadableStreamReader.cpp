@@ -14,7 +14,8 @@
 #include "jsfriendapi.h"  // JS_ReportErrorNumberASCII, js::GetErrorMessage
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "builtin/Stream.h"   // js::ReadableStream{,Controller}
+#include "builtin/Stream.h"   // js::ReadableStreamController
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
 #include "js/Value.h"         // JS::Value, JS::UndefinedHandleValue
 #include "vm/Interpreter.h"   // js::GetAndClearException

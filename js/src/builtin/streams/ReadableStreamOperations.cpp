@@ -15,7 +15,8 @@
 
 #include "builtin/Array.h"  // js::NewDenseFullyAllocatedArray
 #include "builtin/Promise.h"  // js::PromiseObject, js::RejectPromiseWithPendingError
-#include "builtin/Stream.h"  // js::ReadableStream{,{,Default}Controller}, js::ReadableStreamDefaultControllerClose, js::ReadableStreamDefaultControllerEnqueue, js::ReadableStreamControllerError
+#include "builtin/Stream.h"  // js::ReadableStream{,Default}Controller, js::ReadableStreamDefaultControllerClose, js::ReadableStreamDefaultControllerEnqueue, js::ReadableStreamControllerError
+#include "builtin/streams/ReadableStream.h"        // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ReadableStream{,Default}Reader, js::ReadableStreamDefaultReaderRead, js::ReadableStreamCancel
 #include "builtin/streams/TeeState.h"              // js::TeeState
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}

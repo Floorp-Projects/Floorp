@@ -15,7 +15,8 @@
 #include "jsfriendapi.h"  // JS_GetArrayBufferViewData, js::IsObjectInContextCompartment, js::GetErrorMessage, JSMSG_*
 #include "jstypes.h"      // JS_{FRIEND,PUBLIC}_API
 
-#include "builtin/Stream.h"  // js::ReadableStream{,GetNumReadRequests,FulfillReadOrReadIntoRequest,HasDefaultReader}, js::ReadableStreamController{,Error,GetDesiredSizeUnchecked}, js::ReadableByteStreamController{,Close}, js::ReadableStreamDefaultController{,Close}, js::StreamController, js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
+#include "builtin/Stream.h"  // js::ReadableStream{GetNumReadRequests,FulfillReadOrReadIntoRequest,HasDefaultReader}, js::ReadableStreamController{,Error,GetDesiredSizeUnchecked}, js::ReadableByteStreamController{,Close}, js::ReadableStreamDefaultController{,Close}, js::StreamController
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
 #include "gc/Zone.h"        // JS::Zone
