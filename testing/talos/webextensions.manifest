@@ -1,0 +1,9 @@
+[
+  {
+    "size": 2608427,
+    "visibility": "public",
+    "digest": "f3198257ca82043bb9fe9a7085cff7af6f0d11685a0416ebb73e8edec547b970dd044666120e44898e2de36372add88ef93cd08af79dcd03e32fa1e9ef2053c8",
+    "algorithm": "sha512",
+    "filename": "webextensions.zip"
+  }
+]

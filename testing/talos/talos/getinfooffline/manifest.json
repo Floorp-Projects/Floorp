@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "Make the getinfo step happen offline for Talos",
+  "description": "Puts the browser in offline mode during the getinfo step and then uninstalls itself so that the browser runs in online mode for subsequent starts. This is useful when running startup tests that instal add-ons that like to open up network requests after being installed for the first time, which normally would cause the test runner to crash.",
+  "version": "0.1",
+
+  "applications": {
+    "gecko": {
+      "id": "getinfooffline@mozilla.org"
+    }
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "experiment_apis": {
+    "getinfooffline": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}
