@@ -32,7 +32,8 @@
 #define NUM_FRAMES 150UL
 #define FRAME_RATE 30
 #define FRAME_DURATION (1000000 / FRAME_RATE)
-#define BIT_RATE (1000 * 1000)  // 1Mbps
+#define BIT_RATE (1000 * 1000)        // 1Mbps
+#define KEYFRAME_INTERVAL FRAME_RATE  // 1 keyframe per second
 
 using namespace mozilla;
 
@@ -133,8 +134,11 @@ class MediaDataEncoderTest : public testing::Test {
 };
 
 static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
-    MediaDataEncoder::Usage aUsage,
-    MediaDataEncoder::PixelFormat aPixelFormat) {
+    MediaDataEncoder::Usage aUsage, MediaDataEncoder::PixelFormat aPixelFormat,
+    const Maybe<MediaDataEncoder::H264Specific>& aSpecific =
+        Some(MediaDataEncoder::H264Specific(
+            KEYFRAME_INTERVAL,
+            MediaDataEncoder::H264Specific::ProfileLevel::BaselineAutoLevel))) {
   RefPtr<PEMFactory> f(new PEMFactory());
 
   if (!f->SupportsMimeType(NS_LITERAL_CSTRING(VIDEO_MP4))) {
@@ -145,10 +149,19 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
   videoInfo.mMimeType = NS_LITERAL_CSTRING(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)));
-  CreateEncoderParams c(videoInfo /* track info */, aUsage, taskQueue,
-                        aPixelFormat, FRAME_RATE /* FPS */,
-                        BIT_RATE /* bitrate */);
-  return f->CreateEncoder(c);
+
+  RefPtr<MediaDataEncoder> e;
+  if (aSpecific) {
+    e = f->CreateEncoder(CreateEncoderParams(
+        videoInfo /* track info */, aUsage, taskQueue, aPixelFormat,
+        FRAME_RATE /* FPS */, BIT_RATE /* bitrate */, aSpecific.value()));
+  } else {
+    e = f->CreateEncoder(CreateEncoderParams(
+        videoInfo /* track info */, aUsage, taskQueue, aPixelFormat,
+        FRAME_RATE /* FPS */, BIT_RATE /* bitrate */));
+  }
+
+  return e.forget();
 }
 
 void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
@@ -196,6 +209,22 @@ static bool EnsureInit(RefPtr<MediaDataEncoder> aEncoder) {
       },
       [&succeeded](MediaResult r) { succeeded = false; });
   return succeeded;
+}
+
+TEST_F(MediaDataEncoderTest, H264InitWithoutSpecific) {
+  SKIP_IF_NOT_SUPPORTED(VIDEO_MP4);
+
+  RefPtr<MediaDataEncoder> e =
+      CreateH264Encoder(MediaDataEncoder::Usage::Realtime,
+                        MediaDataEncoder::PixelFormat::YUV420P, Nothing());
+
+#if defined(MOZ_WIDGET_ANDROID)  // Android encoder requires I-frame interval
+  EXPECT_FALSE(EnsureInit(e));
+#else
+  EXPECT_TRUE(EnsureInit(e));
+#endif
+
+  WaitForShutdown(e);
 }
 
 TEST_F(MediaDataEncoderTest, H264Init) {
