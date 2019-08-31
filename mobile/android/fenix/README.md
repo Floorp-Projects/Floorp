@@ -1,26 +1,50 @@
 # Firefox Preview
 
+[![Task Status](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-mobile/fenix/master/latest)
+[![codecov](https://codecov.io/gh/mozilla-mobile/fenix/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/fenix)
+
 Firefox Preview (internal code name: "Fenix") is an all-new browser for Android, based on [GeckoView](https://mozilla.github.io/geckoview/) and [Mozilla Android Components](https://mozac.org/).
 
-## Getting Involved
+## I want to open a Pull Request!
 
-We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any other kind of positive contribution. 
+We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any other kind of positive contribution.
+
+Since we are a small team, however, **we do not have the bandwidth to review unsolicited PRs**. Please follow our [Pull Request guidelines](https://github.com/mozilla-mobile/shared-docs/blob/master/android/CONTRIBUTING_code.md#creating-a-pull-request), or **we may close the PR**.
+
+To make it easier to review, we have these PR requirements:
+
+* Every PR must have **exactly** one issue associated with it.
+* Write a clear explanation of what the code is doing when opening the pull request, and optionally add comments to the PR.
+* Make sure there are tests - or ask for help on how the code should be tested in the Issue!
+* Keep PRs small and to the point. For extra code-health changes, either file a separate issue, or make it a separate PR that can be easily reviewed.
+* Use micro-commits. This makes it easier and faster to review.
+* Add a screenshot for UX changes (this is part of the PR checklist)
+
+As a small team, we have to prioritize our work, and reviewing PRs takes time. We receive lots of PRs every day, so if you can keep your PRs small, it helps our small team review and merge code faster, minimizing stale code.
+
+
+Keep in mind that the team is very overloaded, so PRs sometimes wait
+for a *very* long time. However this is not for lack of interest, but
+because we find ourselves in a constant need to prioritize
+certain issues/PRs over others. If you think your issue/PR is very important,
+try to popularize it by getting other users to comment and share their point of view.
+
+## Getting Involved
 
 Before you attempt to make a contribution please read the [Community Participation Guidelines](https://www.mozilla.org/en-US/about/governance/policies/participation/).
 
 * [Guide to Contributing](https://github.com/mozilla-mobile/shared-docs/blob/master/android/CONTRIBUTING.md) (**New contributors start here!**)
 
-* [View current Issues](https://github.com/mozilla-mobile/fenix/issues), [view current Pull Requests](https://github.com/mozilla-mobile/fenix/pulls), or [file a security issue][sec issue].
+* Browse our [current Issues](https://github.com/mozilla-mobile/fenix/issues), or [file a security issue][sec issue].
 
 * IRC: [#fenix (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/fenix/)
 (**We're available Monday-Friday, GMT and PST working hours**).
 
-* [View the Wiki](https://github.com/mozilla-mobile/fenix/wiki).
+* Check out the [project wiki](https://github.com/mozilla-mobile/fenix/wiki) for more information.
 
 * Localization happens on [Pontoon](https://pontoon.mozilla.org/projects/android-l10n/). Please get in touch with delphine (at) mozilla (dot) com directly for more information.
 
 **Beginners!** - Watch out for [Issues with the "Good First Issue" label](https://github.com/mozilla-mobile/fenix/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22). These are easy bugs that have been left for first timers to have a go, get involved and make a positive contribution to the project!
-
 
 ## Build Instructions
 
