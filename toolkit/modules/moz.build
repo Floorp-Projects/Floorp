@@ -188,7 +188,6 @@ EXTRA_JS_MODULES += [
     'FinderHighlighter.jsm',
     'FinderIterator.jsm',
     'FinderParent.jsm',
-    'FirstStartup.jsm',
     'FormLikeFactory.jsm',
     'Geometry.jsm',
     'GMPExtractorWorker.js',
