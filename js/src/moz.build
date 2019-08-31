@@ -225,6 +225,7 @@ UNIFIED_SOURCES += [
     'builtin/ReflectParse.cpp',
     'builtin/Stream.cpp',
     'builtin/streams/MiscellaneousOperations.cpp',
+    'builtin/streams/PullIntoDescriptor.cpp',
     'builtin/streams/QueueingStrategies.cpp',
     'builtin/streams/QueueWithSizes.cpp',
     'builtin/streams/ReadableStreamDefaultReader.cpp',
