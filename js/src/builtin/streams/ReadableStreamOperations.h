@@ -20,23 +20,6 @@ class ReadableStream;
 class ReadableStreamDefaultController;
 class TeeState;
 
-/**
- * Characterizes the family of algorithms, (startAlgorithm, pullAlgorithm,
- * cancelAlgorithm), associated with a readable stream.
- *
- * See the comment on SetUpReadableStreamDefaultController().
- */
-enum class SourceAlgorithms {
-  Script,
-  Tee,
-};
-
-extern MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
-    JSContext* cx, JS::Handle<ReadableStream*> stream,
-    SourceAlgorithms sourceAlgorithms, JS::Handle<JS::Value> underlyingSource,
-    JS::Handle<JS::Value> pullMethod, JS::Handle<JS::Value> cancelMethod,
-    double highWaterMark, JS::Handle<JS::Value> size);
-
 extern MOZ_MUST_USE JSObject* ReadableStreamTee_Pull(
     JSContext* cx, JS::Handle<TeeState*> unwrappedTeeState);
 

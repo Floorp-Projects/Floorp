@@ -13,13 +13,13 @@
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*, js::AssertSameCompartment
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "builtin/Stream.h"  // js::ReadableStreamController{CallPullIfNeeded,ClearAlgorithms,Error,GetDesiredSizeUnchecked}, js::ReadableStreamDefaultController{Close,Enqueue},
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::IsMaybeWrapped, js::PromiseCall
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,ResetQueue}
-#include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController, js::SetUpReadableStreamDefaultControllerFromUnderlyingSource
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller, js::ReadableByteStreamController, js::CheckReadableStreamControllerCanCloseOrEnqueue, js::ReadableStreamControllerCancelSteps, js::ReadableStreamDefaultControllerPullSteps, js::ControllerStart{,Failed}Handler
+#include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamController{CallPullIfNeeded,ClearAlgorithms,Error,GetDesiredSizeUnchecked}, js::ReadableStreamDefaultController{Close,Enqueue}
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStream{AddReadOrReadIntoRequest,CloseInternal,CreateReadResult}
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStreamTee_Cancel
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader
