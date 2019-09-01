@@ -20,8 +20,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
-using namespace std;
-
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
 
 class TestManager {
@@ -29,7 +27,7 @@ class TestManager {
   TestManager() = default;
 
   // Register a test with the test manager.
-  void BeginTest(const string& aTestID) {
+  void BeginTest(const std::string& aTestID) {
     std::lock_guard<std::mutex> lock(mMutex);
     auto found = mTestIDs.find(aTestID);
     if (found == mTestIDs.end()) {
@@ -42,7 +40,7 @@ class TestManager {
   // Notify the test manager that the test is finished. If all tests are done,
   // test manager will send "test-storage complete" to notify the parent that
   // all tests are finished and also delete itself.
-  void EndTest(const string& aTestID) {
+  void EndTest(const std::string& aTestID) {
     bool isEmpty = false;
     {
       std::lock_guard<std::mutex> lock(mMutex);
@@ -64,12 +62,12 @@ class TestManager {
  private:
   ~TestManager() = default;
 
-  static void Error(const string& msg) { FakeDecryptor::Message(msg); }
+  static void Error(const std::string& msg) { FakeDecryptor::Message(msg); }
 
   static void Finish() { FakeDecryptor::Message("test-storage complete"); }
 
   std::mutex mMutex;
-  set<string> mTestIDs;
+  std::set<std::string> mTestIDs;
 };
 
 FakeDecryptor::FakeDecryptor(cdm::Host_10* aHost) : mHost(aHost) {
@@ -91,26 +89,26 @@ std::vector<std::string> Tokenize(const std::string& aString) {
   return std::vector<std::string>(it, end);
 }
 
-static const string TruncateRecordId = "truncate-record-id";
-static const string TruncateRecordData = "I will soon be truncated";
+static const std::string TruncateRecordId = "truncate-record-id";
+static const std::string TruncateRecordData = "I will soon be truncated";
 
 template <class Continuation>
 class WriteRecordSuccessTask {
  public:
-  WriteRecordSuccessTask(string aId, Continuation aThen)
-      : mId(aId), mThen(move(aThen)) {}
+  WriteRecordSuccessTask(std::string aId, Continuation aThen)
+      : mId(aId), mThen(std::move(aThen)) {}
 
   void operator()() { ReadRecord(FakeDecryptor::sInstance->mHost, mId, mThen); }
 
-  string mId;
+  std::string mId;
   Continuation mThen;
 };
 
 class WriteRecordFailureTask {
  public:
-  explicit WriteRecordFailureTask(const string& aMessage,
+  explicit WriteRecordFailureTask(const std::string& aMessage,
                                   TestManager* aTestManager = nullptr,
-                                  const string& aTestID = "")
+                                  const std::string& aTestID = "")
       : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void operator()() {
@@ -121,14 +119,14 @@ class WriteRecordFailureTask {
   }
 
  private:
-  string mMessage;
+  std::string mMessage;
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
 class TestEmptyContinuation : public ReadContinuation {
  public:
-  TestEmptyContinuation(TestManager* aTestManager, const string& aTestID)
+  TestEmptyContinuation(TestManager* aTestManager, const std::string& aTestID)
       : mTestmanager(aTestManager), mTestID(aTestID) {}
 
   virtual void operator()(bool aSuccess, const uint8_t* aData,
@@ -142,18 +140,18 @@ class TestEmptyContinuation : public ReadContinuation {
 
  private:
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
 class TruncateContinuation : public ReadContinuation {
  public:
-  TruncateContinuation(const string& aID, TestManager* aTestManager,
-                       const string& aTestID)
+  TruncateContinuation(const std::string& aID, TestManager* aTestManager,
+                       const std::string& aTestID)
       : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   virtual void operator()(bool aSuccess, const uint8_t* aData,
                           uint32_t aDataSize) override {
-    if (string(reinterpret_cast<const char*>(aData), aDataSize) !=
+    if (std::string(reinterpret_cast<const char*>(aData), aDataSize) !=
         TruncateRecordData) {
       FakeDecryptor::Message(
           "FAIL TruncateContinuation read data doesn't match written data");
@@ -166,20 +164,22 @@ class TruncateContinuation : public ReadContinuation {
   }
 
  private:
-  const string mID;
+  const std::string mID;
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
 class VerifyAndFinishContinuation : public ReadContinuation {
  public:
-  explicit VerifyAndFinishContinuation(string aValue, TestManager* aTestManager,
-                                       const string& aTestID)
+  explicit VerifyAndFinishContinuation(std::string aValue,
+                                       TestManager* aTestManager,
+                                       const std::string& aTestID)
       : mValue(aValue), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   virtual void operator()(bool aSuccess, const uint8_t* aData,
                           uint32_t aDataSize) override {
-    if (string(reinterpret_cast<const char*>(aData), aDataSize) != mValue) {
+    if (std::string(reinterpret_cast<const char*>(aData), aDataSize) !=
+        mValue) {
       FakeDecryptor::Message(
           "FAIL VerifyAndFinishContinuation read data doesn't match expected "
           "data");
@@ -188,16 +188,17 @@ class VerifyAndFinishContinuation : public ReadContinuation {
   }
 
  private:
-  string mValue;
+  std::string mValue;
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
 class VerifyAndOverwriteContinuation : public ReadContinuation {
  public:
-  VerifyAndOverwriteContinuation(string aId, string aValue, string aOverwrite,
+  VerifyAndOverwriteContinuation(std::string aId, std::string aValue,
+                                 std::string aOverwrite,
                                  TestManager* aTestManager,
-                                 const string& aTestID)
+                                 const std::string& aTestID)
       : mId(aId),
         mValue(aValue),
         mOverwrite(aOverwrite),
@@ -206,7 +207,8 @@ class VerifyAndOverwriteContinuation : public ReadContinuation {
 
   virtual void operator()(bool aSuccess, const uint8_t* aData,
                           uint32_t aDataSize) override {
-    if (string(reinterpret_cast<const char*>(aData), aDataSize) != mValue) {
+    if (std::string(reinterpret_cast<const char*>(aData), aDataSize) !=
+        mValue) {
       FakeDecryptor::Message(
           "FAIL VerifyAndOverwriteContinuation read data doesn't match "
           "expected data");
@@ -219,19 +221,19 @@ class VerifyAndOverwriteContinuation : public ReadContinuation {
   }
 
  private:
-  string mId;
-  string mValue;
-  string mOverwrite;
+  std::string mId;
+  std::string mValue;
+  std::string mOverwrite;
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
-static const string OpenAgainRecordId = "open-again-record-id";
+static const std::string OpenAgainRecordId = "open-again-record-id";
 
 class OpenedSecondTimeContinuation : public OpenContinuation {
  public:
   explicit OpenedSecondTimeContinuation(TestManager* aTestManager,
-                                        const string& aTestID)
+                                        const std::string& aTestID)
       : mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void operator()(bool aSuccess) override {
@@ -246,13 +248,13 @@ class OpenedSecondTimeContinuation : public OpenContinuation {
 
  private:
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
 class OpenedFirstTimeContinuation : public OpenContinuation {
  public:
-  OpenedFirstTimeContinuation(const string& aID, TestManager* aTestManager,
-                              const string& aTestID)
+  OpenedFirstTimeContinuation(const std::string& aID, TestManager* aTestManager,
+                              const std::string& aTestID)
       : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void operator()(bool aSuccess) override {
@@ -268,12 +270,13 @@ class OpenedFirstTimeContinuation : public OpenContinuation {
   }
 
  private:
-  const string mID;
+  const std::string mID;
   TestManager* const mTestmanager;
-  const string mTestID;
+  const std::string mTestID;
 };
 
-static void DoTestStorage(const string& aPrefix, TestManager* aTestManager) {
+static void DoTestStorage(const std::string& aPrefix,
+                          TestManager* aTestManager) {
   MOZ_ASSERT(FakeDecryptor::sInstance->mHost,
              "FakeDecryptor::sInstance->mHost should not be null");
   // Basic I/O tests. We run three cases concurrently. The tests, like
@@ -287,8 +290,8 @@ static void DoTestStorage(const string& aPrefix, TestManager* aTestManager) {
   // read data, verify that we read what we wrote, then
   // write 0 bytes to truncate record, then
   // read data, verify that 0 bytes was read
-  const string id1 = aPrefix + TruncateRecordId;
-  const string testID1 = aPrefix + "write-test-1";
+  const std::string id1 = aPrefix + TruncateRecordId;
+  const std::string testID1 = aPrefix + "write-test-1";
   aTestManager->BeginTest(testID1);
   auto cont1 = TruncateContinuation(id1, aTestManager, testID1);
   auto msg1 = "FAIL in TestStorage writing TruncateRecord.";
@@ -303,10 +306,10 @@ static void DoTestStorage(const string& aPrefix, TestManager* aTestManager) {
   // read and verify record, then
   // write a shorter record to same record.
   // read and verify
-  string id2 = aPrefix + "record1";
-  string record1 = "This is the first write to a record.";
-  string overwrite = "A shorter record";
-  const string testID2 = aPrefix + "write-test-2";
+  std::string id2 = aPrefix + "record1";
+  std::string record1 = "This is the first write to a record.";
+  std::string overwrite = "A shorter record";
+  const std::string testID2 = aPrefix + "write-test-2";
   aTestManager->BeginTest(testID2);
   auto task2 = VerifyAndOverwriteContinuation(id2, record1, overwrite,
                                               aTestManager, testID2);
@@ -321,8 +324,8 @@ static void DoTestStorage(const string& aPrefix, TestManager* aTestManager) {
   // Open record1, then
   // open record1, should fail.
   // close record1
-  const string id3 = aPrefix + OpenAgainRecordId;
-  const string testID3 = aPrefix + "open-test-1";
+  const std::string id3 = aPrefix + OpenAgainRecordId;
+  const std::string testID3 = aPrefix + "open-test-1";
   aTestManager->BeginTest(testID3);
   auto task3 = OpenedFirstTimeContinuation(id3, aTestManager, testID3);
   OpenRecord(FakeDecryptor::sInstance->mHost, id3, task3);
@@ -340,39 +343,39 @@ void FakeDecryptor::TestStorage() {
 
 class ReportWritten {
  public:
-  ReportWritten(const string& aRecordId, const string& aValue)
+  ReportWritten(const std::string& aRecordId, const std::string& aValue)
       : mRecordId(aRecordId), mValue(aValue) {}
   void operator()() {
     FakeDecryptor::Message("stored " + mRecordId + " " + mValue);
   }
 
-  const string mRecordId;
-  const string mValue;
+  const std::string mRecordId;
+  const std::string mValue;
 };
 
 class ReportReadStatusContinuation : public ReadContinuation {
  public:
-  explicit ReportReadStatusContinuation(const string& aRecordId)
+  explicit ReportReadStatusContinuation(const std::string& aRecordId)
       : mRecordId(aRecordId) {}
   void operator()(bool aSuccess, const uint8_t* aData,
                   uint32_t aDataSize) override {
     if (!aSuccess) {
       FakeDecryptor::Message("retrieve " + mRecordId + " failed");
     } else {
-      stringstream ss;
+      std::stringstream ss;
       ss << aDataSize;
-      string len;
+      std::string len;
       ss >> len;
       FakeDecryptor::Message("retrieve " + mRecordId + " succeeded (length " +
                              len + " bytes)");
     }
   }
-  string mRecordId;
+  std::string mRecordId;
 };
 
 class ReportReadRecordContinuation : public ReadContinuation {
  public:
-  explicit ReportReadRecordContinuation(const string& aRecordId)
+  explicit ReportReadRecordContinuation(const std::string& aRecordId)
       : mRecordId(aRecordId) {}
   void operator()(bool aSuccess, const uint8_t* aData,
                   uint32_t aDataSize) override {
@@ -381,16 +384,16 @@ class ReportReadRecordContinuation : public ReadContinuation {
     } else {
       FakeDecryptor::Message(
           "retrieved " + mRecordId + " " +
-          string(reinterpret_cast<const char*>(aData), aDataSize));
+          std::string(reinterpret_cast<const char*>(aData), aDataSize));
     }
   }
-  string mRecordId;
+  std::string mRecordId;
 };
 
 enum ShutdownMode { ShutdownNormal, ShutdownTimeout, ShutdownStoreToken };
 
 static ShutdownMode sShutdownMode = ShutdownNormal;
-static string sShutdownToken;
+static std::string sShutdownToken;
 
 void FakeDecryptor::UpdateSession(uint32_t aPromiseId, const char* aSessionId,
                                   uint32_t aSessionIdLength,
@@ -401,22 +404,22 @@ void FakeDecryptor::UpdateSession(uint32_t aPromiseId, const char* aSessionId,
   std::string response((const char*)aResponse,
                        (const char*)(aResponse) + aResponseSize);
   std::vector<std::string> tokens = Tokenize(response);
-  const string& task = tokens[0];
+  const std::string& task = tokens[0];
   if (task == "test-storage") {
     TestStorage();
   } else if (task == "store") {
     // send "stored record" message on complete.
-    const string& id = tokens[1];
-    const string& value = tokens[2];
+    const std::string& id = tokens[1];
+    const std::string& value = tokens[2];
     WriteRecord(FakeDecryptor::sInstance->mHost, id, value,
                 ReportWritten(id, value),
                 WriteRecordFailureTask("FAIL in writing record."));
   } else if (task == "retrieve") {
-    const string& id = tokens[1];
+    const std::string& id = tokens[1];
     ReadRecord(FakeDecryptor::sInstance->mHost, id,
                ReportReadStatusContinuation(id));
   } else if (task == "shutdown-mode") {
-    const string& mode = tokens[1];
+    const std::string& mode = tokens[1];
     if (mode == "timeout") {
       sShutdownMode = ShutdownTimeout;
     } else if (mode == "token") {
