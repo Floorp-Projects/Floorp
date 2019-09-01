@@ -258,6 +258,7 @@ Services.obs.addObserver(
   {
     observe(subject, topic, data) {
       assert(topic == "webnavigation-create");
+      subject.QueryInterface(Ci.nsIDocShell);
       subject.watchedByDevtools = true;
     },
   },
