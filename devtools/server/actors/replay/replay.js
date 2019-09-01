@@ -222,7 +222,7 @@ function considerScript(script) {
 
 function setEmptyInstrumentationId(script) {
   script.setInstrumentationId(0);
-  script.getChildScripts().foreach(setEmptyInstrumentationId);
+  script.getChildScripts().forEach(setEmptyInstrumentationId);
 }
 
 dbg.onNewScript = function(script) {
