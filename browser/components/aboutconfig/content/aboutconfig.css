@@ -180,3 +180,7 @@ td.cell-value > form > input[type="number"] {
 .button-reset {
   background-image: url("chrome://browser/skin/undo.svg");
 }
+
+.button-reset:dir(rtl) {
+  transform: scaleX(-1);
+}
