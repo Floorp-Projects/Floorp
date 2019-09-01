@@ -26,7 +26,7 @@ linux64-clang-4.0:
         fetch:
             - clang-4.0
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-7:
     description: "Clang 7 toolchain build"
@@ -44,7 +44,7 @@ linux64-clang-7:
         fetch:
             - clang-7
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-8:
     description: "Clang 8 toolchain build"
@@ -63,7 +63,7 @@ linux64-clang-8:
         fetch:
             - clang-8
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-8-mingw-x86:
     description: "MinGW-Clang Trunk x86 toolchain build"
@@ -85,7 +85,7 @@ linux64-clang-8-mingw-x86:
             - libunwind
             - llvm-mingw
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-8-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
@@ -108,7 +108,7 @@ linux64-clang-8-mingw-x64:
             - libunwind
             - llvm-mingw
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-8-android-cross:
     description: "Clang 8 toolchain build"
@@ -127,7 +127,7 @@ linux64-clang-8-android-cross:
         fetch:
             - clang-8
         toolchain:
-            - linux64-gcc-7
+            - linux64-gcc-6
             - linux64-android-ndk-linux-repack
 
 linux64-clang-8-aarch64-cross:
@@ -152,7 +152,7 @@ linux64-clang-8-aarch64-cross:
             - clang-8
         toolchain:
             - linux64-binutils
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 linux64-clang-8-macosx-cross:
     description: "Clang 8 toolchain build with MacOS Compiler RT libs"
@@ -179,7 +179,7 @@ linux64-clang-8-macosx-cross:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-8
-            - linux64-gcc-7
+            - linux64-gcc-6
 
 macosx64-clang:
     description: "Clang toolchain build"
@@ -208,7 +208,7 @@ macosx64-clang:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-8
-            - linux64-gcc-7
+            - linux64-gcc-6
             - linux64-node
 
 win64-clang-cl:
