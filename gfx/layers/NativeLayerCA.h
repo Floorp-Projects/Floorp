@@ -9,10 +9,11 @@
 #include <IOSurface/IOSurface.h>
 
 #include <deque>
+#include <unordered_map>
 
-#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 
+#include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/layers/NativeLayer.h"
 #include "CFTypeRefPtr.h"
 #include "nsRegion.h"
@@ -25,6 +26,12 @@ typedef void CALayer;
 #endif
 
 namespace mozilla {
+
+namespace gl {
+class GLContextCGL;
+class MozFramebuffer;
+}  // namespace gl
+
 namespace layers {
 
 class IOSurfaceRegistry {
@@ -100,6 +107,9 @@ class NativeLayerCA : public NativeLayer {
       const gfx::IntRegion& aRegion) override;
   RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
       gfx::BackendType aBackendType) override;
+  void SetGLContext(gl::GLContext* aGLContext) override;
+  gl::GLContext* GetGLContext() override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) override;
   gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
@@ -150,6 +160,10 @@ class NativeLayerCA : public NativeLayer {
   CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
+
+  GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
+                                          CFTypeRefPtr<IOSurfaceRef> aSurface,
+                                          bool aNeedsDepth);
 
   struct SurfaceWithInvalidRegion {
     CFTypeRefPtr<IOSurfaceRef> mSurface;
@@ -234,6 +248,11 @@ class NativeLayerCA : public NativeLayer {
 
   // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
   RefPtr<MacIOSurface> mInProgressLockedIOSurface;
+
+  RefPtr<gl::GLContextCGL> mGLContext;
+
+  std::unordered_map<CFTypeRefPtr<IOSurfaceRef>, UniquePtr<gl::MozFramebuffer>>
+      mFramebuffers;
 
   gfx::IntPoint mPosition;
   gfx::IntSize mSize;
