@@ -8,8 +8,6 @@
 #include "Logging.h"
 #include "PathHelpers.h"
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 

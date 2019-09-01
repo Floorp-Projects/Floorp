@@ -12,8 +12,6 @@
 #include "skia/include/core/SkData.h"
 #include "mozilla/CheckedInt.h"
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 
