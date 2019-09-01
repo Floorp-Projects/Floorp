@@ -25,6 +25,7 @@ const {
         FOCUSABLE_POSITIVE_TABINDEX,
         INTERACTIVE_NO_ACTION,
         INTERACTIVE_NOT_FOCUSABLE,
+        MOUSE_INTERACTIVE_ONLY,
         NO_FOCUS_VISIBLE,
       },
     },
@@ -55,6 +56,10 @@ const ISSUE_TO_ANNOTATION_MAP = {
   [INTERACTIVE_NOT_FOCUSABLE]: {
     href: A11Y_KEYBOARD_LINKS.INTERACTIVE_NOT_FOCUSABLE,
     l10nId: "accessibility-keyboard-issue-focusable",
+  },
+  [MOUSE_INTERACTIVE_ONLY]: {
+    href: A11Y_KEYBOARD_LINKS.MOUSE_INTERACTIVE_ONLY,
+    l10nId: "accessibility-keyboard-issue-mouse-only",
   },
   [NO_FOCUS_VISIBLE]: {
     href: A11Y_KEYBOARD_LINKS.NO_FOCUS_VISIBLE,
