@@ -279,7 +279,7 @@ if (!isDevtools) {
   }
 }
 
-if (!AppConstants.NIGHTLY_BUILD) {
+if (!AppConstants.NIGHTLY_BUILD && !isDevtools) {
   // Bug 1532703 - only used in HTML-based about:config
   whitelist.add("chrome://browser/skin/toggle.svg");
 }
