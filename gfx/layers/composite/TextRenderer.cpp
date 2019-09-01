@@ -111,62 +111,48 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
     maxWidth = std::max(lineWidth, maxWidth);
   }
 
-  // Create a surface to draw our glyphs to.
-  RefPtr<DataSourceSurface> textSurf = Factory::CreateDataSourceSurface(
-      IntSize(maxWidth, numLines * info->mCellHeight), sTextureFormat);
-  if (NS_WARN_IF(!textSurf)) {
-    return nullptr;
-  }
+  IntSize size(maxWidth, numLines * info->mCellHeight);
 
-  DataSourceSurface::MappedSurface map;
-  if (NS_WARN_IF(
-          !textSurf->Map(DataSourceSurface::MapType::READ_WRITE, &map))) {
-    return nullptr;
-  }
+  // Create a DrawTarget to draw our glyphs to.
+  RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTarget(BackendType::SKIA, size, sTextureFormat);
 
   // Initialize the surface to transparent white.
-  memset(map.mData, uint8_t(sBackgroundOpacity * 255.0f),
-         numLines * info->mCellHeight * map.mStride);
+  dt->FillRect(Rect(0, 0, size.width, size.height),
+               ColorPattern(Color(1.0, 1.0, 1.0, sBackgroundOpacity)),
+               DrawOptions(1.0, CompositionOp::OP_SOURCE));
 
-  uint32_t currentXPos = 0;
-  uint32_t currentYPos = 0;
+  IntPoint currentPos;
 
   const unsigned int kGlyphsPerLine = info->mTextureWidth / info->mCellWidth;
 
   // Copy our glyphs onto the surface.
   for (uint32_t i = 0; i < aText.length(); i++) {
     if (aText[i] == '\n' ||
-        (aText[i] == ' ' && currentXPos > aTargetPixelWidth)) {
-      currentYPos += info->mCellHeight;
-      currentXPos = 0;
+        (aText[i] == ' ' && currentPos.x > int32_t(aTargetPixelWidth))) {
+      currentPos.y += info->mCellHeight;
+      currentPos.x = 0;
       continue;
     }
 
     uint32_t index = aText[i] - info->mFirstChar;
-    uint32_t glyphXOffset = (index % kGlyphsPerLine) * info->mCellWidth *
-                            BytesPerPixel(sTextureFormat);
-    uint32_t truncatedLine = index / kGlyphsPerLine;
-    uint32_t glyphYOffset =
-        truncatedLine * info->mCellHeight * cache->mMap.mStride;
-
+    uint32_t cellIndexY = index / kGlyphsPerLine;
+    uint32_t cellIndexX = index - (cellIndexY * kGlyphsPerLine);
     uint32_t glyphWidth = info->GetGlyphWidth(aText[i]);
+    IntRect srcRect(cellIndexX * info->mCellWidth,
+                    cellIndexY * info->mCellHeight, glyphWidth,
+                    info->mCellHeight);
 
-    for (uint32_t y = 0; y < info->mCellHeight; y++) {
-      memcpy(map.mData + (y + currentYPos) * map.mStride +
-                 currentXPos * BytesPerPixel(sTextureFormat),
-             cache->mMap.mData + glyphYOffset + y * cache->mMap.mStride +
-                 glyphXOffset,
-             glyphWidth * BytesPerPixel(sTextureFormat));
-    }
+    dt->CopySurface(cache->mGlyphBitmaps, srcRect, currentPos);
 
-    currentXPos += glyphWidth;
+    currentPos.x += glyphWidth;
   }
 
-  textSurf->Unmap();
-
+  RefPtr<SourceSurface> surf = dt->Snapshot();
+  RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
   RefPtr<DataTextureSource> src = aProvider->CreateDataTextureSource();
 
-  if (!src->Update(textSurf)) {
+  if (!src->Update(dataSurf)) {
     // Upload failed.
     return nullptr;
   }
