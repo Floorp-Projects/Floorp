@@ -74,3 +74,5 @@ accessibility-keyboard-issue-action = Interactive elements must be able to be ac
 accessibility-keyboard-issue-focusable = Interactive elements must be focusable. <a>Learn more</a>
 
 accessibility-keyboard-issue-focus-visible = Focusable element may be missing focus styling. <a>Learn more</a>
+
+accessibility-keyboard-issue-mouse-only = Clickable elements must be focusable and should have interactive semantics. <a>Learn more</a>

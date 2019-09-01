@@ -12,6 +12,7 @@ const {
         FOCUSABLE_POSITIVE_TABINDEX,
         INTERACTIVE_NO_ACTION,
         INTERACTIVE_NOT_FOCUSABLE,
+        MOUSE_INTERACTIVE_ONLY,
         NO_FOCUS_VISIBLE,
       },
       [AUDIT_TYPE.TEXT_LABEL]: {
@@ -174,6 +175,8 @@ const A11Y_KEYBOARD_LINK_IDS = {
   [INTERACTIVE_NO_ACTION]:
     "Interactive_elements_must_be_able_to_be_activated_using_a_keyboard",
   [INTERACTIVE_NOT_FOCUSABLE]: "Interactive_elements_must_be_focusable",
+  [MOUSE_INTERACTIVE_ONLY]:
+    "Clickable_elements_must_be_focusable_and_should_have_interactive_semantics",
   [NO_FOCUS_VISIBLE]: "Focusable_element_must_have_focus_styling",
 };
 
