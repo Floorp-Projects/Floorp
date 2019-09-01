@@ -17,7 +17,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
 CompositingRenderTargetOGL::~CompositingRenderTargetOGL() {
-  if (mGL && mGL->MakeCurrent()) {
+  if (mGLResourceOwnership == GLResourceOwnership::OWNED_BY_RENDER_TARGET &&
+      mGL && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(1, &mTextureHandle);
     mGL->fDeleteFramebuffers(1, &mFBO);
   }

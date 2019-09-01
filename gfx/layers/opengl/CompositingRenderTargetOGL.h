@@ -40,6 +40,16 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
 
   friend class CompositorOGL;
 
+  enum class GLResourceOwnership : uint8_t {
+    // Framebuffer and texture will be deleted when the RenderTarget is
+    // destroyed.
+    OWNED_BY_RENDER_TARGET,
+
+    // Framebuffer and texture are only used by the RenderTarget, but never
+    // deleted.
+    EXTERNALLY_OWNED
+  };
+
   // For lazy initialisation of the GL stuff
   struct InitParams {
     InitParams()
@@ -67,20 +77,6 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   };
 
  public:
-  CompositingRenderTargetOGL(CompositorOGL* aCompositor,
-                             const gfx::IntPoint& aOrigin,
-                             const gfx::IntPoint& aClipSpaceOrigin,
-                             GLuint aTexure, GLuint aFBO)
-      : CompositingRenderTarget(aOrigin),
-        mInitParams(),
-        mCompositor(aCompositor),
-        mGL(aCompositor->gl()),
-        mClipSpaceOrigin(aClipSpaceOrigin),
-        mTextureHandle(aTexure),
-        mFBO(aFBO) {
-    MOZ_ASSERT(mGL);
-  }
-
   ~CompositingRenderTargetOGL();
 
   const char* Name() const override { return "CompositingRenderTargetOGL"; }
@@ -89,27 +85,29 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
    * Create a render target around the default FBO, for rendering straight to
    * the window.
    */
-  static already_AddRefed<CompositingRenderTargetOGL> RenderTargetForWindow(
+  static already_AddRefed<CompositingRenderTargetOGL> CreateForWindow(
       CompositorOGL* aCompositor, const gfx::IntSize& aSize) {
     RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
-        aCompositor, gfx::IntPoint(), gfx::IntPoint(), 0, 0);
+        aCompositor, gfx::IntPoint(), gfx::IntPoint(),
+        GLResourceOwnership::EXTERNALLY_OWNED, 0, 0);
     result->mInitParams = InitParams(aSize, aSize, 0, INIT_MODE_NONE);
     result->mInitParams.mStatus = InitParams::INITIALIZED;
     return result.forget();
   }
 
-  /**
-   * Some initialisation work on the backing FBO and texture.
-   * We do this lazily so that when we first set this render target on the
-   * compositor we do not have to re-bind the FBO after unbinding it, or
-   * alternatively leave the FBO bound after creation.
-   */
-  void Initialize(const gfx::IntSize& aSize, const gfx::IntSize& aPhySize,
-                  GLenum aFBOTextureTarget, SurfaceInitMode aInit) {
-    MOZ_ASSERT(mInitParams.mStatus == InitParams::NO_PARAMS,
-               "Initialized twice?");
-    // postpone initialization until we actually want to use this render target
-    mInitParams = InitParams(aSize, aPhySize, aFBOTextureTarget, aInit);
+  static already_AddRefed<CompositingRenderTargetOGL>
+  CreateForNewFBOAndTakeOwnership(CompositorOGL* aCompositor, GLuint aTexture,
+                                  GLuint aFBO, const gfx::IntRect& aRect,
+                                  const gfx::IntPoint& aClipSpaceOrigin,
+                                  const gfx::IntSize& aPhySize,
+                                  GLenum aFBOTextureTarget,
+                                  SurfaceInitMode aInit) {
+    RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
+        aCompositor, aRect.TopLeft(), aClipSpaceOrigin,
+        GLResourceOwnership::OWNED_BY_RENDER_TARGET, aTexture, aFBO);
+    result->mInitParams =
+        InitParams(aRect.Size(), aPhySize, aFBOTextureTarget, aInit);
+    return result.forget();
   }
 
   void BindTexture(GLenum aTextureUnit, GLenum aTextureTarget);
@@ -161,9 +159,29 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   const gfx::IntSize& GetInitSize() const { return mInitParams.mSize; }
 
  private:
+  CompositingRenderTargetOGL(CompositorOGL* aCompositor,
+                             const gfx::IntPoint& aOrigin,
+                             const gfx::IntPoint& aClipSpaceOrigin,
+                             GLResourceOwnership aGLResourceOwnership,
+                             GLuint aTexure, GLuint aFBO)
+      : CompositingRenderTarget(aOrigin),
+        mInitParams(),
+        mCompositor(aCompositor),
+        mGL(aCompositor->gl()),
+        mClipSpaceOrigin(aClipSpaceOrigin),
+        mGLResourceOwnership(aGLResourceOwnership),
+        mTextureHandle(aTexure),
+        mFBO(aFBO) {
+    MOZ_ASSERT(mGL);
+  }
+
   /**
-   * Actually do the initialisation. Note that we leave our FBO bound, and so
-   * calling this method is only suitable when about to use this render target.
+   * Actually do the initialisation.
+   * We do this lazily so that when we first set this render target on the
+   * compositor we do not have to re-bind the FBO after unbinding it, or
+   * alternatively leave the FBO bound after creation. Note that we leave our
+   * FBO bound, and so calling this method is only suitable when about to use
+   * this render target.
    */
   void InitializeImpl();
 
@@ -177,6 +195,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   RefPtr<GLContext> mGL;
   Maybe<gfx::IntRect> mClipRect;
   gfx::IntPoint mClipSpaceOrigin;
+  GLResourceOwnership mGLResourceOwnership;
   GLuint mTextureHandle;
   GLuint mFBO;
 };

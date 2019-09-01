@@ -640,12 +640,11 @@ already_AddRefed<CompositingRenderTarget> CompositorOGL::CreateRenderTarget(
   GLuint tex = 0;
   GLuint fbo = 0;
   IntRect rect = aRect;
-  IntSize FBOSize;
-  CreateFBOWithTexture(rect, false, 0, &fbo, &tex, &FBOSize);
-  RefPtr<CompositingRenderTargetOGL> surface = new CompositingRenderTargetOGL(
-      this, aRect.TopLeft(), aRect.TopLeft(), tex, fbo);
-  surface->Initialize(aRect.Size(), FBOSize, mFBOTextureTarget, aInit);
-  return surface.forget();
+  IntSize fboSize;
+  CreateFBOWithTexture(rect, false, 0, &fbo, &tex, &fboSize);
+  return CompositingRenderTargetOGL::CreateForNewFBOAndTakeOwnership(
+      this, tex, fbo, aRect, aRect.TopLeft(), aRect.Size(), mFBOTextureTarget,
+      aInit);
 }
 
 already_AddRefed<CompositingRenderTarget>
@@ -671,11 +670,9 @@ CompositorOGL::CreateRenderTargetFromSource(
   IntRect sourceRect(aSourcePoint, aRect.Size());
   CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
 
-  RefPtr<CompositingRenderTargetOGL> surface = new CompositingRenderTargetOGL(
-      this, aRect.TopLeft(), aRect.TopLeft(), tex, fbo);
-  surface->Initialize(aRect.Size(), sourceRect.Size(), mFBOTextureTarget,
-                      INIT_MODE_NONE);
-  return surface.forget();
+  return CompositingRenderTargetOGL::CreateForNewFBOAndTakeOwnership(
+      this, tex, fbo, aRect, aRect.TopLeft(), sourceRect.Size(),
+      mFBOTextureTarget, INIT_MODE_NONE);
 }
 
 void CompositorOGL::SetRenderTarget(CompositingRenderTarget* aSurface) {
@@ -808,9 +805,11 @@ void CompositorOGL::RegisterIOSurface(IOSurfacePtr aSurface) {
                                       LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex, 0);
   }
 
-  RefPtr<CompositingRenderTargetOGL> rt = new CompositingRenderTargetOGL(
-      this, gfx::IntPoint(), gfx::IntPoint(), tex, fbo);
-  rt->Initialize(size, size, LOCAL_GL_TEXTURE_RECTANGLE_ARB, INIT_MODE_NONE);
+  IntRect rect(IntPoint(), size);
+  RefPtr<CompositingRenderTargetOGL> rt =
+      CompositingRenderTargetOGL::CreateForNewFBOAndTakeOwnership(
+          this, tex, fbo, rect, IntPoint(), size,
+          LOCAL_GL_TEXTURE_RECTANGLE_ARB, INIT_MODE_NONE);
 
   mRegisteredIOSurfaceRenderTargets.insert({aSurface, rt});
 }
@@ -1100,7 +1099,7 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   RefPtr<CompositingRenderTarget> rt;
   if (mCanRenderToDefaultFramebuffer) {
-    rt = CompositingRenderTargetOGL::RenderTargetForWindow(this, rect.Size());
+    rt = CompositingRenderTargetOGL::CreateForWindow(this, rect.Size());
   } else if (mTarget) {
     rt = CreateRenderTarget(rect, INIT_MODE_CLEAR);
   } else {
