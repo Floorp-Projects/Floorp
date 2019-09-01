@@ -53,6 +53,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArr
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray, kotlin.Int)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toSha256Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha256-digest.md
+$dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifChanged(kotlinx.coroutines.flow.Flow((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T)))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/if-changed.md
 $dokka.location:mozilla.components.support.locale$toLocale(kotlin.String)mozilla.components.support.locale/kotlin.-string/to-locale.md
 $dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
 mozilla.components
@@ -96,7 +97,6 @@ mozilla.components.browser.session.engine.request
 mozilla.components.browser.session.ext
 mozilla.components.browser.session.intent
 mozilla.components.browser.session.storage
-mozilla.components.browser.session.tab
 mozilla.components.browser.session.utils
 mozilla.components.browser.state.action
 mozilla.components.browser.state.selector
@@ -239,6 +239,7 @@ mozilla.components.support.ktx.android.util
 mozilla.components.support.ktx.android.view
 mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
+mozilla.components.support.ktx.kotlinx.coroutines.flow
 mozilla.components.support.locale
 mozilla.components.support.rusthttp
 mozilla.components.support.rustlog

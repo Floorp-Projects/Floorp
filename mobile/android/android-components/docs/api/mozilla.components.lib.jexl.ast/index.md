@@ -6,5 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [AstNode](-ast-node/index.md) | `data class AstNode`<br>A node of the abstract syntax tree. |
-| [AstType](-ast-type/index.md) | `enum class AstType` |
+| [AstNode](-ast-node/index.md) | `sealed class AstNode`<br>A node of the abstract syntax tree. |
