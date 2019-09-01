@@ -96,19 +96,12 @@ class NativeLayerCA : public NativeLayer {
   // Overridden methods
   void SetRect(const gfx::IntRect& aRect) override;
   gfx::IntRect GetRect() override;
-
-  // The invalid region of the surface that has been returned from the most
-  // recent call to NextSurface. Newly-created surfaces are entirely invalid.
-  // For surfaces that have been used before, the invalid region is the union of
-  // all invalid regions that have been passed to
-  // invalidateRegionThroughoutSwapchain since the last time that
-  // NotifySurfaceReady was called for this surface. Can only be called between
-  // calls to NextSurface and NotifySurfaceReady. Can be called on any thread.
-  gfx::IntRegion CurrentSurfaceInvalidRegion();
-
-  // Invalidates the specified region in all surfaces that are tracked by this
-  // layer.
-  void InvalidateRegionThroughoutSwapchain(const gfx::IntRegion& aRegion);
+  void InvalidateRegionThroughoutSwapchain(
+      const gfx::IntRegion& aRegion) override;
+  gfx::IntRegion CurrentSurfaceInvalidRegion() override;
+  void NotifySurfaceReady() override;
+  void SetSurfaceIsFlipped(bool aIsFlipped) override;
+  bool SurfaceIsFlipped() override;
 
   // Returns an IOSurface that can be drawn to. The size of the IOSurface will
   // be the size of the rect that has been passed to SetRect.
@@ -119,13 +112,6 @@ class NativeLayerCA : public NativeLayer {
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
   CFTypeRefPtr<IOSurfaceRef> NextSurface();
-
-  // Indicates that the surface which has been returned from the most recent
-  // call to NextSurface is now finished being drawn to and can be displayed on
-  // the screen. The surface will be used during the next call to the layer's
-  // ApplyChanges method. Resets the invalid region on the surface to the empty
-  // region.
-  void NotifySurfaceReady();
 
   // Consumers may provide an object that implements the IOSurfaceRegistry
   // interface.
@@ -144,11 +130,6 @@ class NativeLayerCA : public NativeLayer {
   // happen at a deterministic time and on the right thread.
   void SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry);
   RefPtr<IOSurfaceRegistry> GetSurfaceRegistry();
-
-  // Whether the surface contents are flipped vertically compared to this
-  // layer's coordinate system. Can be set on any thread at any time.
-  void SetSurfaceIsFlipped(bool aIsFlipped);
-  bool SurfaceIsFlipped();
 
   // Set an opaque region on the layer. Internally, this causes the creation
   // of opaque and transparent sublayers to cover the regions.

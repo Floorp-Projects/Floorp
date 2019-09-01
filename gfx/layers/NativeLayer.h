@@ -67,6 +67,30 @@ class NativeLayer {
   virtual void SetOpaqueRegion(const gfx::IntRegion& aRegion) = 0;
   virtual gfx::IntRegion OpaqueRegion() = 0;
 
+  // Whether the surface contents are flipped vertically compared to this
+  // layer's coordinate system. Can be set on any thread at any time.
+  virtual void SetSurfaceIsFlipped(bool aIsFlipped) = 0;
+  virtual bool SurfaceIsFlipped() = 0;
+
+  // Invalidates the specified region in all surfaces that are tracked by this
+  // layer.
+  virtual void InvalidateRegionThroughoutSwapchain(
+      const gfx::IntRegion& aRegion) = 0;
+
+  // The invalid region of the surface that has been returned from the most
+  // recent call to NextSurface*. Newly-created surfaces are entirely invalid.
+  // For surfaces that have been used before, the invalid region is the union of
+  // all invalid regions that have been passed to
+  // InvalidateRegionThroughoutSwapchain since the last time that
+  // NotifySurfaceReady was called for this surface. Can only be called between
+  // calls to NextSurface* and NotifySurfaceReady. Can be called on any thread.
+  virtual gfx::IntRegion CurrentSurfaceInvalidRegion() = 0;
+
+  // Indicates that the surface which has been returned from the most recent
+  // call to NextSurface* is now finished being drawn to and can be displayed on
+  // the screen. Resets the invalid region on the surface to the empty region.
+  virtual void NotifySurfaceReady() = 0;
+
  protected:
   virtual ~NativeLayer() {}
 };
