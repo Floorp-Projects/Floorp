@@ -13,10 +13,6 @@
 #include "mozilla/gfx/Triangle.h"
 #include "mozilla/gfx/Polygon.h"
 
-#ifdef XP_MACOSX
-class MacIOSurface;
-#endif
-
 namespace mozilla {
 namespace layers {
 
@@ -201,12 +197,6 @@ class BasicCompositor : public Compositor {
   // Non-null only between BeginFrameForWindow and EndFrame if
   // BeginFrameForWindow has been called with a non-null aNativeLayer.
   RefPtr<NativeLayer> mCurrentNativeLayer;
-
-#ifdef XP_MACOSX
-  // The MacIOSurface that we're currently rendering to, if any.
-  // Non-null in the same cases as mCurrentNativeLayer.
-  RefPtr<MacIOSurface> mCurrentIOSurface;
-#endif
 
   gfx::IntRegion mInvalidRegion;
 
