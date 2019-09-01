@@ -58,7 +58,7 @@ lockwise-title = Never forget a password again
 lockwise-title-logged-in = { -lockwise-brand-name }
 lockwise-header-content = { -lockwise-brand-name } securely stores your passwords in your browser.
 lockwise-header-content-logged-in = Securely store and sync your passwords to all your devices.
-about-logins-view-logins-button = View Logins
+open-about-logins-button = Open in { -brand-short-name }
 lockwise-no-logins-content = Get the <a data-l10n-name="lockwise-inline-link">{ -lockwise-brand-name }</a> app to take your passwords everywhere.
 
 # This string is displayed after a large numeral that indicates the total number
