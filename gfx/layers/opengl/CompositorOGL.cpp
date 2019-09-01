@@ -573,9 +573,9 @@ gfx::Rect CompositorOGL::GetTextureCoordinates(gfx::Rect textureRect,
 void CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget) {
   MOZ_ASSERT(aRenderTarget);
   // Logical surface size.
-  const gfx::IntSize& size = aRenderTarget->mInitParams.mSize;
+  const gfx::IntSize& size = aRenderTarget->GetSize();
   // Physical surface size.
-  const gfx::IntSize& phySize = aRenderTarget->mInitParams.mPhySize;
+  const gfx::IntSize& phySize = aRenderTarget->GetPhysicalSize();
 
   // Set the viewport correctly.
   mGLContext->fViewport(mSurfaceOrigin.x, mSurfaceOrigin.y, phySize.width,
