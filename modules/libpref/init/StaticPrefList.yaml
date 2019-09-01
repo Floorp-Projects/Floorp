@@ -639,11 +639,11 @@
 
 - name: browser.active_color
   type: String
-  value: ""
+  value: "#EE0000"
   mirror: never
 - name: browser.anchor_color
   type: String
-  value: ""
+  value: "#0000EE"
   mirror: never
 
 # See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
@@ -771,7 +771,7 @@
 
 - name: browser.display.background_color
   type: String
-  value: ""
+  value: "#FFFFFF"
   mirror: never
 
 # 0 = default: always, except in high contrast mode
@@ -795,10 +795,11 @@
 
 - name: browser.display.focus_background_color
   type: String
-  value: ""
+  value: "#117722"
   mirror: never
 
-# 0=solid, 1=dotted
+# Focus ring border style.
+# 0 = solid border, 1 = dotted border
 - name: browser.display.focus_ring_style
   type: uint32_t
   value: 1
@@ -806,11 +807,11 @@
 
 - name: browser.display.focus_text_color
   type: String
-  value: ""
+  value: "#ffffff"
   mirror: never
 - name: browser.display.foreground_color
   type: String
-  value: ""
+  value: "#000000"
   mirror: never
 
 - name: browser.display.show_focus_rings
@@ -838,7 +839,7 @@
 
 - name: browser.display.use_system_colors
   type: bool
-  value: true
+  value: false
   mirror: always
 
 - name: browser.dom.window.dump.enabled
@@ -955,7 +956,7 @@
 
 - name: browser.visited_color
   type: String
-  value: ""
+  value: "#551A8B"
   mirror: never
 
 # Enable xul error pages.
