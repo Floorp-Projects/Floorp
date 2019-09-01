@@ -58,11 +58,6 @@
 #  include "GeneratedJNIWrappers.h"
 #endif
 
-#ifdef XP_MACOSX
-#  include "GLContextCGL.h"
-#  include "mozilla/layers/NativeLayerCA.h"
-#endif
-
 #include "GeckoProfiler.h"
 
 namespace mozilla {
@@ -760,67 +755,6 @@ void CompositorOGL::ClearRect(const gfx::Rect& aRect) {
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
 
-#ifdef XP_MACOSX
-class SurfaceRegistryWrapperAroundCompositorOGL
-    : public layers::IOSurfaceRegistry {
- public:
-  explicit SurfaceRegistryWrapperAroundCompositorOGL(CompositorOGL* aCompositor)
-      : mCompositor(aCompositor) {}
-  void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mCompositor->RegisterIOSurface((IOSurfacePtr)aSurface.get());
-  }
-  void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
-    mCompositor->UnregisterIOSurface((IOSurfacePtr)aSurface.get());
-  }
-  RefPtr<CompositorOGL> mCompositor;
-};
-
-void CompositorOGL::RegisterIOSurface(IOSurfacePtr aSurface) {
-  MOZ_RELEASE_ASSERT(mRegisteredIOSurfaceRenderTargets.find(aSurface) ==
-                         mRegisteredIOSurfaceRenderTargets.end(),
-                     "double-registering IOSurface");
-
-  IOSurfaceRef surface = (IOSurfaceRef)aSurface;
-  auto glContextCGL = GLContextCGL::Cast(mGLContext);
-  MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
-
-  IntSize size(IOSurfaceGetWidth(surface), IOSurfaceGetHeight(surface));
-
-  mGLContext->MakeCurrent();
-  GLuint tex = mGLContext->CreateTexture();
-  {
-    const ScopedBindTexture bindTex(mGLContext, tex,
-                                    LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-    CGLTexImageIOSurface2D(glContextCGL->GetCGLContext(),
-                           LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_RGBA,
-                           size.width, size.height, LOCAL_GL_BGRA,
-                           LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, surface, 0);
-  }
-
-  GLuint fbo = mGLContext->CreateFramebuffer();
-  {
-    const ScopedBindFramebuffer bindFB(mGLContext, fbo);
-    mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                      LOCAL_GL_COLOR_ATTACHMENT0,
-                                      LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex, 0);
-  }
-
-  IntRect rect(IntPoint(), size);
-  RefPtr<CompositingRenderTargetOGL> rt =
-      CompositingRenderTargetOGL::CreateForNewFBOAndTakeOwnership(
-          this, tex, fbo, rect, IntPoint(), size,
-          LOCAL_GL_TEXTURE_RECTANGLE_ARB, INIT_MODE_NONE);
-
-  mRegisteredIOSurfaceRenderTargets.insert({aSurface, rt});
-}
-
-void CompositorOGL::UnregisterIOSurface(IOSurfacePtr aSurface) {
-  size_t removeCount = mRegisteredIOSurfaceRenderTargets.erase(aSurface);
-  MOZ_RELEASE_ASSERT(removeCount == 1,
-                     "Unregistering IOSurface that's not registered");
-}
-#endif
-
 already_AddRefed<CompositingRenderTargetOGL>
 CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
                                           IntRegion& aInvalidRegion) {
@@ -828,39 +762,24 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
     return nullptr;
   }
 
-#ifdef XP_MACOSX
-  NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
-  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-  nativeLayer->SetSurfaceIsFlipped(true);
-  auto glContextCGL = GLContextCGL::Cast(mGLContext);
-  MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
-  RefPtr<layers::IOSurfaceRegistry> currentRegistry =
-      nativeLayer->GetSurfaceRegistry();
-  if (!currentRegistry) {
-    nativeLayer->SetSurfaceRegistry(
-        MakeAndAddRef<SurfaceRegistryWrapperAroundCompositorOGL>(this));
-  } else {
-    MOZ_RELEASE_ASSERT(static_cast<SurfaceRegistryWrapperAroundCompositorOGL*>(
-                           currentRegistry.get())
-                           ->mCompositor == this);
-  }
-  CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
-  if (!surf) {
+  aNativeLayer->SetSurfaceIsFlipped(true);
+  aNativeLayer->SetGLContext(mGLContext);
+
+  IntRect layerRect = aNativeLayer->GetRect();
+  IntRegion invalidRelativeToLayer =
+      aInvalidRegion.MovedBy(-layerRect.TopLeft());
+  aNativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  Maybe<GLuint> fbo = aNativeLayer->NextSurfaceAsFramebuffer(false);
+  if (!fbo) {
     return nullptr;
   }
 
-  IntRect layerRect = nativeLayer->GetRect();
-  IntRegion invalidRelativeToLayer =
-      aInvalidRegion.MovedBy(-layerRect.TopLeft());
-  nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
-  invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
+  invalidRelativeToLayer = aNativeLayer->CurrentSurfaceInvalidRegion();
   aInvalidRegion = invalidRelativeToLayer.MovedBy(layerRect.TopLeft());
 
-  auto match = mRegisteredIOSurfaceRenderTargets.find((IOSurfacePtr)surf.get());
-  MOZ_RELEASE_ASSERT(match != mRegisteredIOSurfaceRenderTargets.end(),
-                     "IOSurface has not been registered with this Compositor");
-  RefPtr<CompositingRenderTargetOGL> rt = match->second;
-  rt->SetOrigin(layerRect.TopLeft());
+  RefPtr<CompositingRenderTargetOGL> rt =
+      CompositingRenderTargetOGL::CreateForExternallyOwnedFBO(
+          this, *fbo, layerRect, IntPoint());
 
   // Clip the render target to the invalid rect. This conserves memory bandwidth
   // and power.
@@ -868,9 +787,6 @@ CompositorOGL::RenderTargetForNativeLayer(NativeLayer* aNativeLayer,
   rt->SetClipRect(invalidRect == layerRect ? Nothing() : Some(invalidRect));
 
   return rt.forget();
-#else
-  MOZ_CRASH("Unexpected native layer on this platform");
-#endif
 }
 
 Maybe<IntRect> CompositorOGL::BeginFrameForWindow(
@@ -1042,14 +958,8 @@ void CompositorOGL::EndRenderingToNativeLayer() {
   mCurrentRenderTarget->SetClipRect(Nothing());
   SetRenderTarget(mNativeLayersReferenceRT);
 
-#ifdef XP_MACOSX
-  NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
-  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-  nativeLayer->NotifySurfaceReady();
+  mCurrentNativeLayer->NotifySurfaceReady();
   mCurrentNativeLayer = nullptr;
-#else
-  MOZ_CRASH("Unexpected native layer on this platform");
-#endif
 }
 
 Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,

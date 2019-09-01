@@ -86,6 +86,16 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
     return result.forget();
   }
 
+  static already_AddRefed<CompositingRenderTargetOGL>
+  CreateForExternallyOwnedFBO(CompositorOGL* aCompositor, GLuint aFBO,
+                              const gfx::IntRect& aRect,
+                              const gfx::IntPoint& aClipSpaceOrigin) {
+    RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
+        aCompositor, aRect, aClipSpaceOrigin, aRect.Size(),
+        GLResourceOwnership::EXTERNALLY_OWNED, 0, aFBO, Nothing());
+    return result.forget();
+  }
+
   void BindTexture(GLenum aTextureUnit, GLenum aTextureTarget);
 
   /**
