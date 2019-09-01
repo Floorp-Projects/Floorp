@@ -98,6 +98,8 @@ class NativeLayerCA : public NativeLayer {
   gfx::IntRect GetRect() override;
   void InvalidateRegionThroughoutSwapchain(
       const gfx::IntRegion& aRegion) override;
+  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      gfx::BackendType aBackendType) override;
   gfx::IntRegion CurrentSurfaceInvalidRegion() override;
   void NotifySurfaceReady() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
@@ -112,6 +114,7 @@ class NativeLayerCA : public NativeLayer {
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
   CFTypeRefPtr<IOSurfaceRef> NextSurface();
+  CFTypeRefPtr<IOSurfaceRef> NextSurfaceLocked(const MutexAutoLock&);
 
   // Consumers may provide an object that implements the IOSurfaceRegistry
   // interface.
@@ -228,6 +231,9 @@ class NativeLayerCA : public NativeLayer {
   // mSurfaces.front() is the next surface we'll attempt to use.
   // mSurfaces.back() is the one we submitted most recently.
   std::deque<SurfaceWithInvalidRegion> mSurfaces;
+
+  // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
+  RefPtr<MacIOSurface> mInProgressLockedIOSurface;
 
   gfx::IntPoint mPosition;
   gfx::IntSize mSize;

@@ -77,6 +77,19 @@ class NativeLayer {
   virtual void InvalidateRegionThroughoutSwapchain(
       const gfx::IntRegion& aRegion) = 0;
 
+  // Returns a DrawTarget. The size of the DrawTarget will be the size of the
+  // rect that has been passed to SetRect. The caller should draw to that
+  // DrawTarget, then drop its reference to the DrawTarget, and then call
+  // NotifySurfaceReady(). It can limit its drawing to
+  // CurrentSurfaceInvalidRegion() (which is in the DrawTarget's device space).
+  // After a call to NextSurface*, NextSurface* must not be called again until
+  // after NotifySurfaceReady has been called. Can be called on any thread. When
+  // used from multiple threads, callers need to make sure that they still only
+  // call NextSurface and NotifySurfaceReady alternatingly and not in any other
+  // order.
+  virtual RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      gfx::BackendType aBackendType) = 0;
+
   // The invalid region of the surface that has been returned from the most
   // recent call to NextSurface*. Newly-created surfaces are entirely invalid.
   // For surfaces that have been used before, the invalid region is the union of
