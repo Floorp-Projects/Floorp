@@ -336,13 +336,6 @@ pref("ui.menu.incremental_search.timeout", 1000);
 // If true, all popups won't hide automatically on blur
 pref("ui.popup.disable_autohide", false);
 
-// 0 = default: always, except in high contrast mode
-// 1 = always
-// 2 = never
-pref("browser.display.document_color_use", 0);
-pref("browser.display.use_system_colors",   false);
-pref("browser.display.foreground_color",    "#000000");
-pref("browser.display.background_color",    "#FFFFFF");
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
 // 0 = no external leading,
 // 1 = use external leading only when font provides,
@@ -354,10 +347,6 @@ pref("browser.display.show_image_placeholders", true);
 pref("browser.display.show_loading_image_placeholder", false);
 // min font device pixel size at which to turn on high quality
 pref("browser.display.auto_quality_min_font_size", 20);
-pref("browser.anchor_color",                "#0000EE");
-pref("browser.active_color",                "#EE0000");
-pref("browser.visited_color",               "#551A8B");
-pref("browser.underline_anchors",           true);
 pref("browser.enable_automatic_image_resizing", false);
 pref("browser.enable_click_image_resizing", true);
 
@@ -365,15 +354,6 @@ pref("browser.enable_click_image_resizing", true);
 pref("browser.send_pings", false);
 pref("browser.send_pings.max_per_link", 1);           // limit the number of pings that are sent per link click
 pref("browser.send_pings.require_same_host", false);  // only send pings to the same host if this is true
-
-pref("browser.display.use_focus_colors",    false);
-pref("browser.display.focus_background_color", "#117722");
-pref("browser.display.focus_text_color",     "#ffffff");
-pref("browser.display.focus_ring_width",     1);
-pref("browser.display.focus_ring_on_anything", false);
-// focus ring border style.
-// 0 = solid border, 1 = dotted border
-pref("browser.display.focus_ring_style", 1);
 
 pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
