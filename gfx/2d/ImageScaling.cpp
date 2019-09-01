@@ -11,8 +11,6 @@
 #include <math.h>
 #include <algorithm>
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 
@@ -65,8 +63,8 @@ void ImageHalfScaler::ScaleForSize(const IntSize& aSize) {
   delete[] mDataStorage;
 
   IntSize internalSurfSize;
-  internalSurfSize.width = max(scaleSize.width, mOrigSize.width / 2);
-  internalSurfSize.height = max(scaleSize.height, mOrigSize.height / 2);
+  internalSurfSize.width = std::max(scaleSize.width, mOrigSize.width / 2);
+  internalSurfSize.height = std::max(scaleSize.height, mOrigSize.height / 2);
 
   size_t bufLen = 0;
   mStride = GetAlignedStride<16>(internalSurfSize.width, 4);

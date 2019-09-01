@@ -20,8 +20,6 @@
 #  include "mozilla/arm.h"
 #endif
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 
@@ -123,14 +121,15 @@ static inline void BoxBlurRow(const uint8_t* aInput, uint8_t* aOutput,
   // loops if we are in bound, we instead compute the points at which
   // we will move out of bounds of the row on the left side (splitLeft)
   // and right side (splitRight).
-  int32_t splitLeft = min(max(aLeftLobe, aStart), aEnd);
-  int32_t splitRight = min(max(aWidth - (boxSize - aLeftLobe), aStart), aEnd);
+  int32_t splitLeft = std::min(std::max(aLeftLobe, aStart), aEnd);
+  int32_t splitRight =
+      std::min(std::max(aWidth - (boxSize - aLeftLobe), aStart), aEnd);
   // If the filter window is actually large than the size of the row,
   // there will be a middle area of overlap where the leftmost and rightmost
   // pixel of the filter will both be outside the row. In this case, we need
   // to invert the splits so that splitLeft <= splitRight.
   if (boxSize > aWidth) {
-    swap(splitLeft, splitRight);
+    std::swap(splitLeft, splitRight);
   }
 
   // Process all pixels up to splitLeft that would sample before the start of
@@ -271,7 +270,7 @@ template <bool aTranspose>
 static void BoxBlur(uint8_t* aData, const int32_t aLobes[3][2], int32_t aWidth,
                     int32_t aRows, int32_t aStride, IntRect aSkipRect) {
   if (aTranspose) {
-    swap(aWidth, aRows);
+    std::swap(aWidth, aRows);
     aSkipRect.Swap();
   }
 
@@ -317,8 +316,8 @@ static void BoxBlur(uint8_t* aData, const int32_t aLobes[3][2], int32_t aWidth,
     // Make sure not to overwrite the skip rect by only outputting to the
     // destination before and after the skip rect, if requested.
     int32_t skipStart =
-        inSkipRectY ? min(max(aSkipRect.X(), 0), aWidth) : aWidth;
-    int32_t skipEnd = max(skipStart, aSkipRect.XMost());
+        inSkipRectY ? std::min(std::max(aSkipRect.X(), 0), aWidth) : aWidth;
+    int32_t skipEnd = std::max(skipStart, aSkipRect.XMost());
     if (skipStart > 0) {
       BoxBlurRow<false, aTranspose>(tmpRow2, aData, aLobes[2][0], aLobes[2][1],
                                     aWidth, aStride, 0, skipStart);
@@ -406,11 +405,11 @@ static void SpreadHorizontal(uint8_t* aInput, uint8_t* aOutput, int32_t aRadius,
         if (x >= aWidth) break;
       }
 
-      int32_t sMin = max(x - aRadius, 0);
-      int32_t sMax = min(x + aRadius, aWidth - 1);
+      int32_t sMin = std::max(x - aRadius, 0);
+      int32_t sMax = std::min(x + aRadius, aWidth - 1);
       int32_t v = 0;
       for (int32_t s = sMin; s <= sMax; ++s) {
-        v = max<int32_t>(v, aInput[aStride * y + s]);
+        v = std::max<int32_t>(v, aInput[aStride * y + s]);
       }
       aOutput[aStride * y + x] = v;
     }
@@ -442,11 +441,11 @@ static void SpreadVertical(uint8_t* aInput, uint8_t* aOutput, int32_t aRadius,
         if (y >= aRows) break;
       }
 
-      int32_t sMin = max(y - aRadius, 0);
-      int32_t sMax = min(y + aRadius, aRows - 1);
+      int32_t sMin = std::max(y - aRadius, 0);
+      int32_t sMax = std::min(y + aRadius, aRows - 1);
       int32_t v = 0;
       for (int32_t s = sMin; s <= sMax; ++s) {
-        v = max<int32_t>(v, aInput[aStride * s + x]);
+        v = std::max<int32_t>(v, aInput[aStride * s + x]);
       }
       aOutput[aStride * y + x] = v;
     }

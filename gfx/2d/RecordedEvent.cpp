@@ -17,8 +17,6 @@
 namespace mozilla {
 namespace gfx {
 
-using namespace std;
-
 /* static */
 bool RecordedEvent::DoWithEventFromStream(
     EventStream& aStream, EventType aType,
@@ -33,7 +31,7 @@ bool RecordedEvent::DoWithEventFromStream(
   return DoWithEvent(aStream, aType, aAction);
 }
 
-string RecordedEvent::GetEventName(EventType aType) {
+std::string RecordedEvent::GetEventName(EventType aType) {
   switch (aType) {
     case DRAWTARGETCREATION:
       return "DrawTarget Creation";
