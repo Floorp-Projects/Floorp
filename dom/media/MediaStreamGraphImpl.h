@@ -26,7 +26,7 @@
 namespace mozilla {
 
 namespace media {
-class ShutdownTicket;
+class ShutdownBlocker;
 }
 
 template <typename T>
@@ -172,7 +172,19 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * and other state controlled by the media graph thread.
    * This is called during application shutdown.
    */
-  void ForceShutDown(media::ShutdownTicket* aShutdownTicket);
+  void ForceShutDown();
+
+  /**
+   * Sets mShutdownBlocker and makes it block shutdown.
+   * Main thread only. Not idempotent.
+   */
+  void AddShutdownBlocker();
+
+  /**
+   * Removes mShutdownBlocker and unblocks shutdown.
+   * Main thread only. Idempotent.
+   */
+  void RemoveShutdownBlocker();
 
   /**
    * Called before the thread runs.
@@ -874,10 +886,10 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   bool mForceShutDown;
 
   /**
-   * Drop this reference during shutdown to unblock shutdown.
+   * Remove this blocker to unblock shutdown.
    * Only accessed on the main thread.
    **/
-  RefPtr<media::ShutdownTicket> mForceShutdownTicket;
+  RefPtr<media::ShutdownBlocker> mShutdownBlocker;
 
   /**
    * True when we have posted an event to the main thread to run
