@@ -66,7 +66,7 @@ def resolve_keys(config, jobs):
             resolve_keyed_by(
                 job, field, item_name=job['label'],
                 **{
-                    'release-type': config.params['release-type'],
+                    'release-type': config.params['release_type'],
                     'project': config.params['project']
                 }
             )
