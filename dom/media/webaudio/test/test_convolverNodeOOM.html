@@ -27,7 +27,12 @@ var gTest = {
       return convolver;
     }
     source.connect(convolver);
-    convolver.buffer = buffer;
+    try {
+      convolver.buffer = buffer;
+    } catch (e) {
+      // This can also OOM.
+      return convolver;
+    }
     source.start();
     return convolver;
   }
