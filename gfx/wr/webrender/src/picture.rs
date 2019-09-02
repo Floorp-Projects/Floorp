@@ -29,8 +29,8 @@ use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBind
 use crate::print_tree::PrintTreePrinter;
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
-use crate::render_task::{ClearMode, RenderTargetKind, RenderTask};
-use crate::render_task::{RenderTaskLocation, BlurTaskCache};
+use crate::render_target::RenderTargetKind;
+use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache, ClearMode};
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use crate::scene_builder::Interners;
