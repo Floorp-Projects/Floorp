@@ -29,5 +29,9 @@
   <div id="focusable-1" role="button" tabindex="0">Focusable with no focus style.</div>
   <div id="focusable-2" role="button" tabindex="0">Focusable with focus style.</div>
   <div id="focusable-3" role="button" tabindex="0">Focusable with focus style.</div>
+  <div id="mouse-only-1" onclick="console.log('foo');">Button for mouse only</div>
+  <div id="focusable-4" onclick="console.log('foo');" tabindex="0">Button no semantics</div>
+  <div id="button-7" onclick="console.log('foo');" role="button">Semantic button not focusable</div>
+  <div id="button-8" onclick="console.log('foo');" role="button" tabindex="0">Button</div>
 </body>
 </html>
