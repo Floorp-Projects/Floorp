@@ -406,7 +406,7 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
     nsAutoCString origin;
     if (decoded.Contains('\t')) {
       auto split = decoded.Split('\t');
-      MOZ_ASSERT(decoded.CountChar('\t') == 2);
+      MOZ_ASSERT(decoded.CountChar('\t') == 1);
 
       origin = split.Get(0);
       decoded = split.Get(1);
