@@ -3256,6 +3256,9 @@
   value: 0
   mirror: once
 
+# Whether to preserve color bitmap tables in fonts (bypassing OTS).
+# Currently these are supported only on platforms where we use Freetype
+# to render fonts (Linux/Gtk and Android).
 - name: gfx.downloadable_fonts.keep_color_bitmaps
   type: RelaxedAtomicBool
   value: false
@@ -3267,6 +3270,7 @@
   value: true
   mirror: always
 
+# Whether to validate OpenType variation tables in fonts.
 - name: gfx.downloadable_fonts.validate_variation_tables
   type: RelaxedAtomicBool
   value: true
@@ -3292,12 +3296,15 @@
   value: false
   mirror: once
 
+# Disable antialiasing of Ahem, for use in tests.
 - name: gfx.font_rendering.ahem_antialias_none
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
 #if defined(XP_MACOSX)
+  # Set to true to revert from HarfBuzz AAT shaping to the old Core Text
+  # backend.
 -   name: gfx.font_rendering.coretext.enabled
     type: RelaxedAtomicBool
     value: false

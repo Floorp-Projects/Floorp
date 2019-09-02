@@ -695,14 +695,6 @@ pref("gfx.downloadable_fonts.disable_cache", false);
   pref("gfx.downloadable_fonts.otl_validation", true);
 #endif
 
-// Whether to preserve color bitmap tables in fonts (bypassing OTS).
-// Currently these are supported only on platforms where we use Freetype
-// to render fonts (Linux/Gtk and Android).
-pref("gfx.downloadable_fonts.keep_color_bitmaps", false);
-
-// Whether to validate OpenType variation tables in fonts
-pref("gfx.downloadable_fonts.validate_variation_tables", true);
-
 #ifdef ANDROID
   pref("gfx.bundled_fonts.enabled", true);
   pref("gfx.bundled_fonts.force-enabled", false);
@@ -732,25 +724,15 @@ pref("gfx.font_rendering.wordcache.maxentries", 10000);
 
 pref("gfx.font_rendering.graphite.enabled", true);
 
-#ifdef XP_MACOSX
-  // Set to true to revert from HarfBuzz AAT shaping to the old Core Text
-  // backend.
-  pref("gfx.font_rendering.coretext.enabled", false);
-#endif
-
 #ifdef XP_WIN
   pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
-
-// Disable antialiasing of Ahem, for use in tests
-pref("gfx.font_rendering.ahem_antialias_none", false);
 
 #if defined(XP_WIN)
   // comma separated list of backends to use in order of preference
   // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia");
   pref("gfx.canvas.azure.backends", "direct2d1.1,skia");
   pref("gfx.content.azure.backends", "direct2d1.1,skia");
-  pref("gfx.canvas.remote", false);
 #elif defined(XP_MACOSX)
   pref("gfx.content.azure.backends", "skia");
   pref("gfx.canvas.azure.backends", "skia");
@@ -758,12 +740,6 @@ pref("gfx.font_rendering.ahem_antialias_none", false);
   pref("gfx.canvas.azure.backends", "skia");
   pref("gfx.content.azure.backends", "skia");
 #endif
-
-pref("gfx.draw-color-bars", false);
-
-pref("gfx.logging.painted-pixel-count.enabled", false);
-
-pref("gfx.ycbcr.accurate-conversion", false);
 
 #ifdef XP_WIN
   pref("gfx.webrender.force-angle", true);
@@ -775,12 +751,6 @@ pref("gfx.ycbcr.accurate-conversion", false);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
   pref("gfx.webrender.program-binary-disk", true);
 #endif
-
-#ifdef XP_MACOSX
-  pref("gfx.compositor.glcontext.opaque", false);
-#endif
-
-pref("gfx.webrender.highlight-painted-layers", false);
 
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
