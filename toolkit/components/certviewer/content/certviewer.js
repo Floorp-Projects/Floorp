@@ -114,10 +114,14 @@ export const adjustCertInformation = cert => {
       let items = [];
       if (cert.notBefore && cert.notAfter) {
         items = [
-          createEntryItem("Not Before", cert.notBefore),
-          createEntryItem("Not Before UTC", cert.notBeforeUTC),
-          createEntryItem("Not After", cert.notAfter),
-          createEntryItem("Not After UTC", cert.notAfterUTC),
+          createEntryItem("Not Before", {
+            local: cert.notBefore,
+            utc: cert.notBeforeUTC,
+          }),
+          createEntryItem("Not After", {
+            local: cert.notAfter,
+            utc: cert.notAfterUTC,
+          }),
         ].filter(elem => elem != null);
       }
       return items;
@@ -368,9 +372,15 @@ export const adjustCertInformation = cert => {
       let items = [];
       if (cert.ext.scts && cert.ext.scts.timestamps) {
         cert.ext.scts.timestamps.forEach(entry => {
+          let timestamps = {};
           for (let key of Object.keys(entry)) {
-            items.push(createEntryItem(key, entry[key]));
+            if (key.includes("timestamp")) {
+              timestamps[key.includes("UTC") ? "utc" : "local"] = entry[key];
+            } else {
+              items.push(createEntryItem(key, entry[key]));
+            }
           }
+          items.push({ label: "timestamp", info: timestamps });
         });
       }
       return items.filter(elem => elem != null);
