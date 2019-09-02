@@ -307,59 +307,11 @@ nsresult nsXULElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   RefPtr<nsXULElement> element = Construct(ni.forget());
 
-  nsresult rv = element->mAttrs.EnsureCapacityToClone(mAttrs);
+  nsresult rv = const_cast<nsXULElement*>(this)->CopyInnerTo(
+      element, ReparseAttributes::No);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note that we're _not_ copying mControllers.
-
-  uint32_t count = mAttrs.AttrCount();
-  rv = NS_OK;
-  // FIXME(emilio): This setup looks somewhat error prone. Other than the
-  // AddListenerFor bit (what is that for?), everything else could be handled by
-  // the generic Element::CopyInnerTo, or the equivalent in
-  // nsGenericHTMLElement (somehow), both of which go through AfterSetAttr...
-  for (uint32_t i = 0; i < count; ++i) {
-    const nsAttrName* originalName = mAttrs.AttrNameAt(i);
-    const nsAttrValue* originalValue = mAttrs.AttrAt(i);
-    nsAttrValue attrValue;
-
-    // Style rules need to be cloned.
-    if (originalValue->Type() == nsAttrValue::eCSSDeclaration) {
-      DeclarationBlock* decl = originalValue->GetCSSDeclarationValue();
-      RefPtr<DeclarationBlock> declClone = decl->Clone();
-
-      nsString stringValue;
-      originalValue->ToString(stringValue);
-
-      attrValue.SetTo(declClone.forget(), &stringValue);
-    } else {
-      attrValue.SetTo(*originalValue);
-    }
-
-    bool oldValueSet;
-    if (originalName->IsAtom()) {
-      rv = element->mAttrs.SetAndSwapAttr(originalName->Atom(), attrValue,
-                                          &oldValueSet);
-    } else {
-      rv = element->mAttrs.SetAndSwapAttr(originalName->NodeInfo(), attrValue,
-                                          &oldValueSet);
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-    element->AddListenerFor(*originalName);
-    if (originalName->Equals(nsGkAtoms::id) &&
-        !originalValue->IsEmptyString()) {
-      element->SetHasID();
-    }
-    if (originalName->Equals(nsGkAtoms::_class)) {
-      element->SetMayHaveClass();
-    }
-    if (originalName->Equals(nsGkAtoms::style)) {
-      element->SetMayHaveStyle();
-    }
-    if (originalName->Equals(nsGkAtoms::part)) {
-      element->SetHasPartAttribute(true);
-    }
-  }
 
   element.forget(aResult);
   return rv;

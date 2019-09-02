@@ -1910,11 +1910,13 @@ class Element : public FragmentOrElement {
       nsAtom* aAtom,
       const DOMTokenListSupportedTokenArray aSupportedTokens = nullptr);
 
+  enum class ReparseAttributes { No, Yes };
   /**
    * Copy attributes and state to another element
    * @param aDest the object to copy to
    */
-  nsresult CopyInnerTo(Element* aDest);
+  nsresult CopyInnerTo(Element* aDest,
+                       ReparseAttributes = ReparseAttributes::Yes);
 
  private:
   /**
