@@ -1017,6 +1017,7 @@
 # Prefs starting with "clipboard."
 #---------------------------------------------------------------------------
 
+# Clipboard behavior.
 - name: clipboard.autocopy
   type: bool
 #if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
@@ -1175,9 +1176,12 @@
 # Prefs starting with "devtools."
 #---------------------------------------------------------------------------
 
+# Tells if DevTools have been explicitely enabled by the user. This pref
+# allows to disable all features related to DevTools for users that never use
+# them. Until bug 1361080 lands, we always consider them enabled.
 - name: devtools.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: devtools.console.stdout.chrome
@@ -2701,7 +2705,8 @@
   mirror: always
 
 # This pref has no effect within fission windows, it only controls the
-# behaviour within non-fission windows.
+# behaviour within non-fission windows. If true, preserve browsing contexts
+# between process swaps. Should be set to true in bug 1550571.
 - name: fission.preserve_browsing_contexts
   type: bool
   value: false
