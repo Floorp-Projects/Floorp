@@ -361,11 +361,6 @@ hpp:
        */
       const char* describeBinASTVariant(const BinASTVariant& variant);
 
-      /**
-       * Return a string describing a `BinASTList`.
-       */
-      const char* describeBinASTList(const BinASTList& list);
-
       } // namespace frontend
       } // namespace js
 
@@ -1051,7 +1046,7 @@ EmptyStatement:
 ExpressionStatement:
   build: |
     BINJS_TRY_DECL(result,
-                   handler_.newExprStatement(expression));
+                   handler_.newExprStatement(expression, tokenizer_->offset()));
 
 ForInOfBinding:
   init:
@@ -1299,24 +1294,27 @@ LiteralRegExpExpression:
     flags:
       block:
         replace: |
-          RegExpFlags reflags = JS::RegExpFlag::NoFlags;
-          auto flagsContext = Context(FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags));
-          if (mozilla::IsSame<Tok, BinASTTokenReaderContext>::value) {
-            // Hack: optimized `readChars` is not implemented for `BinASTTokenReaderContext`.
-            RootedAtom flags(cx_);
-            MOZ_TRY_VAR(flags, tokenizer_->readAtom(flagsContext));
-            if (!this->parseRegExpFlags(flags, &reflags)) {
-              return raiseError("Invalid regexp flags");
-            }
-          } else {
-            Chars flags(cx_);
-            MOZ_TRY(tokenizer_->readChars(flags, flagsContext));
-            if (!this->parseRegExpFlags(flags, &reflags)) {
-              return raiseError("Invalid regexp flags");
-            }
-          }
-
+          Chars flags(cx_);
+          MOZ_TRY(tokenizer_->readChars(flags, Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
   build: |
+    RegExpFlags reflags = RegExpFlag::NoFlags;
+    for (auto c : flags) {
+      if (c == 'g' && !reflags.global()) {
+        reflags |= RegExpFlag::Global;
+      } else if (c == 'i' && !reflags.ignoreCase()) {
+        reflags |= RegExpFlag::IgnoreCase;
+      } else if (c == 'm' && !reflags.multiline()) {
+        reflags |= RegExpFlag::Multiline;
+      } else if (c == 'u' && !reflags.unicode()) {
+        reflags |= RegExpFlag::Unicode;
+      } else if (c == 'y' && !reflags.sticky()) {
+        reflags |= RegExpFlag::Sticky;
+      } else {
+        return raiseError("Invalid regexp flags");
+      }
+    }
+
+
     Rooted<RegExpObject*> reobj(cx_);
     BINJS_TRY_VAR(reobj,
                   RegExpObject::create(cx_, pattern, reflags, TenuredObject));
