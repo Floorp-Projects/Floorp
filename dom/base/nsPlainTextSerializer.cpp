@@ -1143,6 +1143,7 @@ void nsPlainTextSerializer::FlushLine() {
       nsAutoString quotesAndIndent;
       CreateQuotesAndIndent(
           quotesAndIndent);  // XXX: Should we always do this? Bug?
+      mIndentation.mHeader.Truncate();
       mOutputManager->Append(quotesAndIndent);
     }
 
@@ -1405,6 +1406,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     const bool stripTrailingSpaces = mCurrentLineContent.mValue.IsEmpty();
     nsAutoString quotesAndIndent;
     CreateQuotesAndIndent(quotesAndIndent);
+    mIndentation.mHeader.Truncate();
 
     if (stripTrailingSpaces) {
       quotesAndIndent.Trim(" ", false, true, false);
@@ -1425,10 +1427,9 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
 
 /**
  * Creates the calculated and stored indent and text in the indentation. That is
- * quote chars and numbers for numbered lists and such. It will also reset any
- * stored text to put in the indentation after using it.
+ * quote chars and numbers for numbered lists and such.
  */
-void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) {
+void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) const {
   // Put the mail quote "> " chars in, if appropriate:
   if (mCiteQuoteLevel > 0) {
     nsAutoString quotes;
@@ -1459,7 +1460,6 @@ void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) {
 
   if (!mIndentation.mHeader.IsEmpty()) {
     aResult += mIndentation.mHeader;
-    mIndentation.mHeader.Truncate();
   }
 }
 
@@ -1598,6 +1598,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       if (outputQuotes) {
         nsAutoString quotesAndIndent;
         CreateQuotesAndIndent(quotesAndIndent);
+        mIndentation.mHeader.Truncate();
         mOutputManager->Append(quotesAndIndent);
       }
 
