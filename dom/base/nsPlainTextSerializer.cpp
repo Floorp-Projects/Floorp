@@ -1504,9 +1504,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
          mWrapColumn);
 #endif
 
-  int32_t bol = 0;
-  int32_t newline;
-
   const int32_t totLen = str.Length();
 
   // If the string is empty, do nothing:
@@ -1535,8 +1532,11 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       FlushLine();
     }
 
+    int32_t newline{0};
+
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
+    int32_t bol = 0;
     while (bol < totLen) {
       MOZ_ASSERT(mOutputManager);
 
@@ -1558,7 +1558,9 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
           newline = new_newline;
           break;
         }
-        if (' ' != *iter) spacesOnly = false;
+        if (' ' != *iter) {
+          spacesOnly = false;
+        }
         ++new_newline;
         ++iter;
       }
@@ -1569,12 +1571,8 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         // No new lines.
         stringpart.Assign(Substring(str, bol, totLen - bol));
         if (!stringpart.IsEmpty()) {
-          char16_t lastchar = stringpart[stringpart.Length() - 1];
-          if (IsLineFeedCarriageReturnBlankOrTab(lastchar)) {
-            mInWhitespace = true;
-          } else {
-            mInWhitespace = false;
-          }
+          char16_t lastchar = stringpart.Last();
+          mInWhitespace = IsLineFeedCarriageReturnBlankOrTab(lastchar);
         }
         mEmptyLines = -1;
         bol = totLen;
@@ -1618,7 +1616,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
     }
 
-    // Reset mCurrentLineContent.mValue.
     mCurrentLineContent.mValue.Truncate();
 
 #ifdef DEBUG_wrapping
@@ -1633,6 +1630,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
   int32_t nextpos;
   const char16_t* offsetIntoBuffer = nullptr;
 
+  int32_t bol = 0;
   while (bol < totLen) {  // Loop over lines
     // Find a place where we may have to do whitespace compression
     nextpos = str.FindCharInSet(" \t\n\r", bol);
