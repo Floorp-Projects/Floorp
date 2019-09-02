@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1286509
     synthesizeKey("KEY_ArrowDown");
     synthesizeKey("KEY_ArrowLeft");
     synthesizeKey("KEY_ArrowRight");
-    is(eventCounts['change'], 4, "Expect key up/down/left/right should trigger range input to fire change events");
+    is(eventCounts.change, 4, "Expect key up/down/left/right should trigger range input to fire change events");
     SimpleTest.finish();
   }
   addLoadEvent(test);

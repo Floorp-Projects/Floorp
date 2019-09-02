@@ -45,7 +45,7 @@ window.checkResults = function(reportObj) {
   is(cspReport["document-uri"], docUri, "Incorrect document-uri");
 
   // we can not test for the whole referrer since it includes platform specific information
-  ok(cspReport["referrer"].startsWith("http://mochi.test:8888/tests/dom/security/test/csp/test_report.html"),
+  ok(cspReport.referrer.startsWith("http://mochi.test:8888/tests/dom/security/test/csp/test_report.html"),
      "Incorrect referrer");
 
   is(cspReport["blocked-uri"], "inline", "Incorrect blocked-uri");

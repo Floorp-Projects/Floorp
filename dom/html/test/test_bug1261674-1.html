@@ -52,10 +52,10 @@ function runTests() {
 
   function runNext() {
     let p = params[testIdx];
-    (p["focus"]) ? input.focus() : input.blur();
-    expectChange = p["valueChanged"] == 0 ? expectChange : expectChange + 1;
-    result += parseInt(p["valueChanged"]);
-    sendWheelAndPaint(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] }, () => {
+    (p.focus) ? input.focus() : input.blur();
+    expectChange = p.valueChanged == 0 ? expectChange : expectChange + 1;
+    result += parseInt(p.valueChanged);
+    sendWheelAndPaint(input, 1, 1, { deltaY: p.deltaY, deltaMode: p.deltaMode }, () => {
       ok(input.value == result,
          "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
       ok(rangeChange == expectChange,

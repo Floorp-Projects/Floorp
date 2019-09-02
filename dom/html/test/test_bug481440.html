@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481440
 for (var i = 0; i < 500; ++i) {
   document.getElementById(i);
 }
-is(document.all["x"], document.getElementById("y"),
+is(document.all.x, document.getElementById("y"),
    "Unexpected node");
 </script>
 </pre>

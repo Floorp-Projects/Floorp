@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346485
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
     frameLoaded = function() {
-      is(frames['submit_frame'].location.href, "about:blank",
+      is(frames.submit_frame.location.href, "about:blank",
          "Blank frame loaded");
     }
   </script>
@@ -135,7 +135,7 @@ function checkFormSubmission()
    * element value should not appear.
    */
 
-  is(frames['submit_frame'].location.href,
+  is(frames.submit_frame.location.href,
     'http://mochi.test:8888/tests/dom/html/test/forms/foo?a=afield&b=bfield',
      "The output element value should not be submitted");
   SimpleTest.finish();
