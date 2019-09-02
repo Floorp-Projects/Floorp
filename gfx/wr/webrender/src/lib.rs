@@ -108,6 +108,7 @@ mod prim_store;
 mod print_tree;
 mod record;
 mod render_backend;
+mod render_target;
 mod render_task_graph;
 mod render_task;
 mod renderer;

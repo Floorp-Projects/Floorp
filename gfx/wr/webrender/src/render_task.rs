@@ -25,7 +25,8 @@ use crate::print_tree::{PrintTreePrinter};
 use crate::resource_cache::{CacheItem, ResourceCache};
 use std::{mem, usize, f32, i32, u32};
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use crate::render_task_graph::{RenderTaskGraph, RenderTargetIndex, RenderTaskId};
+use crate::render_target::{RenderTargetIndex, RenderTargetKind};
+use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 
 
 const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
@@ -39,15 +40,6 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
         error!("Attempting to create a render task of size {}x{}", size.width, size.height);
         panic!();
     }
-}
-
-/// A tag used to identify the output format of a `RenderTarget`.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum RenderTargetKind {
-    Color, // RGBA8
-    Alpha, // R8
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
