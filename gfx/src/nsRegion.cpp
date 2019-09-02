@@ -9,8 +9,6 @@
 #include "gfxUtils.h"
 #include "mozilla/ToString.h"
 
-using namespace std;
-
 void nsRegion::AssertStateInternal() const {
   bool failed = false;
   // Verify consistent state inside the region.
