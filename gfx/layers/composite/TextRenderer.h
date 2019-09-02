@@ -46,6 +46,11 @@ class TextRenderer final {
                                   uint32_t aTargetPixelWidth,
                                   FontType aFontType = FontType::Default);
 
+  void RenderTextToDrawTarget(gfx::DrawTarget* aDrawTarget,
+                              const std::string& aText,
+                              uint32_t aTargetPixelWidth,
+                              FontType aFontType = FontType::Default);
+
   struct FontCache {
     ~FontCache();
     RefPtr<gfx::DataSourceSurface> mGlyphBitmaps;
