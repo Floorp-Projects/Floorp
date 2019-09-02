@@ -63,7 +63,7 @@ void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
   aTargetPixelWidth /= scaleFactor;
 
   RefPtr<TextureSource> src =
-      RenderText(aCompositor, aText, aTextSize, aTargetPixelWidth, aFontType);
+      RenderText(aCompositor, aText, aTargetPixelWidth, aFontType);
   if (!src) {
     return;
   }
@@ -82,7 +82,6 @@ void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
 
 RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
                                                const string& aText,
-                                               uint32_t aTextSize,
                                                uint32_t aTargetPixelWidth,
                                                FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {
