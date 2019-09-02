@@ -6,10 +6,6 @@
 var WORKER_SOURCE_URI = "chrome://workers/content/worker_fileReader.js";
 do_load_manifest("data/chrome.manifest");
 
-function run_test() {
-  run_next_test();
-}
-
 function talk_with_worker(worker) {
   return new Promise((resolve, reject) => {
     worker.onmessage = function(event) {

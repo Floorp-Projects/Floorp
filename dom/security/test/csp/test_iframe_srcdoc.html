@@ -74,12 +74,12 @@ var tests = [
 var counter = -1;
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   window.examiner.remove();
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   var result = event.data.result;
   testComplete(result, tests[counter].result, tests[counter].desc);

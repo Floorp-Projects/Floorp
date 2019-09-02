@@ -26,7 +26,7 @@ createIframe(content)
     iframeWin.grabme.appendChild(host);
 
     var inner = shadow.getElementById("inner");
-    is(iframeWin.getComputedStyle(inner, null).getPropertyValue("height"), "200px", "Style in shadow root should take effect.");
+    is(iframeWin.getComputedStyle(inner).getPropertyValue("height"), "200px", "Style in shadow root should take effect.");
 
     SimpleTest.finish();
   });
