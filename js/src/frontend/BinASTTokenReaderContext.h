@@ -59,15 +59,12 @@ struct NormalizedInterfaceAndField {
 // Whenever a lookup is performed, the consumer MUST look at the `bitLength` of
 // the returned `HuffmanKey` and consume as many bits from the bit stream.
 struct HuffmanLookup {
-  HuffmanLookup(const uint32_t bits, const uint8_t bitLength)
+  HuffmanLookup(uint32_t bits, uint8_t bitLength)
       // We zero out the highest `32 - bitLength` bits.
-      : bits(bitLength == 0
-                 ? 0  // >> 32 is UB
-                 : (bits & (uint32_t(0xFFFFFFFF) >> (32 - bitLength)))),
+      : bits(bits & (uint32_t(0xFFFFFFFF) >> (32 - bitLength))),
         bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
-    MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */,
-                  this->bits >> bitLength == 0);
+    MOZ_ASSERT(bits >> bitLength == 0);
   }
 
   // Return the `bitLength` leading bits of this superset, in the order
@@ -88,14 +85,14 @@ struct HuffmanLookup {
   //
   // If `bitLength < 32`, the unused highest bits are guaranteed
   // to be 0.
-  const uint32_t bits;
+  uint32_t bits;
 
   // The actual length of buffer `bits`.
   //
   // MUST be within `[0, 32]`.
   //
   // If `bitLength < 32`, it means that some of the highest bits are unused.
-  const uint8_t bitLength;
+  uint8_t bitLength;
 };
 
 // A Huffman Key.
@@ -111,7 +108,7 @@ struct HuffmanKey {
   HuffmanKey(const uint32_t bits, const uint8_t bitLength)
       : bits(bits), bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
-    MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
+    MOZ_ASSERT(bits >> bitLength == 0);
   }
 
   // The buffer holding the bits.
@@ -121,14 +118,14 @@ struct HuffmanKey {
   //
   // If `bitLength < 32`, the unused highest bits are guaranteed
   // to be 0.
-  const uint32_t bits;
+  uint32_t bits;
 
   // The actual length of buffer `bits`.
   //
   // MUST be within `[0, 32]`.
   //
   // If `bitLength < 32`, it means that some of the highest bits are unused.
-  const uint8_t bitLength;
+  uint8_t bitLength;
 };
 
 // An entry in a Huffman table.
@@ -199,21 +196,12 @@ class HuffmanTableImpl {
   friend class HuffmanPreludeReader;
 };
 
-// An empty Huffman table. Attempting to get a value from this table is a syntax
+// An empty Huffman table. Attempting to get a value from this table is an
 // error. This is the default value for `HuffmanTable` and represents all states
 // that may not be reached.
 //
-// Part of variants `HuffmanTable` and `HuffmanTableListLength`.
+// Part of variant `HuffmanTable`.
 struct HuffmanTableUnreachable {};
-
-// While reading the Huffman prelude, whenever we first encounter a
-// `HuffmanTableUnreachable`, we replace it with a `HuffmanTableInitializing`
-// to mark that we should not attempt to read/initialize it again.
-//
-// Attempting to get a value from this table is an internal error.
-//
-// Part of variants `HuffmanTable` and `HuffmanTableListLength`.
-struct HuffmanTableInitializing {};
 
 // --- Explicit instantiations of `HuffmanTableImpl`.
 // These classes are all parts of variant `HuffmanTable`.
@@ -227,7 +215,6 @@ struct HuffmanTableExplicitSymbolsF64 {
 struct HuffmanTableExplicitSymbolsU32 {
   using Contents = uint32_t;
   HuffmanTableImpl<uint32_t> impl;
-  explicit HuffmanTableExplicitSymbolsU32(JSContext* cx) : impl(cx) {}
 };
 
 struct HuffmanTableIndexedSymbolsSum {
@@ -242,11 +229,9 @@ struct HuffmanTableIndexedSymbolsBool {
   explicit HuffmanTableIndexedSymbolsBool(JSContext* cx) : impl(cx) {}
 };
 
-// A Huffman table that may only ever contain two values:
-// `BinASTKind::_Null` and another `BinASTKind`.
 struct HuffmanTableIndexedSymbolsMaybeInterface {
-  using Contents = BinASTKind;
-  HuffmanTableImpl<BinASTKind, 2> impl;
+  using Contents = Nullable;
+  HuffmanTableImpl<Nullable, 2> impl;
   explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx) : impl(cx) {}
 
   // `true` if this table only contains values for `null`.
@@ -259,7 +244,7 @@ struct HuffmanTableIndexedSymbolsMaybeInterface {
       return false;
     }
     // Otherwise, check the single value.
-    return impl.begin()->value == BinASTKind::_Null;
+    return impl.begin()->value == Nullable::Null;
   }
 };
 
@@ -285,10 +270,9 @@ struct HuffmanTableIndexedSymbolsOptionalLiteralString {
 // A single Huffman table.
 using HuffmanTable = mozilla::Variant<
     HuffmanTableUnreachable,  // Default value.
-    HuffmanTableInitializing, HuffmanTableExplicitSymbolsF64,
-    HuffmanTableExplicitSymbolsU32, HuffmanTableIndexedSymbolsSum,
-    HuffmanTableIndexedSymbolsMaybeInterface, HuffmanTableIndexedSymbolsBool,
-    HuffmanTableIndexedSymbolsStringEnum,
+    HuffmanTableExplicitSymbolsF64, HuffmanTableExplicitSymbolsU32,
+    HuffmanTableIndexedSymbolsSum, HuffmanTableIndexedSymbolsMaybeInterface,
+    HuffmanTableIndexedSymbolsBool, HuffmanTableIndexedSymbolsStringEnum,
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
@@ -301,7 +285,6 @@ struct HuffmanTableExplicitSymbolsListLength {
 // A single Huffman table, specialized for list lengths.
 using HuffmanTableListLength =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
-                     HuffmanTableInitializing,
                      HuffmanTableExplicitSymbolsListLength>;
 
 // A Huffman dictionary for the current file.
@@ -311,7 +294,7 @@ using HuffmanTableListLength =
 // to predict list lengths.
 class HuffmanDictionary {
  public:
-  explicit HuffmanDictionary(JSContext* cx);
+  explicit HuffmanDictionary(JSContext* cx) : fields(cx), listLengths(cx) {}
 
   HuffmanTable& tableForField(NormalizedInterfaceAndField index);
   HuffmanTableListLength& tableForListLength(BinASTList list);
@@ -402,7 +385,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     BestEffort
   };
 
- protected:
+ private:
   // A buffer of bits used to lookup data from the Huffman tables.
   // It may contain up to 64 bits.
   //
@@ -417,12 +400,12 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     //
     // If `result.bitLength == 0`, you have reached the end of the stream.
     template <Compression Compression>
-    MOZ_MUST_USE JS::Result<HuffmanLookup> getHuffmanLookup(
-        BinASTTokenReaderContext& owner);
+    HuffmanLookup getHuffmanLookup();
 
     // Advance the bit buffer by `bitLength` bits.
     template <Compression Compression>
-    void advanceBitBuffer(const uint8_t bitLength);
+    MOZ_MUST_USE JS::Result<Ok> advanceBitBuffer(
+        BinASTTokenReaderContext& owner, const uint8_t bitLength);
 
    private:
     // The contents of the buffer.
@@ -600,11 +583,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * Read a single unsigned long.
    */
   MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&);
-  MOZ_MUST_USE JS::Result<uint32_t> readUnpackedLong();
 
  private:
-  MOZ_MUST_USE JS::Result<BinASTKind> readTagFromTable(const Context&);
-
   template <typename Table>
   MOZ_MUST_USE JS::Result<typename Table::Contents> readFieldFromTable(
       const Context&);
@@ -613,11 +593,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * Report an "invalid value error".
    */
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidValue(const Context&);
-
-  /**
-   * Report a "value not in prelude".
-   */
-  MOZ_MUST_USE ErrorResult<JS::Error&> raiseNotInPrelude(const Context&);
 
  private:
   /**
@@ -660,7 +635,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
  protected:
   friend class HuffmanPreludeReader;
-  friend struct TagReader;
+
+  JSContext* cx_;
 
  public:
   // The following classes are used whenever we encounter a tuple/tagged
@@ -688,6 +664,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     friend BinASTTokenReaderContext;
     void init();
 
+    // Set to `true` if `init()` has been called. Reset to `false` once
+    // all conditions have been checked.
     bool initialized_;
     BinASTTokenReaderContext& reader_;
   };
