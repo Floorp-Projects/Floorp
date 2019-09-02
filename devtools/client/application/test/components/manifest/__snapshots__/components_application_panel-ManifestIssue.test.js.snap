@@ -2,7 +2,7 @@
 
 exports[`ManifestIssue renders the expected snapshot for a warning 1`] = `
 <li
-  className="manifest-warning "
+  className="js-manifest-issue "
 >
   <Localized
     attrs={
@@ -26,7 +26,7 @@ exports[`ManifestIssue renders the expected snapshot for a warning 1`] = `
 
 exports[`ManifestIssue renders the expected snapshot for an error 1`] = `
 <li
-  className="manifest-warning "
+  className="js-manifest-issue "
 >
   <Localized
     attrs={
