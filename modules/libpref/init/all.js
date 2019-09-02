@@ -2517,9 +2517,6 @@ pref("middlemouse.paste", false);
 pref("middlemouse.contentLoadURL", false);
 pref("middlemouse.scrollbarPosition", false);
 
-// Clipboard behavior
-pref("clipboard.autocopy", false);
-
 // Clipboard only supports text/plain
 pref("clipboard.plainTextOnly", false);
 
@@ -3851,9 +3848,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   pref("middlemouse.paste", true);
   pref("middlemouse.openNewWindow", true);
   pref("middlemouse.scrollbarPosition", true);
-
-  // Clipboard behavior
-  pref("clipboard.autocopy", true);
 
   pref("browser.urlbar.clickSelectsAll", false);
 
@@ -5266,10 +5260,6 @@ pref("dom.events.testing.asyncClipboard", false);
 // Should be turned back on to resolve bug 1551993.
 pref("fission.rebuild_frameloaders_on_remoteness_change", false);
 
-// If true, preserve browsing contexts between process swaps. Should be set to
-// true in bug 1550571.
-pref("fission.preserve_browsing_contexts", false);
-
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
 //  * userContent.css
@@ -5468,11 +5458,6 @@ pref("devtools.jsonview.enabled", true);
 // Completely disable DevTools entry points, as well as all DevTools command
 // line arguments This should be merged with devtools.enabled, see Bug 1440675.
 pref("devtools.policy.disabled", false);
-
-// Tells if DevTools have been explicitely enabled by the user. This pref
-// allows to disable all features related to DevTools for users that never use
-// them. Until bug 1361080 lands, we always consider them enabled.
-pref("devtools.enabled", true);
 
 // Enable deprecation warnings.
 pref("devtools.errorconsole.deprecation_warnings", true);
