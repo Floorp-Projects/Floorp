@@ -497,7 +497,11 @@ class HuffmanPreludeReader {
 
     MOZ_ASSERT(numberOfSymbols <= MAX_NUMBER_OF_SYMBOLS);
 
+    fprintf(stderr, "readMultipleValuesTable %s with %u entries\n",
+            describeBinASTInterfaceAndField(entry.identity.identity),
+            numberOfSymbols);
     if (numberOfSymbols == 1) {
+      fprintf(stderr, "readMultipleValuesTable (handling single symbol)\n");
       // Special case: only one symbol.
       BINJS_MOZ_TRY_DECL(bitLength, reader.readByte<Compression::No>());
       if (bitLength != 0) {
@@ -534,46 +538,61 @@ class HuffmanPreludeReader {
     uint32_t code = 0;
     MOZ_TRY(table.impl.init(cx_, numberOfSymbols));
 
-    // Iterate through non-0 entries.
-    size_t nextIndex = 1;
-    for (size_t i = 0; i < numberOfSymbols; i = nextIndex) {
-      // Look for the next non-0 length.
-      // We are guaranteed to always have one as
-      // `auxStorageBitLengths[numberOfSymbols] != 0`.
-      for (nextIndex = i + 1; nextIndex <= numberOfSymbols; ++nextIndex) {
-        if (auxStorageBitLengths[nextIndex] != 0) {
-          break;
-        }
-      }
+    // Iterate through entries with a `bitWeight != 0` (aka *non-0 entries*).
+    // The algorithm is a tad complex because we want to avoid allocating an
+    // intermediate vector to store entries. The trivial algorithm to do so is
+    // O(numberOfSymbols^2), so we go for something slightly more complicated.
+    // Effectively, we're emulating a `filter_map()` in a functional
+    // language/framework.
 
-      // Read the symbol. We need to do this even if `bitLength == 0`.
-      // If `Entry` is an indexed type, it is fetched directly from the grammar.
+    // Find the first non-0 entry, consuming 0 entries along the way.
+    // It MAY be inexistent, in which case `i == numberOfSymbols`.
+    size_t i;
+    for (i = 0; i < numberOfSymbols && auxStorageBitLengths[i] == 0; ++i) {
+      MOZ_TRY(readSymbol<Entry>(entry, i));  // Read and ignore 0-entries.
+    }
+
+    while (i < numberOfSymbols) {
+      fprintf(stderr,
+              "readMultipleValuesTable (reading non-0 entry at index %zu)\n",
+              i);
+      // Read the first non-0 entry.
       BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>(entry, i));
 
-      const auto bitLength = auxStorageBitLengths[i];
-      if (bitLength == 0) {
-        // In a table with multiple values, we use a bitLength of 0 to represent
-        // an absent symbol, so let's skip to `nextIndex`.
-        continue;
+      // Find the next non-0 entry.
+      // We know that it exists because we have added a non-0 terminator.
+      size_t j;
+      for (j = i + 1; j <= numberOfSymbols && auxStorageBitLengths[j] == 0;
+           ++j) {
+        MOZ_TRY(readSymbol<Entry>(entry, j));  // Read and ignore 0-entries.
       }
 
-      // Look for the next non-0.
-      const auto nextBitLength =
-          auxStorageBitLengths[nextIndex];  // Valid thanks to the terminator.
+      const auto bitLength = auxStorageBitLengths[i];
+      const auto nextBitLength = auxStorageBitLengths[j];
+      MOZ_ASSERT(bitLength != 0);
+      MOZ_ASSERT(nextBitLength != 0);
+
       if (bitLength > nextBitLength) {
         // By format invariant, bit lengths are always ranked by increasing
         // order.
         return raiseInvalidTableData(entry.identity);
       }
 
+      // Add symbol.
       MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
 
+      // Prepare next code.
       code = (code + 1) << (nextBitLength - bitLength);
+
+      i = j;
     }
+
+    fprintf(stderr,
+            "readMultipleValuesTable (finally, the table has %lu elements)\n",
+            table.impl.length());
 
     // Note that the table may be empty, in the case of a list that never has
     // any elements.
-
     auxStorageBitLengths.clear();
     return Ok();
   }
@@ -603,6 +622,9 @@ class HuffmanPreludeReader {
         // Construct in-place.
         table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
         auto& tableRef = table.template as<typename Entry::Table>();
+
+        fprintf(stderr, "readSingleValueTable %s\n",
+                describeBinASTInterfaceAndField(entry.identity.identity));
 
         // The table contains a single value.
         MOZ_TRY((readSingleValueTable<Entry>(tableRef, entry)));
@@ -1289,8 +1311,9 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
       context.as<BinASTTokenReaderBase::ListContext>().content;
   const auto& table = dictionary.tableForListLength(identity);
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
-  const auto lookup =
-      table.as<HuffmanTableExplicitSymbolsListLength>().impl.lookup(bits);
+  const auto& tableForLookup =
+      table.as<HuffmanTableExplicitSymbolsListLength>();
+  const auto lookup = tableForLookup.impl.lookup(bits);
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
     return raiseInvalidValue(context);
@@ -1421,6 +1444,9 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
   // provide bounded-time lookup.
+  fprintf(stderr, "HuffmanTableImpl::lookup among %lu values\n",
+          values.length());
+
   for (const auto& iter : values) {
     if (iter.key.bitLength > key.bitLength) {
       // We can't find the entry.
@@ -1723,7 +1749,7 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 template <>
 MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
     const List& list, size_t) {
-  BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  BINJS_MOZ_TRY_DECL(length, reader.readUnpackedLong());
   if (length > MAX_LIST_LENGTH) {
     return raiseInvalidTableData(list.identity);
   }
