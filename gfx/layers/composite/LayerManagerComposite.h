@@ -441,6 +441,10 @@ class LayerManagerComposite final : public HostLayerManager {
    */
   void RenderDebugOverlay(const gfx::IntRect& aBounds);
 
+  void DrawBorder(const gfx::IntRect& aOuter, int32_t aBorderWidth,
+                  const gfx::Color& aColor, const gfx::Matrix4x4& aTransform);
+  void DrawTranslationWarningOverlay(const gfx::IntRect& aBounds);
+
   RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
   void PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
                                gfx::IntRect aClipRect, bool aGrayscaleEffect,
