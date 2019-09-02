@@ -569,10 +569,8 @@ class HuffmanPreludeReader {
       code = (code + 1) << (nextBitLength - bitLength);
     }
 
-    if (table.impl.length() == 0) {
-      // At this stage, an empty table makes no sense.
-      return raiseInvalidTableData(entry.identity);
-    }
+    // Note that the table may be empty, in the case of a list that never has
+    // any elements.
 
     auxStorageBitLengths.clear();
     return Ok();
@@ -672,7 +670,8 @@ class HuffmanPreludeReader {
       MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
 
       auto& length = table.as<HuffmanTableExplicitSymbolsListLength>();
-      if (length.impl.length() == 1 && length.impl.begin()->value == 0) {
+      if ((length.impl.length() == 0) ||
+          (length.impl.length() == 1 && length.impl.begin()->value == 0)) {
         // Spec:
         // 3. If the field has a FrozenArray type
         //   a. Determine if the array type is always empty
@@ -1118,8 +1117,8 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
       // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__QRST_UVWX`.
       this->bits += reversedByte;
       this->bitLength += BIT_BUFFER_READ_UNIT;
-      MOZ_ASSERT_IF(this->bitLength != 32 /* >> 32 is UB */,
-                    bits >> this->bitLength == 0);
+      MOZ_ASSERT_IF(this->bitLength != 64 /* >> 64 is UB for a uint64_t */,
+                    this->bits >> this->bitLength == 0);
 
       // 5. Continue as long as we don't have enough bits.
     }
@@ -1412,7 +1411,6 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
   // provide bounded-time lookup.
-  MOZ_ASSERT(length() > 0);
   for (const auto& iter : values) {
     if (iter.key.bitLength > key.bitLength) {
       // We can't find the entry.
@@ -1503,11 +1501,11 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::run(size_t initialCapacity) {
   MOZ_TRY(pushFields(BinASTKind::Script));
   while (stack.length() > 0) {
     const Entry entry = stack.popCopy();
-#ifdef DEBUG_BINAST
+#ifdef DEBUG
     entry.match(PrintEntry("pop"));
 #endif  // DEBUG_BINAST
     MOZ_TRY(entry.match(ReadPoppedEntryMatcher(*this)));
-#ifdef DEBUG_BINAST
+#ifdef DEBUG
     entry.match(PrintEntry("pop complete"));
 #endif  // DEBUG_BINAST
   }
