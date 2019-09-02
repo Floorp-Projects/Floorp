@@ -1125,6 +1125,8 @@ SpdyConnectTransaction::SpdyConnectTransaction(
 SpdyConnectTransaction::~SpdyConnectTransaction() {
   LOG(("SpdyConnectTransaction dtor %p\n", this));
 
+  MOZ_ASSERT(OnSocketThread());
+
   if (mDrivingTransaction) {
     // requeue it I guess. This should be gone.
     mDrivingTransaction->SetH2WSTransaction(nullptr);
@@ -1146,6 +1148,8 @@ void SpdyConnectTransaction::ForcePlainText() {
 void SpdyConnectTransaction::MapStreamToHttpConnection(
     nsISocketTransport* aTransport, nsHttpConnectionInfo* aConnInfo,
     int32_t httpResponseCode) {
+  MOZ_ASSERT(OnSocketThread());
+
   mConnInfo = aConnInfo;
 
   mTunnelTransport = new SocketTransportShim(this, aTransport, mIsWebsocket);
@@ -1440,6 +1444,7 @@ nsresult SpdyConnectTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
 
 nsresult SpdyConnectTransaction::WebsocketWriteSegments(
     nsAHttpSegmentWriter* writer, uint32_t count, uint32_t* countWritten) {
+  MOZ_ASSERT(OnSocketThread());
   MOZ_ASSERT(mIsWebsocket);
   if (mDrivingTransaction && !mDrivingTransaction->IsDone()) {
     // Transaction hasn't received end of headers yet, so keep passing data to
@@ -1482,6 +1487,8 @@ void SpdyConnectTransaction::Close(nsresult code) {
   LOG(("SpdyConnectTransaction close %p %" PRIx32 "\n", this,
        static_cast<uint32_t>(code)));
 
+  MOZ_ASSERT(OnSocketThread());
+
   if (mIsWebsocket && mDrivingTransaction) {
     mDrivingTransaction->SetH2WSTransaction(nullptr);
     if (!mConnRefTaken) {
@@ -1500,6 +1507,8 @@ void SpdyConnectTransaction::Close(nsresult code) {
 }
 
 void SpdyConnectTransaction::SetConnRefTaken() {
+  MOZ_ASSERT(OnSocketThread());
+
   mConnRefTaken = true;
   mDrivingTransaction = nullptr;  // Just in case
 }

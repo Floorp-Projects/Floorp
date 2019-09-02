@@ -194,8 +194,8 @@ void nsHttpTransaction::SetClassOfService(uint32_t cos) {
 
 class ReleaseH2WSTrans final : public Runnable {
  public:
-  explicit ReleaseH2WSTrans(SpdyConnectTransaction* trans)
-      : Runnable("ReleaseH2WSTrans"), mTrans(trans) {}
+  explicit ReleaseH2WSTrans(already_AddRefed<SpdyConnectTransaction>&& trans)
+      : Runnable("ReleaseH2WSTrans"), mTrans(std::move(trans)) {}
 
   NS_IMETHOD Run() override {
     mTrans = nullptr;
@@ -236,7 +236,8 @@ nsHttpTransaction::~nsHttpTransaction() {
   ReleaseBlockingTransaction();
 
   if (mH2WSTransaction) {
-    RefPtr<ReleaseH2WSTrans> r = new ReleaseH2WSTrans(mH2WSTransaction);
+    RefPtr<ReleaseH2WSTrans> r =
+        new ReleaseH2WSTrans(mH2WSTransaction.forget());
     r->Dispatch();
   }
 }
@@ -445,6 +446,14 @@ nsAHttpConnection* nsHttpTransaction::Connection() {
 }
 
 void nsHttpTransaction::SetH2WSConnRefTaken() {
+  if (!OnSocketThread()) {
+    nsCOMPtr<nsIRunnable> event =
+        NewRunnableMethod("nsHttpTransaction::SetH2WSConnRefTaken", this,
+                          &nsHttpTransaction::SetH2WSConnRefTaken);
+    gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
+    return;
+  }
+
   if (mH2WSTransaction) {
     // Need to let the websocket transaction/connection know we've reached
     // this point so it can stop forwarding information through us and
@@ -2399,6 +2408,8 @@ bool nsHttpTransaction::IsWebsocketUpgrade() {
 
 void nsHttpTransaction::SetH2WSTransaction(
     SpdyConnectTransaction* aH2WSTransaction) {
+  MOZ_ASSERT(OnSocketThread());
+
   mH2WSTransaction = aH2WSTransaction;
 }
 
