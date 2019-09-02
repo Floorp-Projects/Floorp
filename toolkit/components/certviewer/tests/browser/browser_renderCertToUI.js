@@ -75,9 +75,11 @@ add_task(async function test() {
           let infoItemLabel = infoItem.shadowRoot
             .querySelector("label")
             .getAttribute("data-l10n-id");
-          let infoItemInfo = infoItem.shadowRoot.children[2].innerText;
-
+          let infoElem = infoItem.shadowRoot.querySelector(".info");
+          let infoItemInfo = infoElem.textContent;
           let adjustedCertsElemLabel = adjustedCertsElem.sectionItems[i].label;
+          let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
+
           if (adjustedCertsElemLabel == null) {
             adjustedCertsElemLabel = "";
           }
@@ -88,10 +90,22 @@ add_task(async function test() {
             .replace(/--/g, "-")
             .toLowerCase();
 
-          let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
-
           if (adjustedCertsElemInfo == null) {
             adjustedCertsElemInfo = "";
+          }
+
+          if (
+            adjustedCertsElemLabel === "timestamp" ||
+            adjustedCertsElemLabel === "not-after" ||
+            adjustedCertsElemLabel === "not-before"
+          ) {
+            Assert.equal(
+              infoElem.getAttribute("title"),
+              adjustedCertsElemInfo.utc,
+              "Timestamps must be equal"
+            );
+            i++;
+            continue;
           }
 
           if (
@@ -109,21 +123,11 @@ add_task(async function test() {
             "data-l10n-id must contain the original label"
           );
 
-          if (
-            // we are skiping this cases because we are going to compare them
-            // with their UTC, e.g: timestampUTC
-            !(
-              adjustedCertsElemLabel === "timestamp" ||
-              adjustedCertsElemLabel === "not-after" ||
-              adjustedCertsElemLabel === "not-before"
-            )
-          ) {
-            Assert.equal(
-              infoItemInfo,
-              adjustedCertsElemInfo,
-              "Info must be equal"
-            );
-          }
+          Assert.equal(
+            infoItemInfo,
+            adjustedCertsElemInfo,
+            "Info must be equal"
+          );
 
           i++;
         }
