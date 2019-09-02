@@ -91,16 +91,6 @@ class DOMMediaStream : public DOMEventTargetHelper,
      * Called when the DOMMediaStream has become inactive.
      */
     virtual void NotifyInactive(){};
-
-    /**
-     * Called when the DOMMediaStream has become audible.
-     */
-    virtual void NotifyAudible(){};
-
-    /**
-     * Called when the DOMMediaStream has become inaudible.
-     */
-    virtual void NotifyInaudible(){};
   };
 
   explicit DOMMediaStream(nsPIDOMWindowInner* aWindow);
@@ -206,12 +196,6 @@ class DOMMediaStream : public DOMEventTargetHelper,
   // Dispatches NotifyInactive() to all registered track listeners.
   void NotifyInactive();
 
-  // Dispatches NotifyAudible() to all registered track listeners.
-  void NotifyAudible();
-
-  // Dispatches NotifyInaudible() to all registered track listeners.
-  void NotifyInaudible();
-
   // Dispatches NotifyTrackAdded() to all registered track listeners.
   void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack);
 
@@ -242,9 +226,6 @@ class DOMMediaStream : public DOMEventTargetHelper,
 
   // True if this stream has live tracks.
   bool mActive;
-
-  // True if this stream has live audio tracks.
-  bool mAudible;
 
   // For compatibility with mozCaptureStream, we in some cases do not go
   // inactive until the MediaDecoder lets us. (Remove this in Bug 1302379)
