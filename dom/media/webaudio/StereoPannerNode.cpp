@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-using namespace std;
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(StereoPannerNode, AudioNode, mPan)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StereoPannerNode)

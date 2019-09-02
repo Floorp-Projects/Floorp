@@ -29,7 +29,6 @@
 #include "HRTFDatabase.h"
 #include "AudioBlock.h"
 
-using namespace std;
 using namespace mozilla;
 using dom::ChannelInterpretation;
 
@@ -111,8 +110,8 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth,
   // We don't immediately start using this azimuth index, but instead approach
   // this index from the last index we rendered at. This minimizes the clicks
   // and graininess for moving sources which occur otherwise.
-  desiredAzimuthIndex = max(0, desiredAzimuthIndex);
-  desiredAzimuthIndex = min(numberOfAzimuths - 1, desiredAzimuthIndex);
+  desiredAzimuthIndex = std::max(0, desiredAzimuthIndex);
+  desiredAzimuthIndex = std::min(numberOfAzimuths - 1, desiredAzimuthIndex);
   return desiredAzimuthIndex;
 }
 
