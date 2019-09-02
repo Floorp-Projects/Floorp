@@ -98,22 +98,6 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
   }
 }
 
-static nsAtom& ParagraphSeparatorElement(ParagraphSeparator separator) {
-  switch (separator) {
-    default:
-      MOZ_FALLTHROUGH_ASSERT("Unexpected paragraph separator!");
-
-    case ParagraphSeparator::div:
-      return *nsGkAtoms::div;
-
-    case ParagraphSeparator::p:
-      return *nsGkAtoms::p;
-
-    case ParagraphSeparator::br:
-      return *nsGkAtoms::br;
-  }
-}
-
 class TableCellAndListItemFunctor final : public BoolDomIterFunctor {
  public:
   // Used to build list of all li's, td's & th's iterator covers
@@ -1877,8 +1861,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     // Therefore, even if it returns NS_OK, editor might have been destroyed
     // at restoring Selection.
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .FormatBlockContainerWithTransaction(
-                          MOZ_KnownLive(ParagraphSeparatorElement(separator)));
+                      .FormatBlockContainerWithTransaction(MOZ_KnownLive(
+                          HTMLEditor::ToParagraphSeparatorTagName(separator)));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
         NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
@@ -7969,12 +7953,6 @@ Element* HTMLEditRules::IsInListItem(nsINode* aNode) {
   return nullptr;
 }
 
-nsAtom& HTMLEditRules::DefaultParagraphSeparator() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  return ParagraphSeparatorElement(
-      HTMLEditorRef().GetDefaultParagraphSeparator());
-}
-
 nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
                                        int32_t aOffset) {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -8053,7 +8031,8 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
       HTMLEditorRef().mTypeInState->ClearAllProps();
 
       // Create a paragraph
-      nsAtom& paraAtom = DefaultParagraphSeparator();
+      nsStaticAtom& paraAtom =
+          HTMLEditorRef().DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
       EditorDOMPoint nextToHeader(headerParent, offset + 1);
       RefPtr<Element> pNode =
@@ -8487,7 +8466,8 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
       }
 
       // Time to insert a paragraph
-      nsAtom& paraAtom = DefaultParagraphSeparator();
+      nsStaticAtom& paraAtom =
+          HTMLEditorRef().DefaultParagraphSeparatorTagName();
       // We want a wrapper even if we separate with <br>
       RefPtr<Element> pNode =
           MOZ_KnownLive(HTMLEditorRef())

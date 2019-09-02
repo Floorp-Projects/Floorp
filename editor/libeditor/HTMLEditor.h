@@ -504,11 +504,28 @@ class HTMLEditor final : public TextEditor,
     mComposerCommandsUpdater = aComposerCommandsUpdater;
   }
 
+  nsStaticAtom& DefaultParagraphSeparatorTagName() const {
+    return HTMLEditor::ToParagraphSeparatorTagName(mDefaultParagraphSeparator);
+  }
   ParagraphSeparator GetDefaultParagraphSeparator() const {
     return mDefaultParagraphSeparator;
   }
   void SetDefaultParagraphSeparator(ParagraphSeparator aSep) {
     mDefaultParagraphSeparator = aSep;
+  }
+  static nsStaticAtom& ToParagraphSeparatorTagName(
+      ParagraphSeparator aSeparator) {
+    switch (aSeparator) {
+      case ParagraphSeparator::div:
+        return *nsGkAtoms::div;
+      case ParagraphSeparator::p:
+        return *nsGkAtoms::p;
+      case ParagraphSeparator::br:
+        return *nsGkAtoms::br;
+      default:
+        MOZ_ASSERT_UNREACHABLE("New paragraph separator isn't handled here");
+        return *nsGkAtoms::div;
+    }
   }
 
   /**
