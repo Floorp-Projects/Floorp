@@ -9,6 +9,7 @@ use api;
 use crate::device::TextureFilter;
 use crate::renderer::PipelineInfo;
 use crate::gpu_cache::GpuCacheUpdateList;
+use crate::frame_builder::Frame;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
 use crate::profiler::BackendProfileCounters;
@@ -24,7 +25,6 @@ use std::sync::Arc;
 use crate::capture::{CaptureConfig, ExternalCaptureImage};
 #[cfg(feature = "replay")]
 use crate::capture::PlainExternalImage;
-use crate::render_task_graph;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
@@ -473,9 +473,9 @@ impl TextureUpdateList {
     }
 }
 
-/// Wraps a render_task_graph::Frame, but conceptually could hold more information
+/// Wraps a frame_builder::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
-    pub frame: render_task_graph::Frame,
+    pub frame: Frame,
     pub is_new_scene: bool,
 }
 

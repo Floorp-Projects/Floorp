@@ -7,21 +7,25 @@ use api::{PipelineId};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::debug_render::DebugItem;
 use crate::display_list_flattener::{DisplayListFlattener};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
+use crate::gpu_types::TransformData;
 use crate::hit_test::{HitTester, HitTestingScene};
 #[cfg(feature = "replay")]
 use crate::hit_test::HitTestingSceneStats;
 use crate::internal_types::{FastHashMap, PlaneSplitter};
-use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
+use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
+use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
+use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
 #[cfg(feature = "replay")]
 use crate::prim_store::{PrimitiveStoreStats};
 use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use crate::render_backend::{DataStores, FrameStamp};
+use crate::render_backend::{DataStores, FrameStamp, FrameId};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCounters};
+use crate::render_task_graph::{RenderPassKind, RenderTargetContext, RenderPass};
 use crate::render_task::{RenderTask, RenderTaskLocation};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{ScenePipeline, SceneProperties};
@@ -29,7 +33,6 @@ use crate::scene_builder::DocumentStats;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
-use crate::render_task_graph::{Frame, RenderPassKind, RenderTargetContext};
 use crate::util::MaxRect;
 
 
@@ -669,5 +672,58 @@ impl FrameBuilder {
             &self.clip_store,
             clip_data_store,
         )
+    }
+}
+
+/// A rendering-oriented representation of the frame built by the render backend
+/// and presented to the renderer.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct Frame {
+    /// The origin on content produced by the render tasks.
+    pub content_origin: DeviceIntPoint,
+    /// The rectangle to show the frame in, on screen.
+    pub device_rect: DeviceIntRect,
+    pub background_color: Option<ColorF>,
+    pub layer: DocumentLayer,
+    pub passes: Vec<RenderPass>,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
+    pub profile_counters: FrameProfileCounters,
+
+    pub transform_palette: Vec<TransformData>,
+    pub render_tasks: RenderTaskGraph,
+    pub prim_headers: PrimitiveHeaders,
+
+    /// The GPU cache frame that the contents of Self depend on
+    pub gpu_cache_frame_id: FrameId,
+
+    /// List of textures that we don't know about yet
+    /// from the backend thread. The render thread
+    /// will use a callback to resolve these and
+    /// patch the data structures.
+    pub deferred_resolves: Vec<DeferredResolve>,
+
+    /// True if this frame contains any render tasks
+    /// that write to the texture cache.
+    pub has_texture_cache_tasks: bool,
+
+    /// True if this frame has been drawn by the
+    /// renderer.
+    pub has_been_rendered: bool,
+
+    /// Dirty regions recorded when generating this frame. Empty when not in
+    /// testing.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
+
+    /// Debugging information to overlay for this frame.
+    pub debug_items: Vec<DebugItem>,
+}
+
+impl Frame {
+    // This frame must be flushed if it writes to the
+    // texture cache, and hasn't been drawn yet.
+    pub fn must_be_drawn(&self) -> bool {
+        self.has_texture_cache_tasks && !self.has_been_rendered
     }
 }

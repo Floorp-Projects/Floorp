@@ -56,7 +56,7 @@ use crate::device::{ShaderError, TextureFilter, TextureFlags,
 use crate::device::ProgramCache;
 use crate::device::query::GpuTimer;
 use euclid::{rect, Transform3D, Scale, default};
-use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
+use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
@@ -87,7 +87,7 @@ use smallvec::SmallVec;
 use crate::texture_cache::TextureCache;
 use crate::render_task_graph::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::render_task_graph::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
-use crate::render_task_graph::{Frame, RenderTarget, TextureCacheRenderTarget};
+use crate::render_task_graph::{RenderTarget, TextureCacheRenderTarget};
 use crate::util::drain_filter;
 
 use std;
