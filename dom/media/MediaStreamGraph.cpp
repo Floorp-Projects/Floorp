@@ -3353,13 +3353,10 @@ NS_IMETHODIMP
 MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                                      nsISupports* aData, bool aAnonymize) {
   MOZ_ASSERT(NS_IsMainThread());
-  {
-    MonitorAutoLock mon(mMonitor);
-    if (LifecycleStateRef() >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
-      // Shutting down, nothing to report.
-      FinishCollectReports(aHandleReport, aData, nsTArray<AudioNodeSizes>());
-      return NS_OK;
-    }
+  if (mMainThreadStreamCount == 0) {
+    // No streams to report.
+    FinishCollectReports(aHandleReport, aData, nsTArray<AudioNodeSizes>());
+    return NS_OK;
   }
 
   class Message final : public ControlMessage {
