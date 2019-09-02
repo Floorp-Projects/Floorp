@@ -10,8 +10,6 @@ idl_test(
   ['media-source'],
   ['dom', 'html', 'url'],
   async idl_array => {
-    self.audio = document.createElement('audio');
-    self.video = document.createElement('video');
     idl_array.add_objects({
       MediaSource: ['mediaSource'],
       SourceBuffer: ['sourceBuffer'],
