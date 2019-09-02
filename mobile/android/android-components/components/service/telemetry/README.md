@@ -2,6 +2,12 @@
 
 A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
+## Deprecated
+This component is now deprecated: only maintenance fixes will be provided and no new feature development will happen.
+Use [the Glean SDK](../glean) instead.
+This library will not be removed until all projects using it start using the Glean SDK.
+Please do reach out to the Glean team (Mozilla Slack in *#glean* or *glean-team@mozilla.com*) for support transitioning to the new SDK.
+
 ## Motivation
 
 The goal of this library is to provide a generic set of components to support a variety of telemetry use cases. It tries to not be opinionated about dependency injection frameworks or http clients. The only dependency is ``support-annotations`` to ensure code quality.
