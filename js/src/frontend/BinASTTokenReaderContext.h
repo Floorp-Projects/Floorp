@@ -196,12 +196,21 @@ class HuffmanTableImpl {
   friend class HuffmanPreludeReader;
 };
 
-// An empty Huffman table. Attempting to get a value from this table is an
+// An empty Huffman table. Attempting to get a value from this table is a syntax
 // error. This is the default value for `HuffmanTable` and represents all states
 // that may not be reached.
 //
-// Part of variant `HuffmanTable`.
+// Part of variants `HuffmanTable` and `HuffmanTableListLength`.
 struct HuffmanTableUnreachable {};
+
+// While reading the Huffman prelude, whenever we first encounter a
+// `HuffmanTableUnreachable`, we replace it with a `HuffmanTableInitializing`
+// to mark that we should not attempt to read/initialize it again.
+//
+// Attempting to get a value from this table is an internal error.
+//
+// Part of variants `HuffmanTable` and `HuffmanTableListLength`.
+struct HuffmanTableInitializing {};
 
 // --- Explicit instantiations of `HuffmanTableImpl`.
 // These classes are all parts of variant `HuffmanTable`.
@@ -270,9 +279,10 @@ struct HuffmanTableIndexedSymbolsOptionalLiteralString {
 // A single Huffman table.
 using HuffmanTable = mozilla::Variant<
     HuffmanTableUnreachable,  // Default value.
-    HuffmanTableExplicitSymbolsF64, HuffmanTableExplicitSymbolsU32,
-    HuffmanTableIndexedSymbolsSum, HuffmanTableIndexedSymbolsMaybeInterface,
-    HuffmanTableIndexedSymbolsBool, HuffmanTableIndexedSymbolsStringEnum,
+    HuffmanTableInitializing, HuffmanTableExplicitSymbolsF64,
+    HuffmanTableExplicitSymbolsU32, HuffmanTableIndexedSymbolsSum,
+    HuffmanTableIndexedSymbolsMaybeInterface, HuffmanTableIndexedSymbolsBool,
+    HuffmanTableIndexedSymbolsStringEnum,
     HuffmanTableIndexedSymbolsLiteralString,
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
@@ -285,6 +295,7 @@ struct HuffmanTableExplicitSymbolsListLength {
 // A single Huffman table, specialized for list lengths.
 using HuffmanTableListLength =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
+                     HuffmanTableInitializing,
                      HuffmanTableExplicitSymbolsListLength>;
 
 // A Huffman dictionary for the current file.
@@ -583,6 +594,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * Read a single unsigned long.
    */
   MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&);
+  MOZ_MUST_USE JS::Result<uint32_t> readUnpackedLong();
 
  private:
   template <typename Table>
@@ -593,6 +605,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * Report an "invalid value error".
    */
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidValue(const Context&);
+
+  /**
+   * Report a "value not in prelude".
+   */
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseNotInPrelude(const Context&);
 
  private:
   /**
