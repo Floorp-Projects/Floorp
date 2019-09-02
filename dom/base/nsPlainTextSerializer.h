@@ -249,10 +249,18 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // old messages).
   bool mHasWrittenCiteBlockquote;
 
-  int32_t mIndent;
-  // mInIndentString keeps a header that has to be written in the indent.
-  // That could be, for instance, the bullet in a bulleted list.
-  nsString mInIndentString;
+  struct Indentation {
+    // The number of space characters to be inserted including the number of
+    // characters in mHeader.
+    int32_t mWidth = 0;
+
+    // The header that has to be written in the indent.
+    // That could be, for instance, the bullet in a bulleted list.
+    nsString mHeader;
+  };
+
+  Indentation mIndentation;
+
   int32_t mCiteQuoteLevel;
   int32_t mFloatingLines;  // To store the number of lazy line breaks
 
