@@ -1829,6 +1829,20 @@ class HTMLEditor final : public TextEditor,
   HandleInsertParagraphInHeadingElement(Element& aHeader, nsINode& aNode,
                                         int32_t aOffset);
 
+  /**
+   * HandleInsertParagraphInListItemElement() handles insertParagraph command
+   * (i.e., handling Enter key press) in a list item element.
+   *
+   * @param aListItem           The list item which has the following point.
+   * @param aNode               Typically, Selection start container, where to
+   *                            insert a break.
+   * @param aOffset             Typically, Selection start offset in the
+   *                            start container, where to insert a break.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  HandleInsertParagraphInListItemElement(Element& aListItem, nsINode& aNode,
+                                         int32_t aOffset);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

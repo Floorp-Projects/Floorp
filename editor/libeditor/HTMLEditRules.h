@@ -457,20 +457,6 @@ class HTMLEditRules : public TextEditRules {
   Element* IsInListItem(nsINode* aNode);
 
   /**
-   * ReturnInListItem() handles insertParagraph command (i.e., handling
-   * Enter key press) in a list item element.
-   *
-   * @param aListItem           The list item which has the following point.
-   * @param aNode               Typically, Selection start container, where to
-   *                            insert a break.
-   * @param aOffset             Typically, Selection start offset in the
-   *                            start container, where to insert a break.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult ReturnInListItem(Element& aListItem, nsINode& aNode,
-                                         int32_t aOffset);
-
-  /**
    * Called after handling edit action.  This may adjust Selection, remove
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
