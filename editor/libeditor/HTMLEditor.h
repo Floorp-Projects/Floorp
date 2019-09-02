@@ -1723,6 +1723,13 @@ class HTMLEditor final : public TextEditor,
   InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
       const EditorDOMPoint& aPointToInsert);
 
+  /**
+   * Insert padding `<br>` element for empty last line into aElement if
+   * aElement is a block element and empty.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertPaddingBRElementForEmptyLastLineIfNeeded(Element& aElement);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
