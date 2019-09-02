@@ -456,8 +456,6 @@ class HTMLEditRules : public TextEditRules {
    */
   Element* IsInListItem(nsINode* aNode);
 
-  nsAtom& DefaultParagraphSeparator();
-
   /**
    * ReturnInHeader() handles insertParagraph command (i.e., handling Enter
    * key press) in a heading element.  This splits aHeader element at
