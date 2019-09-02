@@ -54,13 +54,13 @@ var tests = [
 var counter = -1;
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
 var subtests = 0;
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   var result = event.data.result;
   // query the scheme from the URL before comparing the result

@@ -34,7 +34,7 @@ function test() {
       ok("detail" in e, "DOMActivate should have .detail");
       is(e.detail, 1, ".detail should be 1");
       domActivateEvents++;
-    }, false);
+    });
 
     domActivateEvents = 0;
     wu.sendMouseEvent("mousedown", rect.left + 5, rect.top + 5, 0, 1, 0);

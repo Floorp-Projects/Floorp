@@ -37,10 +37,10 @@ function createTestEventValue(name) {
   let screenY = random();
   let clientX = random();
   let clientY = random();
-  let ctrlKey = random() % 2 ? true : false;
-  let altKey = random() % 2 ? true : false;
-  let shiftKey = random() % 2 ? true : false;
-  let metaKey = random() % 2 ? true : false;
+  let ctrlKey = !!(random() % 2);
+  let altKey = !!(random() % 2);
+  let shiftKey = !!(random() % 2);
+  let metaKey = !!(random() % 2);
   let button = random();
   let pointerId = random();
 
