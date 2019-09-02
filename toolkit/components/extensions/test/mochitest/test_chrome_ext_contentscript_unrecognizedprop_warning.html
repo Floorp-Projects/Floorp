@@ -56,7 +56,7 @@ add_task(async function test_contentscript() {
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Error processing content_scripts.*.unrecognized_property: An unexpected property was found/,
+      message: /Reading manifest: Warning processing content_scripts.*.unrecognized_property: An unexpected property was found/,
     }]);
   });
 
