@@ -1713,6 +1713,16 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   FormatBlockContainer(nsAtom& aBlockType);
 
+  /**
+   * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if
+   * aPointToInsert is start of a hard line and end of the line (i.e, the
+   * line is empty) and the line ends with block boundary, inserts a `<br>`
+   * element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+      const EditorDOMPoint& aPointToInsert);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

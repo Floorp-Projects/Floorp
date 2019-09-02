@@ -498,7 +498,10 @@ nsresult HTMLEditRules::AfterEditInner() {
         !HTMLEditorRef()
              .TopLevelEditSubActionDataRef()
              .mDidDeleteEmptyParentBlocks) {
-      nsresult rv = InsertBRIfNeeded();
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                  EditorBase::GetStartPoint(*SelectionRefPtr()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2462,11 +2465,13 @@ nsresult HTMLEditRules::WillDeleteSelection(
           return rv;
         }
       }
-      rv = InsertBRIfNeeded();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                   EditorBase::GetStartPoint(*SelectionRefPtr()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
+      return rv;
     }
 
     if (wsType == WSType::text) {
@@ -2540,7 +2545,9 @@ nsresult HTMLEditRules::WillDeleteSelection(
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove collapsed text");
 
-      rv = InsertBRIfNeeded();
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                   EditorBase::GetStartPoint(*SelectionRefPtr()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2734,11 +2741,13 @@ nsresult HTMLEditRules::WillDeleteSelection(
           return error.StealNSResult();
         }
       }
-      rv = InsertBRIfNeeded();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                   EditorBase::GetStartPoint(*SelectionRefPtr()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
+      return rv;
     }
 
     if (wsType == WSType::otherBlock) {
@@ -3267,43 +3276,41 @@ nsresult HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::InsertBRIfNeeded() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+    const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToInsert.IsSet());
 
-  EditorDOMPoint atStartOfSelection(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // inline elements don't need any br
-  if (!HTMLEditor::NodeIsBlockStatic(*atStartOfSelection.GetContainer())) {
+  // If container of the point is not in a block, we don't need to put a
+  // `<br>` element here.
+  if (!HTMLEditor::NodeIsBlockStatic(*aPointToInsert.GetContainer())) {
     return NS_OK;
   }
 
-  // examine selection
-  WSRunObject wsObj(&HTMLEditorRef(), atStartOfSelection);
-  if (((wsObj.mStartReason & WSType::block) ||
-       (wsObj.mStartReason & WSType::br)) &&
-      (wsObj.mEndReason & WSType::block)) {
-    // if we are tucked between block boundaries then insert a br
-    // first check that we are allowed to
-    if (HTMLEditorRef().CanContainTag(*atStartOfSelection.GetContainer(),
-                                      *nsGkAtoms::br)) {
-      RefPtr<Element> brElement =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertBRElementWithTransaction(atStartOfSelection,
-                                              nsIEditor::ePrevious);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(!brElement)) {
-        return NS_ERROR_FAILURE;
-      }
-      return NS_OK;
-    }
+  WSRunObject wsObj(this, aPointToInsert);
+  // If the point is not start of a hard line, we don't need to put a `<br>`
+  // element here.
+  if (!(wsObj.mStartReason & (WSType::block | WSType::br))) {
+    return NS_OK;
   }
-  return NS_OK;
+  // If the point is not end of a hard line or the hard line does not end with
+  // block boundary, we don't need to put a `<br>` element here.
+  if (!(wsObj.mEndReason & WSType::block)) {
+    return NS_OK;
+  }
+
+  // If we cannot insert a `<br>` element here, do nothing.
+  if (!CanContainTag(*aPointToInsert.GetContainer(), *nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> brElement =
+      InsertBRElementWithTransaction(aPointToInsert, nsIEditor::ePrevious);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(brElement, "Failed to insert <br> element");
+  return brElement ? NS_OK : NS_ERROR_FAILURE;
 }
 
 EditorDOMPoint HTMLEditRules::GetGoodSelPointForNode(

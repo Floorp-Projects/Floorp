@@ -159,13 +159,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
-   * InsertBRIfNeeded() determines if a br is needed for current selection to
-   * not be spastic.  If so, it inserts one.  Callers responsibility to only
-   * call with collapsed selection.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded();
-
-  /**
    * Insert normal <br> element into aNode when aNode is a block and it has
    * no children.
    */
