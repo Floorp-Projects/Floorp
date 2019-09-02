@@ -8,7 +8,7 @@ function synthesizeImage(suffix) {
         if (client.url.indexOf("?new") > 0) {
           url = "image-40px.png";
         }
-        client.postMessage({ suffix: suffix, url: url });
+        client.postMessage({ suffix, url });
       });
       return fetch(url);
     })
@@ -31,7 +31,7 @@ function synthesizeImage(suffix) {
       }
       return new Response(ab, {
         status: 200,
-        headers: headers,
+        headers,
       });
     });
 }

@@ -9,13 +9,13 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/javascript">
      let SimpleTest = {
-       finish: function() {
-         parent.postMessage(JSON.stringify({fn: "finish"}), "*");
-       }
+       finish() {
+    parent.postMessage(JSON.stringify({fn: "finish"}), "*");
+  }
      };
      ["ok", "is", "info"].forEach(fn => {
        self[fn] = function (...args) {
-         parent.postMessage(JSON.stringify({fn: fn, args: args}), "*");
+         parent.postMessage(JSON.stringify({fn, args}), "*");
        }
      });
      "use strict";

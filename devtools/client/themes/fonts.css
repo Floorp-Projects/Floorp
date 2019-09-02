@@ -91,13 +91,13 @@
   background: var(--preview-input-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
-  height: 23px;
+  height: 25px;
 }
 
 #font-preview-input-container input {
   background-image: none;
   flex: 1;
-  padding-left: 14px;
+  padding-inline: 19px;
 }
 
 .font-preview {
@@ -157,14 +157,23 @@
 }
 
 .font-css-code {
+  /* Force text direction in LTR and RTL */
   direction: ltr;
+  text-align: left;
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--theme-text-color-strong);
   grid-column: span 2;
-  position: relative;
-  inset-inline-start: -4px;
+}
+
+.font-css-code .theme-twisty {
+  margin-inline-start: -3px;
+}
+
+/* Force arrow direction in LTR and RTL */
+.font-css-code .theme-twisty:not([open]) {
+  transform: rotate(-90deg) !important;
 }
 
 .font-css-code-expander::before {
@@ -188,7 +197,7 @@
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 20px;
   margin: .6em 0;
 }
 
@@ -234,7 +243,7 @@
   flex: 1;
   font-size: 12px;
   min-width: 70px;
-  margin-right: 10px;
+  margin-inline-end: 10px;
   user-select: none;
 }
 
@@ -369,12 +378,12 @@
 
 .font-value-slider-container::before {
   content: attr(data-min);
-  left: .3em;
+  inset-inline-start: .3em;
 }
 
 .font-value-slider-container::after {
   content: attr(data-max);
-  right: .3em;
+  inset-inline-end: .3em;
 }
 
 .font-value-slider {

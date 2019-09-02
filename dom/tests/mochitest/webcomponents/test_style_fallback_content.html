@@ -27,10 +27,10 @@ createIframe(content)
 
     innerStyle.innerHTML = '#innerspan { margin-top: 10px; }';
     var innerSpan = shadow.getElementById("innerspan");
-    is(iframeWin.getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "10px", "Default content should be style by id selector.");
+    is(iframeWin.getComputedStyle(innerSpan).getPropertyValue("margin-top"), "10px", "Default content should be style by id selector.");
 
     innerStyle.innerHTML = '#container > slot > #innerspan { margin-top: 30px; }';
-    is(iframeWin.getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "30px", "Default content should be style by child combinators.");
+    is(iframeWin.getComputedStyle(innerSpan).getPropertyValue("margin-top"), "30px", "Default content should be style by child combinators.");
 
     SimpleTest.finish();
   });

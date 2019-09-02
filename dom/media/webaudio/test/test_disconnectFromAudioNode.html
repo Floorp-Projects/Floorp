@@ -12,40 +12,40 @@
       var gTest = {
         length: 256,
         numberOfChannels: 1,
-        createGraph: function(context) {
-          var sourceBuffer = context.createBuffer(1, 256, context.sampleRate);
-          var data = sourceBuffer.getChannelData(0);
-          for (var j = 0; j < data.length; j++) {
-              data[j] = 1;
-          }
+        createGraph(context) {
+    var sourceBuffer = context.createBuffer(1, 256, context.sampleRate);
+    var data = sourceBuffer.getChannelData(0);
+    for (var j = 0; j < data.length; j++) {
+        data[j] = 1;
+    }
 
-          var source = context.createBufferSource();
-          source.buffer = sourceBuffer;
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
 
-          var gain1 = context.createGain();
-          var gain2 = context.createGain();
-          var gain3 = context.createGain();
+    var gain1 = context.createGain();
+    var gain2 = context.createGain();
+    var gain3 = context.createGain();
 
-          source.connect(gain1);
-          source.connect(gain2);
+    source.connect(gain1);
+    source.connect(gain2);
 
-          gain1.connect(gain3);
-          gain2.connect(gain3);
+    gain1.connect(gain3);
+    gain2.connect(gain3);
 
-          source.start();
+    source.start();
 
-          source.disconnect(gain2);
+    source.disconnect(gain2);
 
-          return gain3;
-        },
-        createExpectedBuffers: function(context) {
-          expectedBuffer = context.createBuffer(1, 256, context.sampleRate);
-          for (var i = 0; i < 256; ++i) {
-            expectedBuffer.getChannelData(0)[i] = 1.0;
-          }
+    return gain3;
+  },
+        createExpectedBuffers(context) {
+    expectedBuffer = context.createBuffer(1, 256, context.sampleRate);
+    for (var i = 0; i < 256; ++i) {
+      expectedBuffer.getChannelData(0)[i] = 1.0;
+    }
 
-          return expectedBuffer;
-        }
+    return expectedBuffer;
+  }
       };
 
       runTest();

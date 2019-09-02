@@ -43,7 +43,7 @@ function runTest() {
     }
 
     var offscreenCanvas = canvas.transferControlToOffscreen();
-    worker.postMessage({test: test, canvas: offscreenCanvas}, [offscreenCanvas]);
+    worker.postMessage({test, canvas: offscreenCanvas}, [offscreenCanvas]);
   }
 
   /* create 4 workers that do the regular drawing test and 4 workers

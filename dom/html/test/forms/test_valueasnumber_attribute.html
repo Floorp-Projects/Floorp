@@ -412,7 +412,7 @@ function checkTimeSet()
     // Some NaN values (should set to empty string).
     { value: NaN, result: "" },
     { value: "foobar", result: "" },
-    { value: function() {}, result: "" },
+    { value() {}, result: "" },
     // Inifinity (should throw).
     { value: Infinity, throw: true },
     { value: -Infinity, throw: true },

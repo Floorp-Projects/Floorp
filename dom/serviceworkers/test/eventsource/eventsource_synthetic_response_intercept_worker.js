@@ -18,7 +18,7 @@ self.addEventListener("fetch", function(event) {
   };
   var headers = new Headers(headerList);
   var init = {
-    headers: headers,
+    headers,
     mode: "cors",
   };
   var body = "data: data0\r\r";

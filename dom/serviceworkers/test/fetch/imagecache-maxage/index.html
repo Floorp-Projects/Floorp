@@ -5,10 +5,10 @@ function maybeReport() {
   if (width !== undefined && url !== undefined &&
       width2 !== undefined && url2 !== undefined) {
     window.parent.postMessage({status: "result",
-                               width: width,
-                               width2: width2,
-                               url: url,
-                               url2: url2}, "*");
+                               width,
+                               width2,
+                               url,
+                               url2}, "*");
   }
 }
 onload = function() {

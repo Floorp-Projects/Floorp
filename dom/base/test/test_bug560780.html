@@ -50,7 +50,7 @@ function mousedown(event) {
 
 function selectByMouseThenClick(elm,startx,starty) {
   // select some text
-  var ctrl = navigator.platform.indexOf("Linux") ? true : false;
+  var ctrl = !!navigator.platform.indexOf("Linux");
   var alt  = true;
   var x = startx;
   synthesizeMouse(elm, x,        starty, { type:"mousedown", ctrlKey:ctrl, altKey:alt }); 

@@ -888,7 +888,7 @@ is(e.eventPhase, Event.NONE, "Wrong event phase");
 // InputEvent
 let dataTransfer = new DataTransfer();
 dataTransfer.setData("text/plain", "foo");
-e = new InputEvent("hello", {data: "something data", dataTransfer: dataTransfer, inputType: "invalid input type", isComposing: true});
+e = new InputEvent("hello", {data: "something data", dataTransfer, inputType: "invalid input type", isComposing: true});
 is(e.type, "hello", "InputEvent should set type attribute");
 is(e.data, "something data", "InputEvent should have data attribute");
 is(e.dataTransfer, dataTransfer, "InputEvent should have the dataTransfer");
@@ -903,7 +903,7 @@ is(e.inputType, "invalid input type", "InputEvent should have inputType attribut
 is(e.isComposing, true, "InputEvent should have isComposing attribute");
 
 dataTransfer = new DataTransfer();
-e = new InputEvent("hello", {data: "", dataTransfer: dataTransfer, inputType: "insertText"});
+e = new InputEvent("hello", {data: "", dataTransfer, inputType: "insertText"});
 is(e.data, "", "InputEvent.data should be empty string when empty string is specified explicitly");
 is(e.dataTransfer, dataTransfer, "InputEvent.dataTransfer should have the empty dataTransfer");
 is(e.inputType, "insertText", "InputEvent.inputType should return valid inputType from EditorInputType enum");

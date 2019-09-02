@@ -13,7 +13,7 @@
 var gTest = {
   length: 4096,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     // silence for half of the buffer, ones after that.
     var buffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 1024; i < 2048; i++) {
@@ -30,7 +30,7 @@ var gTest = {
     source.start(0, 1024 / context.sampleRate, 1024 / context.sampleRate);
     return source;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(1, 4096, context.sampleRate);
     for (var i = 0; i < 4096; i++) {
       expectedBuffer.getChannelData(0)[i] = 1;

@@ -294,7 +294,7 @@ async function test_codeExecution_continue(r, that) {
 
   var promise = new Promise(resolve => {
     consoleListener.prototype = {
-      observe: function(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic, aData) {
         that.ok(true, "Something has been received");
         that.is(aTopic, "console-api-log-event");
 

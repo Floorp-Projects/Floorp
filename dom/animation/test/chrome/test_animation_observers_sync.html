@@ -43,7 +43,7 @@ function setupSynchronousObserver(t, target, subtree) {
   t.add_cleanup(() => {
     observer.disconnect();
   });
-  observer.observe(target, { animations: true, subtree: subtree });
+  observer.observe(target, { animations: true, subtree });
   return observer;
 }
 

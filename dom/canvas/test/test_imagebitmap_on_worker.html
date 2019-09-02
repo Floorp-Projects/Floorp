@@ -39,7 +39,7 @@ TaskWithCrop.prototype.constructor = TaskWithCrop;
 
 var WORKER_TASKS = {
   tasks: [], // an arrayf of Task objects
-  dispatch: function() {
+  dispatch() {
     if (this.tasks.length) {
       worker.postMessage(this.tasks.pop());
     } else {

@@ -27,7 +27,7 @@ function receiveMessage(evt)
 
   SimpleTest.finish();
 }
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 // By default, proxies don't apply to 127.0.0.1.
 // We need them to for this test (at least on android), though:

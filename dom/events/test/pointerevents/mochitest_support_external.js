@@ -69,7 +69,7 @@ var MouseEventHelper = (function() {
     BUTTONS_5TH: utils.MOUSE_BUTTONS_5TH_BUTTON,
 
     // Utils
-    computeButtonsMaskFromButton: function(aButton) {
+    computeButtonsMaskFromButton(aButton) {
       // Since the range of button values is 0 ~ 2 (see nsIDOMWindowUtils.idl),
       // we can use an array to find out the desired mask.
       var mask = [
@@ -83,7 +83,7 @@ var MouseEventHelper = (function() {
       return mask;
     },
 
-    checkExitState: function() {
+    checkExitState() {
       ok(!this.BUTTONS_STATE, "Mismatched mousedown/mouseup caught.");
     },
   };
@@ -179,7 +179,7 @@ var TouchEventHelper = {
   TOUCH_STATE: false,
 
   // Utils
-  checkExitState: function() {
+  checkExitState() {
     ok(!this.TOUCH_STATE, "Mismatched touchstart/touchend caught.");
   },
 };
@@ -189,7 +189,7 @@ var TouchEventHelper = {
 // PointerEvent.isPrimary and pinch-zoom.
 function sendTouchEvent(int_win, elemId, touchEventType, params) {
   var elem = int_win.document.getElementById(elemId);
-  if (!!elem) {
+  if (elem) {
     var rect = elem.getBoundingClientRect();
     var eventObj = {
       type: touchEventType,

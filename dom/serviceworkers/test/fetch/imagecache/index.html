@@ -4,8 +4,8 @@ var width, url;
 function maybeReport() {
   if (width !== undefined && url !== undefined) {
     window.parent.postMessage({status: "result",
-                               width: width,
-                               url: url}, "*");
+                               width,
+                               url}, "*");
   }
 }
 onload = function() {

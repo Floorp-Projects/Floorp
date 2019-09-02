@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <script>
   function ok(cond, msg) {
-    window.parent.postMessage({status: "ok", data: cond, msg: msg}, "*");
+    window.parent.postMessage({status: "ok", data: cond, msg}, "*");
   }
   function finish() {
     window.parent.postMessage({status: "done"}, "*");

@@ -7,6 +7,6 @@ var props = {
   OS: 1,
 };
 for (var prop in props) {
-  postMessage({ prop: prop, value: self[prop] });
+  postMessage({ prop, value: self[prop] });
 }
 postMessage({ testfinished: 1 });

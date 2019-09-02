@@ -48,7 +48,7 @@ var anyFailedDelayedTests = false;
 function delayed_is(actual, expected, description)
 {
   var result = actual == expected;
-  delayedTests.push({ actual: actual, expected: expected, description: description });
+  delayedTests.push({ actual, expected, description });
   if (!result) {
     anyFailedDelayedTests = true;
   }

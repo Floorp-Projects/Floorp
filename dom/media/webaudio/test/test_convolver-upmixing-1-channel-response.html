@@ -28,7 +28,7 @@ function test_linear_upmixing(channelInterpretation, initial_mono_frames)
   // and stereo signals are convolved independently before up-mixing the mono
   // output to mix with the stereo output.
   let context = new OfflineAudioContext({numberOfChannels: 4,
-                                         length: length,
+                                         length,
                                          sampleRate: SAMPLE_RATE});
 
   let response = new AudioBuffer({numberOfChannels: 1,
@@ -84,7 +84,7 @@ function test_linear_upmixing(channelInterpretation, initial_mono_frames)
   let maxDelayTime = (length - STEREO_FRAMES) / context.sampleRate;
   let delay =
       new DelayNode(context,
-                    {maxDelayTime: maxDelayTime,
+                    {maxDelayTime,
                      delayTime: initial_mono_frames / context.sampleRate});
   // Schedule an increase in the delay to return to mono silence.
   delay.delayTime.setValueAtTime(maxDelayTime,

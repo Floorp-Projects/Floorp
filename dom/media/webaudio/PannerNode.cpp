@@ -23,8 +23,6 @@ using WebCore::HRTFPanner;
 namespace mozilla {
 namespace dom {
 
-using namespace std;
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(PannerNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PannerNode, AudioNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPositionX, mPositionY, mPositionZ,
@@ -448,7 +446,7 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 
     // The following algorithm is described in the spec.
     // Clamp azimuth in the [-90, 90] range.
-    azimuth = min(180.f, max(-180.f, azimuth));
+    azimuth = std::min(180.f, std::max(-180.f, azimuth));
 
     // Wrap around
     if (azimuth < -90.f) {
@@ -548,7 +546,7 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
 
       // The following algorithm is described in the spec.
       // Clamp azimuth in the [-90, 90] range.
-      azimuth = min(180.f, max(-180.f, azimuth));
+      azimuth = std::min(180.f, std::max(-180.f, azimuth));
 
       // Wrap around
       if (azimuth < -90.f) {

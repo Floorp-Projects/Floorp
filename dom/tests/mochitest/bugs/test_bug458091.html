@@ -48,7 +48,7 @@ function finish(val)
 SimpleTest.waitForExplicitFinish();
 
 function test1() {
-  sessionStorage["testItem"] = "correct value";
+  sessionStorage.testItem = "correct value";
 
   gRunningTests++;
   window.open('javascript:window.opener.finish(sessionStorage["testItem"]);window.close();');
@@ -78,7 +78,7 @@ function test2() {
   // Now change session storage and load a new item in gTestWin, to
   // verify that they properly diverged after window.open().
   gRunningTests++;
-  sessionStorage["testItem"] = "incorrect value";
+  sessionStorage.testItem = "incorrect value";
   gTestWin.location = 'javascript:window.opener.finish(sessionStorage["testItem"]);';
 }
 

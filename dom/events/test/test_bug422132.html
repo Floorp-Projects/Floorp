@@ -42,7 +42,7 @@ function runTests()
 
   var tests = [
     {
-      prepare: function() {
+      prepare() {
         scrollLeft = target.scrollLeft;
         scrollTop = target.scrollTop;
       },
@@ -61,14 +61,14 @@ function runTests()
         lineOrPageDeltaX: 0,
         lineOrPageDeltaY: 0
       },
-      check: function() {
+      check() {
         is(target.scrollLeft - scrollLeft, 1,
            "not scrolled to right by 0.5px delta value with pending 0.5px delta");
         is(target.scrollTop - scrollTop, 1,
            "not scrolled to bottom by 0.5px delta value with pending 0.5px delta");
       },
     }, {
-      prepare: function() {
+      prepare() {
         scrollLeft = target.scrollLeft;
         scrollTop = target.scrollTop;
       },
@@ -87,7 +87,7 @@ function runTests()
         lineOrPageDeltaX: 1,
         lineOrPageDeltaY: 1
       },
-      check: function() {
+      check() {
         is(target.scrollLeft - scrollLeft, 1,
            "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
         is(target.scrollTop - scrollTop, 1,

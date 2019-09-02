@@ -13,7 +13,7 @@ function waitForIframeLoad(iframe) {
 function waitForRegister(scope, callback) {
   return new Promise(function(resolve) {
     let listener = {
-      onRegister: function(registration) {
+      onRegister(registration) {
         if (registration.scope !== scope) {
           return;
         }
@@ -28,7 +28,7 @@ function waitForRegister(scope, callback) {
 function waitForUnregister(scope) {
   return new Promise(function(resolve) {
     let listener = {
-      onUnregister: function(registration) {
+      onUnregister(registration) {
         if (registration.scope !== scope) {
           return;
         }
@@ -43,7 +43,7 @@ function waitForUnregister(scope) {
 function waitForServiceWorkerRegistrationChange(registration, callback) {
   return new Promise(function(resolve) {
     let listener = {
-      onChange: function() {
+      onChange() {
         registration.removeListener(listener);
         if (callback) {
           callback();
@@ -58,7 +58,7 @@ function waitForServiceWorkerRegistrationChange(registration, callback) {
 function waitForServiceWorkerShutdown() {
   return new Promise(function(resolve) {
     let observer = {
-      observe: function(subject, topic, data) {
+      observe(subject, topic, data) {
         if (topic !== "service-worker-shutdown") {
           return;
         }

@@ -42,11 +42,11 @@ shippingAddress.init(
 
 const NormalUIService = {
   shippingOptionChanged: false,
-  showPayment: function(requestId) {
+  showPayment(requestId) {
     paymentSrv.changeShippingAddress(requestId, shippingAddress);
   },
-  abortPayment: function(requestId) {},
-  completePayment: function(requestId) {
+  abortPayment(requestId) {},
+  completePayment(requestId) {
     let completeResponse = Cc[
       "@mozilla.org/dom/payments/payment-complete-action-response;1"
     ].createInstance(Ci.nsIPaymentCompleteActionResponse);
@@ -58,7 +58,7 @@ const NormalUIService = {
       completeResponse.QueryInterface(Ci.nsIPaymentActionResponse)
     );
   },
-  updatePayment: function(requestId) {
+  updatePayment(requestId) {
     let showResponse = null;
     let payRequest = paymentSrv.getPaymentRequestById(requestId);
 
@@ -97,7 +97,7 @@ const NormalUIService = {
       showResponse.QueryInterface(Ci.nsIPaymentActionResponse)
     );
   },
-  closePayment: function(requestId) {},
+  closePayment(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 

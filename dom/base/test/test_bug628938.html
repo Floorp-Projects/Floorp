@@ -119,7 +119,7 @@ function noWhiteSpaceWalk()
   var walker = document.createTreeWalker(document.getElementById('content'),
                                          NodeFilter.SHOW_ALL,
                                          {
-                                           acceptNode : function(node) {
+                                           acceptNode(node) {
                                              if (node.nodeType == Node.TEXT_NODE &&
                                                  !(/[^\t\n\r ]/.test(node.nodeValue)))
                                                return NodeFilter.FILTER_REJECT;
@@ -175,7 +175,7 @@ function onlyDivSubTreeWalk()
   var walker = document.createTreeWalker(document.getElementById('content'),
                                          NodeFilter.SHOW_ALL,
                                          {
-                                           acceptNode : function(node) {
+                                           acceptNode(node) {
                                              if (node.nodeType == Node.TEXT_NODE &&
                                                  !(/[^\t\n\r ]/.test(node.nodeValue)))
                                                return NodeFilter.FILTER_REJECT;
@@ -213,7 +213,7 @@ function onlyDivDataWalk()
   var walker = document.createTreeWalker(document.getElementById('content'),
                                          NodeFilter.SHOW_ALL,
                                          {
-                                           acceptNode : function(node) {
+                                           acceptNode(node) {
                                              if (node.nodeName == "DIV" ||
                                                  (node.parentNode &&
                                                   node.parentNode.nodeName == "DIV"))

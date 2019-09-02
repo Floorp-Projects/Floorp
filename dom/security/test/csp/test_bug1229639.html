@@ -21,7 +21,7 @@ function examiner() {
 }
 
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (data === 'http://mochi.test:8888/tests/dom/security/test/csp/%24.js') {
       is(topic, "specialpowers-http-notify-request");
       this.remove();
@@ -31,7 +31,7 @@ examiner.prototype  = {
 
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }

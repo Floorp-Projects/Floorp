@@ -8,9 +8,9 @@ addEventListener("error", function(e) {
 });
 onerror = function(message, filename, lineno) {
   var obj = {
-    message: message,
-    filename: filename,
-    lineno: lineno,
+    message,
+    filename,
+    lineno,
     type: "callback",
   };
   postMessage(obj);

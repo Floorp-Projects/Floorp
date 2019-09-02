@@ -76,17 +76,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function fn_onmessage(e) {
     if (e.currentTarget == e.target && e.target.hits != null)
-      e.target.hits['fn_onmessage']++;
+      e.target.hits.fn_onmessage++;
   }
 
   function fn_event_listener_message(e) {
     if (e.currentTarget == e.target && e.target.hits != null)
-      e.target.hits['fn_event_listener_message']++;
+      e.target.hits.fn_event_listener_message++;
   }
 
   function fn_other_event_name(e) {
     if (e.currentTarget == e.target && e.target.hits != null)
-      e.target.hits['fn_other_event_name']++;
+      e.target.hits.fn_other_event_name++;
   }
 
   var gEventSourceObj1 = null, gEventSourceObj1_e, gEventSourceObj1_f;
@@ -105,9 +105,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
                       // the test when running in slow machines
 
   function hasBeenHitFor1And2(obj, min) {
-    if (obj.hits['fn_onmessage'] < min ||
-        obj.hits['fn_event_listener_message'] < min ||
-        obj.hits['fn_other_event_name'] < min)
+    if (obj.hits.fn_onmessage < min ||
+        obj.hits.fn_event_listener_message < min ||
+        obj.hits.fn_other_event_name < min)
       return false;
     return true;
   }
@@ -130,11 +130,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest1_b(test_id) {
     gEventSourceObj1.hits = [];
-    gEventSourceObj1.hits['fn_onmessage'] = 0;
+    gEventSourceObj1.hits.fn_onmessage = 0;
     gEventSourceObj1.onmessage = fn_onmessage;
-    gEventSourceObj1.hits['fn_event_listener_message'] = 0;
+    gEventSourceObj1.hits.fn_event_listener_message = 0;
     gEventSourceObj1.addEventListener('message', fn_event_listener_message, true);
-    gEventSourceObj1.hits['fn_other_event_name'] = 0;
+    gEventSourceObj1.hits.fn_other_event_name = 0;
     gEventSourceObj1.addEventListener('other_event_name', fn_other_event_name, true);
 
     // the eventsources.res always use a retry of 0.5 second, so for four hits a timeout of 6 seconds is enough
@@ -154,9 +154,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   }
 
   function doTest1_d(test_id) {
-    gEventSourceObj1.hits['fn_onmessage'] = 0;
-    gEventSourceObj1.hits['fn_event_listener_message'] = 0;
-    gEventSourceObj1.hits['fn_other_event_name'] = 0;
+    gEventSourceObj1.hits.fn_onmessage = 0;
+    gEventSourceObj1.hits.fn_event_listener_message = 0;
+    gEventSourceObj1.hits.fn_other_event_name = 0;
 
     setTimeout(function(){
       bhits = hasBeenHitFor1And2(gEventSourceObj1, 1);
@@ -237,10 +237,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_a.onmessage = fn_onmessage;
     gEventSourceObj3_a.hits = [];
-    gEventSourceObj3_a.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_a.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_a.hits['fn_onmessage'] == 0, "Test 3.a failed");
+      ok(gEventSourceObj3_a.hits.fn_onmessage == 0, "Test 3.a failed");
       gEventSourceObj3_a.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -262,10 +262,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_b.onmessage = fn_onmessage;
     gEventSourceObj3_b.hits = [];
-    gEventSourceObj3_b.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_b.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_b.hits['fn_onmessage'] == 0, "Test 3.b failed");
+      ok(gEventSourceObj3_b.hits.fn_onmessage == 0, "Test 3.b failed");
       gEventSourceObj3_b.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -282,10 +282,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_c.onmessage = fn_onmessage;
     gEventSourceObj3_c.hits = [];
-    gEventSourceObj3_c.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_c.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_c.hits['fn_onmessage'] == 0, "Test 3.c failed");
+      ok(gEventSourceObj3_c.hits.fn_onmessage == 0, "Test 3.c failed");
       gEventSourceObj3_c.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -296,10 +296,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_d.onmessage = fn_onmessage;
     gEventSourceObj3_d.hits = [];
-    gEventSourceObj3_d.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_d.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_d.hits['fn_onmessage'] == 0, "Test 3.d failed");
+      ok(gEventSourceObj3_d.hits.fn_onmessage == 0, "Test 3.d failed");
       gEventSourceObj3_d.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -310,10 +310,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_e.onmessage = fn_onmessage;
     gEventSourceObj3_e.hits = [];
-    gEventSourceObj3_e.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_e.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_e.hits['fn_onmessage'] == 0, "Test 3.e failed");
+      ok(gEventSourceObj3_e.hits.fn_onmessage == 0, "Test 3.e failed");
       gEventSourceObj3_e.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -324,10 +324,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_f.onmessage = fn_onmessage;
     gEventSourceObj3_f.hits = [];
-    gEventSourceObj3_f.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_f.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_f.hits['fn_onmessage'] == 0, "Test 3.f failed");
+      ok(gEventSourceObj3_f.hits.fn_onmessage == 0, "Test 3.f failed");
       gEventSourceObj3_f.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -342,10 +342,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_g.onmessage = fn_onmessage;
     gEventSourceObj3_g.hits = [];
-    gEventSourceObj3_g.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_g.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_g.hits['fn_onmessage'] == 0, "Test 3.g failed");
+      ok(gEventSourceObj3_g.hits.fn_onmessage == 0, "Test 3.g failed");
       gEventSourceObj3_g.close();
       setTestHasFinished(test_id);
     }, parseInt(1500*stress_factor));
@@ -365,11 +365,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj3_h.onmessage = fn_onmessage;
     gEventSourceObj3_h.hits = [];
-    gEventSourceObj3_h.hits['fn_onmessage'] = 0;
+    gEventSourceObj3_h.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj3_h.hits['fn_onmessage'] > 1, "Test 3.h.1 failed");
-      if (gEventSourceObj3_h.hits['fn_onmessage'] > 1) {
+      ok(gEventSourceObj3_h.hits.fn_onmessage > 1, "Test 3.h.1 failed");
+      if (gEventSourceObj3_h.hits.fn_onmessage > 1) {
         ok(fnMessageListenerTest3h.msg_ok, "Test 3.h.2 failed");
         ok(fnMessageListenerTest3h.id_ok, "Test 3.h.3 failed");
       }
@@ -438,10 +438,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj5_a.onmessage = fn_onmessage;
     gEventSourceObj5_a.hits = [];
-    gEventSourceObj5_a.hits['fn_onmessage'] = 0;
+    gEventSourceObj5_a.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj5_a.hits['fn_onmessage'] != 0, "Test 5.a failed");
+      ok(gEventSourceObj5_a.hits.fn_onmessage != 0, "Test 5.a failed");
       gEventSourceObj5_a.close();
       setTestHasFinished(test_id);
     }, parseInt(3000*stress_factor));
@@ -453,10 +453,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     gEventSourceObj5_b.onmessage = fn_onmessage;
     gEventSourceObj5_b.hits = [];
-    gEventSourceObj5_b.hits['fn_onmessage'] = 0;
+    gEventSourceObj5_b.hits.fn_onmessage = 0;
 
     setTimeout(function() {
-      ok(gEventSourceObj5_b.hits['fn_onmessage'] == 0, "Test 5.b failed");
+      ok(gEventSourceObj5_b.hits.fn_onmessage == 0, "Test 5.b failed");
       gEventSourceObj5_b.close();
       setTestHasFinished(test_id);
     }, parseInt(3000*stress_factor));
@@ -481,10 +481,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         fn_onmessage(e);
       };
       gEventSourceObj5_c.hits = [];
-      gEventSourceObj5_c.hits['fn_onmessage'] = 0;
+      gEventSourceObj5_c.hits.fn_onmessage = 0;
 
       setTimeout(function() {
-        ok(gEventSourceObj5_c.hits['fn_onmessage'] > 0, "Test 5.c failed");
+        ok(gEventSourceObj5_c.hits.fn_onmessage > 0, "Test 5.c failed");
         gEventSourceObj5_c.close();
         doTest5_d(test_id);
       }, parseInt(3000*stress_factor));
@@ -507,10 +507,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         fn_onmessage(e);
       };
       gEventSourceObj5_d.hits = [];
-      gEventSourceObj5_d.hits['fn_onmessage'] = 0;
+      gEventSourceObj5_d.hits.fn_onmessage = 0;
 
       setTimeout(function() {
-        ok(gEventSourceObj5_d.hits['fn_onmessage'] == 0, "Test 5.d failed");
+        ok(gEventSourceObj5_d.hits.fn_onmessage == 0, "Test 5.d failed");
         gEventSourceObj5_d.close();
         setTestHasFinished(test_id);
       }, parseInt(3000*stress_factor));
@@ -535,10 +535,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         fn_onmessage(e);
       };
       gEventSourceObj5_e.hits = [];
-      gEventSourceObj5_e.hits['fn_onmessage'] = 0;
+      gEventSourceObj5_e.hits.fn_onmessage = 0;
 
       setTimeout(function() {
-        ok(gEventSourceObj5_e.hits['fn_onmessage'] > 0, "Test 5.e failed");
+        ok(gEventSourceObj5_e.hits.fn_onmessage > 0, "Test 5.e failed");
         gEventSourceObj5_e.close();
         doTest5_f(test_id);
       }, parseInt(5000*stress_factor));
@@ -562,10 +562,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
         fn_onmessage(e);
       };
       gEventSourceObj5_f.hits = [];
-      gEventSourceObj5_f.hits['fn_onmessage'] = 0;
+      gEventSourceObj5_f.hits.fn_onmessage = 0;
 
       setTimeout(function() {
-        ok(gEventSourceObj5_f.hits['fn_onmessage'] == 0, "Test 5.f failed");
+        ok(gEventSourceObj5_f.hits.fn_onmessage == 0, "Test 5.f failed");
         gEventSourceObj5_f.close();
         setTestHasFinished(test_id);
       }, parseInt(3000*stress_factor));

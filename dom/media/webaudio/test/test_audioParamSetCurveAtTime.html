@@ -15,7 +15,7 @@ var T0 = 0;
 var gTest = {
   length: 2048,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var source = context.createConstantSource();
 
     var gain = context.createGain();
@@ -25,7 +25,7 @@ var gTest = {
     source.start(0);
     return gain;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     this.duration = 1024 / context.sampleRate;
     this.curve = new Float32Array([1.0, 0.5, 0.75, 0.25]);
     var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);

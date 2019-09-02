@@ -16,7 +16,7 @@ var gTest = {
   length: 128 * OFFSETS.length,
   numberOfChannels: 1,
 
-  createGraph: function(context) {
+  createGraph(context) {
     var gain = context.createGain();
 
     // create a repeating sample
@@ -50,7 +50,7 @@ var gTest = {
     return gain;
   },
 
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     return context.createBuffer(1, gTest.length, context.sampleRate);
   },
 };
