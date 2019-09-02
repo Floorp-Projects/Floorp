@@ -1255,7 +1255,9 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
 // static
 bool AntiTrackingCommon::CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
                                                     nsACString& aKey) {
-  MOZ_ASSERT(aPrincipal);
+  if (!aPrincipal) {
+    return false;
+  }
 
   nsAutoCString origin;
   nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
