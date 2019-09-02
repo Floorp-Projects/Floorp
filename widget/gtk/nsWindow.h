@@ -402,12 +402,6 @@ class nsWindow final : public nsBaseWidget {
   void DispatchResized();
   void MaybeDispatchResized();
 
-  // Helper for SetParent and ReparentNativeWidget.
-  void ReparentNativeWidgetInternal(nsIWidget* aNewParent,
-                                    GtkWidget* aNewContainer,
-                                    GdkWindow* aNewParentWindow,
-                                    GtkWidget* aOldContainer);
-
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
 #ifdef MOZ_WAYLAND

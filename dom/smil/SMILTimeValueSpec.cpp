@@ -359,8 +359,8 @@ bool SMILTimeValueSpec::ApplyOffset(SMILTimeValue& aTime) const {
 
   double resultAsDouble =
       (double)aTime.GetMillis() + mParams.mOffset.GetMillis();
-  if (resultAsDouble > std::numeric_limits<SMILTime>::max() ||
-      resultAsDouble < std::numeric_limits<SMILTime>::min()) {
+  if (resultAsDouble > double(std::numeric_limits<SMILTime>::max()) ||
+      resultAsDouble < double(std::numeric_limits<SMILTime>::min())) {
     return false;
   }
   aTime.SetMillis(aTime.GetMillis() + mParams.mOffset.GetMillis());

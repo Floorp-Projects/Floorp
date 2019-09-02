@@ -509,6 +509,10 @@
       "type": "URLorEmpty"
     },
 
+    "PasswordManagerEnabled": {
+      "type": "boolean"
+    },
+
     "Permissions": {
       "type": "object",
       "properties": {

@@ -35,7 +35,7 @@
 #computed-toolbar {
   display: flex;
   align-items: center;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 #browser-style-checkbox {
@@ -53,7 +53,7 @@
 }
 
 #computed-property-container {
-  -moz-user-select: text;
+  user-select: text;
   overflow-y: auto;
   overflow-x: hidden;
   flex: auto;

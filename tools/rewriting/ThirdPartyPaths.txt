@@ -1,3 +1,4 @@
+build/pymake
 browser/components/newtab/logs/
 browser/components/newtab/node_modules/
 browser/components/newtab/vendor/
@@ -5,7 +6,7 @@ browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
 devtools/client/aboutdebugging/test/jest/node_modules/
 devtools/client/application/test/components/node_modules/
-devtools/client/debugger/flow-typed/npm/
+devtools/client/debugger/flow-typed/
 devtools/client/debugger/node_modules/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
@@ -98,7 +99,8 @@ media/openmax_il/
 media/webrtc/signaling/src/sdp/sipcc/
 media/webrtc/trunk/
 mfbt/double-conversion/double-conversion/
-mfbt/lz4.*
+mfbt/lz4.c
+mfbt/lz4.h
 mobile/android/geckoview/src/thirdparty/
 mobile/android/thirdparty/
 modules/brotli/
@@ -134,7 +136,6 @@ toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
 toolkit/components/protobuf/
 toolkit/components/url-classifier/chromium/
-toolkit/components/url-classifier/protobuf/
 toolkit/components/utils/mozjexl.js
 toolkit/crashreporter/breakpad-client/
 toolkit/crashreporter/google-breakpad/

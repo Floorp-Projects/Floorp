@@ -15,6 +15,7 @@ const {
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
+  ZOOM_VIEWPORT,
 } = require("../actions/index");
 
 const VIEWPORT_WIDTH_PREF = "devtools.responsive.viewport.width";
@@ -34,6 +35,7 @@ const INITIAL_VIEWPORT = {
   width: Services.prefs.getIntPref(VIEWPORT_WIDTH_PREF, 320),
   pixelRatio: Services.prefs.getIntPref(VIEWPORT_PIXEL_RATIO_PREF, 0),
   userContextId: 0,
+  zoom: 1,
 };
 
 const reducers = {
@@ -181,6 +183,23 @@ const reducers = {
         ...viewport,
         height,
         width,
+      };
+    });
+  },
+
+  [ZOOM_VIEWPORT](viewports, { id, zoom }) {
+    return viewports.map(viewport => {
+      if (viewport.id !== id) {
+        return viewport;
+      }
+
+      if (!zoom) {
+        zoom = viewport.zoom;
+      }
+
+      return {
+        ...viewport,
+        zoom,
       };
     });
   },

@@ -901,6 +901,16 @@ class Accessible : public nsISupports {
   }
 
   /**
+   * Return true if native markup has a numeric value.
+   */
+  bool NativeHasNumericValue() const;
+
+  /**
+   * Return true if ARIA specifies support for a numeric value.
+   */
+  bool ARIAHasNumericValue() const;
+
+  /**
    * Return true if the accessible has a numeric value.
    */
   bool HasNumericValue() const;

@@ -8,8 +8,6 @@
 #include "Logging.h"
 #include "PathHelpers.h"
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 
@@ -33,16 +31,16 @@ bool DrawTargetTiled::Init(const TileSet& aTiles) {
       return false;
     }
     uint32_t newXMost =
-        max(mRect.XMost(),
-            mTiles[i].mTileOrigin.x + mTiles[i].mDrawTarget->GetSize().width);
+        std::max(mRect.XMost(), mTiles[i].mTileOrigin.x +
+                                    mTiles[i].mDrawTarget->GetSize().width);
     uint32_t newYMost =
-        max(mRect.YMost(),
-            mTiles[i].mTileOrigin.y + mTiles[i].mDrawTarget->GetSize().height);
+        std::max(mRect.YMost(), mTiles[i].mTileOrigin.y +
+                                    mTiles[i].mDrawTarget->GetSize().height);
     if (i == 0) {
       mRect.MoveTo(mTiles[0].mTileOrigin.x, mTiles[0].mTileOrigin.y);
     } else {
-      mRect.MoveTo(min(mRect.X(), mTiles[i].mTileOrigin.x),
-                   min(mRect.Y(), mTiles[i].mTileOrigin.y));
+      mRect.MoveTo(std::min(mRect.X(), mTiles[i].mTileOrigin.x),
+                   std::min(mRect.Y(), mTiles[i].mTileOrigin.y));
     }
     mRect.SetRightEdge(newXMost);
     mRect.SetBottomEdge(newYMost);

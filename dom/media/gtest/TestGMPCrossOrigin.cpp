@@ -16,8 +16,6 @@
 #include "mozilla/DebugOnly.h"
 #include "nsThreadUtils.h"
 
-using namespace std;
-
 using namespace mozilla;
 using namespace mozilla::gmp;
 

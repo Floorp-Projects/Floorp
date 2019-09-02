@@ -8,14 +8,12 @@
 
 #include <sstream>
 
-using namespace std;
-
 int TestBase::RunTests(int* aFailures) {
   int testsRun = 0;
   *aFailures = 0;
 
   for (unsigned int i = 0; i < mTests.size(); i++) {
-    stringstream stream;
+    std::stringstream stream;
     stream << "Test (" << mTests[i].name << "): ";
     LogMessage(stream.str());
     stream.str("");
@@ -41,4 +39,6 @@ int TestBase::RunTests(int* aFailures) {
   return testsRun;
 }
 
-void TestBase::LogMessage(string aMessage) { printf("%s", aMessage.c_str()); }
+void TestBase::LogMessage(std::string aMessage) {
+  printf("%s", aMessage.c_str());
+}

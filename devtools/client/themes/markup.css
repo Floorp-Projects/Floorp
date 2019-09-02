@@ -31,7 +31,7 @@
 }
 
 body {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* Force height and width (possibly overflowing) from inline elements.

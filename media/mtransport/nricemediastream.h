@@ -194,7 +194,8 @@ class NrIceMediaStream {
   // the candidate belongs to.
   const std::string& GetId() const { return id_; }
 
-  sigslot::signal3<NrIceMediaStream*, const std::string&, const std::string&>
+  sigslot::signal5<NrIceMediaStream*, const std::string&, const std::string&,
+                   const std::string&, const std::string&>
       SignalCandidate;  // A new ICE candidate:
 
   sigslot::signal1<NrIceMediaStream*> SignalReady;   // Candidate pair ready.

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<title>Test for bug 1576229 - Nodes in Shadow DOM react properly to dynamic changes in user sheets</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<div></div>
+<span id="host" style="display: block"></span>
+<script>
+const gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService)
+
+const gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
+  .getService(SpecialPowers.Ci.nsIStyleSheetService);
+
+const windowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function loadUserSheet(style) {
+  const uri = gIOService.newURI("data:text/css," + style);
+  windowUtils.loadSheet(uri, windowUtils.USER_SHEET);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+onload = function() {
+  loadUserSheet(`
+    div {
+      width: 100px;
+      height: 100px;
+      background-color: red;
+    }
+    .foo {
+      background-color: green;
+    }
+  `);
+  let host = document.querySelector("#host");
+  host.attachShadow({ mode: "open" }).innerHTML = `
+    <div></div>
+  `;
+  let light = document.querySelector('div');
+  let shadow = host.shadowRoot.querySelector('div');
+  is(getComputedStyle(light).backgroundColor, "rgb(255, 0, 0)", "User sheet works in light DOM");
+  is(getComputedStyle(shadow).backgroundColor, "rgb(255, 0, 0)", "User sheet works in shadow DOM");
+  light.classList.add("foo");
+  shadow.classList.add("foo");
+  is(getComputedStyle(light).backgroundColor, "rgb(0, 128, 0)", "Dynamic change for user sheet works in light DOM");
+  is(getComputedStyle(shadow).backgroundColor, "rgb(0, 128, 0)", "Dynamic change for user sheet works in shadow DOM");
+  SimpleTest.finish();
+}
+</script>

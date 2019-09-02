@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><!-- Shadow Parts issue with xul/xbl domparser --></title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <style>custom-button::part(foo) { background: red; }</style>
+  <script>
+    add_task(async function test() {
+      // A simplified version of what MozXULElement.parseXULToFragment does
+      let parser = new DOMParser();
+      parser.forceEnableXULXBL();
+      let doc = parser.parseFromString(`<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><box part="foo">there</box></box>`, `application/xml`);
+      let range = doc.createRange();
+      range.selectNodeContents(doc.querySelector("box"));
+      let frag = range.extractContents();
+
+      customElements.define("custom-button", class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({mode: "open"});
+          this.shadowRoot.appendChild(document.importNode(frag, true));
+        }
+      });
+      let button = document.createElement("custom-button");
+      document.body.appendChild(button);
+
+      let box = button.shadowRoot.querySelector("box");
+
+      // XXX: this fixes it
+      // box.removeAttribute("part");
+      // box.setAttribute("part", "foo");
+
+      is(window.getComputedStyle(box).getPropertyValue("background-color"), "rgb(255, 0, 0)", "part applied");
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

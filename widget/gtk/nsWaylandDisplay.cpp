@@ -13,10 +13,15 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
+#define DMABUF_PREF "widget.wayland_dmabuf_backend.enabled"
+// See WindowSurfaceWayland::RenderingCacheMode for details.
+#define CACHE_MODE_PREF "widget.wayland_cache_mode"
+
 bool nsWaylandDisplay::mIsDMABufEnabled = false;
 // -1 mean the pref was not loaded yet
 int nsWaylandDisplay::mIsDMABufPrefState = -1;
 bool nsWaylandDisplay::mIsDMABufConfigured = false;
+int nsWaylandDisplay::mRenderingCacheModePref = -1;
 
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
@@ -317,14 +322,15 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
-    // We can't load the preference from compositor/render thread,
-    // only from main one. So we can't call it directly from
-    // nsWaylandDisplay::IsDMABufEnabled() as it can be called from various
-    // threads.
+    // We can't load the preference from compositor/render thread
+    // so load all Wayland prefs here.
     if (mIsDMABufPrefState == -1) {
-      mIsDMABufPrefState =
-          Preferences::GetBool("widget.wayland_dmabuf_backend.enabled", false);
+      mIsDMABufPrefState = Preferences::GetBool(DMABUF_PREF, false);
     }
+    if (mRenderingCacheModePref == -1) {
+      mRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
+    }
+
     // Use default event queue in main thread operated by Gtk+.
     mEventQueue = nullptr;
     wl_display_roundtrip(mDisplay);

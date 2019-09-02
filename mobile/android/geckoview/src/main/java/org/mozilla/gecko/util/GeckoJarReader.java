@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.Stack;
 
 /* Reads out of a multiple level deep jar file such as
@@ -194,6 +196,11 @@ public final class GeckoJarReader {
         // loop through children jar files until we reach the innermost one
         while (!jarUrls.empty()) {
             String fileName = jarUrls.pop();
+            try {
+                fileName = URLDecoder.decode(fileName, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // UTF-8 is always supported
+            }
 
             if (inputStream != null) {
                 // intermediate NativeZips and InputStreams will be garbage collected.

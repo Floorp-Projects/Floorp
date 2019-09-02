@@ -1246,14 +1246,6 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
                                   MutableHandleDebuggerObject result) {
   MOZ_ASSERT(obj);
 
-  if (obj->is<JSFunction>()) {
-    MOZ_ASSERT(!IsInternalFunctionObject(*obj));
-    RootedFunction fun(cx, &obj->as<JSFunction>());
-    if (!EnsureFunctionHasScript(cx, fun)) {
-      return false;
-    }
-  }
-
   DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
   if (p) {
     result.set(&p->value()->as<DebuggerObject>());
@@ -4545,13 +4537,12 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   //
   // 1. this js::Debugger must be in global->getDebuggers(),
   // 2. global must be in this->debuggees,
-  // 3. it must be in zone->getDebuggers(),
-  // 4. the debuggee's zone must be in this->debuggeeZones,
-  // 5. if we are tracking allocations, the SavedStacksMetadataBuilder must be
+  // 3. the debuggee's zone must be in this->debuggeeZones,
+  // 4. if we are tracking allocations, the SavedStacksMetadataBuilder must be
   //    installed for this realm, and
-  // 6. Realm::isDebuggee()'s bit must be set.
+  // 5. Realm::isDebuggee()'s bit must be set.
   //
-  // All six indications must be kept consistent.
+  // All five indications must be kept consistent.
 
   AutoRealm ar(cx, global);
   Zone* zone = global->zone();
@@ -4578,21 +4569,6 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   bool addingZoneRelation = !debuggeeZones.has(zone);
 
   // (3)
-  auto* zoneDebuggers = zone->getOrCreateDebuggers(cx);
-  if (!zoneDebuggers) {
-    return false;
-  }
-  if (addingZoneRelation && !zoneDebuggers->append(this)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  auto zoneDebuggersGuard = MakeScopeExit([&] {
-    if (addingZoneRelation) {
-      zoneDebuggers->popBack();
-    }
-  });
-
-  // (4)
   if (addingZoneRelation && !debuggeeZones.put(zone)) {
     ReportOutOfMemory(cx);
     return false;
@@ -4603,7 +4579,7 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
     }
   });
 
-  // (5)
+  // (4)
   if (trackingAllocationSites &&
       !Debugger::addAllocationsTracking(cx, global)) {
     return false;
@@ -4615,7 +4591,7 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
     }
   });
 
-  // (6)
+  // (5)
   AutoRestoreRealmDebugMode debugModeGuard(debuggeeRealm);
   debuggeeRealm->setIsDebuggee();
   debuggeeRealm->updateDebuggerObservesAsmJS();
@@ -4627,7 +4603,6 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
 
   globalDebuggersGuard.release();
   debuggeesGuard.release();
-  zoneDebuggersGuard.release();
   debuggeeZonesGuard.release();
   allocationsTrackingGuard.release();
   debugModeGuard.release();
@@ -4721,7 +4696,6 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   }
 
   auto* globalDebuggersVector = global->getDebuggers();
-  auto* zoneDebuggersVector = global->zone()->getDebuggers();
 
   // The relation must be removed from up to three places:
   // globalDebuggersVector and debuggees for sure, and possibly the
@@ -4742,10 +4716,6 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   }
 
   recomputeDebuggeeZoneSet();
-
-  if (!debuggeeZones.has(global->zone())) {
-    zoneDebuggersVector->erase(findDebuggerInVector(this, zoneDebuggersVector));
-  }
 
   // Remove all breakpoints for the debuggee.
   Breakpoint* nextbp;
@@ -6155,32 +6125,53 @@ typename Map::WrapperType* Debugger::wrapVariantReferent(
 DebuggerScript* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerScriptReferent> referent) {
   DebuggerScript* obj;
+
+  // A single script can be, at different times, represented by a JSScript,
+  // LazyScript, or both a LazyScript and JSScript. In the latter case, the
+  // LazyScript will have a pointer to the JSScript, and the JSScript might have
+  // a pointer to the LazyScript.
+  //
+  // When the same Debugger wraps either the LazyScript or JSScript at any
+  // different time, we have to ensure that the wrapper is always the same,
+  // i.e. Debugger.Script identity is preserved. We have to pick either the
+  // JSScript or the LazyScript consistently as the canonical referent.
+  //
+  // We have to work together with the lazification code in order to ensure we
+  // can always pick a canonical referent for the script. If a LazyScript with
+  // no JSScript is wrapped by any Debugger, and a JSScript is created later,
+  // that JSScript must point to the LazyScript.
+  //
+  // The JSScript is canonical when there is a JSScript with no LazyScript
+  // pointer. Either the JSScript is not lazifiable, or there is (or was)
+  // a LazyScript but the JSScript is not relazifiable. In the latter case we
+  // know from above that no Debugger ever wrapped the LazyScript.
+  //
+  // The LazyScript is canonical in all other cases.
+
   if (referent.is<JSScript*>()) {
     Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
     if (untaggedReferent->maybeLazyScript()) {
-      // If the JSScript has corresponding LazyScript, wrap the LazyScript
-      // instead.
-      //
-      // This is necessary for Debugger.Script identity.  If we use both
-      // JSScript and LazyScript for same single script, those 2 wrapped
-      // scripts become not identical, while the referent script is
-      // actually identical.
-      //
-      // If a script has corresponding LazyScript and JSScript, the
-      // lifetime of the LazyScript is always longer than the JSScript.
-      // So we can use the LazyScript as a proxy for the JSScript.
+      // This JSScript has a LazyScript, so the LazyScript is canonical.
       Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
-      Rooted<DebuggerScriptReferent> lazyScriptReferent(cx, lazyScript.get());
-
-      obj = wrapVariantReferent(cx, lazyScripts, lazyScriptReferent);
-      MOZ_ASSERT_IF(obj, obj->getReferent() == lazyScriptReferent);
-      return obj;
-    } else {
-      // If the JSScript doesn't have corresponding LazyScript, the script
-      // is not lazifiable, and we can safely use JSScript as referent.
-      obj = wrapVariantReferent(cx, scripts, referent);
+      return wrapLazyScript(cx, lazyScript);
     }
+    // This JSScript doesn't have a LazyScript, so the JSScript is canonical.
+    obj = wrapVariantReferent(cx, scripts, referent);
   } else if (referent.is<LazyScript*>()) {
+    Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
+    if (untaggedReferent->maybeScript()) {
+      RootedScript script(cx, untaggedReferent->maybeScript());
+      if (!script->maybeLazyScript()) {
+        // Even though we have a LazyScript, we found a JSScript which doesn't
+        // have a LazyScript (which also means that no Debugger has wrapped this
+        // LazyScript), and the JSScript is canonical.
+        MOZ_ASSERT(!untaggedReferent->isWrappedByDebugger());
+        return wrapScript(cx, script);
+      }
+    }
+    // If there is an associated JSScript, this LazyScript is reachable from it,
+    // so this LazyScript is canonical.
+    untaggedReferent->setWrappedByDebugger();
     obj = wrapVariantReferent(cx, lazyScripts, referent);
   } else {
     referent.template as<WasmInstanceObject*>();

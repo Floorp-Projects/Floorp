@@ -22,8 +22,6 @@
 
 #include "mozilla/Mutex.h"
 
-using namespace std;
-
 // decltype is not usable for overloaded functions.
 typedef HRESULT(WINAPI* D2D1CreateFactoryFunc)(
     D2D1_FACTORY_TYPE factoryType, REFIID iid,
@@ -40,7 +38,7 @@ RefPtr<ID2D1Factory1> D2DFactory() { return DrawTargetD2D1::factory(); }
 
 DrawTargetD2D1::DrawTargetD2D1()
     : mPushedLayers(1),
-      mSnapshotLock(make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock")),
+      mSnapshotLock(std::make_shared<Mutex>("DrawTargetD2D1::mSnapshotLock")),
       mUsedCommandListsSincePurge(0),
       mTransformedGlyphsSinceLastPurge(0),
       mComplexBlendsWithListInList(0),
@@ -1688,13 +1686,13 @@ void DrawTargetD2D1::AddDependencyOnSource(SourceSurfaceD2D1* aSource) {
 static D2D1_RECT_F IntersectRect(const D2D1_RECT_F& aRect1,
                                  const D2D1_RECT_F& aRect2) {
   D2D1_RECT_F result;
-  result.left = max(aRect1.left, aRect2.left);
-  result.top = max(aRect1.top, aRect2.top);
-  result.right = min(aRect1.right, aRect2.right);
-  result.bottom = min(aRect1.bottom, aRect2.bottom);
+  result.left = std::max(aRect1.left, aRect2.left);
+  result.top = std::max(aRect1.top, aRect2.top);
+  result.right = std::min(aRect1.right, aRect2.right);
+  result.bottom = std::min(aRect1.bottom, aRect2.bottom);
 
-  result.right = max(result.right, result.left);
-  result.bottom = max(result.bottom, result.top);
+  result.right = std::max(result.right, result.left);
+  result.bottom = std::max(result.bottom, result.top);
 
   return result;
 }

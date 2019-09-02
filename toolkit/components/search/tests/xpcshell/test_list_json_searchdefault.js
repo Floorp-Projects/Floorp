@@ -52,8 +52,7 @@ add_task(async function test_searchDefaultEngineUS() {
 
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
-    // TODO: The second parameter should be true here.
-    getDefaultEngineName(true, false),
+    getDefaultEngineName(true, true),
     "Should have the private default engine when separate private browsing is on."
   );
   Assert.equal(

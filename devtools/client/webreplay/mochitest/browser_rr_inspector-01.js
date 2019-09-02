@@ -19,11 +19,8 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
     waitForRecording: true,
     disableLogging: true,
+    skipInterrupt: true,
   });
-  const { threadFront } = dbg;
-
-  await threadFront.interrupt();
-  await threadFront.resume();
 
   const { inspector } = await openInspector();
 
@@ -31,7 +28,7 @@ add_task(async function() {
   let container = getContainerForNodeFront(nodeFront, inspector);
   ok(!container, "No node container while unpaused");
 
-  await threadFront.interrupt();
+  await interrupt(dbg);
 
   nodeFront = await getNodeFront("#maindiv", inspector);
   await waitFor(
@@ -43,9 +40,8 @@ add_task(async function() {
     "Correct late element text"
   );
 
-  const bp = await setBreakpoint(threadFront, "doc_inspector_basic.html", 9);
-
-  await rewindToLine(threadFront, 9);
+  await addBreakpoint(dbg, "doc_inspector_basic.html", 9);
+  await rewindToLine(dbg, 9);
 
   nodeFront = await getNodeFront("#maindiv", inspector);
   await waitFor(
@@ -57,6 +53,5 @@ add_task(async function() {
     "Correct early element text"
   );
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 });

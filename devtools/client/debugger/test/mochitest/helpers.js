@@ -1739,9 +1739,9 @@ async function getDebuggerSplitConsole(dbg) {
 
 // Return a promise that resolves with the result of a thread evaluating a
 // string in the topmost frame.
-async function evaluateInTopFrame(target, text) {
-  const threadFront = target.threadFront;
-  const consoleFront = await target.getFront("console");
+async function evaluateInTopFrame(dbg, text) {
+  const threadFront = dbg.toolbox.target.threadFront;
+  const consoleFront = await dbg.toolbox.target.getFront("console");
   const { frames } = await threadFront.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
   const options = { thread: threadFront.actor, frameActor: frames[0].actor };
@@ -1751,8 +1751,8 @@ async function evaluateInTopFrame(target, text) {
 
 // Return a promise that resolves when a thread evaluates a string in the
 // topmost frame, ensuring the result matches the expected value.
-async function checkEvaluateInTopFrame(target, text, expected) {
-  const rval = await evaluateInTopFrame(target, text);
+async function checkEvaluateInTopFrame(dbg, text, expected) {
+  const rval = await evaluateInTopFrame(dbg, text);
   ok(rval == expected, `Eval returned ${expected}`);
 }
 

@@ -7,8 +7,6 @@
 #include "JobScheduler.h"
 #include "mozilla/gfx/Logging.h"
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 

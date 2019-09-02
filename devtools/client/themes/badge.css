@@ -38,7 +38,7 @@
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
-  -moz-user-select: none;
+  user-select: none;
   background-color: var(--badge-background-color);
   color: var(--badge-color);
   box-sizing: border-box;

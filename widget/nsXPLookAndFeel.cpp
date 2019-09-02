@@ -885,12 +885,13 @@ nsresult nsXPLookAndFeel::GetColorImpl(ColorID aID,
           !IsSpecialColor(aID, aResult)) {
         qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
         if (transform) {
-          uint8_t color[3];
+          uint8_t color[4];
           color[0] = NS_GET_R(aResult);
           color[1] = NS_GET_G(aResult);
           color[2] = NS_GET_B(aResult);
+          color[3] = NS_GET_A(aResult);
           qcms_transform_data(transform, color, color, 1);
-          aResult = NS_RGB(color[0], color[1], color[2]);
+          aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
         }
       }
 

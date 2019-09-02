@@ -26,6 +26,9 @@ seta_10_120:
     description: Runs the seta_10_120 experimental optimization strategy
     treeherder:
         symbol: SS(seta_10_120)
+    index:
+        product: source
+        job-name: shadow-scheduler-seta_10_120
     worker:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta_10_120

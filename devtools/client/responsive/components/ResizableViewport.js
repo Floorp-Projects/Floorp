@@ -66,8 +66,8 @@ class ResizableViewport extends PureComponent {
     }
 
     let { lastClientX, lastClientY, ignoreX, ignoreY } = this.state;
-    let deltaX = clientX - lastClientX;
-    let deltaY = clientY - lastClientY;
+    let deltaX = (clientX - lastClientX) / this.props.viewport.zoom;
+    let deltaY = (clientY - lastClientY) / this.props.viewport.zoom;
 
     if (!this.props.leftAlignmentEnabled) {
       // The viewport is centered horizontally, so horizontal resize resizes
@@ -82,18 +82,18 @@ class ResizableViewport extends PureComponent {
       deltaY = 0;
     }
 
-    let width = this.props.viewport.width + deltaX;
-    let height = this.props.viewport.height + deltaY;
+    let width = Math.round(this.props.viewport.width + deltaX);
+    let height = Math.round(this.props.viewport.height + deltaY);
 
     if (width < VIEWPORT_MIN_WIDTH) {
       width = VIEWPORT_MIN_WIDTH;
-    } else {
+    } else if (width != this.props.viewport.width) {
       lastClientX = clientX;
     }
 
     if (height < VIEWPORT_MIN_HEIGHT) {
       height = VIEWPORT_MIN_HEIGHT;
-    } else {
+    } else if (height != this.props.viewport.height) {
       lastClientY = clientY;
     }
 
@@ -171,8 +171,8 @@ class ResizableViewport extends PureComponent {
           {
             className: contentClass,
             style: {
-              width: viewport.width + "px",
-              height: viewport.height + "px",
+              width: Math.round(viewport.width * viewport.zoom) + "px",
+              height: Math.round(viewport.height * viewport.zoom) + "px",
             },
           },
           Browser({

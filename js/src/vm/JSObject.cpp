@@ -837,8 +837,8 @@ JSObject* js::NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                             gc::AllocKind allocKind,
                                             NewObjectKind newKind,
                                             uint32_t initialShapeFlags) {
-  if (CanBeFinalizedInBackground(allocKind, clasp)) {
-    allocKind = GetBackgroundAllocKind(allocKind);
+  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+    allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
   bool isCachable =
@@ -892,8 +892,8 @@ JSObject* js::NewObjectWithClassProtoCommon(JSContext* cx, const JSClass* clasp,
                                          allocKind, newKind);
   }
 
-  if (CanBeFinalizedInBackground(allocKind, clasp)) {
-    allocKind = GetBackgroundAllocKind(allocKind);
+  if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+    allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
   Handle<GlobalObject*> global = cx->global();
@@ -963,8 +963,8 @@ JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
                                        gc::AllocKind allocKind,
                                        NewObjectKind newKind) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
-  if (CanBeFinalizedInBackground(allocKind, group->clasp())) {
-    allocKind = GetBackgroundAllocKind(allocKind);
+  if (CanChangeToBackgroundAllocKind(allocKind, group->clasp())) {
+    allocKind = ForegroundToBackgroundAllocKind(allocKind);
   }
 
   bool isCachable = NewObjectWithGroupIsCachable(cx, group, newKind);
@@ -3898,7 +3898,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     }
 
     size_t nelements = aobj.getDenseCapacity();
-    return GetBackgroundAllocKind(GetGCArrayKind(nelements));
+    return ForegroundToBackgroundAllocKind(GetGCArrayKind(nelements));
   }
 
   if (is<JSFunction>()) {
@@ -3917,7 +3917,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     } else {
       allocKind = GetGCObjectKind(getClass());
     }
-    return GetBackgroundAllocKind(allocKind);
+    return ForegroundToBackgroundAllocKind(allocKind);
   }
 
   // Proxies that are CrossCompartmentWrappers may be nursery allocated.

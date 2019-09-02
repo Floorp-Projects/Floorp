@@ -50,7 +50,9 @@ function imageLoadHandler()
   image.style.display = "inline";
 
   // Wait for the image to decode
-  setTimeout("tryToFinish();", 500);
+  setTimeout(function() {
+    tryToFinish();
+  }, 500);
 }
 
 function tryToFinish()
@@ -58,7 +60,9 @@ function tryToFinish()
   // If it hasn't happened yet, wait longer. If it never happens, this test
   // will timeout after 300 seconds...
   if (!isFrameDecoded("testimage")) {
-    setTimeout("tryToFinish();", 500);
+    setTimeout(function() {
+      tryToFinish();
+    }, 500);
     return;
   }
 

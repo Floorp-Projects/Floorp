@@ -438,7 +438,8 @@ class HTMLMediaElement::MediaStreamRenderer
         mWatchManager(this, aMainThread) {}
 
   void UpdateGraphTime() {
-    mGraphTime = mGraph->CurrentTime() - *mGraphTimeOffset;
+    mGraphTime =
+        mGraphTimeDummy->mStream->Graph()->CurrentTime() - *mGraphTimeOffset;
   }
 
   void Start() {
@@ -448,13 +449,13 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mRendering = true;
 
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return;
     }
 
-    *mGraphTimeOffset = mGraph->CurrentTime() - mGraphTime;
-
-    mWatchManager.Watch(mGraph->CurrentTime(),
+    MediaStreamGraph* graph = mGraphTimeDummy->mStream->Graph();
+    mGraphTimeOffset = Some(graph->CurrentTime().Ref() - mGraphTime);
+    mWatchManager.Watch(graph->CurrentTime(),
                         &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
@@ -477,11 +478,11 @@ class HTMLMediaElement::MediaStreamRenderer
 
     mRendering = false;
 
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return;
     }
 
-    mWatchManager.Unwatch(mGraph->CurrentTime(),
+    mWatchManager.Unwatch(mGraphTimeDummy->mStream->Graph()->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
@@ -514,7 +515,7 @@ class HTMLMediaElement::MediaStreamRenderer
   void AddTrack(AudioStreamTrack* aTrack) {
     MOZ_DIAGNOSTIC_ASSERT(!mAudioTracks.Contains(aTrack));
     mAudioTracks.AppendElement(aTrack);
-    EnsureGraph();
+    EnsureGraphTimeDummy();
     if (mRendering) {
       aTrack->AddAudioOutput(mAudioOutputKey);
       aTrack->SetAudioOutputVolume(mAudioOutputKey, mAudioOutputVolume);
@@ -526,7 +527,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
     mVideoTrack = aTrack;
-    EnsureGraph();
+    EnsureGraphTimeDummy();
     if (mRendering) {
       aTrack->AddVideoOutput(mVideoContainer);
     }
@@ -551,11 +552,12 @@ class HTMLMediaElement::MediaStreamRenderer
   }
 
   double CurrentTime() const {
-    if (!mGraph) {
+    if (!mGraphTimeDummy) {
       return 0.0;
     }
 
-    return mGraph->MediaTimeToSeconds(mGraphTime);
+    return mGraphTimeDummy->mStream->GraphImpl()->MediaTimeToSeconds(
+        mGraphTime);
   }
 
   Watchable<GraphTime>& CurrentGraphTime() { return mGraphTime; }
@@ -579,10 +581,10 @@ class HTMLMediaElement::MediaStreamRenderer
 
     MOZ_DIAGNOSTIC_ASSERT(mAudioTracks.IsEmpty());
     MOZ_DIAGNOSTIC_ASSERT(!mVideoTrack);
-  };
+  }
 
-  void EnsureGraph() {
-    if (mGraph) {
+  void EnsureGraphTimeDummy() {
+    if (mGraphTimeDummy) {
       return;
     }
 
@@ -602,14 +604,13 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
 
-    mGraph = static_cast<MediaStreamGraphImpl*>(graph);
-
-    // The current graph time will represent 0 for this session.
-    mGraphTimeOffset = Some(mGraph->CurrentTime().Ref());
-    mGraphTime = 0;
+    // This dummy keeps `graph` alive and ensures access to it.
+    mGraphTimeDummy =
+        MakeRefPtr<SharedDummyStream>(graph->CreateSourceStream());
 
     if (mRendering) {
-      mWatchManager.Watch(mGraph->CurrentTime(),
+      mGraphTimeOffset = Some(graph->CurrentTime() - mGraphTime);
+      mWatchManager.Watch(graph->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
     }
   }
@@ -624,17 +625,18 @@ class HTMLMediaElement::MediaStreamRenderer
   // WatchManager for mGraphTime.
   WatchManager<MediaStreamRenderer> mWatchManager;
 
-  // The MediaStreamGraph used to track current time. Set once the first track
-  // is added.
-  RefPtr<MediaStreamGraphImpl> mGraph;
+  // A dummy MediaStream to guarantee a MediaStreamGraph is kept alive while
+  // we're actively rendering, so we can track the graph's current time. Set
+  // when the first track is added, never unset.
+  RefPtr<SharedDummyStream> mGraphTimeDummy;
 
   // Watchable that relays the graph's currentTime updates to the media element
   // only while we're rendering. This is the current time of the rendering in
   // GraphTime units.
   Watchable<GraphTime> mGraphTime = {0, "MediaStreamRenderer::mGraphTime"};
 
-  // Nothing until we start playing a track from mSrcStream. Then the offset in
-  // mGraph's GraphTime at which started rendering the first track.
+  // Nothing until a track has been added. Then, the current GraphTime at the
+  // time when we were last Start()ed.
   Maybe<GraphTime> mGraphTimeOffset;
 
   // Currently enabled (and rendered) audio tracks.
@@ -2804,8 +2806,7 @@ double HTMLMediaElement::CurrentTime() const {
 
 void HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv) {
   LOG(LogLevel::Debug, ("%p FastSeek(%f) called by JS", this, aTime));
-  RefPtr<Promise> tobeDropped =
-      Seek(aTime, SeekTarget::PrevSyncPoint, IgnoreErrors());
+  Seek(aTime, SeekTarget::PrevSyncPoint, IgnoreErrors());
 }
 
 already_AddRefed<Promise> HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv) {
@@ -2820,14 +2821,23 @@ already_AddRefed<Promise> HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv) {
     }
   }
 
-  return Seek(CurrentTime(), SeekTarget::NextFrame, aRv);
+  Seek(CurrentTime(), SeekTarget::NextFrame, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  mSeekDOMPromise = CreateDOMPromise(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return do_AddRef(mSeekDOMPromise);
 }
 
 void HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv) {
   LOG(LogLevel::Debug,
       ("%p SetCurrentTime(%f) called by JS", this, aCurrentTime));
-  RefPtr<Promise> tobeDropped =
-      Seek(aCurrentTime, SeekTarget::Accurate, IgnoreErrors());
+  Seek(aCurrentTime, SeekTarget::Accurate, IgnoreErrors());
 }
 
 /**
@@ -2857,9 +2867,8 @@ static bool IsInRanges(TimeRanges& aRanges, double aValue,
   return false;
 }
 
-already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
-                                                 SeekTarget::Type aSeekType,
-                                                 ErrorResult& aRv) {
+void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
+                            ErrorResult& aRv) {
   // Note: Seek is called both by synchronous code that expects errors thrown in
   // aRv, as well as asynchronous code that expects a promise. Make sure all
   // synchronous errors are returned using aRv, not promise rejections.
@@ -2870,11 +2879,6 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
   // Seeking step1, Set the media element's show poster flag to false.
   // https://html.spec.whatwg.org/multipage/media.html#dom-media-seek
   mShowPoster = false;
-
-  RefPtr<Promise> promise = CreateDOMPromise(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
 
   // Detect if user has interacted with element by seeking so that
   // play will not be blocked when initiated by a script.
@@ -2887,7 +2891,7 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
   if (mSrcAttrStream) {
     // do nothing since media streams have an empty Seekable range.
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+    return;
   }
 
   if (mPlayed && mCurrentPlayRangeStart != -1.0) {
@@ -2906,28 +2910,28 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
   if (mReadyState == HAVE_NOTHING) {
     mDefaultPlaybackStartPosition = aTime;
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+    return;
   }
 
   if (!mDecoder) {
     // mDecoder must always be set in order to reach this point.
     NS_ASSERTION(mDecoder, "SetCurrentTime failed: no decoder");
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+    return;
   }
 
   // Clamp the seek target to inside the seekable ranges.
   media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
   if (seekableIntervals.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+    return;
   }
   RefPtr<TimeRanges> seekable =
       new TimeRanges(ToSupports(OwnerDoc()), seekableIntervals);
   uint32_t length = seekable->Length();
   if (length == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
+    return;
   }
 
   // If the position we want to seek to is not in a seekable range, we seek
@@ -2988,11 +2992,6 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
 
   // We changed whether we're seeking so we need to AddRemoveSelfReference.
   AddRemoveSelfReference();
-
-  // Keep the DOM promise.
-  mSeekDOMPromise = promise;
-
-  return promise.forget();
 }
 
 double HTMLMediaElement::Duration() const {
@@ -3303,13 +3302,14 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   MarkAsTainted();
 
   // We don't support routing to a different graph.
-  if (!mOutputStreams.IsEmpty() && aGraph != mOutputStreams[0].mGraph) {
+  if (!mOutputStreams.IsEmpty() &&
+      aGraph !=
+          mOutputStreams[0].mGraphKeepAliveDummyStream->mStream->Graph()) {
     return nullptr;
   }
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  out->mGraph = static_cast<MediaStreamGraphImpl*>(aGraph);
   out->mGraphKeepAliveDummyStream =
       mOutputStreams.Length() == 1
           ? MakeRefPtr<SharedDummyStream>(aGraph->CreateSourceStream())
@@ -3337,7 +3337,7 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
 
   if (mDecoder) {
     out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(out->mStream, out->mGraph);
+    mDecoder->AddOutputStream(out->mStream, out->mGraphKeepAliveDummyStream);
   } else if (mSrcStream) {
     out->mCapturingMediaStream = true;
   }
@@ -4049,14 +4049,6 @@ void HTMLMediaElement::ReleaseAudioWakeLockIfExists() {
 
 void HTMLMediaElement::WakeLockRelease() { ReleaseAudioWakeLockIfExists(); }
 
-HTMLMediaElement::SharedDummyStream::SharedDummyStream(MediaStream* aStream)
-    : mStream(aStream) {
-  mStream->Suspend();
-}
-HTMLMediaElement::SharedDummyStream::~SharedDummyStream() {
-  mStream->Destroy();
-}
-
 HTMLMediaElement::OutputMediaStream::OutputMediaStream()
     : mFinishWhenEnded(false),
       mCapturingAudioOnly(false),
@@ -4662,7 +4654,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
     }
 
     ms.mCapturingDecoder = true;
-    aDecoder->AddOutputStream(ms.mStream, ms.mGraph);
+    aDecoder->AddOutputStream(ms.mStream, ms.mGraphKeepAliveDummyStream);
   }
 
   if (mMediaKeys) {
@@ -5266,6 +5258,24 @@ void HTMLMediaElement::SeekCompleted() {
   if (IsAudioTrackCurrentlySilent()) {
     UpdateAudioTrackSilenceRange(mIsAudioTrackAudible);
   }
+
+  if (mSeekDOMPromise) {
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
+        __func__, [promise = std::move(mSeekDOMPromise)] {
+          promise->MaybeResolveWithUndefined();
+        }));
+  }
+  MOZ_ASSERT(!mSeekDOMPromise);
+}
+
+void HTMLMediaElement::SeekAborted() {
+  if (mSeekDOMPromise) {
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
+        __func__, [promise = std::move(mSeekDOMPromise)] {
+          promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        }));
+  }
+  MOZ_ASSERT(!mSeekDOMPromise);
 }
 
 void HTMLMediaElement::NotifySuspendedByCache(bool aSuspendedByCache) {
@@ -7233,30 +7243,6 @@ void HTMLMediaElement::MarkAsTainted() {
 bool HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj) {
   return nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::debugger) ||
          nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::tabs);
-}
-
-void HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mSeekDOMPromise) {
-    RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "dom::HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists",
-        [promise]() { promise->MaybeResolveWithUndefined(); });
-    mAbstractMainThread->Dispatch(r.forget());
-    mSeekDOMPromise = nullptr;
-  }
-}
-
-void HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mSeekDOMPromise) {
-    RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "dom::HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists",
-        [promise]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
-    mAbstractMainThread->Dispatch(r.forget());
-    mSeekDOMPromise = nullptr;
-  }
 }
 
 void HTMLMediaElement::ReportCanPlayTelemetry() {

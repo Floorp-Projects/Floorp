@@ -93,7 +93,7 @@ add_task(async function() {
     );
     is(
       hasLoginsHeaderContent.textContent,
-      "Firefox Monitor warns you if your info has appeared in a known data breach",
+      "Firefox Monitor warns you if your info has appeared in a known data breach.",
       "Header content for user with monitor data is correct"
     );
 
@@ -213,12 +213,7 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
     );
     is(
       noLoginsHeaderContent.getAttribute("data-l10n-id"),
-      "monitor-header-content",
-      "Header content for user with no logins is correct"
-    );
-    is(
-      noLoginsHeaderContent.getAttribute("data-l10n-id"),
-      "monitor-header-content",
+      "monitor-header-content-no-account",
       "Header content for user with no logins is correct"
     );
   });

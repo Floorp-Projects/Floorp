@@ -16,6 +16,7 @@ const {
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
+  ZOOM_VIEWPORT,
 } = require("./index");
 
 const { post } = require("../utils/message");
@@ -109,6 +110,17 @@ module.exports = {
     return {
       type: ROTATE_VIEWPORT,
       id,
+    };
+  },
+
+  /**
+   * Zoom the viewport.
+   */
+  zoomViewport(id, zoom) {
+    return {
+      type: ZOOM_VIEWPORT,
+      id,
+      zoom,
     };
   },
 };

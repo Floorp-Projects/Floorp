@@ -16,7 +16,7 @@
 }
 
 #filter-container.dragging {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 #filter-container .filters-list,
@@ -96,7 +96,7 @@
 }
 
 #filter-container .filter-name label {
-  -moz-user-select: none;
+  user-select: none;
   flex-grow: 1;
 }
 

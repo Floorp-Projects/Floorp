@@ -141,6 +141,7 @@
       // ////////////////////////////////////////////////////////////////////////
       // roles transformed by ARIA state attributes
       testRole("togglebutton", ROLE_TOGGLE_BUTTON);
+      testRole("implicit_gridcell", ROLE_GRID_CELL);
 
       // ////////////////////////////////////////////////////////////////////////
       // ignore unknown roles, take first known
@@ -257,7 +258,7 @@
   <span id="aria_region_has_label" role="region" aria-label="label"/>
   <span id="aria_region_has_labelledby" role="region" aria-labelledby="label"/><span id="label" aria-label="label">
   <span id="aria_region_has_title" role="region" title="title"/>
-  <span id="aria_region_empty_name" role="region" aria-label="" title="" aria-labelledby="empty"/><span id="empty"/>
+  <span id="aria_region_empty_name" role="region" aria-label="" title="" aria-labelledby="empty"></span><span id="empty"></span>
   <span id="aria_row" role="row"/>
   <span id="aria_rowheader" role="rowheader"/>
   <span id="aria_scrollbar" role="scrollbar"/>
@@ -343,6 +344,13 @@
   <!-- test abstract structure roles -->
   <div role="section" id="section">section</div>
   <div role="sectionhead" id="sectionhead">sectionhead</div>
+
+  <!-- roles transformed by ARIA roles of ancestors -->
+  <table role="grid">
+    <tr>
+      <td id="implicit_gridcell">foo</td>
+    </tr>
+  </table>
 
   <!-- roles transformed by ARIA state attributes -->
   <button aria-pressed="true" id="togglebutton">

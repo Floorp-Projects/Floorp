@@ -26,7 +26,11 @@ const message = require("./utils/message");
 const App = createFactory(require("./components/App"));
 const Store = require("./store");
 const { loadDevices, restoreDeviceState } = require("./actions/devices");
-const { addViewport, resizeViewport } = require("./actions/viewports");
+const {
+  addViewport,
+  resizeViewport,
+  zoomViewport,
+} = require("./actions/viewports");
 const { changeDisplayPixelRatio } = require("./actions/ui");
 
 // Exposed for use by tests
@@ -175,4 +179,15 @@ window.getViewportBrowser = () => {
     });
   }
   return browser;
+};
+
+/**
+ * Called by manager.js to zoom the viewport.
+ */
+window.setViewportZoom = zoom => {
+  try {
+    bootstrap.dispatch(zoomViewport(0, zoom));
+  } catch (e) {
+    console.error(e);
+  }
 };

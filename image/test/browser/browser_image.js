@@ -7,6 +7,7 @@ var gTimer;
 
 // Browsing to a new URL - pushing us into the bfcache - should cause
 // animations to stop, and resume when we return
+/* global yield */
 function testBFCache() {
   function theTest() {
     var abort = false;

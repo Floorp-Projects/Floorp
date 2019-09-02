@@ -22,7 +22,7 @@ add_task(async function() {
   setInputValue(hud, expression);
 
   let onResultMessage = waitForMessage(hud, "20", ".result");
-  synthesizeEvaluation();
+  synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(true, "The whole expression is evaluated when there's no selection");
 
@@ -32,9 +32,20 @@ add_task(async function() {
     { line: 0, ch: expression.split("\n")[0].length }
   );
   onResultMessage = waitForMessage(hud, "10", ".result");
-  synthesizeEvaluation();
+  synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(true, "Only the expression on the first line was evaluated");
+
+  info("Check that it also works when clicking on the Run button");
+  onResultMessage = waitForMessage(hud, "10", ".result");
+  hud.ui.outputNode
+    .querySelector(".webconsole-editor-toolbar-executeButton")
+    .click();
+  await onResultMessage;
+  ok(
+    true,
+    "Only the expression on the first line was evaluated when clicking the Run button"
+  );
 
   info("Check that this works in inline mode as well");
   await toggleLayout(hud);
@@ -43,7 +54,7 @@ add_task(async function() {
     { line: 0, ch: expression.split("\n")[0].length }
   );
   onResultMessage = waitForMessage(hud, "10", ".result");
-  synthesizeEvaluation();
+  synthesizeKeyboardEvaluation();
   await onResultMessage;
   ok(
     true,
@@ -51,7 +62,7 @@ add_task(async function() {
   );
 });
 
-function synthesizeEvaluation() {
+function synthesizeKeyboardEvaluation() {
   EventUtils.synthesizeKey("KEY_Enter", {
     [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
   });

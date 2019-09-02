@@ -119,6 +119,7 @@ class TsBase(Test):
         'setup',
         'cleanup',
         'webextensions',
+        'webextensions_folder',
         'reinstall',     # A list of files from the profile directory that
                          # should be copied to the temporary profile prior to
                          # running each cycle, to avoid one cycle overwriting
@@ -175,6 +176,18 @@ class startup_about_home_paint(ts_paint):
     cycles = 20
     extensions = ['${talos}/startup_test/startup_about_home_paint/addon']
     tpmanifest = '${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest'
+
+
+@register_test()
+class startup_about_home_paint_realworld_webextensions(ts_paint):
+    url = None
+    cycles = 20
+    extensions = [
+        '${talos}/startup_test/startup_about_home_paint/addon',
+        '${talos}/getinfooffline'
+    ]
+    tpmanifest = '${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest'
+    webextensions_folder = '${talos}/webextensions'
 
 
 @register_test()
@@ -253,7 +266,7 @@ class PageloaderTest(Test):
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile',
-            'subtest_alerts', 'perfherder_framework', 'pdfpaint']
+            'subtest_alerts', 'perfherder_framework', 'pdfpaint', 'webextensions_folder']
 
 
 class QuantumPageloadTest(PageloaderTest):

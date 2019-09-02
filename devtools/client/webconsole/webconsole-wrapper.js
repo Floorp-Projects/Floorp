@@ -206,6 +206,13 @@ class WebConsoleWrapper {
           return this.hud.getInputValue();
         },
 
+        getInputSelection: () => {
+          if (!webConsoleUI.jsterm || !webConsoleUI.jsterm.editor) {
+            return null;
+          }
+          return webConsoleUI.jsterm.editor.getSelection();
+        },
+
         setInputValue: value => {
           this.hud.setInputValue(value);
         },

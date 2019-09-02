@@ -71,6 +71,7 @@ struct CompilerEnvironment {
       DebugEnabled debug_;
       bool refTypes_;
       bool gcTypes_;
+      bool hugeMemory_;
     };
   };
 
@@ -85,7 +86,7 @@ struct CompilerEnvironment {
   CompilerEnvironment(CompileMode mode, Tier tier,
                       OptimizedBackend optimizedBackend,
                       DebugEnabled debugEnabled, bool refTypesConfigured,
-                      bool gcTypesConfigured);
+                      bool gcTypesConfigured, bool hugeMemory);
 
   // Compute any remaining compilation parameters.
   void computeParameters(Decoder& d, bool gcFeatureOptIn);
@@ -119,6 +120,10 @@ struct CompilerEnvironment {
   bool refTypes() const {
     MOZ_ASSERT(isComputed());
     return refTypes_;
+  }
+  bool hugeMemory() const {
+    MOZ_ASSERT(isComputed());
+    return hugeMemory_;
   }
 };
 
@@ -209,6 +214,9 @@ struct ModuleEnvironment {
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
   bool debugEnabled() const {
     return compilerEnv->debug() == DebugEnabled::True;
+  }
+  bool hugeMemoryEnabled() const {
+    return !isAsmJS() && compilerEnv->hugeMemory();
   }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();

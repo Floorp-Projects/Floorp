@@ -220,7 +220,6 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
   mSettings.Init(aFlags);
   mWrapColumn = aWrapColumn;
 
-  // Only create a linebreaker if we will handle wrapping.
   if (MayWrap() && MayBreakLines()) {
     mLineBreaker = nsContentUtils::LineBreaker();
   }
@@ -1240,9 +1239,12 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
           --goodSpace;  // adjust the position since line breaker returns a
                         // position next to space
         }
-      }
-      // fallback if the line breaker is unavailable or failed
-      if (!mLineBreaker) {
+      } else {
+        // In this case we don't want strings, especially CJK-ones, to be split.
+        // See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+        // information.
+
         if (mCurrentLineContent.mValue.IsEmpty() || mWrapColumn < prefixwidth) {
           goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
         } else {
@@ -1269,9 +1271,11 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
                                            goodSpace);
           if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
             goodSpace = mCurrentLineContent.mValue.Length();
-        }
-        // fallback if the line breaker is unavailable or failed
-        if (!mLineBreaker) {
+        } else {
+          // In this case we don't want strings, especially CJK-ones, to be
+          // split. See
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+          // information.
           goodSpace =
               (prefixwidth > mWrapColumn) ? 1 : mWrapColumn - prefixwidth;
           while (goodSpace < linelength &&

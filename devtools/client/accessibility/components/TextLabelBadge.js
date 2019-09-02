@@ -41,6 +41,7 @@ class TextLabelBadge extends PureComponent {
     }
 
     return Badge({
+      score,
       label: L10N.getStr("accessibility.badge.textLabel"),
       tooltip: L10N.getStr("accessibility.badge.textLabel.tooltip"),
     });

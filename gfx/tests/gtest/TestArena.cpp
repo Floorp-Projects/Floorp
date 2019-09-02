@@ -51,7 +51,7 @@ class B : public Base {
  public:
   virtual B* AsB() override { return this; }
 
-  explicit B(const string& str) : mVal(str) {}
+  explicit B(const std::string& str) : mVal(str) {}
   ~B() { ++sDtorItemB; }
 
   std::string mVal;

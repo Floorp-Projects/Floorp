@@ -136,6 +136,19 @@ bool encoding_can_encode_everything(ENCODING_RS_ENCODING const* encoding);
 /// UB ensues if the argument is `NULL`.
 bool encoding_is_ascii_compatible(ENCODING_RS_ENCODING const* encoding);
 
+/// Checks whether this encoding maps one byte to one Basic Multilingual
+/// Plane code point (i.e. byte length equals decoded UTF-16 length) and
+/// vice versa (for mappable characters).
+///
+/// `true` iff this encoding is on the list of [Legacy single-byte
+/// encodings](https://encoding.spec.whatwg.org/#legacy-single-byte-encodings)
+/// in the spec or x-user-defined.
+///
+/// # Undefined behavior
+///
+/// UB ensues if the argument is `NULL`.
+bool encoding_is_single_byte(ENCODING_RS_ENCODING const* encoding);
+
 /// Returns the _output encoding_ of this encoding. This is UTF-8 for
 /// UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
 ///

@@ -11,6 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class Badge extends Component {
   static get propTypes() {
     return {
+      score: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
       ariaLabel: PropTypes.string,
       tooltip: PropTypes.string,
@@ -18,11 +19,12 @@ class Badge extends Component {
   }
 
   render() {
-    const { label, ariaLabel, tooltip } = this.props;
+    const { score, label, ariaLabel, tooltip } = this.props;
 
     return span(
       {
-        className: "audit-badge badge",
+        className: `audit-badge badge`,
+        "data-score": score,
         title: tooltip,
         "aria-label": ariaLabel || label,
       },

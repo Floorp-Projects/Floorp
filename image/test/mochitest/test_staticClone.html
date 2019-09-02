@@ -30,7 +30,7 @@ window.onload = function() {
   var staticReq = request.getStaticRequest();
   var clone = staticReq.clone(null);
 
-  ok(true, "hooray, we didn't crash!");
+  ok(clone, "hooray, we didn't crash!");
 
   SimpleTest.finish();
 }

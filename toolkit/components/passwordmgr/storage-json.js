@@ -638,6 +638,17 @@ this.LoginManagerStorage_json.prototype = {
     );
   },
 
+  clearAllPotentiallyVulnerablePasswords() {
+    this._store.ensureDataReady();
+    if (!this._store.data.potentiallyVulnerablePasswords.length) {
+      // No need to write to disk
+      return;
+    }
+    this._store.data.potentiallyVulnerablePasswords = [];
+    this._store.saveSoon();
+    this.__decryptedPotentiallyVulnerablePasswords = null;
+  },
+
   get uiBusy() {
     return this._crypto.uiBusy;
   },

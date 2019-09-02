@@ -9,8 +9,6 @@
 namespace mozilla {
 namespace gfx {
 
-using namespace std;
-
 void PathBuilderCapture::MoveTo(const Point& aPoint) {
   PathOp op;
   op.mType = PathOp::OP_MOVETO;

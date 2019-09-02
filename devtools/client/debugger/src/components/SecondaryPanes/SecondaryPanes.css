@@ -45,7 +45,6 @@
   font-style: italic;
   text-align: center;
   padding: 0.5em;
-  -moz-user-select: none;
   user-select: none;
   cursor: default;
 }

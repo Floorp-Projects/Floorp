@@ -10,7 +10,7 @@
  */
 .debug-target-pane__heading {
   grid-template-columns: var(--main-subheading-icon-size) max-content calc(var(--base-unit) * 3);
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .debug-target-pane__icon {

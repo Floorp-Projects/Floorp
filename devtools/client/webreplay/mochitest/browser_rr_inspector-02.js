@@ -15,14 +15,10 @@ add_task(async function() {
     waitForRecording: true,
     disableLogging: true,
   });
-  const { threadFront, toolbox } = dbg;
+  const { toolbox } = dbg;
 
-  await threadFront.interrupt();
-  await threadFront.resume();
-
-  await threadFront.interrupt();
-  const bp = await setBreakpoint(threadFront, "doc_inspector_basic.html", 9);
-  await rewindToLine(threadFront, 9);
+  await addBreakpoint(dbg, "doc_inspector_basic.html", 9);
+  await rewindToLine(dbg, 9);
 
   const { testActor } = await openInspector();
 
@@ -38,7 +34,6 @@ add_task(async function() {
   info("Performing checks");
   await testActor.isNodeCorrectlyHighlighted("#maindiv", is);
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 
   function moveMouseOver(selector, x, y) {

@@ -5378,6 +5378,18 @@
     "n_values": 6,
     "description": "Network identification (0=None, 1=New Ipv4, 2=Same, 3=New IPv6, 4=New dual)"
   },
+  "NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1570932],
+    "expires_in_version": "76",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 600000,
+    "n_buckets": 50,
+    "description": "Time in ms between two NS_NETWORK_LINK_DATA_CHANGED events sent"
+  },
   "IDLE_NOTIFY_IDLE_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -13701,6 +13713,30 @@
     "bug_numbers": [1430145],
     "labels": ["Used", "RejectedByPolicy", "RequestMismatch", "LoadError", "NotUsed"],
     "description": "Whether a preloaded script was used or the reason it was not used."
+  },
+  "DOM_SCRIPT_LOAD_INCREMENTAL_RATIO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["nicolas.b.pierron@mozilla.com"],
+    "expires_in_version": "75",
+    "kind": "linear",
+    "low": 2,
+    "high": 100,
+    "n_buckets": 99,
+    "bug_numbers": [1573904],
+    "description": "Ratio of JavaScript-text bytes transferred incrementally compared to the total number of bytes transferred."
+  },
+  "DOM_SCRIPT_LOAD_INCREMENTAL_AVG_TRANSFER_RATE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["nicolas.b.pierron@mozilla.com"],
+    "expires_in_version": "75",
+    "kind": "exponential",
+    "low": 1,
+    "high": 1000000,
+    "n_buckets": 60,
+    "bug_numbers": [1573904],
+    "description": "Speed at which JavaScript-text bytes are transferred incrementally, measured between the first onIncremantalData call and the onStreamComplete call (in character/ms)."
   },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
     "record_in_processes": ["content"],

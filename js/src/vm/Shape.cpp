@@ -2202,8 +2202,8 @@ void NewObjectCache::invalidateEntriesForShape(JSContext* cx, HandleShape shape,
   const JSClass* clasp = shape->getObjectClass();
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  if (CanBeFinalizedInBackground(kind, clasp)) {
-    kind = GetBackgroundAllocKind(kind);
+  if (CanChangeToBackgroundAllocKind(kind, clasp)) {
+    kind = ForegroundToBackgroundAllocKind(kind);
   }
 
   RootedObjectGroup group(

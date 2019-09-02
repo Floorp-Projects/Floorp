@@ -85,7 +85,6 @@ JS::Zone::Zone(JSRuntime* rt)
       // ProtectedData checks in CheckZone::check may read this field.
       helperThreadUse_(HelperThreadUse::None),
       helperThreadOwnerContext_(nullptr),
-      debuggers(this, nullptr),
       uniqueIds_(this),
       suppressAllocationMetadataBuilder(this, false),
       arenas(this),
@@ -139,7 +138,6 @@ Zone::~Zone() {
     rt->gc.systemZone = nullptr;
   }
 
-  js_delete(debuggers.ref());
   js_delete(jitZone_.ref());
 }
 
@@ -155,18 +153,6 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
 }
 
 void Zone::beginSweepTypes() { types.beginSweep(); }
-
-Zone::DebuggerVector* Zone::getOrCreateDebuggers(JSContext* cx) {
-  if (debuggers) {
-    return debuggers;
-  }
-
-  debuggers = js_new<DebuggerVector>();
-  if (!debuggers) {
-    ReportOutOfMemory(cx);
-  }
-  return debuggers;
-}
 
 void Zone::sweepBreakpoints(JSFreeOp* fop) {
   if (fop->runtime()->debuggerList().isEmpty()) {

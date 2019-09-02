@@ -1864,6 +1864,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   background: var(--panel-separator-color);
 }
 
+#PanelUI-whatsNew .whatsNew-message:last-child {
+  border-bottom: none;
+}
+
 #PanelUI-whatsNew .whatsNew-message-date {
   font-size: 11px;
   margin: 0 -12px;

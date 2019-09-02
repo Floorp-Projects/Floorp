@@ -66,3 +66,6 @@ if CONFIG['MOZ_LAUNCHER_PROCESS']:
         DEFINES[var] = '"%s"' % CONFIG[var]
 
 DisableStlWrapping()
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Launcher Process')

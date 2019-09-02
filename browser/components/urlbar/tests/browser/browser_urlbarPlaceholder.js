@@ -9,8 +9,9 @@
 "use strict";
 
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
+const TEST_PRIVATE_ENGINE_BASENAME = "searchSuggestionEngine2.xml";
 
-var originalEngine, extraEngine, expectedString;
+var originalEngine, extraEngine, extraPrivateEngine, expectedString;
 var tabs = [];
 
 add_task(async function setup() {
@@ -23,6 +24,9 @@ add_task(async function setup() {
   extraEngine = await SearchTestUtils.promiseNewSearchEngine(
     rootDir + TEST_ENGINE_BASENAME
   );
+  extraPrivateEngine = await SearchTestUtils.promiseNewSearchEngine(
+    rootDir + TEST_PRIVATE_ENGINE_BASENAME
+  );
 
   // Force display of a tab with a URL bar, to clear out any possible placeholder
   // initialization listeners that happen on startup.
@@ -31,6 +35,10 @@ add_task(async function setup() {
     "about:mozilla"
   );
   BrowserTestUtils.removeTab(urlTab);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault", false]],
+  });
 
   registerCleanupFunction(async () => {
     await Services.search.setDefault(originalEngine);
@@ -74,7 +82,7 @@ add_task(async function test_delayed_update_placeholder() {
   tabs.push(blankTab);
 
   // Pretend we've "initialized".
-  BrowserSearch._updateURLBarPlaceholder(extraEngine.name, true);
+  BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false, true);
 
   Assert.equal(
     gURLBar.placeholder,
@@ -93,7 +101,7 @@ add_task(async function test_delayed_update_placeholder() {
   // Do it the other way to check both named engine and fallback code paths.
   await BrowserTestUtils.switchTab(gBrowser, blankTab);
 
-  BrowserSearch._updateURLBarPlaceholder(originalEngine.name, true);
+  BrowserSearch._updateURLBarPlaceholder(originalEngine.name, false, true);
   await TestUtils.waitForTick();
 
   Assert.equal(
@@ -110,7 +118,7 @@ add_task(async function test_delayed_update_placeholder() {
   );
 
   // Now check when we have a URL displayed, the placeholder is updated straight away.
-  BrowserSearch._updateURLBarPlaceholder(extraEngine.name);
+  BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false);
   await TestUtils.waitForTick();
 
   Assert.equal(
@@ -118,4 +126,68 @@ add_task(async function test_delayed_update_placeholder() {
     gURLBar.getAttribute("defaultPlaceholder"),
     "Placeholder should be the default."
   );
+});
+
+add_task(async function test_private_window_no_separate_engine() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  await Services.search.setDefault(extraEngine);
+
+  await TestUtils.waitForCondition(
+    () =>
+      win.gURLBar.placeholder == win.gURLBar.getAttribute("defaultPlaceholder"),
+    "The placeholder should match the default placeholder for non-built-in engines."
+  );
+  Assert.equal(
+    win.gURLBar.placeholder,
+    win.gURLBar.getAttribute("defaultPlaceholder")
+  );
+
+  await Services.search.setDefault(originalEngine);
+
+  await TestUtils.waitForCondition(
+    () => win.gURLBar.placeholder == expectedString,
+    "The placeholder should include the engine name for built-in engines."
+  );
+  Assert.equal(win.gURLBar.placeholder, expectedString);
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_private_window_separate_engine() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault", true]],
+  });
+  const originalPrivateEngine = await Services.search.getDefaultPrivate();
+  registerCleanupFunction(async () => {
+    await Services.search.setDefaultPrivate(originalPrivateEngine);
+  });
+
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  // Keep the normal default as a different string to the private, so that we
+  // can be sure we're testing the right thing.
+  await Services.search.setDefault(originalEngine);
+  await Services.search.setDefaultPrivate(extraPrivateEngine);
+
+  await TestUtils.waitForCondition(
+    () =>
+      win.gURLBar.placeholder == win.gURLBar.getAttribute("defaultPlaceholder"),
+    "The placeholder should match the default placeholder for non-built-in engines."
+  );
+  Assert.equal(
+    win.gURLBar.placeholder,
+    win.gURLBar.getAttribute("defaultPlaceholder")
+  );
+
+  await Services.search.setDefault(extraEngine);
+  await Services.search.setDefaultPrivate(originalEngine);
+
+  await TestUtils.waitForCondition(
+    () => win.gURLBar.placeholder == expectedString,
+    "The placeholder should include the engine name for built-in engines."
+  );
+  Assert.equal(win.gURLBar.placeholder, expectedString);
+
+  await BrowserTestUtils.closeWindow(win);
 });

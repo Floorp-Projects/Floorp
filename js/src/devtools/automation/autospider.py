@@ -232,6 +232,7 @@ cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
 
 compiler_dir = env.get('GCCDIR', os.path.join(DIR.fetches, compiler))
 info("looking for compiler under {}/".format(compiler_dir))
+compiler_libdir = None
 if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
     env.setdefault('CC', os.path.join(compiler_dir, 'bin', compiler))
     env.setdefault('CXX', os.path.join(compiler_dir, 'bin', cxx))
@@ -239,14 +240,14 @@ if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
         platlib = 'lib'
     else:
         platlib = 'lib64' if word_bits == 64 else 'lib'
-    env.setdefault('LD_LIBRARY_PATH', os.path.join(compiler_dir, platlib))
+    compiler_libdir = os.path.join(compiler_dir, platlib)
 else:
     env.setdefault('CC', compiler)
     env.setdefault('CXX', cxx)
 
 bindir = os.path.join(OBJDIR, 'dist', 'bin')
 env['LD_LIBRARY_PATH'] = ':'.join(
-    p for p in (bindir, env.get('LD_LIBRARY_PATH')) if p)
+    p for p in (bindir, compiler_libdir, env.get('LD_LIBRARY_PATH')) if p)
 
 for v in ('CC', 'CXX', 'LD_LIBRARY_PATH'):
     info("default {name} = {value}".format(name=v, value=env[v]))

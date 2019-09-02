@@ -19,31 +19,44 @@
   align-items: baseline;
 }
 
-.accessibility-color-contrast .accessibility-contrast-value:not(:empty):after {
+.accessibility-color-contrast .accessibility-contrast-value:empty:after {
+  display: none;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:after {
   margin-inline-start: 4px;
 }
 
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).AA:after,
+  .accessibility-contrast-value.AA:after,
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).AAA:after {
+  .accessibility-contrast-value.AAA:after {
   color: var(--theme-highlight-green);
 }
 
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).FAIL:after {
-  color: #e57180;
-  content: "⚠️";
+  .accessibility-contrast-value.FAIL:after {
+  color: var(--theme-icon-error-color);
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  content: "";
+  vertical-align: -2px;
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).AA:after {
+  .accessibility-contrast-value.AA:after {
   content: "AA\2713";
   unicode-bidi: isolate;
 }
 
 .accessibility-color-contrast
-  .accessibility-contrast-value:not(:empty).AAA:after {
+  .accessibility-contrast-value.AAA:after {
   content: "AAA\2713";
   unicode-bidi: isolate;
 }
@@ -61,5 +74,5 @@
   padding: 0px 2px;
   margin-inline-start: 6px;
   line-height: initial;
-  -moz-user-select: none;
+  user-select: none;
 }

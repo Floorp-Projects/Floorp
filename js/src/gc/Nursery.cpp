@@ -1379,7 +1379,14 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   const float factor = promotionRate / PromotionGoal;
   MOZ_ASSERT(factor >= 0.0f);
 
-  MOZ_ASSERT((float(capacity()) * factor) <= SIZE_MAX);
+#ifdef DEBUG
+  // This is |... <= SIZE_MAX|, just without the implicit value-changing
+  // conversion that expression would involve and modern clang would warn about.
+  static const float SizeMaxPlusOne =
+      2.0f * float(1ULL << (sizeof(void*) * CHAR_BIT - 1));
+  MOZ_ASSERT((float(capacity()) * factor) < SizeMaxPlusOne);
+#endif
+
   size_t newCapacity = size_t(float(capacity()) * factor);
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());

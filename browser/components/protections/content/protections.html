@@ -25,7 +25,8 @@
       <h1 id="report-title" data-l10n-id="protection-report-content-title"></h1>
       <div class="card card-no-hover etp-card">
         <div class="card-header">
-          <div class="icon"></div>
+          <img class="icon light" src="chrome://browser/content/logos/tracking-protection.svg"/>
+          <img class="icon dark" src="chrome://browser/content/logos/tracking-protection-dark-theme.svg"/>
           <div class="wrapper">
             <h2 class="card-title" data-l10n-id="etp-card-title"></h2>
             <p class="content" data-l10n-id="etp-card-content"></p>
@@ -40,19 +41,34 @@
               <div id="legend">
                 <label id="graphLegendDescription" data-l10n-id="graph-legend-description"></label>
                 <input id="tab-social" data-type="social" type="radio" name="tabs" aria-labelledby="socialLabel socialTitle" aria-describedby="socialContent" checked>
-                <label id="socialLabel" for="tab-social" data-type="social"></label>
+                <label id="socialLabel" for="tab-social" data-type="social">
+                  <img class="icon-small" src="chrome://browser/skin/controlcenter/socialblock.svg" data-type="social"/>
+                  <span data-type="social"></span>
+                </label>
 
                 <input id="tab-cookie" data-type="cookie" type="radio" name="tabs" aria-labelledby="cookieLabel cookieTitle" aria-describedby="cookieContent">
-                <label id="cookieLabel" for="tab-cookie" data-type="cookie"></label>
+                <label id="cookieLabel" for="tab-cookie" data-type="cookie">
+                  <img class="icon-small" src="chrome://browser/skin/controlcenter/3rdpartycookies.svg" data-type="cookie"/>
+                  <span data-type="cookie"></span>
+                </label>
 
                 <input id="tab-tracker" data-type="tracker" type="radio" name="tabs" aria-labelledby="trackerLabel trackerTitle" aria-describedby="trackerContent">
-                <label id="trackerLabel" for="tab-tracker" data-type="tracker"></label>
+                <label id="trackerLabel" for="tab-tracker" data-type="tracker">
+                  <img class="icon-small" src="chrome://browser/skin/controlcenter/tracker-image.svg" data-type="tracker"/>
+                  <span data-type="tracker"></span>
+                </label>
 
                 <input id="tab-fingerprinter" data-type="fingerprinter" type="radio" name="tabs" aria-labelledby="fingerprinterLabel fingerprinterTitle" aria-describedby="fingerprinterContent">
-                <label id="fingerprinterLabel" for="tab-fingerprinter" data-type="fingerprinter"></label>
+                <label id="fingerprinterLabel" for="tab-fingerprinter" data-type="fingerprinter">
+                  <img class="icon-small" src="chrome://browser/skin/controlcenter/fingerprinters.svg" data-type="fingerprinter"/>
+                  <span data-type="fingerprinter"></span>
+                </label>
 
                 <input id="tab-cryptominer" data-type="cryptominer" type="radio" name="tabs" aria-labelledby="cryptominerLabel cryptominerTitle" aria-describedby="cryptominerContent">
-                <label id="cryptominerLabel" for="tab-cryptominer" data-type="cryptominer"></label>
+                <label id="cryptominerLabel" for="tab-cryptominer" data-type="cryptominer">
+                  <img class="icon-small" src="chrome://browser/skin/controlcenter/cryptominers.svg" data-type="cryptominer"/>
+                  <span data-type="cryptominer"></span>
+                </label>
                 <div id=highlight></div>
                 <div id=highlight-hover></div>
                 <div id="social" class="tab-content">
@@ -69,7 +85,7 @@
                 </div>
                 <div id="tracker" class="tab-content">
                   <p id="trackerTitle" class="content-title" data-l10n-id="tracker-tab-title"></p>
-                  <p id="trackerContent" data-l10n-id="tracker-tab-content">
+                  <p id="trackerContent" data-l10n-id="tracker-tab-description">
                     <a target="_blank" id="tracker-link" data-l10n-name="learn-more-link"></a>
                   </p>
                 </div>
@@ -94,7 +110,7 @@
      <!-- Markup for Monitor card. -->
       <section class="card card-no-hover monitor-card hidden">
           <div class="card-header">
-            <div class="icon"></div>
+            <img class="icon" src="chrome://browser/content/logos/monitor.svg"/>
             <div class="wrapper">
               <h2 id="monitor-title" class="card-title" data-l10n-id="monitor-title"></h2>
               <p id="monitor-header-content" class="content">
@@ -103,7 +119,8 @@
                 </span>
                 <a target="_blank" href="" id="monitor-link" data-l10n-id="monitor-link"></a>
               </p>
-              <span class="inline-text-icon monitor-scanned-text" data-l10n-id="auto-scan"></span>
+              <img class="icon-small" src="chrome://browser/skin/reload.svg"/>
+              <span class="monitor-scanned-text" data-l10n-id="auto-scan"></span>
             </div>
             <a target="_blank" id="sign-up-for-monitor-link">
               <!-- Insert Monitor link content here. -->
@@ -115,7 +132,7 @@
                 <div class="monitor-info-wrapper">
                   <div class="monitor-block email">
                       <span class="monitor-stat">
-                        <span class="monitor-icon"></span>
+                        <img class="icon-med" src="chrome://browser/skin/mail.svg"/>
                         <span data-type="stored-emails">
                           <!-- Display number of stored emails here. -->
                         </span>
@@ -124,7 +141,7 @@
                     </div>
                     <div class="monitor-block breaches">
                       <span class="monitor-stat">
-                        <span class="monitor-icon"></span>
+                        <img class="icon-med" src="chrome://browser/skin/fxa/avatar.svg"/>
                         <span data-type="known-breaches">
                           <!-- Display number of known breaches here. -->
                         </span>
@@ -133,7 +150,7 @@
                     </div>
                     <div class="monitor-block passwords">
                       <span class="monitor-stat">
-                          <span class="monitor-icon"></span>
+                          <img class="icon-med" src="chrome://browser/skin/login.svg"/>
                           <span data-type="exposed-passwords">
                             <!-- Display number of exposed passwords here. -->
                           </span>
@@ -159,7 +176,7 @@
       <!-- Markup for Lockwise card. -->
       <section class="card card-no-hover lockwise-card hidden">
         <div class="card-header">
-          <div class="icon"></div>
+          <img class="icon" src="chrome://browser/content/logos/lockwise.svg"/>
           <div class="wrapper">
             <h2 id="lockwise-title" class="card-title">
               <!-- Insert Lockwise card title here. -->
@@ -173,7 +190,7 @@
         <div class="card-body hidden">
           <div id="lockwise-body-content" class="body-wrapper">
             <div class="no-logins hidden">
-                <div class="lockwise-mobile-app-icon"></div>
+                <img class="lockwise-mobile-app-icon" src="chrome://browser/content/logos/lockwise-mobile-app.svg"/>
                 <span data-l10n-id="lockwise-no-logins-content">
                   <a target="_blank" id="lockwise-inline-link" data-l10n-name="lockwise-inline-link" href=""></a>
                 </span>
@@ -182,14 +199,18 @@
               <span class="number-of-logins block">
                 <!-- Display number of stored logins here. -->
               </span>
-              <span id="lockwise-passwords-stored" class="inline-text-icon passwords-stored-text">
-                 <!-- Display message for stored logins here. -->
-                 <a target="_blank" id="lockwise-how-it-works" data-l10n-name="lockwise-how-it-works" href=""></a>
+              <span class="passwords-stored-text">
+                <img class="icon-small" src= "chrome://browser/skin/login.svg"/>
+                <span id="lockwise-passwords-stored">
+                  <!-- Display message for stored logins here. -->
+                  <a target="_blank" id="lockwise-how-it-works" data-l10n-name="lockwise-how-it-works" href=""></a>
+                </span>
               </span>
               <span class="number-of-synced-devices block">
                 <!-- Display number of synced devices here. -->
               </span>
-              <span class="inline-text-icon synced-devices-text">
+              <span class="synced-devices-text">
+                <img class="icon-small" src="chrome://browser/skin/sync.svg"/>
                 <span>
                   <!-- Display message for status of synced devices here. -->
                 </span>

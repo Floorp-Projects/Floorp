@@ -18,9 +18,9 @@ fuzzy-if(skiaContent,0-1,0-336) == text-emphasis-style-property-010Cf.html text-
 # END tests from support/generate-text-emphasis-style-property-010-tests.sh
 == text-emphasis-style-property-010Cn.html text-emphasis-style-property-010-ref.html
 # START tests from support/generate-text-emphasis-style-property-tests.py
-fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-011.html text-emphasis-style-property-011-ref.html
-fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-011a.html text-emphasis-style-property-011-ref.html
-fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-011b.html text-emphasis-style-property-011-ref.html
+fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(winWidget,0-56,0-50) == text-emphasis-style-property-011.html text-emphasis-style-property-011-ref.html
+fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(winWidget,0-56,0-50) == text-emphasis-style-property-011a.html text-emphasis-style-property-011-ref.html
+fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(winWidget,0-56,0-50) == text-emphasis-style-property-011b.html text-emphasis-style-property-011-ref.html
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-012.html text-emphasis-style-property-012-ref.html
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-012a.html text-emphasis-style-property-012-ref.html
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-style-property-012b.html text-emphasis-style-property-012-ref.html

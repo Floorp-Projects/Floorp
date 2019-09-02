@@ -25,6 +25,7 @@ DevToolsModules(
     'LearnMoreLink.js',
     'MainFrame.js',
     'RightSidebar.js',
+    'SimulationMenuButton.js',
     'TextLabelBadge.js',
     'TextLabelCheck.js',
     'Toolbar.js'

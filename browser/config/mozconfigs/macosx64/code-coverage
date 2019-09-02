@@ -8,6 +8,7 @@ ac_add_options --disable-sandbox
 ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
 
-export LDFLAGS="-coverage -L$MOZ_FETCHES_DIR/clang/lib/clang/8.0.1/lib/darwin/"
+CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/darwin && pwd)"
+export LDFLAGS="-coverage -L$CLANG_LIB_DIR"
 export LIBS="-lclang_rt.profile_osx"
 export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads -Clink-dead-code -Coverflow-checks=off"

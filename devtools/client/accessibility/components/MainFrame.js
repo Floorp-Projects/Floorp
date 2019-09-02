@@ -47,6 +47,7 @@ class MainFrame extends Component {
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
       supports: PropTypes.object,
+      simulator: PropTypes.object,
     };
   }
 
@@ -115,6 +116,7 @@ class MainFrame extends Component {
       fluentBundles,
       enabled,
       auditing,
+      simulator,
     } = this.props;
 
     if (!enabled) {
@@ -128,7 +130,7 @@ class MainFrame extends Component {
       { bundles: fluentBundles },
       div(
         { className: "mainFrame", role: "presentation" },
-        Toolbar({ accessibility, accessibilityWalker }),
+        Toolbar({ accessibility, accessibilityWalker, simulator }),
         isAuditing && AuditProgressOverlay(),
         span(
           {

@@ -18,14 +18,14 @@
   fill: currentColor;
   --horizontal-padding: 2.1rem;
   --vertical-section-padding: 0.9em;
-  --height-offset: 0;
+  --height-offset: 0px;
 }
 
 #protections-popup[toast] {
   --popup-width: 32rem;
 }
 
-#protections-popoup[infoMessageShowing] {
+#protections-popup[infoMessageShowing] {
   --height-offset: 260px;
 }
 
@@ -122,6 +122,7 @@
   margin-bottom: 0;
 }
 
+#identity-popup-permissions-header,
 .identity-popup-security-connection,
 #identity-popup-security-description {
   /* icon indent + 16px icon width + 6px description margin
@@ -143,6 +144,23 @@
 #identity-popup-permissions-content {
   padding-top: 1em;
   padding-bottom: 1em;
+}
+
+#identity-popup-permissions-header {
+  background-image: url(chrome://browser/skin/permissions.svg);
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#identity-popup-permissions-header:-moz-locale-dir(rtl) {
+  background-position-x: right;
+}
+
+#identity-popup-permissions-header,
+#identity-popup-permission-list {
+  /* 16px icon width + 12px margin */
+  padding-inline-start: 28px;
 }
 
 #protections-popup-content {
@@ -525,6 +543,10 @@ description#identity-popup-content-verifier,
   margin: 5px 0;
 }
 
+#protections-popup-cookiesView-list > .protections-popup-cookiesView-list-section:only-of-type > .protections-popup-cookiesView-list-header {
+  display: none;
+}
+
 :root[lwt-popup-brighttext] .protections-popup-cookiesView-list-header {
   color: #f9f9fa;
 }
@@ -655,7 +677,6 @@ description#identity-popup-content-verifier,
   margin: 0;
   padding: var(--vertical-section-padding) var(--horizontal-padding);
   color: #737373;
-  display: none;
 }
 
 :root[lwt-popup-brighttext] #protections-popup-no-trackers-found-description,
@@ -677,54 +698,12 @@ description#identity-popup-content-verifier,
  */
 
 #protections-popup-category-list {
-  display: grid;
   padding: 0;
   margin: 0;
 }
 
 #protections-popup-no-trackers-found-description:not([hidden]) ~ #protections-popup-content {
   display: none;
-}
-
-#protections-popup-blocking-section-header,
-#protections-popup-not-blocking-section-header,
-#protections-popup-not-found-section-header {
-  display: none;
-}
-
-#protections-popup-blocking-section-header {
-  grid-row: 1;
-}
-
-#protections-popup:not([hasException]) .protections-popup-category.blocked:not(.notFound) ~ #protections-popup-blocking-section-header,
-.protections-popup-category.notFound ~ #protections-popup-not-found-section-header,
-.protections-popup-category:not(.blocked):not(.notFound) ~ #protections-popup-not-blocking-section-header,
-#protections-popup[hasException] .protections-popup-category:not(.notFound) ~ #protections-popup-not-blocking-section-header {
-  display: flex;
-}
-
-#protections-popup:not([hasException]) #protections-popup-category-socialblock.blocked {
-  grid-row: 2;
-}
-
-#protections-popup:not([hasException]) #protections-popup-category-cookies.blocked {
-  grid-row: 3;
-}
-
-#protections-popup:not([hasException]) #protections-popup-category-tracking-protection.blocked {
-  grid-row: 4;
-}
-
-#protections-popup:not([hasException]) #protections-popup-category-fingerprinters.blocked {
-  grid-row: 5;
-}
-
-#protections-popup:not([hasException]) #protections-popup-category-cryptominers.blocked {
-  grid-row: 6;
-}
-
-#protections-popup-not-blocking-section-header {
-  grid-row: 7;
 }
 
 #protections-popup-not-blocking-section-description {
@@ -742,30 +721,6 @@ description#identity-popup-content-verifier,
   text-decoration: none;
 }
 
-#protections-popup-category-socialblock {
-  grid-row: 8;
-}
-
-#protections-popup-category-cookies {
-  grid-row: 9;
-}
-
-#protections-popup-category-tracking-protection {
-  grid-row: 10;
-}
-
-#protections-popup-category-fingerprinters {
-  grid-row: 11;
-}
-
-#protections-popup-category-cryptominers {
-  grid-row: 12;
-}
-
-#protections-popup-not-found-section-header {
-  grid-row: 13;
-}
-
 .protections-popup-category.notFound {
   color: var(--panel-disabled-color);
   fill: var(--panel-disabled-color);
@@ -778,26 +733,6 @@ description#identity-popup-content-verifier,
 /* Hide the arrow for not found items */
 .protections-popup-category.notFound::after {
   display: none;
-}
-
-#protections-popup-category-socialblock.notFound {
-  grid-row: 14 !important;
-}
-
-#protections-popup-category-cookies.notFound {
-  grid-row: 15 !important;
-}
-
-#protections-popup-category-tracking-protection.notFound {
-  grid-row: 16 !important;
-}
-
-#protections-popup-category-fingerprinters.notFound {
-  grid-row: 17 !important;
-}
-
-#protections-popup-category-cryptominers.notFound {
-  grid-row: 18 !important;
 }
 
 .tracking-protection-icon {
@@ -849,37 +784,12 @@ description#identity-popup-content-verifier,
 
 /* PERMISSIONS */
 
-#identity-popup-permissions-content {
-  padding-bottom: 1.5em;
-}
-
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   /* The extra padding-bottom is there to work around XUL flex (Bug 1368281).
      This rule and the 1.5em above can both be removed once we are only using CSS flex. */
   #identity-popup-permissions-content {
     padding-bottom: 1em;
   }
-}
-
-#identity-popup-permissions-headline {
-  color: #737373;
-  font-weight: 500;
-  margin-inline-start: 0;
-}
-
-#identity-popup-permissions-granted-indicator {
-  display: none;
-  list-style-image: url(chrome://browser/skin/badge-blue.svg);
-  width: 16px;
-  height: 16px;
-}
-
-#identity-popup-permissions-granted-indicator[show] {
-  display: block;
-}
-
-:root[lwt-popup-brighttext] #identity-popup-permissions-headline {
-  color: #f9f9fa;
 }
 
 .protections-popup-category,
@@ -899,7 +809,7 @@ description#identity-popup-content-verifier,
 #identity-popup-permission-reload-hint,
 #identity-popup-permission-empty-hint,
 #identity-popup-permission-list:not(:empty) {
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
 .identity-popup-permission-icon {

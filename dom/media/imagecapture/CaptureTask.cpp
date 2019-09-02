@@ -21,7 +21,9 @@ class CaptureTask::MediaStreamEventListener : public MediaStreamTrackListener {
       : mCaptureTask(aCaptureTask){};
 
   // MediaStreamTrackListener methods.
-  void NotifyEnded() override { mCaptureTask->PostTrackEndEvent(); }
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
+    mCaptureTask->PostTrackEndEvent();
+  }
 
  private:
   CaptureTask* mCaptureTask;

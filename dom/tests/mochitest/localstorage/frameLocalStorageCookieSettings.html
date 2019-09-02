@@ -7,9 +7,9 @@
 <script type="text/javascript">
   try {
     localStorage.setItem("contentkey", "test-value");
-    ok(false, "Setting localStorageItem should throw a type error exception");
+    ok(false, "Setting localStorageItem should throw a security exception");
   } catch(ex) {
-    is(ex.name, "TypeError");
+    is(ex.name, "SecurityError");
   }
 </script>
 </body>

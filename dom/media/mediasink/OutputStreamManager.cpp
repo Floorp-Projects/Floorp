@@ -7,7 +7,7 @@
 #include "OutputStreamManager.h"
 
 #include "DOMMediaStream.h"
-#include "../MediaStreamGraphImpl.h"
+#include "../MediaStreamGraph.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -157,11 +157,11 @@ void OutputStreamData::SetPrincipal(nsIPrincipal* aPrincipal) {
   }
 }
 
-OutputStreamManager::OutputStreamManager(MediaStreamGraphImpl* aGraph,
+OutputStreamManager::OutputStreamManager(SharedDummyStream* aDummyStream,
                                          nsIPrincipal* aPrincipal,
                                          AbstractThread* aAbstractMainThread)
     : mAbstractMainThread(aAbstractMainThread),
-      mGraph(aGraph),
+      mDummyStream(aDummyStream),
       mPrincipalHandle(
           aAbstractMainThread,
           aPrincipal ? MakePrincipalHandle(aPrincipal) : PRINCIPAL_HANDLE_NONE,
@@ -248,7 +248,8 @@ already_AddRefed<SourceMediaStream> OutputStreamManager::AddTrack(
   MOZ_ASSERT(!HasTrackType(aType),
              "Cannot have two tracks of the same type at the same time");
 
-  RefPtr<SourceMediaStream> stream = mGraph->CreateSourceStream();
+  RefPtr<SourceMediaStream> stream =
+      mDummyStream->mStream->Graph()->CreateSourceStream();
   if (!mPlaying) {
     stream->Suspend();
   }

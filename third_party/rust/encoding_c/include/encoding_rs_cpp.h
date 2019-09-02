@@ -805,6 +805,20 @@ public:
   }
 
   /**
+  * Checks whether this encoding maps one byte to one Basic Multilingual
+  * Plane code point (i.e. byte length equals decoded UTF-16 length) and
+  * vice versa (for mappable characters).
+  *
+  * `true` iff this encoding is on the list of Legacy single-byte
+  * encodings (https://encoding.spec.whatwg.org/#legacy-single-byte-encodings)
+  * in the spec or x-user-defined.
+  */
+  inline bool is_single_byte() const
+  {
+    return encoding_is_single_byte(this);
+  }
+
+  /**
    * Returns the _output encoding_ of this encoding. This is UTF-8 for
    * UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
    */

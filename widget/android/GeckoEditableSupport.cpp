@@ -18,6 +18,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/BrowserChild.h"
 
 #include <android/api-level.h>
@@ -1493,9 +1494,12 @@ void GeckoEditableSupport::SetInputContext(const InputContext& aContext,
                                            const InputContextAction& aAction) {
   MOZ_ASSERT(mEditable);
 
-  ALOGIME("IME: SetInputContext: s=0x%X, 0x%X, action=0x%X, 0x%X",
-          aContext.mIMEState.mEnabled, aContext.mIMEState.mOpen, aAction.mCause,
-          aAction.mFocusChange);
+  ALOGIME(
+      "IME: SetInputContext: aContext.mIMEState={mEnabled=%s, mOpen=%s}, "
+      "aAction={mCause=%s, mFocusChange=%s}",
+      ToString(aContext.mIMEState.mEnabled).c_str(),
+      ToString(aContext.mIMEState.mOpen).c_str(),
+      ToString(aAction.mCause).c_str(), ToString(aAction.mFocusChange).c_str());
 
   mInputContext = aContext;
 

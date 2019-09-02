@@ -153,10 +153,7 @@ describe("<ImpressionStats>", () => {
     const dispatch = sinon.spy();
     const props = {
       dispatch,
-      IntersectionObserver: buildIntersectionObserver(
-        ZeroIntersectEntries,
-        false
-      ),
+      IntersectionObserver: buildIntersectionObserver(ZeroIntersectEntries),
     };
     const wrapper = renderImpressionStats(props);
 
@@ -173,15 +170,7 @@ describe("<ImpressionStats>", () => {
     ]);
 
     dispatch.resetHistory();
-
-    // Simulating the full intersection change with a row change
-    wrapper.setProps({
-      ...props,
-      ...{ rows: [{ id: 1, pos: 0 }, { id: 2, pos: 1 }, { id: 3, pos: 2 }] },
-      ...{
-        IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
-      },
-    });
+    wrapper.instance().impressionObserver.callback(FullIntersectEntries);
 
     // For the impression
     assert.calledOnce(dispatch);
@@ -193,25 +182,6 @@ describe("<ImpressionStats>", () => {
       { id: 2, pos: 1 },
       { id: 3, pos: 2 },
     ]);
-  });
-  it("should send a loaded content and an impression if props are updated and props.rows are different", () => {
-    const props = { dispatch: sinon.spy() };
-    const wrapper = renderImpressionStats(props);
-    props.dispatch.resetHistory();
-
-    // New rows
-    wrapper.setProps({ ...DEFAULT_PROPS, ...{ rows: [{ id: 4, pos: 3 }] } });
-
-    assert.calledTwice(props.dispatch);
-  });
-  it("should not send any ping if props are updated but IDs are the same", () => {
-    const props = { dispatch: sinon.spy() };
-    const wrapper = renderImpressionStats(props);
-    props.dispatch.resetHistory();
-
-    wrapper.setProps(DEFAULT_PROPS);
-
-    assert.notCalled(props.dispatch);
   });
   it("should remove visibility change listener when the wrapper is removed", () => {
     const props = {

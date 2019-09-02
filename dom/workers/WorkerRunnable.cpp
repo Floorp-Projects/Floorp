@@ -272,6 +272,19 @@ WorkerRunnable::Run() {
     globalObject = mWorkerPrivate->GetCurrentEventLoopGlobal();
     if (!globalObject) {
       globalObject = DefaultGlobalObject();
+      // Our worker thread may not be in a good state here if there is no
+      // JSContext avaliable.  The way this manifests itself is that
+      // globalObject ends up null (though it's not clear to me how we can be
+      // running runnables at all when DefaultGlobalObject() is returning
+      // false!) and then when we try to init the AutoJSAPI either
+      // CycleCollectedJSContext::Get() returns null or it has a null JSContext.
+      // In any case, we used to have a check for
+      // GetCurrentWorkerThreadJSContext() being non-null here and that seems to
+      // avoid the problem, so let's keep doing that check even if we don't need
+      // the JSContext here at all.
+      if (NS_WARN_IF(!globalObject && !GetCurrentWorkerThreadJSContext())) {
+        return NS_ERROR_FAILURE;
+      }
     }
 
     // We may still not have a globalObject here: in the case of

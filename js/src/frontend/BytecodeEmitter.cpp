@@ -7481,11 +7481,13 @@ bool BytecodeEmitter::emitCallOrNew(
         break;
       case ParseNodeKind::Name: {
         // Use the start of callee name unless it is at a separator
+        // or has no args.
         //
         // 2 + obj()   // expression
         //     ^       // column coord
         //
-        if (!bytecodeSection().atSeparator(calleeNode->pn_pos.begin)) {
+        if (argsList->empty() ||
+            !bytecodeSection().atSeparator(calleeNode->pn_pos.begin)) {
           // Use the start of callee names.
           coordNode = calleeNode;
         }

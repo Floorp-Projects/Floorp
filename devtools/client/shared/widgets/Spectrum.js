@@ -6,26 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new MultiLocalizationHelper(
-  "devtools/shared/locales/en-US/accessibility.properties",
-  "devtools/client/locales/en-US/accessibility.properties",
-  "devtools/client/locales/en-US/inspector.properties"
-);
-const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
-const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const SLIDER = {
-  hue: {
-    MIN: "0",
-    MAX: "128",
-    STEP: "1",
-  },
-  alpha: {
-    MIN: "0",
-    MAX: "1",
-    STEP: "0.01",
-  },
-};
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
@@ -46,6 +26,27 @@ loader.lazyRequireGetter(
   "devtools/shared/accessibility",
   true
 );
+
+const L10N = new MultiLocalizationHelper(
+  "devtools/shared/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/accessibility.properties",
+  "devtools/client/locales/en-US/inspector.properties"
+);
+const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
+const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const SLIDER = {
+  hue: {
+    MIN: "0",
+    MAX: "128",
+    STEP: "1",
+  },
+  alpha: {
+    MIN: "0",
+    MAX: "1",
+    STEP: "0.01",
+  },
+};
 
 /**
  * Spectrum creates a color picker widget in any container you give it.
@@ -70,24 +71,23 @@ loader.lazyRequireGetter(
  * Fires the following events:
  * - changed : When the user changes the current color
  */
-function Spectrum(parentEl, rgb) {
-  EventEmitter.decorate(this);
+class Spectrum {
+  constructor(parentEl, rgb) {
+    EventEmitter.decorate(this);
 
-  this.document = parentEl.ownerDocument;
-  this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
-  this.parentEl = parentEl;
+    this.document = parentEl.ownerDocument;
+    this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
+    this.parentEl = parentEl;
 
-  this.element.className = "spectrum-container";
-  // eslint-disable-next-line no-unsanitized/property
-  this.element.innerHTML = `
+    this.element.className = "spectrum-container";
+    // eslint-disable-next-line no-unsanitized/property
+    this.element.innerHTML = `
     <section class="spectrum-color-picker">
-      <div
-        class="spectrum-color spectrum-box"
-        tabindex="0"
-        role="slider"
-        title="${L10N.getStr("colorPickerTooltip.spectrumDraggerTitle")}"
-        aria-describedby="spectrum-dragger"
-      >
+      <div class="spectrum-color spectrum-box"
+           tabindex="0"
+           role="slider"
+           title="${L10N.getStr("colorPickerTooltip.spectrumDraggerTitle")}"
+           aria-describedby="spectrum-dragger">
         <div class="spectrum-sat">
           <div class="spectrum-val">
             <div class="spectrum-dragger" id="spectrum-dragger"></div>
@@ -121,72 +121,471 @@ function Spectrum(parentEl, rgb) {
     </section>
   `;
 
-  this.onElementClick = this.onElementClick.bind(this);
-  this.element.addEventListener("click", this.onElementClick);
+    this.onElementClick = this.onElementClick.bind(this);
+    this.element.addEventListener("click", this.onElementClick);
 
-  this.parentEl.appendChild(this.element);
+    this.parentEl.appendChild(this.element);
 
-  // Color spectrum dragger.
-  this.dragger = this.element.querySelector(".spectrum-color");
-  this.dragHelper = this.element.querySelector(".spectrum-dragger");
-  Spectrum.draggable(
-    this.dragger,
-    this.dragHelper,
-    this.onDraggerMove.bind(this)
-  );
+    // Color spectrum dragger.
+    this.dragger = this.element.querySelector(".spectrum-color");
+    this.dragHelper = this.element.querySelector(".spectrum-dragger");
+    draggable(this.dragger, this.dragHelper, this.onDraggerMove.bind(this));
 
-  // Here we define the components for the "controls" section of the color picker.
-  this.controls = this.element.querySelector(".spectrum-controls");
-  this.colorPreview = this.element.querySelector(".spectrum-color-preview");
+    // Here we define the components for the "controls" section of the color picker.
+    this.controls = this.element.querySelector(".spectrum-controls");
+    this.colorPreview = this.element.querySelector(".spectrum-color-preview");
 
-  // Create the eyedropper.
-  const eyedropper = this.document.createElementNS(XHTML_NS, "button");
-  eyedropper.id = "eyedropper-button";
-  eyedropper.className = "devtools-button";
-  eyedropper.style.pointerEvents = "auto";
-  eyedropper.setAttribute(
-    "aria-label",
-    L10N.getStr("colorPickerTooltip.eyedropperTitle")
-  );
-  this.controls.insertBefore(eyedropper, this.colorPreview);
+    // Create the eyedropper.
+    const eyedropper = this.document.createElementNS(XHTML_NS, "button");
+    eyedropper.id = "eyedropper-button";
+    eyedropper.className = "devtools-button";
+    eyedropper.style.pointerEvents = "auto";
+    eyedropper.setAttribute(
+      "aria-label",
+      L10N.getStr("colorPickerTooltip.eyedropperTitle")
+    );
+    this.controls.insertBefore(eyedropper, this.colorPreview);
 
-  // Hue slider and alpha slider
-  this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
-  this.hueSlider.setAttribute("aria-describedby", this.dragHelper.id);
-  this.alphaSlider = this.createSlider(
-    "alpha",
-    this.onAlphaSliderMove.bind(this)
-  );
+    // Hue slider and alpha slider
+    this.hueSlider = this.createSlider("hue", this.onHueSliderMove.bind(this));
+    this.hueSlider.setAttribute("aria-describedby", this.dragHelper.id);
+    this.alphaSlider = this.createSlider(
+      "alpha",
+      this.onAlphaSliderMove.bind(this)
+    );
 
-  // Color contrast
-  this.spectrumContrast = this.element.querySelector(
-    ".spectrum-color-contrast"
-  );
-  this.contrastLabel = this.element.querySelector(".contrast-ratio-label");
-  [
-    this.contrastValue,
-    this.contrastValueMin,
-    this.contrastValueMax,
-  ] = this.element.querySelectorAll(".accessibility-contrast-value");
+    // Color contrast
+    this.spectrumContrast = this.element.querySelector(
+      ".spectrum-color-contrast"
+    );
+    this.contrastLabel = this.element.querySelector(".contrast-ratio-label");
+    [
+      this.contrastValue,
+      this.contrastValueMin,
+      this.contrastValueMax,
+    ] = this.element.querySelectorAll(".accessibility-contrast-value");
 
-  // Create the learn more info button
-  const learnMore = this.document.createElementNS(XHTML_NS, "button");
-  learnMore.id = "learn-more-button";
-  learnMore.className = "learn-more";
-  learnMore.title = L10N.getStr("accessibility.learnMore");
-  this.element
-    .querySelector(".contrast-ratio-header-and-single-ratio")
-    .appendChild(learnMore);
+    // Create the learn more info button
+    const learnMore = this.document.createElementNS(XHTML_NS, "button");
+    learnMore.id = "learn-more-button";
+    learnMore.className = "learn-more";
+    learnMore.title = L10N.getStr("accessibility.learnMore");
+    this.element
+      .querySelector(".contrast-ratio-header-and-single-ratio")
+      .appendChild(learnMore);
 
-  if (rgb) {
-    this.rgb = rgb;
+    if (rgb) {
+      this.rgb = rgb;
+      this.updateUI();
+    }
+  }
+
+  set textProps(style) {
+    this._textProps = style
+      ? {
+          fontSize: style["font-size"].value,
+          fontWeight: style["font-weight"].value,
+          opacity: style.opacity.value,
+        }
+      : null;
+  }
+
+  set rgb(color) {
+    this.hsv = rgbToHsv(color[0], color[1], color[2], color[3]);
+  }
+
+  set backgroundColorData(colorData) {
+    this._backgroundColorData = colorData;
+  }
+
+  get backgroundColorData() {
+    return this._backgroundColorData;
+  }
+
+  get textProps() {
+    return this._textProps;
+  }
+
+  get rgb() {
+    const rgb = hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2], this.hsv[3]);
+    return [
+      Math.round(rgb[0]),
+      Math.round(rgb[1]),
+      Math.round(rgb[2]),
+      Math.round(rgb[3] * 100) / 100,
+    ];
+  }
+
+  /**
+   * Map current rgb to the closest color available in the database by
+   * calculating the delta-E between each available color and the current rgb
+   *
+   * @return {String}
+   *         Color name or closest color name
+   */
+  get colorName() {
+    const labColorEntries = Object.entries(labColors);
+
+    const deltaEs = labColorEntries.map(color =>
+      colorUtils.calculateDeltaE(color[1], colorUtils.rgbToLab(this.rgb))
+    );
+
+    // Get the color name for the one that has the lowest delta-E
+    const minDeltaE = Math.min(...deltaEs);
+    const colorName = labColorEntries[deltaEs.indexOf(minDeltaE)][0];
+    return minDeltaE === 0
+      ? colorName
+      : L10N.getFormatStr("colorPickerTooltip.colorNameTitle", colorName);
+  }
+
+  get rgbNoSatVal() {
+    const rgb = hsvToRgb(this.hsv[0], 1, 1);
+    return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
+  }
+
+  get rgbCssString() {
+    const rgb = this.rgb;
+    return (
+      "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ")"
+    );
+  }
+
+  show() {
+    this.dragWidth = this.dragger.offsetWidth;
+    this.dragHeight = this.dragger.offsetHeight;
+    this.dragHelperHeight = this.dragHelper.offsetHeight;
+
     this.updateUI();
+  }
+
+  onElementClick(e) {
+    e.stopPropagation();
+  }
+
+  onHueSliderMove() {
+    this.hsv[0] = this.hueSlider.value / this.hueSlider.max;
+    this.updateUI();
+    this.onChange();
+  }
+
+  onDraggerMove(dragX, dragY) {
+    this.hsv[1] = dragX / this.dragWidth;
+    this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
+    this.updateUI();
+    this.onChange();
+  }
+
+  onAlphaSliderMove() {
+    this.hsv[3] = this.alphaSlider.value / this.alphaSlider.max;
+    this.updateUI();
+    this.onChange();
+  }
+
+  onChange() {
+    this.emit("changed", this.rgb, this.rgbCssString);
+  }
+
+  /**
+   * Creates and initializes a slider element, attaches it to its parent container
+   * based on the slider type and returns it
+   *
+   * @param  {String} sliderType
+   *         The type of the slider (i.e. alpha or hue)
+   * @param  {Function} onSliderMove
+   *         The function to tie the slider to on input
+   * @return {DOMNode}
+   *         Newly created slider
+   */
+  createSlider(sliderType, onSliderMove) {
+    const container = this.element.querySelector(`.spectrum-${sliderType}`);
+
+    const slider = this.document.createElementNS(XHTML_NS, "input");
+    slider.className = `spectrum-${sliderType}-input`;
+    slider.type = "range";
+    slider.min = SLIDER[sliderType].MIN;
+    slider.max = SLIDER[sliderType].MAX;
+    slider.step = SLIDER[sliderType].STEP;
+    slider.title = L10N.getStr(`colorPickerTooltip.${sliderType}SliderTitle`);
+    slider.addEventListener("input", onSliderMove);
+
+    container.appendChild(slider);
+    return slider;
+  }
+
+  /**
+   * Updates the contrast label with appropriate content (i.e. large text indicator
+   * if the contrast is calculated for large text, or a base label otherwise)
+   *
+   * @param  {Boolean} isLargeText
+   *         True if contrast is calculated for large text.
+   */
+  updateContrastLabel(isLargeText) {
+    if (!isLargeText) {
+      this.contrastLabel.textContent = L10N.getStr(
+        "accessibility.contrast.ratio.label"
+      );
+      return;
+    }
+
+    // Clear previously appended children before appending any new children
+    while (this.contrastLabel.firstChild) {
+      this.contrastLabel.firstChild.remove();
+    }
+
+    const largeTextStr = L10N.getStr("accessibility.contrast.large.text");
+    const contrastLabelStr = L10N.getFormatStr(
+      "colorPickerTooltip.contrast.large.title",
+      largeTextStr
+    );
+
+    // Build an array of children nodes for the contrast label element
+    const contents = contrastLabelStr
+      .split(new RegExp(largeTextStr), 2)
+      .map(content => this.document.createTextNode(content));
+    const largeTextIndicator = this.document.createElementNS(XHTML_NS, "span");
+    largeTextIndicator.className = "accessibility-color-contrast-large-text";
+    largeTextIndicator.textContent = largeTextStr;
+    largeTextIndicator.title = L10N.getStr(
+      "accessibility.contrast.large.title"
+    );
+    contents.splice(1, 0, largeTextIndicator);
+
+    // Append children to contrast label
+    for (const content of contents) {
+      this.contrastLabel.appendChild(content);
+    }
+  }
+
+  /**
+   * Updates a contrast value element with the given score, value and swatches.
+   *
+   * @param  {DOMNode} el
+   *         Contrast value element to update.
+   * @param  {String} score
+   *         Contrast ratio score.
+   * @param  {Number} value
+   *         Contrast ratio value.
+   * @param  {Array} backgroundColor
+   *         RGBA color array for the background color to show in the swatch.
+   */
+  updateContrastValueEl(el, score, value, backgroundColor) {
+    el.classList.toggle(score, true);
+    el.textContent = value.toFixed(2);
+    el.title = L10N.getFormatStr(
+      `accessibility.contrast.annotation.${score}`,
+      L10N.getFormatStr(
+        "colorPickerTooltip.contrastAgainstBgTitle",
+        `rgba(${backgroundColor})`
+      )
+    );
+    el.parentElement.style.setProperty(
+      "--accessibility-contrast-color",
+      this.rgbCssString
+    );
+    el.parentElement.style.setProperty(
+      "--accessibility-contrast-bg",
+      `rgba(${backgroundColor})`
+    );
+  }
+
+  updateAlphaSlider() {
+    // Set alpha slider background
+    const rgb = this.rgb;
+
+    const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+    const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
+    const alphaGradient =
+      "linear-gradient(to right, " + rgbAlpha0 + ", " + rgbNoAlpha + ")";
+    this.alphaSlider.style.background = alphaGradient;
+  }
+
+  updateColorPreview() {
+    // Overlay the rgba color over a checkered image background.
+    this.colorPreview.style.setProperty("--overlay-color", this.rgbCssString);
+
+    // We should be able to distinguish the color preview on high luminance rgba values.
+    // Give the color preview a light grey border if the luminance of the current rgba
+    // tuple is great.
+    const colorLuminance = colorUtils.calculateLuminance(this.rgb);
+    this.colorPreview.classList.toggle("high-luminance", colorLuminance > 0.85);
+
+    // Set title on color preview for better UX
+    this.colorPreview.title = this.colorName;
+  }
+
+  updateDragger() {
+    // Set dragger background color
+    const flatColor =
+      "rgb(" +
+      this.rgbNoSatVal[0] +
+      ", " +
+      this.rgbNoSatVal[1] +
+      ", " +
+      this.rgbNoSatVal[2] +
+      ")";
+    this.dragger.style.backgroundColor = flatColor;
+
+    // Set dragger aria attributes
+    this.dragger.setAttribute("aria-valuetext", this.rgbCssString);
+  }
+
+  updateHueSlider() {
+    // Set hue slider aria attributes
+    this.hueSlider.setAttribute("aria-valuetext", this.rgbCssString);
+  }
+
+  updateHelperLocations() {
+    const h = this.hsv[0];
+    const s = this.hsv[1];
+    const v = this.hsv[2];
+
+    // Placing the color dragger
+    let dragX = s * this.dragWidth;
+    let dragY = this.dragHeight - v * this.dragHeight;
+    const helperDim = this.dragHelperHeight / 2;
+
+    dragX = Math.max(
+      -helperDim,
+      Math.min(this.dragWidth - helperDim, dragX - helperDim)
+    );
+    dragY = Math.max(
+      -helperDim,
+      Math.min(this.dragHeight - helperDim, dragY - helperDim)
+    );
+
+    this.dragHelper.style.top = dragY + "px";
+    this.dragHelper.style.left = dragX + "px";
+
+    // Placing the hue slider
+    this.hueSlider.value = h * this.hueSlider.max;
+
+    // Placing the alpha slider
+    this.alphaSlider.value = this.hsv[3] * this.alphaSlider.max;
+  }
+
+  /* Calculates the contrast ratio for the currently selected
+   * color against a single or range of background colors and displays contrast ratio section
+   * components depending on the contrast ratio calculated.
+   *
+   * Contrast ratio components include:
+   *    - contrastLargeTextIndicator: Hidden by default, shown when text has large font
+   *                                  size if there is no error in calculation.
+   *    - contrastValue(s):           Set to calculated value(s), score(s) and text color on
+   *                                  background swatches. Set to error text
+   *                                  if there is an error in calculation.
+   */
+  updateContrast() {
+    // Remove additional classes on spectrum contrast, leaving behind only base classes
+    this.spectrumContrast.classList.toggle("visible", false);
+    this.spectrumContrast.classList.toggle("range", false);
+    this.spectrumContrast.classList.toggle("error", false);
+    // Assign only base class to all contrastValues, removing any score class
+    this.contrastValue.className = this.contrastValueMin.className = this.contrastValueMax.className =
+      "accessibility-contrast-value";
+
+    if (!this.contrastEnabled) {
+      return;
+    }
+
+    const isRange = this.backgroundColorData.min !== undefined;
+    this.spectrumContrast.classList.toggle("visible", true);
+    this.spectrumContrast.classList.toggle("range", isRange);
+
+    const colorContrast = getContrastRatio(
+      {
+        ...this.textProps,
+        color: this.rgbCssString,
+      },
+      this.backgroundColorData
+    );
+
+    const {
+      value,
+      min,
+      max,
+      score,
+      scoreMin,
+      scoreMax,
+      backgroundColor,
+      backgroundColorMin,
+      backgroundColorMax,
+      isLargeText,
+      error,
+    } = colorContrast;
+
+    if (error) {
+      this.updateContrastLabel(false);
+      this.spectrumContrast.classList.toggle("error", true);
+
+      // If current background color is a range, show the error text in the contrast range
+      // span. Otherwise, show it in the single contrast span.
+      const contrastValEl = isRange
+        ? this.contrastValueMin
+        : this.contrastValue;
+      contrastValEl.textContent = L10N.getStr("accessibility.contrast.error");
+      contrastValEl.title = L10N.getStr(
+        "accessibility.contrast.annotation.transparent.error"
+      );
+
+      return;
+    }
+
+    this.updateContrastLabel(isLargeText);
+    if (!isRange) {
+      this.updateContrastValueEl(
+        this.contrastValue,
+        score,
+        value,
+        backgroundColor
+      );
+
+      return;
+    }
+
+    this.updateContrastValueEl(
+      this.contrastValueMin,
+      scoreMin,
+      min,
+      backgroundColorMin
+    );
+    this.updateContrastValueEl(
+      this.contrastValueMax,
+      scoreMax,
+      max,
+      backgroundColorMax
+    );
+  }
+
+  updateUI() {
+    this.updateHelperLocations();
+
+    this.updateColorPreview();
+    this.updateDragger();
+    this.updateHueSlider();
+    this.updateAlphaSlider();
+    this.updateContrast();
+  }
+
+  destroy() {
+    this.element.removeEventListener("click", this.onElementClick);
+    this.hueSlider.removeEventListener("input", this.onHueSliderMove);
+    this.alphaSlider.removeEventListener("input", this.onAlphaSliderMove);
+
+    this.parentEl.removeChild(this.element);
+
+    this.dragger = this.dragHelper = null;
+    this.alphaSlider = null;
+    this.hueSlider = null;
+    this.colorPreview = null;
+    this.element = null;
+    this.parentEl = null;
+    this.spectrumContrast = null;
+    this.contrastValue = this.contrastValueMin = this.contrastValueMax = null;
+    this.contrastLabel = null;
   }
 }
 
-module.exports.Spectrum = Spectrum;
-
-Spectrum.hsvToRgb = function(h, s, v, a) {
+function hsvToRgb(h, s, v, a) {
   let r, g, b;
 
   const i = Math.floor(h * 6);
@@ -229,9 +628,9 @@ Spectrum.hsvToRgb = function(h, s, v, a) {
   }
 
   return [r * 255, g * 255, b * 255, a];
-};
+}
 
-Spectrum.rgbToHsv = function(r, g, b, a) {
+function rgbToHsv(r, g, b, a) {
   r = r / 255;
   g = g / 255;
   b = b / 255;
@@ -262,9 +661,9 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
     h /= 6;
   }
   return [h, s, v, a];
-};
+}
 
-Spectrum.draggable = function(element, dragHelper, onmove) {
+function draggable(element, dragHelper, onmove) {
   onmove = onmove || function() {};
 
   const doc = element.ownerDocument;
@@ -356,7 +755,7 @@ Spectrum.draggable = function(element, dragHelper, onmove) {
 
   element.addEventListener("mousedown", start);
   element.addEventListener("keydown", onKeydown);
-};
+}
 
 /**
  * Calculates the contrast ratio for a DOM node's computed style against
@@ -382,413 +781,4 @@ function getContrastRatio(computedStyle, backgroundColor) {
   return getContrastRatioAgainstBackground(backgroundColor, props);
 }
 
-Spectrum.prototype = {
-  set textProps(style) {
-    this._textProps = style
-      ? {
-          fontSize: style["font-size"].value,
-          fontWeight: style["font-weight"].value,
-          opacity: style.opacity.value,
-        }
-      : null;
-  },
-
-  set rgb(color) {
-    this.hsv = Spectrum.rgbToHsv(color[0], color[1], color[2], color[3]);
-  },
-
-  set backgroundColorData(colorData) {
-    this._backgroundColorData = colorData;
-  },
-
-  get backgroundColorData() {
-    return this._backgroundColorData;
-  },
-
-  get textProps() {
-    return this._textProps;
-  },
-
-  get rgb() {
-    const rgb = Spectrum.hsvToRgb(
-      this.hsv[0],
-      this.hsv[1],
-      this.hsv[2],
-      this.hsv[3]
-    );
-    return [
-      Math.round(rgb[0]),
-      Math.round(rgb[1]),
-      Math.round(rgb[2]),
-      Math.round(rgb[3] * 100) / 100,
-    ];
-  },
-
-  /**
-   * Map current rgb to the closest color available in the database by
-   * calculating the delta-E between each available color and the current rgb
-   *
-   * @return {String}
-   *         Color name or closest color name
-   */
-  get colorName() {
-    const labColorEntries = Object.entries(labColors);
-
-    const deltaEs = labColorEntries.map(color =>
-      colorUtils.calculateDeltaE(color[1], colorUtils.rgbToLab(this.rgb))
-    );
-
-    // Get the color name for the one that has the lowest delta-E
-    const minDeltaE = Math.min(...deltaEs);
-    const colorName = labColorEntries[deltaEs.indexOf(minDeltaE)][0];
-    return minDeltaE === 0
-      ? colorName
-      : L10N.getFormatStr("colorPickerTooltip.colorNameTitle", colorName);
-  },
-
-  get rgbNoSatVal() {
-    const rgb = Spectrum.hsvToRgb(this.hsv[0], 1, 1);
-    return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]), rgb[3]];
-  },
-
-  get rgbCssString() {
-    const rgb = this.rgb;
-    return (
-      "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ")"
-    );
-  },
-
-  show: function() {
-    this.dragWidth = this.dragger.offsetWidth;
-    this.dragHeight = this.dragger.offsetHeight;
-    this.dragHelperHeight = this.dragHelper.offsetHeight;
-
-    this.updateUI();
-  },
-
-  onElementClick: function(e) {
-    e.stopPropagation();
-  },
-
-  onHueSliderMove: function() {
-    this.hsv[0] = this.hueSlider.value / this.hueSlider.max;
-    this.updateUI();
-    this.onChange();
-  },
-
-  onDraggerMove: function(dragX, dragY) {
-    this.hsv[1] = dragX / this.dragWidth;
-    this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
-    this.updateUI();
-    this.onChange();
-  },
-
-  onAlphaSliderMove: function() {
-    this.hsv[3] = this.alphaSlider.value / this.alphaSlider.max;
-    this.updateUI();
-    this.onChange();
-  },
-
-  onChange: function() {
-    this.emit("changed", this.rgb, this.rgbCssString);
-  },
-
-  /**
-   * Creates and initializes a slider element, attaches it to its parent container
-   * based on the slider type and returns it
-   *
-   * @param  {String} sliderType
-   *         The type of the slider (i.e. alpha or hue)
-   * @param  {Function} onSliderMove
-   *         The function to tie the slider to on input
-   * @return {DOMNode}
-   *         Newly created slider
-   */
-  createSlider: function(sliderType, onSliderMove) {
-    const container = this.element.querySelector(`.spectrum-${sliderType}`);
-
-    const slider = this.document.createElementNS(XHTML_NS, "input");
-    slider.className = `spectrum-${sliderType}-input`;
-    slider.type = "range";
-    slider.min = SLIDER[sliderType].MIN;
-    slider.max = SLIDER[sliderType].MAX;
-    slider.step = SLIDER[sliderType].STEP;
-    slider.title = L10N.getStr(`colorPickerTooltip.${sliderType}SliderTitle`);
-    slider.addEventListener("input", onSliderMove);
-
-    container.appendChild(slider);
-    return slider;
-  },
-
-  /**
-   * Updates the contrast label with appropriate content (i.e. large text indicator
-   * if the contrast is calculated for large text, or a base label otherwise)
-   *
-   * @param  {Boolean} isLargeText
-   *         True if contrast is calculated for large text.
-   */
-  updateContrastLabel: function(isLargeText) {
-    if (!isLargeText) {
-      this.contrastLabel.textContent = L10N.getStr(
-        "accessibility.contrast.ratio.label"
-      );
-      return;
-    }
-
-    // Clear previously appended children before appending any new children
-    while (this.contrastLabel.firstChild) {
-      this.contrastLabel.firstChild.remove();
-    }
-
-    const largeTextStr = L10N.getStr("accessibility.contrast.large.text");
-    const contrastLabelStr = L10N.getFormatStr(
-      "colorPickerTooltip.contrast.large.title",
-      largeTextStr
-    );
-
-    // Build an array of children nodes for the contrast label element
-    const contents = contrastLabelStr
-      .split(new RegExp(largeTextStr), 2)
-      .map(content => this.document.createTextNode(content));
-    const largeTextIndicator = this.document.createElementNS(XHTML_NS, "span");
-    largeTextIndicator.className = "accessibility-color-contrast-large-text";
-    largeTextIndicator.textContent = largeTextStr;
-    largeTextIndicator.title = L10N.getStr(
-      "accessibility.contrast.large.title"
-    );
-    contents.splice(1, 0, largeTextIndicator);
-
-    // Append children to contrast label
-    for (const content of contents) {
-      this.contrastLabel.appendChild(content);
-    }
-  },
-
-  /**
-   * Updates a contrast value element with the given score, value and swatches.
-   *
-   * @param  {DOMNode} el
-   *         Contrast value element to update.
-   * @param  {String} score
-   *         Contrast ratio score.
-   * @param  {Number} value
-   *         Contrast ratio value.
-   * @param  {Array} backgroundColor
-   *         RGBA color array for the background color to show in the swatch.
-   */
-  updateContrastValueEl: function(el, score, value, backgroundColor) {
-    el.classList.toggle(score, true);
-    el.textContent = value.toFixed(2);
-    el.title = L10N.getFormatStr(
-      `accessibility.contrast.annotation.${score}`,
-      L10N.getFormatStr(
-        "colorPickerTooltip.contrastAgainstBgTitle",
-        `rgba(${backgroundColor})`
-      )
-    );
-    el.parentElement.style.setProperty(
-      "--accessibility-contrast-color",
-      this.rgbCssString
-    );
-    el.parentElement.style.setProperty(
-      "--accessibility-contrast-bg",
-      `rgba(${backgroundColor})`
-    );
-  },
-
-  updateAlphaSlider: function() {
-    // Set alpha slider background
-    const rgb = this.rgb;
-
-    const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
-    const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
-    const alphaGradient =
-      "linear-gradient(to right, " + rgbAlpha0 + ", " + rgbNoAlpha + ")";
-    this.alphaSlider.style.background = alphaGradient;
-  },
-
-  updateColorPreview: function() {
-    // Overlay the rgba color over a checkered image background.
-    this.colorPreview.style.setProperty("--overlay-color", this.rgbCssString);
-
-    // We should be able to distinguish the color preview on high luminance rgba values.
-    // Give the color preview a light grey border if the luminance of the current rgba
-    // tuple is great.
-    const colorLuminance = colorUtils.calculateLuminance(this.rgb);
-    this.colorPreview.classList.toggle("high-luminance", colorLuminance > 0.85);
-
-    // Set title on color preview for better UX
-    this.colorPreview.title = this.colorName;
-  },
-
-  updateDragger: function() {
-    // Set dragger background color
-    const flatColor =
-      "rgb(" +
-      this.rgbNoSatVal[0] +
-      ", " +
-      this.rgbNoSatVal[1] +
-      ", " +
-      this.rgbNoSatVal[2] +
-      ")";
-    this.dragger.style.backgroundColor = flatColor;
-
-    // Set dragger aria attributes
-    this.dragger.setAttribute("aria-valuetext", this.rgbCssString);
-  },
-
-  updateHueSlider: function() {
-    // Set hue slider aria attributes
-    this.hueSlider.setAttribute("aria-valuetext", this.rgbCssString);
-  },
-
-  updateHelperLocations: function() {
-    const h = this.hsv[0];
-    const s = this.hsv[1];
-    const v = this.hsv[2];
-
-    // Placing the color dragger
-    let dragX = s * this.dragWidth;
-    let dragY = this.dragHeight - v * this.dragHeight;
-    const helperDim = this.dragHelperHeight / 2;
-
-    dragX = Math.max(
-      -helperDim,
-      Math.min(this.dragWidth - helperDim, dragX - helperDim)
-    );
-    dragY = Math.max(
-      -helperDim,
-      Math.min(this.dragHeight - helperDim, dragY - helperDim)
-    );
-
-    this.dragHelper.style.top = dragY + "px";
-    this.dragHelper.style.left = dragX + "px";
-
-    // Placing the hue slider
-    this.hueSlider.value = h * this.hueSlider.max;
-
-    // Placing the alpha slider
-    this.alphaSlider.value = this.hsv[3] * this.alphaSlider.max;
-  },
-
-  /* Calculates the contrast ratio for the currently selected
-   * color against a single or range of background colors and displays contrast ratio section
-   * components depending on the contrast ratio calculated.
-   *
-   * Contrast ratio components include:
-   *    - contrastLargeTextIndicator: Hidden by default, shown when text has large font
-   *                                  size if there is no error in calculation.
-   *    - contrastValue(s):           Set to calculated value(s), score(s) and text color on
-   *                                  background swatches. Set to error text
-   *                                  if there is an error in calculation.
-   */
-  updateContrast: function() {
-    // Remove additional classes on spectrum contrast, leaving behind only base classes
-    this.spectrumContrast.classList.toggle("visible", false);
-    this.spectrumContrast.classList.toggle("range", false);
-    this.spectrumContrast.classList.toggle("error", false);
-    // Assign only base class to all contrastValues, removing any score class
-    this.contrastValue.className = this.contrastValueMin.className = this.contrastValueMax.className =
-      "accessibility-contrast-value";
-
-    if (!this.contrastEnabled) {
-      return;
-    }
-
-    const isRange = this.backgroundColorData.min !== undefined;
-    this.spectrumContrast.classList.toggle("visible", true);
-    this.spectrumContrast.classList.toggle("range", isRange);
-
-    const colorContrast = getContrastRatio(
-      {
-        ...this.textProps,
-        color: this.rgbCssString,
-      },
-      this.backgroundColorData
-    );
-
-    const {
-      value,
-      min,
-      max,
-      score,
-      scoreMin,
-      scoreMax,
-      backgroundColor,
-      backgroundColorMin,
-      backgroundColorMax,
-      isLargeText,
-      error,
-    } = colorContrast;
-
-    if (error) {
-      this.updateContrastLabel(false);
-      this.spectrumContrast.classList.toggle("error", true);
-
-      // If current background color is a range, show the error text in the contrast range
-      // span. Otherwise, show it in the single contrast span.
-      const contrastValEl = isRange
-        ? this.contrastValueMin
-        : this.contrastValue;
-      contrastValEl.textContent = L10N.getStr("accessibility.contrast.error");
-      contrastValEl.title = L10N.getStr(
-        "accessibility.contrast.annotation.transparent.error"
-      );
-
-      return;
-    }
-
-    this.updateContrastLabel(isLargeText);
-    if (!isRange) {
-      this.updateContrastValueEl(
-        this.contrastValue,
-        score,
-        value,
-        backgroundColor
-      );
-
-      return;
-    }
-
-    this.updateContrastValueEl(
-      this.contrastValueMin,
-      scoreMin,
-      min,
-      backgroundColorMin
-    );
-    this.updateContrastValueEl(
-      this.contrastValueMax,
-      scoreMax,
-      max,
-      backgroundColorMax
-    );
-  },
-
-  updateUI: function() {
-    this.updateHelperLocations();
-
-    this.updateColorPreview();
-    this.updateDragger();
-    this.updateHueSlider();
-    this.updateAlphaSlider();
-    this.updateContrast();
-  },
-
-  destroy: function() {
-    this.element.removeEventListener("click", this.onElementClick);
-    this.hueSlider.removeEventListener("input", this.onHueSliderMove);
-    this.alphaSlider.removeEventListener("input", this.onAlphaSliderMove);
-
-    this.parentEl.removeChild(this.element);
-
-    this.dragger = this.dragHelper = null;
-    this.alphaSlider = null;
-    this.hueSlider = null;
-    this.colorPreview = null;
-    this.element = null;
-    this.parentEl = null;
-    this.spectrumContrast = null;
-    this.contrastValue = this.contrastValueMin = this.contrastValueMax = null;
-    this.contrastLabel = null;
-  },
-};
+module.exports = Spectrum;

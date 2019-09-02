@@ -17,6 +17,7 @@ import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoWebExecutor;
+import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebNotification;
@@ -45,6 +46,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -749,6 +751,26 @@ public class GeckoViewActivity extends AppCompatActivity {
         @Override
         public void onWebAppManifest(final GeckoSession session, JSONObject manifest) {
             Log.d(LOGTAG, "onWebAppManifest: " + manifest);
+        }
+
+        private boolean activeAlert = false;
+
+        @Override
+        public GeckoResult<SlowScriptResponse> onSlowScript(final GeckoSession geckoSession,
+                                                            final String scriptFileName) {
+            BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt) mTabSessionManager.getCurrentSession().getPromptDelegate();
+            if (prompt != null) {
+                GeckoResult<SlowScriptResponse> result = new GeckoResult<SlowScriptResponse>();
+                if (!activeAlert) {
+                    activeAlert = true;
+                    prompt.onSlowScriptPrompt(geckoSession, getString(R.string.slow_script), result);
+                }
+                return result.then(value -> {
+                    activeAlert = false;
+                    return GeckoResult.fromValue(value);
+                });
+            }
+            return null;
         }
     }
 

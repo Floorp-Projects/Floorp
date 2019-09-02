@@ -91,7 +91,7 @@ def get_client_id(state_dir):
     '''
     path = os.path.join(state_dir, 'telemetry_client_id.json')
     if os.path.exists(path):
-        with open(path, 'rb') as f:
+        with open(path, 'r') as f:
             return json.load(f)['client_id']
     import uuid
     # uuid4 is random, other uuid types may include identifiers from the local system.

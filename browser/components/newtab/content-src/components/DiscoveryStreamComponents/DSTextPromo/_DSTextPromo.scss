@@ -3,11 +3,12 @@
   max-width: 744px;
   margin: 16px auto;
 
-  img {
+  picture {
     width: 40px;
     height: 40px;
     margin: 0 12px 0 0;
     border-radius: 4px;
+    flex-shrink: 0;
   }
 
   .text {

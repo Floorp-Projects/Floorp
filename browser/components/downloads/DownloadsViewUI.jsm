@@ -327,8 +327,14 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    *        Downloads View.
    */
   showStatusWithDetails(stateLabel, hoverStatus) {
+    let referrer =
+      this.download.source.referrerInfo &&
+      this.download.source.referrerInfo.originalReferrer
+        ? this.download.source.referrerInfo.originalReferrer.spec
+        : null;
+
     let [displayHost] = DownloadUtils.getURIHost(
-      this.download.source.referrer || this.download.source.url
+      referrer || this.download.source.url
     );
     let [displayDate] = DownloadUtils.getReadableDates(
       new Date(this.download.endTime)

@@ -2,13 +2,14 @@
  * Test to ensure that load/decode notifications are delivered completely and
  * asynchronously when dealing with a file that's a 404.
  */
+/* import-globals-from async_load_tests.js */
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
+var ioService = Services.io;
 
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
   return ioService.newURI(

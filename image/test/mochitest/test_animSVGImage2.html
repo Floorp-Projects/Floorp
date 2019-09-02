@@ -96,7 +96,7 @@ function main() {
   takeReferenceSnapshot();
 
   // Create, customize & attach decoder observer
-  observer = new ImageDecoderObserverStub();
+  var observer = new ImageDecoderObserverStub();
   observer.frameUpdate = myOnFrameUpdate;
   gMyDecoderObserver =
     Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)

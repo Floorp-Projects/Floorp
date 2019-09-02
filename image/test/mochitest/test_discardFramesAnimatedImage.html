@@ -88,11 +88,11 @@ function step2() {
 
 function step3() {
   // Draw the images to canvas to force them to be decoded.
-  for (var i = 0; i < gImgs.length; i++) {
+  for (let i = 0; i < gImgs.length; i++) {
     drawCanvas(document.getElementById(gImgs[i]));
   }
 
-  for (var i = 0; i < gImgs.length; i++) {
+  for (let i = 0; i < gImgs.length; i++) {
     addCallbacks(document.getElementById(gImgs[i]), i);
   }
 
@@ -147,13 +147,13 @@ function checkIfLoaded() {
 function resetState() {
   gFinished = false;
   gCountingFrameUpdates = false;
-  for (var i = 0; i < gNumFrameUpdates.length; ++i) {
+  for (let i = 0; i < gNumFrameUpdates.length; ++i) {
     gNumFrameUpdates[i] = 0;
   }
-  for (var i = 0; i < gNumSnapShotChanges.length; ++i) {
+  for (let i = 0; i < gNumSnapShotChanges.length; ++i) {
     gNumSnapShotChanges[i] = 0;
   }
-  for (var i = 0; i < gLastSnapShot.length; ++i) {
+  for (let i = 0; i < gLastSnapShot.length; ++i) {
     gLastSnapShot[i] = null;
   }
 }

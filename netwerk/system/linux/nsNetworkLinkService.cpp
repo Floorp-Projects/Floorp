@@ -9,6 +9,7 @@
 #include "nsNetworkLinkService.h"
 #include "nsString.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
 
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Services.h"
@@ -108,6 +109,13 @@ nsresult nsNetworkLinkService::Shutdown() {
 
 void nsNetworkLinkService::OnNetworkChanged() {
   if (StaticPrefs::network_notify_changed()) {
+    if (!mNetworkChangeTime.IsNull()) {
+      mozilla::Telemetry::AccumulateTimeDelta(
+          mozilla::Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
+          mNetworkChangeTime);
+    }
+    mNetworkChangeTime = TimeStamp::Now();
+
     RefPtr<nsNetworkLinkService> self = this;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "nsNetworkLinkService::OnNetworkChanged",

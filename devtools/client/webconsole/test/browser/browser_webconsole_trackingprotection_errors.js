@@ -92,13 +92,19 @@ add_task(async function testLimitForeignCookieBlockedMessage() {
   await pushPref(COOKIE_BEHAVIOR_PREF, COOKIE_BEHAVIORS.LIMIT_FOREIGN);
   const { hud, win } = await openNewWindowAndConsole(TEST_URI);
 
-  const message = await waitFor(() =>
-    findMessage(
-      hud,
-      `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
-        `blocking all third-party storage access requests and content blocking is enabled`
-    )
+  const message = await waitFor(
+    () =>
+      findMessage(
+        hud,
+        `Request to access cookie or storage on ${BLOCKED_URL} was blocked because we are ` +
+          `blocking all third-party storage access requests and content blocking is enabled`
+      ),
+    "Wait for 'blocking all third-party storage access' message",
+    100
   );
+  ok(true, "Third-party storage access blocked message was displayed");
+
+  info("Check that clicking on the Learn More link works as expected");
   await testLearnMoreClickOpenNewTab(
     message,
     getStorageErrorUrl("CookieBlockedForeign")

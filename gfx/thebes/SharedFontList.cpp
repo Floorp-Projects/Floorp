@@ -757,7 +757,16 @@ Family* FontList::FindFamily(const nsCString& aName) {
   // style name from the end of the requested family name.
   // After the deferred font loader has finished, this is no longer needed as
   // the "real" family names will have been found in AliasFamilies() above.
-  if (!header.mAliasCount && aName.Contains(' ')) {
+  if (aName.Contains(' ')) {
+    auto pfl = gfxPlatformFontList::PlatformFontList();
+    if (header.mAliasCount) {
+      // Aliases have been fully loaded by the parent process, so just discard
+      // any stray mAliasTable and mLocalNameTable entries from earlier calls
+      // to this code, and return.
+      pfl->mAliasTable.Clear();
+      pfl->mLocalNameTable.Clear();
+      return nullptr;
+    }
     const nsLiteralCString kStyleSuffixes[] = {
         nsLiteralCString(" book"),   nsLiteralCString(" medium"),
         nsLiteralCString(" normal"), nsLiteralCString(" regular"),
@@ -776,10 +785,14 @@ Family* FontList::FindFamily(const nsCString& aName) {
           // (either it's already in mAliasTable, or it gets added there when
           // we call ReadFaceNamesForFamily on this candidate).
           Family* candidateFamily = &families[match];
-          auto pfl = gfxPlatformFontList::PlatformFontList();
           if (pfl->mAliasTable.Lookup(aName)) {
             return candidateFamily;
           }
+          // Note that ReadFaceNamesForFamily may store entries in mAliasTable
+          // (and mLocalNameTable), but if this is happening in a content
+          // process (which is the common case) those entries will not be saved
+          // into the shared font list; they're just used here until the "real"
+          // alias list is ready, then discarded.
           pfl->ReadFaceNamesForFamily(candidateFamily, false);
           if (pfl->mAliasTable.Lookup(aName)) {
             return candidateFamily;

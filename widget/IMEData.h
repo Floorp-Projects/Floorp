@@ -804,6 +804,14 @@ struct CandidateWindowPosition {
   bool mExcludeRect;
 };
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const IMEState::Enabled& aEnabled);
+std::ostream& operator<<(std::ostream& aStream, const IMEState::Open& aOpen);
+std::ostream& operator<<(std::ostream& aStream,
+                         const InputContextAction::Cause& aCause);
+std::ostream& operator<<(std::ostream& aStream,
+                         const InputContextAction::FocusChange& aFocusChange);
+
 }  // namespace widget
 }  // namespace mozilla
 

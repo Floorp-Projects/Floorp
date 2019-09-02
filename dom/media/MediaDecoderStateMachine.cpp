@@ -3776,13 +3776,13 @@ void MediaDecoderStateMachine::RemoveOutputStream(DOMMediaStream* aStream) {
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManager(
-    MediaStreamGraphImpl* aGraph) {
+    SharedDummyStream* aDummyStream) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
     return;
   }
-  mOutputStreamManager = new OutputStreamManager(aGraph, mOutputStreamPrincipal,
-                                                 mAbstractMainThread);
+  mOutputStreamManager = new OutputStreamManager(
+      aDummyStream, mOutputStreamPrincipal, mAbstractMainThread);
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManagerHasTracks(

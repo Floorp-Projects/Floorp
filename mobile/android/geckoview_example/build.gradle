@@ -22,6 +22,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    dexOptions {
+        javaMaxHeapSize "6g"
+    }
+
     buildTypes {
         release {
             minifyEnabled false

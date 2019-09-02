@@ -86,7 +86,9 @@ add_task(async function test_set_login() {
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
   let originInput = gLoginItem.shadowRoot.querySelector("input[name='origin']");
   is(originInput.value, TEST_LOGIN_1.origin, "origin should be populated");
-  is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
+  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
+  is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
+  is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when not editing");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
@@ -114,6 +116,16 @@ add_task(async function test_set_login() {
     ok(false, "right-clicking the .origin-input should not trigger the AboutLoginsOpenSite event");
   }, {once: true});
   synthesizeMouseAtCenter(originInput, {button: 2});
+
+  let loginNoUsername = Object.assign({}, TEST_LOGIN_1, {username: ""});
+  gLoginItem.setLogin(loginNoUsername);
+  ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
+  is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when username is not present and not editing");
+  let copyUsernameButton = gLoginItem.shadowRoot.querySelector(".copy-username-button");
+  ok(copyUsernameButton.disabled, "The copy-username-button should be disabled if there is no username");
+
+  gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  is(document.l10n.getAttributes(usernameInput).id, null, "username field should have no placeholder when editing");
 });
 
 add_task(async function test_update_breaches() {
@@ -147,7 +159,9 @@ add_task(async function test_edit_login() {
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
-  is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
+  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
+  is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
+  is(document.l10n.getAttributes(usernameInput).id, null, "username field should have no placeholder in edit mode");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
@@ -155,7 +169,7 @@ add_task(async function test_edit_login() {
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when editing a login");
 
-  gLoginItem.shadowRoot.querySelector("input[name='username']").value = "newUsername";
+  usernameInput.value = "newUsername";
   gLoginItem.shadowRoot.querySelector("input[name='password']").value = "newPassword";
 
   let updateEventDispatched = false;
@@ -202,6 +216,13 @@ add_task(async function test_reveal_password_change_selected_login() {
   await SimpleTest.promiseWaitForCondition(() => passwordInput.type == "text",
     "waiting for password input type to change after checking for master password");
   is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
+
+  let editButton = gLoginItem.shadowRoot.querySelector(".edit-button");
+  editButton.click();
+  ok(revealCheckbox.checked, "reveal-checkbox should remain checked when entering 'edit' mode");
+  gLoginItem.shadowRoot.querySelector(".cancel-button").click();
+  ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked after canceling 'edit' mode");
+  revealCheckbox.click();
 
   gLoginItem.setLogin(TEST_LOGIN_2);
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked when changing logins");

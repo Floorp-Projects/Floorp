@@ -86,8 +86,8 @@ CallObject* CallObject::create(JSContext* cx, HandleShape shape,
   MOZ_ASSERT(!group->singleton());
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &CallObject::class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
 
@@ -117,8 +117,8 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
   }
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   // The JITs assume the result is nursery allocated unless we collected the
   // nursery, so don't change |heap| here.
@@ -255,8 +255,8 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
   }
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   {
     AutoSweepObjectGroup sweep(group);
@@ -387,8 +387,8 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   }
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
@@ -601,8 +601,8 @@ WasmInstanceEnvironmentObject::createHollowForDebug(
   }
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
@@ -637,8 +637,8 @@ WasmFunctionCallObject* WasmFunctionCallObject::createHollowForDebug(
   }
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
-  kind = gc::GetBackgroundAllocKind(kind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, &class_));
+  kind = gc::ForegroundToBackgroundAllocKind(kind);
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
@@ -912,9 +912,9 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
   // nursery, so don't change |heap| here.
 
   gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());
-  MOZ_ASSERT(
-      CanBeFinalizedInBackground(allocKind, &LexicalEnvironmentObject::class_));
-  allocKind = GetBackgroundAllocKind(allocKind);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind,
+                                            &LexicalEnvironmentObject::class_));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(

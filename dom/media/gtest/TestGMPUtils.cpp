@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace mozilla;
 
 void TestSplitAt(const char* aInput, const char* aDelims,
@@ -60,7 +59,7 @@ TEST(GeckoMediaPlugins, ToHexString)
 {
   struct Test {
     nsTArray<uint8_t> bytes;
-    string hex;
+    std::string hex;
   };
 
   static const Test tests[] = {

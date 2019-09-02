@@ -20,12 +20,29 @@ add_task(async function test_proc_info() {
         let parentProc = await ChromeUtils.requestProcInfo();
         cpuUser += parentProc.cpuUser;
 
+        Assert.equal(
+          parentProc.type,
+          "browser",
+          "Parent proc type should be browser"
+        );
+
         for (var x = 0; x < parentProc.threads.length; x++) {
           cpuThreads += parentProc.threads[x].cpuUser;
         }
 
         for (var i = 0; i < parentProc.children.length; i++) {
           let childProc = parentProc.children[i];
+          Assert.notEqual(
+            childProc.type,
+            "browser",
+            "Child proc type should not be browser"
+          );
+          Assert.notEqual(
+            childProc.type,
+            "unknown",
+            "Child proc type should be known"
+          );
+
           for (var y = 0; y < childProc.threads.length; y++) {
             cpuThreads += childProc.threads[y].cpuUser;
           }

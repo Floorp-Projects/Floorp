@@ -120,6 +120,10 @@ ReplayDebugger.prototype = {
     return this._control.cachedPoints();
   },
 
+  replayDebuggerRequests() {
+    return this._control.debuggerRequests();
+  },
+
   addDebuggee() {},
   removeAllDebuggees() {},
 
@@ -1036,6 +1040,7 @@ function ReplayDebuggerObject(dbg, data) {
   this._data = data;
   this._preview = null;
   this._properties = null;
+  this._containerContents = null;
 }
 
 ReplayDebuggerObject.prototype = {
@@ -1043,6 +1048,7 @@ ReplayDebuggerObject.prototype = {
     this._data = null;
     this._preview = null;
     this._properties = null;
+    this._containerContents = null;
   },
 
   toString() {
@@ -1130,6 +1136,7 @@ ReplayDebuggerObject.prototype = {
   },
 
   getOwnPropertyDescriptor(name) {
+    name = name.toString();
     if (this._preview) {
       if (this._preview.enumerableOwnProperties) {
         const desc = this._preview.enumerableOwnProperties.get(name);
@@ -1176,6 +1183,29 @@ ReplayDebuggerObject.prototype = {
       rv.set = this._dbg._getObject(desc.set);
     }
     return rv;
+  },
+
+  containerContents(forPreview = false) {
+    let contents;
+    if (forPreview && this._preview && this._preview.containerContents) {
+      contents = this._preview.containerContents;
+    } else {
+      if (!this._containerContents) {
+        const id = this._data.id;
+        this._containerContents = this._dbg._sendRequestAllowDiverge(
+          { type: "getObjectContainerContents", id },
+          []
+        );
+      }
+      contents = this._containerContents;
+    }
+    return contents.map(value => {
+      // Watch for [key, value] pairs in maps.
+      if (value.length == 2) {
+        return value.map(v => this._dbg._convertValue(v));
+      }
+      return this._dbg._convertValue(value);
+    });
   },
 
   unwrap() {
@@ -1256,7 +1286,31 @@ ReplayDebuggerObject.prototype = {
   executeInGlobal: NYI,
   executeInGlobalWithBindings: NYI,
 
-  makeDebuggeeValue: NotAllowed,
+  getTypedArrayLength() {
+    return this._data.typedArrayLength;
+  },
+
+  getContainerSize() {
+    return this._data.containerSize;
+  },
+
+  getRegExpString() {
+    return this._data.regExpString;
+  },
+
+  getDateTime() {
+    return this._data.dateTime;
+  },
+
+  getErrorProperties() {
+    return this._data.errorProperties;
+  },
+
+  makeDebuggeeValue(obj) {
+    assert(obj instanceof ReplayDebuggerObject);
+    return obj;
+  },
+
   preventExtensions: NotAllowed,
   seal: NotAllowed,
   freeze: NotAllowed,

@@ -22,7 +22,7 @@ LOCAL_INCLUDES += [
     '/xpcom/threads',
 ]
 
-SPHINX_TREES['telemetry'] = 'docs'
+SPHINX_TREES['/toolkit/components/telemetry'] = 'docs'
 
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']

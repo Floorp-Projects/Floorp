@@ -46,7 +46,7 @@
 
 .layout-container li {
   padding: 3px 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .layout-container input {
@@ -78,7 +78,7 @@
 .layout-properties-header {
   font-size: 12px;
   padding: 2px 3px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .layout-properties-expander {
@@ -145,7 +145,7 @@ html[dir="rtl"] .flex-header-button-prev::before {
   flex: 1;
   padding: 2px 0;
   padding-inline-start: 20px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .flex-header-content:not(.flex-item-shown) {
@@ -199,7 +199,7 @@ html[dir="rtl"] .flex-header-button-prev::before {
   color: var(--theme-comment);
   padding-inline-start: 23px;
   margin-bottom: 4px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .flex-item-list .devtools-button {
@@ -417,7 +417,7 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 
 .flex-outline-point {
   position: relative;
-  -moz-user-select: none;
+  user-select: none;
   grid-row: 1;
   display: grid;
 }

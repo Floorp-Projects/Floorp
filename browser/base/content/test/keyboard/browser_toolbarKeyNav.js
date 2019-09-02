@@ -403,3 +403,52 @@ add_task(async function testArrowKeyForTPIconContainerandIdentityBox() {
     );
   });
 });
+
+// Test navigation by typed characters.
+add_task(async function testCharacterNavigation() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+    await waitUntilReloadEnabled();
+    startFromUrlBar();
+    await expectFocusAfterKey("Tab", "pageActionButton");
+    await expectFocusAfterKey("h", "home-button");
+    // There's no button starting with "hs", so pressing s should do nothing.
+    EventUtils.synthesizeKey("s");
+    is(
+      document.activeElement.id,
+      "home-button",
+      "home-button still focused after s pressed"
+    );
+    // Escape should reset the search.
+    EventUtils.synthesizeKey("KEY_Escape");
+    // Now that the search is reset, pressing s should focus Save to Pocket.
+    await expectFocusAfterKey("s", "pocket-button");
+    // Pressing i makes the search "si", so it should focus Sidebars.
+    await expectFocusAfterKey("i", "sidebar-button");
+    // Reset the search.
+    EventUtils.synthesizeKey("KEY_Escape");
+    await expectFocusAfterKey("s", "pocket-button");
+    // Pressing s again should find the next button starting with s: Sidebars.
+    await expectFocusAfterKey("s", "sidebar-button");
+  });
+});
+
+// Test that toolbar character navigation doesn't trigger in PanelMultiView for
+// a panel anchored to the toolbar.
+// We do this by opening the Library menu and ensuring that pressing s
+// does nothing.
+// This test should be removed if PanelMultiView implements character
+// navigation.
+add_task(async function testCharacterInPanelMultiView() {
+  let button = document.getElementById("library-button");
+  forceFocus(button);
+  let view = document.getElementById("appMenu-libraryView");
+  let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
+  EventUtils.synthesizeKey(" ");
+  let focusEvt = await focused;
+  ok(true, "Focus inside Library menu after toolbar button pressed");
+  EventUtils.synthesizeKey("s");
+  is(document.activeElement, focusEvt.target, "s inside panel does nothing");
+  let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
+  view.closest("panel").hidePopup();
+  await hidden;
+});

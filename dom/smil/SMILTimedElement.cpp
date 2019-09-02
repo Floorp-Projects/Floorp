@@ -1714,7 +1714,7 @@ SMILTimeValue SMILTimedElement::GetRepeatDuration() const {
   SMILTimeValue multipliedDuration;
   if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
     if (mRepeatCount * double(mSimpleDur.GetMillis()) <
-        std::numeric_limits<SMILTime>::max()) {
+        double(std::numeric_limits<SMILTime>::max())) {
       multipliedDuration.SetMillis(
           SMILTime(mRepeatCount * mSimpleDur.GetMillis()));
     }
@@ -1977,7 +1977,7 @@ nsresult SMILTimedElement::AddInstanceTimeFromCurrentTime(SMILTime aCurrentTime,
   double offset = NS_round(aOffsetSeconds * PR_MSEC_PER_SEC);
 
   // Check we won't overflow the range of SMILTime
-  if (aCurrentTime + offset > std::numeric_limits<SMILTime>::max())
+  if (aCurrentTime + offset > double(std::numeric_limits<SMILTime>::max()))
     return NS_ERROR_ILLEGAL_VALUE;
 
   SMILTimeValue timeVal(aCurrentTime + int64_t(offset));

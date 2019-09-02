@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![doc(html_root_url = "https://docs.rs/encoding_c/0.9.0")]
+#![doc(html_root_url = "https://docs.rs/encoding_c/0.9.1")]
 
 //! The C API for encoding_rs.
 //!
@@ -409,6 +409,22 @@ pub unsafe extern "C" fn encoding_can_encode_everything(encoding: *const Encodin
 #[no_mangle]
 pub unsafe extern "C" fn encoding_is_ascii_compatible(encoding: *const Encoding) -> bool {
     (*encoding).is_ascii_compatible()
+}
+
+/// Checks whether this encoding maps one byte to one Basic Multilingual
+/// Plane code point (i.e. byte length equals decoded UTF-16 length) and
+/// vice versa (for mappable characters).
+///
+/// `true` iff this encoding is on the list of [Legacy single-byte
+/// encodings](https://encoding.spec.whatwg.org/#legacy-single-byte-encodings)
+/// in the spec or x-user-defined.
+///
+/// # Undefined behavior
+///
+/// UB ensues if the argument is `NULL`.
+#[no_mangle]
+pub unsafe extern "C" fn encoding_is_single_byte(encoding: *const Encoding) -> bool {
+    (*encoding).is_single_byte()
 }
 
 /// Returns the _output encoding_ of this encoding. This is UTF-8 for

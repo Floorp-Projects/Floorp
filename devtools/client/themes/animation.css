@@ -92,7 +92,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animation-list-container {
   overflow: hidden;
   width: 100%;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .animation-list-container.active-scrubber,
@@ -421,7 +421,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 .animated-property-list-container {
   flex: 1;
   overflow: hidden;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* Keyframes Progress Bar */

@@ -619,7 +619,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start gathering
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering, false,
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering, false, false,
                         false),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -634,7 +634,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   // New candidate
   void GotCandidate(NrIceMediaStream* stream, const std::string& candidate,
-                    const std::string& ufrag) {
+                    const std::string& ufrag, const std::string& mdns_addr,
+                    const std::string& actual_addr) {
     std::cerr << "Got candidate " << candidate << " (ufrag=" << ufrag << ")"
               << std::endl;
   }

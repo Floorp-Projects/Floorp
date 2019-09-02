@@ -69,6 +69,7 @@ exports.FILTER_TOGGLE = "FILTER_TOGGLE";
 exports.AUDIT = "AUDIT";
 exports.AUDITING = "AUDITING";
 exports.AUDIT_PROGRESS = "AUDIT_PROGRESS";
+exports.SIMULATE = "SIMULATE";
 
 // List of filters for accessibility checks.
 exports.FILTERS = {
@@ -122,6 +123,8 @@ exports.A11Y_LEARN_MORE_LINK =
 exports.A11Y_CONTRAST_LEARN_MORE_LINK =
   "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Perceivable/" +
   "Color_contrast?utm_source=devtools&utm_medium=a11y-panel-checks-color-contrast";
+exports.A11Y_SIMULATION_DOCUMENTATION_LINK =
+  "https://developer.mozilla.org/docs/Tools/Accessibility_inspector/Simulation";
 
 const A11Y_TEXT_LABEL_LINK_BASE =
   "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Text_labels_and_names" +

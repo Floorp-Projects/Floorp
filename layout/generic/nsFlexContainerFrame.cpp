@@ -4503,9 +4503,10 @@ nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
 
       flexFrame = GetFlexContainerFrame(weakFrameRef.GetFrame());
 
-      MOZ_ASSERT(!flexFrame || flexFrame->HasProperty(FlexContainerInfo()),
-                 "The state bit should've made our forced-reflow "
-                 "generate a FlexContainerInfo object");
+      NS_WARNING_ASSERTION(
+          !flexFrame || flexFrame->HasProperty(FlexContainerInfo()),
+          "The state bit should've made our forced-reflow "
+          "generate a FlexContainerInfo object");
     }
   }
   return flexFrame;

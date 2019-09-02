@@ -112,7 +112,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnded() override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -127,7 +127,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
-  void NotifyRemoved() override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     if (!mShutdown) {
       nsresult rv = mEncoderThread->Dispatch(
           NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
@@ -246,7 +246,8 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnabledStateChanged(bool aEnabled) override {
+  void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
+                                 bool aEnabled) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -268,7 +269,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnded() override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -283,7 +284,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
     Unused << rv;
   }
 
-  void NotifyRemoved() override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     if (!mShutdown) {
       nsresult rv = mEncoderThread->Dispatch(
           NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
