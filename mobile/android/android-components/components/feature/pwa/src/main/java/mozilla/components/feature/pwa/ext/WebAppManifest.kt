@@ -28,7 +28,6 @@ fun WebAppManifest.toTaskDescription(icon: Bitmap?) =
  */
 fun WebAppManifest.toCustomTabConfig() =
     CustomTabConfig(
-        id = startUrl,
         toolbarColor = themeColor,
         navigationBarColor = backgroundColor?.let {
             if (isDark(it)) Color.BLACK else Color.WHITE

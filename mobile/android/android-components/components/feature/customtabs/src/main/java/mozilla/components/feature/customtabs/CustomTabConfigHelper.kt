@@ -38,7 +38,6 @@ import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
 import mozilla.components.support.utils.toSafeIntent
-import java.util.UUID
 import kotlin.math.max
 
 /**
@@ -88,7 +87,6 @@ fun createCustomTabConfigFromIntent(
     val safeIntent = intent.toSafeIntent()
 
     return CustomTabConfig(
-        id = UUID.randomUUID().toString(),
         toolbarColor = safeIntent.getColorExtra(EXTRA_TOOLBAR_COLOR),
         navigationBarColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_COLOR),
         closeButtonIcon = getCloseButtonIcon(safeIntent, resources),
