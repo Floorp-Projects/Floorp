@@ -42,6 +42,10 @@ class TextRenderer final {
                   uint32_t aTargetPixelWidth,
                   FontType aFontType = FontType::Default);
 
+  gfx::IntSize ComputeSurfaceSize(const std::string& aText,
+                                  uint32_t aTargetPixelWidth,
+                                  FontType aFontType = FontType::Default);
+
   struct FontCache {
     ~FontCache();
     RefPtr<gfx::DataSourceSurface> mGlyphBitmaps;

@@ -80,12 +80,11 @@ void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
   aCompositor->DrawQuad(Rect(drawRect), clip, chain, 1.0f, transform);
 }
 
-RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
-                                               const string& aText,
-                                               uint32_t aTargetPixelWidth,
-                                               FontType aFontType) {
+IntSize TextRenderer::ComputeSurfaceSize(const string& aText,
+                                         uint32_t aTargetPixelWidth,
+                                         FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {
-    return nullptr;
+    return IntSize();
   }
 
   FontCache* cache = mFonts[aFontType].get();
@@ -110,7 +109,18 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
     maxWidth = std::max(lineWidth, maxWidth);
   }
 
-  IntSize size(maxWidth, numLines * info->mCellHeight);
+  return IntSize(maxWidth, numLines * info->mCellHeight);
+}
+
+RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
+                                               const string& aText,
+                                               uint32_t aTargetPixelWidth,
+                                               FontType aFontType) {
+  if (!EnsureInitialized(aFontType)) {
+    return nullptr;
+  }
+
+  IntSize size = ComputeSurfaceSize(aText, aTargetPixelWidth, aFontType);
 
   // Create a DrawTarget to draw our glyphs to.
   RefPtr<DrawTarget> dt =
@@ -122,6 +132,9 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
                DrawOptions(1.0, CompositionOp::OP_SOURCE));
 
   IntPoint currentPos;
+
+  FontCache* cache = mFonts[aFontType].get();
+  const FontBitmapInfo* info = cache->mInfo;
 
   const unsigned int kGlyphsPerLine = info->mTextureWidth / info->mCellWidth;
 
