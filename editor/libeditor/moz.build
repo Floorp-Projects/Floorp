@@ -62,7 +62,6 @@ UNIFIED_SOURCES += [
     'HTMLInlineTableEditor.cpp',
     'HTMLStyleEditor.cpp',
     'HTMLTableEditor.cpp',
-    'HTMLURIRefObject.cpp',
     'InsertNodeTransaction.cpp',
     'InsertTextTransaction.cpp',
     'InternetCiter.cpp',

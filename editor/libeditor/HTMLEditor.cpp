@@ -25,7 +25,6 @@
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
-#include "HTMLURIRefObject.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 
@@ -38,7 +37,6 @@
 #include "mozilla/css/Loader.h"
 
 #include "nsIContent.h"
-#include "nsIMutableArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
 #include "nsGenericHTMLElement.h"
@@ -3045,39 +3043,6 @@ nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
                                                 *nsGkAtoms::bgcolor, aColor)
                   : RemoveAttributeWithTransaction(
                         *rootElementOfBackgroundColor, *nsGkAtoms::bgcolor);
-}
-
-NS_IMETHODIMP
-HTMLEditor::GetLinkedObjects(nsIArray** aNodeList) {
-  NS_ENSURE_TRUE(aNodeList, NS_ERROR_NULL_POINTER);
-
-  nsresult rv;
-  nsCOMPtr<nsIMutableArray> nodes = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  RefPtr<Document> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  PostContentIterator postOrderIter;
-  postOrderIter.Init(doc->GetRootElement());
-
-  // loop through the content iterator for each content node
-  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
-    nsCOMPtr<nsINode> node = postOrderIter.GetCurrentNode();
-    if (node) {
-      // Let nsURIRefObject make the hard decisions:
-      nsCOMPtr<nsIURIRefObject> refObject;
-      rv = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
-      if (NS_SUCCEEDED(rv)) {
-        nodes->AppendElement(refObject);
-      }
-    }
-  }
-
-  nodes.forget(aNodeList);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
