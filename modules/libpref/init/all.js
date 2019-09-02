@@ -244,9 +244,6 @@ pref("browser.download.forbid_open_with", false);
 // Insecure registerProtocolHandler is disabled by default
 pref("dom.registerProtocolHandler.insecure.enabled", false);
 
-// Whether or not testing features are enabled.
-pref("dom.quotaManager.testing", false);
-
 // Whether or not indexedDB is enabled.
 pref("dom.indexedDB.enabled", true);
 // Whether or not indexedDB experimental features are enabled.
@@ -310,12 +307,7 @@ pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl", "")
 // explanation for the detail.
 pref("dom.mouseevent.click.hack.use_legacy_non-primary_dispatch", "");
 
-// Whether InputEvent.dataTransfer is enabled.
-pref("dom.inputevent.datatransfer.enabled", true);
-
 #ifdef JS_BUILD_BINAST
-  pref("dom.script_loader.binast_encoding.enabled", false);
-
   // Until we're satisfied that it works nicely, we're restricting
   // BinAST to a few partner sites:
   // - A subset of Facebook
@@ -2942,8 +2934,6 @@ pref("dom.ipc.plugins.reportCrashURL", true);
 // Defaults to 30 seconds.
 pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 
-// Allow Flash async drawing mode in 64-bit release builds
-pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 // Force the accelerated direct path for a subset of Flash wmode values
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 
@@ -4699,31 +4689,6 @@ pref("io.activity.enabled", false);
 // to take effect.
 pref("jsloader.shareGlobal", true);
 
-// It is often desirable to automatically start vr presentation when
-// a user puts on the VR headset.  This is done by emitting the
-// Window.vrdisplayactivate event when the headset's sensors detect it
-// being worn.  This can result in WebVR content taking over the headset
-// when the user is using it outside the browser or inadvertent start of
-// presentation due to the high sensitivity of the proximity sensor in some
-// headsets, so it is off by default.
-pref("dom.vr.autoactivate.enabled", false);
-// The threshold value of trigger inputs for VR controllers
-pref("dom.vr.controller_trigger_threshold", "0.1");
-// Minimum number of milliseconds the browser will wait before attempting
-// to re-start the VR service after an enumeration returned no devices.
-pref("dom.vr.external.notdetected.timeout", 60000);
-// Minimum number of milliseconds the browser will wait before attempting
-// to re-start the VR service after a VR API (eg, OpenVR or Oculus)
-// requests that we shutdown and unload its libraries.
-// To ensure that we don't interfere with VR runtime software auto-updates,
-// we will not attempt to re-load the service until this timeout has elapsed.
-pref("dom.vr.external.quit.timeout", 10000);
-// Maximum number of milliseconds the browser will wait for content to call
-// VRDisplay.requestPresent after emitting vrdisplayactivate during VR
-// link traversal.  This prevents a long running event handler for
-// vrdisplayactivate from later calling VRDisplay.requestPresent, which would
-// result in a non-responsive browser in the VR headset.
-pref("dom.vr.navigation.timeout", 5000);
 // path to OSVR DLLs
 pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");
