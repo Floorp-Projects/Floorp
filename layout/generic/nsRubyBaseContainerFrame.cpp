@@ -359,12 +359,13 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   GetIsLineBreakAllowed(this, aReflowInput.mLineLayout->LineIsBreakable(),
                         &allowInitialLineBreak, &allowLineBreak);
 
-  nscoord isize = 0;
   // Reflow columns excluding any span
   RubyReflowInput reflowInput = {allowInitialLineBreak,
                                  allowLineBreak && !hasSpan, textContainers,
                                  aReflowInput, reflowInputs};
-  isize = ReflowColumns(reflowInput, aStatus);
+  aDesiredSize.BSize(lineWM) = 0;
+  aDesiredSize.SetBlockStartAscent(0);
+  nscoord isize = ReflowColumns(reflowInput, aDesiredSize, aStatus);
   DebugOnly<nscoord> lineSpanSize = aReflowInput.mLineLayout->EndSpan(this);
   aDesiredSize.ISize(lineWM) = isize;
   // When there are no frames inside the ruby base container, EndSpan
@@ -408,13 +409,6 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     textContainer->SetISize(rtcISize);
     lineLayout->EndLineReflow();
   }
-
-  // Border and padding are suppressed on ruby base container,
-  // create a fake borderPadding for setting BSize.
-  WritingMode frameWM = aReflowInput.GetWritingMode();
-  LogicalMargin borderPadding(frameWM);
-  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
-                                         lineWM, frameWM);
 }
 
 /**
@@ -432,7 +426,8 @@ struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState {
 };
 
 nscoord nsRubyBaseContainerFrame::ReflowColumns(
-    const RubyReflowInput& aReflowInput, nsReflowStatus& aStatus) {
+    const RubyReflowInput& aReflowInput, ReflowOutput& aDesiredSize,
+    nsReflowStatus& aStatus) {
   nsLineLayout* lineLayout = aReflowInput.mBaseReflowInput.mLineLayout;
   const uint32_t rtcCount = aReflowInput.mTextContainers.Length();
   nscoord icoord = lineLayout->GetCurrentICoord();
@@ -446,7 +441,8 @@ nscoord nsRubyBaseContainerFrame::ReflowColumns(
   RubyColumnEnumerator e(this, aReflowInput.mTextContainers);
   for (; !e.AtEnd(); e.Next()) {
     e.GetColumn(column);
-    icoord += ReflowOneColumn(aReflowInput, columnIndex, column, reflowStatus);
+    icoord += ReflowOneColumn(aReflowInput, columnIndex, column, aDesiredSize,
+                              reflowStatus);
     if (!reflowStatus.IsInlineBreakBefore()) {
       columnIndex++;
     }
@@ -470,7 +466,8 @@ nscoord nsRubyBaseContainerFrame::ReflowColumns(
       // No more frames can be pulled.
       break;
     }
-    icoord += ReflowOneColumn(aReflowInput, columnIndex, column, reflowStatus);
+    icoord += ReflowOneColumn(aReflowInput, columnIndex, column, aDesiredSize,
+                              reflowStatus);
     if (!reflowStatus.IsInlineBreakBefore()) {
       columnIndex++;
     }
@@ -540,7 +537,8 @@ nscoord nsRubyBaseContainerFrame::ReflowColumns(
 
 nscoord nsRubyBaseContainerFrame::ReflowOneColumn(
     const RubyReflowInput& aReflowInput, uint32_t aColumnIndex,
-    const RubyColumn& aColumn, nsReflowStatus& aStatus) {
+    const RubyColumn& aColumn, ReflowOutput& aDesiredSize,
+    nsReflowStatus& aStatus) {
   const ReflowInput& baseReflowInput = aReflowInput.mBaseReflowInput;
   const auto& textReflowInputs = aReflowInput.mTextReflowInputs;
   nscoord istart = baseReflowInput.mLineLayout->GetCurrentICoord();
@@ -624,8 +622,10 @@ nscoord nsRubyBaseContainerFrame::ReflowOneColumn(
     bool pushedFrame;
     nsReflowStatus reflowStatus;
     nsLineLayout* lineLayout = baseReflowInput.mLineLayout;
+    WritingMode lineWM = lineLayout->GetWritingMode();
     nscoord baseIStart = lineLayout->GetCurrentICoord();
-    lineLayout->ReflowFrame(aColumn.mBaseFrame, reflowStatus, nullptr,
+    ReflowOutput metrics(lineWM);
+    lineLayout->ReflowFrame(aColumn.mBaseFrame, reflowStatus, &metrics,
                             pushedFrame);
     if (MOZ_UNLIKELY(reflowStatus.IsInlineBreak() || pushedFrame)) {
       MOZ_ASSERT_UNREACHABLE(
@@ -636,6 +636,17 @@ nscoord nsRubyBaseContainerFrame::ReflowOneColumn(
     }
     nscoord baseISize = lineLayout->GetCurrentICoord() - baseIStart;
     columnISize = std::max(columnISize, baseISize);
+    // Calculate ascent & descent of the base frame and update desired
+    // size of this base container accordingly.
+    nscoord oldAscent = aDesiredSize.BlockStartAscent();
+    nscoord oldDescent = aDesiredSize.BSize(lineWM) - oldAscent;
+    nscoord baseAscent = metrics.BlockStartAscent();
+    nscoord baseDesent = metrics.BSize(lineWM) - baseAscent;
+    LogicalMargin margin = aColumn.mBaseFrame->GetLogicalUsedMargin(lineWM);
+    nscoord newAscent = std::max(baseAscent + margin.BStart(lineWM), oldAscent);
+    nscoord newDescent = std::max(baseDesent + margin.BEnd(lineWM), oldDescent);
+    aDesiredSize.SetBlockStartAscent(newAscent);
+    aDesiredSize.BSize(lineWM) = newAscent + newDescent;
   }
 
   // Align all the line layout to the new coordinate.
