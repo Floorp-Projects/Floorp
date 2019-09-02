@@ -188,9 +188,31 @@ void nsCounterList::RecalcAll() {
   }
 }
 
+static bool AddCounterChangeNode(nsCounterManager& aManager, nsIFrame* aFrame,
+                                 int32_t aIndex,
+                                 const nsStyleContent::CounterPair& aPair,
+                                 nsCounterNode::Type aType) {
+  auto* node = new nsCounterChangeNode(aFrame, aType, aPair.value, aIndex);
+  nsCounterList* counterList = aManager.CounterListFor(aPair.name.AsAtom());
+  counterList->Insert(node);
+  if (!counterList->IsLast(node)) {
+    // Tell the caller it's responsible for recalculating the entire
+    // list.
+    counterList->SetDirty();
+    return true;
+  }
+
+  // Don't call Calc() if the list is already dirty -- it'll be recalculated
+  // anyway, and trying to calculate with a dirty list doesn't work.
+  if (MOZ_LIKELY(!counterList->IsDirty())) {
+    node->Calc(counterList);
+  }
+  return false;
+}
+
 static bool HasCounters(const nsStyleContent& aStyle) {
-  return aStyle.CounterIncrementCount() || aStyle.CounterResetCount() ||
-         aStyle.CounterSetCount();
+  return !aStyle.mCounterIncrement.IsEmpty() ||
+         !aStyle.mCounterReset.IsEmpty() || !aStyle.mCounterSet.IsEmpty();
 }
 
 bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
@@ -217,54 +239,42 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
   bool dirty = false;
   // Add in order, resets first, so all the comparisons will be optimized
   // for addition at the end of the list.
-  for (int32_t i : IntegerRange(styleContent->CounterResetCount())) {
-    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterResetAt(i),
-                                  nsCounterChangeNode::RESET);
+  {
+    int32_t i = 0;
+    for (const auto& pair : styleContent->mCounterReset.AsSpan()) {
+      dirty |= AddCounterChangeNode(*this, aFrame, i++, pair,
+                                    nsCounterChangeNode::RESET);
+    }
   }
   bool hasListItemIncrement = false;
-  for (int32_t i : IntegerRange(styleContent->CounterIncrementCount())) {
-    const nsStyleCounterData& increment = styleContent->CounterIncrementAt(i);
-    hasListItemIncrement |= increment.mCounter == nsGkAtoms::list_item;
-    dirty |= AddCounterChangeNode(aFrame, i, increment,
-                                  nsCounterChangeNode::INCREMENT);
+  {
+    int32_t i = 0;
+    for (const auto& pair : styleContent->mCounterIncrement.AsSpan()) {
+      hasListItemIncrement |= pair.name.AsAtom() == nsGkAtoms::list_item;
+      dirty |= AddCounterChangeNode(*this, aFrame, i++, pair,
+                                    nsCounterChangeNode::INCREMENT);
+    }
   }
+
   if (requiresListItemIncrement && !hasListItemIncrement) {
     bool reversed =
         aFrame->StyleList()->mMozListReversed == StyleMozListReversed::True;
-    nsStyleCounterData listItemIncrement{nsGkAtoms::list_item,
-                                         reversed ? -1 : 1};
-    dirty |=
-        AddCounterChangeNode(aFrame, styleContent->CounterIncrementCount() + 1,
-                             listItemIncrement, nsCounterChangeNode::INCREMENT);
+    RefPtr<nsAtom> atom = nsGkAtoms::list_item;
+    auto listItemIncrement = nsStyleContent::CounterPair{
+        {StyleAtom(atom.forget())}, reversed ? -1 : 1};
+    dirty |= AddCounterChangeNode(
+        *this, aFrame, styleContent->mCounterIncrement.Length(),
+        listItemIncrement, nsCounterChangeNode::INCREMENT);
   }
-  for (int32_t i : IntegerRange(styleContent->CounterSetCount())) {
-    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterSetAt(i),
-                                  nsCounterChangeNode::SET);
+
+  {
+    int32_t i = 0;
+    for (const auto& pair : styleContent->mCounterSet.AsSpan()) {
+      dirty |= AddCounterChangeNode(*this, aFrame, i++, pair,
+                                    nsCounterChangeNode::SET);
+    }
   }
   return dirty;
-}
-
-bool nsCounterManager::AddCounterChangeNode(
-    nsIFrame* aFrame, int32_t aIndex, const nsStyleCounterData& aCounterData,
-    nsCounterNode::Type aType) {
-  nsCounterChangeNode* node =
-      new nsCounterChangeNode(aFrame, aType, aCounterData.mValue, aIndex);
-
-  nsCounterList* counterList = CounterListFor(aCounterData.mCounter);
-  counterList->Insert(node);
-  if (!counterList->IsLast(node)) {
-    // Tell the caller it's responsible for recalculating the entire
-    // list.
-    counterList->SetDirty();
-    return true;
-  }
-
-  // Don't call Calc() if the list is already dirty -- it'll be recalculated
-  // anyway, and trying to calculate with a dirty list doesn't work.
-  if (MOZ_LIKELY(!counterList->IsDirty())) {
-    node->Calc(counterList);
-  }
-  return false;
 }
 
 nsCounterList* nsCounterManager::CounterListFor(nsAtom* aCounterName) {
