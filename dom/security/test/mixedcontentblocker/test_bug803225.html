@@ -91,38 +91,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
       /* Mixed Script tests */
       case "about":
         ok(event.data.msg == "resource with about protocol loaded", "resource with about protocol did not load");
-        testsToRun["about"] = true;
+        testsToRun.about = true;
         break;
 
       case "resource":
         ok(event.data.msg == "resource with resource protocol loaded", "resource with resource protocol did not load");
-        testsToRun["resource"] = true;
+        testsToRun.resource = true;
         break;
 
       case "unsafe_about":
         // This one should not load
         ok(event.data.msg == "resource with unsafe about protocol did not load", "resource with unsafe about protocol loaded");
-        testsToRun["unsafe_about"] = true;
+        testsToRun.unsafe_about = true;
         break;
 
       case "data_protocol":
         ok(event.data.msg == "resource with data protocol loaded", "resource with data protocol did not load");
-        testsToRun["data_protocol"] = true;
+        testsToRun.data_protocol = true;
         break;
 
       case "javascript":
         ok(event.data.msg == "resource with javascript protocol loaded", "resource with javascript protocol did not load");
-        testsToRun["javascript"] = true;
+        testsToRun.javascript = true;
         break;
 
       case "wss":
         ok(event.data.msg == "resource with wss protocol loaded", "resource with wss protocol did not load");
-        testsToRun["wss"] = true;
+        testsToRun.wss = true;
         break;
 
       case "mailto":
         ok(event.data.msg == "resource with mailto protocol loaded", "resource with mailto protocol did not load");
-        testsToRun["mailto"] = true;
+        testsToRun.mailto = true;
         break;
     }
     checkTestsCompleted();

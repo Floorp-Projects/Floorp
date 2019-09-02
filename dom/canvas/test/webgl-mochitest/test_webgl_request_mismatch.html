@@ -9,7 +9,7 @@
 
 WEBGL_TYPES = {};
 WEBGL_TYPES['experimental-webgl'] = true;
-WEBGL_TYPES['webgl'] = true;
+WEBGL_TYPES.webgl = true;
 
 function AreBothIn(a, b, set) {
     return (a in set) && (b in set);
@@ -73,7 +73,7 @@ if (IsWebGLFunctional())
     functionalTypeSet['experimental-webgl'] = true;
 
 if (IsWebGLConformant())
-    functionalTypeSet['webgl'] = true;
+    functionalTypeSet.webgl = true;
 
 for (var i in typeList) {
     var creationType = typeList[i];

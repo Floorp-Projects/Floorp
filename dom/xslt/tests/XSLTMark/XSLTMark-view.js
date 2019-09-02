@@ -46,7 +46,7 @@ var view = {
       if (head.test(line)) {
         test = new Object();
         res = head.exec(line);
-        test["title"] = res[1];
+        test.title = res[1];
         this.testArray.push(test);
       } else if (line == "") {
         test = undefined;

@@ -47,7 +47,7 @@ if (self.Notification) {
         "data item 0 should be a matching string"
       );
       is(
-        notification.data[1]["structured"],
+        notification.data[1].structured,
         "cloned",
         "data item 1 should be a matching object literal"
       );
