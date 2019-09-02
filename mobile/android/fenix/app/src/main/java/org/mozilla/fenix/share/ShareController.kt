@@ -13,8 +13,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceEventOutgoing
-import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.TabData
+import mozilla.components.feature.sendtab.SendTabUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -37,15 +37,15 @@ interface ShareController {
  * Default behavior of [ShareController]. Other implementations are possible.
  *
  * @param fragment the [ShareFragment] instance this controller handles business logic for.
- * @param tabs the list of [ShareTab]s that can be shared.
- * @param account the [OAuthAccount] to which tabs can be shared.
+ * @param sharedTabs the list of [ShareTab]s that can be shared.
+ * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
  * @param navController - [NavController] used for navigation.
  * @param dismiss - callback signalling sharing can be closed.
  */
 class DefaultShareController(
     private val fragment: Fragment,
-    private val tabs: List<ShareTab>,
-    private val account: OAuthAccount?,
+    private val sharedTabs: List<ShareTab>,
+    private val sendTabUseCases: SendTabUseCases,
     private val navController: NavController,
     private val dismiss: () -> Unit
 ) : ShareController {
@@ -73,14 +73,14 @@ class DefaultShareController(
     }
 
     override fun handleShareToDevice(device: Device) {
-        sendTab(device.id)
-        (fragment.activity as ShareFragment.TabsSharedCallback).onTabsShared(tabs.size)
+        sendTabUseCases.sendToDeviceAsync(device.id, sharedTabs.toTabData())
+        (fragment.activity as ShareFragment.TabsSharedCallback).onTabsShared(sharedTabs.size)
         dismiss()
     }
 
     override fun handleShareToAllDevices(devices: List<Device>) {
-        devices.forEach { device -> sendTab(device.id) }
-        (fragment.activity as ShareFragment.TabsSharedCallback).onTabsShared(tabs.size)
+        sendTabUseCases.sendToAllAsync(sharedTabs.toTabData())
+        (fragment.activity as ShareFragment.TabsSharedCallback).onTabsShared(sharedTabs.size)
         dismiss()
     }
 
@@ -91,17 +91,9 @@ class DefaultShareController(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun sendTab(deviceId: String) {
-        account?.run {
-            tabs.forEach { tab ->
-                deviceConstellation().sendEventToDeviceAsync(
-                    deviceId,
-                    DeviceEventOutgoing.SendTab(tab.title, tab.url)
-                )
-            }
-        }
-    }
+    fun getShareText() = sharedTabs.joinToString("\n") { tab -> tab.url }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getShareText() = tabs.joinToString("\n") { tab -> tab.url }
+    // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
+    private fun ShareTab.toTabData() = TabData(title, url)
+    private fun List<ShareTab>.toTabData() = map { it.toTabData() }
 }

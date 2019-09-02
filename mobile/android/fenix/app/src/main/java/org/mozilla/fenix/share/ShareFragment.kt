@@ -25,6 +25,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
+import mozilla.components.feature.sendtab.SendTabUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -81,14 +82,14 @@ class ShareFragment : AppCompatDialogFragment() {
         }
 
         val tabs = args.tabs?.toList() ?: listOf(ShareTab(args.url!!, args.title ?: ""))
-        val account = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+        val accountManager = requireComponents.backgroundServices.accountManager
 
         shareInteractor = ShareInteractor(
             DefaultShareController(
                 fragment = this,
-                tabs = tabs,
+                sharedTabs = tabs,
                 navController = findNavController(),
-                account = account,
+                sendTabUseCases = SendTabUseCases(accountManager),
                 dismiss = ::dismiss
             )
         )
@@ -165,4 +166,4 @@ class ShareFragment : AppCompatDialogFragment() {
 }
 
 @Parcelize
-data class ShareTab(val url: String, val title: String, val sessionId: String? = null) : Parcelable
+data class ShareTab(val url: String, val title: String) : Parcelable

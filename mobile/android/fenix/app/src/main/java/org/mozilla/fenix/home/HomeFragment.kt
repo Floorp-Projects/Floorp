@@ -388,7 +388,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 invokePendingDeleteJobs()
                 val shareTabs = sessionManager
                     .sessionsOfType(private = (activity as HomeActivity).browsingModeManager.mode.isPrivate)
-                    .map { ShareTab(it.url, it.title, it.id) }
+                    .map { ShareTab(it.url, it.title) }
                     .toList()
                 share(tabs = shareTabs)
             }
