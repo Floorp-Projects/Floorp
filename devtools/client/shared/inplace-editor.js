@@ -1204,11 +1204,16 @@ InplaceEditor.prototype = {
         this._hideAutocompletePopup();
       }
     } else if (
-      !cycling &&
-      !multilineNavigation &&
-      !event.metaKey &&
-      !event.altKey &&
-      !event.ctrlKey
+      // We may show the suggestion completion if Ctrl+space is pressed, or if an
+      // otherwise unhandled key is pressed and the user is not cycling through the
+      // options in the pop-up menu, it is not an expanded shorthand property, and no
+      // modifier key is pressed.
+      (event.key === " " && event.ctrlKey) ||
+      (!cycling &&
+        !multilineNavigation &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.ctrlKey)
     ) {
       this._maybeSuggestCompletion(true);
     }
