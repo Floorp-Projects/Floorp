@@ -8281,7 +8281,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     }
   }
   EditActionResult result(
-      SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;
@@ -8290,18 +8291,16 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
 }
 
 template <typename PT, typename CT>
-nsresult HTMLEditRules::SplitParagraph(
+nsresult HTMLEditor::SplitParagraph(
     Element& aParentDivOrP, const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
     nsIContent* aNextBRNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // split para
-  // get ws code to adjust any ws
   nsCOMPtr<nsINode> selNode = aStartOfRightNode.GetContainer();
   int32_t selOffset = aStartOfRightNode.Offset();
   nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(
-      MOZ_KnownLive(&HTMLEditorRef()), address_of(selNode), &selOffset);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+      this, address_of(selNode), &selOffset);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8312,12 +8311,10 @@ nsresult HTMLEditRules::SplitParagraph(
   }
 
   // Split the paragraph.
-  SplitNodeResult splitDivOrPResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              aParentDivOrP, EditorDOMPoint(selNode, selOffset),
-              SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SplitNodeResult splitDivOrPResult = SplitNodeDeepWithTransaction(
+      aParentDivOrP, EditorDOMPoint(selNode, selOffset),
+      SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(splitDivOrPResult.Failed())) {
@@ -8329,9 +8326,9 @@ nsresult HTMLEditRules::SplitParagraph(
 
   // Get rid of the break, if it is visible (otherwise it may be needed to
   // prevent an empty p).
-  if (aNextBRNode && HTMLEditorRef().IsVisibleBRElement(aNextBRNode)) {
-    rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*aNextBRNode);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (aNextBRNode && IsVisibleBRElement(aNextBRNode)) {
+    rv = DeleteNodeWithTransaction(*aNextBRNode);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8340,9 +8337,8 @@ nsresult HTMLEditRules::SplitParagraph(
   }
 
   // Remove ID attribute on the paragraph from the existing right node.
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .RemoveAttributeWithTransaction(aParentDivOrP, *nsGkAtoms::id);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  rv = RemoveAttributeWithTransaction(aParentDivOrP, *nsGkAtoms::id);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8356,17 +8352,15 @@ nsresult HTMLEditRules::SplitParagraph(
   // normal <br> elements for placeholder in this case.  Note that Chromium
   // also behaves so.
   if (splitDivOrPResult.GetPreviousNode()->IsElement()) {
-    rv = MOZ_KnownLive(HTMLEditorRef())
-             .InsertBRElementIfEmptyBlockElement(MOZ_KnownLive(
-                 *splitDivOrPResult.GetPreviousNode()->AsElement()));
+    rv = InsertBRElementIfEmptyBlockElement(
+        MOZ_KnownLive(*splitDivOrPResult.GetPreviousNode()->AsElement()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
   if (splitDivOrPResult.GetNextNode()->IsElement()) {
-    rv = MOZ_KnownLive(HTMLEditorRef())
-             .InsertBRElementIfEmptyBlockElement(
-                 MOZ_KnownLive(*splitDivOrPResult.GetNextNode()->AsElement()));
+    rv = InsertBRElementIfEmptyBlockElement(
+        MOZ_KnownLive(*splitDivOrPResult.GetNextNode()->AsElement()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8374,26 +8368,27 @@ nsresult HTMLEditRules::SplitParagraph(
 
   // selection to beginning of right hand para;
   // look inside any containers that are up front.
-  nsIContent* child = HTMLEditorRef().GetLeftmostChild(&aParentDivOrP, true);
-  if (EditorBase::IsTextNode(child) || HTMLEditorRef().IsContainer(child)) {
+  nsIContent* child = GetLeftmostChild(&aParentDivOrP, true);
+  if (EditorBase::IsTextNode(child) || IsContainer(child)) {
     EditorRawDOMPoint atStartOfChild(child, 0);
     IgnoredErrorResult ignoredError;
     SelectionRefPtr()->Collapse(atStartOfChild, ignoredError);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         !ignoredError.Failed(),
-        "Failed to collapse selection at the end of the child");
+        "Failed to collapse selection at the end of the child, but ignored");
   } else {
     EditorRawDOMPoint atChild(child);
     IgnoredErrorResult ignoredError;
     SelectionRefPtr()->Collapse(atChild, ignoredError);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Failed to collapse selection at the child");
+    NS_WARNING_ASSERTION(
+        !ignoredError.Failed(),
+        "Failed to collapse selection at the child, but ignored");
   }
   return NS_OK;
 }
