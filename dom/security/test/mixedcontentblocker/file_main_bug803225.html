@@ -114,12 +114,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
       var os = Cc["@mozilla.org/observer-service;1"]
         .getService(Ci.nsIObserverService);
       var observer = {
-        observe: function(subject, topic, data) {
-          if (topic == "content-document-global-created" && data == "http://example.com") {
-             sendAsyncMessage("Test:content-ready");
-             os.removeObserver(observer, "content-document-global-created");
-          }
+        observe(subject, topic, data) {
+        if (topic == "content-document-global-created" && data == "http://example.com") {
+           sendAsyncMessage("Test:content-ready");
+           os.removeObserver(observer, "content-document-global-created");
         }
+      }
       };
       os.addObserver(observer, "content-document-global-created");
     }

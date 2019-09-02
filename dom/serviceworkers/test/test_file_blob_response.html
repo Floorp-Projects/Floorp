@@ -19,7 +19,7 @@
   var scope = './file_blob_response/';
   function start() {
     return navigator.serviceWorker.register("file_blob_response_worker.js",
-                                            { scope: scope })
+                                            { scope })
       .then(function(swr) {
         registration = swr;
         return new waitForState(swr.installing, 'activated');

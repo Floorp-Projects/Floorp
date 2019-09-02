@@ -8,5 +8,5 @@
     threw = true;
   }
   var sandboxed = (location.search == "?sandboxed");
-  parent.postMessage({ threw: threw, sandboxed: sandboxed }, "*");
+  parent.postMessage({ threw, sandboxed }, "*");
 </script>

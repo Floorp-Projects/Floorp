@@ -90,7 +90,7 @@ class Manifest extends PureComponent {
 
   render() {
     return article(
-      {},
+      { className: "js-manifest" },
       Localized(
         {
           id: "manifest-view-header",

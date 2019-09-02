@@ -42,11 +42,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
     };
 
     if (nextEventIdx >= eventsToAbortOn.indexOf("speechstart")) {
-        expectedEvents["speechstart"] = null;
+        expectedEvents.speechstart = null;
     }
 
     if (nextEventIdx >= eventsToAbortOn.indexOf("speechend")) {
-        expectedEvents["speechend"] = null;
+        expectedEvents.speechend = null;
     }
 
     info("Aborting on " + nextEvent);
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
     performTest({
       eventsToRequest: [],
-      expectedEvents: expectedEvents,
+      expectedEvents,
       doneFunc: (nextEventIdx < eventsToAbortOn.length) ? doNextTest : SimpleTest.finish,
       prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
     });

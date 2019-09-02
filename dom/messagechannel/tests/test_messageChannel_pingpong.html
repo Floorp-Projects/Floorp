@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
             ok(event.data % 2, "The number " + event.data + " has been received correctly by the main window");
 
             if (event.data < MAX - 1) {
-              ifr.contentWindow.postMessage({ type: 'PORT', port: port }, '*', [port]);
+              ifr.contentWindow.postMessage({ type: 'PORT', port }, '*', [port]);
             } else {
               SimpleTest.finish();
             }

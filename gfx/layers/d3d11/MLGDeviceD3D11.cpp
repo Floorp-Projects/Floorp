@@ -30,7 +30,6 @@ namespace layers {
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers::mlg;
-using namespace std;
 
 // Defined in CompositorD3D11.cpp.
 bool CanUsePartialPresents(ID3D11Device* aDevice);

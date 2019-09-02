@@ -14,7 +14,7 @@ function ok(a, msg) {
     type: "status",
     status: !!a,
     msg: a + ": " + msg,
-    context: context,
+    context,
   });
 }
 
@@ -23,7 +23,7 @@ function is(a, b, msg) {
     type: "status",
     status: a === b,
     msg: a + " === " + b + ": " + msg,
-    context: context,
+    context,
   });
 }
 
@@ -33,7 +33,7 @@ addEventListener("message", function workerWrapperOnMessage(e) {
 
   function runTestAndReportToClient(event) {
     var done = function(res) {
-      client.postMessage({ type: "finish", context: context });
+      client.postMessage({ type: "finish", context });
       return res;
     };
 
@@ -48,7 +48,7 @@ addEventListener("message", function workerWrapperOnMessage(e) {
         type: "status",
         status: false,
         msg: "worker failed to run " + data.script + "; error: " + e.message,
-        context: context,
+        context,
       });
       done();
     }

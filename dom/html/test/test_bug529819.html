@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529819
 <script type="application/javascript">
 
 /** Test for Bug 529819 **/
-is($("form").elements["foo"] instanceof HTMLInputElement, true, "Should have an element here");
-is($("form").elements["bar"] instanceof HTMLInputElement, false, "Should have a list here");
-is($("form").elements["bar"].length, 2, "Should have a list with two elements here");
+is($("form").elements.foo instanceof HTMLInputElement, true, "Should have an element here");
+is($("form").elements.bar instanceof HTMLInputElement, false, "Should have a list here");
+is($("form").elements.bar.length, 2, "Should have a list with two elements here");
 
 </script>
 </pre>

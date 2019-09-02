@@ -80,13 +80,13 @@ var VRSimulationDriver = (function() {
   };
 
   var API = {
-    AttachWebVRDisplay: AttachWebVRDisplay,
-    SetVRDisplayPose: SetVRDisplayPose,
-    SetEyeResolution: SetEyeResolution,
-    SetEyeParameter: SetEyeParameter,
-    SetMountState: SetMountState,
-    UpdateVRDisplay: UpdateVRDisplay,
-    AttachVRController: AttachVRController,
+    AttachWebVRDisplay,
+    SetVRDisplayPose,
+    SetEyeResolution,
+    SetEyeParameter,
+    SetMountState,
+    UpdateVRDisplay,
+    AttachVRController,
 
     none: false,
   };

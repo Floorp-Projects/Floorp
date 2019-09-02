@@ -19,9 +19,10 @@ use crate::prim_store::{
     PrimTemplate, PrimTemplateCommonData, PrimitiveStore, SegmentInstanceIndex,
     SizeKey, InternablePrimitive,
 };
+use crate::render_target::RenderTargetKind;
 use crate::render_task::{
     BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
-    RenderTaskCacheKeyKind, RenderTargetKind,
+    RenderTaskCacheKeyKind,
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;

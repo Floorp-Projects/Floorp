@@ -60,19 +60,19 @@ function checkIndividualResults(testname, expected) {
         testname + " test: some image loads required in results object."
       );
       is(
-        results["img"].count,
+        results.img.count,
         2,
         testname + " Test: Expected 2 loads for image requests."
       );
 
       expected.forEach(function(ref) {
         ok(
-          results["img"].referrers.includes(ref),
+          results.img.referrers.includes(ref),
           testname +
             " Test: Expected " +
             ref +
             " referrer policy in test, results were " +
-            JSON.stringify(results["img"].referrers) +
+            JSON.stringify(results.img.referrers) +
             "."
         );
       });
@@ -100,7 +100,7 @@ function checkExpectedGlobalResults(testName) {
           for (policy in response[type][scheme]) {
             var expectedResult =
               EXPECTED_RESULTS[type] === undefined
-                ? EXPECTED_RESULTS["default"][scheme][policy]
+                ? EXPECTED_RESULTS.default[scheme][policy]
                 : EXPECTED_RESULTS[type][scheme][policy];
             is(
               response[type][scheme][policy],

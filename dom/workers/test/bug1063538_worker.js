@@ -8,7 +8,7 @@ var xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
 var progressFired = false;
 
 xhr.onloadend = function(e) {
-  postMessage({ type: "finish", progressFired: progressFired });
+  postMessage({ type: "finish", progressFired });
   self.close();
 };
 

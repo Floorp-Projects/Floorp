@@ -39,7 +39,7 @@ function logEvent(evt) {
       uploadTotal = evt.total
     } else {
       if (evt.type == "progress") {
-        is(evt.lengthComputable, evt.total != 0, "event(" + evt.type +  ").lengthComputable should be " + (evt.total != 0 ? true : false) + ".");
+        is(evt.lengthComputable, evt.total != 0, "event(" + evt.type +  ").lengthComputable should be " + (evt.total != 0) + ".");
       }
       if (evt.total != uploadTotal && evt.total != 0) {
         ok(false, "event(" + evt.type +  ").total should not change during upload except to become 0 on error/abort/timeout.");

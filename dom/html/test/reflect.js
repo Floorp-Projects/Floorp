@@ -122,7 +122,7 @@ function reflectString(aParameters) {
     // ES5, verse 8.12.8.
     [
       {
-        toString: function() {
+        toString() {
           return "foo";
         },
       },
@@ -130,7 +130,7 @@ function reflectString(aParameters) {
     ],
     [
       {
-        valueOf: function() {
+        valueOf() {
           return "foo";
         },
       },
@@ -138,7 +138,7 @@ function reflectString(aParameters) {
     ],
     [
       {
-        valueOf: function() {
+        valueOf() {
           return "quux";
         },
         toString: undefined,
@@ -147,10 +147,10 @@ function reflectString(aParameters) {
     ],
     [
       {
-        valueOf: function() {
+        valueOf() {
           return "foo";
         },
-        toString: function() {
+        toString() {
           return "bar";
         },
       },
@@ -681,7 +681,7 @@ function reflectBoolean(aParameters) {
     // ES5, verse 9.2.
     {
       value: {
-        toString: function() {
+        toString() {
           return "foo";
         },
       },
@@ -690,7 +690,7 @@ function reflectBoolean(aParameters) {
     },
     {
       value: {
-        valueOf: function() {
+        valueOf() {
           return "foo";
         },
       },
@@ -699,7 +699,7 @@ function reflectBoolean(aParameters) {
     },
     {
       value: {
-        valueOf: function() {
+        valueOf() {
           return "quux";
         },
         toString: undefined,
@@ -709,10 +709,10 @@ function reflectBoolean(aParameters) {
     },
     {
       value: {
-        valueOf: function() {
+        valueOf() {
           return "foo";
         },
-        toString: function() {
+        toString() {
           return "bar";
         },
       },
@@ -721,7 +721,7 @@ function reflectBoolean(aParameters) {
     },
     {
       value: {
-        valueOf: function() {
+        valueOf() {
           return false;
         },
       },

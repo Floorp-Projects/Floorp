@@ -74,12 +74,12 @@ var tests = [
 var counter = -1;
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   window.examiner.remove();
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   var result = event.data.result;
   testComplete(result, tests[counter].result, tests[counter].desc);
@@ -90,7 +90,7 @@ function examiner() {
 }
 
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === "csp-on-violate-policy") {
       var violationString = SpecialPowers.getPrivilegedProps(SpecialPowers.
                              do_QueryInterface(subject, "nsISupportsCString"), "data");
@@ -102,7 +102,7 @@ examiner.prototype  = {
       testComplete("blocked", tests[counter].result, tests[counter].desc);
     }
   },
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }

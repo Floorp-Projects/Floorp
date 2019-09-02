@@ -117,6 +117,9 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
   WritingMode frameWM = aReflowInput.GetWritingMode();
   WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding();
+  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
+                                         lineWM, frameWM);
+
   nscoord startEdge = 0;
   const bool boxDecorationBreakClone =
       StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone;
@@ -131,7 +134,8 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
                                       availableISize, &mBaseline);
 
   for (RubySegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    ReflowSegment(aPresContext, aReflowInput, e.GetBaseContainer(), aStatus);
+    ReflowSegment(aPresContext, aReflowInput, aDesiredSize.BlockStartAscent(),
+                  aDesiredSize.BSize(lineWM), e.GetBaseContainer(), aStatus);
 
     if (aStatus.IsInlineBreak()) {
       // A break occurs when reflowing the segment.
@@ -148,7 +152,8 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
       // No more continuations after, finish now.
       break;
     }
-    ReflowSegment(aPresContext, aReflowInput, baseContainer, aStatus);
+    ReflowSegment(aPresContext, aReflowInput, aDesiredSize.BlockStartAscent(),
+                  aDesiredSize.BSize(lineWM), baseContainer, aStatus);
   }
   // We never handle overflow in ruby.
   MOZ_ASSERT(!aStatus.IsOverflowIncomplete());
@@ -165,13 +170,11 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
   if (nsRubyBaseContainerFrame* rbc = FindRubyBaseContainerAncestor(this)) {
     rbc->UpdateDescendantLeadings(mLeadings);
   }
-
-  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
-                                         lineWM, frameWM);
 }
 
 void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                                 const ReflowInput& aReflowInput,
+                                nscoord aBlockStartAscent, nscoord aBlockSize,
                                 nsRubyBaseContainerFrame* aBaseContainer,
                                 nsReflowStatus& aStatus) {
   WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
@@ -267,10 +270,11 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   // base container's rect, using a coordinate space that's relative to
   // the ruby frame. Right now, the base container's rect's block-axis
   // position is relative to the block container frame containing the
-  // lines, so we use 0 instead. (i.e. we assume that the base container
-  // is adjacent to the ruby frame's block-start edge.)
+  // lines, so here we reset it to the different between the ascents of
+  // the ruby container and the ruby base container, assuming they are
+  // aligned with the baseline.
   // XXX We may need to add border/padding here. See bug 1055667.
-  baseRect.BStart(lineWM) = 0;
+  baseRect.BStart(lineWM) = aBlockStartAscent - baseMetrics.BlockStartAscent();
   // The rect for offsets of text containers.
   LogicalRect offsetRect = baseRect;
   RubyBlockLeadings descLeadings = aBaseContainer->GetDescendantLeadings();
@@ -356,9 +360,12 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     aReflowInput.mLineLayout->AdvanceICoord(deltaISize);
   }
 
-  // Set block leadings of the base container
-  nscoord startLeading = baseRect.BStart(lineWM) - offsetRect.BStart(lineWM);
-  nscoord endLeading = offsetRect.BEnd(lineWM) - baseRect.BEnd(lineWM);
+  // Set block leadings of the base container.
+  // The leadings are the difference between the offsetRect and the rect
+  // of this ruby container, which has block start zero and block size
+  // aBlockSize.
+  nscoord startLeading = -offsetRect.BStart(lineWM);
+  nscoord endLeading = offsetRect.BEnd(lineWM) - aBlockSize;
   // XXX When bug 765861 gets fixed, this warning should be upgraded.
   NS_WARNING_ASSERTION(startLeading >= 0 && endLeading >= 0,
                        "Leadings should be non-negative (because adding "

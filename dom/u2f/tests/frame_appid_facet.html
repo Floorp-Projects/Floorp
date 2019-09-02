@@ -20,14 +20,14 @@ async function doTests() {
   local_isnot(window.u2f, undefined, "U2F API endpoint must exist");
 
   await promiseU2FRegister(null, [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "Null AppID should work.");
   });
 
   await promiseU2FRegister("", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "Empty AppID should work.");
@@ -35,7 +35,7 @@ async function doTests() {
 
   // Test: Correct TLD, but incorrect scheme
   await promiseU2FRegister("http://example.com/appId", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_isnot(res.errorCode, 0, "HTTP scheme is disallowed");
@@ -43,7 +43,7 @@ async function doTests() {
 
   // Test: Correct TLD, and also HTTPS
   await promiseU2FRegister("https://example.com/appId", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "HTTPS origin for example.com should work");
@@ -51,7 +51,7 @@ async function doTests() {
 
   // Test: Sub-domain
   await promiseU2FRegister("https://test2.example.com/appId", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "HTTPS origin for test2.example.com should work");
@@ -59,7 +59,7 @@ async function doTests() {
 
   // Test: Sub-sub-domain
   await promiseU2FRegister("https://sub.test2.example.com/appId", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "HTTPS origin for sub.test2.example.com should work");
@@ -67,7 +67,7 @@ async function doTests() {
 
   // Test: TLD
   await promiseU2FRegister("https://com/crazyAppID", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 2, "HTTPS origin of the TLD should not work");
@@ -75,7 +75,7 @@ async function doTests() {
 
   // Test: Dynamic origin
   await promiseU2FRegister(window.location.origin + "/otherAppId", [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_is(res.errorCode, 0, "Direct window origin should work");

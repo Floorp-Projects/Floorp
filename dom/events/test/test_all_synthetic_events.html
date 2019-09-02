@@ -24,70 +24,70 @@
  *         aName specifies the event's type name.  See each create() code for the detail of aProps.
  */
 const kEventConstructors = {
-  Event:                                     { create: function (aName, aProps) {
+  Event:                                     { create (aName, aProps) {
                                                          return new Event(aName, aProps);
                                                        },
                                              },
-  AnimationEvent:                            { create: function (aName, aProps) {
+  AnimationEvent:                            { create (aName, aProps) {
                                                          return new AnimationEvent(aName, aProps);
                                                        },
                                              },
-  AnimationPlaybackEvent:                    { create: function (aName, aProps) {
+  AnimationPlaybackEvent:                    { create (aName, aProps) {
                                                          return new AnimationPlaybackEvent(aName, aProps);
                                                        },
                                              },
   AudioProcessingEvent:                      { create: null, // Cannot create untrusted event from JS.
                                              },
-  BeforeUnloadEvent:                         { create: function (aName, aProps) {
+  BeforeUnloadEvent:                         { create (aName, aProps) {
                                                          var e = document.createEvent("beforeunloadevent");
                                                          e.initEvent(aName, aProps.bubbles, aProps.cancelable);
                                                          return e;
                                                        },
                                              },
-  BlobEvent:                                 { create: function (aName, aProps) {
+  BlobEvent:                                 { create (aName, aProps) {
                                                          return new BlobEvent(aName, aProps);
                                                        },
                                              },
-  CallEvent:                                 { create: function (aName, aProps) {
+  CallEvent:                                 { create (aName, aProps) {
                                                           return new CallEvent(aName, aProps);
                                                        },
                                              },
-  CallGroupErrorEvent:                       { create: function (aName, aProps) {
+  CallGroupErrorEvent:                       { create (aName, aProps) {
                                                           return new CallGroupErrorEvent(aName, aProps);
                                                        },
                                              },
-  CFStateChangeEvent:                        { create: function (aName, aProps) {
+  CFStateChangeEvent:                        { create (aName, aProps) {
                                                           return new CFStateChangeEvent(aName, aProps);
                                                        },
                                              },
-  CloseEvent:                                { create: function (aName, aProps) {
+  CloseEvent:                                { create (aName, aProps) {
                                                          return new CloseEvent(aName, aProps);
                                                        },
                                              },
-  ClipboardEvent:                            { create: function (aName, aProps) {
+  ClipboardEvent:                            { create (aName, aProps) {
                                                          return new ClipboardEvent(aName, aProps);
                                                        },
                                              },
-  CompositionEvent:                          { create: function (aName, aProps) {
+  CompositionEvent:                          { create (aName, aProps) {
                                                          var e = document.createEvent("compositionevent");
                                                          e.initCompositionEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                                 aProps.view, aProps.data, aProps.locale);
                                                          return e;
                                                        },
                                              },
-  CustomEvent:                               { create: function (aName, aProps) {
+  CustomEvent:                               { create (aName, aProps) {
                                                          return new CustomEvent(aName, aProps);
                                                        },
                                              },
-  DataErrorEvent:                            { create: function (aName, aProps) {
+  DataErrorEvent:                            { create (aName, aProps) {
                                                           return new DataErrorEvent(aName, aProps);
                                                        },
                                              },
-  DeviceLightEvent:                          { create: function (aName, aProps) {
+  DeviceLightEvent:                          { create (aName, aProps) {
                                                          return new DeviceLightEvent(aName, aProps);
                                                        },
                                              },
-  DeviceMotionEvent:                         { create: function (aName, aProps) {
+  DeviceMotionEvent:                         { create (aName, aProps) {
                                                          var e = document.createEvent("devicemotionevent");
                                                          e.initDeviceMotionEvent(aName, aProps.bubbles, aProps.cancelable, aProps.acceleration,
                                                                                  aProps.accelerationIncludingGravity, aProps.rotationRate,
@@ -95,19 +95,19 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  DeviceOrientationEvent:                    { create: function (aName, aProps) {
+  DeviceOrientationEvent:                    { create (aName, aProps) {
                                                          return new DeviceOrientationEvent(aName, aProps);
                                                        },
                                              },
-  DeviceProximityEvent:                      { create: function (aName, aProps) {
+  DeviceProximityEvent:                      { create (aName, aProps) {
                                                          return new DeviceProximityEvent(aName, aProps);
                                                        },
                                              },
-  DownloadEvent:                             { create: function (aName, aProps) {
+  DownloadEvent:                             { create (aName, aProps) {
                                                          return new DownloadEvent(aName, aProps);
                                                        },
                                              },
-  DragEvent:                                 { create: function (aName, aProps) {
+  DragEvent:                                 { create (aName, aProps) {
                                                          var e = document.createEvent("dragevent");
                                                          e.initDragEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                          aProps.view, aProps.detail,
@@ -118,93 +118,93 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  ErrorEvent:                                { create: function (aName, aProps) {
+  ErrorEvent:                                { create (aName, aProps) {
                                                          return new ErrorEvent(aName, aProps);
                                                        },
   },
-  FocusEvent:                                { create: function (aName, aProps) {
+  FocusEvent:                                { create (aName, aProps) {
                                                          return new FocusEvent(aName, aProps);
                                                        },
                                              },
-  FontFaceSetLoadEvent:                      { create: function (aName, aProps) {
+  FontFaceSetLoadEvent:                      { create (aName, aProps) {
                                                          return new FontFaceSetLoadEvent(aName, aProps);
                                                        },
                                              },
-  GamepadEvent:                              { create: function (aName, aProps) {
+  GamepadEvent:                              { create (aName, aProps) {
                                                          return new GamepadEvent(aName, aProps);
                                                        },
                                              },
-  GamepadAxisMoveEvent:                      { create: function (aName, aProps) {
+  GamepadAxisMoveEvent:                      { create (aName, aProps) {
                                                          return new GamepadAxisMoveEvent(aName, aProps);
                                                        },
                                              },
-  GamepadButtonEvent:                        { create: function (aName, aProps) {
+  GamepadButtonEvent:                        { create (aName, aProps) {
                                                          return new GamepadButtonEvent(aName, aProps);
                                                        },
                                              },
-  HashChangeEvent:                           { create: function (aName, aProps) {
+  HashChangeEvent:                           { create (aName, aProps) {
                                                          return new HashChangeEvent(aName, aProps);
                                                        },
                                              },
-  IDBVersionChangeEvent:                     { create: function (aName, aProps) {
+  IDBVersionChangeEvent:                     { create (aName, aProps) {
                                                          return new IDBVersionChangeEvent(aName, aProps);
                                                        },
                                              },
-  ImageCaptureErrorEvent:                                { create: function (aName, aProps) {
+  ImageCaptureErrorEvent:                                { create (aName, aProps) {
                                                          return new ImageCaptureErrorEvent(aName, aProps);
                                                        },
                                              },
-  InputEvent:                                { create: function (aName, aProps) {
+  InputEvent:                                { create (aName, aProps) {
                                                          return new InputEvent(aName, aProps);
                                                        },
                                              },
-  KeyEvent:                                  { create: function (aName, aProps) {
+  KeyEvent:                                  { create (aName, aProps) {
                                                          return new KeyboardEvent(aName, aProps);
                                                        },
                                              },
-  KeyboardEvent:                             { create: function (aName, aProps) {
+  KeyboardEvent:                             { create (aName, aProps) {
                                                          return new KeyboardEvent(aName, aProps);
                                                        },
                                              },
-  MediaEncryptedEvent:                       { create: function (aName, aProps) {
+  MediaEncryptedEvent:                       { create (aName, aProps) {
                                                          return new MediaEncryptedEvent(aName, aProps);
                                                        },
                                              },
-  MediaKeyMessageEvent:                      { create: function (aName, aProps) {
+  MediaKeyMessageEvent:                      { create (aName, aProps) {
                                                          return new MediaKeyMessageEvent(aName, {
                                                            messageType: "license-request",
                                                            message: new ArrayBuffer(0)
                                                          });
                                                        },
                                              },
-  MediaQueryListEvent:                       { create: function (aName, aProps) {
+  MediaQueryListEvent:                       { create (aName, aProps) {
                                                          return new MediaQueryListEvent(aName, aProps);
                                                        },
                                              },
-  MediaRecorderErrorEvent:                   { create: function (aName, aProps) {
+  MediaRecorderErrorEvent:                   { create (aName, aProps) {
                                                          aProps.error = new DOMException();
                                                          return new MediaRecorderErrorEvent(aName, aProps);
                                                        },
                                              },
-  MediaStreamEvent:                          { create: function (aName, aProps) {
+  MediaStreamEvent:                          { create (aName, aProps) {
                                                          return new MediaStreamEvent(aName, aProps);
                                                        },
                                              },
   MediaStreamTrackEvent:                     {
                                                // Difficult to test required arguments.
                                              },
-  MessageEvent:                              { create: function (aName, aProps) {
+  MessageEvent:                              { create (aName, aProps) {
                                                          var e = new MessageEvent("messageevent", { bubbles: aProps.bubbles,
                                                              cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,
                                                              lastEventId: aProps.lastEventId, source: aProps.source });
                                                          return e;
                                                        },
                                              },
-  MouseEvent:                                { create: function (aName, aProps) {
+  MouseEvent:                                { create (aName, aProps) {
                                                          return new MouseEvent(aName, aProps);
                                                        },
                                              },
-  MouseScrollEvent:                          { create: function (aName, aProps) {
+  MouseScrollEvent:                          { create (aName, aProps) {
                                                          var e = document.createEvent("mousescrollevents");
                                                          e.initMouseScrollEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                                 aProps.view, aProps.detail,
@@ -215,43 +215,43 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  MozApplicationEvent:                       { create: function (aName, aProps) {
+  MozApplicationEvent:                       { create (aName, aProps) {
                                                          return new MozApplicationEvent(aName, aProps);
                                                        },
                                              },
-  MozClirModeEvent:                          { create: function (aName, aProps) {
+  MozClirModeEvent:                          { create (aName, aProps) {
                                                          return new MozClirModeEvent(aName, aProps);
                                                        },
                                              },
-  MozContactChangeEvent:                     { create: function (aName, aProps) {
+  MozContactChangeEvent:                     { create (aName, aProps) {
                                                          return new MozContactChangeEvent(aName, aProps);
                                                        },
                                              },
-  MozEmergencyCbModeEvent:                   { create: function (aName, aProps) {
+  MozEmergencyCbModeEvent:                   { create (aName, aProps) {
                                                           return new MozEmergencyCbModeEvent(aName, aProps);
                                                        },
                                              },
-  MozMessageDeletedEvent:                    { create: function (aName, aProps) {
+  MozMessageDeletedEvent:                    { create (aName, aProps) {
                                                          return new MozMessageDeletedEvent(aName, aProps);
                                                        },
                                              },
-  MozMmsEvent:                               { create: function (aName, aProps) {
+  MozMmsEvent:                               { create (aName, aProps) {
                                                          return new MozMmsEvent(aName, aProps);
                                                        },
                                              },
-  MozOtaStatusEvent:                         { create: function (aName, aProps) {
+  MozOtaStatusEvent:                         { create (aName, aProps) {
                                                           return new MozOtaStatusEvent(aName, aProps);
                                                        },
                                              },
-  MozSmsEvent:                               { create: function (aName, aProps) {
+  MozSmsEvent:                               { create (aName, aProps) {
                                                          return new MozSmsEvent(aName, aProps);
                                                        },
                                              },
-  MozStkCommandEvent:                        { create: function (aName, aProps) {
+  MozStkCommandEvent:                        { create (aName, aProps) {
                                                           return new MozStkCommandEvent(aName, aProps);
                                                        },
                                              },
-  MutationEvent:                             { create: function (aName, aProps) {
+  MutationEvent:                             { create (aName, aProps) {
                                                          var e = document.createEvent("mutationevent");
                                                          e.initMutationEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                              aProps.relatedNode, aProps.prevValue, aProps.newValue,
@@ -268,32 +268,32 @@ const kEventConstructors = {
                                                           }
                                                         : null,
                                              },
-  PageTransitionEvent:                       { create: function (aName, aProps) {
+  PageTransitionEvent:                       { create (aName, aProps) {
                                                          return new PageTransitionEvent(aName, aProps);
                                                        },
                                              },
-  PointerEvent:                              { create: function (aName, aProps) {
+  PointerEvent:                              { create (aName, aProps) {
                                                          return new PointerEvent(aName, aProps);
                                                        },
                                              },
-  PopStateEvent:                             { create: function (aName, aProps) {
+  PopStateEvent:                             { create (aName, aProps) {
                                                          return new PopStateEvent(aName, aProps);
                                                        },
                                              },
-  PopupBlockedEvent:                         { create: function (aName, aProps) {
+  PopupBlockedEvent:                         { create (aName, aProps) {
                                                          return new PopupBlockedEvent(aName, aProps);
                                                        },
                                              },
-  ProgressEvent:                             { create: function (aName, aProps) {
+  ProgressEvent:                             { create (aName, aProps) {
                                                          return new ProgressEvent(aName, aProps);
                                                        },
                                              },
-  PromiseRejectionEvent:                     { create: function (aName, aProps) {
+  PromiseRejectionEvent:                     { create (aName, aProps) {
                                                          aProps.promise = new Promise(() => {});
                                                          return new PromiseRejectionEvent(aName, aProps);
                                                        },
                                              },
-  RTCDataChannelEvent:                       { create: function (aName, aProps) {
+  RTCDataChannelEvent:                       { create (aName, aProps) {
                                                          let pc = new RTCPeerConnection();
                                                          aProps.channel = pc.createDataChannel("foo");
                                                          let e = new RTCDataChannelEvent(aName, aProps);
@@ -302,18 +302,18 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  RTCDTMFToneChangeEvent:                       { create: function (aName, aProps) {
+  RTCDTMFToneChangeEvent:                       { create (aName, aProps) {
                                                          return new RTCDTMFToneChangeEvent(aName, aProps);
                                                        },
                                              },
-  RTCPeerConnectionIceEvent:                 { create: function (aName, aProps) {
+  RTCPeerConnectionIceEvent:                 { create (aName, aProps) {
                                                          return new RTCPeerConnectionIceEvent(aName, aProps);
                                                        },
                                              },
   RTCTrackEvent:                             {
                                                // Difficult to test required arguments.
                                              },
-  ScrollAreaEvent:                           { create: function (aName, aProps) {
+  ScrollAreaEvent:                           { create (aName, aProps) {
                                                          var e = document.createEvent("scrollareaevent");
                                                          e.initScrollAreaEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                                aProps.view, aProps.details,
@@ -322,63 +322,63 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  SpeechRecognitionError:                    { create: function (aName, aProps) {
+  SpeechRecognitionError:                    { create (aName, aProps) {
                                                          return new SpeechRecognitionError(aName, aProps);
                                                        },
                                              },
-  SpeechRecognitionEvent:                    { create: function (aName, aProps) {
+  SpeechRecognitionEvent:                    { create (aName, aProps) {
                                                          return new SpeechRecognitionEvent(aName, aProps);
                                                        },
                                              },
-  SpeechSynthesisErrorEvent:                 { create: function (aName, aProps) {
+  SpeechSynthesisErrorEvent:                 { create (aName, aProps) {
                                                          aProps.error = "synthesis-unavailable";
                                                          aProps.utterance = new SpeechSynthesisUtterance("Hello World");
                                                          return new SpeechSynthesisErrorEvent(aName, aProps);
                                                        },
                                              },
-  SpeechSynthesisEvent:                      { create: function (aName, aProps) {
+  SpeechSynthesisEvent:                      { create (aName, aProps) {
                                                          aProps.utterance = new SpeechSynthesisUtterance("Hello World");
                                                          return new SpeechSynthesisEvent(aName, aProps);
                                                        },
                                              },
-  StorageEvent:                              { create: function (aName, aProps) {
+  StorageEvent:                              { create (aName, aProps) {
                                                          return new StorageEvent(aName, aProps);
                                                        },
                                              },
-  StyleRuleChangeEvent:                      { create: function (aName, aProps) {
+  StyleRuleChangeEvent:                      { create (aName, aProps) {
                                                          return new StyleRuleChangeEvent(aName, aProps);
                                                        },
                                                chromeOnly: true,
                                              },
-  StyleSheetApplicableStateChangeEvent:      { create: function (aName, aProps) {
+  StyleSheetApplicableStateChangeEvent:      { create (aName, aProps) {
                                                          return new StyleSheetApplicableStateChangeEvent(aName, aProps);
                                                        },
                                                chromeOnly: true,
                                              },
-  StyleSheetChangeEvent:                     { create: function (aName, aProps) {
+  StyleSheetChangeEvent:                     { create (aName, aProps) {
                                                          return new StyleSheetChangeEvent(aName, aProps);
                                                        },
                                                chromeOnly: true,
                                              },
-  TCPSocketErrorEvent:                       { create: function(aName, aProps) {
+  TCPSocketErrorEvent:                       { create(aName, aProps) {
                                                          return new TCPSocketErrorEvent(aName, aProps);
                                                        },
                                              },
-  TCPSocketEvent:                            { create: function(aName, aProps) {
+  TCPSocketEvent:                            { create(aName, aProps) {
                                                          return new TCPSocketEvent(aName, aProps);
                                                        },
                                              },
-  TCPServerSocketEvent:                      { create: function(aName, aProps) {
+  TCPServerSocketEvent:                      { create(aName, aProps) {
                                                          return new TCPServerSocketEvent(aName, aProps);
                                                        },
                                              },
-  TimeEvent:                                 { create: function (aName, aProps) {
+  TimeEvent:                                 { create (aName, aProps) {
                                                          var e = document.createEvent("timeevent");
                                                          e.initTimeEvent(aName, aProps.view, aProps.detail);
                                                          return e;
                                                        },
                                              },
-  TouchEvent:                                { create: function (aName, aProps) {
+  TouchEvent:                                { create (aName, aProps) {
                                                          var e = document.createEvent("touchevent");
                                                          e.initTouchEvent(aName, aProps.bubbles, aProps.cancelable,
                                                                           aProps.view, aProps.detail,
@@ -387,23 +387,23 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  TrackEvent:                                { create: function (aName, aProps) {
+  TrackEvent:                                { create (aName, aProps) {
                                                          return new TrackEvent(aName, aProps);
                                                        },
                                              },
-  TransitionEvent:                           { create: function (aName, aProps) {
+  TransitionEvent:                           { create (aName, aProps) {
                                                          return new TransitionEvent(aName, aProps);
                                                        },
                                              },
-  UIEvent:                                   { create: function (aName, aProps) {
+  UIEvent:                                   { create (aName, aProps) {
                                                          return new UIEvent(aName, aProps);
                                                        },
                                              },
-  UserProximityEvent:                        { create: function (aName, aProps) {
+  UserProximityEvent:                        { create (aName, aProps) {
                                                          return new UserProximityEvent(aName, aProps);
                                                        },
                                              },
-  USSDReceivedEvent:                         { create: function (aName, aProps) {
+  USSDReceivedEvent:                         { create (aName, aProps) {
                                                           return new USSDReceivedEvent(aName, aProps);
                                                        },
                                              },
@@ -413,15 +413,15 @@ const kEventConstructors = {
                                                // connected.  When Bug 1229480 lands, this test can be
                                                // updated to use the puppet VR device.
                                              },
-  WheelEvent:                                { create: function (aName, aProps) {
+  WheelEvent:                                { create (aName, aProps) {
                                                          return new WheelEvent(aName, aProps);
                                                        },
                                              },
-  WebGLContextEvent:                         { create: function (aName, aProps) {
+  WebGLContextEvent:                         { create (aName, aProps) {
                                                          return new WebGLContextEvent(aName, aProps);
                                                        },
                                              },
-  SecurityPolicyViolationEvent:              { create: function (aName, aProps) {
+  SecurityPolicyViolationEvent:              { create (aName, aProps) {
                                                          return new SecurityPolicyViolationEvent(aName, aProps);
                                                        },
                                              },

@@ -8,7 +8,7 @@
   SimpleTest.waitForExplicitFinish();
   function doTest() {
     var sandbox = Cu.Sandbox("http://mochi.test:8888/", { wantXrays: true });
-    var win = window.frames["sameDomain"];
+    var win = window.frames.sameDomain;
     sandbox.win = win;
     sandbox.is = is;
     sandbox.done = SimpleTest.finish;

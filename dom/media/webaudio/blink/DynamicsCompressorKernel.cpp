@@ -35,8 +35,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "WebAudioUtils.h"
 
-using namespace std;
-
 using namespace mozilla::dom;  // for WebAudioUtils
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
@@ -242,7 +240,7 @@ void DynamicsCompressorKernel::process(
       WebAudioUtils::ConvertDecibelsToLinear(dbPostGain) * fullRangeMakeupGain;
 
   // Attack parameters.
-  attackTime = max(0.001f, attackTime);
+  attackTime = std::max(0.001f, attackTime);
   float attackFrames = attackTime * sampleRate;
 
   // Release parameters.
@@ -337,8 +335,8 @@ void DynamicsCompressorKernel::process(
 
       // Contain within range: -12 -> 0 then scale to go from 0 -> 3
       float x = compressionDiffDb;
-      x = max(-12.0f, x);
-      x = min(0.0f, x);
+      x = std::max(-12.0f, x);
+      x = std::min(0.0f, x);
       x = 0.25f * (x + 12);
 
       // Compute adaptive release curve using 4th order polynomial.
@@ -366,7 +364,7 @@ void DynamicsCompressorKernel::process(
           m_maxAttackCompressionDiffDb < compressionDiffDb)
         m_maxAttackCompressionDiffDb = compressionDiffDb;
 
-      float effAttenDiffDb = max(0.5f, m_maxAttackCompressionDiffDb);
+      float effAttenDiffDb = std::max(0.5f, m_maxAttackCompressionDiffDb);
 
       float x = 0.25f / effAttenDiffDb;
       envelopeRate = 1 - powf(x, 1 / attackFrames);
@@ -415,7 +413,7 @@ void DynamicsCompressorKernel::process(
 
         float attenuationDb =
             -WebAudioUtils::ConvertLinearToDecibels(attenuation, -1000.0f);
-        attenuationDb = max(2.0f, attenuationDb);
+        attenuationDb = std::max(2.0f, attenuationDb);
 
         float dbPerFrame = attenuationDb / satReleaseFrames;
 
@@ -426,7 +424,7 @@ void DynamicsCompressorKernel::process(
         float rate = isRelease ? satReleaseRate : 1;
 
         detectorAverage += (attenuation - detectorAverage) * rate;
-        detectorAverage = min(1.0f, detectorAverage);
+        detectorAverage = std::min(1.0f, detectorAverage);
 
         // Fix gremlins.
         if (IsNaN(detectorAverage)) detectorAverage = 1;
@@ -439,7 +437,7 @@ void DynamicsCompressorKernel::process(
         } else {
           // Release - exponentially increase gain to 1.0
           compressorGain *= envelopeRate;
-          compressorGain = min(1.0f, compressorGain);
+          compressorGain = std::min(1.0f, compressorGain);
         }
 
         // Warp pre-compression gain to smooth out sharp exponential transition

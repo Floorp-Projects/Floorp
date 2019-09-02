@@ -15,7 +15,8 @@ use crate::glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
 use crate::resource_cache::CachedImageData;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::gpu_cache::GpuCache;
-use crate::render_task::{RenderTaskGraph, RenderTaskCache};
+use crate::render_task_graph::RenderTaskGraph;
+use crate::render_task::RenderTaskCache;
 use crate::profiler::TextureCacheProfileCounters;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use rayon::ThreadPool;
@@ -1018,7 +1019,8 @@ mod test_glyph_rasterizer {
         use crate::texture_cache::TextureCache;
         use crate::glyph_cache::GlyphCache;
         use crate::gpu_cache::GpuCache;
-        use crate::render_task::{RenderTaskCache, RenderTaskGraph, RenderTaskGraphCounters};
+        use crate::render_task::RenderTaskCache;
+        use crate::render_task_graph::{RenderTaskGraph, RenderTaskGraphCounters};
         use crate::profiler::TextureCacheProfileCounters;
         use api::{FontKey, FontInstanceKey, FontTemplate, FontRenderMode,
                   IdNamespace, ColorU};

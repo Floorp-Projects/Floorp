@@ -29,7 +29,6 @@
 #define SPAN_TEST(name) TEST(SpanTest, name)
 #define CHECK_THROW(a, b)
 
-using namespace std;
 using namespace mozilla;
 
 static_assert(IsConvertible<Range<int>, Span<const int>>::value,

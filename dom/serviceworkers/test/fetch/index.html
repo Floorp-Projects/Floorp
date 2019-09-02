@@ -16,7 +16,7 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
   function my_ok(result, msg) {
-    window.opener.postMessage({status: "ok", result: result, message: msg}, "*");
+    window.opener.postMessage({status: "ok", result, message: msg}, "*");
   }
 
   function check_intercepted_script() {

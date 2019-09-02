@@ -6,7 +6,7 @@ var sdputils = {
   // Finds the codec id / payload type given a codec format
   // (e.g., "VP8", "VP9/90000"). `offset` tells us which one to use in case of
   // multiple matches.
-  findCodecId: function(sdp, format, offset = 0) {
+  findCodecId(sdp, format, offset = 0) {
     let regex = new RegExp("rtpmap:([0-9]+) " + format, "gi");
     let match;
     for (let i = 0; i <= offset; ++i) {
@@ -32,7 +32,7 @@ var sdputils = {
   // Finds all the extmap ids in the given sdp.  Note that this does NOT
   // consider m-sections, so a more generic version would need to
   // look at each m-section separately.
-  findExtmapIds: function(sdp) {
+  findExtmapIds(sdp) {
     var sdpExtmapIds = [];
     extmapRegEx = /^a=extmap:([0-9+])/gm;
     // must call exec on the regex to get each match in the string
@@ -45,7 +45,7 @@ var sdputils = {
     return sdpExtmapIds;
   },
 
-  findExtmapIdsUrnsDirections: function(sdp) {
+  findExtmapIdsUrnsDirections(sdp) {
     var sdpExtmap = [];
     extmapRegEx = /^a=extmap:([0-9+])([A-Za-z/]*) ([A-Za-z0-9_:\-\/\.]+)/gm;
     // must call exec on the regex to get each match in the string
@@ -62,7 +62,7 @@ var sdputils = {
     return sdpExtmap;
   },
 
-  verify_unique_extmap_ids: function(sdp) {
+  verify_unique_extmap_ids(sdp) {
     const sdpExtmapIds = sdputils.findExtmapIdsUrnsDirections(sdp);
 
     return sdpExtmapIds.reduce(function(result, item, index) {
@@ -76,26 +76,26 @@ var sdputils = {
     }, {});
   },
 
-  getMSections: function(sdp) {
+  getMSections(sdp) {
     return sdp
       .split(new RegExp("^m=", "gm"))
       .slice(1)
       .map(s => "m=" + s);
   },
 
-  getAudioMSections: function(sdp) {
+  getAudioMSections(sdp) {
     return this.getMSections(sdp).filter(section =>
       section.startsWith("m=audio")
     );
   },
 
-  getVideoMSections: function(sdp) {
+  getVideoMSections(sdp) {
     return this.getMSections(sdp).filter(section =>
       section.startsWith("m=video")
     );
   },
 
-  checkSdpAfterEndOfTrickle: function(description, testOptions, label) {
+  checkSdpAfterEndOfTrickle(description, testOptions, label) {
     info("EOC-SDP: " + JSON.stringify(description));
 
     const checkForTransportAttributes = msection => {
@@ -155,7 +155,7 @@ var sdputils = {
 
   // Note, we don't bother removing the fmtp lines, which makes a good test
   // for some SDP parsing issues.
-  removeCodec: function(sdp, codec) {
+  removeCodec(sdp, codec) {
     var updated_sdp = sdp.replace(
       new RegExp("a=rtpmap:" + codec + ".*\\/90000\\r\\n", ""),
       ""
@@ -179,59 +179,59 @@ var sdputils = {
     return updated_sdp;
   },
 
-  removeAllButPayloadType: function(sdp, pt) {
+  removeAllButPayloadType(sdp, pt) {
     return sdp.replace(
       new RegExp("m=(\\w+ \\w+) UDP/TLS/RTP/SAVPF .*" + pt + ".*\\r\\n", "gi"),
       "m=$1 UDP/TLS/RTP/SAVPF " + pt + "\r\n"
     );
   },
 
-  removeRtpMapForPayloadType: function(sdp, pt) {
+  removeRtpMapForPayloadType(sdp, pt) {
     return sdp.replace(new RegExp("a=rtpmap:" + pt + ".*\\r\\n", "gi"), "");
   },
 
-  removeRtcpMux: function(sdp) {
+  removeRtcpMux(sdp) {
     return sdp.replace(/a=rtcp-mux\r\n/g, "");
   },
 
-  removeSSRCs: function(sdp) {
+  removeSSRCs(sdp) {
     return sdp.replace(/a=ssrc.*\r\n/g, "");
   },
 
-  removeBundle: function(sdp) {
+  removeBundle(sdp) {
     return sdp.replace(/a=group:BUNDLE .*\r\n/g, "");
   },
 
-  reduceAudioMLineToPcmuPcma: function(sdp) {
+  reduceAudioMLineToPcmuPcma(sdp) {
     return sdp.replace(
       /m=audio .*\r\n/g,
       "m=audio 9 UDP/TLS/RTP/SAVPF 0 8\r\n"
     );
   },
 
-  setAllMsectionsInactive: function(sdp) {
+  setAllMsectionsInactive(sdp) {
     return sdp
       .replace(/\r\na=sendrecv/g, "\r\na=inactive")
       .replace(/\r\na=sendonly/g, "\r\na=inactive")
       .replace(/\r\na=recvonly/g, "\r\na=inactive");
   },
 
-  removeAllRtpMaps: function(sdp) {
+  removeAllRtpMaps(sdp) {
     return sdp.replace(/a=rtpmap:.*\r\n/g, "");
   },
 
-  reduceAudioMLineToDynamicPtAndOpus: function(sdp) {
+  reduceAudioMLineToDynamicPtAndOpus(sdp) {
     return sdp.replace(
       /m=audio .*\r\n/g,
       "m=audio 9 UDP/TLS/RTP/SAVPF 101 109\r\n"
     );
   },
 
-  addTiasBps: function(sdp, bps) {
+  addTiasBps(sdp, bps) {
     return sdp.replace(/c=IN (.*)\r\n/g, "c=IN $1\r\nb=TIAS:" + bps + "\r\n");
   },
 
-  removeSimulcastProperties: function(sdp) {
+  removeSimulcastProperties(sdp) {
     return sdp
       .replace(/a=simulcast:.*\r\n/g, "")
       .replace(/a=rid:.*\r\n/g, "")
@@ -241,7 +241,7 @@ var sdputils = {
       );
   },
 
-  transferSimulcastProperties: function(offer_sdp, answer_sdp) {
+  transferSimulcastProperties(offer_sdp, answer_sdp) {
     if (!offer_sdp.includes("a=simulcast:")) {
       return answer_sdp;
     }
@@ -269,7 +269,7 @@ var sdputils = {
     return new_answer_sdp;
   },
 
-  verifySdp: function(
+  verifySdp(
     desc,
     expectedType,
     offerConstraintsList,
@@ -365,7 +365,7 @@ var sdputils = {
    * @param constraints
    *        The contraint to be examined.
    */
-  countTracksInConstraint: function(type, constraints) {
+  countTracksInConstraint(type, constraints) {
     if (!Array.isArray(constraints)) {
       return 0;
     }

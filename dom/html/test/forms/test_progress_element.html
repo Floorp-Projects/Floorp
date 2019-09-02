@@ -247,7 +247,7 @@ function checkNotResetableAndFormSubmission(aElement)
   aElement.max = 100.0;
 
   document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
-    is(frames['submit_frame'].location.href,
+    is(frames.submit_frame.location.href,
       'http://mochi.test:8888/tests/dom/html/test/forms/foo?a=tulip',
        "The progress element value should not be submitted");
 

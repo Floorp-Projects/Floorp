@@ -181,22 +181,22 @@ add_task(async function test() {
     "Scalar keys are set: " + Object.keys(webauthn_used).join(", ")
   );
   is(
-    webauthn_used["U2FRegisterFinish"],
+    webauthn_used.U2FRegisterFinish,
     1,
     "webauthn_used U2FRegisterFinish scalar should be 1"
   );
   is(
-    webauthn_used["U2FSignFinish"],
+    webauthn_used.U2FSignFinish,
     1,
     "webauthn_used U2FSignFinish scalar should be 1"
   );
   is(
-    webauthn_used["U2FSignAbort"],
+    webauthn_used.U2FSignAbort,
     undefined,
     "webauthn_used U2FSignAbort scalar must be unset"
   );
   is(
-    webauthn_used["U2FRegisterAbort"],
+    webauthn_used.U2FRegisterAbort,
     undefined,
     "webauthn_used U2FRegisterAbort scalar must be unset"
   );

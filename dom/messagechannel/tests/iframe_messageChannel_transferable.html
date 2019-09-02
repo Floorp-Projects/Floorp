@@ -4,7 +4,7 @@
   <script type="application/javascript">
 
   function ok(what, msg) {
-    window.parent.postMessage({type: what ? 'OK' : 'KO', msg: msg }, '*');
+    window.parent.postMessage({type: what ? 'OK' : 'KO', msg }, '*');
   }
 
   window.addEventListener('message', receiveMessage);

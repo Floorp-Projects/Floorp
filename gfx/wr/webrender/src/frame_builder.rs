@@ -5,30 +5,37 @@
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::{PipelineId};
 use api::units::*;
+use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipDataStore, ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::debug_render::DebugItem;
 use crate::display_list_flattener::{DisplayListFlattener};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
+use crate::gpu_types::TransformData;
 use crate::hit_test::{HitTester, HitTestingScene};
 #[cfg(feature = "replay")]
 use crate::hit_test::HitTestingSceneStats;
-use crate::internal_types::{FastHashMap, PlaneSplitter};
-use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
+use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
+use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
-use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
+use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
+use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
 #[cfg(feature = "replay")]
 use crate::prim_store::{PrimitiveStoreStats};
 use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use crate::render_backend::{DataStores, FrameStamp};
-use crate::render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskGraph, RenderTaskGraphCounters};
+use crate::render_backend::{DataStores, FrameStamp, FrameId};
+use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
+use crate::render_target::{RenderTargetContext, RenderTargetKind};
+use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCounters};
+use crate::render_task_graph::{RenderPassKind, RenderPass};
+use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{ScenePipeline, SceneProperties};
 use crate::scene_builder::DocumentStats;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
-use crate::tiling::{Frame, RenderPassKind, RenderTargetContext};
 use crate::util::MaxRect;
 
 
@@ -99,7 +106,7 @@ impl FrameGlobalResources {
     }
 }
 
-/// A builder structure for `tiling::Frame`
+/// A builder structure for `render_task_graph::Frame`
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
     output_rect: DeviceIntRect,
@@ -604,7 +611,8 @@ impl FrameBuilder {
                     globals: &self.globals,
                 };
 
-                pass.build(
+                build_render_pass(
+                    pass,
                     &mut ctx,
                     gpu_cache,
                     &mut render_tasks,
@@ -668,5 +676,360 @@ impl FrameBuilder {
             &self.clip_store,
             clip_data_store,
         )
+    }
+}
+
+/// Processes this pass to prepare it for rendering.
+///
+/// Among other things, this allocates output regions for each of our tasks
+/// (added via `add_render_task`) in a RenderTarget and assigns it into that
+/// target.
+pub fn build_render_pass(
+    pass: &mut RenderPass,
+    ctx: &mut RenderTargetContext,
+    gpu_cache: &mut GpuCache,
+    render_tasks: &mut RenderTaskGraph,
+    deferred_resolves: &mut Vec<DeferredResolve>,
+    clip_store: &ClipStore,
+    transforms: &mut TransformPalette,
+    prim_headers: &mut PrimitiveHeaders,
+    z_generator: &mut ZBufferIdGenerator,
+) {
+    profile_scope!("RenderPass::build");
+
+    match pass.kind {
+        RenderPassKind::MainFramebuffer { ref mut main_target, .. } => {
+            for &task_id in &pass.tasks {
+                assert_eq!(render_tasks[task_id].target_kind(), RenderTargetKind::Color);
+                main_target.add_task(
+                    task_id,
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    clip_store,
+                    transforms,
+                    deferred_resolves,
+                );
+            }
+            main_target.build(
+                ctx,
+                gpu_cache,
+                render_tasks,
+                deferred_resolves,
+                prim_headers,
+                transforms,
+                z_generator,
+            );
+        }
+        RenderPassKind::OffScreen {
+            ref mut color,
+            ref mut alpha,
+            ref mut texture_cache,
+            ref mut picture_cache,
+        } => {
+            let saved_color = if pass.tasks.iter().any(|&task_id| {
+                let t = &render_tasks[task_id];
+                t.target_kind() == RenderTargetKind::Color && t.saved_index.is_some()
+            }) {
+                Some(render_tasks.save_target())
+            } else {
+                None
+            };
+            let saved_alpha = if pass.tasks.iter().any(|&task_id| {
+                let t = &render_tasks[task_id];
+                t.target_kind() == RenderTargetKind::Alpha && t.saved_index.is_some()
+            }) {
+                Some(render_tasks.save_target())
+            } else {
+                None
+            };
+
+            // Collect a list of picture cache tasks, keyed by picture index.
+            // This allows us to only walk that picture root once, adding the
+            // primitives to all relevant batches at the same time.
+            let mut picture_cache_tasks = FastHashMap::default();
+
+            // Step through each task, adding to batches as appropriate.
+            for &task_id in &pass.tasks {
+                let (target_kind, texture_target, layer) = {
+                    let task = &mut render_tasks[task_id];
+                    let target_kind = task.target_kind();
+
+                    // Find a target to assign this task to, or create a new
+                    // one if required.
+                    let (texture_target, layer) = match task.location {
+                        RenderTaskLocation::TextureCache { texture, layer, .. } => {
+                            (Some(texture), layer)
+                        }
+                        RenderTaskLocation::Fixed(..) => {
+                            (None, 0)
+                        }
+                        RenderTaskLocation::Dynamic(ref mut origin, size) => {
+                            let (target_index, alloc_origin) =  match target_kind {
+                                RenderTargetKind::Color => color.allocate(size),
+                                RenderTargetKind::Alpha => alpha.allocate(size),
+                            };
+                            *origin = Some((alloc_origin, target_index));
+                            (None, target_index.0)
+                        }
+                        RenderTaskLocation::PictureCache { .. } => {
+                            // For picture cache tiles, just store them in the map
+                            // of picture cache tasks, to be handled below.
+                            let pic_index = match task.kind {
+                                RenderTaskKind::Picture(ref info) => {
+                                    info.pic_index
+                                }
+                                _ => {
+                                    unreachable!();
+                                }
+                            };
+
+                            picture_cache_tasks
+                                .entry(pic_index)
+                                .or_insert_with(Vec::new)
+                                .push(task_id);
+
+                            continue;
+                        }
+                    };
+
+                    // Replace the pending saved index with a real one
+                    if let Some(index) = task.saved_index {
+                        assert_eq!(index, SavedTargetIndex::PENDING);
+                        task.saved_index = match target_kind {
+                            RenderTargetKind::Color => saved_color,
+                            RenderTargetKind::Alpha => saved_alpha,
+                        };
+                    }
+
+                    // Give the render task an opportunity to add any
+                    // information to the GPU cache, if appropriate.
+                    task.write_gpu_blocks(gpu_cache);
+
+                    (target_kind, texture_target, layer)
+                };
+
+                match texture_target {
+                    Some(texture_target) => {
+                        let texture = texture_cache
+                            .entry((texture_target, layer))
+                            .or_insert_with(||
+                                TextureCacheRenderTarget::new(target_kind)
+                            );
+                        texture.add_task(task_id, render_tasks);
+                    }
+                    None => {
+                        match target_kind {
+                            RenderTargetKind::Color => {
+                                color.targets[layer].add_task(
+                                    task_id,
+                                    ctx,
+                                    gpu_cache,
+                                    render_tasks,
+                                    clip_store,
+                                    transforms,
+                                    deferred_resolves,
+                                )
+                            }
+                            RenderTargetKind::Alpha => {
+                                alpha.targets[layer].add_task(
+                                    task_id,
+                                    ctx,
+                                    gpu_cache,
+                                    render_tasks,
+                                    clip_store,
+                                    transforms,
+                                    deferred_resolves,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // For each picture in this pass that has picture cache tiles, create
+            // a batcher per task, and then build batches for each of the tasks
+            // at the same time.
+            for (pic_index, task_ids) in picture_cache_tasks {
+                let pic = &ctx.prim_store.pictures[pic_index.0];
+                let tile_cache = pic.tile_cache.as_ref().expect("bug");
+
+                // Extract raster/surface spatial nodes for this surface.
+                let (root_spatial_node_index, surface_spatial_node_index) = match pic.raster_config {
+                    Some(ref rc) => {
+                        let surface = &ctx.surfaces[rc.surface_index.0];
+                        (surface.raster_spatial_node_index, surface.surface_spatial_node_index)
+                    }
+                    None => {
+                        unreachable!();
+                    }
+                };
+
+                // Determine the clear color for this picture cache.
+                // If the entire tile cache is opaque, we can skip clear completely.
+                // If it's the first layer, clear it to white to allow subpixel AA on that
+                // first layer even if it's technically transparent.
+                // Otherwise, clear to transparent and composite with alpha.
+                // TODO(gw): We can detect per-tile opacity for the clear color here
+                //           which might be a significant win on some pages?
+                let forced_opaque = match tile_cache.background_color {
+                    Some(color) => color.a >= 1.0,
+                    None => false,
+                };
+                // TODO(gw): Once we have multiple slices enabled, take advantage of
+                //           option to skip clears if the slice is opaque.
+                let clear_color = if forced_opaque {
+                    Some(ColorF::WHITE)
+                } else {
+                    Some(ColorF::TRANSPARENT)
+                };
+
+                // Create an alpha batcher for each of the tasks of this picture.
+                let mut batchers = Vec::new();
+                for task_id in &task_ids {
+                    let task_id = *task_id;
+                    let vis_mask = match render_tasks[task_id].kind {
+                        RenderTaskKind::Picture(ref info) => info.vis_mask,
+                        _ => unreachable!(),
+                    };
+                    batchers.push(AlphaBatchBuilder::new(
+                        pass.screen_size,
+                        ctx.break_advanced_blend_batches,
+                        ctx.batch_lookback_count,
+                        task_id,
+                        render_tasks.get_task_address(task_id),
+                        vis_mask,
+                    ));
+                }
+
+                // Run the batch creation code for this picture, adding items to
+                // all relevant per-task batchers.
+                let mut batch_builder = BatchBuilder::new(batchers);
+                batch_builder.add_pic_to_batch(
+                    pic,
+                    ctx,
+                    gpu_cache,
+                    render_tasks,
+                    deferred_resolves,
+                    prim_headers,
+                    transforms,
+                    root_spatial_node_index,
+                    surface_spatial_node_index,
+                    z_generator,
+                );
+
+                // Create picture cache targets, one per render task, and assign
+                // the correct batcher to them.
+                let batchers = batch_builder.finalize();
+                for (task_id, batcher) in task_ids.into_iter().zip(batchers.into_iter()) {
+                    let task = &render_tasks[task_id];
+                    let (target_rect, _) = task.get_target_rect();
+
+                    match task.location {
+                        RenderTaskLocation::PictureCache { texture, layer, .. } => {
+                            // TODO(gw): The interface here is a bit untidy since it's
+                            //           designed to support batch merging, which isn't
+                            //           relevant for picture cache targets. We
+                            //           can restructure / tidy this up a bit.
+                            let mut batch_containers = Vec::new();
+                            let mut alpha_batch_container = AlphaBatchContainer::new(None);
+                            batcher.build(
+                                &mut batch_containers,
+                                &mut alpha_batch_container,
+                                target_rect,
+                                None,
+                            );
+                            debug_assert!(batch_containers.is_empty());
+
+                            let target = PictureCacheTarget {
+                                texture,
+                                layer: layer as usize,
+                                clear_color,
+                                alpha_batch_container,
+                            };
+
+                            picture_cache.push(target);
+                        }
+                        _ => {
+                            unreachable!()
+                        }
+                    }
+                }
+            }
+
+            color.build(
+                ctx,
+                gpu_cache,
+                render_tasks,
+                deferred_resolves,
+                saved_color,
+                prim_headers,
+                transforms,
+                z_generator,
+            );
+            alpha.build(
+                ctx,
+                gpu_cache,
+                render_tasks,
+                deferred_resolves,
+                saved_alpha,
+                prim_headers,
+                transforms,
+                z_generator,
+            );
+        }
+    }
+}
+
+/// A rendering-oriented representation of the frame built by the render backend
+/// and presented to the renderer.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct Frame {
+    /// The origin on content produced by the render tasks.
+    pub content_origin: DeviceIntPoint,
+    /// The rectangle to show the frame in, on screen.
+    pub device_rect: DeviceIntRect,
+    pub background_color: Option<ColorF>,
+    pub layer: DocumentLayer,
+    pub passes: Vec<RenderPass>,
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
+    pub profile_counters: FrameProfileCounters,
+
+    pub transform_palette: Vec<TransformData>,
+    pub render_tasks: RenderTaskGraph,
+    pub prim_headers: PrimitiveHeaders,
+
+    /// The GPU cache frame that the contents of Self depend on
+    pub gpu_cache_frame_id: FrameId,
+
+    /// List of textures that we don't know about yet
+    /// from the backend thread. The render thread
+    /// will use a callback to resolve these and
+    /// patch the data structures.
+    pub deferred_resolves: Vec<DeferredResolve>,
+
+    /// True if this frame contains any render tasks
+    /// that write to the texture cache.
+    pub has_texture_cache_tasks: bool,
+
+    /// True if this frame has been drawn by the
+    /// renderer.
+    pub has_been_rendered: bool,
+
+    /// Dirty regions recorded when generating this frame. Empty when not in
+    /// testing.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
+
+    /// Debugging information to overlay for this frame.
+    pub debug_items: Vec<DebugItem>,
+}
+
+impl Frame {
+    // This frame must be flushed if it writes to the
+    // texture cache, and hasn't been drawn yet.
+    pub fn must_be_drawn(&self) -> bool {
+        self.has_texture_cache_tasks && !self.has_been_rendered
     }
 }

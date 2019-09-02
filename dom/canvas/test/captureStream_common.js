@@ -40,7 +40,7 @@ CaptureStreamTestHelper.prototype = {
    * Perform the drawing operation on each animation frame until stop is called
    * on the returned object.
    */
-  startDrawing: function(f) {
+  startDrawing(f) {
     var stop = false;
     var draw = () => {
       if (stop) {
@@ -54,7 +54,7 @@ CaptureStreamTestHelper.prototype = {
   },
 
   /* Request a frame from the stream played by |video|. */
-  requestFrame: function(video) {
+  requestFrame(video) {
     info("Requesting frame from " + video.id);
     video.srcObject.requestFrame();
   },
@@ -63,7 +63,7 @@ CaptureStreamTestHelper.prototype = {
    * Returns the pixel at (|offsetX|, |offsetY|) (from top left corner) of
    * |video| as an array of the pixel's color channels: [R,G,B,A].
    */
-  getPixel: function(video, offsetX = 0, offsetY = 0) {
+  getPixel(video, offsetX = 0, offsetY = 0) {
     // Avoids old values in case of a transparent image.
     CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
 
@@ -89,7 +89,7 @@ CaptureStreamTestHelper.prototype = {
    *
    * Threshold defaults to 0 which is an exact match.
    */
-  isPixel: function(px, refColor, threshold = 0) {
+  isPixel(px, refColor, threshold = 0) {
     return px.every((ch, i) => Math.abs(ch - refColor.data[i]) <= threshold);
   },
 
@@ -100,14 +100,14 @@ CaptureStreamTestHelper.prototype = {
    *
    * Threshold defaults to 127 which should be far enough for most cases.
    */
-  isPixelNot: function(px, refColor, threshold = 127) {
+  isPixelNot(px, refColor, threshold = 127) {
     return px.some((ch, i) => Math.abs(ch - refColor.data[i]) > threshold);
   },
 
   /*
    * Behaves like isPixelNot but ignores the alpha channel.
    */
-  isOpaquePixelNot: function(px, refColor, threshold) {
+  isOpaquePixelNot(px, refColor, threshold) {
     px[3] = refColor.data[3];
     return this.isPixelNot(px, refColor, threshold);
   },
@@ -116,7 +116,7 @@ CaptureStreamTestHelper.prototype = {
    * Returns a promise that resolves when the provided function |test|
    * returns true, or rejects when the optional `cancel` promise resolves.
    */
-  waitForPixel: async function(
+  async waitForPixel(
     video,
     test,
     {
@@ -151,7 +151,7 @@ CaptureStreamTestHelper.prototype = {
    * on all channels. Use |threshold| for fuzzy matching the color on each
    * channel, in the range [0,255]. 0 means exact match, 255 accepts anything.
    */
-  pixelMustBecome: async function(
+  async pixelMustBecome(
     video,
     refColor,
     { threshold = 0, infoString = "n/a", cancel = new Promise(() => {}) } = {}
@@ -202,7 +202,7 @@ CaptureStreamTestHelper.prototype = {
    * top left pixel of |video| becomes |refColor|. The test is failed if the
    * time is not reached, or if the cancel promise resolves.
    */
-  pixelMustNotBecome: async function(
+  async pixelMustNotBecome(
     video,
     refColor,
     { threshold = 0, time = 5000, infoString = "n/a" } = {}
@@ -236,7 +236,7 @@ CaptureStreamTestHelper.prototype = {
   },
 
   /* Create an element of type |type| with id |id| and append it to the body. */
-  createAndAppendElement: function(type, id) {
+  createAndAppendElement(type, id) {
     var e = document.createElement(type);
     e.id = id;
     e.width = this.elemWidth;

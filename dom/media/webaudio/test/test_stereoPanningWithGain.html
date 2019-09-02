@@ -14,7 +14,7 @@ const size = 256;
 
 var gTest = {
   numberOfChannels: 2,
-  createGraph: function(context) {
+  createGraph(context) {
     var panner = context.createPanner();
     panner.setPosition(1.0, 0.0, 0.0); // reference distance the right
     panner.panningModel = "equalpower";
@@ -33,7 +33,7 @@ var gTest = {
 
     return panner;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(2, size, context.sampleRate);
     expectedBuffer.getChannelData(1)[0] = -0.5;
     expectedBuffer.getChannelData(1)[1] = -0.5;

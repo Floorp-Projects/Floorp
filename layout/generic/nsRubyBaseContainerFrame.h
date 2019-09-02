@@ -68,11 +68,11 @@ class nsRubyBaseContainerFrame final : public nsContainerFrame {
 
   struct RubyReflowInput;
   nscoord ReflowColumns(const RubyReflowInput& aReflowInput,
-                        nsReflowStatus& aStatus);
+                        ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
   nscoord ReflowOneColumn(const RubyReflowInput& aReflowInput,
                           uint32_t aColumnIndex,
                           const mozilla::RubyColumn& aColumn,
-                          nsReflowStatus& aStatus);
+                          ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
   nscoord ReflowSpans(const RubyReflowInput& aReflowInput);
 
   struct PullFrameState;

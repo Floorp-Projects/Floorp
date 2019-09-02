@@ -62,7 +62,7 @@ registerCleanupFunction(async function() {
   });
   const browserConsole = BrowserConsoleManager.getBrowserConsole();
   if (browserConsole) {
-    browserConsole.ui.clearOutput(true);
+    await clearOutput(browserConsole);
     await BrowserConsoleManager.toggleBrowserConsole();
   }
 });
@@ -1050,10 +1050,11 @@ async function setFilterState(hud, settings) {
       const filterInput = getFilterInput(hud);
       filterInput.focus();
       filterInput.select();
+      const win = outputNode.ownerDocument.defaultView;
       if (!value) {
-        EventUtils.synthesizeKey("KEY_Delete");
+        EventUtils.synthesizeKey("KEY_Delete", {}, win);
       } else {
-        EventUtils.sendString(value);
+        EventUtils.sendString(value, win);
       }
       await waitFor(() => filterInput.value === value);
       continue;
@@ -1558,4 +1559,10 @@ async function waitForLazyRequests(toolbox) {
   return waitUntil(() => {
     return !wrapper.networkDataProvider.lazyRequestData.size;
   });
+}
+
+async function clearOutput(hud, clearStorage = true) {
+  const onMessagesCleared = hud.ui.once("messages-cleared");
+  hud.ui.clearOutput(clearStorage);
+  await onMessagesCleared;
 }

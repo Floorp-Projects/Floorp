@@ -566,8 +566,8 @@ class nsXULElement : public nsStyledElement {
   /**
    * Add a listener for the specified attribute, if appropriate.
    */
-  void AddListenerFor(const nsAttrName& aName);
-  void MaybeAddPopupListener(nsAtom* aLocalName);
+  void AddListenerForAttributeIfNeeded(const nsAttrName& aName);
+  void AddListenerForAttributeIfNeeded(nsAtom* aLocalName);
 
   nsIWidget* GetWindowWidget();
 

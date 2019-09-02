@@ -49,7 +49,7 @@ function examiner() {
   SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === "specialpowers-http-notify-request") {
       if (data === "https://test1.example.com/tests/dom/security/test/csp/file_reloadInFreshProcess.sjs?largeAllocation_with_no_csp") {
         httpsCounter++;
@@ -63,7 +63,7 @@ examiner.prototype  = {
       }
     }
   },
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }

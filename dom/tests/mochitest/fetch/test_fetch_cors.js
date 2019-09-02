@@ -1117,7 +1117,7 @@ function testCrossOriginCredentials() {
       url = baseURL + "allowOrigin=" + escape(test.origin || origin);
     }
     req = {
-      url: url,
+      url,
       method: test.method,
       headers: test.headers,
       withCred: test.withCred,

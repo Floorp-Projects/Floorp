@@ -4075,9 +4075,10 @@ void GCRuntime::markCompartments() {
 
   while (!workList.empty()) {
     Compartment* comp = workList.popCopy();
-    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
-      Compartment* dest = e.front().key()->compartment();
-      if (dest && !dest->gcState.maybeAlive) {
+    for (Compartment::WrappedObjectCompartmentEnum e(comp); !e.empty();
+         e.popFront()) {
+      Compartment* dest = e.front();
+      if (!dest->gcState.maybeAlive) {
         dest->gcState.maybeAlive = true;
         if (!workList.append(dest)) {
           return;
@@ -4499,24 +4500,33 @@ static void DropStringWrappers(JSRuntime* rt) {
 
 bool Compartment::findSweepGroupEdges() {
   Zone* source = zone();
-  for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    JSObject* key = e.front().mutableKey();
+  for (WrappedObjectCompartmentEnum e(this); !e.empty(); e.popFront()) {
+    Compartment* targetComp = e.front();
+    Zone* target = targetComp->zone();
 
-    Zone* target = key->zone();
-    if (!target->isGCMarking()) {
+    if (!target->isGCMarking() || source->hasSweepGroupEdgeTo(target)) {
       continue;
     }
 
-    // Add an edge to the wrapped object's zone to ensure that the wrapper zone
-    // is not still being marked when we start sweeping the wrapped zone. As an
-    // optimization, if the wrapped object is already marked black there is no
-    // danger of later marking and we can skip this.
-    if (key->asTenured().isMarkedBlack()) {
-      continue;
-    }
+    for (ObjectWrapperEnum e(this, targetComp); !e.empty(); e.popFront()) {
+      JSObject* key = e.front().mutableKey();
+      MOZ_ASSERT(key->zone() == target);
 
-    if (!source->addSweepGroupEdgeTo(target)) {
-      return false;
+      // Add an edge to the wrapped object's zone to ensure that the wrapper
+      // zone is not still being marked when we start sweeping the wrapped zone.
+      // As an optimization, if the wrapped object is already marked black there
+      // is no danger of later marking and we can skip this.
+      if (key->asTenured().isMarkedBlack()) {
+        continue;
+      }
+
+      if (!source->addSweepGroupEdgeTo(target)) {
+        return false;
+      }
+
+      // We don't need to consider any more wrappers for this target
+      // compartment since we already added an edge.
+      break;
     }
   }
 

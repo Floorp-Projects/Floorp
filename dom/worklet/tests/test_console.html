@@ -17,7 +17,7 @@ function configureTest() {
   }
 
   consoleListener.prototype  = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       if (aTopic == "console-api-log-event") {
         var obj = aSubject.wrappedJSObject;
         if (obj.arguments[0] == "Hello world from a worklet") {

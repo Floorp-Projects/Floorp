@@ -41,32 +41,32 @@ function test1() {
   is(sessionStorage.key(-1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(sessionStorage.getItem("nonexisting"), null, "Nonexisting item is null (getItem())");
-  is(sessionStorage["nonexisting"], undefined, "Nonexisting item is undefined (array access)");
+  is(sessionStorage.nonexisting, undefined, "Nonexisting item is undefined (array access)");
   is(sessionStorage.nonexisting, undefined, "Nonexisting item is undefined (property access)");
   sessionStorage.removeItem("nonexisting"); // Just check there is no exception
 
   is(typeof sessionStorage.getItem("nonexisting"), "object", "getItem('nonexisting') is object");
-  is(typeof sessionStorage["nonexisting"], "undefined", "['nonexisting'] is undefined");
+  is(typeof sessionStorage.nonexisting, "undefined", "['nonexisting'] is undefined");
   is(typeof sessionStorage.nonexisting, "undefined", "nonexisting is undefined");
   is(typeof sessionStorage.getItem("nonexisting2"), "object", "getItem('nonexisting2') is object");
-  is(typeof sessionStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
+  is(typeof sessionStorage.nonexisting2, "undefined", "['nonexisting2'] is undefined");
   is(typeof sessionStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
   is(sessionStorage.getItem("empty"), "", "Empty value (getItem())");
-  is(sessionStorage["empty"], "", "Empty value (array access)");
+  is(sessionStorage.empty, "", "Empty value (array access)");
   is(sessionStorage.empty, "", "Empty value (property access)");
   is(typeof sessionStorage.getItem("empty"), "string", "getItem('empty') is string");
-  is(typeof sessionStorage["empty"], "string", "['empty'] is string");
+  is(typeof sessionStorage.empty, "string", "['empty'] is string");
   is(typeof sessionStorage.empty, "string", "empty is string");
   sessionStorage.removeItem("empty");
   is(sessionStorage.length, 0, "The storage has no keys");
   is(sessionStorage.getItem("empty"), null, "empty item is null (getItem())");
-  is(sessionStorage["empty"], undefined, "empty item is undefined (array access)");
+  is(sessionStorage.empty, undefined, "empty item is undefined (array access)");
   is(sessionStorage.empty, undefined, "empty item is undefined (property access)");
   is(typeof sessionStorage.getItem("empty"), "object", "getItem('empty') is object");
-  is(typeof sessionStorage["empty"], "undefined", "['empty'] is undefined");
+  is(typeof sessionStorage.empty, "undefined", "['empty'] is undefined");
   is(typeof sessionStorage.empty, "undefined", "empty is undefined");
 
   // add one key, check it is there
@@ -79,11 +79,11 @@ function test1() {
   // check all access method give the correct result
   // and are of the correct type
   is(sessionStorage.getItem("key1"), "value1", "getItem('key1') == value1");
-  is(sessionStorage["key1"], "value1", "['key1'] == value1");
+  is(sessionStorage.key1, "value1", "['key1'] == value1");
   is(sessionStorage.key1, "value1", "key1 == value1");
 
   is(typeof sessionStorage.getItem("key1"), "string", "getItem('key1') is string");
-  is(typeof sessionStorage["key1"], "string", "['key1'] is string");
+  is(typeof sessionStorage.key1, "string", "['key1'] is string");
   is(typeof sessionStorage.key1, "string", "key1 is string");
 
   // remove the previously added key and check the storage is empty
@@ -93,7 +93,7 @@ function test1() {
   is(sessionStorage.getItem("key1"), null, "\'key1\' removed");
 
   is(typeof sessionStorage.getItem("key1"), "object", "getItem('key1') is object");
-  is(typeof sessionStorage["key1"], "undefined", "['key1'] is undefined");
+  is(typeof sessionStorage.key1, "undefined", "['key1'] is undefined");
   is(typeof sessionStorage.key1, "undefined", "key1 is undefined");
 
   // add one key, check it is there
@@ -144,52 +144,52 @@ function test1() {
   // JS property test
   sessionStorage.testA = "valueA";
   is(sessionStorage.testA, "valueA");
-  is(sessionStorage["testA"], "valueA");
+  is(sessionStorage.testA, "valueA");
   is(sessionStorage.getItem("testA"), "valueA");
 
   sessionStorage.testA = "valueA2";
   is(sessionStorage.testA, "valueA2");
-  is(sessionStorage["testA"], "valueA2");
+  is(sessionStorage.testA, "valueA2");
   is(sessionStorage.getItem("testA"), "valueA2");
 
-  sessionStorage["testB"] = "valueB";
+  sessionStorage.testB = "valueB";
   is(sessionStorage.testB, "valueB");
-  is(sessionStorage["testB"], "valueB");
+  is(sessionStorage.testB, "valueB");
   is(sessionStorage.getItem("testB"), "valueB");
 
-  sessionStorage["testB"] = "valueB2";
+  sessionStorage.testB = "valueB2";
   is(sessionStorage.testB, "valueB2");
-  is(sessionStorage["testB"], "valueB2");
+  is(sessionStorage.testB, "valueB2");
   is(sessionStorage.getItem("testB"), "valueB2");
 
   sessionStorage.setItem("testC", "valueC");
   is(sessionStorage.testC, "valueC");
-  is(sessionStorage["testC"], "valueC");
+  is(sessionStorage.testC, "valueC");
   is(sessionStorage.getItem("testC"), "valueC");
 
   sessionStorage.setItem("testC", "valueC2");
   is(sessionStorage.testC, "valueC2");
-  is(sessionStorage["testC"], "valueC2");
+  is(sessionStorage.testC, "valueC2");
   is(sessionStorage.getItem("testC"), "valueC2");
 
   sessionStorage.setItem("testC", null);
   is("testC" in sessionStorage, true);
   is(sessionStorage.getItem("testC"), "null");
-  is(sessionStorage["testC"], "null");
+  is(sessionStorage.testC, "null");
   is(sessionStorage.testC, "null");
 
   sessionStorage.removeItem("testC");
-  sessionStorage["testC"] = null;
+  sessionStorage.testC = null;
   is("testC" in sessionStorage, true);
   is(sessionStorage.getItem("testC"), "null");
-  is(sessionStorage["testC"], "null");
+  is(sessionStorage.testC, "null");
   is(sessionStorage.testC, "null");
 
   sessionStorage.setItem(null, "test");
   is("null" in sessionStorage, true);
   is(sessionStorage.getItem("null"), "test");
   is(sessionStorage.getItem(null), "test");
-  is(sessionStorage["null"], "test");
+  is(sessionStorage.null, "test");
   sessionStorage.removeItem(null, "test");
   is("null" in sessionStorage, false);
 

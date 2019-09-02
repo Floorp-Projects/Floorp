@@ -333,11 +333,13 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-      const nsTArray<nsCString>&& aPositions,
-      const nsTArray<int32_t>&& aPositionDescendants,
+      nsTArray<nsCString>&& aPositions,
+      nsTArray<int32_t>&& aPositionDescendants,
       const nsTArray<InputFormData>& aInputs,
       const nsTArray<CollectedInputDataValue>& aIdVals,
       const nsTArray<CollectedInputDataValue>& aXPathVals,
+      nsTArray<nsCString>&& aOrigins, nsTArray<nsString>&& aKeys,
+      nsTArray<nsString>&& aValues, const bool aIsFullStorage,
       const uint32_t& aFlushId, const bool& aIsFinal, const uint32_t& aEpoch);
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(

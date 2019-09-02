@@ -29,7 +29,7 @@ function promiseWaitForEvent(
 function waitForDocLoadComplete(aBrowser = gBrowser) {
   return new Promise(resolve => {
     let listener = {
-      onStateChange: function(webProgress, req, flags, status) {
+      onStateChange(webProgress, req, flags, status) {
         let docStop =
           Ci.nsIWebProgressListener.STATE_IS_NETWORK |
           Ci.nsIWebProgressListener.STATE_STOP;

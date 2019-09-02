@@ -7,7 +7,7 @@ function localStorageFlush(cb) {
   }
 
   var ob = {
-    observe: function(sub, top, dat) {
+    observe(sub, top, dat) {
       os().removeObserver(ob, "domstorage-test-flushed");
       cb();
     },

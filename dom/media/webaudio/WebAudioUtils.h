@@ -38,14 +38,8 @@ const size_t MaxChannelCount = 32;
 const uint32_t MinSampleRate = 8000;
 const uint32_t MaxSampleRate = 192000;
 
-inline bool FuzzyEqual(float v1, float v2) {
-  using namespace std;
-  return fabsf(v1 - v2) < 1e-7f;
-}
-inline bool FuzzyEqual(double v1, double v2) {
-  using namespace std;
-  return fabs(v1 - v2) < 1e-7;
-}
+inline bool FuzzyEqual(float v1, float v2) { return fabsf(v1 - v2) < 1e-7f; }
+inline bool FuzzyEqual(double v1, double v2) { return fabs(v1 - v2) < 1e-7; }
 
 /**
  * Converts an AudioTimelineEvent's floating point time values to tick values
@@ -160,8 +154,7 @@ inline bool IsTimeValid(double aTime) {
  */
 template <typename IntType, typename FloatType>
 IntType TruncateFloatToInt(FloatType f) {
-  using namespace std;
-
+  using std::numeric_limits;
   static_assert(mozilla::IsIntegral<IntType>::value == true,
                 "IntType must be an integral type");
   static_assert(mozilla::IsFloatingPoint<FloatType>::value == true,

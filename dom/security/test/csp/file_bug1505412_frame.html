@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title> Bug 1505412 CSP-RO reports violations in inline-scripts with nonce</title>
+    <script src="/tests/SimpleTest/SimpleTest.js" nonce="foobar"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+ 
+
+<body>
+    <script src="file_bug1505412.sjs" nonce="foobar"></script>
+</body>
+
+</html>

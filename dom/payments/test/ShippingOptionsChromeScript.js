@@ -82,8 +82,8 @@ function updateRequest(requestId) {
 
 const TestingUIService = {
   showPayment: showRequest,
-  abortPayment: function(requestId) {},
-  completePayment: function(requestId) {
+  abortPayment(requestId) {},
+  completePayment(requestId) {
     let request = paymentSrv.getPaymentRequestById(requestId);
     let completeResponse = Cc[
       "@mozilla.org/dom/payments/payment-complete-action-response;1"
@@ -97,7 +97,7 @@ const TestingUIService = {
     );
   },
   updatePayment: updateRequest,
-  closePayment: function(requestId) {},
+  closePayment(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 

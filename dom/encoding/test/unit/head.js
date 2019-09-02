@@ -122,8 +122,8 @@ var tests = [];
 
 function test(func, msg) {
   tests.push({
-    msg: msg,
-    func: func,
+    msg,
+    func,
     filename: Components.stack.caller.filename,
   });
 }

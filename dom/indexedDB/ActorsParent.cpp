@@ -23163,9 +23163,8 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   AutoTArray<IndexUpdateInfo, 32> updateInfos;
   ErrorResult errorResult;
   IDBObjectStore::DeserializeIndexValueToUpdateInfos(
-      metadata.id(), metadata.keyPath(), metadata.unique(),
-      metadata.multiEntry(), metadata.locale(), cloneInfo, updateInfos,
-      errorResult);
+      metadata.id(), metadata.keyPath(), metadata.multiEntry(),
+      metadata.locale(), cloneInfo, updateInfos, errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
     return errorResult.StealNSResult();
   }

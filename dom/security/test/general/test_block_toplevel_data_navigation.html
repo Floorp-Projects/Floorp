@@ -28,10 +28,10 @@ window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   switch (event.data) {
     case "test1":
-      testsToRun["test1"] = true;
+      testsToRun.test1 = true;
       break;
     case "test3":
-      testsToRun["test3"] = true;
+      testsToRun.test3 = true;
       break;
   }
 }
@@ -42,7 +42,7 @@ function test1() {
   let win1 = window.open(TEST_FILE);
   // testsToRun["test1"] will be false if toplevel data: URI is blocked
   setTimeout(function () {
-    is(testsToRun["test1"], false,
+    is(testsToRun.test1, false,
       "toplevel data: URI navigation through click() should be blocked");
     win1.close();
     test2();
@@ -67,7 +67,7 @@ function test3() {
   let win3 = window.open("file_block_toplevel_data_navigation3.html");
   // testsToRun["test3"] will be false if toplevel data: URI is blocked
   setTimeout(function () {
-    is(testsToRun["test3"], false,
+    is(testsToRun.test3, false,
       "data: URI navigation through win.loc.href should be blocked");
     win3.close();
     test4();

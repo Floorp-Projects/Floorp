@@ -13,7 +13,7 @@ use crate::internal_types::LayoutPrimitiveInfo;
 use crate::picture::{SubpixelMode, SurfaceInfo};
 use crate::prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
-use crate::render_task::{RenderTaskGraph};
+use crate::render_task_graph::RenderTaskGraph;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};

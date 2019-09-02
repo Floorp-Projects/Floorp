@@ -9,11 +9,11 @@ for (var i = 0; i < gPaddingSize; i++) {
 }
 
 function ok(a, msg) {
-  postMessage({ type: "status", status: !!a, msg: msg });
+  postMessage({ type: "status", status: !!a, msg });
 }
 
 function is(a, b, msg) {
-  postMessage({ type: "status", status: a === b, msg: msg });
+  postMessage({ type: "status", status: a === b, msg });
 }
 
 function checkData(response, data_head, cb) {

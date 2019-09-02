@@ -38,7 +38,7 @@
         worker.postMessage({
           type: 'returnPrefs',
           prefs: event.data.prefs,
-          result: result
+          result
         });
 
       } else if (event.data.type == 'getHelperData') {

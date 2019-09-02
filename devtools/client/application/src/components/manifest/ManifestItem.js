@@ -27,16 +27,19 @@ class ManifestItem extends PureComponent {
     const { children, label } = this.props;
     return tr(
       {
-        className: "manifest-item",
+        className: "manifest-item js-manifest-item",
       },
       th(
         {
-          className: "manifest-item__label",
+          className: "manifest-item__label js-manifest-item-label",
           scope: "row",
         },
         label
       ),
-      td({ className: "manifest-item__value" }, children)
+      td(
+        { className: "manifest-item__value js-manifest-item-content" },
+        children
+      )
     );
   }
 }

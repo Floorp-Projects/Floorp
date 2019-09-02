@@ -14,7 +14,8 @@ static constexpr bool odd(int32_t n) { return (n & 1); }
 
 void TestAllOf() {
   using namespace mozilla;
-  using namespace std;
+  using std::begin;
+  using std::end;
 
   constexpr static int32_t arr1[3] = {1, 2, 3};
   MOZ_RELEASE_ASSERT(!AllOf(begin(arr1), end(arr1), even));

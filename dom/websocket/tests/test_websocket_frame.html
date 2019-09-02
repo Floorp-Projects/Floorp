@@ -36,7 +36,7 @@ ok(!!service, "We have the nsIWebSocketEventService");
 var listener = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebSocketEventListener]),
 
-  webSocketCreated: function(aWebSocketSerialID, aURI, aProtocols) {
+  webSocketCreated(aWebSocketSerialID, aURI, aProtocols) {
     info("WebSocketCreated");
 
     is(aURI, URI, "URI matches");
@@ -45,7 +45,7 @@ var listener = {
     webSocketCreatedCounter++;
   },
 
-  webSocketOpened: function(aWebSocketSerialID, aEffectiveURI, aProtocols, aExtensions, httpChannelId) {
+  webSocketOpened(aWebSocketSerialID, aEffectiveURI, aProtocols, aExtensions, httpChannelId) {
     info("WebSocketOpened");
 
     is(aEffectiveURI, URI, "EffectiveURI matches");
@@ -56,7 +56,7 @@ var listener = {
     webSocketOpenedCounter++;
   },
 
-  webSocketMessageAvailable: function(aWebSocketSerialID, aData, aMessageType) {
+  webSocketMessageAvailable(aWebSocketSerialID, aData, aMessageType) {
     info("WebSocketMessageAvailable");
 
     if (tests.length) {
@@ -74,7 +74,7 @@ var listener = {
     }
   },
 
-  webSocketClosed: function(aWebSocketSerialID, aWasClean,
+  webSocketClosed(aWebSocketSerialID, aWasClean,
                             aCode, aReason) {
     info("WebSocketClosed");
 
@@ -86,7 +86,7 @@ var listener = {
     checkListener();
   },
 
-  frameReceived: function(aWebSocketSerialID, aFrame) {
+  frameReceived(aWebSocketSerialID, aFrame) {
     ok(!!aFrame, "We have received a frame");
 
     if (tests.length) {
@@ -104,7 +104,7 @@ var listener = {
     frameReceivedCounter++;
   },
 
-  frameSent: function(aWebSocketSerialID, aFrame) {
+  frameSent(aWebSocketSerialID, aFrame) {
     ok(!!aFrame, "We have sent a frame");
 
     if (tests.length) {

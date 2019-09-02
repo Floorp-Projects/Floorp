@@ -18,7 +18,7 @@ onmessage = function(event) {
 
   postMessage({
     type: "status",
-    status: status,
+    status,
     msg: "WebSocket object:" + WebSocket,
   });
 

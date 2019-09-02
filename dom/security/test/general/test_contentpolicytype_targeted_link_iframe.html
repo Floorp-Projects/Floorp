@@ -35,7 +35,7 @@ const POLICYID = SpecialPowers.wrap(SpecialPowers.Components)
 
 var policy = {
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
@@ -46,12 +46,12 @@ var policy = {
   },
 
   // nsIFactory implementation
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let contentType = loadInfo.externalContentPolicyType;
 
     // make sure we get the right amount of content policy calls
@@ -67,7 +67,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }

@@ -18,7 +18,7 @@ function examiner() {
 }
 
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
 
     if(topic === "csp-on-violate-policy") {
       var violationString = SpecialPowers.getPrivilegedProps(SpecialPowers.
@@ -35,7 +35,7 @@ examiner.prototype  = {
 
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }

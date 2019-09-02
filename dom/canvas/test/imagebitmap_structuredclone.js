@@ -1,5 +1,5 @@
 function ok(expect, msg) {
-  postMessage({ type: "status", status: !!expect, msg: msg });
+  postMessage({ type: "status", status: !!expect, msg });
 }
 
 onmessage = function(event) {
@@ -21,7 +21,7 @@ onmessage = function(event) {
       );
 
       // send the newly created ImageBitmap back to the main-thread
-      postMessage({ type: "bitmap2", bitmap: bitmap });
+      postMessage({ type: "bitmap2", bitmap });
 
       // finish the test
       postMessage({ type: "finish" });

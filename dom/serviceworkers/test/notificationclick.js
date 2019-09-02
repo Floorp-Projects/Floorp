@@ -14,9 +14,9 @@ onnotificationclick = function(e) {
       client.postMessage({
         result:
           e.notification.data &&
-          e.notification.data["complex"] &&
-          e.notification.data["complex"][0] == "jsval" &&
-          e.notification.data["complex"][1] == 5,
+          e.notification.data.complex &&
+          e.notification.data.complex[0] == "jsval" &&
+          e.notification.data.complex[1] == 5,
       });
     });
   });

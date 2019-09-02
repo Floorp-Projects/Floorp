@@ -28,7 +28,7 @@ function examiner() {
 }
 
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == CSP_BLOCKED_SUBJECT) {
       let jsFileName = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
       if (jsFileName.endsWith("file_script_template.js")) {
@@ -45,7 +45,7 @@ examiner.prototype  = {
     }
   },
 
-  removeAndFinish: function() {
+  removeAndFinish() {
     SpecialPowers.removeObserver(this, CSP_BLOCKED_SUBJECT);
     SpecialPowers.removeObserver(this, CSP_ALLOWED_SUBJECT);
     SimpleTest.finish();

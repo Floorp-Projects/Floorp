@@ -4,7 +4,7 @@
   <script type="application/javascript">
 
   function ok(expect, msg) {
-    window.parent.postMessage({"type": "status", status: !!expect, msg: msg}, "*");
+    window.parent.postMessage({"type": "status", status: !!expect, msg}, "*");
   }
 
   window.onmessage = function(event) {

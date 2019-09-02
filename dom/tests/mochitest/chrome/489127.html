@@ -42,7 +42,7 @@
   function doTest() {
 
     // Set up shortcut access to elements
-    e['html'] = document.getElementsByTagName("html")[0];
+    e.html = document.getElementsByTagName("html")[0];
     ['h1', 'd1', 'd2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'span',
      'a1', 'a2', 'a3', 'transf', 'iframe1', 'body'].forEach(function(a) {
       e[a] = document.getElementById(a);

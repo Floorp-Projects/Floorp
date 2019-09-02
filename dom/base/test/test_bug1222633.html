@@ -54,7 +54,7 @@ function testCancelPreloadNotCrash(url) {
 
   // Not actually verifying any value, just to ensure cancelPrefetchPreload
   // won't cause crash.
-  prefetch.cancelPrefetchPreloadURI(ios.newURI(url, null, null), link);
+  prefetch.cancelPrefetchPreloadURI(ios.newURI(url), link);
 }
 
 function testChangePrefetchToPreload(url) {

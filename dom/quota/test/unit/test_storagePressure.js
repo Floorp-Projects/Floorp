@@ -19,7 +19,7 @@ function awaitStoragePressure() {
     promise_resolve(usage);
   }
 
-  Services.obs.addObserver(observer, "QuotaManager::StoragePressure", false);
+  Services.obs.addObserver(observer, "QuotaManager::StoragePressure");
 
   return promise;
 }

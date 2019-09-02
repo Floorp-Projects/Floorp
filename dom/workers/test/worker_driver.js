@@ -79,5 +79,5 @@ function workerTestExec(script) {
     SimpleTest.finish();
   };
 
-  worker.postMessage({ script: script });
+  worker.postMessage({ script });
 }

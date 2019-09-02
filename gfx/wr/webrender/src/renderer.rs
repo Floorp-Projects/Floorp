@@ -56,7 +56,7 @@ use crate::device::{ShaderError, TextureFilter, TextureFlags,
 use crate::device::ProgramCache;
 use crate::device::query::GpuTimer;
 use euclid::{rect, Transform3D, Scale, default};
-use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
+use crate::frame_builder::{Frame, ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
@@ -77,16 +77,18 @@ use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::record::ApiRecordingReceiver;
 use crate::render_backend::{FrameId, RenderBackend};
-use crate::render_task::{RenderTargetKind, RenderTask, RenderTaskData, RenderTaskKind, RenderTaskGraph};
+use crate::render_task_graph::RenderTaskGraph;
+use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind};
 use crate::resource_cache::ResourceCache;
 use crate::scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
 use crate::texture_cache::TextureCache;
-use crate::tiling::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
-use crate::tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
-use crate::tiling::{Frame, RenderTarget, TextureCacheRenderTarget};
+use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
+use crate::render_target::{RenderTarget, TextureCacheRenderTarget, RenderTargetList};
+use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
+use crate::render_task_graph::RenderPassKind;
 use crate::util::drain_filter;
 
 use std;
@@ -2861,7 +2863,7 @@ impl Renderer {
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
                     frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
-                self.draw_tile_frame(
+                self.draw_frame(
                     frame,
                     device_size,
                     cpu_frame_id,
@@ -2882,7 +2884,7 @@ impl Renderer {
 
                 // If we're the last document, don't call end_pass here, because we'll
                 // be moving on to drawing the debug overlays. See the comment above
-                // the end_pass call in draw_tile_frame about debug draw overlays
+                // the end_pass call in draw_frame about debug draw overlays
                 // for a bit more context.
                 if doc_index != last_document_index {
                     self.texture_resolver.end_pass(&mut self.device, None, None);
@@ -4508,7 +4510,7 @@ impl Renderer {
         debug_assert!(self.texture_resolver.prev_pass_color.is_none());
     }
 
-    fn draw_tile_frame(
+    fn draw_frame(
         &mut self,
         frame: &mut Frame,
         device_size: Option<DeviceIntSize>,
@@ -4518,7 +4520,7 @@ impl Renderer {
     ) {
         // These markers seem to crash a lot on Android, see bug 1559834
         #[cfg(not(target_os = "android"))]
-        let _gm = self.gpu_profile.start_marker("tile frame draw");
+        let _gm = self.gpu_profile.start_marker("draw frame");
 
         if frame.passes.is_empty() {
             frame.has_been_rendered = true;
