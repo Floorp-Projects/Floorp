@@ -62,6 +62,7 @@
 
 namespace mozilla {
 
+using namespace std;
 using namespace gfx;
 
 namespace layers {

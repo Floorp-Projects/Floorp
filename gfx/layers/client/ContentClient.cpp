@@ -39,6 +39,8 @@
 #include <utility>
 #include <vector>
 
+using namespace std;
+
 namespace mozilla {
 
 using namespace gfx;
@@ -572,7 +574,7 @@ class RemoteBufferReadbackProcessor : public TextureReadbackSink {
  private:
   nsTArray<ReadbackProcessor::Update> mReadbackUpdates;
   // This array is used to keep the layers alive until the callback.
-  std::vector<RefPtr<Layer>> mLayerRefs;
+  vector<RefPtr<Layer>> mLayerRefs;
 
   IntRect mBufferRect;
   nsIntPoint mBufferRotation;

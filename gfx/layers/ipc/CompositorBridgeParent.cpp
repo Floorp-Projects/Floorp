@@ -114,6 +114,7 @@ namespace layers {
 
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
+using namespace std;
 
 using base::ProcessId;
 using base::Thread;
@@ -235,7 +236,7 @@ CompositorBridgeParent::LayerTreeState::~LayerTreeState() {
   }
 }
 
-typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
+typedef map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
 LayerTreeMap sIndirectLayerTrees;
 StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
 
@@ -267,7 +268,7 @@ inline void CompositorBridgeParent::ForEachIndirectLayerTree(
  * compositions without having to keep references to the
  * compositor
  */
-typedef std::map<uint64_t, CompositorBridgeParent*> CompositorMap;
+typedef map<uint64_t, CompositorBridgeParent*> CompositorMap;
 static StaticAutoPtr<CompositorMap> sCompositorMap;
 
 void CompositorBridgeParent::Setup() {
