@@ -14816,34 +14816,24 @@ BrowsingContext* Document::GetBrowsingContext() const {
 }
 
 void Document::NotifyUserGestureActivation() {
-  if (HasBeenUserGestureActivated()) {
-    return;
+  for (RefPtr<BrowsingContext> bc = GetBrowsingContext(); bc;
+       bc = bc->GetParent()) {
+    bc->NotifyUserGestureActivation();
   }
-
-  RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  if (!bc) {
-    return;
-  }
-  bc->NotifyUserGestureActivation();
 }
 
 bool Document::HasBeenUserGestureActivated() {
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  if (!bc) {
-    return false;
-  }
-  return bc->GetUserGestureActivation();
+  return bc ? bc->GetIsActivatedByUserGesture() : false;
 }
 
 void Document::ClearUserGestureActivation() {
-  if (!HasBeenUserGestureActivated()) {
-    return;
+  if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
+    bc = bc->Top();
+    bc->PreOrderWalk([&](BrowsingContext* aContext) {
+      aContext->NotifyResetUserGestureActivation();
+    });
   }
-  RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  if (!bc) {
-    return;
-  }
-  bc->NotifyResetUserGestureActivation();
 }
 
 void Document::SetDocTreeHadAudibleMedia() {

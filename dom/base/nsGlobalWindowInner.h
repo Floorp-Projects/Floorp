@@ -1223,10 +1223,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void CallDocumentFlushedResolvers();
   void CancelDocumentFlushedResolvers();
 
-  // Return true if we need to notify browsing context to reset its user gesture
-  // activation flag.
-  bool ShouldResetBrowsingContextUserGestureActivation();
-
   // Try to fire the "load" event on our content embedder if we're an iframe.
   void FireFrameLoadEvent(bool aIsTrusted);
 
