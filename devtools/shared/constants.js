@@ -28,6 +28,8 @@ const ISSUE_TYPE = {
     INTERACTIVE_NO_ACTION: "INTERACTIVE_NO_ACTION",
     // Interative accessible objcets are not focusable.
     INTERACTIVE_NOT_FOCUSABLE: "INTERACTIVE_NOT_FOCUSABLE",
+    // Accessible objects can only be interacted with a mouse.
+    MOUSE_INTERACTIVE_ONLY: "MOUSE_INTERACTIVE_ONLY",
     // Focusable accessible objects have no focus styling.
     NO_FOCUS_VISIBLE: "NO_FOCUS_VISIBLE",
   },
