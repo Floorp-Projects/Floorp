@@ -781,8 +781,6 @@ pref("gfx.ycbcr.accurate-conversion", false);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.blob-images", true);
-pref("gfx.webrender.blob.paint-flashing", false);
 
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
@@ -804,14 +802,6 @@ pref("gfx.webrender.debug.slow-frame-indicator", false);
 pref("gfx.webrender.debug.picture-caching", false);
 pref("gfx.webrender.debug.primitives", false);
 pref("gfx.webrender.debug.small-screen", false);
-pref("gfx.webrender.dl.dump-parent", false);
-pref("gfx.webrender.dl.dump-content", false);
-pref("gfx.webrender.picture-caching", true);
-#ifdef NIGHTLY_BUILD
-  // Keep this pref hidden on non-nightly builds to avoid people accidentally
-  // turning it on.
-  pref("gfx.webrender.start-debug-server", false);
-#endif
 
 pref("accessibility.warn_on_browsewithcaret", true);
 
@@ -4421,12 +4411,6 @@ pref("layers.tiles.retain-back-buffer", true);
 
 pref("layers.draw-mask-debug", false);
 
-pref("gfx.content.always-paint", false);
-
-#ifdef ANDROID
-  pref("gfx.apitrace.enabled",false);
-#endif
-
 #ifdef MOZ_X11
   #ifdef MOZ_WIDGET_GTK
     pref("gfx.xrender.enabled",false);
@@ -4438,20 +4422,6 @@ pref("gfx.content.always-paint", false);
 #endif
 
 pref("widget.window-transforms.disabled", false);
-
-#ifdef XP_WIN
-  // Whether to defer destruction of Direct2D DrawTargets to the paint thread
-  // when using OMTP.
-  pref("gfx.direct2d.destroy-dt-on-paintthread", true);
-
-  // Prefer flipping between two buffers over copying from our back buffer
-  // to the OS.
-  #ifdef NIGHTLY_BUILD
-    pref("gfx.direct3d11.use-double-buffering", true);
-  #else
-    pref("gfx.direct3d11.use-double-buffering", false);
-  #endif
-#endif
 
 // Copy-on-write canvas
 pref("layers.shared-buffer-provider.enabled", true);
