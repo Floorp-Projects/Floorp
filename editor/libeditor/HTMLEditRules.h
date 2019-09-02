@@ -619,13 +619,6 @@ class HTMLEditRules : public TextEditRules {
                                                    nsAtom& aItemType);
 
   /**
-   * IsEmptyBlockElement() returns true if aElement is a block level element
-   * and it doesn't have any visible content.
-   */
-  enum class IgnoreSingleBR { eYes, eNo };
-  bool IsEmptyBlockElement(Element& aElement, IgnoreSingleBR aIgnoreSingleBR);
-
-  /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
    * of aStartNode in aEditingHostElement.
    * If found empty ancestor is a list item element, inserts a <br> element
