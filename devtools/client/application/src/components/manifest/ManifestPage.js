@@ -4,6 +4,7 @@
 
 "use strict";
 
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
   PureComponent,
@@ -12,63 +13,38 @@ const {
   section,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+
 const ManifestLoader = createFactory(require("../manifest/ManifestLoader"));
 
 const Manifest = createFactory(require("./Manifest"));
 const ManifestEmpty = createFactory(require("./ManifestEmpty"));
 
 class ManifestPage extends PureComponent {
-  render() {
-    // TODO: needs to be replaced with data from Redux
-    const data = {
-      validation: [
-        { level: "warning", message: "Icons item at index 0 is invalid." },
-        { level: "error", message: "Random JSON error" },
-        {
-          level: "warning",
-          message:
-            "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
-        },
-      ],
-      icons: [],
-      identity: [
-        {
-          key: "name",
-          value:
-            "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
-        },
-        {
-          key: "short_name",
-          value: "Na",
-        },
-      ],
-      presentation: [
-        { key: "display", value: "browser" },
-        { key: "orientation", value: "landscape" },
-        { key: "start_url", value: "root" },
-        { key: "theme_color", value: "#345" },
-        { key: "background_color", value: "#F9D" },
-      ],
+  // TODO: Use well-defined types
+  //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1576881
+  static get propTypes() {
+    return {
+      manifest: PropTypes.object,
     };
+  }
 
-    const isManifestEmpty = !data;
+  render() {
+    const { manifest } = this.props;
 
     return section(
       {
-        className: `app-page ${isManifestEmpty ? "app-page--empty" : ""}`,
+        className: `app-page ${!manifest ? "app-page--empty" : ""}`,
       },
       ManifestLoader({}),
-      isManifestEmpty
-        ? ManifestEmpty({})
-        : Manifest({
-            icons: data.icons,
-            identity: data.identity,
-            presentation: data.presentation,
-            validation: data.validation,
-          })
+      manifest ? Manifest({ ...manifest }) : ManifestEmpty({})
     );
   }
 }
-
+function mapStateToProps(state) {
+  return {
+    manifest: state.manifest.manifest,
+  };
+}
 // Exports
-module.exports = ManifestPage;
+module.exports = connect(mapStateToProps)(ManifestPage);
