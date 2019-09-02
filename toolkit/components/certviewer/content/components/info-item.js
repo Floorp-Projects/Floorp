@@ -23,6 +23,13 @@ export class InfoItem extends HTMLElement {
     this.render();
   }
 
+  handleTimeZone(infoElement) {
+    let localTime = this.item.info.local;
+    let UTCTime = this.item.info.utc;
+    infoElement.textContent = localTime;
+    infoElement.setAttribute("title", UTCTime);
+  }
+
   render() {
     let label = this.shadowRoot.querySelector("label");
     let labelText = normalizeToKebabCase(this.item.label);
@@ -31,6 +38,10 @@ export class InfoItem extends HTMLElement {
     this.classList.add(labelText);
 
     let info = this.shadowRoot.querySelector(".info");
+    if (this.item.info.hasOwnProperty("utc")) {
+      this.handleTimeZone(info);
+      return;
+    }
     info.textContent = Array.isArray(this.item.info)
       ? this.item.info.join(", ")
       : this.item.info;
