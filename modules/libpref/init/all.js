@@ -2654,23 +2654,6 @@ pref("general.smoothScroll.lines", true);
 pref("general.smoothScroll.pages", true);
 pref("general.smoothScroll.scrollbars", true);
 pref("general.smoothScroll.other", true);
-// To connect consecutive scroll events into a continuous flow, the animation's duration
-// should be longer than scroll events intervals (or else the scroll will stop
-// before the next event arrives - we're guessing next interval by averaging recent
-// intervals).
-// This defines how longer is the duration compared to events interval (percentage)
-pref("general.smoothScroll.durationToIntervalRatio", 200);
-// These two prefs determine the timing function.
-pref("general.smoothScroll.currentVelocityWeighting", "0.25");
-pref("general.smoothScroll.stopDecelerationWeighting", "0.4");
-// Alternative smooth scroll physics ("MSD" = Mass-Spring-Damper)
-pref("general.smoothScroll.msdPhysics.enabled", false);
-pref("general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS", 120);
-pref("general.smoothScroll.msdPhysics.motionBeginSpringConstant", 1250);
-pref("general.smoothScroll.msdPhysics.slowdownMinDeltaMS", 12);
-pref("general.smoothScroll.msdPhysics.slowdownMinDeltaRatio", "1.3");
-pref("general.smoothScroll.msdPhysics.slowdownSpringConstant", 2000);
-pref("general.smoothScroll.msdPhysics.regularSpringConstant", 1000);
 
 // We can show it anytime from menus
 pref("profile.manage_only_at_launch", false);
