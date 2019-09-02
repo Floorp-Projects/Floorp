@@ -636,8 +636,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
  protected:
   friend class HuffmanPreludeReader;
 
-  JSContext* cx_;
-
  public:
   // The following classes are used whenever we encounter a tuple/tagged
   // tuple/list to make sure that:
