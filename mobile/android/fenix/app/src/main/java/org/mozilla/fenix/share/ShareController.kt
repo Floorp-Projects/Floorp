@@ -94,6 +94,8 @@ class DefaultShareController(
     fun getShareText() = sharedTabs.joinToString("\n") { tab -> tab.url }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
-    private fun ShareTab.toTabData() = TabData(title, url)
-    private fun List<ShareTab>.toTabData() = map { it.toTabData() }
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun ShareTab.toTabData() = TabData(title, url)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun List<ShareTab>.toTabData() = map { it.toTabData() }
 }

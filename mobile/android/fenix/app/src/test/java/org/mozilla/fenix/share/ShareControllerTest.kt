@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import assertk.assertAll
 import assertk.assertThat
+import assertk.assertions.isDataClassEqualTo
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import io.mockk.Runs
@@ -16,14 +17,13 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.DeviceEventOutgoing
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.TabData
+import mozilla.components.feature.sendtab.SendTabUseCases
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
@@ -39,16 +39,20 @@ import org.robolectric.annotation.Config
 @Config(application = TestApplication::class)
 class ShareControllerTest {
     private val fragment = mockk<Fragment>(relaxed = true)
-    private val tabsToShare = listOf(
-        ShareTab("url0", "title0", "sessionId0"),
+    private val shareTabs = listOf(
+        ShareTab("url0", "title0"),
         ShareTab("url1", "title1")
     )
-    private val textToShare = "${tabsToShare[0].url}\n${tabsToShare[1].url}"
-    private val account = mockk<OAuthAccount>(relaxed = true)
+    // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
+    private val tabsData = listOf(
+        TabData("title0", "url0"),
+        TabData("title1", "url1")
+    )
+    private val textToShare = "${shareTabs[0].url}\n${shareTabs[1].url}"
+    private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
-    // Use a spy that allows overriding "controller.sendTab below"
-    private val controller = spyk(DefaultShareController(fragment, tabsToShare, account, navController, dismiss))
+    private val controller = DefaultShareController(fragment, shareTabs, sendTabUseCases, navController, dismiss)
 
     @Test
     fun `handleShareClosed should call a passed in delegate to close this`() {
@@ -91,22 +95,26 @@ class ShareControllerTest {
         val tabSharedCallbackActivity = mockk<HomeActivity>(relaxed = true)
         val sharedTabsNumber = slot<Int>()
         val deviceId = slot<String>()
+        val tabsShared = slot<List<TabData>>()
         every { fragment.activity } returns tabSharedCallbackActivity
 
         controller.handleShareToDevice(deviceToShareTo)
 
         // Verify all the needed methods are called.
-        verify { controller.sendTab(capture(deviceId)) }
-        verify { tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber)) }
-        verify { dismiss() }
+        verifyOrder {
+            sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
+            tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber))
+            dismiss()
+        }
         assertAll {
-            // sendTab() should be called for each device in the account
             assertThat(deviceId.isCaptured).isTrue()
             assertThat(deviceId.captured).isEqualTo(deviceToShareTo.id)
+            assertThat(tabsShared.isCaptured).isTrue()
+            assertThat(tabsShared.captured).isEqualTo(tabsData)
 
             // All current tabs should be shared
             assertThat(sharedTabsNumber.isCaptured).isTrue()
-            assertThat(sharedTabsNumber.captured).isEqualTo(tabsToShare.size)
+            assertThat(sharedTabsNumber.captured).isEqualTo(shareTabs.size)
         }
     }
 
@@ -118,25 +126,25 @@ class ShareControllerTest {
         )
         val tabSharedCallbackActivity = mockk<HomeActivity>(relaxed = true)
         val sharedTabsNumber = slot<Int>()
-        val sharedToDeviceIds = mutableListOf<String>()
+        val tabsShared = slot<List<TabData>>()
         every { fragment.activity } returns tabSharedCallbackActivity
 
         controller.handleShareToAllDevices(devicesToShareTo)
 
         // Verify all the needed methods are called. sendTab() should be called for each account device.
-        verify(exactly = devicesToShareTo.size) { controller.sendTab(capture(sharedToDeviceIds)) }
-        verify { tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber)) }
-        verify { dismiss() }
+        verifyOrder {
+            sendTabUseCases.sendToAllAsync(capture(tabsShared))
+            tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber))
+            dismiss()
+        }
         assertAll {
-            // sendTab() should be called for each device in the account
-            assertThat(sharedToDeviceIds.size).isEqualTo(devicesToShareTo.size)
-            sharedToDeviceIds.forEachIndexed { index, shareToDeviceId ->
-                assertThat(shareToDeviceId).isEqualTo(devicesToShareTo[index].id)
-            }
+            // SendTabUseCases should send a the `shareTabs` mapped to tabData
+            assertThat(tabsShared.isCaptured).isTrue()
+            assertThat(tabsShared.captured).isEqualTo(tabsData)
 
             // All current tabs should be shared
             assertThat(sharedTabsNumber.isCaptured).isTrue()
-            assertThat(sharedTabsNumber.captured).isEqualTo(tabsToShare.size)
+            assertThat(sharedTabsNumber.captured).isEqualTo(shareTabs.size)
         }
     }
 
@@ -154,37 +162,29 @@ class ShareControllerTest {
     }
 
     @Test
-    @Suppress("DeferredResultUnused")
-    fun `sendTab should send all current tabs to the selected device`() {
-        val deviceToShareTo =
-            Device("deviceId", "deviceName", DeviceType.UNKNOWN, false, 0L, emptyList(), false, null)
-        val sharedToDeviceIds = mutableListOf<String>()
-        val outgoingEvents = mutableListOf<DeviceEventOutgoing.SendTab>()
-
-        controller.sendTab(deviceToShareTo.id)
-
-        // Verify the sync components being called and record the sent values
-        verify {
-            account.deviceConstellation()
-                .sendEventToDeviceAsync(capture(sharedToDeviceIds), capture(outgoingEvents))
-        }
-        assertAll {
-            // All Tabs should be sent to the same device
-            assertThat(sharedToDeviceIds.size).isEqualTo(tabsToShare.size)
-            sharedToDeviceIds.forEach { sharedToDeviceId ->
-                assertThat(sharedToDeviceId).isEqualTo(deviceToShareTo.id)
-            }
-            // There should be an DeviceEventOutgoing.SendTab for each sent Tab
-            assertThat(outgoingEvents.size).isEqualTo(outgoingEvents.size)
-            outgoingEvents.forEachIndexed { index, event ->
-                assertThat((event).title).isEqualTo(tabsToShare[index].title)
-                assertThat((event).url).isEqualTo(tabsToShare[index].url)
-            }
-        }
+    fun `getShareText should respect concatenate shared tabs urls`() {
+        assertThat(controller.getShareText()).isEqualTo(textToShare)
     }
 
     @Test
-    fun `getShareText should respect concatenate shared tabs urls`() {
-        assertThat(controller.getShareText()).isEqualTo(textToShare)
+    fun `ShareTab#toTabData maps a ShareTab to a TabData`() {
+        var tabData: TabData
+
+        with(controller) {
+            tabData = shareTabs[0].toTabData()
+        }
+
+        assertThat(tabData).isDataClassEqualTo(tabsData[0])
+    }
+
+    @Test
+    fun `ShareTab#toTabData maps a list of ShareTab to a TabData list`() {
+        var tabData: List<TabData>
+
+        with(controller) {
+            tabData = shareTabs.toTabData()
+        }
+
+        assertThat(tabData).isEqualTo(tabsData)
     }
 }
