@@ -163,16 +163,7 @@ class HTMLEditRules : public TextEditRules {
    * no children.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode) {
-    return InsertBRIfNeededInternal(aNode, false);
-  }
-
-  /**
-   * Insert padding <br> element for empty last line into aNode when aNode is a
-   * block and it has no children.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertPaddingBRElementForEmptyLastLineIfNeeded(nsINode& aNode) {
-    return InsertBRIfNeededInternal(aNode, true);
+    return InsertBRIfNeededInternal(aNode);
   }
 
   /**
@@ -188,7 +179,7 @@ class HTMLEditRules : public TextEditRules {
    *                            <br> element, false.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertBRIfNeededInternal(nsINode& aNode, bool aForPadding);
+  InsertBRIfNeededInternal(nsINode& aNode);
 
   /**
    * GetGoodSelPointForNode() finds where at a node you would want to set the

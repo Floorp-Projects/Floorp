@@ -4748,12 +4748,18 @@ nsresult HTMLEditRules::DidMakeBasicBlock() {
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = InsertPaddingBRElementForEmptyLastLineIfNeeded(
-      MOZ_KnownLive(*atStartOfSelection.Container()));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!atStartOfSelection.Container()->IsElement()) {
+    return NS_OK;
   }
-  return NS_OK;
+  OwningNonNull<Element> startContainerElement =
+      *atStartOfSelection.Container()->AsElement();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .InsertPaddingBRElementForEmptyLastLineIfNeeded(
+                        startContainerElement);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "InsertPaddingBRElementForEmptyLastLineIfNeeded() failed");
+  return rv;
 }
 
 nsresult HTMLEditRules::WillIndent(bool* aCancel, bool* aHandled) {
@@ -10235,8 +10241,32 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
-                                                 bool aForPadding) {
+nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
+    Element& aElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
+    return NS_OK;
+  }
+
+  bool isEmpty = false;
+  nsresult rv = IsEmptyNode(&aElement, &isEmpty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (!isEmpty) {
+    return NS_OK;
+  }
+
+  CreateElementResult createBRResult =
+      InsertPaddingBRElementForEmptyLastLineWithTransaction(
+          EditorDOMPoint(&aElement, 0));
+  NS_WARNING_ASSERTION(createBRResult.Succeeded(),
+                       "Failed to create padding <br> element");
+  return createBRResult.Rv();
+}
+
+nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (!HTMLEditor::NodeIsBlockStatic(aNode)) {
@@ -10250,16 +10280,6 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
   }
   if (!isEmpty) {
     return NS_OK;
-  }
-
-  if (aForPadding) {
-    CreateElementResult createBRResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertPaddingBRElementForEmptyLastLineWithTransaction(
-                EditorDOMPoint(&aNode, 0));
-    NS_WARNING_ASSERTION(createBRResult.Succeeded(),
-                         "Failed to create padding <br> element");
-    return createBRResult.Rv();
   }
 
   RefPtr<Element> brElement =
