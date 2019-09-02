@@ -61,3 +61,33 @@ add_task(async function test_manifest() {
     });
   }
 });
+
+add_task(async function test_manifest_warnings_on_unexpected_props() {
+  let extension = await ExtensionTestUtils.loadExtension({
+    manifest: {
+      background: {
+        scripts: ["bg.js"],
+        wrong_prop: true,
+      },
+    },
+    files: {
+      "bg.js": "",
+    },
+  });
+
+  await extension.startup();
+
+  // Retrieve the warning message collected by the Extension class
+  // packagingWarning method.
+  const { warnings } = extension.extension;
+  equal(warnings.length, 1, "Got the expected number of manifest warnings");
+
+  const expectedMessage =
+    "Reading manifest: Warning processing background.wrong_prop";
+  ok(
+    warnings[0].startsWith(expectedMessage),
+    "Got the expected warning message format"
+  );
+
+  await extension.unload();
+});

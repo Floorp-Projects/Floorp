@@ -454,9 +454,12 @@ class Context {
    *        A caller may pass `null` to prevent a choice from being
    *        added, but this should *only* be done from code processing a
    *        choices type.
+   * @param {boolean} [warning = false]
+   *        If true, make message prefixed `Warning`. If false, make message
+   *        prefixed `Error`
    * @returns {object}
    */
-  error(errorMessage, choicesMessage = undefined) {
+  error(errorMessage, choicesMessage = undefined, warning = false) {
     if (choicesMessage !== null) {
       let { choicePath } = this;
       if (choicePath) {
@@ -470,7 +473,9 @@ class Context {
       let { currentTarget } = this;
       return {
         error: () =>
-          `Error processing ${currentTarget}: ${forceString(errorMessage)}`,
+          `${
+            warning ? "Warning" : "Error"
+          } processing ${currentTarget}: ${forceString(errorMessage)}`,
       };
     }
     return { error: errorMessage };
@@ -485,10 +490,12 @@ class Context {
    * the message, in the same way as for the `error` method.
    *
    * @param {string} message
+   * @param {object} [options]
+   * @param {boolean} [options.warning = false]
    * @returns {Error}
    */
-  makeError(message) {
-    let error = forceString(this.error(message).error);
+  makeError(message, { warning = false } = {}) {
+    let error = forceString(this.error(message, null, warning).error);
     if (this.cloneScope) {
       return new this.cloneScope.Error(error);
     }
@@ -1186,7 +1193,7 @@ class Entry {
       }
     }
 
-    context.logError(context.makeError(message));
+    context.logError(context.makeError(message, { warning: true }));
   }
 
   /**

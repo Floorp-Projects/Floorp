@@ -1266,8 +1266,8 @@ add_task(async function testDeprecation() {
     { foo: "bar", xxx: "any", yyy: "property" },
   ]);
   checkErrors([
-    "Error processing xxx: Unknown property",
-    "Error processing yyy: Unknown property",
+    "Warning processing xxx: Unknown property",
+    "Warning processing yyy: Unknown property",
   ]);
 
   root.deprecated.value(12);
