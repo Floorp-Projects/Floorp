@@ -18,7 +18,7 @@
     window.addEventListener("message", (msg)=>{
         ok(false, "The CSP did not block javascript:uri");
           SimpleTest.finish();
-    }, false);
+    });
 
     document.addEventListener("securitypolicyviolation",()=>{
         ok(true, "The CSP did block javascript:uri");

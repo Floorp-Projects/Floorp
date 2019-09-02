@@ -40,9 +40,9 @@ const DATE_BAD_INPUT_MSG = "Please enter a valid date.";
 const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
 function checkValidity(aElement, aIsBadInput) {
-  is(aElement.validity.valid, aIsBadInput ? false : true,
+  is(aElement.validity.valid, !aIsBadInput,
      "validity.valid should be " + (aIsBadInput ? "false" : "true"));
-  is(aElement.validity.badInput, aIsBadInput ? true : false,
+  is(aElement.validity.badInput, !!aIsBadInput,
      "validity.badInput should be " + (aIsBadInput ? "true" : "false"));
   is(aElement.validationMessage, aIsBadInput ? DATE_BAD_INPUT_MSG : "",
      "validationMessage should be: " + (aIsBadInput ? DATE_BAD_INPUT_MSG : ""));
