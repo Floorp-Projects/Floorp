@@ -1334,7 +1334,7 @@ BinASTTokenReaderContext::AutoTaggedTuple::AutoTaggedTuple(
     : AutoBase(reader) {}
 
 JS::Result<Ok> BinASTTokenReaderContext::AutoTaggedTuple::done() {
-  return reader_.raiseError("Not Yet Implemented");
+  return Ok();
 }
 
 template <typename T, int N>
@@ -1845,9 +1845,9 @@ HuffmanTableListLength& HuffmanDictionary::tableForListLength(BinASTList list) {
 
 uint32_t HuffmanLookup::leadingBits(const uint8_t bitLength) const {
   MOZ_ASSERT(bitLength <= this->bitLength);
-  const uint32_t result = bitLength == 0
-                              ? 0  // Shifting a uint32_t by 32 bits is UB.
-                              : this->bits >> uint32_t(32 - bitLength);
+  const uint32_t result =
+      bitLength == 0 ? 0  // Shifting a uint32_t by 32 bits is UB.
+                     : this->bits >> uint32_t(this->bitLength - bitLength);
   return result;
 }
 
