@@ -42,7 +42,7 @@ use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
 use std::{f32, mem, usize, ops};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
-use crate::tiling::{CompositeOps};
+use crate::render_task_graph::{CompositeOps};
 use crate::util::{MaxRect, VecHelper};
 use crate::filterdata::{SFilterDataComponent, SFilterData, SFilterDataKey};
 

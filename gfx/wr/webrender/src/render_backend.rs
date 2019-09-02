@@ -38,7 +38,7 @@ use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
 use crate::profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use crate::record::ApiRecordingReceiver;
-use crate::render_task::RenderTaskGraphCounters;
+use crate::render_task_graph::RenderTaskGraphCounters;
 use crate::renderer::{AsyncPropertySampler, PipelineInfo};
 use crate::resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
@@ -59,7 +59,7 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
 #[cfg(feature = "replay")]
-use crate::tiling::Frame;
+use crate::render_task_graph::Frame;
 use time::precise_time_ns;
 use crate::util::{Recycler, VecHelper, drain_filter};
 
@@ -1707,7 +1707,7 @@ impl RenderBackend {
     ) -> DebugOutput {
         use std::fs;
         use crate::capture::CaptureConfig;
-        use crate::render_task::dump_render_tasks_as_svg;
+        use crate::render_task_graph::dump_render_tasks_as_svg;
 
         debug!("capture: saving {:?}", root);
         if !root.is_dir() {

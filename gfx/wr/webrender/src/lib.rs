@@ -108,6 +108,7 @@ mod prim_store;
 mod print_tree;
 mod record;
 mod render_backend;
+mod render_task_graph;
 mod render_task;
 mod renderer;
 mod resource_cache;
@@ -120,7 +121,6 @@ mod spatial_node;
 mod storage;
 mod texture_allocator;
 mod texture_cache;
-mod tiling;
 mod util;
 
 mod shader_source {
