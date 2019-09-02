@@ -1214,7 +1214,7 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
       setMarkStackLimit(atoi(size), lock);
     }
 
-    if (!nursery().init(maxNurseryBytes, lock)) {
+    if (!nursery().init(lock)) {
       return false;
     }
 
