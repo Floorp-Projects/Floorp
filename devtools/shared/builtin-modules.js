@@ -22,6 +22,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const {
+  BrowsingContext,
   console,
   DebuggerNotificationObserver,
   DOMPoint,
@@ -313,6 +314,7 @@ exports.globals = {
   atob,
   Blob,
   btoa,
+  BrowsingContext,
   console,
   CSS,
   // Make sure `define` function exists.  This allows defining some modules
