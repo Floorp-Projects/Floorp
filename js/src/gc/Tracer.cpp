@@ -106,16 +106,24 @@ void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
 
 JS_PUBLIC_API void JS::TraceIncomingCCWs(
     JSTracer* trc, const JS::CompartmentSet& compartments) {
-  for (js::CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
-    if (compartments.has(comp)) {
+  for (CompartmentsIter source(trc->runtime()); !source.done(); source.next()) {
+    if (compartments.has(source)) {
       continue;
     }
-    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
-      JSObject* obj = e.front().key();
-      Compartment* comp = obj->compartment();
-      if (compartments.has(comp)) {
+    // Iterate over all compartments that |source| has wrappers for.
+    for (Compartment::WrappedObjectCompartmentEnum dest(source); !dest.empty();
+         dest.popFront()) {
+      if (!compartments.has(dest)) {
+        continue;
+      }
+      // Iterate over all wrappers from |source| to |dest| compartments.
+      for (Compartment::ObjectWrapperEnum e(source, dest); !e.empty();
+           e.popFront()) {
+        JSObject* obj = e.front().key();
+        MOZ_ASSERT(compartments.has(obj->compartment()));
         mozilla::DebugOnly<JSObject*> prior = obj;
-        TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
+        TraceManuallyBarrieredEdge(trc, &obj,
+                                   "cross-compartment wrapper target");
         MOZ_ASSERT(obj == prior);
       }
     }

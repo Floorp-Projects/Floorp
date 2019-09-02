@@ -25,9 +25,10 @@
 
 namespace js {
 
-// The data structure for storing JSObject CCWs, which has a map per target
-// compartment so we can access them easily. String CCWs are stored in a
-// separate map.
+// The data structure use to storing JSObject CCWs for a given source
+// compartment. These are partitioned by target compartment so that we can
+// easily select wrappers by source and target compartment. String CCWs are
+// stored in a per-zone separate map.
 class ObjectWrapperMap {
   static const size_t InitialInnerMapSize = 4;
 
@@ -125,6 +126,31 @@ class ObjectWrapperMap {
 
     Ptr() : InnerMap::Ptr(), map(nullptr) {}
     Ptr(const InnerMap::Ptr& p, InnerMap& m) : InnerMap::Ptr(p), map(&m) {}
+  };
+
+  // Iterator over compartments that the ObjectWrapperMap has wrappers for.
+  class WrappedCompartmentEnum {
+    OuterMap::Enum iter;
+
+    void settle() {
+      // It's possible for InnerMap to be empty after wrappers have been
+      // removed, e.g. by being nuked.
+      while (!iter.empty() && iter.front().value().empty()) {
+        iter.popFront();
+      }
+    }
+
+   public:
+    explicit WrappedCompartmentEnum(ObjectWrapperMap& map) : iter(map.map) {
+      settle();
+    }
+    bool empty() const { return iter.empty(); }
+    JS::Compartment* front() const { return iter.front().key(); }
+    operator JS::Compartment*() const { return front(); }
+    void popFront() {
+      iter.popFront();
+      settle();
+    }
   };
 
   explicit ObjectWrapperMap(Zone* zone) : map(zone), zone(zone) {}
@@ -358,17 +384,26 @@ class JS::Compartment {
     return crossCompartmentObjectWrappers.hasNurseryAllocatedWrapperEntries(f);
   }
 
+  // Iterator over |wrapped -> wrapper| entries for object CCWs in a given
+  // compartment. Can be optionally restricted by target compartment.
   struct ObjectWrapperEnum : public js::ObjectWrapperMap::Enum {
-    explicit ObjectWrapperEnum(JS::Compartment* c)
+    explicit ObjectWrapperEnum(Compartment* c)
         : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers) {}
-    explicit ObjectWrapperEnum(JS::Compartment* c,
-                               const js::CompartmentFilter& f)
+    explicit ObjectWrapperEnum(Compartment* c, const js::CompartmentFilter& f)
         : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers, f) {}
-    explicit ObjectWrapperEnum(JS::Compartment* c, JS::Compartment* target)
+    explicit ObjectWrapperEnum(Compartment* c, Compartment* target)
         : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers,
                                      target) {
       MOZ_ASSERT(target);
     }
+  };
+
+  // Iterator over compartments that this compartment has CCWs for.
+  struct WrappedObjectCompartmentEnum
+      : public js::ObjectWrapperMap::WrappedCompartmentEnum {
+    explicit WrappedObjectCompartmentEnum(Compartment* c)
+        : js::ObjectWrapperMap::WrappedCompartmentEnum(
+              c->crossCompartmentObjectWrappers) {}
   };
 
   /*
