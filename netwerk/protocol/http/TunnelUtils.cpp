@@ -104,6 +104,8 @@ TLSFilterTransaction::~TLSFilterTransaction() {
 }
 
 void TLSFilterTransaction::Cleanup() {
+  LOG(("TLSFilterTransaction::Cleanup %p", this));
+
   if (mTransaction) {
     mTransaction->Close(NS_ERROR_ABORT);
     mTransaction = nullptr;
@@ -121,6 +123,9 @@ void TLSFilterTransaction::Cleanup() {
 }
 
 void TLSFilterTransaction::Close(nsresult aReason) {
+  LOG(("TLSFilterTransaction::Close %p %" PRIx32, this,
+       static_cast<uint32_t>(aReason)));
+
   if (!mTransaction) {
     return;
   }
@@ -224,7 +229,11 @@ nsresult TLSFilterTransaction::OnReadSegment(const char* aData, uint32_t aCount,
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       // return OK because all the data was consumed and stored in this buffer
-      Connection()->TransactionHasDataToWrite(this);
+      // It is fine if the connection is null.  We are likely a websocket and
+      // thus writing push is ensured by the caller.
+      if (Connection()) {
+        Connection()->TransactionHasDataToWrite(this);
+      }
       return NS_OK;
     } else if (NS_FAILED(rv)) {
       return rv;
@@ -349,7 +358,9 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader* aReader,
       (mReadSegmentReturnValue == NS_BASE_STREAM_WOULD_BLOCK)) {
     LOG(("TLSFilterTransaction %p read segment blocked found rv=%" PRIx32 "\n",
          this, static_cast<uint32_t>(rv)));
-    Unused << Connection()->ForceSend();
+    if (Connection()) {
+      Unused << Connection()->ForceSend();
+    }
   }
 
   return NS_SUCCEEDED(rv) ? mReadSegmentReturnValue : rv;
