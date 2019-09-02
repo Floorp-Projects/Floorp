@@ -2946,11 +2946,19 @@
   value: true
   mirror: always
 
+# This pref and general.smoothScroll.stopDecelerationWeighting determine
+# the timing function.
 - name: general.smoothScroll.currentVelocityWeighting
   type: AtomicFloat
   value: 0.25
   mirror: always
 
+# To connect consecutive scroll events into a continuous flow, the animation's
+# duration should be longer than scroll events intervals (or else the scroll
+# will stop before the next event arrives - we're guessing the next interval
+# by averaging recent intervals).
+# This defines how much longer the duration is compared to the events
+# interval (percentage).
 - name: general.smoothScroll.durationToIntervalRatio
   type: RelaxedAtomicInt32
   value: 200
@@ -3016,12 +3024,14 @@
   value: 150
   mirror: always
 
+# This pref and general.smoothScroll.currentVelocityWeighting determine
+# the timing function.
 - name: general.smoothScroll.stopDecelerationWeighting
   type: AtomicFloat
   value: 0.4f
   mirror: always
 
-
+# Alternative smooth scroll physics. ("MSD" = Mass-Spring-Damper)
 - name: general.smoothScroll.msdPhysics.enabled
   type: RelaxedAtomicBool
   value: false
