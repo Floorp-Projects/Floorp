@@ -665,20 +665,7 @@ pref("layout.scroll.root-frame-containers", false);
 
 pref("layout.scrollbars.always-layerize-track", false);
 
-// Whether to enable LayerScope tool and default listening port
-pref("gfx.layerscope.enabled", false);
-pref("gfx.layerscope.port", 23456);
-
-// Log severe performance warnings to the error console and profiles.
-// This should be use to quickly find which slow paths are used by test cases.
-pref("gfx.perf-warnings.enabled", false);
-
-// 0 = Off, 1 = Full, 2 = Tagged Images Only.
-// See eCMSMode in gfx/thebes/gfxPlatform.h
-pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
-pref("gfx.color_management.rendering_intent", 0);
-pref("gfx.color_management.enablev4", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
@@ -687,13 +674,6 @@ pref("gfx.downloadable_fonts.fallback_delay_short", 100);
 // disable downloadable font cache so that behavior is consistently
 // the uncached load behavior across pages (useful for testing reflow problems)
 pref("gfx.downloadable_fonts.disable_cache", false);
-
-// Whether OTS validation should be applied to OpenType Layout (OTL) tables
-#ifdef RELEASE_OR_BETA
-  pref("gfx.downloadable_fonts.otl_validation", false);
-#else
-  pref("gfx.downloadable_fonts.otl_validation", true);
-#endif
 
 #ifdef ANDROID
   pref("gfx.bundled_fonts.enabled", true);
