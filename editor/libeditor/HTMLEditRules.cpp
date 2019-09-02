@@ -8384,13 +8384,21 @@ nsresult HTMLEditRules::SplitParagraph(
   // it'll be exposed as <br> with Element.innerHTML.  Therefore, we can use
   // normal <br> elements for placeholder in this case.  Note that Chromium
   // also behaves so.
-  rv = InsertBRIfNeeded(MOZ_KnownLive(*splitDivOrPResult.GetPreviousNode()));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (splitDivOrPResult.GetPreviousNode()->IsElement()) {
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .InsertBRElementIfEmptyBlockElement(MOZ_KnownLive(
+                 *splitDivOrPResult.GetPreviousNode()->AsElement()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
-  rv = InsertBRIfNeeded(MOZ_KnownLive(*splitDivOrPResult.GetNextNode()));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (splitDivOrPResult.GetNextNode()->IsElement()) {
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .InsertBRElementIfEmptyBlockElement(
+                 MOZ_KnownLive(*splitDivOrPResult.GetNextNode()->AsElement()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // selection to beginning of right hand para;
@@ -10266,15 +10274,15 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
   return createBRResult.Rv();
 }
 
-nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (!HTMLEditor::NodeIsBlockStatic(aNode)) {
+  if (!HTMLEditor::NodeIsBlockStatic(aElement)) {
     return NS_OK;
   }
 
   bool isEmpty;
-  nsresult rv = HTMLEditorRef().IsEmptyNode(&aNode, &isEmpty);
+  nsresult rv = IsEmptyNode(&aElement, &isEmpty);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10283,12 +10291,11 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode) {
   }
 
   RefPtr<Element> brElement =
-      MOZ_KnownLive(HTMLEditorRef())
-          .InsertBRElementWithTransaction(EditorDOMPoint(&aNode, 0));
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+      InsertBRElementWithTransaction(EditorDOMPoint(&aElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(brElement, "Failed to create <br> element");
+  NS_WARNING_ASSERTION(brElement, "InsertBRElementWithTransaction() failed");
   return brElement ? NS_OK : NS_ERROR_FAILURE;
 }
 

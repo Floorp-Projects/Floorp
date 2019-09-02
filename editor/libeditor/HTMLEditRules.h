@@ -159,29 +159,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
-   * Insert normal <br> element into aNode when aNode is a block and it has
-   * no children.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode) {
-    return InsertBRIfNeededInternal(aNode);
-  }
-
-  /**
-   * Insert a normal <br> element or a padding <br> element for empty last line
-   * to aNode when aNode is a block and it has no children.  Use
-   * InsertBRIfNeeded() or InsertPaddingBRElementForEmptyLastLineIfNeeded()
-   * instead.
-   *
-   * @param aNode               Reference to a block parent.
-   * @param aForPadding         true if this should insert a <br> element for
-   *                            placing caret at empty last line.
-   *                            Otherwise, i.e., this should insert a normal
-   *                            <br> element, false.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertBRIfNeededInternal(nsINode& aNode);
-
-  /**
    * GetGoodSelPointForNode() finds where at a node you would want to set the
    * selection if you were trying to have a caret next to it.  Always returns a
    * valid value (unless mHTMLEditor has gone away).
