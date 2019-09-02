@@ -7,7 +7,7 @@ use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTran
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth};
-use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
+use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
@@ -42,7 +42,6 @@ use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
 use std::{f32, mem, usize, ops};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
-use crate::render_task_graph::{CompositeOps};
 use crate::util::{MaxRect, VecHelper};
 use crate::filterdata::{SFilterDataComponent, SFilterData, SFilterDataKey};
 
@@ -202,6 +201,39 @@ impl NodeIdToIndexMapper {
 
     pub fn get_spatial_node_index(&self, id: SpatialId) -> SpatialNodeIndex {
         self.spatial_node_map[&id]
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CompositeOps {
+    // Requires only a single texture as input (e.g. most filters)
+    pub filters: Vec<Filter>,
+    pub filter_datas: Vec<FilterData>,
+    pub filter_primitives: Vec<FilterPrimitive>,
+
+    // Requires two source textures (e.g. mix-blend-mode)
+    pub mix_blend_mode: Option<MixBlendMode>,
+}
+
+impl CompositeOps {
+    pub fn new(
+        filters: Vec<Filter>,
+        filter_datas: Vec<FilterData>,
+        filter_primitives: Vec<FilterPrimitive>,
+        mix_blend_mode: Option<MixBlendMode>
+    ) -> Self {
+        CompositeOps {
+            filters,
+            filter_datas,
+            filter_primitives,
+            mix_blend_mode,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.filters.is_empty() &&
+            self.filter_primitives.is_empty() &&
+            self.mix_blend_mode.is_none()
     }
 }
 
