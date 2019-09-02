@@ -614,7 +614,7 @@ class HuffmanPreludeReader {
     // The owning HuffmanPreludeReader.
     HuffmanPreludeReader& owner;
 
-    NormalizedInterfaceAndField identity;
+    const NormalizedInterfaceAndField identity;
 
     PushEntryMatcher(JSContext* cx_, HuffmanPreludeReader& owner,
                      NormalizedInterfaceAndField identity)
@@ -648,7 +648,8 @@ class HuffmanPreludeReader {
       // 1. If the field’s type is an array type, the effective type is the
       // array element type. Stop.
 
-      // We now recurse with the contents of the list/array.
+      // We now recurse with the contents of the list/array, *without checking
+      // whether the field has already been visited*.
       switch (list.contents) {
 #define WRAP_LIST_2(_, CONTENT) CONTENT
 #define EMIT_CASE(LIST_NAME, _CONTENT_TYPE, _HUMAN_NAME, TYPE) \
@@ -666,7 +667,19 @@ class HuffmanPreludeReader {
     }
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& interface) {
-      // Spec
+      // Note: In this case, for compatibility, we do *not* check whether
+      // the interface has already been visited.
+      auto& table = owner.dictionary.tableForField(identity);
+      if (table.is<HuffmanTableUnreachable>()) {
+        // Effectively, an `Interface` is a sum with a single entry.
+        HuffmanTableIndexedSymbolsSum sum(cx_);
+        MOZ_TRY(sum.impl.initWithSingleValue(cx_, BinASTKind(interface.kind)));
+
+        table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
+                 std::move(sum)};
+      }
+
+      // Spec:
       // 4. If the effective type is a monomorphic interface, push all of the
       // interface’s fields
       return owner.pushFields(interface.kind);
@@ -1202,14 +1215,24 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
   js::frontend::BinASTTokenReaderBase::ContextPrinter::print("enterTaggedTuple",
                                                              context);
 
-  if (context.is<BinASTTokenReaderBase::RootContext>()) {
-    // For the moment, the format hardcodes `Script` as root.
-    tag = BinASTKind::Script;
-    return Ok();
-  }
-  MOZ_TRY_VAR(tag,
-              (readFieldFromTable<HuffmanTableIndexedSymbolsSum>(context)));
-  return Ok();
+  return context.match(
+      [&tag](const BinASTTokenReaderBase::RootContext&) -> JS::Result<Ok> {
+        // For the moment, the format hardcodes `Script` as root.
+        tag = BinASTKind::Script;
+        return Ok();
+      },
+      [](const BinASTTokenReaderBase::ListContext&) -> JS::Result<Ok> {
+        MOZ_CRASH(
+            "We shouldn't have generated a ListContext for enterTaggedTuple");
+        return Ok();
+      },
+      [this, context,
+       &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
+          -> JS::Result<Ok> {
+        MOZ_TRY_VAR(
+            tag, (readFieldFromTable<HuffmanTableIndexedSymbolsSum>(context)));
+        return Ok();
+      });
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
