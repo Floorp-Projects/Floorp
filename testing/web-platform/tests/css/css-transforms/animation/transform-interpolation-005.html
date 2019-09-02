@@ -122,6 +122,36 @@ test_interpolation({
   {at: 2, expect: `matrix(13, 0, -10, -5, 0, 0)`}
 ]);
 
+// none -> translateX(6px) skewX(45deg) scaleX(7) scaleY(2)
+test_interpolation({
+  property: 'transform',
+  from: 'none',
+  to: 'matrix(7, 0, 2, 2, 6, 0)'
+}, [
+  {at: -1, expect: 'matrix(-5, 0, 0, 0, -6, 0)'},
+  {at: 0, expect: 'matrix(1, 0, 0, 1, 0, 0)'},
+  {at: 0.25, expect: 'matrix(2.5, 0, 0.31, 1.25, 1.5, 0)'},
+  {at: 0.5, expect: 'matrix(4, 0, 0.75, 1.5, 3, 0)'},
+  {at: 0.75, expect: 'matrix(5.5, 0, 1.31, 1.75, 4.5, 0)'},
+  {at: 1, expect: 'matrix(7, 0, 2, 2, 6, 0)'},
+  {at: 2, expect: 'matrix(13, 0, 6, 3, 12, 0)'}
+]);
+
+// translateY(-6px) scale(3, 5) -> none
+test_interpolation({
+  property: 'transform',
+  from: 'matrix(3, 0, 0, 5, 0, -6)',
+  to: 'none'
+}, [
+  {at: -1, expect: 'matrix(5, 0, 0, 9, 0, -12)'},
+  {at: 0, expect: 'matrix(3, 0, 0, 5, 0, -6)'},
+  {at: 0.25, expect: 'matrix(2.5, 0, 0, 4, 0, -4.5)'},
+  {at: 0.5, expect: 'matrix(2, 0, 0, 3, 0, -3)'},
+  {at: 0.75, expect: 'matrix(1.5, 0, 0, 2, 0, -1.5)'},
+  {at: 1, expect: 'matrix(1, 0, 0, 1, 0, 0)'},
+  {at: 2, expect: 'matrix(-1, 0, 0, -3, 0, 6)'}
+]);
+
 // 3-D matrix transforms.
 // TODO(kevers): Revisit 3D transform examples. It is difficult to infer
 // the quality of the matrix decompositions from the expected output.
