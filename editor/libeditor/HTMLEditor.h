@@ -1755,6 +1755,14 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
 
+  /**
+   * IsEmptyBlockElement() returns true if aElement is a block level element
+   * and it doesn't have any visible content.
+   */
+  enum class IgnoreSingleBR { Yes, No };
+  bool IsEmptyBlockElement(Element& aElement,
+                           IgnoreSingleBR aIgnoreSingleBR) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
