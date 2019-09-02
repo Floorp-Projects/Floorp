@@ -90,6 +90,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
+
+  void ResetCurrentLineContentAndIndentationHeader();
+
   void FlushLine();
   void CreateQuotesAndIndent(nsAString& aResult) const;
 

@@ -1127,6 +1127,13 @@ void nsPlainTextSerializer::EnsureVerticalSpace(int32_t noOfRows) {
   mFloatingLines = -1;
 }
 
+void nsPlainTextSerializer::ResetCurrentLineContentAndIndentationHeader() {
+  mCurrentLineContent.mValue.Truncate();
+  mCurrentLineContent.mWidth = 0;
+
+  mIndentation.mHeader.Truncate();
+}
+
 /**
  * This empties the current line cache without adding a NEWLINE.
  * Should not be used if line wrapping is of importance since
@@ -1143,14 +1150,12 @@ void nsPlainTextSerializer::FlushLine() {
       nsAutoString quotesAndIndent;
       CreateQuotesAndIndent(
           quotesAndIndent);  // XXX: Should we always do this? Bug?
-      mIndentation.mHeader.Truncate();
       mOutputManager->Append(quotesAndIndent);
     }
 
     mCurrentLineContent.MaybeReplaceNbsps();
     mOutputManager->Append(mCurrentLineContent.mValue);
-    mCurrentLineContent.mValue.Truncate();
-    mCurrentLineContent.mWidth = 0;
+    ResetCurrentLineContentAndIndentationHeader();
   }
 }
 
@@ -1406,7 +1411,6 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     const bool stripTrailingSpaces = mCurrentLineContent.mValue.IsEmpty();
     nsAutoString quotesAndIndent;
     CreateQuotesAndIndent(quotesAndIndent);
-    mIndentation.mHeader.Truncate();
 
     if (stripTrailingSpaces) {
       quotesAndIndent.Trim(" ", false, true, false);
@@ -1418,8 +1422,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   mCurrentLineContent.MaybeReplaceNbsps();
   mOutputManager->Append(mCurrentLineContent.mValue);
   mOutputManager->AppendLineBreak();
-  mCurrentLineContent.mValue.Truncate();
-  mCurrentLineContent.mWidth = 0;
+  ResetCurrentLineContentAndIndentationHeader();
   mInWhitespace = true;
   mLineBreakDue = false;
   mFloatingLines = -1;
@@ -1584,7 +1587,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         }
       }
 
-      mCurrentLineContent.mValue.Truncate();
       if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
         if ((outputLineBreak || !spacesOnly) &&  // bugs 261467,125928
             !IsQuotedLine(stringpart) && !stringpart.EqualsLiteral("-- ") &&
@@ -1598,7 +1600,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       if (outputQuotes) {
         nsAutoString quotesAndIndent;
         CreateQuotesAndIndent(quotesAndIndent);
-        mIndentation.mHeader.Truncate();
         mOutputManager->Append(quotesAndIndent);
       }
 
@@ -1610,9 +1611,9 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       if (outputLineBreak) {
         mOutputManager->AppendLineBreak();
       }
-    }
 
-    mCurrentLineContent.mValue.Truncate();
+      ResetCurrentLineContentAndIndentationHeader();
+    }
 
 #ifdef DEBUG_wrapping
     printf("No wrapping: newline is %d, totLen is %d\n", newline, totLen);
