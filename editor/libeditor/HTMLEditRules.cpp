@@ -767,12 +767,12 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
-      UndefineCaretBidiLevel();
+      TextEditorRef().UndefineCaretBidiLevel();
       return MOZ_KnownLive(HTMLEditorRef())
           .WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                           aInfo.inString, aInfo.outString, aInfo.maxLength);
     case EditSubAction::eInsertParagraphSeparator: {
-      UndefineCaretBidiLevel();
+      TextEditorRef().UndefineCaretBidiLevel();
       EditActionResult result = WillInsertParagraphSeparator();
       if (NS_WARN_IF(result.Failed())) {
         return result.Rv();
