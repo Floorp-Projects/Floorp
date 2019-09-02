@@ -95,14 +95,13 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
                                                  const ObjectStoreSpec& aSpec);
 
   static void AppendIndexUpdateInfo(int64_t aIndexID, const KeyPath& aKeyPath,
-                                    bool aUnique, bool aMultiEntry,
-                                    const nsCString& aLocale, JSContext* aCx,
-                                    JS::Handle<JS::Value> aVal,
-                                    nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
-                                    ErrorResult& aRv);
+                                    bool aMultiEntry, const nsCString& aLocale,
+                                    JSContext* aCx, JS::Handle<JS::Value> aVal,
+                                    nsTArray<IndexUpdateInfo>* aUpdateInfoArray,
+                                    ErrorResult* aRv);
 
   static void DeserializeIndexValueToUpdateInfos(
-      int64_t aIndexID, const KeyPath& aKeyPath, bool aUnique, bool aMultiEntry,
+      int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
       const nsCString& aLocale, StructuredCloneReadInfo& aCloneReadInfo,
       nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv);
 

@@ -63,6 +63,26 @@ using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
+namespace {
+
+IndexUpdateInfo MakeIndexUpdateInfo(const int64_t aIndexID, const Key& aKey,
+                                    const nsCString& aLocale,
+                                    ErrorResult* const aRv) {
+  IndexUpdateInfo indexUpdateInfo;
+  indexUpdateInfo.indexId() = aIndexID;
+  indexUpdateInfo.value() = aKey;
+  if (!aLocale.IsEmpty()) {
+    const auto result =
+        aKey.ToLocaleBasedKey(indexUpdateInfo.localizedValue(), aLocale, *aRv);
+    if (result.Is(Invalid, *aRv)) {
+      aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+  }
+  return indexUpdateInfo;
+}
+
+}  // namespace
+
 struct IDBObjectStore::StructuredCloneWriteInfo {
   JSAutoStructuredCloneBuffer mCloneBuffer;
   nsTArray<StructuredCloneFile> mFiles;
@@ -900,39 +920,25 @@ already_AddRefed<IDBObjectStore> IDBObjectStore::Create(
 
 // static
 void IDBObjectStore::AppendIndexUpdateInfo(
-    int64_t aIndexID, const KeyPath& aKeyPath, bool aUnique, bool aMultiEntry,
-    const nsCString& aLocale, JSContext* aCx, JS::Handle<JS::Value> aVal,
-    nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv) {
-  const bool localeAware = !aLocale.IsEmpty();
-
+    const int64_t aIndexID, const KeyPath& aKeyPath, const bool aMultiEntry,
+    const nsCString& aLocale, JSContext* const aCx, JS::Handle<JS::Value> aVal,
+    nsTArray<IndexUpdateInfo>* const aUpdateInfoArray, ErrorResult* const aRv) {
   if (!aMultiEntry) {
     Key key;
-    aRv = aKeyPath.ExtractKey(aCx, aVal, key);
+    *aRv = aKeyPath.ExtractKey(aCx, aVal, key);
 
     // If an index's keyPath doesn't match an object, we ignore that object.
-    if (aRv.ErrorCodeIs(NS_ERROR_DOM_INDEXEDDB_DATA_ERR) || key.IsUnset()) {
-      aRv.SuppressException();
+    if (aRv->ErrorCodeIs(NS_ERROR_DOM_INDEXEDDB_DATA_ERR) || key.IsUnset()) {
+      aRv->SuppressException();
       return;
     }
 
-    if (aRv.Failed()) {
+    if (aRv->Failed()) {
       return;
     }
 
-    IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-    updateInfo->indexId() = aIndexID;
-    updateInfo->value() = key;
-    if (localeAware) {
-      auto result =
-          key.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale, aRv);
-      if (NS_WARN_IF(!result.Is(Ok, aRv))) {
-        if (result.Is(Invalid, aRv)) {
-          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        }
-        return;
-      }
-    }
-
+    *aUpdateInfoArray->AppendElement() =
+        MakeIndexUpdateInfo(aIndexID, key, aLocale, aRv);
     return;
   }
 
@@ -944,7 +950,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
   bool isArray;
   if (!JS_IsArrayObject(aCx, val, &isArray)) {
     IDB_REPORT_INTERNAL_ERR();
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return;
   }
   if (isArray) {
@@ -952,7 +958,7 @@ void IDBObjectStore::AppendIndexUpdateInfo(
     uint32_t arrayLength;
     if (NS_WARN_IF(!JS_GetArrayLength(aCx, array, &arrayLength))) {
       IDB_REPORT_INTERNAL_ERR();
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return;
     }
 
@@ -960,54 +966,35 @@ void IDBObjectStore::AppendIndexUpdateInfo(
       JS::Rooted<JS::Value> arrayItem(aCx);
       if (NS_WARN_IF(!JS_GetElement(aCx, array, arrayIndex, &arrayItem))) {
         IDB_REPORT_INTERNAL_ERR();
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        aRv->Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         return;
       }
 
       Key value;
-      auto result = value.SetFromJSVal(aCx, arrayItem, aRv);
-      if (!result.Is(Ok, aRv) || value.IsUnset()) {
+      const auto result = value.SetFromJSVal(aCx, arrayItem, *aRv);
+      if (!result.Is(Ok, *aRv) || value.IsUnset()) {
         // Not a value we can do anything with, ignore it.
-        aRv.SuppressException();
+        aRv->SuppressException();
         continue;
       }
 
-      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-      updateInfo->indexId() = aIndexID;
-      updateInfo->value() = value;
-      if (localeAware) {
-        auto result =
-            value.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale, aRv);
-        if (NS_WARN_IF(!result.Is(Ok, aRv))) {
-          if (result.Is(Invalid, aRv)) {
-            aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-          }
-          return;
-        }
+      *aUpdateInfoArray->AppendElement() =
+          MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
+      if (aRv->Failed()) {
+        return;
       }
     }
   } else {
     Key value;
-    auto result = value.SetFromJSVal(aCx, val, aRv);
-    if (!result.Is(Ok, aRv) || value.IsUnset()) {
+    const auto result = value.SetFromJSVal(aCx, val, *aRv);
+    if (!result.Is(Ok, *aRv) || value.IsUnset()) {
       // Not a value we can do anything with, ignore it.
-      aRv.SuppressException();
+      aRv->SuppressException();
       return;
     }
 
-    IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-    updateInfo->indexId() = aIndexID;
-    updateInfo->value() = value;
-    if (localeAware) {
-      auto result =
-          value.ToLocaleBasedKey(updateInfo->localizedValue(), aLocale, aRv);
-      if (NS_WARN_IF(!result.Is(Ok, aRv))) {
-        if (result.Is(Invalid, aRv)) {
-          aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        }
-        return;
-      }
-    }
+    *aUpdateInfoArray->AppendElement() =
+        MakeIndexUpdateInfo(aIndexID, value, aLocale, aRv);
   }
 }
 
@@ -1111,15 +1098,13 @@ class SandboxHolder final {
 class DeserializeIndexValueHelper final : public Runnable {
  public:
   DeserializeIndexValueHelper(int64_t aIndexID, const KeyPath& aKeyPath,
-                              bool aUnique, bool aMultiEntry,
-                              const nsCString& aLocale,
+                              bool aMultiEntry, const nsCString& aLocale,
                               StructuredCloneReadInfo& aCloneReadInfo,
                               nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
       : Runnable("DeserializeIndexValueHelper"),
         mMonitor("DeserializeIndexValueHelper::mMonitor"),
         mIndexID(aIndexID),
         mKeyPath(aKeyPath),
-        mUnique(aUnique),
         mMultiEntry(aMultiEntry),
         mLocale(aLocale),
         mCloneReadInfo(aCloneReadInfo),
@@ -1136,9 +1121,9 @@ class DeserializeIndexValueHelper final : public Runnable {
       JS::Rooted<JS::Value> value(jsapi.cx());
       value.setUndefined();
 
-      IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mUnique,
-                                            mMultiEntry, mLocale, jsapi.cx(),
-                                            value, mUpdateInfoArray, aRv);
+      IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
+                                            mLocale, jsapi.cx(), value,
+                                            &mUpdateInfoArray, &aRv);
       return;
     }
 
@@ -1184,9 +1169,9 @@ class DeserializeIndexValueHelper final : public Runnable {
     }
 
     ErrorResult errorResult;
-    IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mUnique,
-                                          mMultiEntry, mLocale, cx, value,
-                                          mUpdateInfoArray, errorResult);
+    IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
+                                          mLocale, cx, value, &mUpdateInfoArray,
+                                          &errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
       OperationCompleted(errorResult.StealNSResult());
       return NS_OK;
@@ -1229,7 +1214,6 @@ class DeserializeIndexValueHelper final : public Runnable {
 
   int64_t mIndexID;
   const KeyPath& mKeyPath;
-  bool mUnique;
   bool mMultiEntry;
   const nsCString mLocale;
   StructuredCloneReadInfo& mCloneReadInfo;
@@ -1355,14 +1339,14 @@ class DeserializeUpgradeValueHelper final : public Runnable {
 
 // static
 void IDBObjectStore::DeserializeIndexValueToUpdateInfos(
-    int64_t aIndexID, const KeyPath& aKeyPath, bool aUnique, bool aMultiEntry,
+    int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
     const nsCString& aLocale, StructuredCloneReadInfo& aCloneReadInfo,
     nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  RefPtr<DeserializeIndexValueHelper> helper = new DeserializeIndexValueHelper(
-      aIndexID, aKeyPath, aUnique, aMultiEntry, aLocale, aCloneReadInfo,
-      aUpdateInfoArray);
+  RefPtr<DeserializeIndexValueHelper> helper =
+      new DeserializeIndexValueHelper(aIndexID, aKeyPath, aMultiEntry, aLocale,
+                                      aCloneReadInfo, aUpdateInfoArray);
   helper->DispatchAndWait(aRv);
 }
 
@@ -1445,9 +1429,8 @@ void IDBObjectStore::GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
       const IndexMetadata& metadata = indexes[idxIndex];
 
       AppendIndexUpdateInfo(metadata.id(), metadata.keyPath(),
-                            metadata.unique(), metadata.multiEntry(),
-                            metadata.locale(), aCx, aValueWrapper.Value(),
-                            aUpdateInfoArray, aRv);
+                            metadata.multiEntry(), metadata.locale(), aCx,
+                            aValueWrapper.Value(), &aUpdateInfoArray, &aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
