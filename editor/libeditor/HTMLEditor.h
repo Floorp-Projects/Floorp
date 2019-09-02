@@ -1724,6 +1724,12 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPointToInsert);
 
   /**
+   * Insert a `<br>` element if aElement is a block element and empty.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertBRElementIfEmptyBlockElement(Element& aElement);
+
+  /**
    * Insert padding `<br>` element for empty last line into aElement if
    * aElement is a block element and empty.
    */
