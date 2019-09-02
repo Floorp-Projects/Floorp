@@ -1943,9 +1943,11 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
 
   if (HTMLEditUtils::IsHeader(*blockParent)) {
     // Headers: close (or split) header
-    nsresult rv = ReturnInHeader(
-        *blockParent, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
-        atStartOfSelection.Offset());
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .HandleInsertParagraphInHeadingElement(
+                *blockParent, MOZ_KnownLive(*atStartOfSelection.GetContainer()),
+                atStartOfSelection.Offset());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -7955,9 +7957,10 @@ Element* HTMLEditRules::IsInListItem(nsINode* aNode) {
   return nullptr;
 }
 
-nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
-                                       int32_t aOffset) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
+                                                           nsINode& aNode,
+                                                           int32_t aOffset) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // Remember where the header is
   nsCOMPtr<nsINode> headerParent = aHeader.GetParentNode();
@@ -7965,9 +7968,9 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
   // Get ws code to adjust any ws
   nsCOMPtr<nsINode> node = &aNode;
-  nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(
-      MOZ_KnownLive(&HTMLEditorRef()), address_of(node), &aOffset);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv =
+      WSRunObject::PrepareToSplitAcrossBlocks(this, address_of(node), &aOffset);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7979,11 +7982,9 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
   // Split the header
   SplitNodeResult splitHeaderResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitNodeDeepWithTransaction(
-              aHeader, EditorDOMPoint(node, aOffset),
-              SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+      SplitNodeDeepWithTransaction(aHeader, EditorDOMPoint(node, aOffset),
+                                   SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(splitHeaderResult.Succeeded(),
@@ -7991,19 +7992,18 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
   // If the previous heading of split point is empty, put a padding <br>
   // element for empty last line into it.
-  nsCOMPtr<nsIContent> prevItem = HTMLEditorRef().GetPriorHTMLSibling(&aHeader);
+  nsCOMPtr<nsIContent> prevItem = GetPriorHTMLSibling(&aHeader);
   if (prevItem) {
     MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
     bool isEmptyNode;
-    rv = HTMLEditorRef().IsEmptyNode(prevItem, &isEmptyNode);
+    rv = IsEmptyNode(prevItem, &isEmptyNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     if (isEmptyNode) {
       CreateElementResult createPaddingBRResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertPaddingBRElementForEmptyLastLineWithTransaction(
-                  EditorDOMPoint(prevItem, 0));
+          InsertPaddingBRElementForEmptyLastLineWithTransaction(
+              EditorDOMPoint(prevItem, 0));
       if (NS_WARN_IF(createPaddingBRResult.Failed())) {
         return createPaddingBRResult.Rv();
       }
@@ -8011,10 +8011,9 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
   }
 
   // If the new (righthand) header node is empty, delete it
-  if (HTMLEditorRef().IsEmptyBlockElement(aHeader,
-                                          HTMLEditor::IgnoreSingleBR::Yes)) {
-    rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(aHeader);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (IsEmptyBlockElement(aHeader, IgnoreSingleBR::Yes)) {
+    rv = DeleteNodeWithTransaction(aHeader);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8024,26 +8023,20 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
     // break after the header.
     nsCOMPtr<nsIContent> sibling;
     if (aHeader.GetNextSibling()) {
-      sibling = HTMLEditorRef().GetNextHTMLSibling(aHeader.GetNextSibling());
+      sibling = GetNextHTMLSibling(aHeader.GetNextSibling());
     }
     if (!sibling || !sibling->IsHTMLElement(nsGkAtoms::br)) {
-      HTMLEditorRef()
-          .TopLevelEditSubActionDataRef()
-          .mCachedInlineStyles.Clear();
-      HTMLEditorRef().mTypeInState->ClearAllProps();
+      TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
+      mTypeInState->ClearAllProps();
 
       // Create a paragraph
-      nsStaticAtom& paraAtom =
-          HTMLEditorRef().DefaultParagraphSeparatorTagName();
+      nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
       EditorDOMPoint nextToHeader(headerParent, offset + 1);
-      RefPtr<Element> pNode =
-          MOZ_KnownLive(HTMLEditorRef())
-              .CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br
-                                             ? *nsGkAtoms::p
-                                             : MOZ_KnownLive(paraAtom),
-                                         nextToHeader);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      RefPtr<Element> pNode = CreateNodeWithTransaction(
+          &paraAtom == nsGkAtoms::br ? *nsGkAtoms::p : MOZ_KnownLive(paraAtom),
+          nextToHeader);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!pNode)) {
@@ -8052,9 +8045,8 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
       // Append a <br> to it
       RefPtr<Element> brElement =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertBRElementWithTransaction(EditorDOMPoint(pNode, 0));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+          InsertBRElementWithTransaction(EditorDOMPoint(pNode, 0));
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!brElement)) {
@@ -8064,40 +8056,42 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
       // Set selection to before the break
       ErrorResult error;
       SelectionRefPtr()->Collapse(EditorRawDOMPoint(pNode, 0), error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      if (NS_WARN_IF(Destroyed())) {
         error.SuppressException();
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
-    } else {
-      EditorRawDOMPoint afterSibling(sibling);
-      if (NS_WARN_IF(!afterSibling.AdvanceOffset())) {
-        return NS_ERROR_FAILURE;
-      }
-      // Put selection after break
-      ErrorResult error;
-      SelectionRefPtr()->Collapse(afterSibling, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        error.SuppressException();
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
+      return NS_OK;
     }
-  } else {
-    // Put selection at front of righthand heading
+
+    EditorRawDOMPoint afterSibling(sibling);
+    if (NS_WARN_IF(!afterSibling.AdvanceOffset())) {
+      return NS_ERROR_FAILURE;
+    }
+    // Put selection after break
     ErrorResult error;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(&aHeader, 0), error);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    SelectionRefPtr()->Collapse(afterSibling, error);
+    if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
+    return NS_OK;
+  }
+
+  // Put selection at front of righthand heading
+  ErrorResult error;
+  SelectionRefPtr()->Collapse(RawRangeBoundary(&aHeader, 0), error);
+  if (NS_WARN_IF(Destroyed())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
   return NS_OK;
 }
