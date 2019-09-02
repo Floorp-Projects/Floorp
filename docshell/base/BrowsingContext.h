@@ -279,9 +279,6 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // activation flag of the top level browsing context.
   void NotifyResetUserGestureActivation();
 
-  // Return true if it corresponding document is activated by user gesture.
-  bool GetUserGestureActivation();
-
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
   // Set the window proxy object that corresponds to this browsing context.
