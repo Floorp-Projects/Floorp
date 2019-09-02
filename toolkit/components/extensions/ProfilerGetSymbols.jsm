@@ -36,11 +36,11 @@ Cu.importGlobalProperties(["fetch"]);
 // expect them to be.
 // The source code is at https://github.com/mstange/profiler-get-symbols/ .
 
-// Generated from https://github.com/mstange/profiler-get-symbols/commit/0a0aadc68d6196823a5f102feacb2f04424cd681
+// Generated from https://github.com/mstange/profiler-get-symbols/commit/bff0bc7b6dfbbc83b084d080dd977adea6d3f661
 const WASM_MODULE_URL =
-  "https://zealous-rosalind-a98ce8.netlify.com/wasm/4af7553b4848038c5a1e33a15ec107094bd0572e16fe2a367235bcb50a630b148ac4fe1d165859d7a9bb4ca4e2572c0e.wasm";
+  "https://zealous-rosalind-a98ce8.netlify.com/wasm/3365b75b606d0fd60ca98eea6b3057ac5bdcd4be2f24d1ad1c6452ddf2cc622ddeae28665261d7e0f13913ed5e14960b.wasm";
 const WASM_MODULE_INTEGRITY =
-  "sha384-SvdVO0hIA4xaHjOhXsEHCUvQVy4W/io2cjW8tQpjCxSKxP4dFlhZ16m7TKTiVywO";
+  "sha384-M2W3W2BtD9YMqY7qazBXrFvc1L4vJNGtHGRS3fLMYi3erihmUmHX4PE5E+1eFJYL";
 
 const EXPIRY_TIME_IN_MS = 5 * 60 * 1000; // 5 minutes
 
