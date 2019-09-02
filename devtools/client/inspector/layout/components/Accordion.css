@@ -40,8 +40,11 @@
   background-color: var(--theme-toolbar-hover);
 }
 
-.accordion ._header:hover svg {
-  fill: var(--theme-text-color-inactive);
+.accordion ._header .arrow {
+  flex: none;
+  margin-inline-start: 0px;
+  margin-inline-end: 2px;
+  padding: 0;
 }
 
 .accordion ._header .truncate {
@@ -60,12 +63,3 @@
 .accordion div:last-child ._content {
   border-bottom: none;
 }
-
-.arrow {
-  vertical-align: middle;
-  display: inline-block;
-  padding-inline-start: 2px;
-  padding-inline-end: 1px;
-  flex-shrink: 0;
-}
-
