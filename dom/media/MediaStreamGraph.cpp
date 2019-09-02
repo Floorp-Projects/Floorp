@@ -1793,8 +1793,8 @@ void MediaStreamGraphImpl::SignalMainThreadCleanup() {
 
 void MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage) {
   MOZ_ASSERT(NS_IsMainThread(), "main thread only");
-  MOZ_ASSERT_IF(aMessage->GetStream(), !aMessage->GetStream()->IsDestroyed());
-  MOZ_DIAGNOSTIC_ASSERT(mMainThreadStreamCount > 0 || mMainThreadPortCount > 0);
+  MOZ_ASSERT(!aMessage->GetStream() || !aMessage->GetStream()->IsDestroyed(),
+             "Stream already destroyed");
 
   if (mDetectedNotRunning &&
       LifecycleStateRef() > LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
@@ -2001,11 +2001,8 @@ void MediaStream::Destroy() {
     }
     void RunDuringShutdown() override { Run(); }
   };
-  // Keep a reference to the graph, since Message might RunDuringShutdown()
-  // synchronously and make GraphImpl() invalid.
-  RefPtr<MediaStreamGraphImpl> graph = GraphImpl();
-  graph->AppendMessage(MakeUnique<Message>(this));
-  graph->RemoveStream(this);
+  GraphImpl()->RemoveStream(this);
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this));
   // Message::RunDuringShutdown may have removed this stream from the graph,
   // but our kungFuDeathGrip above will have kept this stream alive if
   // necessary.
@@ -2988,7 +2985,6 @@ void MediaInputPort::Destroy() {
     MediaInputPort* mPort;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
-  --GraphImpl()->mMainThreadPortCount;
 }
 
 MediaStreamGraphImpl* MediaInputPort::GraphImpl() { return mGraph; }
@@ -3106,7 +3102,6 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
     }
   }
   port->SetGraphImpl(GraphImpl());
-  ++GraphImpl()->mMainThreadPortCount;
   GraphImpl()->AppendMessage(MakeUnique<Message>(port));
   return port.forget();
 }
@@ -3358,10 +3353,13 @@ NS_IMETHODIMP
 MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                                      nsISupports* aData, bool aAnonymize) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mMainThreadStreamCount == 0) {
-    // No streams to report.
-    FinishCollectReports(aHandleReport, aData, nsTArray<AudioNodeSizes>());
-    return NS_OK;
+  {
+    MonitorAutoLock mon(mMonitor);
+    if (LifecycleStateRef() >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
+      // Shutting down, nothing to report.
+      FinishCollectReports(aHandleReport, aData, nsTArray<AudioNodeSizes>());
+      return NS_OK;
+    }
   }
 
   class Message final : public ControlMessage {
