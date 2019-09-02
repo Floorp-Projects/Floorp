@@ -609,7 +609,11 @@ void LayerManagerComposite::UpdateAndRender() {
 
   // We don't want our debug overlay to cause more frames to happen
   // so we will invalidate after we've decided if something changed.
-  InvalidateDebugOverlay(invalid, mRenderBounds);
+  // Only invalidate if we're not using native layers. When using native layers,
+  // UpdateDebugOverlayNativeLayers will repaint the appropriate layer areas.
+  if (!mNativeLayerRoot) {
+    InvalidateDebugOverlay(invalid, mRenderBounds);
+  }
 
   bool rendered = Render(invalid, opaque);
 #if defined(MOZ_WIDGET_ANDROID)
@@ -787,6 +791,96 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
     DrawPaintTimes(mCompositor);
   }
 #endif
+}
+
+void LayerManagerComposite::UpdateDebugOverlayNativeLayers() {
+  // Remove all debug layers first because PlaceNativeLayers might have changed
+  // the z-order. By removing and re-adding, we keep the debug overlay layers
+  // on top.
+  if (mGPUStatsLayer) {
+    mNativeLayerRoot->RemoveLayer(mGPUStatsLayer);
+  }
+  if (mUnusedTransformWarningLayer) {
+    mNativeLayerRoot->RemoveLayer(mUnusedTransformWarningLayer);
+  }
+  if (mDisabledApzWarningLayer) {
+    mNativeLayerRoot->RemoveLayer(mDisabledApzWarningLayer);
+  }
+
+  bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
+
+  if (drawFps) {
+    if (!mGPUStatsLayer) {
+      mGPUStatsLayer = mNativeLayerRoot->CreateLayer();
+    }
+
+    GPUStats stats;
+    stats.mScreenPixels = mRenderBounds.Area();
+    mCompositor->GetFrameStats(&stats);
+
+    std::string text = mDiagnostics->GetFrameOverlayString(stats);
+    IntSize size = mTextRenderer->ComputeSurfaceSize(
+        text, 600, TextRenderer::FontType::FixedWidth);
+
+    mGPUStatsLayer->SetRect(IntRect(IntPoint(2, 5), size));
+    RefPtr<DrawTarget> dt =
+        mGPUStatsLayer->NextSurfaceAsDrawTarget(BackendType::SKIA);
+    mTextRenderer->RenderTextToDrawTarget(dt, text, 600,
+                                          TextRenderer::FontType::FixedWidth);
+    mGPUStatsLayer->NotifySurfaceReady();
+    mNativeLayerRoot->AppendLayer(mGPUStatsLayer);
+
+    // The two warning layers are created on demand and their content is only
+    // drawn once. After that, they only get moved (if the window size changes)
+    // and conditionally shown.
+    // The drawing would be unnecessary if we had native "color layers".
+    if (mUnusedApzTransformWarning) {
+      // If we have an unused APZ transform on this composite, draw a 20x20 red
+      // box in the top-right corner.
+      if (!mUnusedTransformWarningLayer) {
+        mUnusedTransformWarningLayer = mNativeLayerRoot->CreateLayer();
+        mUnusedTransformWarningLayer->SetRect(IntRect(0, 0, 20, 20));
+        mUnusedTransformWarningLayer->SetOpaqueRegion(IntRect(0, 0, 20, 20));
+        RefPtr<DrawTarget> dt =
+            mUnusedTransformWarningLayer->NextSurfaceAsDrawTarget(
+                BackendType::SKIA);
+        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 0, 0, 1)));
+        mUnusedTransformWarningLayer->NotifySurfaceReady();
+      }
+      mUnusedTransformWarningLayer->SetRect(
+          IntRect(mRenderBounds.XMost() - 20, mRenderBounds.Y(), 20, 20));
+      mNativeLayerRoot->AppendLayer(mUnusedTransformWarningLayer);
+
+      mUnusedApzTransformWarning = false;
+      SetDebugOverlayWantsNextFrame(true);
+    }
+
+    if (mDisabledApzWarning) {
+      // If we have a disabled APZ on this composite, draw a 20x20 yellow box
+      // in the top-right corner, to the left of the unused-apz-transform
+      // warning box.
+      if (!mDisabledApzWarningLayer) {
+        mDisabledApzWarningLayer = mNativeLayerRoot->CreateLayer();
+        mDisabledApzWarningLayer->SetRect(IntRect(0, 0, 20, 20));
+        mDisabledApzWarningLayer->SetOpaqueRegion(IntRect(0, 0, 20, 20));
+        RefPtr<DrawTarget> dt =
+            mDisabledApzWarningLayer->NextSurfaceAsDrawTarget(
+                BackendType::SKIA);
+        dt->FillRect(Rect(0, 0, 20, 20), ColorPattern(Color(1, 1, 0, 1)));
+        mDisabledApzWarningLayer->NotifySurfaceReady();
+      }
+      mDisabledApzWarningLayer->SetRect(
+          IntRect(mRenderBounds.XMost() - 40, mRenderBounds.Y(), 20, 20));
+      mNativeLayerRoot->AppendLayer(mDisabledApzWarningLayer);
+
+      mDisabledApzWarning = false;
+      SetDebugOverlayWantsNextFrame(true);
+    }
+  } else {
+    mGPUStatsLayer = nullptr;
+    mUnusedTransformWarningLayer = nullptr;
+    mDisabledApzWarningLayer = nullptr;
+  }
 }
 
 RefPtr<CompositingRenderTarget>
@@ -1157,7 +1251,9 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  if (!usingNativeLayers) {
+  if (usingNativeLayers) {
+    UpdateDebugOverlayNativeLayers();
+  } else {
     // Allow widget to render a custom foreground.
     mCompositor->GetWidget()->DrawWindowOverlay(
         &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
@@ -1172,13 +1268,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
     // Debugging
-    // FIXME: We should render the debug overlay when using native layers, too.
-    // But we can't split the debug overlay rendering into multiple tiles
-    // because of a cyclic dependency: We want to display stats about the
-    // rendering of the entire window, but at the time when we render into the
-    // native layers, we do not know all the information about this frame yet.
-    // So we need to render the debug layer into an additional native layer on
-    // top, probably.
     RenderDebugOverlay(bounds);
   }
 
