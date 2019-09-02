@@ -35,6 +35,11 @@ import java.util.concurrent.Executors;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 
+/**
+ * @deprecated The whole service-telemetry library is deprecated. Please use the
+ *              <a href="https://mozilla.github.io/glean/book/index.html">Glean SDK</a> instead.
+ */
+@Deprecated
 public class Telemetry {
     private final TelemetryConfiguration configuration;
     private final TelemetryStorage storage;

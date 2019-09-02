@@ -35,6 +35,9 @@ permalink: /changelog/
   * Added `CustomTabState.trustedOrigins` extension method to turn the verification state of a custom tab into a list of origins.
   * Added `WebAppHideToolbarFeature.onTrustedScopesChange` to change the trusted scopes after the feature is created.
 
+* **service-telemetry**
+  * This component is now deprecated. Please use the [Glean SDK](https://mozilla.github.io/glean/book/index.html) instead. This library will not be removed until all projects using it start using the Glean SDK.
+
 # 10.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v10.0.1)
