@@ -107,6 +107,11 @@ add_task(async function testGoodCert() {
       "Security tab should be visible."
     );
     Assert.ok(securityTab, "Security tab is available");
+    let viewCertButton = pageInfo.document.getElementById("security-view-cert");
+    await TestUtils.waitForCondition(
+      () => BrowserTestUtils.is_visible(viewCertButton),
+      "view cert button should be visible."
+    );
 
     let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
     checkAndClickButton(pageInfo.document, "security-view-cert");
