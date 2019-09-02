@@ -57,18 +57,6 @@ static bool ContainsLiveTracks(
   return false;
 }
 
-static bool ContainsLiveAudioTracks(
-    const nsTArray<RefPtr<MediaStreamTrack>>& aTracks) {
-  for (const auto& track : aTracks) {
-    if (track->AsAudioStreamTrack() &&
-        track->ReadyState() == MediaStreamTrackState::Live) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer {
  public:
   explicit PlaybackTrackListener(DOMMediaStream* aStream) : mStream(aStream) {}
@@ -432,24 +420,6 @@ void DOMMediaStream::NotifyInactive() {
   }
 }
 
-void DOMMediaStream::NotifyAudible() {
-  LOG(LogLevel::Info, ("DOMMediaStream %p NotifyAudible(). ", this));
-
-  MOZ_ASSERT(mAudible);
-  for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    mTrackListeners[i]->NotifyAudible();
-  }
-}
-
-void DOMMediaStream::NotifyInaudible() {
-  LOG(LogLevel::Info, ("DOMMediaStream %p NotifyInaudible(). ", this));
-
-  MOZ_ASSERT(!mAudible);
-  for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    mTrackListeners[i]->NotifyInaudible();
-  }
-}
-
 void DOMMediaStream::RegisterTrackListener(TrackListener* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -484,20 +454,14 @@ void DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {
     mTrackListeners[i]->NotifyTrackAdded(aTrack);
   }
 
-  if (!mActive) {
-    // Check if we became active.
-    if (ContainsLiveTracks(mTracks)) {
-      mActive = true;
-      NotifyActive();
-    }
+  if (mActive) {
+    return;
   }
 
-  if (!mAudible) {
-    // Check if we became audible.
-    if (ContainsLiveAudioTracks(mTracks)) {
-      mAudible = true;
-      NotifyAudible();
-    }
+  // Check if we became active.
+  if (ContainsLiveTracks(mTracks)) {
+    mActive = true;
+    NotifyActive();
   }
 }
 
@@ -525,14 +489,6 @@ void DOMMediaStream::NotifyTrackRemoved(
 
   if (!mFinishedOnInactive) {
     return;
-  }
-
-  if (mAudible) {
-    // Check if we became inaudible.
-    if (!ContainsLiveAudioTracks(mTracks)) {
-      mAudible = false;
-      NotifyInaudible();
-    }
   }
 
   // Check if we became inactive.
