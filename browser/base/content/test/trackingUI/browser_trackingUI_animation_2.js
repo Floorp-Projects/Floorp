@@ -6,7 +6,7 @@
  */
 
 const TP_PREF = "privacy.trackingprotection.enabled";
-const TP_PB_PREF = "privacy.trackingprotection.enabled";
+const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
