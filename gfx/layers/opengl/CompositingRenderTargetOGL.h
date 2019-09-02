@@ -40,47 +40,22 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
 
   friend class CompositorOGL;
 
-  // For lazy initialisation of the GL stuff
-  struct InitParams {
-    InitParams()
-        : mStatus(NO_PARAMS), mFBOTextureTarget(0), mInit(INIT_MODE_NONE) {}
-    InitParams(const gfx::IntSize& aSize, const gfx::IntSize& aPhySize,
-               GLenum aFBOTextureTarget, SurfaceInitMode aInit)
-        : mStatus(READY),
-          mSize(aSize),
-          mPhySize(aPhySize),
-          mFBOTextureTarget(aFBOTextureTarget),
-          mInit(aInit) {}
+  enum class GLResourceOwnership : uint8_t {
+    // Framebuffer and texture will be deleted when the RenderTarget is
+    // destroyed.
+    OWNED_BY_RENDER_TARGET,
 
-    enum { NO_PARAMS, READY, INITIALIZED } mStatus;
-    /*
-     * Users of render target would draw in logical size, but it is
-     * actually drawn to a surface in physical size.  GL surfaces have
-     * a limitation on their size, a smaller surface would be
-     * allocated for the render target if the caller requests in a
-     * size too big.
-     */
-    gfx::IntSize mSize;     // Logical size, the expected by callers.
-    gfx::IntSize mPhySize;  // Physical size, the real size of the surface.
+    // Framebuffer and texture are only used by the RenderTarget, but never
+    // deleted.
+    EXTERNALLY_OWNED
+  };
+
+  struct InitParams {
     GLenum mFBOTextureTarget;
-    SurfaceInitMode mInit;
+    SurfaceInitMode mInitMode;
   };
 
  public:
-  CompositingRenderTargetOGL(CompositorOGL* aCompositor,
-                             const gfx::IntPoint& aOrigin,
-                             const gfx::IntPoint& aClipSpaceOrigin,
-                             GLuint aTexure, GLuint aFBO)
-      : CompositingRenderTarget(aOrigin),
-        mInitParams(),
-        mCompositor(aCompositor),
-        mGL(aCompositor->gl()),
-        mClipSpaceOrigin(aClipSpaceOrigin),
-        mTextureHandle(aTexure),
-        mFBO(aFBO) {
-    MOZ_ASSERT(mGL);
-  }
-
   ~CompositingRenderTargetOGL();
 
   const char* Name() const override { return "CompositingRenderTargetOGL"; }
@@ -89,27 +64,36 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
    * Create a render target around the default FBO, for rendering straight to
    * the window.
    */
-  static already_AddRefed<CompositingRenderTargetOGL> RenderTargetForWindow(
+  static already_AddRefed<CompositingRenderTargetOGL> CreateForWindow(
       CompositorOGL* aCompositor, const gfx::IntSize& aSize) {
     RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
-        aCompositor, gfx::IntPoint(), gfx::IntPoint(), 0, 0);
-    result->mInitParams = InitParams(aSize, aSize, 0, INIT_MODE_NONE);
-    result->mInitParams.mStatus = InitParams::INITIALIZED;
+        aCompositor, gfx::IntRect(gfx::IntPoint(), aSize), gfx::IntPoint(),
+        aSize, GLResourceOwnership::EXTERNALLY_OWNED, 0, 0, Nothing());
     return result.forget();
   }
 
-  /**
-   * Some initialisation work on the backing FBO and texture.
-   * We do this lazily so that when we first set this render target on the
-   * compositor we do not have to re-bind the FBO after unbinding it, or
-   * alternatively leave the FBO bound after creation.
-   */
-  void Initialize(const gfx::IntSize& aSize, const gfx::IntSize& aPhySize,
-                  GLenum aFBOTextureTarget, SurfaceInitMode aInit) {
-    MOZ_ASSERT(mInitParams.mStatus == InitParams::NO_PARAMS,
-               "Initialized twice?");
-    // postpone initialization until we actually want to use this render target
-    mInitParams = InitParams(aSize, aPhySize, aFBOTextureTarget, aInit);
+  static already_AddRefed<CompositingRenderTargetOGL>
+  CreateForNewFBOAndTakeOwnership(CompositorOGL* aCompositor, GLuint aTexture,
+                                  GLuint aFBO, const gfx::IntRect& aRect,
+                                  const gfx::IntPoint& aClipSpaceOrigin,
+                                  const gfx::IntSize& aPhySize,
+                                  GLenum aFBOTextureTarget,
+                                  SurfaceInitMode aInit) {
+    RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
+        aCompositor, aRect, aClipSpaceOrigin, aPhySize,
+        GLResourceOwnership::OWNED_BY_RENDER_TARGET, aTexture, aFBO,
+        Some(InitParams{aFBOTextureTarget, aInit}));
+    return result.forget();
+  }
+
+  static already_AddRefed<CompositingRenderTargetOGL>
+  CreateForExternallyOwnedFBO(CompositorOGL* aCompositor, GLuint aFBO,
+                              const gfx::IntRect& aRect,
+                              const gfx::IntPoint& aClipSpaceOrigin) {
+    RefPtr<CompositingRenderTargetOGL> result = new CompositingRenderTargetOGL(
+        aCompositor, aRect, aClipSpaceOrigin, aRect.Size(),
+        GLResourceOwnership::EXTERNALLY_OWNED, 0, aFBO, Nothing());
+    return result.forget();
   }
 
   void BindTexture(GLenum aTextureUnit, GLenum aTextureTarget);
@@ -124,7 +108,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   GLuint GetFBO() const;
 
   GLuint GetTextureHandle() const {
-    MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
+    MOZ_ASSERT(!mNeedInitialization);
     return mTextureHandle;
   }
 
@@ -136,7 +120,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
         "CompositingRenderTargetOGL should not be used as a TextureSource");
     return nullptr;
   }
-  gfx::IntSize GetSize() const override { return mInitParams.mSize; }
+  gfx::IntSize GetSize() const override { return mSize; }
 
   // The point that DrawGeometry's aClipRect is relative to. Will be (0, 0) for
   // root render targets and equal to GetOrigin() for non-root render targets.
@@ -158,16 +142,56 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
       Compositor* aCompositor) override;
 #endif
 
-  const gfx::IntSize& GetInitSize() const { return mInitParams.mSize; }
+  const gfx::IntSize& GetInitSize() const { return mSize; }
+  const gfx::IntSize& GetPhysicalSize() const { return mPhySize; }
 
- private:
+ protected:
+  CompositingRenderTargetOGL(CompositorOGL* aCompositor,
+                             const gfx::IntRect& aRect,
+                             const gfx::IntPoint& aClipSpaceOrigin,
+                             const gfx::IntSize& aPhySize,
+                             GLResourceOwnership aGLResourceOwnership,
+                             GLuint aTexure, GLuint aFBO,
+                             const Maybe<InitParams>& aNeedInitialization)
+      : CompositingRenderTarget(aRect.TopLeft()),
+        mNeedInitialization(aNeedInitialization),
+        mSize(aRect.Size()),
+        mPhySize(aPhySize),
+        mCompositor(aCompositor),
+        mGL(aCompositor->gl()),
+        mClipSpaceOrigin(aClipSpaceOrigin),
+        mGLResourceOwnership(aGLResourceOwnership),
+        mTextureHandle(aTexure),
+        mFBO(aFBO) {
+    MOZ_ASSERT(mGL);
+  }
+
   /**
-   * Actually do the initialisation. Note that we leave our FBO bound, and so
-   * calling this method is only suitable when about to use this render target.
+   * Actually do the initialisation.
+   * We do this lazily so that when we first set this render target on the
+   * compositor we do not have to re-bind the FBO after unbinding it, or
+   * alternatively leave the FBO bound after creation. Note that we leave our
+   * FBO bound, and so calling this method is only suitable when about to use
+   * this render target.
    */
-  void InitializeImpl();
+  void Initialize(GLenum aFBOTextureTarget);
 
-  InitParams mInitParams;
+  /**
+   * Some() between construction and Initialize, if initialization was
+   * requested.
+   */
+  Maybe<InitParams> mNeedInitialization;
+
+  /*
+   * Users of render target would draw in logical size, but it is
+   * actually drawn to a surface in physical size.  GL surfaces have
+   * a limitation on their size, a smaller surface would be
+   * allocated for the render target if the caller requests in a
+   * size too big.
+   */
+  gfx::IntSize mSize;     // Logical size, the expected by callers.
+  gfx::IntSize mPhySize;  // Physical size, the real size of the surface.
+
   /**
    * There is temporary a cycle between the compositor and the render target,
    * each having a strong ref to the other. The compositor's reference to
@@ -177,6 +201,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   RefPtr<GLContext> mGL;
   Maybe<gfx::IntRect> mClipRect;
   gfx::IntPoint mClipSpaceOrigin;
+  GLResourceOwnership mGLResourceOwnership;
   GLuint mTextureHandle;
   GLuint mFBO;
 };

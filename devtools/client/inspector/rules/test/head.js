@@ -386,7 +386,9 @@ var setProperty = async function(
 
   const onPreview = view.once("ruleview-changed");
   if (value === null) {
+    const onPopupOpened = once(view.popup, "popup-opened");
     EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
+    await onPopupOpened;
   } else {
     EventUtils.sendString(value, view.styleWindow);
   }

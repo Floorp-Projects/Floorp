@@ -12,7 +12,6 @@
 #include "mozilla/gfx/TiledRegion.h"
 #include "mozilla/UniquePtr.h"
 
-using namespace std;
 using namespace mozilla::gfx;
 
 //#define REGION_RANDOM_STRESS_TESTS
@@ -1178,8 +1177,10 @@ struct RegionBitmap {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         if (bitmap[x + y * width] == REGION_VALUE) {
-          for (int yn = max(y - 1, 0); yn <= min(y + 1, height - 1); yn++) {
-            for (int xn = max(x - 1, 0); xn <= min(x + 1, width - 1); xn++) {
+          for (int yn = std::max(y - 1, 0); yn <= std::min(y + 1, height - 1);
+               yn++) {
+            for (int xn = std::max(x - 1, 0); xn <= std::min(x + 1, width - 1);
+                 xn++) {
               if (bitmap[xn + yn * width] == 0)
                 bitmap[xn + yn * width] = DILATE_VALUE;
             }

@@ -27,11 +27,6 @@
 #include <algorithm>
 #include "ImageContainer.h"
 
-#ifdef XP_MACOSX
-#  include "mozilla/gfx/MacIOSurface.h"
-#  include "mozilla/layers/NativeLayerCA.h"
-#endif
-
 namespace mozilla {
 using namespace mozilla::gfx;
 
@@ -1037,31 +1032,22 @@ Maybe<gfx::IntRect> BasicCompositor::BeginRenderingToNativeLayer(
   }
 
   RefPtr<CompositingRenderTarget> target;
-#ifdef XP_MACOSX
-  NativeLayerCA* nativeLayer = aNativeLayer->AsNativeLayerCA();
-  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-  nativeLayer->SetSurfaceIsFlipped(false);
-  CFTypeRefPtr<IOSurfaceRef> surf = nativeLayer->NextSurface();
-  if (!surf) {
+  aNativeLayer->SetSurfaceIsFlipped(false);
+  IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
+  aNativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
+  RefPtr<DrawTarget> dt =
+      aNativeLayer->NextSurfaceAsDrawTarget(BackendType::SKIA);
+  if (!dt) {
     return Nothing();
   }
-  IntRegion invalidRelativeToLayer = mInvalidRegion.MovedBy(-rect.TopLeft());
-  nativeLayer->InvalidateRegionThroughoutSwapchain(invalidRelativeToLayer);
-  invalidRelativeToLayer = nativeLayer->CurrentSurfaceInvalidRegion();
+  invalidRelativeToLayer = aNativeLayer->CurrentSurfaceInvalidRegion();
   mInvalidRegion = invalidRelativeToLayer.MovedBy(rect.TopLeft());
   MOZ_RELEASE_ASSERT(!mInvalidRegion.IsEmpty());
   mCurrentNativeLayer = aNativeLayer;
-  mCurrentIOSurface = new MacIOSurface(std::move(surf));
-  mCurrentIOSurface->Lock(false);
-  RefPtr<DrawTarget> dt =
-      mCurrentIOSurface->GetAsDrawTargetLocked(BackendType::SKIA);
   IntRegion clearRegion;
   clearRegion.Sub(mInvalidRegion, aOpaqueRegion);
   // Set up a render target for drawing directly to dt.
   target = CreateRootRenderTarget(dt, rect, clearRegion);
-#else
-  MOZ_CRASH("Unexpected native layer on this platform");
-#endif
 
   MOZ_RELEASE_ASSERT(target);
   SetRenderTarget(target);
@@ -1080,20 +1066,11 @@ void BasicCompositor::EndRenderingToNativeLayer() {
   // Pop mInvalidRegion
   mRenderTarget->mDrawTarget->PopClip();
 
-  MOZ_RELEASE_ASSERT(mCurrentNativeLayer);
-
   SetRenderTarget(mNativeLayersReferenceRT);
 
-#ifdef XP_MACOSX
-  NativeLayerCA* nativeLayer = mCurrentNativeLayer->AsNativeLayerCA();
-  MOZ_RELEASE_ASSERT(nativeLayer, "Unexpected native layer type");
-  mCurrentIOSurface->Unlock(false);
-  mCurrentIOSurface = nullptr;
-  nativeLayer->NotifySurfaceReady();
+  MOZ_RELEASE_ASSERT(mCurrentNativeLayer);
+  mCurrentNativeLayer->NotifySurfaceReady();
   mCurrentNativeLayer = nullptr;
-#else
-  MOZ_CRASH("Unexpected native layer on this platform");
-#endif
 }
 
 void BasicCompositor::EndFrame() {

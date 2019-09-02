@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DbgMacro.h"
+#include "mozilla/HashFunctions.h"
 
 // A smart pointer for CoreFoundation classes which does reference counting.
 //
@@ -137,6 +138,18 @@ class CFTypeRefPtr {
   explicit operator bool() const { return !!mRawPtr; }
 };
 
+template <class PtrT>
+inline bool operator==(const CFTypeRefPtr<PtrT>& aLhs,
+                       const CFTypeRefPtr<PtrT>& aRhs) {
+  return aLhs.get() == aRhs.get();
+}
+
+template <class PtrT>
+inline bool operator!=(const CFTypeRefPtr<PtrT>& aLhs,
+                       const CFTypeRefPtr<PtrT>& aRhs) {
+  return !(aLhs == aRhs);
+}
+
 // Comparing an |CFTypeRefPtr| to |nullptr|
 
 template <class PtrT>
@@ -165,5 +178,17 @@ template <class PtrT>
 std::ostream& operator<<(std::ostream& aOut, const CFTypeRefPtr<PtrT>& aObj) {
   return mozilla::DebugValue(aOut, aObj.get());
 }
+
+// std::hash support (e.g. for unordered_map)
+namespace std {
+template <class PtrT>
+struct hash<CFTypeRefPtr<PtrT>> {
+  typedef CFTypeRefPtr<PtrT> argument_type;
+  typedef std::size_t result_type;
+  result_type operator()(argument_type const& aPtr) const {
+    return mozilla::HashGeneric(reinterpret_cast<uintptr_t>(aPtr.get()));
+  }
+};
+}  // namespace std
 
 #endif /* CFTypeRefPtr_h */

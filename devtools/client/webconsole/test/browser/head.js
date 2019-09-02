@@ -251,6 +251,34 @@ function executeAndWaitForMessage(
 }
 
 /**
+ * Set the input value, simulates the right keyboard event to evaluate it, depending on
+ * if the console is in editor mode or not, and wait for a message with the expected text
+ * (and an optional selector) to be displayed in the output.
+ *
+ * @param {Object} hud : The webconsole.
+ * @param {String} input : The input expression to execute.
+ * @param {String} matchingText : A string that should match the message body content.
+ * @param {String} selector : A selector that should match the message node.
+ */
+function keyboardExecuteAndWaitForMessage(
+  hud,
+  input,
+  matchingText,
+  selector = ".message"
+) {
+  setInputValue(hud, input);
+  const onMessage = waitForMessage(hud, matchingText, selector);
+  if (isEditorModeEnabled(hud)) {
+    EventUtils.synthesizeKey("KEY_Enter", {
+      [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,
+    });
+  } else {
+    EventUtils.synthesizeKey("VK_RETURN");
+  }
+  return onMessage;
+}
+
+/**
  * Wait for a predicate to return a result.
  *
  * @param function condition
