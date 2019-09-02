@@ -8219,10 +8219,11 @@ AbortReasonOr<Ok> IonBuilder::loadStaticSlot(JSObject* staticObject,
 // Whether a write of the given value may need a post-write barrier for GC
 // purposes.
 bool IonBuilder::needsPostBarrier(MDefinition* value) {
-  CompileZone* zone = realm->zone();
-  if (!zone->nurseryExists()) {
+  // Generational GC is disabled for WebReplay.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     return false;
   }
+  CompileZone* zone = realm->zone();
   if (value->mightBeType(MIRType::Object)) {
     return true;
   }
