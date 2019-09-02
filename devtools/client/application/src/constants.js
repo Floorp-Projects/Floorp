@@ -23,6 +23,12 @@ const PAGE_TYPES = {
 
 const DEFAULT_PAGE = PAGE_TYPES.MANIFEST;
 
+const MANIFEST_CATEGORIES = {
+  IDENTITY: "identity",
+  PRESENTATION: "presentation",
+  ICONS: "icons",
+};
+
 const MANIFEST_ISSUE_LEVELS = {
   ERROR: "error",
   WARNING: "warning",
@@ -34,6 +40,7 @@ module.exports = Object.assign(
   {
     DEFAULT_PAGE,
     PAGE_TYPES,
+    MANIFEST_CATEGORIES,
     MANIFEST_ISSUE_LEVELS,
   },
   actionTypes
