@@ -3,10 +3,8 @@
 
   /**
    * Builder for creating a sequence of actions
-   * The default tick duration is set to 32ms, which is 2 frame time based on
-   * 60Hz display.
    */
-  function Actions(defaultTickDuration=32) {
+  function Actions() {
     this.sourceTypes = new Map([["key", KeySource],
                                 ["pointer", PointerSource],
                                 ["none", GeneralSource]]);
@@ -21,7 +19,6 @@
     }
     this.createSource("none");
     this.tickIdx = 0;
-    this.defaultTickDuration = defaultTickDuration;
   }
 
   Actions.prototype = {
@@ -43,7 +40,7 @@
       let actions = [];
       for (let [sourceType, sourceName] of this.sourceOrder) {
         let source = this.sources.get(sourceType).get(sourceName);
-        let serialized = source.serialize(this.tickIdx + 1, this.defaultTickDuration);
+        let serialized = source.serialize(this.tickIdx + 1);
         if (serialized) {
           serialized.id = sourceName;
           actions.push(serialized);
@@ -281,14 +278,17 @@
   }
 
   GeneralSource.prototype = {
-    serialize: function(tickCount, defaultTickDuration) {
+    serialize: function(tickCount) {
+      if (!this.actions.size) {
+        return undefined;
+      }
       let actions = [];
       let data = {"type": "none", "actions": actions};
       for (let i=0; i<tickCount; i++) {
         if (this.actions.has(i)) {
           actions.push(this.actions.get(i));
         } else {
-          actions.push({"type": "pause", duration: defaultTickDuration});
+          actions.push({"type": "pause"});
         }
       }
       return data;
