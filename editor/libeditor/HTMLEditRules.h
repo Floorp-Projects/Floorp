@@ -367,13 +367,6 @@ class HTMLEditRules : public TextEditRules {
                                             bool* aHandled);
 
   /**
-   * Called after creating a basic block, indenting, outdenting or aligning
-   * contents.  This method inserts a padding <br> element for empty last line
-   * if start container of Selection needs it.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidMakeBasicBlock();
-
-  /**
    * Called before changing an element to absolute positioned.
    * This method only prepares the operation since DidAbsolutePosition() will
    * change it actually later.  mNewBlockElement of TopLevelEditSubActionData

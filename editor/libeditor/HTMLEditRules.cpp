@@ -868,13 +868,15 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eIndent:
     case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
-      return DidMakeBasicBlock();
+      return MOZ_KnownLive(HTMLEditorRef())
+          .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
     case EditSubAction::eSetPositionToAbsolute: {
-      nsresult rv = DidMakeBasicBlock();
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -883,6 +885,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
+    case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -4725,10 +4728,9 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   return rv;
 }
 
-nsresult HTMLEditRules::DidMakeBasicBlock() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // check for empty block.  if so, put a moz br in it.
   if (!SelectionRefPtr()->IsCollapsed()) {
     return NS_OK;
   }
@@ -4746,9 +4748,8 @@ nsresult HTMLEditRules::DidMakeBasicBlock() {
   }
   OwningNonNull<Element> startContainerElement =
       *atStartOfSelection.Container()->AsElement();
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .InsertPaddingBRElementForEmptyLastLineIfNeeded(
-                        startContainerElement);
+  nsresult rv =
+      InsertPaddingBRElementForEmptyLastLineIfNeeded(startContainerElement);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "InsertPaddingBRElementForEmptyLastLineIfNeeded() failed");
