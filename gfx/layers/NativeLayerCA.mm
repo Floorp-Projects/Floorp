@@ -11,6 +11,10 @@
 #include <utility>
 #include <algorithm>
 
+#include "GLContextCGL.h"
+#include "MozFramebuffer.h"
+#include "ScopedGLHelpers.h"
+
 @interface CALayer (PrivateSetContentsOpaque)
 - (void)setContentsOpaque:(BOOL)opaque;
 @end
@@ -113,6 +117,10 @@ NativeLayerCA::NativeLayerCA() : mMutex("NativeLayerCA") {}
 NativeLayerCA::~NativeLayerCA() {
   SetSurfaceRegistry(nullptr);  // or maybe MOZ_RELEASE_ASSERT(!mSurfaceRegistry) would be better?
 
+  if (mInProgressLockedIOSurface) {
+    mInProgressLockedIOSurface->Unlock(false);
+    mInProgressLockedIOSurface = nullptr;
+  }
   if (mInProgressSurface) {
     IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
   }
@@ -244,7 +252,10 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const IntRegion& aRegion
 
 CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface() {
   MutexAutoLock lock(mMutex);
+  return NextSurfaceLocked(lock);
+}
 
+CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurfaceLocked(const MutexAutoLock& aLock) {
   IntSize surfaceSize = mSize;
   if (surfaceSize.IsEmpty()) {
     NSLog(@"NextSurface returning nullptr because of invalid surfaceSize (%d, %d).",
@@ -259,7 +270,7 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface() {
 
   // Find the last surface in unusedSurfaces which has the right size. If such
   // a surface exists, it is the surface we will recycle.
-  std::vector<SurfaceWithInvalidRegion> unusedSurfaces = RemoveExcessUnusedSurfaces(lock);
+  std::vector<SurfaceWithInvalidRegion> unusedSurfaces = RemoveExcessUnusedSurfaces(aLock);
   auto surfIter = std::find_if(
       unusedSurfaces.rbegin(), unusedSurfaces.rend(),
       [surfaceSize](const SurfaceWithInvalidRegion& s) { return s.mSize == surfaceSize; });
@@ -295,6 +306,7 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface() {
   if (mSurfaceRegistry) {
     for (auto unusedSurf : unusedSurfaces) {
       mSurfaceRegistry->UnregisterSurface(unusedSurf.mSurface);
+      mFramebuffers.erase(unusedSurf.mSurface);
     }
   }
   unusedSurfaces.clear();
@@ -303,6 +315,72 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface() {
   mInProgressSurface = std::move(surf);
   IOSurfaceIncrementUseCount(mInProgressSurface->mSurface.get());
   return mInProgressSurface->mSurface;
+}
+
+RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(gfx::BackendType aBackendType) {
+  MutexAutoLock lock(mMutex);
+  CFTypeRefPtr<IOSurfaceRef> surface = NextSurfaceLocked(lock);
+  if (!surface) {
+    return nullptr;
+  }
+
+  mInProgressLockedIOSurface = new MacIOSurface(std::move(surface));
+  mInProgressLockedIOSurface->Lock(false);
+  return mInProgressLockedIOSurface->GetAsDrawTargetLocked(aBackendType);
+}
+
+void NativeLayerCA::SetGLContext(gl::GLContext* aContext) {
+  MutexAutoLock lock(mMutex);
+
+  RefPtr<gl::GLContextCGL> glContextCGL = gl::GLContextCGL::Cast(aContext);
+  MOZ_RELEASE_ASSERT(glContextCGL, "Unexpected GLContext type");
+
+  if (glContextCGL != mGLContext) {
+    mFramebuffers.clear();
+    mGLContext = glContextCGL;
+  }
+}
+
+gl::GLContext* NativeLayerCA::GetGLContext() {
+  MutexAutoLock lock(mMutex);
+  return mGLContext;
+}
+
+Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(bool aNeedsDepth) {
+  MutexAutoLock lock(mMutex);
+  CFTypeRefPtr<IOSurfaceRef> surface = NextSurfaceLocked(lock);
+  if (!surface) {
+    return Nothing();
+  }
+
+  return Some(GetOrCreateFramebufferForSurface(lock, std::move(surface), aNeedsDepth));
+}
+
+GLuint NativeLayerCA::GetOrCreateFramebufferForSurface(const MutexAutoLock&,
+                                                       CFTypeRefPtr<IOSurfaceRef> aSurface,
+                                                       bool aNeedsDepth) {
+  auto fbCursor = mFramebuffers.find(aSurface);
+  if (fbCursor != mFramebuffers.end()) {
+    return fbCursor->second->mFB;
+  }
+
+  MOZ_RELEASE_ASSERT(
+      mGLContext, "Only call NextSurfaceAsFramebuffer when a GLContext is set on this NativeLayer");
+  mGLContext->MakeCurrent();
+  GLuint tex = mGLContext->CreateTexture();
+  {
+    const gl::ScopedBindTexture bindTex(mGLContext, tex, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+    CGLTexImageIOSurface2D(mGLContext->GetCGLContext(), LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                           LOCAL_GL_RGBA, mSize.width, mSize.height, LOCAL_GL_BGRA,
+                           LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV, aSurface.get(), 0);
+  }
+
+  auto fb = gl::MozFramebuffer::CreateWith(mGLContext, mSize, 0, aNeedsDepth,
+                                           LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  GLuint fbo = fb->mFB;
+  mFramebuffers.insert({aSurface, std::move(fb)});
+
+  return fbo;
 }
 
 void NativeLayerCA::NotifySurfaceReady() {
@@ -315,6 +393,12 @@ void NativeLayerCA::NotifySurfaceReady() {
     mSurfaces.push_back(*mReadySurface);
     mReadySurface = Nothing();
   }
+
+  if (mInProgressLockedIOSurface) {
+    mInProgressLockedIOSurface->Unlock(false);
+    mInProgressLockedIOSurface = nullptr;
+  }
+
   mReadySurface = std::move(mInProgressSurface);
   mReadySurface->mInvalidRegion = IntRect();
 }

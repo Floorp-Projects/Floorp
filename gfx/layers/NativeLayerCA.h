@@ -9,10 +9,11 @@
 #include <IOSurface/IOSurface.h>
 
 #include <deque>
+#include <unordered_map>
 
-#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 
+#include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/layers/NativeLayer.h"
 #include "CFTypeRefPtr.h"
 #include "nsRegion.h"
@@ -25,6 +26,12 @@ typedef void CALayer;
 #endif
 
 namespace mozilla {
+
+namespace gl {
+class GLContextCGL;
+class MozFramebuffer;
+}  // namespace gl
+
 namespace layers {
 
 class IOSurfaceRegistry {
@@ -96,19 +103,17 @@ class NativeLayerCA : public NativeLayer {
   // Overridden methods
   void SetRect(const gfx::IntRect& aRect) override;
   gfx::IntRect GetRect() override;
-
-  // The invalid region of the surface that has been returned from the most
-  // recent call to NextSurface. Newly-created surfaces are entirely invalid.
-  // For surfaces that have been used before, the invalid region is the union of
-  // all invalid regions that have been passed to
-  // invalidateRegionThroughoutSwapchain since the last time that
-  // NotifySurfaceReady was called for this surface. Can only be called between
-  // calls to NextSurface and NotifySurfaceReady. Can be called on any thread.
-  gfx::IntRegion CurrentSurfaceInvalidRegion();
-
-  // Invalidates the specified region in all surfaces that are tracked by this
-  // layer.
-  void InvalidateRegionThroughoutSwapchain(const gfx::IntRegion& aRegion);
+  void InvalidateRegionThroughoutSwapchain(
+      const gfx::IntRegion& aRegion) override;
+  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      gfx::BackendType aBackendType) override;
+  void SetGLContext(gl::GLContext* aGLContext) override;
+  gl::GLContext* GetGLContext() override;
+  Maybe<GLuint> NextSurfaceAsFramebuffer(bool aNeedsDepth) override;
+  gfx::IntRegion CurrentSurfaceInvalidRegion() override;
+  void NotifySurfaceReady() override;
+  void SetSurfaceIsFlipped(bool aIsFlipped) override;
+  bool SurfaceIsFlipped() override;
 
   // Returns an IOSurface that can be drawn to. The size of the IOSurface will
   // be the size of the rect that has been passed to SetRect.
@@ -119,13 +124,7 @@ class NativeLayerCA : public NativeLayer {
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
   CFTypeRefPtr<IOSurfaceRef> NextSurface();
-
-  // Indicates that the surface which has been returned from the most recent
-  // call to NextSurface is now finished being drawn to and can be displayed on
-  // the screen. The surface will be used during the next call to the layer's
-  // ApplyChanges method. Resets the invalid region on the surface to the empty
-  // region.
-  void NotifySurfaceReady();
+  CFTypeRefPtr<IOSurfaceRef> NextSurfaceLocked(const MutexAutoLock&);
 
   // Consumers may provide an object that implements the IOSurfaceRegistry
   // interface.
@@ -145,11 +144,6 @@ class NativeLayerCA : public NativeLayer {
   void SetSurfaceRegistry(RefPtr<IOSurfaceRegistry> aSurfaceRegistry);
   RefPtr<IOSurfaceRegistry> GetSurfaceRegistry();
 
-  // Whether the surface contents are flipped vertically compared to this
-  // layer's coordinate system. Can be set on any thread at any time.
-  void SetSurfaceIsFlipped(bool aIsFlipped);
-  bool SurfaceIsFlipped();
-
   // Set an opaque region on the layer. Internally, this causes the creation
   // of opaque and transparent sublayers to cover the regions.
   // The coordinates in aRegion are relative to mPosition.
@@ -166,6 +160,10 @@ class NativeLayerCA : public NativeLayer {
   CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
+
+  GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
+                                          CFTypeRefPtr<IOSurfaceRef> aSurface,
+                                          bool aNeedsDepth);
 
   struct SurfaceWithInvalidRegion {
     CFTypeRefPtr<IOSurfaceRef> mSurface;
@@ -247,6 +245,14 @@ class NativeLayerCA : public NativeLayer {
   // mSurfaces.front() is the next surface we'll attempt to use.
   // mSurfaces.back() is the one we submitted most recently.
   std::deque<SurfaceWithInvalidRegion> mSurfaces;
+
+  // Non-null between calls to NextSurfaceAsDrawTarget and NotifySurfaceReady.
+  RefPtr<MacIOSurface> mInProgressLockedIOSurface;
+
+  RefPtr<gl::GLContextCGL> mGLContext;
+
+  std::unordered_map<CFTypeRefPtr<IOSurfaceRef>, UniquePtr<gl::MozFramebuffer>>
+      mFramebuffers;
 
   gfx::IntPoint mPosition;
   gfx::IntSize mSize;
