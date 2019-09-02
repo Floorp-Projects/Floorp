@@ -671,6 +671,49 @@ void LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor) {
 }
 #endif
 
+static Rect RectWithEdges(int32_t aTop, int32_t aRight, int32_t aBottom,
+                          int32_t aLeft) {
+  return Rect(aLeft, aTop, aRight - aLeft, aBottom - aTop);
+}
+
+void LayerManagerComposite::DrawBorder(const IntRect& aOuter,
+                                       int32_t aBorderWidth,
+                                       const Color& aColor,
+                                       const Matrix4x4& aTransform) {
+  EffectChain effects;
+  effects.mPrimaryEffect = new EffectSolidColor(aColor);
+
+  IntRect inner(aOuter);
+  inner.Deflate(aBorderWidth);
+  // Top and bottom border sides
+  mCompositor->DrawQuad(
+      RectWithEdges(aOuter.Y(), aOuter.XMost(), inner.Y(), aOuter.X()), aOuter,
+      effects, 1, aTransform);
+  mCompositor->DrawQuad(
+      RectWithEdges(inner.YMost(), aOuter.XMost(), aOuter.YMost(), aOuter.X()),
+      aOuter, effects, 1, aTransform);
+  // Left and right border sides
+  mCompositor->DrawQuad(
+      RectWithEdges(inner.Y(), inner.X(), inner.YMost(), aOuter.X()), aOuter,
+      effects, 1, aTransform);
+  mCompositor->DrawQuad(
+      RectWithEdges(inner.Y(), aOuter.XMost(), inner.YMost(), inner.XMost()),
+      aOuter, effects, 1, aTransform);
+}
+
+void LayerManagerComposite::DrawTranslationWarningOverlay(
+    const IntRect& aBounds) {
+  // Black blorder
+  IntRect blackBorderBounds(aBounds);
+  blackBorderBounds.Deflate(4);
+  DrawBorder(blackBorderBounds, 6, Color(0, 0, 0, 1), Matrix4x4());
+
+  // Warning border, yellow to red
+  IntRect warnBorder(aBounds);
+  warnBorder.Deflate(5);
+  DrawBorder(warnBorder, 4, Color(1, 1.f - mWarningLevel, 0, 1), Matrix4x4());
+}
+
 static uint16_t sFrameCount = 0;
 void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
   bool drawFps = StaticPrefs::layers_acceleration_draw_fps();
@@ -682,55 +725,11 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
   }
 
   if (drawFps) {
-    float alpha = 1;
 #ifdef ANDROID
     // Draw a translation delay warning overlay
-    int width;
-    int border;
-
-    TimeStamp now = TimeStamp::Now();
-    if (!mWarnTime.IsNull() &&
-        (now - mWarnTime).ToMilliseconds() < kVisualWarningDuration) {
-      EffectChain effects;
-
-      // Black blorder
-      border = 4;
-      width = 6;
-      effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0, 0, 0, 1));
-      mCompositor->DrawQuad(
-          gfx::Rect(border, border, aBounds.Width() - 2 * border, width),
-          aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(gfx::Rect(border, aBounds.Height() - border - width,
-                                      aBounds.Width() - 2 * border, width),
-                            aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(
-          gfx::Rect(border, border + width, width,
-                    aBounds.Height() - 2 * border - width * 2),
-          aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(
-          gfx::Rect(aBounds.Width() - border - width, border + width, width,
-                    aBounds.Height() - 2 * border - 2 * width),
-          aBounds, effects, alpha, gfx::Matrix4x4());
-
-      // Content
-      border = 5;
-      width = 4;
-      effects.mPrimaryEffect =
-          new EffectSolidColor(gfx::Color(1, 1.f - mWarningLevel, 0, 1));
-      mCompositor->DrawQuad(
-          gfx::Rect(border, border, aBounds.Width() - 2 * border, width),
-          aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(gfx::Rect(border, aBounds.height - border - width,
-                                      aBounds.Width() - 2 * border, width),
-                            aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(
-          gfx::Rect(border, border + width, width,
-                    aBounds.Height() - 2 * border - width * 2),
-          aBounds, effects, alpha, gfx::Matrix4x4());
-      mCompositor->DrawQuad(
-          gfx::Rect(aBounds.Width() - border - width, border + width, width,
-                    aBounds.Height() - 2 * border - 2 * width),
-          aBounds, effects, alpha, gfx::Matrix4x4());
+    if (!mWarnTime.IsNull() && (TimeStamp::Now() - mWarnTime).ToMilliseconds() <
+                                   kVisualWarningDuration) {
+      DrawTranslationWarningOverlay(aBounds);
       SetDebugOverlayWantsNextFrame(true);
     }
 #endif
@@ -743,6 +742,7 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
     mTextRenderer->RenderText(mCompositor, text, IntPoint(2, 5), Matrix4x4(),
                               24, 600, TextRenderer::FontType::FixedWidth);
 
+    float alpha = 1;
     if (mUnusedApzTransformWarning) {
       // If we have an unused APZ transform on this composite, draw a 20x20 red
       // box in the top-right corner
@@ -776,9 +776,7 @@ void LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds) {
         new EffectSolidColor(gfxUtils::GetColorForFrameNumber(sFrameCount));
     mCompositor->DrawQuad(Rect(sideRect), sideRect, effects, 1.0,
                           gfx::Matrix4x4());
-  }
 
-  if (drawFrameColorBars) {
     // We intentionally overflow at 2^16.
     sFrameCount++;
   }
