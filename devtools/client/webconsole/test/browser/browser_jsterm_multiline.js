@@ -9,9 +9,7 @@
 "use strict";
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
-  "test/browser/test-console.html";
-const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
+  "http://example.com/browser/devtools/client/webconsole/test/browser/test-console.html";
 
 const SHOULD_ENTER_MULTILINE = [
   { input: "function foo() {" },
@@ -42,47 +40,7 @@ const SHOULD_EXECUTE = [
   { input: "{2,}" },
 ];
 
-const SINGLE_LINE_DATA = {
-  timestamp: null,
-  category: "devtools.main",
-  method: "execute_js",
-  object: "webconsole",
-  value: null,
-  extra: {
-    lines: "1",
-  },
-};
-
-const DATA = [
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  SINGLE_LINE_DATA,
-  {
-    timestamp: null,
-    category: "devtools.main",
-    method: "execute_js",
-    object: "webconsole",
-    value: null,
-    extra: {
-      lines: "3",
-    },
-  },
-];
-
 add_task(async function() {
-  // Let's reset the counts.
-  Services.telemetry.clearEvents();
-
-  // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  ok(!snapshot.parent, "No events have been logged for the main process");
-
   const hud = await openNewTabAndConsole(TEST_URI);
 
   for (const { input, shiftKey } of SHOULD_ENTER_MULTILINE) {
@@ -97,43 +55,11 @@ add_task(async function() {
 
   for (const { input, shiftKey } of SHOULD_EXECUTE) {
     setInputValue(hud, input);
+    const onMessage = waitForMessage(hud, "", ".result");
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey });
+    await onMessage;
 
     await waitFor(() => !getInputValue(hud));
     is(getInputValue(hud), "", "Input is cleared");
   }
-
-  await executeAndWaitForMessage(
-    hud,
-    "document.\nlocation.\nhref",
-    TEST_URI,
-    ".result"
-  );
-
-  checkEventTelemetry();
 });
-
-function checkEventTelemetry() {
-  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  const events = snapshot.parent.filter(
-    event =>
-      event[1] === "devtools.main" &&
-      event[2] === "execute_js" &&
-      event[3] === "webconsole" &&
-      event[4] === null
-  );
-
-  for (const i in DATA) {
-    const [timestamp, category, method, object, value, extra] = events[i];
-    const expected = DATA[i];
-
-    // ignore timestamp
-    ok(timestamp > 0, "timestamp is greater than 0");
-    is(category, expected.category, "category is correct");
-    is(method, expected.method, "method is correct");
-    is(object, expected.object, "object is correct");
-    is(value, expected.value, "value is correct");
-
-    is(extra.lines, expected.extra.lines, "lines is correct");
-  }
-}

@@ -222,7 +222,7 @@ function considerScript(script) {
 
 function setEmptyInstrumentationId(script) {
   script.setInstrumentationId(0);
-  script.getChildScripts().foreach(setEmptyInstrumentationId);
+  script.getChildScripts().forEach(setEmptyInstrumentationId);
 }
 
 dbg.onNewScript = function(script) {
@@ -258,6 +258,7 @@ Services.obs.addObserver(
   {
     observe(subject, topic, data) {
       assert(topic == "webnavigation-create");
+      subject.QueryInterface(Ci.nsIDocShell);
       subject.watchedByDevtools = true;
     },
   },
