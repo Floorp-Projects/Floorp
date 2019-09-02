@@ -199,8 +199,8 @@ already_AddRefed<nsXULElement> nsXULElement::CreateFromPrototype(
       // Check each attribute on the prototype to see if we need to do
       // any additional processing and hookup that would otherwise be
       // done 'automagically' by SetAttr().
-      for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
-        element->AddListenerFor(aPrototype->mAttributes[i].mName);
+      for (const auto& attribute : aPrototype->mAttributes) {
+        element->AddListenerForAttributeIfNeeded(attribute.mName);
       }
     }
 
@@ -584,30 +584,26 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 
 //----------------------------------------------------------------------
 
-void nsXULElement::AddListenerFor(const nsAttrName& aName) {
+void nsXULElement::AddListenerForAttributeIfNeeded(nsAtom* aLocalName) {
   // If appropriate, add a popup listener and/or compile the event
   // handler. Called when we change the element's document, create a
   // new element, change an attribute's value, etc.
-  // Eventlistenener-attributes are always in the null namespace
-  if (aName.IsAtom()) {
-    nsAtom* attr = aName.Atom();
-    MaybeAddPopupListener(attr);
-    if (nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
-      nsAutoString value;
-      GetAttr(kNameSpaceID_None, attr, value);
-      SetEventHandler(attr, value, true);
-    }
-  }
-}
-
-void nsXULElement::MaybeAddPopupListener(nsAtom* aLocalName) {
-  // If appropriate, add a popup listener. Called when we change the
-  // element's document, create a new element, change an attribute's
-  // value, etc.
+  // Eventlistenener-attributes are always in the null namespace.
   if (aLocalName == nsGkAtoms::menu || aLocalName == nsGkAtoms::contextmenu ||
       // XXXdwh popup and context are deprecated
       aLocalName == nsGkAtoms::popup || aLocalName == nsGkAtoms::context) {
     AddPopupListener(aLocalName);
+  }
+  if (nsContentUtils::IsEventAttributeName(aLocalName, EventNameType_XUL)) {
+    nsAutoString value;
+    GetAttr(kNameSpaceID_None, aLocalName, value);
+    SetEventHandler(aLocalName, value, true);
+  }
+}
+
+void nsXULElement::AddListenerForAttributeIfNeeded(const nsAttrName& aName) {
+  if (aName.IsAtom()) {
+    AddListenerForAttributeIfNeeded(aName.Atom());
   }
 }
 
@@ -857,19 +853,7 @@ nsresult nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                     bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aValue) {
-      // Add popup and event listeners. We can't call AddListenerFor since
-      // the attribute isn't set yet.
-      MaybeAddPopupListener(aName);
-      if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL)) {
-        if (aValue->Type() == nsAttrValue::eString) {
-          SetEventHandler(aName, aValue->GetStringValue(), true);
-        } else {
-          nsAutoString body;
-          aValue->ToString(body);
-          SetEventHandler(aName, body, true);
-        }
-      }
-
+      AddListenerForAttributeIfNeeded(aName);
       Document* document = GetUncomposedDoc();
 
       // Hide chrome if needed
