@@ -250,6 +250,15 @@ class HuffmanPreludeReader {
       fprintf(stderr, "<Boolean> %s\n", symbol ? "true" : "false");
     }
 #endif  // DEBUG
+
+    // Comparing booleans.
+    //
+    // As 0 == False < True == 1, we only compare indices.
+    inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
+      MOZ_ASSERT(0 <= aIndex && aIndex <= 1);
+      MOZ_ASSERT(0 <= bIndex && bIndex <= 1);
+      return aIndex < bIndex;
+    }
   };
 
   // A field encoding a lazy offset.
@@ -296,6 +305,15 @@ class HuffmanPreludeReader {
       fprintf(stderr, "<MaybeInterface> %s\n", describeBinASTKind(symbol));
     }
 #endif  // DEBUG
+
+    // Comparing optional interfaces.
+    //
+    // As 0 == Null < _ == 1, we only compare indices.
+    inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
+      MOZ_ASSERT(0 <= aIndex && aIndex <= 1);
+      MOZ_ASSERT(0 <= bIndex && bIndex <= 1);
+      return aIndex < bIndex;
+    }
 
     MaybeInterface(const NormalizedInterfaceAndField identity, BinASTKind kind)
         : EntryIndexed(identity), kind(kind) {}
@@ -371,6 +389,17 @@ class HuffmanPreludeReader {
     }
 #endif  // DEBUG
 
+    // Comparing sum entries.
+    //
+    // By specification, we need to use string comparison.
+    inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
+      MOZ_ASSERT(0 <= aIndex && aIndex <= maxNumberOfSymbols());
+      MOZ_ASSERT(0 <= bIndex && bIndex <= maxNumberOfSymbols());
+      const char* aString = describeBinASTKind(interfaceAt(aIndex));
+      const char* bString = describeBinASTKind(interfaceAt(bIndex));
+      return strcmp(aString, bString) < 0;
+    }
+
     Sum(const NormalizedInterfaceAndField identity, const BinASTSum contents)
         : EntryIndexed(identity), contents(contents) {}
 
@@ -412,6 +441,10 @@ class HuffmanPreludeReader {
     }
 #endif  // DEBUG
 
+    inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
+      return aIndex < bIndex;
+    }
+
     MaybeSum(const NormalizedInterfaceAndField identity,
              const BinASTSum contents)
         : EntryIndexed(identity), contents(contents) {}
@@ -449,6 +482,17 @@ class HuffmanPreludeReader {
       fprintf(stderr, "<StringEnum> %s\n", describeBinASTVariant(symbol));
     }
 #endif  // DEBUG
+
+    // Comparing string enums.
+    //
+    // By specification, we need to use string comparison.
+    inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
+      MOZ_ASSERT(0 <= aIndex && aIndex <= maxNumberOfSymbols());
+      MOZ_ASSERT(0 <= bIndex && bIndex <= maxNumberOfSymbols());
+      const char* aString = describeBinASTVariant(variantAt(aIndex));
+      const char* bString = describeBinASTVariant(variantAt(bIndex));
+      return strcmp(aString, bString) < 0;
+    }
 
     // The values in the enum.
     const BinASTStringEnum contents;
@@ -686,6 +730,11 @@ class HuffmanPreludeReader {
   MOZ_MUST_USE JS::Result<typename Entry::Indexed>
   readMultipleValuesTableAndAssignCode(typename Entry::Table& table,
                                        Entry entry, uint32_t numberOfSymbols) {
+    for (size_t i = 0; i < numberOfSymbols; ++i) {
+      BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>(entry, i));
+      Entry::Dump(symbol);
+    }
+
     // Data is presented in an order that doesn't match our memory
     // representation, so we need to copy `numberOfSymbols` entries.
     // We use an auxiliary vector to avoid allocating each time.
@@ -710,18 +759,20 @@ class HuffmanPreludeReader {
         BitLengthAndIndex(MAX_CODE_BIT_LENGTH, numberOfSymbols)));
 
     // Sort by length then webidl order (which is also the index).
-    std::sort(
-        auxStorageLength.begin(), auxStorageLength.end(),
-        [](const BitLengthAndIndex& a, const BitLengthAndIndex& b) -> bool {
-          MOZ_ASSERT(a.index != b.index);
-          if (a.bitLength < b.bitLength) {
-            return true;
-          }
-          if (a.index < b.index) {
-            return true;
-          }
-          return false;
-        });
+    std::sort(auxStorageLength.begin(), auxStorageLength.end(),
+              [&entry](const BitLengthAndIndex& a,
+                       const BitLengthAndIndex& b) -> bool {
+                MOZ_ASSERT(a.index != b.index);
+                // Compare first by bit length.
+                if (a.bitLength < b.bitLength) {
+                  return true;
+                }
+                if (a.bitLength > b.bitLength) {
+                  return false;
+                }
+                // In case of equal bit length, compare by symbol value.
+                return entry.lessThan(a.index, b.index);
+              });
     MOZ_ASSERT(
         auxStorageLength[auxStorageLength.length() - 1].bitLength ==
         MAX_CODE_BIT_LENGTH);  // Guaranteed to exist as we have a terminator.
@@ -1523,7 +1574,11 @@ JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const Context& context) {
   js::frontend::BinASTTokenReaderBase::ContextPrinter::print("variant",
                                                              context);
-  return readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(context);
+  BINJS_MOZ_TRY_DECL(
+      result,
+      readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(context));
+  fprintf(stderr, "=> %s\n", describeBinASTVariant(result));
+  return result;
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
