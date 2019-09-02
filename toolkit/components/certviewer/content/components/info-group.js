@@ -26,7 +26,6 @@ export class InfoGroup extends HTMLElement {
     // Adds a class with the section title's name, to make
     // it easier to find when highlighting errors.
     this.classList.add(normalizeToKebabCase(this.item.sectionTitle));
-
     for (let i = 0; i < this.item.sectionItems.length; i++) {
       this.shadowRoot.append(new InfoItem(this.item.sectionItems[i]));
     }
