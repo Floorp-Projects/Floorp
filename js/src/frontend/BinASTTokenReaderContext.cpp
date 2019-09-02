@@ -1032,21 +1032,9 @@ BinASTTokenReaderContext::BitBuffer::BitBuffer() : bits(0), bitLength(0) {
 }
 
 template <Compression C>
-HuffmanLookup BinASTTokenReaderContext::BitBuffer::getHuffmanLookup() {
-  // Only keep the leading 32 bits.
-  const uint8_t bitLength =
-      std::min<uint8_t>(this->bitLength, MAX_PREFIX_BIT_LENGTH);
-  const uint32_t bitsPrefix = bits & (uint64_t)0x00000000FFFFFFFF;
-  return HuffmanLookup(bitsPrefix, bitLength);
-}
-
-template <>
-MOZ_MUST_USE JS::Result<Ok>
-BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
-    BinASTTokenReaderContext& owner, const uint8_t bitLength) {
-  // It should be impossible to call `advanceBitBuffer`
-  // with more bits than what we just handed out.
-  MOZ_ASSERT(bitLength <= this->bitLength);
+JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
+    BinASTTokenReaderContext& owner) {
+  // First, read data if necessary.
 
   // The algorithm is not intuitive, so consider an example, where the byte
   // stream starts with `0b_HGFE_DCBA`, `0b_PONM_LKJI`, `0b_XWVU_TRSQ` (to keep
@@ -1056,13 +1044,9 @@ BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
   // is `0b_ABCD_EFGH`, `0b_IJML_MNOP`, `0b_QRST_UVWX`.
   // For the example, let's assume that we have already read
   // `0b_ABCD_EFGH`, `0b_IJKL_MNOP` into `bits`, so before the call to
-  // `advanceBitBuffer`, `bits` initially contains
+  // `getHuffmanLookup`, `bits` initially contains
   // `0b_XXXX_XXXX__XXXX_XXXX__ABCD_EFGH__IJKL_MNOP`, where `X` are bits that
   // are beyond `this->bitLength`
-
-  // 1. We have consumed a few bits from the bit buffer, say `ABC`.
-  // `bits` is now `0b_XXXX_XXXX__XXXX_XXXX__XXXD_EFGH__IJKL_MNOP`.
-  this->bitLength -= bitLength;
 
   if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {
     // Keys can be up to MAX_PREFIX_BIT_LENGTH bits long. If we have fewer bits
@@ -1070,7 +1054,7 @@ BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
     // possible.
 
     while (this->bitLength <= BIT_BUFFER_SIZE - BIT_BUFFER_READ_UNIT) {
-      // Let's try and pull one byte.
+      // 1. Let's try and pull one byte.
       uint8_t byte;
       uint32_t readLen = 1;
       MOZ_TRY((owner.readBuf<Compression::No, EndOfFilePolicy::BestEffort>(
@@ -1099,11 +1083,25 @@ BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
       this->bitLength += BIT_BUFFER_READ_UNIT;
       MOZ_ASSERT(bits >> this->bitLength == 0);
 
-      // 4. Continue as long as we don't have enough bits.
+      // 5. Continue as long as we don't have enough bits.
     }
   }
 
-  return Ok();
+  // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
+  const uint8_t bitLength =
+      std::min<uint8_t>(this->bitLength, MAX_PREFIX_BIT_LENGTH);
+  const uint32_t bitsPrefix = bits & (uint64_t)0x00000000FFFFFFFF;
+  return HuffmanLookup(bitsPrefix, bitLength);
+}
+
+template <>
+void BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
+    const uint8_t bitLength) {
+  // It should be impossible to call `advanceBitBuffer`
+  // with more bits than what we just handed out.
+  MOZ_ASSERT(bitLength <= this->bitLength);
+
+  this->bitLength -= bitLength;
 }
 
 void BinASTTokenReaderContext::traceMetadata(JSTracer* trc) {
@@ -1242,11 +1240,11 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   const auto identity =
       context.as<BinASTTokenReaderBase::ListContext>().content;
   const auto& table = dictionary.tableForListLength(identity);
+  MOZ_TRY(const auto bits = bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto lookup =
-      table.as<HuffmanTableExplicitSymbolsListLength>().impl.lookup(
-          bitBuffer.getHuffmanLookup<Compression::No>());
-  MOZ_TRY(
-      bitBuffer.advanceBitBuffer<Compression::No>(*this, lookup.key.bitLength));
+      table.as<HuffmanTableExplicitSymbolsListLength>().impl.lookup(bits);
+  
+  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
     return raiseInvalidValue(context);
   }
