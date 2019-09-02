@@ -30,8 +30,6 @@
 
 #include "HRTFElevation.h"
 
-using namespace std;
-
 namespace WebCore {
 
 const int HRTFDatabase::MinElevation = -45;
