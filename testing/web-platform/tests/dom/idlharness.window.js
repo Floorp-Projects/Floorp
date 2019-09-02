@@ -5,6 +5,9 @@
 // META: variant=?exclude=Node
 // META: timeout=long
 
+// Note: This isn't merged into idlharness.any.js because of the use of variants,
+// i.e., include=Node wouldn't make sense for workers.
+
 'use strict';
 
 idl_test(
