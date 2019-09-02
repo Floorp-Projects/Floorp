@@ -28,7 +28,10 @@ devtools:
     query:
         - "'debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools | 'mochitest-chrome 'linux64 | 'mac | 'windows10 !asan !shippable !-sw !qr"
+        - "'mochitest-devtools | 'mochitest-chrome 'linux64 | 'windows10 !asan !shippable !-sw !qr"
+        # mac opt tests only run with shippable, so we cannot use the same
+        # selector as linux and windows.
+        - "'mochitest-devtools | 'mochitest-chrome 'mac !asan !-sw !qr"
         - "'xpcshell 'linux64/ !asan !shippable"
 
 perf:
