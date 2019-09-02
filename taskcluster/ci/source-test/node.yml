@@ -2,6 +2,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
+newtab-unit-tests:
+    description: newtab unit tests
+    platform: linux64/opt
+    treeherder:
+        symbol: node(newtab)
+        kind: test
+        tier: 2
+    worker-type: t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "desktop1604-test"}
+        max-run-time: 1800
+    require-build: true
+    fetches:
+        build:
+            - target.tar.bz2
+    run:
+        using: run-task
+        cache-dotcache: true
+        # We fetch our own Firefox nightly because the version of firefox
+        # currently in the desktop1604-test docker image is too old to
+        # pass our unit tests.
+        cwd: '{checkout}'
+        command: >
+            export FIREFOX_BIN=$MOZ_FETCHES_DIR/firefox/firefox &&
+            cd /builds/worker/checkouts/gecko/browser/components/newtab &&
+            npm install &&
+            node bin/try-runner.js
+    attributes:
+        code-review: true
+    when:
+        files-changed:
+            - "browser/components/newtab/**"
+
 debugger-tests:
     description: devtools debugger unit tests and flow type checks
     platform: linux64/opt

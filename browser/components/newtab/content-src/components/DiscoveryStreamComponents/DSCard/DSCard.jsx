@@ -129,7 +129,21 @@ export class DSCard extends React.PureComponent {
     }
   }
 
+  onIdleCallback() {
+    if (!this.state.isSeen) {
+      if (this.observer && this.placholderElement) {
+        this.observer.unobserve(this.placholderElement);
+      }
+      this.setState({
+        isSeen: true,
+      });
+    }
+  }
+
   componentDidMount() {
+    this.idleCallbackId = window.requestIdleCallback(
+      this.onIdleCallback.bind(this)
+    );
     if (this.placholderElement) {
       this.observer = new IntersectionObserver(this.onSeen.bind(this));
       this.observer.observe(this.placholderElement);

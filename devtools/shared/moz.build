@@ -65,6 +65,7 @@ DevToolsModules(
     'l10n.js',
     'loader-plugin-raw.jsm',
     'Loader.jsm',
+    'natural-sort.js',
     'path.js',
     'plural-form.js',
     'protocol.js',

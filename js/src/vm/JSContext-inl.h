@@ -303,44 +303,6 @@ inline void JSContext::minorGC(JS::GCReason reason) {
   runtime()->gc.minorGC(reason);
 }
 
-inline void JSContext::setPendingException(JS::HandleValue v,
-                                           js::HandleSavedFrame stack) {
-#if defined(NIGHTLY_BUILD)
-  do {
-    // Do not intercept exceptions if we are already
-    // in the exception interceptor. That would lead
-    // to infinite recursion.
-    if (this->runtime()->errorInterception.isExecuting) {
-      break;
-    }
-
-    // Check whether we have an interceptor at all.
-    if (!this->runtime()->errorInterception.interceptor) {
-      break;
-    }
-
-    // Make sure that we do not call the interceptor from within
-    // the interceptor.
-    this->runtime()->errorInterception.isExecuting = true;
-
-    // The interceptor must be infallible.
-    const mozilla::DebugOnly<bool> wasExceptionPending =
-        this->isExceptionPending();
-    this->runtime()->errorInterception.interceptor->interceptError(this, v);
-    MOZ_ASSERT(wasExceptionPending == this->isExceptionPending());
-
-    this->runtime()->errorInterception.isExecuting = false;
-  } while (false);
-#endif  // defined(NIGHTLY_BUILD)
-
-  // overRecursed_ is set after the fact by ReportOverRecursed.
-  this->overRecursed_ = false;
-  this->throwing = true;
-  this->unwrappedException() = v;
-  this->unwrappedExceptionStack() = stack;
-  check(v);
-}
-
 inline bool JSContext::runningWithTrustedPrincipals() {
   return !realm() || realm()->principals() == runtime()->trustedPrincipals();
 }

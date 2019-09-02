@@ -368,7 +368,7 @@ nsresult CreateLocalJarInput(nsIZipReaderCache* aJarCache, nsIFile* aFile,
   RefPtr<nsJARInputThunk> input =
       new nsJARInputThunk(reader, aJarURI, aJarEntry, aJarCache != nullptr);
   rv = input->Init();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -991,7 +991,9 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
   mRequest = req;
   nsresult rv = mListener->OnStartRequest(this);
   mRequest = nullptr;
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Restrict loadable content types.
   nsAutoCString contentType;

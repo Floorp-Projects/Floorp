@@ -38,7 +38,21 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = 'xul'
 
+DEFINES['R_DEFINED_INT2'] = 'int16_t'
+DEFINES['R_DEFINED_UINT2'] = 'uint16_t'
+DEFINES['R_DEFINED_INT4'] = 'int32_t'
+DEFINES['R_DEFINED_UINT4'] = 'uint32_t'
+# These are defined to avoid a conflict between typedefs in winsock2.h and
+# r_types.h. This is safe because these types are unused by the code here,
+# but still deeply unfortunate. There is similar code in the win32 version of
+# csi_platform.h, but that trick does not work here, even if that file is
+# directly included.
+DEFINES['R_DEFINED_INT8'] = 'int8_t'
+DEFINES['R_DEFINED_UINT8'] = 'uint8_t'
+
 LOCAL_INCLUDES += [
+    '/media/mtransport/third_party/nICEr/src/net',
+    '/media/mtransport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc',
     '/media/webrtc/signaling/src/peerconnection',
     '/netwerk/base',

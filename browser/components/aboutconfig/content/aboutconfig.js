@@ -210,11 +210,14 @@ class PrefRow {
       if (this.type == "Boolean") {
         document.l10n.setAttributes(
           this.editButton,
-          "about-config-pref-toggle"
+          "about-config-pref-toggle-button"
         );
         this.editButton.className = "button-toggle";
       } else {
-        document.l10n.setAttributes(this.editButton, "about-config-pref-edit");
+        document.l10n.setAttributes(
+          this.editButton,
+          "about-config-pref-edit-button"
+        );
         this.editButton.className = "button-edit";
       }
       this.editButton.removeAttribute("form");
@@ -238,7 +241,10 @@ class PrefRow {
           this.inputField.type = "text";
         }
         form.appendChild(this.inputField);
-        document.l10n.setAttributes(this.editButton, "about-config-pref-save");
+        document.l10n.setAttributes(
+          this.editButton,
+          "about-config-pref-save-button"
+        );
         this.editButton.className = "primary button-save";
       } else {
         delete this.inputField;
@@ -270,7 +276,10 @@ class PrefRow {
             }
           }
         });
-        document.l10n.setAttributes(this.editButton, "about-config-pref-add");
+        document.l10n.setAttributes(
+          this.editButton,
+          "about-config-pref-add-button"
+        );
         this.editButton.className = "button-add";
       }
       this.valueCell.appendChild(form);
@@ -285,13 +294,13 @@ class PrefRow {
       if (!this.hasDefaultValue) {
         document.l10n.setAttributes(
           this.resetButton,
-          "about-config-pref-delete"
+          "about-config-pref-delete-button"
         );
-        this.resetButton.className = "";
+        this.resetButton.className = "button-delete";
       } else {
         document.l10n.setAttributes(
           this.resetButton,
-          "about-config-pref-reset"
+          "about-config-pref-reset-button"
         );
         this.resetButton.className = "button-reset";
       }

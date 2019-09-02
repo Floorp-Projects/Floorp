@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac } from "common/Actions.jsm";
+import { DSImage } from "../DSImage/DSImage.jsx";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
@@ -44,7 +45,11 @@ export class DSTextPromo extends React.PureComponent {
   render() {
     return (
       <div className="ds-text-promo">
-        <img src={this.props.image} alt={this.props.alt_text} />
+        <DSImage
+          alt_text={this.props.alt_text}
+          source={this.props.image}
+          rawSource={this.props.raw_image_src}
+        />
         <div className="text">
           <h3>
             {`${this.props.header}\u2003`}

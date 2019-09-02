@@ -470,6 +470,16 @@ describe("sources", () => {
       );
       expect(getMode(source, source.content)).toEqual({ name: "javascript" });
     });
+
+    it("vue", () => {
+      const source = makeMockSourceAndContent(
+        "http://localhost.com:7999/increment/sometestfile.vue?query=string",
+        undefined,
+        "does not matter",
+        "function foo(){}"
+      );
+      expect(getMode(source, source.content)).toEqual({ name: "javascript" });
+    });
   });
 
   describe("getSourceLineCount", () => {

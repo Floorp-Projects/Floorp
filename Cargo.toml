@@ -63,11 +63,11 @@ packed_simd = { git = "https://github.com/hsivonen/packed_simd", branch = "rust_
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/CraneStation/Cranelift"
-rev = "164f91a1f473e582e18e48d056c51787d9a1c24d"
+rev = "fc88520b88bcaad4e4a92f28a5e17347af20edbd"
 
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/CraneStation/Cranelift"
-rev = "164f91a1f473e582e18e48d056c51787d9a1c24d"
+rev = "fc88520b88bcaad4e4a92f28a5e17347af20edbd"
 
 [patch.crates-io.coreaudio-sys]
 path = "third_party/rust/coreaudio-sys"

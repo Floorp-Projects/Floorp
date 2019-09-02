@@ -9,32 +9,29 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
     waitForRecording: true,
   });
-  const { threadFront, target } = dbg;
 
-  await threadFront.interrupt();
-  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
-  await rewindToLine(threadFront, 21);
-  await checkEvaluateInTopFrame(target, "number", 10);
+  await addBreakpoint(dbg, "doc_rr_basic.html", 21);
+  await rewindToLine(dbg, 21);
+  await checkEvaluateInTopFrame(dbg, "number", 10);
   await waitForSelectedLocation(dbg, 21);
-  await reverseStepOverToLine(threadFront, 20);
-  await reverseStepOverToLine(threadFront, 12);
+  await reverseStepOverToLine(dbg, 20);
+  await reverseStepOverToLine(dbg, 12);
 
   // After reverse-stepping out of the topmost frame we should rewind to the
   // last breakpoint hit.
-  await reverseStepOverToLine(threadFront, 21);
-  await checkEvaluateInTopFrame(target, "number", 9);
+  await reverseStepOverToLine(dbg, 21);
+  await checkEvaluateInTopFrame(dbg, "number", 9);
 
-  await stepOverToLine(threadFront, 22);
-  await stepOverToLine(threadFront, 23);
-  await stepOverToLine(threadFront, 13);
-  await stepOverToLine(threadFront, 17);
-  await stepOverToLine(threadFront, 18);
+  await stepOverToLine(dbg, 22);
+  await stepOverToLine(dbg, 23);
+  await stepOverToLine(dbg, 13);
+  await stepOverToLine(dbg, 17);
+  await stepOverToLine(dbg, 18);
 
   // After forward-stepping out of the topmost frame we should run forward to
   // the next breakpoint hit.
-  await stepOverToLine(threadFront, 21);
-  await checkEvaluateInTopFrame(target, "number", 10);
+  await stepOverToLine(dbg, 21);
+  await checkEvaluateInTopFrame(dbg, "number", 10);
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 });

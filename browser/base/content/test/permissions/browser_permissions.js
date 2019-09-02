@@ -81,7 +81,7 @@ add_task(async function testMainViewVisible() {
 });
 
 add_task(async function testIdentityIcon() {
-  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function() {
     PermissionTestUtils.add(
       gBrowser.currentURI,
       "geo",
@@ -93,28 +93,12 @@ add_task(async function testIdentityIcon() {
       "identity-box signals granted permissions"
     );
 
-    await openIdentityPopup();
-    ok(
-      BrowserTestUtils.is_visible(gIdentityHandler._permissionGrantedIndicator),
-      "The permissions granted indicator is visible if a permission is granted"
-    );
-
-    // We don't close the panel here since we want to check whether the
-    // permission granted indicator gets update on the fly if there is a
-    // permission change.
-
     PermissionTestUtils.remove(gBrowser.currentURI, "geo");
 
     ok(
       !gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
       "identity-box doesn't signal granted permissions"
     );
-
-    ok(
-      BrowserTestUtils.is_hidden(gIdentityHandler._permissionGrantedIndicator),
-      "The permissions granted indicator is hidden if no permission is granted"
-    );
-    await closeIdentityPopup();
 
     PermissionTestUtils.add(
       gBrowser.currentURI,
@@ -127,13 +111,6 @@ add_task(async function testIdentityIcon() {
       "identity-box doesn't signal granted permissions"
     );
 
-    await openIdentityPopup();
-    ok(
-      BrowserTestUtils.is_hidden(gIdentityHandler._permissionGrantedIndicator),
-      "The permissions granted indicator is hidden if no permission is granted"
-    );
-    await closeIdentityPopup();
-
     PermissionTestUtils.add(
       gBrowser.currentURI,
       "cookie",
@@ -144,13 +121,6 @@ add_task(async function testIdentityIcon() {
       gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
       "identity-box signals granted permissions"
     );
-
-    await openIdentityPopup();
-    ok(
-      BrowserTestUtils.is_visible(gIdentityHandler._permissionGrantedIndicator),
-      "The permissions granted indicator is visible if a permission is granted"
-    );
-    await closeIdentityPopup();
 
     PermissionTestUtils.remove(gBrowser.currentURI, "geo");
     PermissionTestUtils.remove(gBrowser.currentURI, "camera");

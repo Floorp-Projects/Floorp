@@ -22,7 +22,7 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_UPDATE_PAYLOAD,
-  PAUSED_EXCECUTION_POINT,
+  PAUSED_EXECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
 } = require("../constants");
 
@@ -68,7 +68,7 @@ function messagesClearLogpoint(logpointId) {
 
 function setPauseExecutionPoint(executionPoint) {
   return {
-    type: PAUSED_EXCECUTION_POINT,
+    type: PAUSED_EXECUTION_POINT,
     executionPoint,
   };
 }

@@ -108,7 +108,7 @@ class Clobberer(object):
         try:
             for p in os.listdir(root):
                 if p not in exclude:
-                    paths.append(os.path.join(root, p).encode('utf-8'))
+                    paths.append(os.path.join(root, p))
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise

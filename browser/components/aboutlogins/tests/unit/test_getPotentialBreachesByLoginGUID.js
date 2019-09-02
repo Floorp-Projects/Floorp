@@ -8,6 +8,10 @@ const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Initializing BrowserGlue requires a profile on Windows.
+do_get_profile();
+
 const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
   Ci.nsIObserver
 );

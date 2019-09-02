@@ -91,7 +91,7 @@ input:-moz-focusring {
   display: grid;
   grid-template-columns: auto min-content;
   width: 100%;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 #toolbar-center-controls,
@@ -320,7 +320,7 @@ input:-moz-focusring {
 .browser {
   display: block;
   border: 0;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .browser:-moz-focusring {
@@ -384,7 +384,7 @@ input:-moz-focusring {
 }
 
 .viewport-dimension-separator {
-  -moz-user-select: none;
+  user-select: none;
   padding: 0 0.2em;
 }
 

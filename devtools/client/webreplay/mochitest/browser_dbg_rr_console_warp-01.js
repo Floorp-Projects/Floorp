@@ -10,25 +10,22 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { threadFront, target } = dbg;
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
   await warpToMessage(hud, dbg, "Number 5");
-  await threadFront.interrupt();
 
-  await checkEvaluateInTopFrame(target, "number", 5);
+  await checkEvaluateInTopFrame(dbg, "number", 5);
 
   // Initially we are paused inside the 'new Error()' call on line 19. The
   // first reverse step takes us to the start of that line.
-  await reverseStepOverToLine(threadFront, 19);
-  await reverseStepOverToLine(threadFront, 18);
-  const bp = await setBreakpoint(threadFront, "doc_rr_error.html", 12);
-  await rewindToLine(threadFront, 12);
-  await checkEvaluateInTopFrame(target, "number", 4);
-  await resumeToLine(threadFront, 12);
-  await checkEvaluateInTopFrame(target, "number", 5);
+  await reverseStepOverToLine(dbg, 19);
+  await reverseStepOverToLine(dbg, 18);
+  await addBreakpoint(dbg, "doc_rr_error.html", 12);
+  await rewindToLine(dbg, 12);
+  await checkEvaluateInTopFrame(dbg, "number", 4);
+  await resumeToLine(dbg, 12);
+  await checkEvaluateInTopFrame(dbg, "number", 5);
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 });

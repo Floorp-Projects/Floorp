@@ -697,6 +697,16 @@ static bool WasmCachingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmHugeMemoryIsSupported(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+  args.rval().setBoolean(true);
+#else
+  args.rval().setBoolean(false);
+#endif
+  return true;
+}
+
 static bool WasmUsesCranelift(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_CRANELIFT
@@ -6364,6 +6374,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmCachingIsSupported", WasmCachingIsSupported, 0, 0,
 "wasmCachingIsSupported()",
 "  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
+
+    JS_FN_HELP("wasmHugeMemoryIsSupported", WasmHugeMemoryIsSupported, 0, 0,
+"wasmHugeMemoryIsSupported()",
+"  Returns a boolean indicating whether WebAssembly supports using a large"
+"  virtual memory reservation in order to elide bounds checks on this platform."),
 
     JS_FN_HELP("wasmUsesCranelift", WasmUsesCranelift, 0, 0,
 "wasmUsesCranelift()",

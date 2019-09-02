@@ -15,8 +15,6 @@ namespace gfx {
   const _type params = *reinterpret_cast<const _type*>(nextByte); \
   nextByte += sizeof(_type);
 
-using namespace std;
-
 bool PathOps::StreamToSink(PathSink& aPathSink) const {
   if (mPathData.empty()) {
     return true;

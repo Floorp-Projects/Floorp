@@ -23,8 +23,9 @@ export const INTERSECTION_RATIO = 0.5;
  * only when the component is visible on the page.
  *
  * Note:
- *   * This wrapper could be used either at the individual card level,
- *     or by the card container components
+ *   * This wrapper used to be used either at the individual card level,
+ *     or by the card container components.
+ *     It is now only used for individual card level.
  *   * Each impression will be sent only once as soon as the desired
  *     visibility is detected
  *   * Batching is not yet implemented, hence it might send multiple
@@ -189,12 +190,6 @@ export class ImpressionStats extends React.PureComponent {
 
   componentDidMount() {
     if (this.props.rows.length) {
-      this.setImpressionObserverOrAddListener();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.rows.length && this.props.rows !== prevProps.rows) {
       this.setImpressionObserverOrAddListener();
     }
   }

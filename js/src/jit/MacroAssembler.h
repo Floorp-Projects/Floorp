@@ -1116,6 +1116,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branch32(Condition cond, Register lhs, Imm32 rhs,
                        L label) PER_SHARED_ARCH;
 
+  inline void branch32(Condition cond, Register lhs, const Address& rhs,
+                       Label* label) DEFINED_ON(arm64);
+
   inline void branch32(Condition cond, const Address& lhs, Register rhs,
                        Label* label) PER_SHARED_ARCH;
   inline void branch32(Condition cond, const Address& lhs, Imm32 rhs,

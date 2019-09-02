@@ -1337,7 +1337,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("trailhead.firstrun.branches", "join-supercharge");
 
 // The pref that controls if the What's New panel is enabled.
-pref("browser.messaging-system.whatsNewPanel.enabled", false);
+pref("browser.messaging-system.whatsNewPanel.enabled", true);
 // Whether to use Messaging System to add a badge to the FxA toolbar button
 pref("browser.messaging-system.fxatoolbarbadge.enabled", true);
 
@@ -2151,8 +2151,8 @@ pref("devtools.netmonitor.har.forceExport", false);
 pref("devtools.netmonitor.har.pageLoadedTimeout", 1500);
 pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 
-// Enable WebSocket monitoring in Nightly builds.
-#if defined(NIGHTLY_BUILD)
+// Enable WebSocket monitoring in Nightly and DevEdition/Beta builds.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
   pref("devtools.netmonitor.features.webSockets", true);
 #else
   pref("devtools.netmonitor.features.webSockets", false);

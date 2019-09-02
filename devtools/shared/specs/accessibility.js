@@ -206,6 +206,19 @@ const accessibleWalkerSpec = generateActorSpec({
   },
 });
 
+const simulatorSpec = generateActorSpec({
+  typeName: "simulator",
+
+  methods: {
+    simulate: {
+      request: { options: Arg(0, "nullable:json") },
+      response: {
+        value: RetVal("boolean"),
+      },
+    },
+  },
+});
+
 const accessibilitySpec = generateActorSpec({
   typeName: "accessibility",
 
@@ -239,6 +252,12 @@ const accessibilitySpec = generateActorSpec({
         walker: RetVal("accessiblewalker"),
       },
     },
+    getSimulator: {
+      request: {},
+      response: {
+        simulator: RetVal("nullable:simulator"),
+      },
+    },
     enable: {
       request: {},
       response: {},
@@ -253,3 +272,4 @@ const accessibilitySpec = generateActorSpec({
 exports.accessibleSpec = accessibleSpec;
 exports.accessibleWalkerSpec = accessibleWalkerSpec;
 exports.accessibilitySpec = accessibilitySpec;
+exports.simulatorSpec = simulatorSpec;

@@ -48,11 +48,6 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
           // The payload of the MConstant will be Double if the constant
           // result is above 2^31-1, but we don't care about that for BCE.
 
-#ifndef WASM_HUGE_MEMORY
-          MOZ_ASSERT(wasm::MaxMemoryAccessSize < wasm::GuardSize,
-                     "Guard page handles partial out-of-bounds");
-#endif
-
           if (addr->isConstant() &&
               addr->toConstant()->type() == MIRType::Int32 &&
               uint32_t(addr->toConstant()->toInt32()) <

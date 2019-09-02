@@ -101,6 +101,9 @@ createEnum(
 
     // Update the device modal state.
     "UPDATE_DEVICE_MODAL",
+
+    // Zoom the viewport.
+    "ZOOM_VIEWPORT",
   ],
   module.exports
 );

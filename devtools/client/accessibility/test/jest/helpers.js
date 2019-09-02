@@ -114,7 +114,7 @@ function testCheck(wrapper, props) {
 
   const icon = localized.at(1).childAt(0);
   expect(icon.type()).toBe("img");
-  expect(icon.hasClass(props.score)).toBe(true);
+  expect(icon.prop("data-score")).toEqual(props.score);
 
   const annotation = localized.at(2).childAt(0);
   expect(annotation.type()).toBe("p");

@@ -265,7 +265,7 @@ GeckoViewPermission.prototype = {
         (granted ? aRequest.allow : aRequest.cancel)();
         Services.perms.addFromPrincipal(
           aRequest.principal,
-          "desktop-notification",
+          perm.type,
           granted ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
           Services.perms.EXPIRE_SESSION
         );

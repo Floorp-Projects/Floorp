@@ -38,7 +38,7 @@
 }
 
 #font-editor summary {
-  -moz-user-select: none;
+  user-select: none;
   cursor: pointer;
   margin-bottom: .4em;
   width: -moz-fit-content;
@@ -235,7 +235,7 @@
   font-size: 12px;
   min-width: 70px;
   margin-right: 10px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .font-control-label-text {
@@ -352,7 +352,7 @@
 /* Firefox doesn't support pseudo-elements on inputs. Using the container instead. */
 .font-value-slider-container::before,
 .font-value-slider-container::after {
-  -moz-user-select: none;
+  user-select: none;
   color: var(--theme-text-color-alt);
   font-size: smaller;
   position: absolute;

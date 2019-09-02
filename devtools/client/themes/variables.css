@@ -194,6 +194,11 @@
 
   /* Element Flash background color */
   --theme-bg-yellow: #fff697;
+
+  /* Warning colors */
+  --theme-warning-background: hsl(54, 100%, 92%);
+  --theme-warning-border: rgba(215, 182, 0, 0.28); /* Yellow 60 + opacity */
+  --theme-warning-color: var(--yellow-80);
 }
 
 /*
@@ -300,4 +305,9 @@
 
   /* Element Flash background color */
   --theme-bg-yellow: #605913;
+
+  /* Warning colors */
+  --theme-warning-background: hsl(42, 37%, 19%);
+  --theme-warning-border: hsl(60, 30%, 26%);
+  --theme-warning-color: hsl(43, 94%, 81%);
 }

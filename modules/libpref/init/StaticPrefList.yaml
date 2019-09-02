@@ -3924,6 +3924,16 @@
   value: false
   mirror: always
 
+- name: layers.compositing-tiles.width
+  type: RelaxedAtomicInt32
+  value: 1024
+  mirror: always
+
+- name: layers.compositing-tiles.height
+  type: RelaxedAtomicInt32
+  value: 1024
+  mirror: always
+
 # 0 is "no change" for contrast, positive values increase it, negative values
 # decrease it until we hit mid gray at -1 contrast, after that it gets weird.
 - name: layers.effect.contrast
@@ -4393,6 +4403,14 @@
   value: 4096
   mirror: always
 
+# Allow <number> and <number>/<number> both for <aspect-ratio>
+# https://github.com/w3c/csswg-drafts/issues/3757
+- name: layout.css.aspect-ratio-number.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is the codepath for using cached scrollbar styles enabled?
 - name: layout.css.cached-scrollbar-styles.enabled
   type: bool
@@ -4756,6 +4774,13 @@
   type: bool
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
+
+# Are counters for unimplemented CSS properties enabled?
+- name: layout.css.use-counters-unimplemented.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_RELEASE_OR_BETA@
+  mirror: always
+  rust: true
 
 # Should the :visited selector ever match (otherwise :link matches instead)?
 - name: layout.css.visited_links_enabled

@@ -29,8 +29,13 @@ Flex::Flex(Element* aParent, nsFlexContainerFrame* aFrame) : mParent(aParent) {
   // going to keep it around.
   const ComputedFlexContainerInfo* containerInfo =
       aFrame->GetFlexContainerInfo();
-  MOZ_ASSERT(containerInfo, "Should only be passed a frame with info.");
-
+  if (!containerInfo) {
+    // It's weird but possible to fail to get a ComputedFlexContainerInfo
+    // structure. Assign sensible default values.
+    mMainAxisDirection = FlexPhysicalDirection::Horizontal_lr;
+    mCrossAxisDirection = FlexPhysicalDirection::Vertical_tb;
+    return;
+  }
   mLines.SetLength(containerInfo->mLines.Length());
   uint32_t index = 0;
   for (auto&& l : containerInfo->mLines) {

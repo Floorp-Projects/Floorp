@@ -22,8 +22,6 @@
 #include <vector>
 #include <cmath>
 
-using namespace std;
-
 namespace mozilla {
 namespace gfx {
 

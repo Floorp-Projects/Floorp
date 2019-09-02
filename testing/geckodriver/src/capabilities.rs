@@ -38,7 +38,7 @@ impl<'a> FirefoxCapabilities<'a> {
     pub fn new(fallback_binary: Option<&'a PathBuf>) -> FirefoxCapabilities<'a> {
         FirefoxCapabilities {
             chosen_binary: None,
-            fallback_binary: fallback_binary,
+            fallback_binary,
             version_cache: BTreeMap::new(),
         }
     }
@@ -49,7 +49,7 @@ impl<'a> FirefoxCapabilities<'a> {
             .and_then(|x| x.get("binary"))
             .and_then(|x| x.as_str())
             .map(PathBuf::from)
-            .or_else(|| self.fallback_binary.map(|x| x.clone()))
+            .or_else(|| self.fallback_binary.cloned())
             .or_else(firefox_default_path)
     }
 
@@ -248,9 +248,10 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                 ErrorStatus::InvalidArgument,
                                 "prefs value is not an object"
                             );
-                            if !prefs_data.values().all(|x| {
+                            let is_pref_value_type = |x:&Value| {
                                 x.is_string() || x.is_i64() || x.is_u64() || x.is_boolean()
-                            }) {
+                            };
+                            if !prefs_data.values().all(is_pref_value_type) {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
                                     "Preference values not all string or integer or boolean",
@@ -325,7 +326,7 @@ impl FirefoxOptions {
         rv.binary = binary_path;
 
         if let Some(json) = matched.remove("moz:firefoxOptions") {
-            let options = json.as_object().ok_or(WebDriverError::new(
+            let options = json.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "'moz:firefoxOptions' \
                  capability is not an object",
@@ -342,7 +343,7 @@ impl FirefoxOptions {
 
     fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
-            let profile_base64 = profile_json.as_str().ok_or(WebDriverError::new(
+            let profile_base64 = profile_json.as_str().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Profile is not a string",
             ))?;
@@ -367,7 +368,7 @@ impl FirefoxOptions {
 
     fn load_args(options: &Capabilities) -> WebDriverResult<Option<Vec<String>>> {
         if let Some(args_json) = options.get("args") {
-            let args_array = args_json.as_array().ok_or(WebDriverError::new(
+            let args_array = args_json.as_array().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Arguments were not an \
                  array",
@@ -376,7 +377,7 @@ impl FirefoxOptions {
                 .iter()
                 .map(|x| x.as_str().map(|x| x.to_owned()))
                 .collect::<Option<Vec<String>>>()
-                .ok_or(WebDriverError::new(
+                .ok_or_else(|| WebDriverError::new(
                     ErrorStatus::UnknownError,
                     "Arguments entries were not all \
                      strings",
@@ -389,18 +390,18 @@ impl FirefoxOptions {
 
     fn load_log(options: &Capabilities) -> WebDriverResult<LogOptions> {
         if let Some(json) = options.get("log") {
-            let log = json.as_object().ok_or(WebDriverError::new(
+            let log = json.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "Log section is not an object",
             ))?;
 
             let level = match log.get("level") {
                 Some(json) => {
-                    let s = json.as_str().ok_or(WebDriverError::new(
+                    let s = json.as_str().ok_or_else(|| WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is not a string",
                     ))?;
-                    Some(Level::from_str(s).ok().ok_or(WebDriverError::new(
+                    Some(Level::from_str(s).ok().ok_or_else(|| WebDriverError::new(
                         ErrorStatus::InvalidArgument,
                         "Log level is unknown",
                     ))?)
@@ -416,7 +417,7 @@ impl FirefoxOptions {
 
     pub fn load_prefs(options: &Capabilities) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
-            let prefs = prefs_data.as_object().ok_or(WebDriverError::new(
+            let prefs = prefs_data.as_object().ok_or_else(|| WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Prefs were not an object",
             ))?;
@@ -432,10 +433,10 @@ impl FirefoxOptions {
 }
 
 fn pref_from_json(value: &Value) -> WebDriverResult<Pref> {
-    match value {
-        &Value::String(ref x) => Ok(Pref::new(x.clone())),
-        &Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
-        &Value::Bool(x) => Ok(Pref::new(x)),
+    match *value {
+        Value::String(ref x) => Ok(Pref::new(x.clone())),
+        Value::Number(ref x) => Ok(Pref::new(x.as_i64().unwrap())),
+        Value::Bool(x) => Ok(Pref::new(x)),
         _ => Err(WebDriverError::new(
             ErrorStatus::UnknownError,
             "Could not convert pref value to string, boolean, or integer",
@@ -457,7 +458,7 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
         })?;
         let unzip_path = {
             let name = file.name();
-            let is_dir = name.ends_with("/");
+            let is_dir = name.ends_with('/');
             let rel_path = Path::new(name);
             let dest_path = dest_dir.join(rel_path);
 

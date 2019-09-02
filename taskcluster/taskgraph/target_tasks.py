@@ -184,7 +184,8 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
 def target_tasks_ash(full_task_graph, parameters, graph_config):
     """Target tasks that only run on the ash branch."""
     def filter(task):
-        platform = task.attributes.get('build_platform')
+        attr = task.attributes
+        platform = attr.get('build_platform')
         # Early return if platform is None
         if not platform:
             return False
@@ -193,21 +194,28 @@ def target_tasks_ash(full_task_graph, parameters, graph_config):
             return False
         # No random non-build jobs either. This is being purposely done as a
         # blacklist so newly-added jobs aren't missed by default.
-        for p in ('nightly', 'haz', 'artifact', 'cov', 'add-on'):
+        for p in ('shippable', 'haz', 'artifact', 'cov', 'add-on'):
             if p in platform:
                 return False
         for k in ('toolchain', 'l10n'):
-            if k in task.attributes['kind']:
+            if k in attr['kind']:
                 return False
         # and none of this linux64-asan/debug stuff
-        if platform == 'linux64-asan' and task.attributes['build_type'] == 'debug':
+        if platform == 'linux64-asan' and attr['build_type'] == 'debug':
             return False
-        # no non-e10s tests
-        if task.attributes.get('unittest_suite'):
-            if not task.attributes.get('e10s'):
+
+        if attr.get('unittest_suite'):
+            # no non-e10s tests
+            if not attr.get('e10s'):
                 return False
+
+            # filter out by test platform
+            for p in ('-qr',):
+                if p in attr['test_platform']:
+                    return False
+
         # don't upload symbols
-        if task.attributes['kind'] == 'upload-symbols':
+        if attr['kind'] == 'upload-symbols':
             return False
         return True
 

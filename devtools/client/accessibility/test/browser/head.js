@@ -6,7 +6,7 @@
 
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
-            toggleRow, toggleMenuItem, addA11yPanelTestsTask, reload, navigate */
+            toggleRow, toggleMenuItem, addA11yPanelTestsTask, reload, navigate, openSimulationMenu, toggleSimulationOption */
 
 "use strict";
 
@@ -35,6 +35,8 @@ const {
 
 // Enable the Accessibility panel
 Services.prefs.setBoolPref("devtools.accessibility.enabled", true);
+
+const SIMULATION_MENU_BUTTON_ID = "#simulation-menu-button";
 
 /**
  * Enable accessibility service and wait for a11y init event.
@@ -471,6 +473,42 @@ async function checkToolbarState(doc, activeToolbarFilters) {
 }
 
 /**
+ * Check the state of the simulation button and menu components.
+ * @param  {Object} doc         Panel document.
+ * @param  {Object} expected    Expected states of the simulation components:
+ *                              menuVisible, buttonActive, checkedOptionIndices (Optional)
+ */
+async function checkSimulationState(doc, expected) {
+  const { buttonActive, checkedOptionIndices } = expected;
+  const simulationMenuOptions = doc
+    .querySelector(SIMULATION_MENU_BUTTON_ID + "-menu")
+    .querySelectorAll(".menuitem");
+
+  // Check simulation menu button state
+  is(
+    doc.querySelector(SIMULATION_MENU_BUTTON_ID).className,
+    `devtools-button toolbar-menu-button simulation${
+      buttonActive ? " active" : ""
+    }`,
+    `Simulation menu button contains ${buttonActive ? "active" : "base"} class.`
+  );
+
+  // Check simulation menu options states, if specified
+  if (checkedOptionIndices) {
+    simulationMenuOptions.forEach((menuListItem, index) => {
+      const isChecked = checkedOptionIndices.includes(index);
+      const button = menuListItem.firstChild;
+
+      is(
+        button.getAttribute("aria-checked"),
+        isChecked ? "true" : null,
+        `Simulation option ${index} is ${isChecked ? "" : "not "}selected.`
+      );
+    });
+  }
+}
+
+/**
  * Focus accessibility properties tree in the a11y inspector sidebar. If focused for the
  * first time, the tree will select first rendered node as defult selection for keyboard
  * purposes.
@@ -590,6 +628,25 @@ async function toggleMenuItem(doc, menuButtonIndex, menuItemIndex) {
   );
 }
 
+async function openSimulationMenu(doc) {
+  doc.querySelector(SIMULATION_MENU_BUTTON_ID).click();
+
+  await BrowserTestUtils.waitForCondition(() =>
+    doc
+      .querySelector(SIMULATION_MENU_BUTTON_ID + "-menu")
+      .classList.contains("tooltip-visible")
+  );
+}
+
+async function toggleSimulationOption(doc, optionIndex) {
+  const simulationMenu = doc.querySelector(SIMULATION_MENU_BUTTON_ID + "-menu");
+  simulationMenu.querySelectorAll(".menuitem")[optionIndex].firstChild.click();
+
+  await BrowserTestUtils.waitForCondition(
+    () => !simulationMenu.classList.contains("tooltip-visible")
+  );
+}
+
 async function findAccessibleFor(
   { toolbox: { target }, panel: { walker: accessibilityWalker } },
   selector
@@ -648,6 +705,7 @@ async function runA11yPanelTests(tests, env) {
       audit,
       toolbarPrefValues,
       activeToolbarFilters,
+      simulation,
     } = expected;
     if (tree) {
       await checkTreeState(env.doc, tree);
@@ -667,6 +725,10 @@ async function runA11yPanelTests(tests, env) {
 
     if (typeof audit !== "undefined") {
       await checkAuditState(env.store, audit);
+    }
+
+    if (simulation) {
+      await checkSimulationState(env.doc, simulation);
     }
   }
 }

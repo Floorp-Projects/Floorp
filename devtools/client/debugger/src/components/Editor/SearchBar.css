@@ -35,7 +35,6 @@
 }
 
 .search-bottom-bar * {
-  -moz-user-select: none;
   user-select: none;
 }
 

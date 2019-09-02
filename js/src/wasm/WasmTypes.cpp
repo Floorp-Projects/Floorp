@@ -34,15 +34,9 @@ using namespace js::wasm;
 using mozilla::IsPowerOfTwo;
 using mozilla::MakeEnumeratedRange;
 
-// We have only tested x64 with WASM_HUGE_MEMORY.
+// We have only tested huge memory on x64 and arm64.
 
-#if defined(JS_CODEGEN_X64) && !defined(WASM_HUGE_MEMORY)
-#  error "Not an expected configuration"
-#endif
-
-// We have only tested WASM_HUGE_MEMORY on x64 and arm64.
-
-#if defined(WASM_HUGE_MEMORY)
+#if defined(WASM_SUPPORTS_HUGE_MEMORY)
 #  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64))
 #    error "Not an expected configuration"
 #  endif
@@ -61,6 +55,11 @@ static_assert(MaxMemoryAccessSize >= 8, "MaxMemoryAccessSize too low");
 static_assert(MaxMemoryAccessSize <= 64, "MaxMemoryAccessSize too high");
 static_assert((MaxMemoryAccessSize & (MaxMemoryAccessSize - 1)) == 0,
               "MaxMemoryAccessSize is not a power of two");
+
+#if defined(WASM_SUPPORTS_HUGE_MEMORY)
+static_assert(HugeMappedSize > ArrayBufferObject::MaxBufferByteLength,
+              "Normal array buffer could be confused with huge memory");
+#endif
 
 Val::Val(const LitVal& val) {
   type_ = val.type();
@@ -591,14 +590,12 @@ uint32_t wasm::RoundUpToNextValidARMImmediate(uint32_t i) {
   return i;
 }
 
-#ifndef WASM_HUGE_MEMORY
-
 bool wasm::IsValidBoundsCheckImmediate(uint32_t i) {
-#  ifdef JS_CODEGEN_ARM
+#ifdef JS_CODEGEN_ARM
   return IsValidARMImmediate(i);
-#  else
+#else
   return true;
-#  endif
+#endif
 }
 
 size_t wasm::ComputeMappedSize(uint32_t maxSize) {
@@ -608,19 +605,17 @@ size_t wasm::ComputeMappedSize(uint32_t maxSize) {
   // code. Thus round up the maxSize to the next valid immediate value
   // *before* adding in the guard page.
 
-#  ifdef JS_CODEGEN_ARM
+#ifdef JS_CODEGEN_ARM
   uint32_t boundsCheckLimit = RoundUpToNextValidARMImmediate(maxSize);
-#  else
+#else
   uint32_t boundsCheckLimit = maxSize;
-#  endif
+#endif
   MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
 
   MOZ_ASSERT(boundsCheckLimit % gc::SystemPageSize() == 0);
   MOZ_ASSERT(GuardSize % gc::SystemPageSize() == 0);
   return boundsCheckLimit + GuardSize;
 }
-
-#endif  // WASM_HUGE_MEMORY
 
 /* static */
 DebugFrame* DebugFrame::from(Frame* fp) {

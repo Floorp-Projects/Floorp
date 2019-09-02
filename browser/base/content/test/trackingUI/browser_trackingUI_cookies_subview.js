@@ -38,7 +38,7 @@ async function assertSitesListed(testCase) {
     [true, false, false, 4, 1, 1, 1, 1],
     [true, true, false, 5, 1, 1, 2, 2],
     [true, true, true, 6, 2, 2, 3, 3],
-    [false, false, false, 3, 0, 0, 0, 0],
+    [false, false, false, 3, 1, 1, 1, 1],
   ];
   let [
     trackersBlocked,
@@ -81,6 +81,19 @@ async function assertSitesListed(testCase) {
     listHeaderCount,
     `We have ${listHeaderCount} list headers.`
   );
+  if (listHeaderCount == 1) {
+    ok(
+      !BrowserTestUtils.is_visible(listHeaders[0]),
+      "Only one header, should be hidden"
+    );
+  } else {
+    for (let header of listHeaders) {
+      ok(
+        BrowserTestUtils.is_visible(header),
+        "Multiple list headers - all should be visible."
+      );
+    }
+  }
 
   let emptyLabels = cookiesView.querySelectorAll(
     ".protections-popup-empty-label"

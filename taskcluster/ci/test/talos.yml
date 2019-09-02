@@ -405,3 +405,20 @@ talos-xperf:
             by-test-platform:
                 windows.*:
                     - talos/windows_vm_config.py
+
+talos-realworld-webextensions:
+    description: "Talos tests with realworld WebExtensions"
+    try-name: "realworld-webextensions"
+    treeherder-symbol: T(realwebext)
+    run-on-projects:
+        by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
+            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
+            macosx.*64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
+            default: ['mozilla-beta', 'trunk', 'try']
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --suite=realworld-webextensions

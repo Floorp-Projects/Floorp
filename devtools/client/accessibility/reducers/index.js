@@ -6,11 +6,13 @@
 const { accessibles } = require("./accessibles");
 const { audit } = require("./audit");
 const { details } = require("./details");
+const { simulation } = require("./simulation");
 const { ui } = require("./ui");
 
 exports.reducers = {
   accessibles,
   audit,
   details,
+  simulation,
   ui,
 };

@@ -1085,23 +1085,23 @@ void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
 
 // -----------------------------------------------------------------------------
 
-void GLBlitHelper::BlitFramebuffer(const gfx::IntSize& srcSize,
-                                   const gfx::IntSize& destSize,
+void GLBlitHelper::BlitFramebuffer(const gfx::IntRect& srcRect,
+                                   const gfx::IntRect& destRect,
                                    GLuint filter) const {
   MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
 
   const ScopedGLState scissor(mGL, LOCAL_GL_SCISSOR_TEST, false);
-  mGL->fBlitFramebuffer(0, 0, srcSize.width, srcSize.height, 0, 0,
-                        destSize.width, destSize.height,
-                        LOCAL_GL_COLOR_BUFFER_BIT, filter);
+  mGL->fBlitFramebuffer(srcRect.x, srcRect.y, srcRect.XMost(), srcRect.YMost(),
+                        destRect.x, destRect.y, destRect.XMost(),
+                        destRect.YMost(), LOCAL_GL_COLOR_BUFFER_BIT, filter);
 }
 
 // --
 
 void GLBlitHelper::BlitFramebufferToFramebuffer(const GLuint srcFB,
                                                 const GLuint destFB,
-                                                const gfx::IntSize& srcSize,
-                                                const gfx::IntSize& destSize,
+                                                const gfx::IntRect& srcRect,
+                                                const gfx::IntRect& destRect,
                                                 GLuint filter) const {
   MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
   MOZ_GL_ASSERT(mGL, !srcFB || mGL->fIsFramebuffer(srcFB));
@@ -1111,7 +1111,7 @@ void GLBlitHelper::BlitFramebufferToFramebuffer(const GLuint srcFB,
   mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, srcFB);
   mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, destFB);
 
-  BlitFramebuffer(srcSize, destSize, filter);
+  BlitFramebuffer(srcRect, destRect, filter);
 }
 
 void GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex,
@@ -1124,7 +1124,7 @@ void GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex,
     const ScopedFramebufferForTexture srcWrapper(mGL, srcTex, srcTarget);
     const ScopedBindFramebuffer bindFB(mGL);
     mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, srcWrapper.FB());
-    BlitFramebuffer(srcSize, destSize);
+    BlitFramebuffer(gfx::IntRect({}, srcSize), gfx::IntRect({}, destSize));
     return;
   }
 
@@ -1141,7 +1141,7 @@ void GLBlitHelper::BlitFramebufferToTexture(GLuint destTex,
     const ScopedFramebufferForTexture destWrapper(mGL, destTex, destTarget);
     const ScopedBindFramebuffer bindFB(mGL);
     mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, destWrapper.FB());
-    BlitFramebuffer(srcSize, destSize);
+    BlitFramebuffer(gfx::IntRect({}, srcSize), gfx::IntRect({}, destSize));
     return;
   }
 

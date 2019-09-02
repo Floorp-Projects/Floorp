@@ -639,13 +639,17 @@ void DrawTargetRecording::EnsurePatternDependenciesStored(
       // No dependencies here.
       return;
     case PatternType::LINEAR_GRADIENT: {
-      MOZ_ASSERT(mRecorder->HasStoredObject(
-          static_cast<const LinearGradientPattern*>(&aPattern)->mStops));
+      MOZ_ASSERT_IF(
+          static_cast<const LinearGradientPattern*>(&aPattern)->mStops,
+          mRecorder->HasStoredObject(
+              static_cast<const LinearGradientPattern*>(&aPattern)->mStops));
       return;
     }
     case PatternType::RADIAL_GRADIENT: {
-      MOZ_ASSERT(mRecorder->HasStoredObject(
-          static_cast<const RadialGradientPattern*>(&aPattern)->mStops));
+      MOZ_ASSERT_IF(
+          static_cast<const LinearGradientPattern*>(&aPattern)->mStops,
+          mRecorder->HasStoredObject(
+              static_cast<const RadialGradientPattern*>(&aPattern)->mStops));
       return;
     }
     case PatternType::SURFACE: {

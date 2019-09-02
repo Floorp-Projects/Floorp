@@ -959,6 +959,7 @@ class CompositingRenderTarget : public TextureSource {
    */
   void ClearOnBind() { mClearOnBind = true; }
 
+  void SetOrigin(const gfx::IntPoint& aOrigin) { mOrigin = aOrigin; }
   const gfx::IntPoint& GetOrigin() const { return mOrigin; }
   gfx::IntRect GetRect() { return gfx::IntRect(GetOrigin(), GetSize()); }
 

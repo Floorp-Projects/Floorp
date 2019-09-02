@@ -502,6 +502,21 @@ set_config('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x
 set_define('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x: True))
 
 
+# Support for WebAssembly I64/BigInt conversion
+# ===========================================================================
+
+@depends(milestone.is_nightly)
+def default_wasm_bigint(is_nightly):
+    return is_nightly
+
+js_option('--enable-wasm-bigint',
+          default=default_wasm_bigint,
+          help='{Enable|Disable} WebAssembly I64/BigInt conversion')
+
+set_config('ENABLE_WASM_BIGINT', depends_if('--enable-wasm-bigint')(lambda x: True))
+set_define('ENABLE_WASM_BIGINT', depends_if('--enable-wasm-bigint')(lambda x: True))
+
+
 # Support for WebAssembly GC.
 # ===========================
 

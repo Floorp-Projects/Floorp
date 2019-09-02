@@ -39,7 +39,7 @@ static gc::AllocKind GetProxyGCObjectKind(const JSClass* clasp,
 
   gc::AllocKind kind = gc::GetGCObjectKind(nslots);
   if (handler->finalizeInBackground(priv)) {
-    kind = GetBackgroundAllocKind(kind);
+    kind = ForegroundToBackgroundAllocKind(kind);
   }
 
   return kind;

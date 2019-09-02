@@ -124,7 +124,7 @@ add_task(async function() {
     );
     is(
       syncedDevicesStatusText.getAttribute("data-l10n-id"),
-      "lockwise-sync-not-syncing",
+      "lockwise-sync-not-syncing-devices",
       "Not syncing to other devices."
     );
 

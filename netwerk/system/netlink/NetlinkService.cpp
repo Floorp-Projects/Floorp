@@ -609,8 +609,6 @@ void NetlinkService::OnNetlinkMessage(int aNetlinkSocket) {
     switch (nlh->nlmsg_type) {
       case NLMSG_DONE: /* Message signalling end of dump for responses to
                           request containing NLM_F_DUMP flag */
-        MOZ_ASSERT(
-            isResponse);  // Could broadcasted message be reply to NLM_F_DUMP?
         if (isResponse) {
           RemovePendingMsg();
         }

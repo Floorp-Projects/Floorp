@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 :root{
-  -moz-user-select: none;
+  user-select: none;
 }
 
 #options-panel-container {
@@ -130,13 +130,16 @@
 
 .deprecation-notice {
   align-items: center;
-  background-color: hsl(54, 100%, 92%);
-  color: var(--yellow-80);
+  background-color: var(--theme-warning-background);
+  color: var(--theme-warning-color);
   display: flex;
-  box-shadow: 0 0 0px 4px hsl(54, 100%, 92%);
   margin-inline-start: 8px;
+  outline: var(--theme-warning-background) solid 4px;
 }
 
+.deprecation-notice a {
+  color: currentColor;
+}
 .deprecation-notice a:hover{
   text-decoration: underline;
 }

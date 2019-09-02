@@ -743,7 +743,7 @@ void VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
      * has a base of 0, which is not necessarily true in all UA's.
      */
     mTimeStampOffset =
-        float(rand()) / RAND_MAX * 10000.0f + 1000.0f - aState.timestamp;
+        float(rand()) / float(RAND_MAX) * 10000.0f + 1000.0f - aState.timestamp;
   }
   mVRState.timestamp = aState.timestamp + mTimeStampOffset;
 

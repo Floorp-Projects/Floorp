@@ -482,6 +482,12 @@ function startup() {
       },
     },
     {
+      name: "GeckoViewProcessHangMonitor",
+      onInit: {
+        resource: "resource://gre/modules/GeckoViewProcessHangMonitor.jsm",
+      },
+    },
+    {
       name: "GeckoViewProgress",
       onEnable: {
         resource: "resource://gre/modules/GeckoViewProgress.jsm",

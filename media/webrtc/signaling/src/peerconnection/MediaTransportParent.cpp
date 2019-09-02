@@ -158,8 +158,10 @@ MediaTransportParent::RecvSetTargetForDefaultLocalAddressLookup(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvStartIceGathering(
-    const bool& defaultRouteOnly, const net::NrIceStunAddrArray& stunAddrs) {
-  mImpl->mHandler->StartIceGathering(defaultRouteOnly, stunAddrs);
+    const bool& defaultRouteOnly, const bool& obfuscateHostAddresses,
+    const net::NrIceStunAddrArray& stunAddrs) {
+  mImpl->mHandler->StartIceGathering(defaultRouteOnly, obfuscateHostAddresses,
+                                     stunAddrs);
   return ipc::IPCResult::Ok();
 }
 

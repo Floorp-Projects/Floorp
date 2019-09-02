@@ -621,10 +621,11 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // Owned by the producer.
   const RefPtr<MediaStream> mInputStream;
   // The MediaStream representing this MediaStreamTrack in the MediaStreamGraph.
-  // Valid until we end. Owned by us.
+  // Set on construction if we're live. Valid until we end. Owned by us.
   RefPtr<ProcessedMediaStream> mStream;
-  // The MediaInputPort connecting mInputStream to mStream. Valid until we end.
-  // Owned by us.
+  // The MediaInputPort connecting mInputStream to mStream. Set on construction
+  // if mInputStream is non-destroyed and we're live. Valid until we end. Owned
+  // by us.
   RefPtr<MediaInputPort> mPort;
   // The TrackID of this track in mInputStream and mStream.
   const TrackID mTrackID;

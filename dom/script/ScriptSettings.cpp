@@ -677,11 +677,23 @@ AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
 
 AutoIncumbentScript::~AutoIncumbentScript() { ScriptSettingsStack::Pop(this); }
 
-AutoNoJSAPI::AutoNoJSAPI() : ScriptSettingsStackEntry(nullptr, eNoJSAPI) {
+AutoNoJSAPI::AutoNoJSAPI(JSContext* aCx)
+    : ScriptSettingsStackEntry(nullptr, eNoJSAPI),
+      JSAutoNullableRealm(aCx, nullptr),
+      mCx(aCx) {
+  // Make sure we don't seem to have an incumbent global due to
+  // whatever script is running right now.
+  JS::HideScriptedCaller(aCx);
+
+  // Make sure the fallback GetIncumbentGlobal() behavior and
+  // GetEntryGlobal() both return null.
   ScriptSettingsStack::Push(this);
 }
 
-AutoNoJSAPI::~AutoNoJSAPI() { ScriptSettingsStack::Pop(this); }
+AutoNoJSAPI::~AutoNoJSAPI() {
+  ScriptSettingsStack::Pop(this);
+  JS::UnhideScriptedCaller(mCx);
+}
 
 }  // namespace dom
 

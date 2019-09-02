@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_c"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "C API for encoding_rs"
 homepage = "https://docs.rs/encoding_c/"
@@ -22,9 +22,15 @@ keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_c"
 [dependencies.encoding_rs]
-version = "0.8.0"
+version = "0.8.11"
 
 [features]
+fast-big5-hanzi-encode = ["encoding_rs/fast-big5-hanzi-encode"]
+fast-gb-hanzi-encode = ["encoding_rs/fast-gb-hanzi-encode"]
+fast-hangul-encode = ["encoding_rs/fast-hangul-encode"]
+fast-hanja-encode = ["encoding_rs/fast-hanja-encode"]
+fast-kanji-encode = ["encoding_rs/fast-kanji-encode"]
+fast-legacy-encode = ["encoding_rs/fast-legacy-encode"]
 less-slow-big5-hanzi-encode = ["encoding_rs/less-slow-big5-hanzi-encode"]
 less-slow-gb-hanzi-encode = ["encoding_rs/less-slow-gb-hanzi-encode"]
 less-slow-kanji-encode = ["encoding_rs/less-slow-kanji-encode"]

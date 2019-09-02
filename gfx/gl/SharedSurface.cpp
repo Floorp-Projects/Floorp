@@ -76,8 +76,9 @@ bool SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       GLuint destRB = dest->ProdRenderbuffer();
       ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
 
-      gl->BlitHelper()->BlitFramebufferToFramebuffer(0, destWrapper.FB(),
-                                                     src->mSize, dest->mSize);
+      gl->BlitHelper()->BlitFramebufferToFramebuffer(
+          0, destWrapper.FB(), gfx::IntRect({}, src->mSize),
+          gfx::IntRect({}, dest->mSize));
     } else {
       MOZ_CRASH("GFX: Unhandled dest->mAttachType 1.");
     }
@@ -115,8 +116,9 @@ bool SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       GLuint srcRB = src->ProdRenderbuffer();
       ScopedFramebufferForRenderbuffer srcWrapper(gl, srcRB);
 
-      gl->BlitHelper()->BlitFramebufferToFramebuffer(srcWrapper.FB(), 0,
-                                                     src->mSize, dest->mSize);
+      gl->BlitHelper()->BlitFramebufferToFramebuffer(
+          srcWrapper.FB(), 0, gfx::IntRect({}, src->mSize),
+          gfx::IntRect({}, dest->mSize));
     } else {
       MOZ_CRASH("GFX: Unhandled src->mAttachType 2.");
     }
@@ -178,7 +180,8 @@ bool SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
       ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
 
       gl->BlitHelper()->BlitFramebufferToFramebuffer(
-          srcWrapper.FB(), destWrapper.FB(), src->mSize, dest->mSize);
+          srcWrapper.FB(), destWrapper.FB(), gfx::IntRect({}, src->mSize),
+          gfx::IntRect({}, dest->mSize));
 
       return true;
     }

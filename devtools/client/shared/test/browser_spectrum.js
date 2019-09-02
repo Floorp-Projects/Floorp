@@ -5,7 +5,7 @@
 
 // Tests that the spectrum color picker works correctly
 
-const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
+const Spectrum = require("devtools/client/shared/widgets/Spectrum");
 const {
   accessibility: {
     SCORES: { FAIL, AAA, AA },

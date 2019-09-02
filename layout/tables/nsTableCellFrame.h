@@ -208,9 +208,6 @@ class nsTableCellFrame : public nsContainerFrame,
   bool GetContentEmpty() const;
   void SetContentEmpty(bool aContentEmpty);
 
-  bool HasPctOverBSize();
-  void SetHasPctOverBSize(bool aValue);
-
   nsTableCellFrame* GetNextCell() const {
     nsIFrame* sibling = GetNextSibling();
 #ifdef DEBUG
@@ -300,18 +297,6 @@ inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty) {
     AddStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
   } else {
     RemoveStateBits(NS_TABLE_CELL_CONTENT_EMPTY);
-  }
-}
-
-inline bool nsTableCellFrame::HasPctOverBSize() {
-  return HasAnyStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
-}
-
-inline void nsTableCellFrame::SetHasPctOverBSize(bool aValue) {
-  if (aValue) {
-    AddStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
-  } else {
-    RemoveStateBits(NS_TABLE_CELL_HAS_PCT_OVER_BSIZE);
   }
 }
 

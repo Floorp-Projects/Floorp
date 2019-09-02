@@ -5287,8 +5287,6 @@ var gCSSProperties = {
       "no-open-quote",
       "no-close-quote",
       "close-quote attr(title) counters(foo, '.', upper-alpha)",
-      "counter(foo, none)",
-      "counters(bar, '.', none)",
       "attr(\\32)",
       "attr(\\2)",
       "attr(-\\2)",
@@ -5307,6 +5305,8 @@ var gCSSProperties = {
       "counters(foo, '.', symbols(numeric '0' '1'))",
     ],
     invalid_values: [
+      "counter(foo, none)",
+      "counters(bar, '.', none)",
       "counters(foo)",
       'counter(foo, ".")',
       'attr("title")',

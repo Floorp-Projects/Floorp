@@ -13,8 +13,6 @@
 #include "mozilla/Bootstrap.h"
 #include <memory>
 
-using namespace std;
-
 VTuneProfiler* VTuneProfiler::mInstance = nullptr;
 
 void VTuneProfiler::Initialize() {
@@ -34,7 +32,7 @@ void VTuneProfiler::Initialize() {
 void VTuneProfiler::Shutdown() {}
 
 void VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind) {
-  string str(aName);
+  std::string str(aName);
 
   auto iter = mStrings.find(str);
 
@@ -56,7 +54,7 @@ void VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind) {
 }
 
 void VTuneProfiler::RegisterThreadInternal(const char* aName) {
-  string str(aName);
+  std::string str(aName);
 
   if (!str.compare("GeckoMain")) {
     // Process main thread.

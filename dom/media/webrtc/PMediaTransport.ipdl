@@ -59,6 +59,7 @@ parent:
                                               uint16_t targetPort);
 
   async StartIceGathering(bool defaultRouteOnly,
+                          bool obfuscateHostAddresses,
                           NrIceStunAddrArray stunAddrs);
 
   async ActivateTransport(string transportId,

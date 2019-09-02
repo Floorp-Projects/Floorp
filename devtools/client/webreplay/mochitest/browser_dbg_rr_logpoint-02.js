@@ -36,7 +36,5 @@ add_task(async function() {
   });
   await waitForMessageCount(hud, "Logpoint", 6);
 
-  await dbg.actions.removeAllBreakpoints(getContext(dbg));
-
   await shutdownDebugger(dbg);
 });

@@ -11,6 +11,9 @@
   /* Icons perfectly centered in the left gutter "feel" closer to the window
    * edge than to message text. This value pushes them slightly to the right. */
   --console-icon-horizontal-offset: 1px;
+  --console-warning-background: var(--theme-warning-background);
+  --console-warning-border: var(--theme-warning-border);
+  --console-warning-color: var(--theme-warning-color);
 }
 
 .theme-dark {
@@ -21,9 +24,6 @@
   --console-error-background: hsl(345, 23%, 24%);
   --console-error-border: hsl(345, 30%, 35%);
   --console-error-color: var(--red-20);
-  --console-warning-background: hsl(42, 37%, 19%);
-  --console-warning-border: hsl(60, 30%, 26%);
-  --console-warning-color: hsl(43, 94%, 81%);
   --console-navigation-color: var(--theme-highlight-blue);
   --console-navigation-border: var(--blue-60);
   --console-indent-border-color: var(--theme-highlight-blue);
@@ -43,9 +43,6 @@
   --console-error-background: hsl(344, 73%, 97%);
   --console-error-border: rgba(215, 0, 34, 0.12); /* Red 60 + opacity */
   --console-error-color: var(--red-70);
-  --console-warning-background: hsl(54, 100%, 92%);
-  --console-warning-border: rgba(215, 182, 0, 0.28); /* Yellow 60 + opacity */
-  --console-warning-color: var(--yellow-80);
   --console-navigation-color: var(--theme-highlight-blue);
   --console-navigation-border: var(--blue-30);
   --console-indent-border-color: var(--theme-highlight-blue);
@@ -446,7 +443,7 @@ a {
 }
 
 .message .learn-more-link {
-  -moz-user-select: none;
+  user-select: none;
   color: var(--theme-highlight-blue);
   margin: 0 1ch;
 }
@@ -617,7 +614,7 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   align-items: center;
   align-self: stretch;
-  -moz-user-select: none;
+  user-select: none;
   grid-column: 1 / -1;
   min-height: var(--primary-toolbar-height);
 }
@@ -666,7 +663,7 @@ a.learn-more-link.webconsole-learn-more-link {
   margin: 0 3px;
   display: flex;
   align-items: center;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .webconsole-filterbar-filtered-messages {
@@ -693,7 +690,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-filtered-messages .filter-message-text {
   font-style: italic;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .webconsole-filterbar-filtered-messages .reset-filters-button {

@@ -10,6 +10,8 @@ DevToolsModules(
   'accessibility-parent.js',
   'accessibility.js',
   'accessible.js',
+  'constants.js',
+  'simulator.js',
   'walker.js',
   'worker.js',
 )

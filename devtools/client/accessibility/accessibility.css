@@ -140,13 +140,13 @@ body {
   margin-inline: 5px;
 }
 
-.devtools-toolbar .accessibility-tree-filters {
+.devtools-toolbar .accessibility-tree-filters,
+.devtools-toolbar .accessibility-simulation {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
-  margin-inline-end: 5px;
 }
 
 .devtools-toolbar .toolbar-menu-button {
@@ -156,12 +156,21 @@ body {
 
 .devtools-toolbar .toolbar-menu-button.filters {
   max-width: 100px;
+}
+
+.devtools-toolbar .toolbar-menu-button.simulation {
+  max-width: 200px;
+}
+
+.devtools-toolbar .toolbar-menu-button.filters,
+.devtools-toolbar .toolbar-menu-button.simulation {
   text-overflow: ellipsis;
   overflow-x: hidden;
   margin-inline-start: 3px;
 }
 
-.devtools-toolbar .toolbar-menu-button::after {
+.devtools-toolbar .toolbar-menu-button::after,
+.devtools-toolbar .toolbar-menu-button.simulation::before {
   content: "";
   display: inline-block;
   -moz-context-properties: fill;
@@ -169,7 +178,8 @@ body {
   margin-inline-start: 3px;
 }
 
-.devtools-toolbar .toolbar-menu-button.filters::after {
+.devtools-toolbar .toolbar-menu-button.filters::after,
+.devtools-toolbar .toolbar-menu-button.simulation::after {
   background: url("chrome://devtools/skin/images/select-arrow.svg") no-repeat;
   width: 8px;
   height: 8px;
@@ -286,22 +296,26 @@ body {
   margin: auto;
 }
 
-.description .link {
+.description .link,
+.accessibility-check-annotation .link  {
   color: var(--accessibility-link-color);
   cursor: pointer;
   outline: 0;
 }
 
-.description .link:hover:not(:focus) {
+.description .link:hover:not(:focus),
+.accessibility-check-annotation .link:hover:not(:focus) {
   text-decoration: underline;
 }
 
-.description .link:focus:not(:active) {
+.description .link:focus:not(:active),
+.accessibility-check-annotation .link:focus:not(:active) {
   box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus), 0 0 0 4px var(--accessibility-toolbar-focus-alpha30);
   border-radius: 2px;
 }
 
-.description .link:active {
+.description .link:active,
+.accessibility-check-annotation .link:active {
   color: var(--accessibility-link-color-active);
   text-decoration: underline;
 }
@@ -387,11 +401,11 @@ body {
 }
 
 .treeTable > tbody td {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .treeTable > tbody td > span {
-  -moz-user-select: text;
+  user-select: text;
 }
 
 .mainFrame .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
@@ -425,26 +439,39 @@ body {
   color: var(--badge-color);
   background-color: var(--badge-background-color);
   border: 1px solid var(--badge-border-color);
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .badge.audit-badge::before {
   content: "";
   display: inline-block;
-  vertical-align: -1px;
-  width: 10px;
-  height: 10px;
-  margin-inline-end: 1px;
-  background: url("chrome://devtools/skin/images/alert-tiny.svg") no-repeat;
+  vertical-align: 0px;
+  width: 9px;
+  height: 9px;
+  margin-inline-end: 2px;
   -moz-context-properties: fill;
   fill: currentColor;
   opacity: 0.9;
 }
 
+.badge.audit-badge[data-score="BEST_PRACTICES"]::before {
+  background-image: url(chrome://devtools/skin/images/info-tiny.svg);
+  vertical-align: -1px;
+}
+
+.badge.audit-badge[data-score="WARNING"]::before {
+  background-image: url(chrome://devtools/skin/images/alert-tiny.svg);
+}
+
+.badge.audit-badge[data-score="FAIL"]::before {
+  background-image: url(chrome://devtools/skin/images/error-tiny.svg);
+  vertical-align: -1px;
+}
+
 /* improve alignment in high res (where we can use half pixels) */
 @media (min-resolution: 1.5x) {
-  .badge.audit-badge::before {
-    vertical-align: -1.5px;
+  .badge.audit-badge[data-score="WARNING"]::before {
+    vertical-align: -0.5px;
   }
 }
 
@@ -630,7 +657,7 @@ body {
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .accessible .tree:focus .node.focused .objectBox-accessible .accessible-role,
@@ -702,7 +729,7 @@ body {
 .checks-empty {
   font-style: italic;
   padding: 0.5em 20px;
-  -moz-user-select: none;
+  user-select: none;
   font-size: 12px;
   white-space: initial;
 }
@@ -727,12 +754,16 @@ body {
   margin-inline-end: 4px;
 }
 
-.accessibility-check .icon.FAIL {
+.accessibility-check .icon[data-score="FAIL"] {
   fill: var(--theme-icon-error-color);
 }
 
-.accessibility-check .icon.WARNING {
+.accessibility-check .icon[data-score="WARNING"] {
   fill: var(--theme-icon-warning-color);
+}
+
+.accessibility-check .icon[data-score="BEST_PRACTICES"] {
+  fill: currentColor;
 }
 
 .accessibility-check,
@@ -764,25 +795,8 @@ body {
 }
 
 .accessibility-check-annotation .link {
-  color: var(--accessibility-link-color);
-  cursor: pointer;
-  outline: 0;
   white-space: nowrap;
   font-style: normal;
-}
-
-.accessibility-check-annotation .link:hover:not(:focus) {
-  text-decoration: underline;
-}
-
-.accessibility-check-annotation .link:focus:not(:active) {
-  box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus), 0 0 0 4px var(--accessibility-toolbar-focus-alpha30);
-  border-radius: 2px;
-}
-
-.accessibility-check-annotation .link:active {
-  color: var(--accessibility-link-color-active);
-  text-decoration: underline;
 }
 
 .accessibility-color-contrast .accessibility-contrast-value:not(:empty) {
@@ -814,4 +828,36 @@ body {
 .accessibility-color-contrast .accessibility-color-contrast-label,
 .accessibility-color-contrast .accessibility-color-contrast-separator:before {
   margin-inline-end: 3px;
+}
+
+.devtools-toolbar .toolbar-menu-button.simulation::before {
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 3px;
+  margin-inline-start: 0px;
+  background: url("chrome://devtools/skin/images/eye.svg") no-repeat;
+  -moz-context-properties: fill, stroke;
+  fill: var(--theme-icon-color);
+  stroke: var(--theme-icon-color);
+  vertical-align: -2px;
+}
+
+.devtools-toolbar .toolbar-menu-button.active,
+.devtools-toolbar .toolbar-menu-button.active.devtools-button:not(:empty):not(.checked):not(:disabled):focus {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.devtools-toolbar .toolbar-menu-button.simulation.active::before {
+  fill: var(--theme-toolbar-selected-color);
+  stroke: var(--theme-toolbar-selected-color);
+}
+
+#simulation-menu-button-menu .link {
+  background-color: transparent;
+  border: none;
+}
+
+#simulation-menu-button-menu .link:focus,
+#simulation-menu-button-menu .link:hover {
+  background-color: var(--theme-arrowpanel-dimmed);
 }

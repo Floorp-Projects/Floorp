@@ -314,6 +314,10 @@ nsresult nsXULElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
 
   uint32_t count = mAttrs.AttrCount();
   rv = NS_OK;
+  // FIXME(emilio): This setup looks somewhat error prone. Other than the
+  // AddListenerFor bit (what is that for?), everything else could be handled by
+  // the generic Element::CopyInnerTo, or the equivalent in
+  // nsGenericHTMLElement (somehow), both of which go through AfterSetAttr...
   for (uint32_t i = 0; i < count; ++i) {
     const nsAttrName* originalName = mAttrs.AttrNameAt(i);
     const nsAttrValue* originalValue = mAttrs.AttrAt(i);
@@ -351,6 +355,9 @@ nsresult nsXULElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
     }
     if (originalName->Equals(nsGkAtoms::style)) {
       element->SetMayHaveStyle();
+    }
+    if (originalName->Equals(nsGkAtoms::part)) {
+      element->SetHasPartAttribute(true);
     }
   }
 

@@ -76,7 +76,9 @@ export class CardGrid extends React.PureComponent {
 
     return (
       <div>
-        <div className="ds-header">{this.props.title}</div>
+        {this.props.title && (
+          <div className="ds-header">{this.props.title}</div>
+        )}
         {isEmpty ? (
           <div className="ds-card-grid empty">
             <DSEmptyState

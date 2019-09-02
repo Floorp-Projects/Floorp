@@ -155,10 +155,6 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
   mDiagnostics = MakeUnique<Diagnostics>();
   MOZ_ASSERT(aCompositor);
   mNativeLayerRoot = aCompositor->GetWidget()->GetNativeLayerRoot();
-  if (mNativeLayerRoot) {
-    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
-    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
-  }
 
 #ifdef USE_SKIA
   mPaintCounter = nullptr;
@@ -178,8 +174,10 @@ void LayerManagerComposite::Destroy() {
     mClonedLayerTreeProperties = nullptr;
     mProfilerScreenshotGrabber.Destroy();
     if (mNativeLayerRoot) {
-      mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
-      mNativeLayerForEntireWindow = nullptr;
+      for (const auto& nativeLayer : mNativeLayers) {
+        mNativeLayerRoot->RemoveLayer(nativeLayer);
+      }
+      mNativeLayers.clear();
       mNativeLayerRoot = nullptr;
     }
     mDestroyed = true;
@@ -230,7 +228,6 @@ void LayerManagerComposite::BeginTransactionWithDrawTarget(
   }
 
   mIsCompositorReady = true;
-  mCompositor->SetTargetContext(aTarget, aRect);
   mTarget = aTarget;
   mTargetBounds = aRect;
 }
@@ -541,7 +538,6 @@ void LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     mCompositor->FlushPendingNotifyNotUsed();
   }
 
-  mCompositor->ClearTargetContext();
   mTarget = nullptr;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -872,6 +868,47 @@ void LayerManagerComposite::PopGroupForLayerEffects(
                         aClipRect, effectChain, 1., Matrix4x4());
 }
 
+void LayerManagerComposite::PlaceNativeLayers(
+    const IntRegion& aRegion, bool aOpaque,
+    std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+    IntRegion* aWindowInvalidRegion) {
+  IntSize tileSize(StaticPrefs::layers_compositing_tiles_width(),
+                   StaticPrefs::layers_compositing_tiles_height());
+  IntRect regionBounds = aRegion.GetBounds();
+  for (int32_t y = 0; y < regionBounds.YMost(); y += tileSize.height) {
+    for (int32_t x = 0; x < regionBounds.XMost(); x += tileSize.width) {
+      IntRegion tileRegion;
+      tileRegion.And(aRegion, IntRect(IntPoint(x, y), tileSize));
+      for (auto iter = tileRegion.RectIter(); !iter.Done(); iter.Next()) {
+        PlaceNativeLayer(iter.Get(), aOpaque, aLayersToRecycle,
+                         aWindowInvalidRegion);
+      }
+    }
+  }
+}
+
+void LayerManagerComposite::PlaceNativeLayer(
+    const IntRect& aRect, bool aOpaque,
+    std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+    IntRegion* aWindowInvalidRegion) {
+  RefPtr<NativeLayer> layer;
+  if (aLayersToRecycle->empty()) {
+    layer = mNativeLayerRoot->CreateLayer();
+    mNativeLayerRoot->AppendLayer(layer);
+  } else {
+    layer = aLayersToRecycle->front();
+    aLayersToRecycle->pop_front();
+  }
+  IntRect oldRect = layer->GetRect();
+  if (!aRect.IsEqualInterior(oldRect)) {
+    aWindowInvalidRegion->OrWith(oldRect);
+    aWindowInvalidRegion->OrWith(aRect);
+  }
+  layer->SetRect(aRect);
+  layer->SetOpaqueRegion(aOpaque ? aRect - aRect.TopLeft() : IntRect());
+  mNativeLayers.push_back(layer);
+}
+
 // Used to clear the 'mLayerComposited' flag at the beginning of each Render().
 static void ClearLayerFlags(Layer* aLayer) {
   ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
@@ -977,19 +1014,25 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   }
 #endif
 
-  if (mNativeLayerForEntireWindow) {
-    mNativeLayerForEntireWindow->SetRect(mRenderBounds);
-#ifdef XP_MACOSX
-    mNativeLayerForEntireWindow->SetOpaqueRegion(
-        mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
-#endif
-  }
-
   Maybe<IntRect> rootLayerClip = mRoot->GetClipRect().map(
       [](const ParentLayerIntRect& r) { return r.ToUnknownRect(); });
-  Maybe<IntRect> maybeBounds =
-      mCompositor->BeginFrame(aInvalidRegion, rootLayerClip, mRenderBounds,
-                              aOpaqueRegion, mNativeLayerForEntireWindow);
+  Maybe<IntRect> maybeBounds;
+  bool usingNativeLayers = false;
+  if (mTarget) {
+    maybeBounds = mCompositor->BeginFrameForTarget(
+        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion, mTarget,
+        mTargetBounds);
+  } else if (mNativeLayerRoot) {
+    if (aInvalidRegion.Intersects(mRenderBounds)) {
+      mCompositor->BeginFrameForNativeLayers();
+      maybeBounds = Some(mRenderBounds);
+      usingNativeLayers = true;
+    }
+  } else {
+    maybeBounds = mCompositor->BeginFrameForWindow(
+        aInvalidRegion, rootLayerClip, mRenderBounds, aOpaqueRegion);
+  }
+
   if (!maybeBounds) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -1010,14 +1053,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
                                             ScreenPoint(0.0f, offset));
 #endif
 
-  RefPtr<CompositingRenderTarget> previousTarget;
-  if (haveLayerEffects) {
-    previousTarget = PushGroupForLayerEffects();
-  } else {
-    mTwoPassTmpTarget = nullptr;
-  }
-
-  // Render our layers.
+  // Prepare our layers.
   {
     Diagnostics::Record record(mRenderStartTime);
     RootLayer()->Prepare(RenderTargetIntRect::FromUnknownRect(clipRect));
@@ -1025,33 +1061,87 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       mDiagnostics->RecordPrepareTime(record.Duration());
     }
   }
-  // Execute draw commands.
+
+  auto RenderOnce = [&](const IntRect& aClipRect) {
+    RefPtr<CompositingRenderTarget> previousTarget;
+    if (haveLayerEffects) {
+      previousTarget = PushGroupForLayerEffects();
+    } else {
+      mTwoPassTmpTarget = nullptr;
+    }
+
+    // Execute draw commands.
+    RootLayer()->RenderLayer(aClipRect, Nothing());
+
+    if (mTwoPassTmpTarget) {
+      MOZ_ASSERT(haveLayerEffects);
+      PopGroupForLayerEffects(previousTarget, aClipRect, grayscaleVal,
+                              invertVal, contrastVal);
+    }
+    if (!mRegionToClear.IsEmpty()) {
+      for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
+        mCompositor->ClearRect(Rect(iter.Get()));
+      }
+    }
+    mCompositor->NormalDrawingDone();
+  };
+
   {
     Diagnostics::Record record;
-    RootLayer()->RenderLayer(clipRect, Nothing());
+
+    if (usingNativeLayers) {
+      // Update the placement of our native layers, so that transparent and
+      // opaque parts of the window are covered by different layers and we can
+      // update those parts separately.
+      IntRegion opaqueRegion;
+#ifdef XP_MACOSX
+      opaqueRegion =
+          mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion();
+#endif
+      opaqueRegion.AndWith(mRenderBounds);
+
+      // Limit the complexity of these regions. Usually, opaqueRegion should be
+      // only one or two rects, so this SimplifyInward call will not change the
+      // region if everything looks as expected.
+      opaqueRegion.SimplifyInward(4);
+
+      IntRegion transparentRegion;
+      transparentRegion.Sub(mRenderBounds, opaqueRegion);
+      std::deque<RefPtr<NativeLayer>> layersToRecycle =
+          std::move(mNativeLayers);
+      IntRegion invalidRegion = aInvalidRegion;
+      PlaceNativeLayers(opaqueRegion, true, &layersToRecycle, &invalidRegion);
+      PlaceNativeLayers(transparentRegion, false, &layersToRecycle,
+                        &invalidRegion);
+      for (const auto& unusedLayer : layersToRecycle) {
+        mNativeLayerRoot->RemoveLayer(unusedLayer);
+      }
+
+      for (const auto& nativeLayer : mNativeLayers) {
+        Maybe<IntRect> maybeLayerRect =
+            mCompositor->BeginRenderingToNativeLayer(
+                invalidRegion, rootLayerClip, aOpaqueRegion, nativeLayer);
+        if (!maybeLayerRect) {
+          continue;
+        }
+
+        if (rootLayerClip) {
+          RenderOnce(rootLayerClip->Intersect(*maybeLayerRect));
+        } else {
+          RenderOnce(*maybeLayerRect);
+        }
+        mCompositor->EndRenderingToNativeLayer();
+      }
+    } else {
+      RenderOnce(clipRect);
+    }
+
     if (record.Recording()) {
       mDiagnostics->RecordCompositeTime(record.Duration());
     }
   }
+
   RootLayer()->Cleanup();
-
-  if (!mRegionToClear.IsEmpty()) {
-    for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
-      mCompositor->ClearRect(Rect(iter.Get()));
-    }
-  }
-
-  if (mTwoPassTmpTarget) {
-    MOZ_ASSERT(haveLayerEffects);
-    PopGroupForLayerEffects(previousTarget, clipRect, grayscaleVal, invertVal,
-                            contrastVal);
-  }
-
-  // Allow widget to render a custom foreground.
-  mCompositor->GetWidget()->DrawWindowOverlay(
-      &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
-
-  mCompositor->NormalDrawingDone();
 
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
 
@@ -1069,17 +1159,30 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     }
   }
 
+  if (!usingNativeLayers) {
+    // Allow widget to render a custom foreground.
+    mCompositor->GetWidget()->DrawWindowOverlay(
+        &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
+
 #if defined(MOZ_WIDGET_ANDROID)
-  // Depending on the content shift the toolbar may be rendered on top of
-  // some of the content so it must be rendered after the content.
-  if (jni::IsFennec()) {
-    RenderToolbar();
-  }
-  HandlePixelsTarget();
+    // Depending on the content shift the toolbar may be rendered on top of
+    // some of the content so it must be rendered after the content.
+    if (jni::IsFennec()) {
+      RenderToolbar();
+    }
+    HandlePixelsTarget();
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-  // Debugging
-  RenderDebugOverlay(bounds);
+    // Debugging
+    // FIXME: We should render the debug overlay when using native layers, too.
+    // But we can't split the debug overlay rendering into multiple tiles
+    // because of a cyclic dependency: We want to display stats about the
+    // rendering of the entire window, but at the time when we render into the
+    // native layers, we do not know all the information about this frame yet.
+    // So we need to render the debug layer into an additional native layer on
+    // top, probably.
+    RenderDebugOverlay(bounds);
+  }
 
   {
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
@@ -1225,8 +1328,8 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   nsIntRegion invalid;
   IntRect bounds = IntRect::Truncate(0, 0, scale * pageWidth, actualHeight);
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
-  Unused << mCompositor->BeginFrame(invalid, Nothing(), bounds, nsIntRegion(),
-                                    nullptr);
+  Unused << mCompositor->BeginFrameForWindow(invalid, Nothing(), bounds,
+                                             nsIntRegion());
 
   // The Java side of Fennec sets a scissor rect that accounts for
   // chrome such as the URL bar. Override that so that the entire frame buffer
@@ -1250,9 +1353,9 @@ ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
   if (!jni::IsFennec()) {
     return result;
   }
-  // If GetTargetContext return is not null we are not drawing to the screen so
+  // If mTarget not null we are not drawing to the screen so
   // there will not be any content offset.
-  if (mCompositor->GetTargetContext() != nullptr) {
+  if (mTarget) {
     return result;
   }
 
@@ -1267,9 +1370,9 @@ ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
 }
 
 void LayerManagerComposite::RenderToolbar() {
-  // If GetTargetContext return is not null we are not drawing to the screen so
+  // If mTarget is not null we are not drawing to the screen so
   // don't draw the toolbar.
-  if (mCompositor->GetTargetContext() != nullptr) {
+  if (mTarget) {
     return;
   }
 
@@ -1406,12 +1509,7 @@ LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect() {
   mCompositable->RemoveMaskEffect();
 }
 
-bool LayerManagerComposite::IsCompositingToScreen() const {
-  if (!mCompositor) {
-    return true;
-  }
-  return !mCompositor->GetTargetContext();
-}
+bool LayerManagerComposite::IsCompositingToScreen() const { return !mTarget; }
 
 LayerComposite::LayerComposite(LayerManagerComposite* aManager)
     : HostLayer(aManager),

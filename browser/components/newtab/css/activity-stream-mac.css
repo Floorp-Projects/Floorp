@@ -1895,18 +1895,15 @@ main {
 .collapsible-section.ds-layout {
   margin: auto;
   width: 986px; }
-  .collapsible-section.ds-layout .section-top-bar {
-    margin-bottom: 0; }
-    .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
-      color: var(--newtab-link-primary-color);
-      font-weight: normal; }
-      .collapsible-section.ds-layout .section-top-bar .learn-more-link a:-moz-any(:focus, :hover) {
-        text-decoration: underline; }
+  .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
+    color: var(--newtab-link-primary-color);
+    font-weight: normal; }
+    .collapsible-section.ds-layout .section-top-bar .learn-more-link a:-moz-any(:focus, :hover) {
+      text-decoration: underline; }
 
 .ds-card-grid {
   display: grid;
-  grid-gap: 24px;
-  margin: 16px 0; }
+  grid-gap: 24px; }
   .ds-card-grid .ds-card {
     background: #FFF;
     border-radius: 4px; }
@@ -1954,7 +1951,7 @@ main {
       .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt,
       .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt {
         font-size: 15px;
-        -webkit-line-clamp: 4;
+        -webkit-line-clamp: 3;
         line-height: 24px; }
     .ds-column-9 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
@@ -2715,7 +2712,7 @@ main {
       font-weight: 600; }
     .ds-card .meta .excerpt {
       font-size: 14px;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: 3;
       line-height: 20px; }
     .ds-card .meta .source {
       -webkit-line-clamp: 1;
@@ -2873,7 +2870,12 @@ main {
 
 .ds-image {
   display: block;
-  position: relative; }
+  position: relative;
+  opacity: 0; }
+  .ds-image.use-transition {
+    transition: opacity 0.8s; }
+  .ds-image.loaded {
+    opacity: 1; }
   .ds-image img,
   .ds-image .broken-image {
     background-color: var(--newtab-card-placeholder-color);
@@ -3029,11 +3031,12 @@ main {
   display: flex;
   max-width: 744px;
   margin: 16px auto; }
-  .ds-text-promo img {
+  .ds-text-promo picture {
     width: 40px;
     height: 40px;
     margin: 0 12px 0 0;
-    border-radius: 4px; }
+    border-radius: 4px;
+    flex-shrink: 0; }
   .ds-text-promo .text {
     line-height: 24px;
     margin: -4.5px 0 0; }
@@ -3459,7 +3462,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
         flex-direction: row;
         padding: 0;
         text-align: inherit; } }
-    @media (max-width: 1120px) {
+    @media (max-width: 1123px) {
       .SimpleBelowSearchSnippet .innerWrapper {
         margin: 0 60px; } }
     @media (max-width: 865px) {
@@ -3522,7 +3525,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       .SimpleBelowSearchSnippet.withButton .blockButton:focus {
         opacity: 1;
         box-shadow: none; }
-      @media (max-width: 1120px) {
+      @media (max-width: 1123px) {
         .SimpleBelowSearchSnippet.withButton .blockButton {
           inset-inline-end: 2%; } }
       .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet.withButton .blockButton {
@@ -4230,14 +4233,16 @@ a.firstrun-link {
         background-image: url("../data/content/assets/trailhead/benefit-privacy.png"); }
       .trailhead .trailheadBenefits li.products {
         background-image: url("../data/content/assets/trailhead/benefit-products.png"); }
-    .trailhead .trailheadBenefits h3 {
+    .trailhead .trailheadBenefits h2 {
+      text-align: start;
+      line-height: inherit;
       color: #CB9EFF;
       font-size: 22px;
       font-weight: 400;
       margin: 0 0 4px;
       padding-inline-start: 52px; }
       @media (min-width: 850px) {
-        .trailhead .trailheadBenefits h3 {
+        .trailhead .trailheadBenefits h2 {
           padding-inline-start: 0; } }
     .trailhead .trailheadBenefits p {
       color: #FFF;

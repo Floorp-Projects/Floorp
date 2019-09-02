@@ -17,8 +17,6 @@
 
 #  include <memory>
 
-using namespace std;
-
 namespace mozilla {
 namespace baseprofiler {
 
@@ -43,7 +41,7 @@ void VTuneProfiler::Shutdown() {}
 
 void VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind) {
   // TODO re-implement here if vtune is needed
-  // string str(aName);
+  // std::string str(aName);
 
   // auto iter = mStrings.find(str);
 
@@ -67,7 +65,7 @@ void VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind) {
 
 void VTuneProfiler::RegisterThreadInternal(const char* aName) {
   // TODO re-implement here if vtune is needed
-  // string str(aName);
+  // std::string str(aName);
 
   // if (!str.compare("Main Thread (Base Profiler)")) {
   //   // Process main thread.

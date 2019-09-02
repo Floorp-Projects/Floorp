@@ -143,6 +143,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         const [spoc] = component.data.spocs;
         const {
           image_src,
+          raw_image_src,
           alt_text,
           title,
           url,
@@ -166,6 +167,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             <DSTextPromo
               dispatch={this.props.dispatch}
               image={image_src}
+              raw_image_src={raw_image_src}
               alt_text={alt_text || title}
               header={title}
               cta_text={cta}

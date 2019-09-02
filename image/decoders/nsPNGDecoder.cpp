@@ -823,19 +823,21 @@ void nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
   // Note that |new_row| may be null here, indicating that this is an interlaced
   // image and |row_callback| is being called for a row that hasn't changed.
   MOZ_ASSERT_IF(!new_row, decoder->interlacebuf);
-  uint8_t* rowToWrite = new_row;
 
   if (decoder->interlacebuf) {
     uint32_t width = uint32_t(decoder->mFrameRect.Width());
 
     // We'll output the deinterlaced version of the row.
-    rowToWrite = decoder->interlacebuf + (row_num * decoder->mChannels * width);
+    uint8_t* rowToWrite =
+        decoder->interlacebuf + (row_num * decoder->mChannels * width);
 
     // Update the deinterlaced version of this row with the new data.
     png_progressive_combine_row(png_ptr, rowToWrite, new_row);
-  }
 
-  decoder->WriteRow(rowToWrite);
+    decoder->WriteRow(rowToWrite);
+  } else {
+    decoder->WriteRow(new_row);
+  }
 }
 
 void nsPNGDecoder::WriteRow(uint8_t* aRow) {

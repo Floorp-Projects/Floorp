@@ -36,7 +36,7 @@ const DEFAULT_VALUE = "value";
 loader.lazyRequireGetter(
   this,
   "naturalSortCaseInsensitive",
-  "devtools/client/shared/natural-sort",
+  "devtools/shared/natural-sort",
   true
 );
 

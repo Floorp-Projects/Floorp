@@ -622,7 +622,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void InitWasOffline();
 
  public:
-  nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
+  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetOpenerWindow(
+      mozilla::ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                  mozilla::ErrorResult& aError);
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,

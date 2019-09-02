@@ -140,23 +140,6 @@ module.exports = {
     }
   }, {
     "files": [
-      "image/**",
-    ],
-    "rules": {
-      "mozilla/consistent-if-bracing": "off",
-      "mozilla/use-chromeutils-generateqi": "off",
-      "mozilla/use-services": "off",
-      "no-array-constructor": "off",
-      "no-implied-eval": "off",
-      "no-redeclare": "off",
-      "no-self-assign": "off",
-      "no-throw-literal": "off",
-      "no-undef": "off",
-      "no-unneeded-ternary": "off",
-      "no-unused-vars": "off",
-    }
-  }, {
-    "files": [
       "netwerk/cookie/test/browser/**",
       "netwerk/test/browser/**",
       "netwerk/test/mochitests/**",

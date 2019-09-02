@@ -3,25 +3,42 @@
 <link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <body>
+<iframe id="iframe"></iframe>
 <script>
-const utils = SpecialPowers.getDOMWindowUtils(window);
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  { "set": [["layout.css.use-counters.enabled", true ]]},
-  run,
-);
 
-function assert_recorded(recorded, properties) {
+function iframe_reload() {
+  return new Promise(resolve => {
+    iframe.addEventListener("load", _ => resolve());
+    iframe.contentWindow.location.reload();
+  });
+}
+
+function assert_recorded(win, recorded, properties, desc) {
+  const utils = SpecialPowers.getDOMWindowUtils(win);
   for (const prop of properties) {
     try {
-      is(utils.isCssPropertyRecordedInUseCounter(prop), recorded, prop)
+      is(utils.isCssPropertyRecordedInUseCounter(prop), recorded,
+         `${desc} - ${prop}`)
     } catch(ex) {
       ok(false, "Threw: " + prop);
     }
   }
 }
 
-function run() {
+// Test implemented properties (i.e. non custom properties).
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.use-counters.enabled", true],
+      ["layout.css.use-counters-unimplemented.enabled", false]
+    ]
+  });
+
+  let iframe = document.getElementById("iframe");
+  // Reload iframe to make sure we re-create its document, which makes the
+  // preference update meaningful.
+  await iframe_reload();
+
   const style = document.createElement('style');
   style.textContent = `
     * {
@@ -29,27 +46,31 @@ function run() {
       -webkit-background-size: 100px 100px; /* longhand alias */
       transform-origin: top left; /* longhand */
       background: green; /* shorthand */
+      zoom: 1.0; /* counted unknown */
     }
   `;
 
-  document.body.appendChild(style);
+  iframe.contentDocument.body.appendChild(style);
 
-  assert_recorded(true, [
+  const win = iframe.contentWindow;
+  assert_recorded(win, true, [
     "grid-gap",
     "-webkit-background-size",
     "transform-origin",
     "background"
-  ]);
+  ], "Test non-custom properties");
 
   // Should only record the aliases, not the non-aliased property.
   // Should only record shorthands, not the longhands it expands to.
-  assert_recorded(false, [
+  // Should not record counted unknown property.
+  assert_recorded(win, false, [
     "gap",
     "background-size",
     "-moz-transform-origin",
     "-webkit-transform-origin",
-    "background-color"
-  ]);
+    "background-color",
+    "zoom"
+  ], "Test non-custom properties");
 
   // TODO(emilio): Make work (and test) inline style and maybe even CSSOM and
   // such?
@@ -60,7 +81,58 @@ function run() {
   //   assert_recorded(true, ["-webkit-transform"]);
   //   assert_recorded(false, ["transform"]);
   //
-  SimpleTest.finish();
-}
+  style.remove();
+  await SpecialPowers.flushPrefEnv();
+});
+
+// Test unimplemented properties.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.use-counters.enabled", true],
+      ["layout.css.use-counters-unimplemented.enabled", true]
+    ]
+  });
+
+  let iframe = document.getElementById("iframe");
+  // Reload iframe to make sure we re-create its document, which makes the
+  // preference update meaningful.
+  await iframe_reload();
+
+  const style = document.createElement('style');
+  style.textContent = `
+    * {
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+      -webkit-font-smoothing: auto; /* counted unknown */
+      zoom: 0.5; /* counted unknown */
+    }
+  `;
+
+  iframe.contentDocument.body.appendChild(style);
+
+  const win = iframe.contentWindow;
+  assert_recorded(win, true, [
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background",
+    "-webkit-font-smoothing",
+    "zoom",
+  ], "Test unimplemented properties");
+
+  // Shouldn't record counted unknown properties which doesn't show up.
+  assert_recorded(win, false, [
+    "size",
+    "speak",
+  ], "Test unimplemented properties");
+
+  // TODO: Make work (and test) inline style and CSSOM.
+  style.remove();
+  await SpecialPowers.flushPrefEnv();
+});
+
 </script>
 </body>

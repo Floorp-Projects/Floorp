@@ -28,6 +28,7 @@ gElements.loginFilter.focus();
 function updateNoLogins() {
   document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
   gElements.loginList.classList.toggle("no-logins", numberOfLogins == 0);
+  gElements.loginItem.classList.toggle("no-logins", numberOfLogins == 0);
 }
 
 window.addEventListener("AboutLoginsChromeToContent", event => {
@@ -63,6 +64,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "SendFavicons": {
       gElements.loginList.addFavicons(event.detail.value);
+      break;
+    }
+    case "ShowLoginItemError": {
+      gElements.loginItem.showLoginItemError(event.detail.value);
       break;
     }
     case "SyncState": {

@@ -14,7 +14,7 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    search/index
    components/normandy/normandy/index
    modules/subprocess/toolkit_modules/subprocess/index
-   components/telemetry/telemetry/index
+   components/telemetry/index
    modules/toolkit_modules/index
    content/toolkit_widgets/index
    components/url-classifier/url-classifier/index

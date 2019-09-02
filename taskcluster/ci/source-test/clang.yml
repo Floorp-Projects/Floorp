@@ -48,7 +48,7 @@ job-defaults:
 tidy:
     description: Run static-analysis (clang-tidy) on C/C++ patches
     treeherder:
-        symbol: clang(tidy)
+        symbol: cpp(clang-tidy)
     run:
         cwd: '{checkout}'
         command: >-
@@ -64,7 +64,7 @@ tidy:
 format:
     description: Run clang-format on C/C++ patches
     treeherder:
-        symbol: clang(format)
+        symbol: cpp(clang-format)
     run:
         cwd: '{checkout}'
         command: >-

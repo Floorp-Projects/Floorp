@@ -442,6 +442,10 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
   // would regress bug 1323735, for example.
   //
   // FIXME(emilio, bug 1528114): Probably we should do something smarter.
+  if (IsZero()) {
+    // Avoid the expensive FP math below.
+    return 0;
+  }
   float length = _0 * float(mozilla::AppUnitsPerCSSPixel());
   if (length >= nscoord_MAX) {
     return nscoord_MAX;

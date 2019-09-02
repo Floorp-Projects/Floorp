@@ -2866,7 +2866,7 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
     }, content.benefits.map(item => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("li", {
       key: item.id,
       className: item.id
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h3", {
+    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h2", {
       "data-l10n-id": item.title.string_id
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
       "data-l10n-id": item.text.string_id
@@ -3600,7 +3600,7 @@ class OnboardingCard extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
       className: `onboardingMessageImage ${content.icon}`
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "onboardingContent"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h3", {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
       className: "onboardingTitle",
       "data-l10n-id": content.title.string_id
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
@@ -4465,8 +4465,9 @@ const INTERSECTION_RATIO = 0.5;
  * only when the component is visible on the page.
  *
  * Note:
- *   * This wrapper could be used either at the individual card level,
- *     or by the card container components
+ *   * This wrapper used to be used either at the individual card level,
+ *     or by the card container components.
+ *     It is now only used for individual card level.
  *   * Each impression will be sent only once as soon as the desired
  *     visibility is detected
  *   * Batching is not yet implemented, hence it might send multiple
@@ -4624,12 +4625,6 @@ class ImpressionStats extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureC
 
   componentDidMount() {
     if (this.props.rows.length) {
-      this.setImpressionObserverOrAddListener();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.rows.length && this.props.rows !== prevProps.rows) {
       this.setImpressionObserverOrAddListener();
     }
   }
@@ -8025,7 +8020,8 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
     this.onNonOptimizedImageError = this.onNonOptimizedImageError.bind(this);
     this.state = {
       isSeen: false,
-      optimizedImageFailed: false
+      optimizedImageFailed: false,
+      useTransition: false
     };
   }
 
@@ -8036,8 +8032,9 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
       if (entry) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: entry.boundingClientRect.width,
-            containerHeight: entry.boundingClientRect.height
+            // Thumbor doesn't handle subpixels and just errors out, so rounding...
+            containerWidth: Math.round(entry.boundingClientRect.width),
+            containerHeight: Math.round(entry.boundingClientRect.height)
           });
         }
 
@@ -8050,6 +8047,14 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
     }
   }
 
+  onIdleCallback() {
+    if (!this.state.isSeen) {
+      this.setState({
+        useTransition: true
+      });
+    }
+  }
+
   reformatImageURL(url, width, height) {
     // Change the image URL to request a size tailored for the parent container width
     // Also: force JPEG, quality 60, no upscaling, no EXIF data
@@ -8058,7 +8063,13 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
   }
 
   componentDidMount() {
-    this.observer = new IntersectionObserver(this.onSeen.bind(this));
+    this.idleCallbackId = window.requestIdleCallback(this.onIdleCallback.bind(this));
+    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
+      // Assume an image will be eventually seen if it is within
+      // half the average Desktop vertical screen size:
+      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
+      rootMargin: `540px`
+    });
     this.observer.observe(external_ReactDOM_default.a.findDOMNode(this));
   }
 
@@ -8070,7 +8081,11 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
   }
 
   render() {
-    const classNames = `ds-image${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}`;
+    let classNames = `ds-image
+      ${this.props.extraClassNames ? ` ${this.props.extraClassNames}` : ``}
+      ${this.state && this.state.useTransition ? ` use-transition` : ``}
+      ${this.state && this.state.isSeen ? ` loaded` : ``}
+    `;
     let img;
 
     if (this.state && this.state.isSeen) {
@@ -8083,7 +8098,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
           source = this.reformatImageURL(baseSource, this.state.containerWidth, this.state.containerHeight);
           source2x = this.reformatImageURL(baseSource, this.state.containerWidth * 2, this.state.containerHeight * 2);
           img = external_React_default.a.createElement("img", {
-            alt: "",
+            alt: this.props.alt_text,
             crossOrigin: "anonymous",
             onError: this.onOptimizedImageError,
             src: source,
@@ -8092,7 +8107,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
         }
       } else if (!this.state.nonOptimizedImageFailed) {
         img = external_React_default.a.createElement("img", {
-          alt: "",
+          alt: this.props.alt_text,
           crossOrigin: "anonymous",
           onError: this.onNonOptimizedImageError,
           src: this.props.source
@@ -8131,8 +8146,9 @@ DSImage_DSImage.defaultProps = {
   // Unadulterated image URL to filter through Thumbor
   extraClassNames: null,
   // Additional classnames to append to component
-  optimize: true // Measure parent container to request exact sizes
-
+  optimize: true,
+  // Measure parent container to request exact sizes
+  alt_text: null
 };
 // EXTERNAL MODULE: ./content-src/components/LinkMenu/LinkMenu.jsx
 var LinkMenu = __webpack_require__(30);
@@ -8473,7 +8489,21 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     }
   }
 
+  onIdleCallback() {
+    if (!this.state.isSeen) {
+      if (this.observer && this.placholderElement) {
+        this.observer.unobserve(this.placholderElement);
+      }
+
+      this.setState({
+        isSeen: true
+      });
+    }
+  }
+
   componentDidMount() {
+    this.idleCallbackId = window.requestIdleCallback(this.onIdleCallback.bind(this));
+
     if (this.placholderElement) {
       this.observer = new IntersectionObserver(this.onSeen.bind(this));
       this.observer.observe(this.placholderElement);
@@ -8715,7 +8745,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
 
     const isEmpty = data.recommendations.length === 0;
-    return external_React_default.a.createElement("div", null, external_React_default.a.createElement("div", {
+    return external_React_default.a.createElement("div", null, this.props.title && external_React_default.a.createElement("div", {
       className: "ds-header"
     }, this.props.title), isEmpty ? external_React_default.a.createElement("div", {
       className: "ds-card-grid empty"
@@ -8848,6 +8878,7 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
 
 
 
+
 class DSTextPromo_DSTextPromo extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -8878,9 +8909,10 @@ class DSTextPromo_DSTextPromo extends external_React_default.a.PureComponent {
   render() {
     return external_React_default.a.createElement("div", {
       className: "ds-text-promo"
-    }, external_React_default.a.createElement("img", {
-      src: this.props.image,
-      alt: this.props.alt_text
+    }, external_React_default.a.createElement(DSImage_DSImage, {
+      alt_text: this.props.alt_text,
+      source: this.props.image,
+      rawSource: this.props.raw_image_src
     }), external_React_default.a.createElement("div", {
       className: "text"
     }, external_React_default.a.createElement("h3", null, `${this.props.header}\u2003`, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
@@ -9867,6 +9899,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
         const [spoc] = component.data.spocs;
         const {
           image_src,
+          raw_image_src,
           alt_text,
           title,
           url,
@@ -9887,6 +9920,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
         }, external_React_default.a.createElement(DSTextPromo_DSTextPromo, {
           dispatch: this.props.dispatch,
           image: image_src,
+          raw_image_src: raw_image_src,
           alt_text: alt_text || title,
           header: title,
           cta_text: cta,

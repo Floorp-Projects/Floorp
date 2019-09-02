@@ -554,6 +554,12 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
       return;
     }
     event = NS_NETWORK_LINK_DATA_CHANGED;
+
+    if (!mNetworkChangeTime.IsNull()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
+                                     mNetworkChangeTime);
+    }
+    mNetworkChangeTime = TimeStamp::Now();
   } else if (!mStatusKnown) {
     event = NS_NETWORK_LINK_DATA_UNKNOWN;
   } else {

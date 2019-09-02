@@ -194,7 +194,10 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    */
   const ComputedFlexContainerInfo* GetFlexContainerInfo() {
     const ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
-    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    NS_WARNING_ASSERTION(info,
+                         "Property generation wasn't requested. "
+                         "This is a known issue in Print Preview. "
+                         "See Bug 1157012.");
     return info;
   }
 

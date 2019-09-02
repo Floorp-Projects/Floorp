@@ -5,12 +5,18 @@
 job-defaults:
     platform: lint/opt
     treeherder:
-        kind: test
+        kind: other
         tier: 1
     worker-type: t-linux-xlarge
     worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
+    run:
+        using: mach
 
 bugzilla-components:
     description: Generate metadata about source files and Bugzilla
@@ -20,14 +26,21 @@ bugzilla-components:
         product: source
         job-name: source-bugzilla-info
     run:
-        using: mach
         mach: file-info bugzilla-automation /builds/worker/artifacts
     worker:
-        artifacts:
-            - type: directory
-              path: /builds/worker/artifacts
-              name: public
         max-run-time: 2700
     when:
         files-changed:
-            - '**'
+            - "**"
+
+test-info-fission:
+    description: Generate test manifest metadata for fission
+    treeherder:
+        symbol: test-info(fission)
+        tier: 2
+    index:
+        product: source
+        job-name: test-info-fission
+    run-on-projects: ['mozilla-central']
+    run:
+        mach: test-info report --show-tests --show-summary --filter-keys=fail-if,skip-if --filter-values='(?<!!)fission' --output-file /builds/worker/artifacts/test-info-fission.json

@@ -169,7 +169,7 @@
 .perf-settings-summary {
   height: 30px;
   cursor: default;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .perf-settings-thread-columns {

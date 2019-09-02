@@ -430,13 +430,6 @@ const proto = {
       return safeGetterValues;
     }
 
-    // Do not search for safe getters while replaying. While this would be nice
-    // to support, it involves a lot of back-and-forth between processes and
-    // would be better to do entirely in the replaying process.
-    if (isReplaying) {
-      return safeGetterValues;
-    }
-
     // Most objects don't have any safe getters but inherit some from their
     // prototype. Avoid calling getOwnPropertyNames on objects that may have
     // many properties like Array, strings or js objects. That to avoid

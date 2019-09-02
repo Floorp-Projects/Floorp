@@ -86,6 +86,7 @@ class MediaTransportHandler {
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
   virtual void StartIceGathering(bool aDefaultRouteOnly,
+                                 bool aObfuscateHostAddresses,
                                  // TODO: It probably makes sense to look
                                  // this up internally
                                  const nsTArray<NrIceStunAddr>& aStunAddrs) = 0;

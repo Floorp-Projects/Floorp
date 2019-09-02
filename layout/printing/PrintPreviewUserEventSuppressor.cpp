@@ -127,8 +127,7 @@ static eEventAction GetActionForEvent(Event* aEvent) {
 
 NS_IMETHODIMP
 PrintPreviewUserEventSuppressor::HandleEvent(Event* aEvent) {
-  nsCOMPtr<nsIContent> content =
-      do_QueryInterface(aEvent ? aEvent->GetOriginalTarget() : nullptr);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->GetOriginalTarget());
   if (content && !content->IsXULElement()) {
     eEventAction action = GetActionForEvent(aEvent);
     switch (action) {

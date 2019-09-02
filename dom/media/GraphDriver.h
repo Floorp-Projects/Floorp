@@ -129,8 +129,6 @@ class GraphDriver {
    * A driver cannot be started twice, it must be shutdown
    * before being started again. */
   virtual void Start() = 0;
-  /* Revive this driver, as more messages just arrived. */
-  virtual void Revive() = 0;
   /* Shutdown GraphDriver (synchronously) */
   virtual void Shutdown() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
@@ -234,7 +232,6 @@ class ThreadedDriver : public GraphDriver {
   void WaitForNextIteration() override;
   void WakeUp() override;
   void Start() override;
-  void Revive() override;
   void Shutdown() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
@@ -323,7 +320,7 @@ struct StreamAndPromiseForOperation {
   dom::AudioContextOperationFlags mFlags;
 };
 
-enum class AsyncCubebOperation { INIT, REVIVE, SHUTDOWN };
+enum class AsyncCubebOperation { INIT, SHUTDOWN };
 enum class AudioInputType { Unknown, Voice };
 
 /**
@@ -361,7 +358,6 @@ class AudioCallbackDriver : public GraphDriver,
   virtual ~AudioCallbackDriver();
 
   void Start() override;
-  void Revive() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
   void Shutdown() override;

@@ -1568,6 +1568,9 @@ class BaseScript : public gc::TenuredCell {
 
     // Set if the script has opted into spew
     SpewEnabled = 1 << 27,
+
+    // Set for LazyScripts which have been wrapped by some Debugger.
+    WrappedByDebugger = 1 << 28,
   };
 
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
@@ -3308,6 +3311,11 @@ class LazyScript : public BaseScript {
   }
 
   bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
+
+  bool isWrappedByDebugger() const {
+    return hasFlag(MutableFlags::WrappedByDebugger);
+  }
+  void setWrappedByDebugger() { setFlag(MutableFlags::WrappedByDebugger); }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
     MOZ_ASSERT(lazyData_);

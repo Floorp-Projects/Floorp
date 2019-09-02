@@ -10,8 +10,6 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_control_flow.html", {
     waitForRecording: true,
   });
-  const { threadFront } = dbg;
-  const breakpoints = [];
 
   await rewindToBreakpoint(10);
   await resumeToBreakpoint(12);
@@ -19,27 +17,22 @@ add_task(async function() {
   await resumeToBreakpoint(20);
   await resumeToBreakpoint(32);
   await resumeToBreakpoint(27);
-  await resumeToLine(threadFront, 32);
-  await resumeToLine(threadFront, 27);
+  await resumeToLine(dbg, 32);
+  await resumeToLine(dbg, 27);
   await resumeToBreakpoint(42);
   await resumeToBreakpoint(44);
   await resumeToBreakpoint(50);
   await resumeToBreakpoint(54);
 
-  for (const bp of breakpoints) {
-    await threadFront.removeBreakpoint(bp);
-  }
   await shutdownDebugger(dbg);
 
   async function rewindToBreakpoint(line) {
-    const bp = await setBreakpoint(threadFront, "doc_control_flow.html", line);
-    breakpoints.push(bp);
-    await rewindToLine(threadFront, line);
+    await addBreakpoint(dbg, "doc_control_flow.html", line);
+    await rewindToLine(dbg, line);
   }
 
   async function resumeToBreakpoint(line) {
-    const bp = await setBreakpoint(threadFront, "doc_control_flow.html", line);
-    breakpoints.push(bp);
-    await resumeToLine(threadFront, line);
+    await addBreakpoint(dbg, "doc_control_flow.html", line);
+    await resumeToLine(dbg, line);
   }
 });

@@ -113,7 +113,9 @@
       }
     }
 
-    h3 {
+    h2 {
+      text-align: start;
+      line-height: inherit;
       color: $violet-20;
       font-size: 22px;
       font-weight: 400;

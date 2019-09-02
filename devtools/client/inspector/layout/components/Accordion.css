@@ -30,12 +30,10 @@
   cursor: pointer;
   font-size: 12px;
   padding: 4px;
-  transition: all 0.25s ease;
   width: 100%;
   align-items: center;
   display: flex;
-
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .accordion ._header:hover {

@@ -67,6 +67,10 @@
         },
         "h1": {
             "tests": ["ts_paint_heavy"]
+        },
+        "realworld-webextensions": {
+            "tests": ["startup_about_home_paint_realworld_webextensions"],
+            "webextensions_zip": "webextensions.zip"
         }
     }
 }

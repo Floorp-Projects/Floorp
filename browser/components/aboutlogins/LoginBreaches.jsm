@@ -144,6 +144,13 @@ this.LoginBreaches = {
     return vulnerablePasswordsByLoginGUID;
   },
 
+  async clearAllPotentiallyVulnerablePasswords() {
+    await Services.logins.initializationPromise;
+    const storageJSON =
+      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+    storageJSON.clearAllPotentiallyVulnerablePasswords();
+  },
+
   _breachAlertIsDismissed(login, breach, dismissedBreachAlerts) {
     const breachAddedDate = new Date(breach.AddedDate).getTime();
     const breachAlertIsDismissed =

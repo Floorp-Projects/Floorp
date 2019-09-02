@@ -17,27 +17,6 @@
 namespace js {
 namespace gc {
 
-static inline bool CanBeFinalizedInBackground(AllocKind kind,
-                                              const JSClass* clasp) {
-  MOZ_ASSERT(IsObjectAllocKind(kind));
-  /* If the class has no finalizer or a finalizer that is safe to call on
-   * a different thread, we change the alloc kind. For example,
-   * AllocKind::OBJECT0 calls the finalizer on the main thread,
-   * AllocKind::OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
-   * IsBackgroundFinalized is called to prevent recursively incrementing
-   * the alloc kind; kind may already be a background finalize kind.
-   */
-  return (
-      !IsBackgroundFinalized(kind) &&
-      (!clasp->hasFinalize() || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
-}
-
-static inline AllocKind GetBackgroundAllocKind(AllocKind kind) {
-  MOZ_ASSERT(!IsBackgroundFinalized(kind));
-  MOZ_ASSERT(IsObjectAllocKind(kind));
-  return AllocKind(size_t(kind) + 1);
-}
-
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
@@ -154,6 +133,40 @@ static inline size_t GetGCKindSlots(AllocKind thingKind, const JSClass* clasp) {
 
 static inline size_t GetGCKindBytes(AllocKind thingKind) {
   return sizeof(JSObject_Slots0) + GetGCKindSlots(thingKind) * sizeof(Value);
+}
+
+static inline bool CanChangeToBackgroundAllocKind(AllocKind kind,
+                                                  const JSClass* clasp) {
+  // If a foreground alloc kind is specified but the class has no finalizer or a
+  // finalizer that is safe to call on a different thread, we can change the
+  // alloc kind to one which is finalized on a background thread.
+  //
+  // For example, AllocKind::OBJECT0 calls the finalizer on the main thread, and
+  // AllocKind::OBJECT0_BACKGROUND calls the finalizer on the a helper thread.
+
+  MOZ_ASSERT(IsObjectAllocKind(kind));
+
+  if (IsBackgroundFinalized(kind)) {
+    return false;  // This kind is already a background finalized kind.
+  }
+
+  return !clasp->hasFinalize() || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE);
+}
+
+static inline AllocKind ForegroundToBackgroundAllocKind(AllocKind fgKind) {
+  MOZ_ASSERT(IsObjectAllocKind(fgKind));
+  MOZ_ASSERT(IsForegroundFinalized(fgKind));
+
+  // For objects, each background alloc kind is defined just after the
+  // corresponding foreground alloc kind so we can convert between them by
+  // incrementing or decrementing as appropriate.
+  AllocKind bgKind = AllocKind(size_t(fgKind) + 1);
+
+  MOZ_ASSERT(IsObjectAllocKind(bgKind));
+  MOZ_ASSERT(IsBackgroundFinalized(bgKind));
+  MOZ_ASSERT(GetGCKindSlots(bgKind) == GetGCKindSlots(fgKind));
+
+  return bgKind;
 }
 
 }  // namespace gc

@@ -11,7 +11,7 @@
   height: 100vh;
   padding: 0 2rem;
   display: grid;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .app-page--empty {
