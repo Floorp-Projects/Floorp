@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=891952
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(function() {
       var all = document.all;
-      is(all["content"], $("content"), "Should find the content");
+      is(all.content, $("content"), "Should find the content");
       ok(!("" in all), "Should not have an empty string prop on document.all");
       is(all[""], undefined, "Should not get empty string on document.all");
       is(all.namedItem(""), null,

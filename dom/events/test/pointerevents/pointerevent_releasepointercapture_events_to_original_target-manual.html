@@ -104,7 +104,7 @@
                 test_pointerEvent = setup_pointerevent_test("got/lost pointercapture: subsequent events to target", ALL_POINTERS);  // set up test harness
                 var listener = document.getElementById("listener");
                 var target0 = document.getElementById("target0");
-                target0.style["touchAction"] = "none";
+                target0.style.touchAction = "none";
 
                 // target0 and listener - handle all events
                 for (var i = 0; i < All_Pointer_Events.length; i++) {

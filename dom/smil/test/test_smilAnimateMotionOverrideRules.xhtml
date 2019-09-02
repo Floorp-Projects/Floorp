@@ -101,61 +101,61 @@ function runTest() {
   var mpathInvalidTargets = [gMpathInvalidTargetA, gMpathInvalidTargetB];
   for (var i in mpathInvalidTargets) {
     var curInvalidValue = mpathInvalidTargets[i];
-    attrSettings["mpath"] = curInvalidValue;
+    attrSettings.mpath = curInvalidValue;
     testAttrSettings(attrSettings, gUnAnimatedCTM,
                      "invalid <mpath> should block animation");
   }
-  delete attrSettings["mpath"];
+  delete attrSettings.mpath;
 
   // Test that 'path' overrides everything below it
   testAttrSettings(attrSettings, gPathCTM,
                    "'path' should win vs all but mpath");
-  attrSettings["path"] = gInvalidAttrValue;
+  attrSettings.path = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid 'path' should block animation vs all but mpath");
-  delete attrSettings["path"];
+  delete attrSettings.path;
 
   // Test that 'values' overrides everything below it
   testAttrSettings(attrSettings, gValuesCTM,
                    "'values' should win vs from/by/to");
-  attrSettings["values"] = gInvalidAttrValue;
+  attrSettings.values = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid 'values' should block animation vs from/by/to");
-  delete attrSettings["values"];
+  delete attrSettings.values;
 
   // Test that 'from' & 'to' overrides 'by'
   testAttrSettings(attrSettings, gFromToCTM,
                    "'from/to' should win vs 'by'");
-  attrSettings["to"] = gInvalidAttrValue;
+  attrSettings.to = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid 'to' should block animation vs 'by'");
-  delete attrSettings["to"];
+  delete attrSettings.to;
 
   // Test that 'from' & 'by' are effective
   testAttrSettings(attrSettings, gFromByCTM,
                    "'from/by' should be visible");
-  attrSettings["by"] = gInvalidAttrValue;
+  attrSettings.by = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid 'by' should block animation");
-  delete attrSettings["from"];
+  delete attrSettings.from;
 
   // REINSERT "to" & fix up "by" so we can test pure-"to" vs pure-"by"
-  attrSettings["to"] = gToValidValue;
-  attrSettings["by"] = gByValidValue;
+  attrSettings.to = gToValidValue;
+  attrSettings.by = gByValidValue;
   testAttrSettings(attrSettings, gPureToCTM,
                    "pure-'to' should be effective & beat pure-'by'");
-  attrSettings["to"] = gInvalidAttrValue;
+  attrSettings.to = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid pure-'to' should block animation vs pure-'by'");
-  delete attrSettings["to"];
+  delete attrSettings.to;
 
   // Test that pure-"by" is effective
   testAttrSettings(attrSettings, gPureByCTM,
                    "pure-by should be visible");
-  attrSettings["by"] = gInvalidAttrValue;
+  attrSettings.by = gInvalidAttrValue;
   testAttrSettings(attrSettings, gUnAnimatedCTM,
                    "invalid 'by' should block animation");
-  delete attrSettings["by"];
+  delete attrSettings.by;
 
   // Make sure that our hash is empty now.
   for (var unexpectedKey in attrSettings) {

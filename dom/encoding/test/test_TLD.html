@@ -33,14 +33,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910211
 
   function next(event) {
     if (event) {
-      is(event.data, current['encoding'], "Got bad encoding for " + current["tld"]);
+      is(event.data, current.encoding, "Got bad encoding for " + current.tld);
     }
     current = tlds.shift();
     if (!current) {
       SimpleTest.finish();
       return;
     }
-    iframe.src = "http://example." + current["tld"] + "/tests/dom/encoding/test/file_TLD.html";
+    iframe.src = "http://example." + current.tld + "/tests/dom/encoding/test/file_TLD.html";
   }
 
   </script>

@@ -46,7 +46,7 @@ function checkResults(reportStr) {
     var cspReport = reportObj["csp-report"];
 
     is(cspReport["document-uri"], DOC_URI, "Incorrect document-uri");
-    is(cspReport["referrer"],
+    is(cspReport.referrer,
        "http://mochi.test:8888/tests/dom/security/test/csp/test_report_for_import.html",
        "Incorrect referrer");
     is(cspReport["violated-directive"],
