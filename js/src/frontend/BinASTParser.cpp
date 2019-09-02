@@ -5202,13 +5202,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseArguments(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(
+      ListContext(context.as<FieldContext>().position, BinASTList::Arguments)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newList(ParseNodeKind::Arguments,
                                           tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::Arguments)));
     BINJS_MOZ_TRY_DECL(item, parseExpressionOrSpreadElement(childContext));
     handler_.addList(/* list = */ result, /* kid = */ item);
   }
@@ -5224,12 +5224,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFunctionBody(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::FunctionBody)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::FunctionBody)));
     BINJS_MOZ_TRY_DECL(item, parseStatement(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5245,14 +5245,14 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedBoundName(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(
+      Context(ListContext(context.as<FieldContext>().position,
+                          BinASTList::ListOfAssertedBoundName)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   (void)start;
   auto result = Ok();
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfAssertedBoundName)));
     MOZ_TRY(parseAssertedBoundName(scopeKind, childContext));
     // Nothing to do here.
   }
@@ -5268,14 +5268,14 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedDeclaredName(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(
+      Context(ListContext(context.as<FieldContext>().position,
+                          BinASTList::ListOfAssertedDeclaredName)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   (void)start;
   auto result = Ok();
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfAssertedDeclaredName)));
     MOZ_TRY(parseAssertedDeclaredName(scopeKind, childContext));
     // Nothing to do here.
   }
@@ -5293,7 +5293,10 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(
+      ListContext(context.as<FieldContext>().position,
+                  BinASTList::ListOfAssertedMaybePositionalParameterName)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   (void)start;
   auto result = Ok();
   // This list contains also destructuring parameters, and the number of
@@ -5306,9 +5309,6 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
   // length match to the known maximum positional parameter index + 1.
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(
-        ListContext(context.as<FieldContext>().position,
-                    BinASTList::ListOfAssertedMaybePositionalParameterName)));
     MOZ_TRY(parseAssertedMaybePositionalParameterName(
         scopeKind, positionalParams, childContext));
     // Nothing to do here.
@@ -5325,12 +5325,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfDirective(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::ListOfDirective)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfDirective)));
     BINJS_MOZ_TRY_DECL(item, parseDirective(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5346,13 +5346,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfObjectProperty(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::ListOfObjectProperty)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newObjectLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfObjectProperty)));
     BINJS_MOZ_TRY_DECL(item, parseObjectProperty(childContext));
     if (!item->isConstant()) result->setHasNonConstInitializer();
     result->appendWithoutOrderAssumption(item);
@@ -5370,13 +5369,13 @@ BinASTParser<Tok>::parseListOfOptionalExpressionOrSpreadElement(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(
+      ListContext(context.as<FieldContext>().position,
+                  BinASTList::ListOfOptionalExpressionOrSpreadElement)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newArrayLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(
-        ListContext(context.as<FieldContext>().position,
-                    BinASTList::ListOfOptionalExpressionOrSpreadElement)));
     BINJS_MOZ_TRY_DECL(item,
                        parseOptionalExpressionOrSpreadElement(childContext));
     if (item) {
@@ -5397,12 +5396,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfParameter(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::ListOfParameter)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfParameter)));
     BINJS_MOZ_TRY_DECL(item, parseParameter(childContext));
     handler_.addList(/* list = */ result, /* kid = */ item);
   }
@@ -5418,12 +5417,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfStatement(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::ListOfStatement)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfStatement)));
     BINJS_MOZ_TRY_DECL(item, parseStatement(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5439,12 +5438,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfSwitchCase(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(Context(ListContext(
+      context.as<FieldContext>().position, BinASTList::ListOfSwitchCase)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfSwitchCase)));
     BINJS_MOZ_TRY_DECL(item, parseSwitchCase(childContext));
     handler_.addCaseStatementToList(result, item);
   }
@@ -5460,14 +5459,14 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
-  MOZ_TRY(tokenizer_->enterList(length, context, guard));
+  const Context childContext(
+      Context(ListContext(context.as<FieldContext>().position,
+                          BinASTList::ListOfVariableDeclarator)));
+  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
   BINJS_TRY_DECL(result, handler_.newDeclarationList(declarationListKind,
                                                      tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfVariableDeclarator)));
     BINJS_MOZ_TRY_DECL(item, parseVariableDeclarator(childContext));
     result->appendWithoutOrderAssumption(item);
   }

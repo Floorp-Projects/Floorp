@@ -1748,11 +1748,11 @@ impl CPPExporter {
     AutoList guard(*tokenizer_);
 
     const auto start = tokenizer_->offset();
-    MOZ_TRY(tokenizer_->enterList(length, context, guard));{empty_check}
+    const Context childContext(Context(ListContext(context.as<FieldContext>().position, BinASTList::{content_kind})));
+    MOZ_TRY(tokenizer_->enterList(length, childContext, guard));{empty_check}
 {init}
 
     for (uint32_t i = 0; i < length; ++i) {{
-        const Context childContext(Context(ListContext(context.as<FieldContext>().position, BinASTList::{content_kind})));
 {call}
 {append}    }}
 

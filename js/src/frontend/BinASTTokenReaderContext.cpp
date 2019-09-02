@@ -1237,6 +1237,8 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
                                                    const Context& context,
                                                    AutoList& guard) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("enterList",
+                                                             context);
   const auto identity =
       context.as<BinASTTokenReaderBase::ListContext>().content;
   const auto& table = dictionary.tableForListLength(identity);
