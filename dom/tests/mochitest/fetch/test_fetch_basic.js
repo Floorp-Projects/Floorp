@@ -115,7 +115,7 @@ function testNonGetBlobURL() {
   var url = URL.createObjectURL(blob);
   return Promise.all(
     ["HEAD", "POST", "PUT", "DELETE"].map(method => {
-      var req = new Request(url, { method: method });
+      var req = new Request(url, { method });
       return fetch(req)
         .then(function(res) {
           ok(false, "Blob URL with non-GET request should not succeed");

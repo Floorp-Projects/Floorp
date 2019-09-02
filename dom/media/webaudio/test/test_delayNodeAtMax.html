@@ -22,7 +22,7 @@ function applySignal(buffer, offset) {
 
 var gTest = {
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var buffer = context.createBuffer(1, signalLength, context.sampleRate);
     applySignal(buffer, 0);
 
@@ -38,7 +38,7 @@ var gTest = {
     source.start(0);
     return delay;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(1, outputLength, context.sampleRate);
     applySignal(expectedBuffer, delayLength);
     return expectedBuffer;

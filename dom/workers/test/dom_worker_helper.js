@@ -51,7 +51,7 @@ function findDebugger(url) {
 function waitForRegister(url, dbgUrl) {
   return new Promise(function(resolve) {
     wdm.addListener({
-      onRegister: function(dbg) {
+      onRegister(dbg) {
         dump("FAK " + dbg.url + "\n");
         if (dbg.url !== url) {
           return;
@@ -71,7 +71,7 @@ function waitForRegister(url, dbgUrl) {
 function waitForUnregister(url) {
   return new Promise(function(resolve) {
     wdm.addListener({
-      onUnregister: function(dbg) {
+      onUnregister(dbg) {
         if (dbg.url !== url) {
           return;
         }
@@ -86,7 +86,7 @@ function waitForUnregister(url) {
 function waitForDebuggerClose(dbg) {
   return new Promise(function(resolve) {
     dbg.addListener({
-      onClose: function() {
+      onClose() {
         ok(true, "Debugger should be closed.");
         dbg.removeListener(this);
         resolve();
@@ -98,7 +98,7 @@ function waitForDebuggerClose(dbg) {
 function waitForDebuggerError(dbg) {
   return new Promise(function(resolve) {
     dbg.addListener({
-      onError: function(filename, lineno, message) {
+      onError(filename, lineno, message) {
         dbg.removeListener(this);
         resolve(new Error(message, filename, lineno));
       },
@@ -109,7 +109,7 @@ function waitForDebuggerError(dbg) {
 function waitForDebuggerMessage(dbg, message) {
   return new Promise(function(resolve) {
     dbg.addListener({
-      onMessage: function(message1) {
+      onMessage(message1) {
         if (message !== message1) {
           return;
         }

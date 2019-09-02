@@ -17,7 +17,7 @@ let toString = Object.prototype.toString;
 function ok(condition, message) {
   debug("condition: " + condition + ", " + message + "\n");
   if (!condition) {
-    sendAsyncMessage("mmMessagePort:fail", { message: message });
+    sendAsyncMessage("mmMessagePort:fail", { message });
     throw "failed check: " + message;
   }
 }

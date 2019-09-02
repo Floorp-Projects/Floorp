@@ -39,7 +39,7 @@ function examiner() {
   SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     var testpat = new RegExp("testid=([a-z0-9_]+)");
 
     if (topic === "specialpowers-http-notify-request") {
@@ -97,7 +97,7 @@ examiner.prototype  = {
 
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
@@ -113,8 +113,7 @@ window.resultPoller = {
 
   POLL_ATTEMPTS_LEFT: 14,
 
-  pollForFinish:
-  function() {
+  pollForFinish() {
     var vr = resultPoller.tallyReceivedReports();
     if (resultPoller.verifyReports(vr, resultPoller.POLL_ATTEMPTS_LEFT < 1)) {
       // report success condition.
@@ -127,8 +126,7 @@ window.resultPoller = {
     }
   },
 
-  resetReportServer:
-  function() {
+  resetReportServer() {
     var xhr = new XMLHttpRequest();
     var xhr_ro = new XMLHttpRequest();
     xhr.open("GET", "file_bug836922_npolicies_violation.sjs?reset", false);
@@ -137,8 +135,7 @@ window.resultPoller = {
     xhr_ro.send(null);
   },
 
-  tallyReceivedReports:
-  function() {
+  tallyReceivedReports() {
     var xhr = new XMLHttpRequest();
     var xhr_ro = new XMLHttpRequest();
     xhr.open("GET", "file_bug836922_npolicies_violation.sjs?results", false);
@@ -165,8 +162,7 @@ window.resultPoller = {
     return results;
   },
 
-  verifyReports:
-  function(receivedCounts, lastAttempt) {
+  verifyReports(receivedCounts, lastAttempt) {
     for (var r in window.violation_reports) {
       var exp = window.violation_reports[r].expected;
       var exp_ro = window.violation_reports[r].expected_ro;

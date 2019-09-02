@@ -62,7 +62,7 @@ let expectedResults = [
 function waitForRegister(aScope, aCallback) {
   return new Promise(function (aResolve) {
     let listener = {
-      onRegister: function (aRegistration) {
+      onRegister (aRegistration) {
         if (aRegistration.scope !== aScope) {
           return;
         }
@@ -78,7 +78,7 @@ function waitForRegister(aScope, aCallback) {
 function waitForUnregister(aScope) {
   return new Promise(function (aResolve) {
     let listener = {
-      onUnregister: function (aRegistration) {
+      onUnregister (aRegistration) {
         if (aRegistration.scope !== aScope) {
           return;
         }

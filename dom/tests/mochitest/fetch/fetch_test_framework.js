@@ -48,7 +48,7 @@ function testScript(script) {
         reject("Worker error: " + event.message);
       };
 
-      worker.postMessage({ script: script });
+      worker.postMessage({ script });
     });
   }
 
@@ -69,7 +69,7 @@ function testScript(script) {
         reject("Nested Worker error: " + event.message);
       };
 
-      worker.postMessage({ script: script });
+      worker.postMessage({ script });
     });
   }
 
@@ -111,7 +111,7 @@ function testScript(script) {
         iframe = document.createElement("iframe");
         iframe.src = "message_receiver.html";
         iframe.onload = function() {
-          worker.postMessage({ script: script });
+          worker.postMessage({ script });
         };
         document.body.appendChild(iframe);
       }

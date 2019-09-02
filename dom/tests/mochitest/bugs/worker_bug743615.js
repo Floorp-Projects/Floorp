@@ -37,8 +37,8 @@ self.onmessage = function onMessage(evt) {
   pattern = makePattern(imageData.data.length, 99, 2);
   setPattern(imageData, pattern);
   self.postMessage({
-    statusMessage: statusMessage,
-    imageData: imageData,
-    pattern: pattern,
+    statusMessage,
+    imageData,
+    pattern,
   });
 };

@@ -3,7 +3,7 @@
 <head> <meta charset="utf-8"> </head>
 <script type="text/javascript">
   function ok(result, desc) {
-    window.parent.postMessage({ok: result, desc: desc}, "*");
+    window.parent.postMessage({ok: result, desc}, "*");
   }
   function doStuff() {
     var beforePrincipal = SpecialPowers.wrap(document).nodePrincipal;

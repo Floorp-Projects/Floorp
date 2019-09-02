@@ -541,8 +541,8 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
-      cleanup: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
+      prepare (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
+      cleanup (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
 
     // momentum scroll should cause scroll even if the action is history, but if the default action is none,
     // shouldn't do it.
@@ -644,8 +644,8 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: true, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
-      cleanup: function (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
+      prepare (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 0]]}, cb); },
+      cleanup (cb) { SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.action", 1]]}, cb); } },
 
     // Don't scroll along axis whose overflow style is hidden.
     { description: "Scroll to only bottom by oblique pixel wheel event with overflow-x: hidden",
@@ -655,7 +655,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 1, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollDown,
-      prepare: function(cb) { gScrollableElement.style.overflowX = "hidden"; cb(); } },
+      prepare(cb) { gScrollableElement.style.overflowX = "hidden"; cb(); } },
     { description: "Scroll to only bottom by oblique line wheel event with overflow-x: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -691,7 +691,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: -1, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollUp,
-      cleanup: function (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
+      cleanup (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
     { description: "Scroll to only right by oblique pixel wheel event with overflow-y: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -699,7 +699,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollRight,
-      prepare: function(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
+      prepare(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
     { description: "Scroll to only right by oblique line wheel event with overflow-y: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -735,7 +735,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: -1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollLeft,
-      cleanup: function (cb) { gScrollableElement.style.overflowY = "auto"; cb(); } },
+      cleanup (cb) { gScrollableElement.style.overflowY = "auto"; cb(); } },
     { description: "Don't be scrolled by oblique pixel wheel event with overflow: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -743,7 +743,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 1, expectedOverflowDeltaY: 1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      prepare: function(cb) { gScrollableElement.style.overflow = "hidden"; cb(); } },
+      prepare(cb) { gScrollableElement.style.overflow = "hidden"; cb(); } },
     { description: "Don't be scrolled by oblique line wheel event with overflow: hidden",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -779,7 +779,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: -1, expectedOverflowDeltaY: -1,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kNoScroll,
-      cleanup: function (cb) { gScrollableElement.style.overflow = "auto"; cb(); } },
+      cleanup (cb) { gScrollableElement.style.overflow = "auto"; cb(); } },
 
     // Don't scroll along axis whose overflow style is hidden and overflow delta values should
     // be zero if there is ancestor scrollable element.
@@ -790,7 +790,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollDown,
-      prepare: function(cb) {
+      prepare(cb) {
         gScrollableElement.style.overflowX = "hidden";
         gScrollableElement.style.position = "fixed";
         gScrollableElement.style.top = "30px";
@@ -836,7 +836,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollUp,
-      cleanup: function (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
+      cleanup (cb) { gScrollableElement.style.overflowX = "auto"; cb(); } },
     { description: "Scroll to only right by oblique pixel wheel event with overflow-y: hidden (body is scrollable)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 0.0,
@@ -844,7 +844,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollRight,
-      prepare: function(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
+      prepare(cb) { gScrollableElement.style.overflowY = "hidden"; cb(); } },
     { description: "Scroll to only right by oblique line wheel event with overflow-y: hidden (body is scrollable)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 0.0,
@@ -880,7 +880,7 @@ function doTestScroll(aSettings, aCallback)
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollLeft,
-      cleanup: function (cb) {
+      cleanup (cb) {
         gScrollableElement.style.overflowY = "auto";
         gScrollableElement.style.position = "static";
         gSpacerForBodyElement.style.width = "";
@@ -1414,7 +1414,7 @@ function getFirstWritingModeStyle()
       return false;
     }
   }
-  return {typeIndex: typeIndex, styleIndex: 0};
+  return {typeIndex, styleIndex: 0};
 }
 
 function getNextWritingModeStyle(curStyle)
@@ -1423,7 +1423,7 @@ function getNextWritingModeStyle(curStyle)
   let styleIndex = curStyle.styleIndex + 1;
   while (typeIndex < kWritingModes.length) {
     if (styleIndex < kWritingModes[typeIndex].styles.length) {
-      return {typeIndex: typeIndex, styleIndex: styleIndex};
+      return {typeIndex, styleIndex};
     }
     typeIndex++;
     styleIndex = 0;
@@ -1520,7 +1520,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: false,
       expected: kScrollDown,
-      prepare: function (cb) {
+      prepare (cb) {
                  // Static contents will not start from the topleft side in some
                  // writing modes, for ease of coding, we simply absolutely
                  // position the target to the topleft in every case.
@@ -1869,7 +1869,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: true,
       expected: kAdjustedForDown.result,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
                  cb();
@@ -1957,7 +1957,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: false,
       expected: kScrollDown,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
                  cb();
@@ -2047,7 +2047,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: true,
       expected: kAdjustedForDown.result,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
                  cb();
@@ -2135,7 +2135,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: false,
       expected: kScrollDown,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
                  cb();
@@ -2225,7 +2225,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: true,
       expected: kAdjustedForDown.result,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
                  cb();
@@ -2313,7 +2313,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: false,
       expected: kScrollDown,
-      prepare: function (cb) {
+      prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
                  cb();
@@ -2385,7 +2385,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       adjusted: true,
       expected: kAdjustedForLeft.result,
-      cleanup: function (cb) {
+      cleanup (cb) {
                  gScrollableElement.style.position = "static";
                  gScrollableElement.style.top = "auto";
                  gScrollableElement.style.left = "auto";
@@ -3009,7 +3009,7 @@ function doTestWholeScroll2(aCallback)
 {
   const kTests = [
     { description: "try whole-scroll to top (line)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3027,7 +3027,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to bottom (line)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3045,7 +3045,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to left (line)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3063,7 +3063,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 0
     },
     { description: "try whole-scroll to right (line)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3083,7 +3083,7 @@ function doTestWholeScroll2(aCallback)
 
 
     { description: "try whole-scroll to top (pixel)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3101,7 +3101,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to bottom (pixel)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3119,7 +3119,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to left (pixel)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3137,7 +3137,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 0
     },
     { description: "try whole-scroll to right (pixel)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3157,7 +3157,7 @@ function doTestWholeScroll2(aCallback)
 
 
     { description: "try whole-scroll to top (page)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3175,7 +3175,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to bottom (page)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3193,7 +3193,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 1000
     },
     { description: "try whole-scroll to left (page)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },
@@ -3211,7 +3211,7 @@ function doTestWholeScroll2(aCallback)
       expectedScrollLeft: 0
     },
     { description: "try whole-scroll to right (page)",
-      prepare: function () {
+      prepare () {
         gScrollableElement.scrollTop = 1000;
         gScrollableElement.scrollLeft = 1000;
       },

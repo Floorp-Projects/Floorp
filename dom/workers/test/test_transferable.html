@@ -67,7 +67,7 @@ Tests of DOM Worker transferable objects
 
     var ab = new ArrayBuffer(size);
     ok(ab.byteLength == size, "P: The size is: " + size + " == " + ab.byteLength);
-    worker.postMessage({ data: 0, timeout: 0, ab: ab, cb: ab, size: size }, [ab]);
+    worker.postMessage({ data: 0, timeout: 0, ab, cb: ab, size }, [ab]);
     ok(ab.byteLength == 0, "P: PostMessage - The size is: 0 == " + ab.byteLength)
   }
 

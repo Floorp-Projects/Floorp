@@ -259,7 +259,6 @@ module.exports = {
     "rules": {
       "consistent-return": "off",
       "dot-notation": "off",
-      "object-shorthand": "off",
       "mozilla/avoid-removeChild": "off",
       "mozilla/consistent-if-bracing": "off",
       "mozilla/no-arbitrary-setTimeout": "off",

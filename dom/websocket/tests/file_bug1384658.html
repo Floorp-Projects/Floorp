@@ -4,7 +4,7 @@
   onload = function() {
     function done(success) {
       var bc = new BroadcastChannel("test_channel");
-      bc.postMessage({success:success});
+      bc.postMessage({success});
       bc.close();
     }
     try {

@@ -16,11 +16,11 @@ var gData1 = "TEST_DATA_1:ABCDEFGHIJKLMNOPQRSTUVWXYZ" + gPadding;
 var gData2 = "TEST_DATA_2:1234567890" + gPadding;
 
 function ok(a, msg) {
-  postMessage({ type: "status", status: !!a, msg: msg });
+  postMessage({ type: "status", status: !!a, msg });
 }
 
 function is(a, b, msg) {
-  postMessage({ type: "status", status: a === b, msg: msg });
+  postMessage({ type: "status", status: a === b, msg });
 }
 
 function checkData(xhr, data, mapped, cb) {

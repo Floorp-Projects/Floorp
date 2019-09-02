@@ -69,49 +69,49 @@ function setupPP(aAllowedEvents, aPopup1, aPopup2, aNext) {
 
 var tests = [
  { event: "mouseup",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
    },
    report: should_not_have_blocked
  },
  { event: "mouseup",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
    },
    report: should_not_have_blocked
  },
  { event: "mouseup",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click", ALLOW_ACTION, ALLOW_ACTION, aNext);
    },
    report: should_not_have_blocked
  },
  { event: "mouseup",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click", DENY_ACTION, DENY_ACTION, aNext);
    },
    report: should_have_blocked
  },
  { event: "mouseover",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
    },
    report: should_have_blocked
  },
  { event: "mouseover",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
    },
    report: should_not_have_blocked
  },
  { event: "click",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", DENY_ACTION, DENY_ACTION, aNext);
    },
    report: should_not_have_blocked
  },
  { event: "click",
-   setup: function(aNext) {
+   setup(aNext) {
      setupPP("click mouseup", ALLOW_ACTION, ALLOW_ACTION, aNext);
    },
    report: should_not_have_blocked

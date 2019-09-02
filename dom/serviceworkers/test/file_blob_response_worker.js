@@ -15,7 +15,7 @@ function makeFileBlob(obj) {
       db.onerror = reject;
 
       var blob = new Blob([JSON.stringify(obj)], { type: "application/json" });
-      var data = { blob: blob, index: 5 };
+      var data = { blob, index: 5 };
 
       objectStore = db.transaction("test", "readwrite").objectStore("test");
       objectStore.add(data).onsuccess = function(event) {

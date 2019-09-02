@@ -18,22 +18,22 @@ function extend(child, supertype) {
 // General Utility Methods
 var SMILUtil = {
   // Returns the first matched <svg> node in the document
-  getSVGRoot: function() {
+  getSVGRoot() {
     return SMILUtil.getFirstElemWithTag("svg");
   },
 
   // Returns the first element in the document with the matching tag
-  getFirstElemWithTag: function(aTargetTag) {
+  getFirstElemWithTag(aTargetTag) {
     var elemList = document.getElementsByTagName(aTargetTag);
     return elemList.length == 0 ? null : elemList[0];
   },
 
   // Simple wrapper for getComputedStyle
-  getComputedStyleSimple: function(elem, prop) {
+  getComputedStyleSimple(elem, prop) {
     return window.getComputedStyle(elem).getPropertyValue(prop);
   },
 
-  getAttributeValue: function(elem, attr) {
+  getAttributeValue(elem, attr) {
     if (attr.attrName == SMILUtil.getMotionFakeAttributeName()) {
       // Fake motion "attribute" -- "computed value" is the element's CTM
       return elem.getCTM();
@@ -50,7 +50,7 @@ var SMILUtil = {
 
   // Smart wrapper for getComputedStyle, which will generate a "fake" computed
   // style for recognized shorthand properties (font, font-variant, overflow, marker)
-  getComputedStyleWrapper: function(elem, propName) {
+  getComputedStyleWrapper(elem, propName) {
     // Special cases for shorthand properties (which aren't directly queriable
     // via getComputedStyle)
     var computedStyle;
@@ -118,7 +118,7 @@ var SMILUtil = {
     return computedStyle;
   },
 
-  getMotionFakeAttributeName: function() {
+  getMotionFakeAttributeName() {
     return "_motion";
   },
 
@@ -132,7 +132,7 @@ var CTMUtil = {
 
   // Function to generate a CTM Matrix from a "summary"
   // (a 3-tuple containing [tX, tY, theta])
-  generateCTM: function(aCtmSummary) {
+  generateCTM(aCtmSummary) {
     if (!aCtmSummary || aCtmSummary.length != 3) {
       ok(false, "Unexpected CTM summary tuple length: " + aCtmSummary.length);
     }
@@ -153,7 +153,7 @@ var CTMUtil = {
   },
 
   /// Helper for isCtmEqual
-  isWithinDelta: function(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
+  isWithinDelta(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
     var testFunc = aIsTodo ? todo : ok;
     const delta = 0.00001; // allowing margin of error = 10^-5
     ok(
@@ -162,13 +162,7 @@ var CTMUtil = {
     );
   },
 
-  assertCTMEqual: function(
-    aLeftCtm,
-    aRightCtm,
-    aComponentsToCheck,
-    aErrMsg,
-    aIsTodo
-  ) {
+  assertCTMEqual(aLeftCtm, aRightCtm, aComponentsToCheck, aErrMsg, aIsTodo) {
     var foundCTMDifference = false;
     for (var j in aComponentsToCheck) {
       var curComponent = aComponentsToCheck[j];
@@ -189,13 +183,7 @@ var CTMUtil = {
     }
   },
 
-  assertCTMNotEqual: function(
-    aLeftCtm,
-    aRightCtm,
-    aComponentsToCheck,
-    aErrMsg,
-    aIsTodo
-  ) {
+  assertCTMNotEqual(aLeftCtm, aRightCtm, aComponentsToCheck, aErrMsg, aIsTodo) {
     // CTM should not match initial one
     var foundCTMDifference = false;
     for (var j in aComponentsToCheck) {
@@ -222,16 +210,16 @@ function SMILTimingData(aBegin, aDur) {
 SMILTimingData.prototype = {
   _begin: null,
   _dur: null,
-  getBeginTime: function() {
+  getBeginTime() {
     return this._begin;
   },
-  getDur: function() {
+  getDur() {
     return this._dur;
   },
-  getEndTime: function() {
+  getEndTime() {
     return this._begin + this._dur;
   },
-  getFractionalTime: function(aPortion) {
+  getFractionalTime(aPortion) {
     return this._begin + aPortion * this._dur;
   },
 };
@@ -304,7 +292,7 @@ TestcaseBundle.prototype = {
   skipReason: null,
 
   // Methods
-  go: function(aTimingData) {
+  go(aTimingData) {
     if (this.skipReason) {
       todo(
         false,
@@ -392,7 +380,7 @@ AnimTestcase.prototype = {
    * @param aIsFreeze If true, indicates that our test animation should use
    *                  fill="freeze"; otherwise, we'll default to fill="remove".
    */
-  runTest: function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
+  runTest(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
     // SANITY CHECKS
     if (!SMILUtil.getSVGRoot().animationsPaused()) {
       ok(false, "Should start each test with animations paused");
@@ -428,7 +416,7 @@ AnimTestcase.prototype = {
   // HELPER FUNCTIONS
   // setupAnimationElement: <animate> element
   // Subclasses should extend this parent method
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     var animElement = document.createElementNS(
       SVG_NS,
       this._animElementTagName
@@ -443,7 +431,7 @@ AnimTestcase.prototype = {
     return animElement;
   },
 
-  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
+  buildSeekList(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     if (!aAnimAttr.isAnimatable) {
       return this.buildSeekListStatic(
         aAnimAttr,
@@ -468,7 +456,7 @@ AnimTestcase.prototype = {
     );
   },
 
-  seekAndTest: function(aSeekList, aTargetElem, aTargetAttr) {
+  seekAndTest(aSeekList, aTargetElem, aTargetAttr) {
     var svg = document.getElementById("svg");
     for (var i in aSeekList) {
       var entry = aSeekList[i];
@@ -498,13 +486,8 @@ AnimTestcase.prototype = {
   },
 
   // methods that expect to be overridden in subclasses
-  buildSeekListStatic: function(
-    aAnimAttr,
-    aBaseVal,
-    aTimeData,
-    aReasonStatic
-  ) {},
-  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {},
+  buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {},
+  buildSeekListAnimated(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {},
 };
 
 // Abstract parent class to share code between from-to & from-by testcases.
@@ -514,7 +497,7 @@ AnimTestcaseFrom.prototype = {
   from: null,
 
   // Methods
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
     var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this, [
       aAnimAttr,
@@ -525,7 +508,7 @@ AnimTestcaseFrom.prototype = {
     return animElem;
   },
 
-  buildSeekListStatic: function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
+  buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
     var seekList = new Array();
     var msgPrefix =
       aAnimAttr.attrName + ": shouldn't be affected by animation ";
@@ -552,7 +535,7 @@ AnimTestcaseFrom.prototype = {
     return seekList;
   },
 
-  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
+  buildSeekListAnimated(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = aAnimAttr.attrName + ": ";
     if (aTimeData.getBeginTime() > 0.1) {
@@ -632,7 +615,7 @@ AnimTestcaseFromTo.prototype = {
   to: null,
 
   // Methods
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
     var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(
       this,
@@ -682,7 +665,7 @@ AnimTestcaseFromBy.prototype = {
   by: null,
 
   // Methods
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
     var animElem = AnimTestcaseFrom.prototype.setupAnimationElement.apply(
       this,
@@ -691,7 +674,7 @@ AnimTestcaseFromBy.prototype = {
     animElem.setAttribute("by", this.by);
     return animElem;
   },
-  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
+  buildSeekList(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     if (!aAnimAttr.isAdditive) {
       return this.buildSeekListStatic(
         aAnimAttr,
@@ -755,7 +738,7 @@ AnimTestcasePaced.prototype = {
   valuesString: null,
 
   // Methods
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     // Call super, and then add my own customization
     var animElem = AnimTestcase.prototype.setupAnimationElement.apply(this, [
       aAnimAttr,
@@ -766,7 +749,7 @@ AnimTestcasePaced.prototype = {
     animElem.setAttribute("calcMode", "paced");
     return animElem;
   },
-  buildSeekListAnimated: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
+  buildSeekListAnimated(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = aAnimAttr.attrName + ": checking value ";
     seekList.push([
@@ -815,7 +798,7 @@ AnimTestcasePaced.prototype = {
     ]);
     return seekList;
   },
-  buildSeekListStatic: function(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
+  buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData, aReasonStatic) {
     var seekList = new Array();
     var msgPrefix =
       aAnimAttr.attrName + ": shouldn't be affected by animation ";
@@ -901,7 +884,7 @@ AnimMotionTestcase.prototype = {
 
   // Implementations of inherited methods that we need to override:
   // --------------------------------------------------------------
-  setupAnimationElement: function(aAnimAttr, aTimeData, aIsFreeze) {
+  setupAnimationElement(aAnimAttr, aTimeData, aIsFreeze) {
     var animElement = document.createElementNS(
       SVG_NS,
       this._animElementTagName
@@ -922,14 +905,14 @@ AnimMotionTestcase.prototype = {
     return animElement;
   },
 
-  createPath: function(aPathDescription) {
+  createPath(aPathDescription) {
     var path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", aPathDescription);
     path.setAttribute("id", MPATH_TARGET_ID);
     return SMILUtil.getSVGRoot().appendChild(path);
   },
 
-  createMpath: function(aAnimElement) {
+  createMpath(aAnimElement) {
     var mpath = document.createElementNS(SVG_NS, "mpath");
     mpath.setAttributeNS(XLINK_NS, "href", "#" + MPATH_TARGET_ID);
     return aAnimElement.appendChild(mpath);
@@ -938,7 +921,7 @@ AnimMotionTestcase.prototype = {
   // Override inherited seekAndTest method since...
   // (a) it expects a computedValMap and we have a computed-CTM map instead
   // and (b) it expects we might have no effect (for non-animatable attrs)
-  buildSeekList: function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
+  buildSeekList(aAnimAttr, aBaseVal, aTimeData, aIsFreeze) {
     var seekList = new Array();
     var msgPrefix = "CTM mismatch ";
     seekList.push([
@@ -991,7 +974,7 @@ AnimMotionTestcase.prototype = {
   // Override inherited seekAndTest method
   // (Have to use assertCTMEqual() instead of is() for comparison, to check each
   // component of the CTM and to allow for a small margin of error.)
-  seekAndTest: function(aSeekList, aTargetElem, aTargetAttr) {
+  seekAndTest(aSeekList, aTargetElem, aTargetAttr) {
     var svg = document.getElementById("svg");
     for (var i in aSeekList) {
       var entry = aSeekList[i];
@@ -1008,7 +991,7 @@ AnimMotionTestcase.prototype = {
 
   // Override "runTest" method so we can remove any <path> element that we
   // created at the end of each test.
-  runTest: function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
+  runTest(aTargetElem, aTargetAttr, aTimeData, aIsFreeze) {
     AnimTestcase.prototype.runTest.apply(this, [
       aTargetElem,
       aTargetAttr,

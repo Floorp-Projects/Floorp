@@ -27,7 +27,7 @@ var worker = new Worker("audioBufferSourceNodeDetached_worker.js");
 var gTest = {
   length: 2048,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var buffer = context.createBuffer(1, 10000000, context.sampleRate);
     var data = buffer.getChannelData(0);
     for (var i = 0; i < data.length; ++i) {

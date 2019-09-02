@@ -214,7 +214,7 @@ function testHeaderGuard() {
     Cookie: "Custom cookie",
     "Non-Simple-Header": "value",
   };
-  var r1 = new Request("", { headers: headers });
+  var r1 = new Request("", { headers });
   ok(
     !r1.headers.has("Cookie"),
     "Default Request header should have guard request and prevent setting forbidden header."
@@ -224,7 +224,7 @@ function testHeaderGuard() {
     "Default Request header should have guard request and allow setting non-simple header."
   );
 
-  var r2 = new Request("", { mode: "no-cors", headers: headers });
+  var r2 = new Request("", { mode: "no-cors", headers });
   ok(
     !r2.headers.has("Cookie"),
     "no-cors Request header should have guard request-no-cors and prevent setting non-simple header."
@@ -613,7 +613,7 @@ function testFormDataBodyExtraction() {
 
   var r4 = new Request("", {
     method: "post",
-    body: body,
+    body,
     headers: {
       "Content-Type": "multipart/form-datafoobar; boundary=" + boundary,
     },
@@ -685,7 +685,7 @@ function testBug1154268() {
   var r1 = new Request("/index.html", { method: "POST", body: "Hi there" });
   ["HEAD", "GET"].forEach(function(method) {
     try {
-      var r2 = new Request(r1, { method: method });
+      var r2 = new Request(r1, { method });
       ok(
         false,
         method + " Request copied from POST Request with body should fail."

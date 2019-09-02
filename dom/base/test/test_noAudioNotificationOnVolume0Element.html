@@ -16,7 +16,7 @@ SimpleTest.waitForExplicitFinish();
 var expectedNotification = null;
 
 var observer = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (expectedNotification !== null) {
       is(topic, "audio-playback", "audio-playback received");
       is(data, expectedNotification, "This is the right notification");

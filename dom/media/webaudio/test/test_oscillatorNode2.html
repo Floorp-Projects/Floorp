@@ -27,7 +27,7 @@ function connectUnreferencedOscillator(context, destination) {
 var gTest = {
   length: signalLength,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var blend = context.createGain();
 
     connectUnreferencedOscillator(context, blend);

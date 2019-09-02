@@ -117,7 +117,7 @@ function listenForEventsOnSocket(socket, socketType) {
      * be immediately resolved (but you won't see that until a future turn of
      * the event loop).
      */
-    waitForEvent: function() {
+    waitForEvent() {
       if (pendingResolve) {
         throw new Error("only one wait allowed at a time.");
       }
@@ -137,7 +137,7 @@ function listenForEventsOnSocket(socket, socketType) {
      * data.  Data is buffered even before you call this method, so be sure to
      * explicitly wait for any and all data sent by the other side.
      */
-    waitForDataWithAtLeastLength: function(length) {
+    waitForDataWithAtLeastLength(length) {
       if (pendingResolve) {
         throw new Error("only one wait allowed at a time.");
       }
@@ -152,7 +152,7 @@ function listenForEventsOnSocket(socket, socketType) {
         wantDataLength = length;
       });
     },
-    waitForAnyDataAndClose: function() {
+    waitForAnyDataAndClose() {
       if (pendingResolve) {
         throw new Error("only one wait allowed at a time.");
       }

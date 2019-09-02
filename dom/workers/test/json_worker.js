@@ -205,7 +205,7 @@ var messages = [
   },
   {
     type: "object",
-    value: function(foo) {
+    value(foo) {
       return "Bad!";
     },
     exception: true,
@@ -269,7 +269,7 @@ var messages = [
   {
     type: "object",
     value: {
-      foo: function(a) {
+      foo(a) {
         alert(b);
       },
     },
@@ -287,7 +287,7 @@ var messages = [
   },
   {
     type: "object",
-    value: { xhr: xhr },
+    value: { xhr },
     exception: true,
   },
   {

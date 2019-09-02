@@ -12,7 +12,7 @@
 
 var gTest = {
   numberOfChannels: 2,
-  createGraph: function(context) {
+  createGraph(context) {
     // An up vector will be made perpendicular to the front vector, in the
     // front-up plane.
     context.listener.setOrientation(0, 6.311749985202524e+307, 0, 0.1, 1000, 0);
@@ -30,7 +30,7 @@ var gTest = {
 
     return panner;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(2, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       // Different signals in left and right buffers

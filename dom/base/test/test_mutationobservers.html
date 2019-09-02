@@ -68,10 +68,10 @@ if (!("isnot" in window)) {
 if (!("SimpleTest" in window)) {
   window.SimpleTest =
   {
-    finish: function() {
+    finish() {
       document.getElementById("log").appendChild(document.createTextNode("DONE"));
     },
-    waitForExplicitFinish: function() {}
+    waitForExplicitFinish() {}
   }
 }
 

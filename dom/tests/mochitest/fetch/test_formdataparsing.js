@@ -343,7 +343,7 @@ function testFormDataParsing(fn) {
 function makeRequest(body) {
   var req = new Request("", {
     method: "post",
-    body: body,
+    body,
     headers: {
       "Content-Type": "multipart/form-data; boundary=" + boundary,
     },

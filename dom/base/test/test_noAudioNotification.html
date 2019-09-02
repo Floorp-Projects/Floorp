@@ -14,7 +14,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var observer = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     ok(false, "should not receive audio-playback notification!");
   }
 };
