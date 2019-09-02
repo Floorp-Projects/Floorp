@@ -19681,6 +19681,12 @@ nsresult FactoryOp::FinishOpen() {
   MOZ_ASSERT(mState == State::FinishOpen);
   MOZ_ASSERT(!mContentParent);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsActorDestroyed()) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   if (QuotaManager::Get()) {
     nsresult rv = OpenDirectory();
     if (NS_WARN_IF(NS_FAILED(rv))) {
