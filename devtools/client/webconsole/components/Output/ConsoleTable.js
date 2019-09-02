@@ -42,9 +42,9 @@ class ConsoleTable extends Component {
   }
 
   componentWillMount() {
-    const { id, dispatch, parameters } = this.props;
+    const { id, dispatch, parameters, tableData } = this.props;
 
-    if (!Array.isArray(parameters) || parameters.length === 0) {
+    if (!Array.isArray(parameters) || parameters.length === 0 || tableData) {
       return;
     }
 
