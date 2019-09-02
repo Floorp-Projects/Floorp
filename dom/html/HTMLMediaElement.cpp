@@ -4720,8 +4720,10 @@ class HTMLMediaElement::MediaStreamTrackListener
     mElement->NotifyMediaStreamTrackRemoved(aTrack);
   }
 
-  void OnActive() {
-    MOZ_ASSERT(mElement);
+  void NotifyActive() override {
+    if (!mElement) {
+      return;
+    }
 
     // mediacapture-main says:
     // Note that once ended equals true the HTMLVideoElement will not play media
@@ -4754,68 +4756,18 @@ class HTMLMediaElement::MediaStreamTrackListener
     mElement->DoLoad();
   }
 
-  void NotifyActive() override {
+  void NotifyInactive() override {
     if (!mElement) {
       return;
     }
-
-    if (!mElement->IsVideo()) {
-      // Audio elements use NotifyAudible().
-      return;
-    }
-
-    OnActive();
-  }
-
-  void NotifyAudible() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (mElement->IsVideo()) {
-      // Video elements use NotifyActive().
-      return;
-    }
-
-    OnActive();
-  }
-
-  void OnInactive() {
-    MOZ_ASSERT(mElement);
-
     if (mElement->IsPlaybackEnded()) {
       return;
     }
     LOG(LogLevel::Debug, ("%p, mSrcStream %p became inactive", mElement.get(),
                           mElement->mSrcStream.get()));
+    MOZ_ASSERT(!mElement->mSrcStream->Active());
     mElement->PlaybackEnded();
     mElement->UpdateReadyStateInternal();
-  }
-
-  void NotifyInactive() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (!mElement->IsVideo()) {
-      // Audio elements use NotifyInaudible().
-      return;
-    }
-
-    OnInactive();
-  }
-
-  void NotifyInaudible() override {
-    if (!mElement) {
-      return;
-    }
-
-    if (mElement->IsVideo()) {
-      // Video elements use NotifyInactive().
-      return;
-    }
-
-    OnInactive();
   }
 
  protected:
