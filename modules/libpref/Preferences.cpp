@@ -14,7 +14,9 @@
 
 #include "base/basictypes.h"
 #include "GeckoProfiler.h"
-#include "ProfilerMarkerPayload.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
 #include "MainThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/ArenaAllocator.h"
@@ -4325,21 +4327,21 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
   return NS_OK;
 }
 
-static void PrefValueToString(const bool* b, nsCString& value) {
-  value = nsCString(*b ? "true" : "false");
+#ifdef MOZ_GECKO_PROFILER
+static nsCString PrefValueToString(const bool* b) {
+  return nsCString(*b ? "true" : "false");
 }
-static void PrefValueToString(const int* i, nsCString& value) {
-  value = nsPrintfCString("%d", *i);
+static nsCString PrefValueToString(const int* i) {
+  return nsPrintfCString("%d", *i);
 }
-static void PrefValueToString(const uint32_t* u, nsCString& value) {
-  value = nsPrintfCString("%d", *u);
+static nsCString PrefValueToString(const uint32_t* u) {
+  return nsPrintfCString("%d", *u);
 }
-static void PrefValueToString(const float* f, nsCString& value) {
-  value = nsPrintfCString("%f", *f);
+static nsCString PrefValueToString(const float* f) {
+  return nsPrintfCString("%f", *f);
 }
-static void PrefValueToString(const nsACString& s, nsCString& value) {
-  value = s;
-}
+static nsCString PrefValueToString(const nsACString& s) { return nsCString(s); }
+#endif
 
 // These preference getter wrappers allow us to look up the value for static
 // preferences based on their native types, rather than manually mapping them to
@@ -4353,24 +4355,20 @@ struct Internals {
     nsresult rv = NS_ERROR_UNEXPECTED;
     NS_ENSURE_TRUE(Preferences::InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-    TimeStamp prefAccessTime = TimeStamp::Now();
-    Maybe<PrefType> prefType = Nothing();
-    nsCString prefValue{""};
-
     if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
       rv = pref->GetValue(aKind, std::forward<T>(aResult));
 
+#ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-        prefType = Some(pref->Type());
-        PrefValueToString(aResult, prefValue);
+        profiler_add_marker("PreferenceRead",
+                            JS::ProfilingCategoryPair::OTHER_PreferenceRead,
+                            MakeUnique<PrefMarkerPayload>(
+                                aPrefName, Some(aKind), Some(pref->Type()),
+                                PrefValueToString(aResult), TimeStamp::Now()));
       }
+#endif
     }
-    if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-      profiler_add_marker(
-          "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
-          MakeUnique<PrefMarkerPayload>(aPrefName, Some(aKind), prefType,
-                                        prefValue, prefAccessTime));
-    }
+
     return rv;
   }
 
@@ -4378,25 +4376,20 @@ struct Internals {
   static nsresult GetSharedPrefValue(const char* aName, T* aResult) {
     nsresult rv = NS_ERROR_UNEXPECTED;
 
-    TimeStamp prefAccessTime = TimeStamp::Now();
-    Maybe<PrefType> prefType = Nothing();
-    nsCString prefValue{""};
-
     if (Maybe<PrefWrapper> pref = pref_SharedLookup(aName)) {
       rv = pref->GetValue(PrefValueKind::User, aResult);
 
+#ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-        prefType = Some(pref->Type());
-        PrefValueToString(aResult, prefValue);
+        profiler_add_marker(
+            "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
+            MakeUnique<PrefMarkerPayload>(
+                aName, Nothing() /* indicates Shared */, Some(pref->Type()),
+                PrefValueToString(aResult), TimeStamp::Now()));
       }
+#endif
     }
 
-    if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-      profiler_add_marker(
-          "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
-          MakeUnique<PrefMarkerPayload>(aName, Nothing() /* indicates Shared */,
-                                        prefType, prefValue, prefAccessTime));
-    }
     return rv;
   }
 
