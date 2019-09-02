@@ -841,7 +841,7 @@ DataChannelWrapper.prototype = {
   /**
    * Close the data channel
    */
-  close: function() {
+  close() {
     info(this + ": Closing channel");
     this._channel.close();
   },
@@ -852,7 +852,7 @@ DataChannelWrapper.prototype = {
    * @param {String|Object} data
    *        Data which has to be sent through the data channel
    */
-  send: function(data) {
+  send(data) {
     info(this + ": Sending data '" + data + "'");
     this._channel.send(data);
   },
@@ -862,7 +862,7 @@ DataChannelWrapper.prototype = {
    *
    * @returns {String} The string representation
    */
-  toString: function() {
+  toString() {
     return (
       "DataChannelWrapper (" + this._pc.label + "_" + this._channel.label + ")"
     );
@@ -974,7 +974,7 @@ PeerConnectionWrapper.prototype = {
    *
    * @returns {sequence<RTCRtpSender>} the senders
    */
-  getSenders: function() {
+  getSenders() {
     return this._pc.getSenders();
   },
 
@@ -983,7 +983,7 @@ PeerConnectionWrapper.prototype = {
    *
    * @returns {sequence<RTCRtpReceiver>} the receivers
    */
-  getReceivers: function() {
+  getReceivers() {
     return this._pc.getReceivers();
   },
 
@@ -1022,7 +1022,7 @@ PeerConnectionWrapper.prototype = {
     return this._pc.iceConnectionState;
   },
 
-  setIdentityProvider: function(provider, options) {
+  setIdentityProvider(provider, options) {
     this._pc.setIdentityProvider(provider, options);
   },
 
@@ -1030,17 +1030,17 @@ PeerConnectionWrapper.prototype = {
     return [this.label, direction].join("_");
   },
 
-  getMediaElementForTrack: function(track, direction) {
+  getMediaElementForTrack(track, direction) {
     var prefix = this.elementPrefix(direction);
     return getMediaElementForTrack(track, prefix);
   },
 
-  createMediaElementForTrack: function(track, direction) {
+  createMediaElementForTrack(track, direction) {
     var prefix = this.elementPrefix(direction);
     return createMediaElementForTrack(track, prefix);
   },
 
-  ensureMediaElement: function(track, direction) {
+  ensureMediaElement(track, direction) {
     var prefix = this.elementPrefix(direction);
     var element = this.getMediaElementForTrack(track, direction);
     if (!element) {
@@ -1059,18 +1059,18 @@ PeerConnectionWrapper.prototype = {
     element.play();
   },
 
-  addSendStream: function(stream) {
+  addSendStream(stream) {
     // The PeerConnection will not necessarily know about this stream
     // automatically, because replaceTrack is not told about any streams the
     // new track might be associated with. Only content really knows.
     this._sendStreams.push(stream);
   },
 
-  getStreamForSendTrack: function(track) {
+  getStreamForSendTrack(track) {
     return this._sendStreams.find(str => str.getTrackById(track.id));
   },
 
-  getStreamForRecvTrack: function(track) {
+  getStreamForRecvTrack(track) {
     return this._pc.getRemoteStreams().find(s => !!s.getTrackById(track.id));
   },
 
@@ -1086,7 +1086,7 @@ PeerConnectionWrapper.prototype = {
    * @param {MediaStream} stream
    *        MediaStream to use as container for `track` on remote side
    */
-  attachLocalTrack: function(track, stream) {
+  attachLocalTrack(track, stream) {
     info("Got a local " + track.kind + " track");
 
     this.expectNegotiationNeeded();
@@ -1119,7 +1119,7 @@ PeerConnectionWrapper.prototype = {
    * @param {MediaStream} stream
    *        Media stream to handle
    */
-  attachLocalStream: function(stream, useAddTransceiver) {
+  attachLocalStream(stream, useAddTransceiver) {
     info("Got local media stream: (" + stream.id + ")");
 
     this.expectNegotiationNeeded();
@@ -1163,7 +1163,7 @@ PeerConnectionWrapper.prototype = {
     return this.observedNegotiationNeeded;
   },
 
-  removeSender: function(index) {
+  removeSender(index) {
     var sender = this._pc.getSenders()[index];
     this.expectedLocalTrackInfo = this.expectedLocalTrackInfo.filter(
       i => i.sender != sender
@@ -1173,7 +1173,7 @@ PeerConnectionWrapper.prototype = {
     return this.observedNegotiationNeeded;
   },
 
-  senderReplaceTrack: function(sender, withTrack, stream) {
+  senderReplaceTrack(sender, withTrack, stream) {
     const info = this.expectedLocalTrackInfo.find(i => i.sender == sender);
     if (!info) {
       return; // replaceTrack on a null track, probably
@@ -1184,7 +1184,7 @@ PeerConnectionWrapper.prototype = {
     return sender.replaceTrack(withTrack);
   },
 
-  getUserMedia: async function(constraints) {
+  async getUserMedia(constraints) {
     var stream = await getUserMedia(constraints);
     if (constraints.audio) {
       stream.getAudioTracks().forEach(track => {
@@ -1217,7 +1217,7 @@ PeerConnectionWrapper.prototype = {
    * @param {array} constraintsList
    *        Array of constraints for GUM calls
    */
-  getAllUserMedia: function(constraintsList) {
+  getAllUserMedia(constraintsList) {
     if (constraintsList.length === 0) {
       info("Skipping GUM: no UserMedia requested");
       return Promise.resolve();
@@ -1229,7 +1229,7 @@ PeerConnectionWrapper.prototype = {
     );
   },
 
-  getAllUserMediaAndAddStreams: async function(constraintsList) {
+  async getAllUserMediaAndAddStreams(constraintsList) {
     var streams = await this.getAllUserMedia(constraintsList);
     if (!streams) {
       return;
@@ -1237,7 +1237,7 @@ PeerConnectionWrapper.prototype = {
     return Promise.all(streams.map(stream => this.attachLocalStream(stream)));
   },
 
-  getAllUserMediaAndAddTransceivers: async function(constraintsList) {
+  async getAllUserMediaAndAddTransceivers(constraintsList) {
     var streams = await this.getAllUserMedia(constraintsList);
     if (!streams) {
       return;
@@ -1251,7 +1251,7 @@ PeerConnectionWrapper.prototype = {
    * Create a new data channel instance.  Also creates a promise called
    * `this.nextDataChannel` that resolves when the next data channel arrives.
    */
-  expectDataChannel: function(message) {
+  expectDataChannel(message) {
     this.nextDataChannel = new Promise(resolve => {
       this.ondatachannel = e => {
         ok(e.channel, message);
@@ -1272,7 +1272,7 @@ PeerConnectionWrapper.prototype = {
    *        Options which get forwarded to nsIPeerConnection.createDataChannel
    * @returns {DataChannelWrapper} The created data channel
    */
-  createDataChannel: function(options) {
+  createDataChannel(options) {
     var label = "channel_" + this.dataChannels.length;
     info(this + ": Create data channel '" + label);
 
@@ -1289,7 +1289,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Creates an offer and automatically handles the failure case.
    */
-  createOffer: function() {
+  createOffer() {
     return this._pc.createOffer(this.offerOptions).then(offer => {
       info("Got offer: " + JSON.stringify(offer));
       // note: this might get updated through ICE gathering
@@ -1301,7 +1301,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Creates an answer and automatically handles the failure case.
    */
-  createAnswer: function() {
+  createAnswer() {
     return this._pc.createAnswer().then(answer => {
       info(this + ": Got answer: " + JSON.stringify(answer));
       this._last_answer = answer;
@@ -1315,7 +1315,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} desc
    *        RTCSessionDescriptionInit for the local description request
    */
-  setLocalDescription: function(desc) {
+  setLocalDescription(desc) {
     this.observedNegotiationNeeded = undefined;
     return this._pc.setLocalDescription(desc).then(() => {
       info(this + ": Successfully set the local description");
@@ -1331,7 +1331,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        A promise that resolves to the expected error
    */
-  setLocalDescriptionAndFail: function(desc) {
+  setLocalDescriptionAndFail(desc) {
     return this._pc
       .setLocalDescription(desc)
       .then(
@@ -1349,7 +1349,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} desc
    *        RTCSessionDescriptionInit for the remote description request
    */
-  setRemoteDescription: function(desc) {
+  setRemoteDescription(desc) {
     this.observedNegotiationNeeded = undefined;
     return this._pc.setRemoteDescription(desc).then(() => {
       info(this + ": Successfully set remote description");
@@ -1372,7 +1372,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        a promise that resolve to the returned error
    */
-  setRemoteDescriptionAndFail: function(desc) {
+  setRemoteDescriptionAndFail(desc) {
     return this._pc
       .setRemoteDescription(desc)
       .then(
@@ -1388,7 +1388,7 @@ PeerConnectionWrapper.prototype = {
    * Registers a callback for the signaling state change and
    * appends the new state to an array for logging it later.
    */
-  logSignalingState: function() {
+  logSignalingState() {
     this.signalingStateLog = [this._pc.signalingState];
     this._pc.addEventListener("signalingstatechange", e => {
       var newstate = this._pc.signalingState;
@@ -1415,15 +1415,15 @@ PeerConnectionWrapper.prototype = {
     });
   },
 
-  isTrackOnPC: function(track) {
+  isTrackOnPC(track) {
     return !!this.getStreamForRecvTrack(track);
   },
 
-  allExpectedTracksAreObserved: function(expected, observed) {
+  allExpectedTracksAreObserved(expected, observed) {
     return Object.keys(expected).every(trackId => observed[trackId]);
   },
 
-  setupStreamEventHandlers: function(stream) {
+  setupStreamEventHandlers(stream) {
     const myTrackIds = new Set(stream.getTracks().map(t => t.id));
 
     stream.addEventListener("addtrack", ({ track }) => {
@@ -1472,7 +1472,7 @@ PeerConnectionWrapper.prototype = {
     });
   },
 
-  setupTrackEventHandler: function() {
+  setupTrackEventHandler() {
     this._pc.addEventListener("track", ({ track, streams }) => {
       info(`${this}: 'ontrack' event fired for ${track.id}`);
       ok(this.isTrackOnPC(track), `Found track ${track.id}`);
@@ -1518,7 +1518,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} candidate
    *        The RTCIceCandidate to be added or stored
    */
-  storeOrAddIceCandidate: function(candidate) {
+  storeOrAddIceCandidate(candidate) {
     this._remote_ice_candidates.push(candidate);
     if (this.signalingState === "closed") {
       info("Received ICE candidate for closed PeerConnection - discarding");
@@ -1544,7 +1544,7 @@ PeerConnectionWrapper.prototype = {
    * Registers a callback for the ICE connection state change and
    * appends the new state to an array for logging it later.
    */
-  logIceConnectionState: function() {
+  logIceConnectionState() {
     this.iceConnectionLog = [this._pc.iceConnectionState];
     this.ice_connection_callbacks.logIceStatus = () => {
       var newstate = this._pc.iceConnectionState;
@@ -1595,7 +1595,7 @@ PeerConnectionWrapper.prototype = {
    * Resets the ICE connected Promise and allows ICE connection state monitoring
    * to go backwards to 'checking'.
    */
-  expectIceChecking: function() {
+  expectIceChecking() {
     this.iceCheckingRestartExpected = true;
     this.iceConnected = new Promise((resolve, reject) => {
       this.iceConnectedResolve = resolve;
@@ -1609,7 +1609,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *          resolves when connected, rejects on failure
    */
-  waitForIceConnected: function() {
+  waitForIceConnected() {
     return this.iceConnected;
   },
 
@@ -1620,7 +1620,7 @@ PeerConnectionWrapper.prototype = {
    *        A PeerConnectionTest object to which the ice candidates gets
    *        forwarded.
    */
-  setupIceCandidateHandler: function(test, candidateHandler) {
+  setupIceCandidateHandler(test, candidateHandler) {
     candidateHandler = candidateHandler || test.iceCandidateHandler.bind(test);
 
     var resolveEndOfTrickle;
@@ -1661,7 +1661,7 @@ PeerConnectionWrapper.prototype = {
     };
   },
 
-  checkLocalMediaTracks: function() {
+  checkLocalMediaTracks() {
     info(
       `${this}: Checking local tracks ${JSON.stringify(
         this.expectedLocalTrackInfo
@@ -1687,11 +1687,11 @@ PeerConnectionWrapper.prototype = {
   /**
    * Checks that we are getting the media tracks we expect.
    */
-  checkMediaTracks: function() {
+  checkMediaTracks() {
     this.checkLocalMediaTracks();
   },
 
-  checkLocalMsids: function() {
+  checkLocalMsids() {
     const sdp = this.localDescription.sdp;
     const msections = sdputils.getMSections(sdp);
     const expectedStreamIdCounts = new Map();
@@ -1753,7 +1753,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        A promise that resolves when media data is flowing.
    */
-  waitForMediaElementFlow: function(element) {
+  waitForMediaElementFlow(element) {
     info("Checking data flow for element: " + element.id);
     is(
       element.ended,
@@ -1849,7 +1849,7 @@ PeerConnectionWrapper.prototype = {
     );
   },
 
-  getExpectedActiveReceiveTracks: function() {
+  getExpectedActiveReceiveTracks() {
     return this._pc
       .getTransceivers()
       .filter(t => {
@@ -1876,7 +1876,7 @@ PeerConnectionWrapper.prototype = {
       .filter(t => t);
   },
 
-  getExpectedSendTracks: function() {
+  getExpectedSendTracks() {
     return this._pc
       .getSenders()
       .map(s => s.track)
@@ -1890,7 +1890,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        A promise that resolves when media flows for all elements and tracks
    */
-  waitForMediaFlow: function() {
+  waitForMediaFlow() {
     return Promise.all(
       [].concat(
         this.localMediaElements.map(element =>
@@ -1963,7 +1963,7 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        A promise that resolves when we're receiving the tone/s from |from|.
    */
-  checkReceivingToneFrom: async function(
+  async checkReceivingToneFrom(
     audiocontext,
     from,
     cancel = wait(60000, new Error("Tone not detected"))
@@ -2067,7 +2067,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Check that stats are present by checking for known stats.
    */
-  getStats: function(selector) {
+  getStats(selector) {
     return this._pc.getStats(selector).then(stats => {
       info(this + ": Got stats: " + JSON.stringify(stats));
       this._last_stats = stats;
@@ -2081,7 +2081,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} stats
    *        The stats to check from this PeerConnectionWrapper
    */
-  checkStats: function(stats, twoMachines) {
+  checkStats(stats, twoMachines) {
     // Allow for clock drift observed on Windows 7. (Bug 979649)
     const isWin7 = navigator.userAgent.includes("Windows NT 6.1");
     const clockDriftAllowanceMs = isWin7 ? 1000 : 250;
@@ -2231,7 +2231,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} stats
    *        The stats to be verified for relayed vs. direct connection.
    */
-  checkStatsIceConnectionType: function(stats, expectedLocalCandidateType) {
+  checkStatsIceConnectionType(stats, expectedLocalCandidateType) {
     let lId;
     let rId;
     for (let stat of stats.values()) {
@@ -2299,7 +2299,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} testOptions
    *        The test options object from the PeerConnectionTest
    */
-  checkStatsIceConnections: function(stats, testOptions) {
+  checkStatsIceConnections(stats, testOptions) {
     var numIceConnections = 0;
     stats.forEach(stat => {
       if (stat.type === "candidate-pair" && stat.selected) {
@@ -2359,7 +2359,7 @@ PeerConnectionWrapper.prototype = {
     }
   },
 
-  expectNegotiationNeeded: function() {
+  expectNegotiationNeeded() {
     if (!this.observedNegotiationNeeded) {
       this.observedNegotiationNeeded = new Promise(resolve => {
         this.onnegotiationneeded = resolve;
@@ -2376,7 +2376,7 @@ PeerConnectionWrapper.prototype = {
    *        The properties to look for
    * @returns {boolean} Whether an entry containing all match-props was found.
    */
-  hasStat: function(stats, props) {
+  hasStat(stats, props) {
     for (let res of stats.values()) {
       var match = true;
       for (let prop in props) {
@@ -2395,7 +2395,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Closes the connection
    */
-  close: function() {
+  close() {
     this._pc.close();
     this.localMediaElements.forEach(e => e.pause());
     info(this + ": Closed connection.");
@@ -2406,7 +2406,7 @@ PeerConnectionWrapper.prototype = {
    *
    * @returns {String} The string representation
    */
-  toString: function() {
+  toString() {
     return "PeerConnectionWrapper (" + this.label + ")";
   },
 };

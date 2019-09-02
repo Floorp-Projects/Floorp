@@ -44,7 +44,7 @@ var innerWindowDestroyID = null;
 var outerWindowDestroyID = null;
 
 var outerObserver = {
-  observe: function(id) {
+  observe(id) {
     outerWindowDestroyID =
       SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
     SpecialPowers.removeObserver(outerObserver, "outer-window-destroyed");
@@ -52,7 +52,7 @@ var outerObserver = {
   }
 };
 var innerObserver = {
-  observe: function(id) {
+  observe(id) {
     innerWindowDestroyID =
       SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
     SpecialPowers.removeObserver(innerObserver, "inner-window-destroyed");

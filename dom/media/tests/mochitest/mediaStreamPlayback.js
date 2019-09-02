@@ -31,7 +31,7 @@ MediaStreamPlayback.prototype = {
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMedia: function(isResume) {
+  playMedia(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying()
       .then(() => this.stopTracksForStreamInMediaPlayback())
@@ -45,7 +45,7 @@ MediaStreamPlayback.prototype = {
    * Precondition: The media stream and element should both be actively
    *               being played. All the stream's tracks must be local.
    */
-  stopTracksForStreamInMediaPlayback: function() {
+  stopTracksForStreamInMediaPlayback() {
     var elem = this.mediaElement;
     return Promise.all([
       haveEvent(
@@ -66,7 +66,7 @@ MediaStreamPlayback.prototype = {
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
    */
-  playMediaWithoutStoppingTracks: function(isResume) {
+  playMediaWithoutStoppingTracks(isResume) {
     this.startMedia(isResume);
     return this.verifyPlaying().then(() => this.detachFromMediaElement());
   },
@@ -77,7 +77,7 @@ MediaStreamPlayback.prototype = {
    * @param {Boolean} isResume specifies if the media element playback
    *                           is being resumed from a previous run
    */
-  startMedia: function(isResume) {
+  startMedia(isResume) {
     // If we're playing media element for the first time, check that time is zero.
     if (!isResume) {
       is(
@@ -100,7 +100,7 @@ MediaStreamPlayback.prototype = {
   /**
    * Verifies that media is playing.
    */
-  verifyPlaying: function() {
+  verifyPlaying() {
     var lastElementTime = this.mediaElement.currentTime;
 
     var mediaTimeProgressed = listenUntil(
@@ -164,7 +164,7 @@ MediaStreamPlayback.prototype = {
    * Precondition: The media stream and element should both be actively
    *               being played.
    */
-  detachFromMediaElement: function() {
+  detachFromMediaElement() {
     this.mediaElement.pause();
     this.mediaElement.srcObject = null;
   },

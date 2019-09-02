@@ -1,9 +1,9 @@
 function ok(test, message) {
-  postMessage({ type: "ok", test: test, message: message });
+  postMessage({ type: "ok", test, message });
 }
 
 function is(a, b, message) {
-  postMessage({ type: "is", test1: a, test2: b, message: message });
+  postMessage({ type: "is", test1: a, test2: b, message });
 }
 
 if (self.Notification) {
@@ -47,7 +47,7 @@ if (self.Notification) {
         "data item 0 should be a matching string"
       );
       is(
-        notification.data[1]["structured"],
+        notification.data[1].structured,
         "cloned",
         "data item 1 should be a matching object literal"
       );

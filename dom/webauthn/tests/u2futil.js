@@ -203,9 +203,9 @@ function webAuthnDecodeAuthDataArray(aAuthData) {
   if ((flags & flag_AT) == 0x00) {
     // No Attestation Data, so we're done.
     return Promise.resolve({
-      rpIdHash: rpIdHash,
-      flags: flags,
-      counter: counter,
+      rpIdHash,
+      flags,
+      counter,
     });
   }
 
@@ -260,9 +260,9 @@ function webAuthnDecodeAuthDataArray(aAuthData) {
 
   return importPublicKey(pubKeyBytes).then(function(aKeyHandle) {
     return Promise.resolve({
-      rpIdHash: rpIdHash,
-      flags: flags,
-      counter: counter,
+      rpIdHash,
+      flags,
+      counter,
       attestationAuthData: attData,
       publicKeyBytes: pubKeyBytes,
       publicKeyHandle: aKeyHandle,
@@ -298,7 +298,7 @@ function deriveAppAndChallengeParam(appId, clientData, attestation) {
     return {
       appParam: new Uint8Array(digests[0]),
       challengeParam: new Uint8Array(digests[1]),
-      attestation: attestation,
+      attestation,
     };
   });
 }

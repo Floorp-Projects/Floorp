@@ -31,11 +31,11 @@
   }
 
   function drawCount(count) {
-    postMessageGeneral({ type: "draw", count: count });
+    postMessageGeneral({ type: "draw", count });
   }
 
   function sendBlob(blob) {
-    postMessageGeneral({ type: "blob", blob: blob });
+    postMessageGeneral({ type: "blob", blob });
   }
 
   function sendImageBitmap(img) {

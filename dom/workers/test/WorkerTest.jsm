@@ -5,7 +5,7 @@
 var EXPORTED_SYMBOLS = ["WorkerTest"];
 
 var WorkerTest = {
-  go: function(message, messageCallback, errorCallback) {
+  go(message, messageCallback, errorCallback) {
     let worker = new ChromeWorker("WorkerTest_worker.js");
     worker.onmessage = messageCallback;
     worker.onerror = errorCallback;

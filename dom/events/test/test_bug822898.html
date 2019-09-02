@@ -37,19 +37,19 @@ function createTestEventValue(name) {
   let screenY = random();
   let clientX = random();
   let clientY = random();
-  let ctrlKey = random() % 2 ? true : false;
-  let altKey = random() % 2 ? true : false;
-  let shiftKey = random() % 2 ? true : false;
-  let metaKey = random() % 2 ? true : false;
+  let ctrlKey = !!(random() % 2);
+  let altKey = !!(random() % 2);
+  let shiftKey = !!(random() % 2);
+  let metaKey = !!(random() % 2);
   let button = random();
   let pointerId = random();
 
   return function() {
     let event = new PointerEvent("pointerdown", {
       bubbles: true, cancelable: true, view: window,
-      detail: detail, screenX: screenX, screenY: screenY, clientX: clientX, clientY: clientY,
-      ctrlKey: ctrlKey, altKey: altKey, shiftKey: shiftKey, metaKey: metaKey,
-      button: button, relatedTarget: null, pointerId: pointerId
+      detail, screenX, screenY, clientX, clientY,
+      ctrlKey, altKey, shiftKey, metaKey,
+      button, relatedTarget: null, pointerId
     });
 
 
@@ -184,38 +184,38 @@ function testBlockBubbling() {
 
 function testOnPointerProperty()
 {
-  iframeBody.onpointerdown = function (e) { gOnPointerPropHandled["pointerdown"] = true; }
-  iframeBody.onpointerup = function (e) { gOnPointerPropHandled["pointerup"] = true; }
-  iframeBody.onpointermove = function (e) { gOnPointerPropHandled["pointermove"] = true; }
-  iframeBody.onpointerout = function (e) { gOnPointerPropHandled["pointerout"] = true; }
-  iframeBody.onpointerover = function (e) { gOnPointerPropHandled["pointerover"] = true; }
-  iframeBody.onpointerenter = function (e) { gOnPointerPropHandled["pointerenter"] = true; }
-  iframeBody.onpointerleave = function (e) { gOnPointerPropHandled["pointerleave"] = true; }
-  iframeBody.onpointercancel = function (e) { gOnPointerPropHandled["pointercancel"] = true; }
+  iframeBody.onpointerdown = function (e) { gOnPointerPropHandled.pointerdown = true; }
+  iframeBody.onpointerup = function (e) { gOnPointerPropHandled.pointerup = true; }
+  iframeBody.onpointermove = function (e) { gOnPointerPropHandled.pointermove = true; }
+  iframeBody.onpointerout = function (e) { gOnPointerPropHandled.pointerout = true; }
+  iframeBody.onpointerover = function (e) { gOnPointerPropHandled.pointerover = true; }
+  iframeBody.onpointerenter = function (e) { gOnPointerPropHandled.pointerenter = true; }
+  iframeBody.onpointerleave = function (e) { gOnPointerPropHandled.pointerleave = true; }
+  iframeBody.onpointercancel = function (e) { gOnPointerPropHandled.pointercancel = true; }
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerdown"));
-  is(gOnPointerPropHandled['pointerdown'], true, "pointerdown property is performed");
+  is(gOnPointerPropHandled.pointerdown, true, "pointerdown property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerup"));
-  is(gOnPointerPropHandled['pointerup'], true, "pointerup property is performed");
+  is(gOnPointerPropHandled.pointerup, true, "pointerup property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointermove"));
-  is(gOnPointerPropHandled['pointermove'], true, "pointermove property is performed");
+  is(gOnPointerPropHandled.pointermove, true, "pointermove property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerout"));
-  is(gOnPointerPropHandled['pointerout'], true, "pointerout property is performed");
+  is(gOnPointerPropHandled.pointerout, true, "pointerout property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerover"));
-  is(gOnPointerPropHandled['pointerover'], true, "pointerover property is performed");
+  is(gOnPointerPropHandled.pointerover, true, "pointerover property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerenter"));
-  is(gOnPointerPropHandled['pointerenter'], true, "pointerenter property is performed");
+  is(gOnPointerPropHandled.pointerenter, true, "pointerenter property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerleave"));
-  is(gOnPointerPropHandled['pointerleave'], true, "pointerleave property is performed");
+  is(gOnPointerPropHandled.pointerleave, true, "pointerleave property is performed");
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointercancel"));
-  is(gOnPointerPropHandled['pointercancel'], true, "pointercancel property is performed");
+  is(gOnPointerPropHandled.pointercancel, true, "pointercancel property is performed");
 
   nextTest();
 }

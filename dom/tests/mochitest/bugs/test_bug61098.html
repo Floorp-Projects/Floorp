@@ -46,7 +46,7 @@ function registerMockPromptService()
 
     domWindow : null,
 
-    _toggleModalState: function()
+    _toggleModalState()
     {
       // The real prompt service puts the window into a modal state
       // immediately before showing a modal prompt, and leaves the modal state
@@ -60,7 +60,7 @@ function registerMockPromptService()
       winUtils.leaveModalState();
     },
 
-    alert: function(aDialogTitle, aText)
+    alert(aDialogTitle, aText)
     {
       this._toggleModalState();
       promptState = {method: "alert",
@@ -70,7 +70,7 @@ function registerMockPromptService()
       };
     },
 
-    alertCheck: function(aDialogTitle, aText, aCheckMsg, aCheckState)
+    alertCheck(aDialogTitle, aText, aCheckMsg, aCheckState)
     {
       this._toggleModalState();
       promptState = {method: "alertCheck",
@@ -84,7 +84,7 @@ function registerMockPromptService()
       SpecialPowers.wrap(aCheckState).value = true;
     },
 
-    confirm: function(aDialogTitle, aText)
+    confirm(aDialogTitle, aText)
     {
       this._toggleModalState();
       promptState = {method: "confirm",
@@ -96,7 +96,7 @@ function registerMockPromptService()
       return true;
     },
 
-    confirmCheck: function(aDialogTitle, aText, aCheckMsg, aCheckState)
+    confirmCheck(aDialogTitle, aText, aCheckMsg, aCheckState)
     {
       this._toggleModalState();
       promptState = {method: "confirmCheck",
@@ -112,7 +112,7 @@ function registerMockPromptService()
       return true;
     },
 
-    confirmEx: function(aDialogTitle, aText, aButtonFlags,
+    confirmEx(aDialogTitle, aText, aButtonFlags,
                         aButton0Title, aButton1Title, aButton2Title,
                         aCheckMsg, aCheckState)
     {
@@ -131,7 +131,7 @@ function registerMockPromptService()
       return 0;
     },
 
-    prompt: function(aDialogTitle, aText, aValue, aCheckMsg,
+    prompt(aDialogTitle, aText, aValue, aCheckMsg,
                      aCheckState)
     {
       this._toggleModalState();
@@ -166,37 +166,37 @@ function registerMockPromptService()
       throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
     },
 
-    getPrompt: function(aDOMWindow, aIID)
+    getPrompt(aDOMWindow, aIID)
     {
         return new MockPrompt(aDOMWindow);
     },
 
-    alert: function(aParent, aDialogTitle, aText)
+    alert(aParent, aDialogTitle, aText)
     {
       var prompt = new MockPrompt(aParent);
       return prompt.alert(aDialogTitle, aText);
     },
 
-    alertCheck: function(aParent, aDialogTitle, aText, aCheckMsg, aCheckState)
+    alertCheck(aParent, aDialogTitle, aText, aCheckMsg, aCheckState)
     {
       var prompt = new MockPrompt(aParent);
       return prompt.alertCheck(aDialogTitle, aText, aCheckMsg, aCheckState);
     },
 
-    confirm: function(aParent, aDialogTitle, aText)
+    confirm(aParent, aDialogTitle, aText)
     {
       var prompt = new MockPrompt(aParent);
       return prompt.confirm(aDialogTitle, aText);
     },
 
-    confirmCheck: function(aParent, aDialogTitle, aText, aCheckMsg,
+    confirmCheck(aParent, aDialogTitle, aText, aCheckMsg,
                            aCheckState)
     {
       var prompt = new MockPrompt(aParent);
       return prompt.confirmCheck(aDialogTitle, aText, aCheckMsg, aCheckState);
     },
 
-    confirmEx: function(aParent, aDialogTitle, aText, aButtonFlags,
+    confirmEx(aParent, aDialogTitle, aText, aButtonFlags,
                         aButton0Title, aButton1Title, aButton2Title,
                         aCheckMsg, aCheckState)
     {
@@ -206,7 +206,7 @@ function registerMockPromptService()
                         aCheckMsg, aCheckState);
     },
 
-    prompt: function(aParent, aDialogTitle, aText, aValue, aCheckMsg,
+    prompt(aParent, aDialogTitle, aText, aValue, aCheckMsg,
                      aCheckState)
     {
       var prompt = new MockPrompt(aParent);

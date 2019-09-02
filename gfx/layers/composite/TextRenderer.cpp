@@ -17,7 +17,6 @@ namespace mozilla {
 namespace layers {
 
 using namespace gfx;
-using namespace std;
 
 const Float sBackgroundOpacity = 0.8f;
 const SurfaceFormat sTextureFormat = SurfaceFormat::B8G8R8A8;
@@ -51,7 +50,7 @@ TextRenderer::~TextRenderer() {}
 
 TextRenderer::FontCache::~FontCache() { mGlyphBitmaps->Unmap(); }
 
-void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
+void TextRenderer::RenderText(Compositor* aCompositor, const std::string& aText,
                               const IntPoint& aOrigin,
                               const Matrix4x4& aTransform, uint32_t aTextSize,
                               uint32_t aTargetPixelWidth, FontType aFontType) {
@@ -80,7 +79,7 @@ void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
   aCompositor->DrawQuad(Rect(drawRect), clip, chain, 1.0f, transform);
 }
 
-IntSize TextRenderer::ComputeSurfaceSize(const string& aText,
+IntSize TextRenderer::ComputeSurfaceSize(const std::string& aText,
                                          uint32_t aTargetPixelWidth,
                                          FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {
@@ -113,7 +112,7 @@ IntSize TextRenderer::ComputeSurfaceSize(const string& aText,
 }
 
 RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
-                                               const string& aText,
+                                               const std::string& aText,
                                                uint32_t aTargetPixelWidth,
                                                FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {
@@ -140,7 +139,7 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
 }
 
 void TextRenderer::RenderTextToDrawTarget(DrawTarget* aDrawTarget,
-                                          const string& aText,
+                                          const std::string& aText,
                                           uint32_t aTargetPixelWidth,
                                           FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {

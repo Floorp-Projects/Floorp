@@ -20,14 +20,14 @@ addListeners(document.getElementById("target1"));
 // Function allows to initialize prerequisites before testing
 // and adds some callbacks to support mochitest system.
 function resultCallback(aTestObj) {
-  var message = aTestObj["name"] + " (";
-  message += "Get: " + JSON.stringify(aTestObj["status"]) + ", ";
-  message += "Expect: " + JSON.stringify(aTestObj["PASS"]) + ")";
+  var message = aTestObj.name + " (";
+  message += "Get: " + JSON.stringify(aTestObj.status) + ", ";
+  message += "Expect: " + JSON.stringify(aTestObj.PASS) + ")";
   window.opener.postMessage(
     {
       type: "RESULT",
-      message: message,
-      result: aTestObj["status"] === aTestObj["PASS"],
+      message,
+      result: aTestObj.status === aTestObj.PASS,
     },
     PARENT_ORIGIN
   );

@@ -24,7 +24,7 @@ onmessage = function(event) {
       event: "W: postMessage with arrayBuffer",
       status: true,
       notEmpty: ab,
-      ab: ab,
+      ab,
       bc: [ab, ab, { dd: ab }],
     },
     [ab]

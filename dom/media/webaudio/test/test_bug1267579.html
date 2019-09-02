@@ -21,7 +21,7 @@ addLoadEvent(function() {
 
 var gTest = {
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var osc = context.createOscillator();
     osc.setPeriodicWave(context.
                         createPeriodicWave(new Float32Array([0.0, 1.0]),
@@ -30,7 +30,7 @@ var gTest = {
     osc.start();
     return osc;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var buffer = context.createBuffer(1, testLength, context.sampleRate);
 
     for (var i = 0; i < buffer.length; ++i) {

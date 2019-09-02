@@ -33,6 +33,7 @@ const {
         FOCUSABLE_POSITIVE_TABINDEX,
         INTERACTIVE_NO_ACTION,
         INTERACTIVE_NOT_FOCUSABLE,
+        MOUSE_INTERACTIVE_ONLY,
         NO_FOCUS_VISIBLE,
       },
     },
@@ -334,6 +335,10 @@ function semanticsRule(accessible) {
   accessible.getState(state, {});
   if (state.value & Ci.nsIAccessibleStates.STATE_FOCUSABLE) {
     return { score: WARNING, issue: FOCUSABLE_NO_SEMANTICS };
+  }
+
+  if (accessible.actionCount > 0) {
+    return { score: FAIL, issue: MOUSE_INTERACTIVE_ONLY };
   }
 
   return null;

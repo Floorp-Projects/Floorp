@@ -206,7 +206,7 @@ function testDecodeValidBOMUTF16() {
   ];
   testBOMCharset({
     encoding: "utf-16be",
-    data: data,
+    data,
     expected: expectedString,
     msg: "decoder valid UTF-16BE test.",
   });
@@ -218,7 +218,7 @@ function testBOMEncodingUTF8() {
   var expectedString = " !\"#$%&'";
   testBOMCharset({
     encoding: "utf-8",
-    data: data,
+    data,
     expected: expectedString,
     msg: "utf-8 encoding.",
   });
@@ -228,7 +228,7 @@ function testBOMEncodingUTF8() {
   expectedString = " !\"#$%&'";
   testBOMCharset({
     encoding: "utf-8",
-    data: data,
+    data,
     expected: expectedString,
     msg: "valid utf-8 encoding provided with VALID utf-8 BOM test.",
   });
@@ -238,7 +238,7 @@ function testBOMEncodingUTF8() {
   testBOMCharset({
     encoding: "utf-8",
     fatal: true,
-    data: data,
+    data,
     error: "TypeError",
     msg: "valid utf-8 encoding provided with invalid utf-8 fatal BOM test.",
   });
@@ -248,7 +248,7 @@ function testBOMEncodingUTF8() {
   expectedString = "\ufffd\ufffd !\"#$%&'";
   testBOMCharset({
     encoding: "utf-8",
-    data: data,
+    data,
     expected: expectedString,
     msg: "valid utf-8 encoding provided with invalid utf-8 BOM test.",
   });
@@ -257,7 +257,7 @@ function testBOMEncodingUTF8() {
   data = [0xff, 0xfe, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27];
   testBOMCharset({
     encoding: "",
-    data: data,
+    data,
     error: "RangeError",
     msg: "empty encoding provided with invalid utf-8 BOM test.",
   });
@@ -462,14 +462,14 @@ function testMoreBOMEncoding() {
   testBOMCharset({
     encoding: "utf-16be",
     fatal: true,
-    data: data,
+    data,
     expected: "\ufffe" + expectedString,
     msg: "test decoder invalid BOM encoding for utf-16be fatal.",
   });
 
   testBOMCharset({
     encoding: "utf-16be",
-    data: data,
+    data,
     expected: "\ufffe" + expectedString,
     msg: "test decoder invalid BOM encoding for utf-16be.",
   });
@@ -1081,7 +1081,7 @@ function testMoreBOMEncoding() {
   testBOMCharset({
     encoding: "utf-8",
     fatal: true,
-    data: data,
+    data,
     error: "TypeError",
     msg:
       "test decoder invalid BOM encoding for valid utf-8 fatal provided label.",
@@ -1089,7 +1089,7 @@ function testMoreBOMEncoding() {
 
   testBOMCharset({
     encoding: "utf-8",
-    data: data,
+    data,
     expected: "\ufffd\ufffd" + expectedString,
     msg: "test decoder invalid BOM encoding for valid utf-8 provided label.",
   });
@@ -1202,14 +1202,14 @@ function testMoreBOMEncoding() {
   testBOMCharset({
     encoding: "greek",
     fatal: true,
-    data: data,
+    data,
     error: "TypeError",
     msg: "test decoder encoding provided with invalid BOM encoding for greek.",
   });
 
   testBOMCharset({
     encoding: "greek",
-    data: data,
+    data,
     expected: expectedString,
     msg: "test decoder encoding provided with invalid BOM encoding for greek.",
   });

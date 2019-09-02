@@ -44,15 +44,15 @@ function receiveMessage(event) {
   switch (event.data.test) {
     case "rootCSP_test":
       is(event.data.msg, "img-blocked", "image should be blocked");
-      testsToRunMultipartCSP["rootCSP_test"] = true;
+      testsToRunMultipartCSP.rootCSP_test = true;
       break;
     case "part1CSP_test":
       is(event.data.msg, "part1-img-loaded", "Part1 image should be loaded");
-      testsToRunMultipartCSP["part1CSP_test"] = true;
+      testsToRunMultipartCSP.part1CSP_test = true;
       break;
     case "part2CSP_test":
       is(event.data.msg, "part2-img-blocked", "Part2 image should be blocked");
-      testsToRunMultipartCSP["part2CSP_test"] = true;
+      testsToRunMultipartCSP.part2CSP_test = true;
       break;
   }
   checkTestsCompleted();

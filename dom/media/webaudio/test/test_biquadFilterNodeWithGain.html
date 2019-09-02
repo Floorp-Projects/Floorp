@@ -15,7 +15,7 @@ const signalLength = 2048;
 var gTest = {
   length: signalLength,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     // Two oscillators scheduled sequentially
     var signalDuration = signalLength / context.sampleRate;
     var osc1 = context.createOscillator();

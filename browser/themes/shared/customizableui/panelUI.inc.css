@@ -237,6 +237,11 @@ panelview {
   padding: 0;
 }
 
+/* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
+#BMB_bookmarksPopup menupopup::part(popupbox) {
+  padding-bottom: 0px;
+}
+
 #confirmation-hint {
   --arrowpanel-background: #0060df;
   --arrowpanel-border-color: #0060df;

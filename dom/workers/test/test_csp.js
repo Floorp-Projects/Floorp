@@ -42,7 +42,7 @@ xhr.send();
 xhr.onload = e => {
   uri = URL.createObjectURL(e.target.response);
   worker = new Worker(uri);
-  worker.postMessage({ do: "nest", uri: uri, level: 3 });
+  worker.postMessage({ do: "nest", uri, level: 3 });
   worker.onmessage = function(event) {
     is(
       event.data,

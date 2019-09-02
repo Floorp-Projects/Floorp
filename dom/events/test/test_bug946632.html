@@ -73,7 +73,7 @@ function prepare(check)
 
 var tests = [
   { 
-    check: function(event) {
+    check(event) {
       is(event.target, container, "<input> vertical line scroll targets container");
       ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
       is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
@@ -87,7 +87,7 @@ var tests = [
     }
   },
  { 
-    check: function(event) {
+    check(event) {
       is(event.target, input, "<input> horizontal line scroll targets <input>");
       is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
       ok(input.scrollLeft > 0, "<input> horizontal line scroll input.scrollLeft");
@@ -101,7 +101,7 @@ var tests = [
     }
   },
  { 
-    check: function(event) {
+    check(event) {
       is(event.target, container, "<input> vertical page scroll targets container");
       ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
       is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
@@ -115,7 +115,7 @@ var tests = [
     }
   },
  { 
-    check: function(event) {
+    check(event) {
       is(event.target, input, "<input> horizontal page scroll targets <input>");
       is(input.scrollTop, 0, "<input> horizontal page scroll input.scrollTop");
       ok(input.scrollLeft > 0, "<input> horizontal page scroll input.scrollLeft");

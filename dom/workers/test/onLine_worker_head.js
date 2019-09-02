@@ -8,7 +8,7 @@ function info(text) {
 }
 
 function ok(test, message) {
-  postMessage({ type: "ok", test: test, message: message });
+  postMessage({ type: "ok", test, message });
 }
 
 /**
