@@ -46,7 +46,7 @@ SpecialPowers.pushPrefEnv({"set": [
     const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
                 getService(Ci.nsIWorkerDebuggerManager);
     wdm.addListener({
-      onUnregister: function (dbg) {
+      onUnregister (dbg) {
         if (dbg.url == url) {
           ok(true, "Debugger with url " + url + " should be unregistered.");
           wdm.removeListener(this);

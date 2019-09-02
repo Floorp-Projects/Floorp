@@ -29,7 +29,7 @@ var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
 
     iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||
@@ -41,12 +41,12 @@ var policy = {
   },
 
   // nsIFactory implementation
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
     let contentType = loadInfo.externalContentPolicyType;
     // Remember last content type seen for the test url
     if (SpecialPowers.wrap(contentLocation).spec == testURL) {
@@ -57,7 +57,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
 
     return Ci.nsIContentPolicy.ACCEPT;
   }

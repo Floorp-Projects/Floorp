@@ -17,7 +17,7 @@ async function doTests() {
 
   // same domain check
   await promiseU2FRegister("https://test1.example.com/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_is(res.errorCode, 0, "AppID should work from a different path of this domain");
@@ -25,7 +25,7 @@ async function doTests() {
 
   // same domain check, but wrong scheme
   await promiseU2FRegister("http://test1.example.com/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_isnot(res.errorCode, 0, "AppID should not work when using a different scheme");
@@ -33,7 +33,7 @@ async function doTests() {
 
   // eTLD+1 subdomain check
   await promiseU2FRegister("https://example.com/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     // Changed in Bug 1244959 to behave like W3C Web Authentication
@@ -42,7 +42,7 @@ async function doTests() {
 
   // sub-subdomain check
   await promiseU2FRegister("https://sub.test1.example.com/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     // Changed in Bug 1244959 to behave like W3C Web Authentication
@@ -51,7 +51,7 @@ async function doTests() {
 
   // sub-subdomain check
   await promiseU2FRegister("https://test2.example.com/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     // Changed in Bug 1244959 to behave like W3C Web Authentication
@@ -60,7 +60,7 @@ async function doTests() {
 
   // other domain check
   await promiseU2FRegister("https://mochi.test:8888/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_isnot(res.errorCode, 0, "AppID should not work from other domains");
@@ -68,7 +68,7 @@ async function doTests() {
 
   // TLD check
   await promiseU2FRegister("https://com:8888/appId", [{
-    version: version,
+    version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_isnot(res.errorCode, 0, "AppID should not work from the eTLD itself");

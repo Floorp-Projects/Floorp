@@ -35,7 +35,7 @@ addLoadEvent(function() {
 });
 
 var gTest = {
-  createGraph: function(context) {
+  createGraph(context) {
     var merger = context.createChannelMerger();
 
     var osc0 = context.createOscillator();
@@ -68,7 +68,7 @@ var gTest = {
 
     return merger;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var buffer = context.createBuffer(3, testLength, context.sampleRate);
 
     for (var i = 0; i < buffer.length; ++i) {

@@ -57,9 +57,9 @@ self.onerror = function(message, filename, lineno) {
   if (!errorCount++) {
     var data = {
       type: "worker-error",
-      message: message,
-      filename: filename,
-      lineno: lineno,
+      message,
+      filename,
+      lineno,
     };
 
     registeredPorts.forEach(function(registeredPort) {

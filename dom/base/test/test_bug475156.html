@@ -24,33 +24,33 @@ function fromCache(xhr)
 var tests = [
   // First just init the file with an ETag
   {
-    init: function(xhr) 
+    init(xhr) 
     {
       xhr.open("GET", path + "bug475156.sjs?etag=a1");
     },
     
-    loading: function(xhr)
+    loading(xhr)
     {
     },
 
-    done: function(xhr)
+    done(xhr)
     {
     },
   },
 
   // Try to load the file the first time regularly, we have to get 200 OK
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), false, "Not coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We get a fresh version of the file");
       is(xhr.getResponseHeader("Etag"), "a1", "We got correct ETag");
@@ -60,18 +60,18 @@ var tests = [
 
   // Try to load the file the second time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a1");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a1", "We got correct ETag");
@@ -81,18 +81,18 @@ var tests = [
 
   // Try to load the file the third time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a1");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a1", "We got correct ETag");
@@ -102,34 +102,34 @@ var tests = [
 
   // Now modify the ETag
   {
-    init: function(xhr) 
+    init(xhr) 
     {
       xhr.open("GET", path + "bug475156.sjs?etag=a2");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
     },
 
-    done: function(xhr)
+    done(xhr)
     {
     },
   },
 
   // Try to load the file, we have to get 200 OK with the new content
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a2");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), false, "Not coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We get a fresh version of the file");
       is(xhr.getResponseHeader("Etag"), "a2", "We got correct ETag");
@@ -139,18 +139,18 @@ var tests = [
 
   // Try to load the file the second time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a2");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a2", "We got correct ETag");
@@ -160,18 +160,18 @@ var tests = [
 
   // Try to load the file the third time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a2");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a2", "We got correct ETag");
@@ -181,34 +181,34 @@ var tests = [
 
   // Now modify the ETag ones more
   {
-    init: function(xhr) 
+    init(xhr) 
     {
       xhr.open("GET", path + "bug475156.sjs?etag=a3");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
     },
 
-    done: function(xhr)
+    done(xhr)
     {
     },
   },
 
   // Try to load the file, we have to get 200 OK with the new content
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a3");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), false, "Not coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We get a fresh version of the file");
       is(xhr.getResponseHeader("Etag"), "a3", "We got correct ETag");
@@ -218,18 +218,18 @@ var tests = [
 
   // Try to load the file the second time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a3");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a3", "We got correct ETag");
@@ -239,18 +239,18 @@ var tests = [
 
   // Try to load the file the third time regularly, we have to get 304 Not Modified
   {    
-    init: function(xhr)
+    init(xhr)
     {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a3");
     },
 
-    loading: function(xhr)
+    loading(xhr)
     {
       is(fromCache(xhr), true, "Coming from the cache");
     },
 
-    done: function(xhr)
+    done(xhr)
     {
       is(xhr.status, 200, "We got cached version");
       is(xhr.getResponseHeader("Etag"), "a3", "We got correct ETag");
@@ -260,15 +260,15 @@ var tests = [
 
   // Load one last time to reset the state variable in the .sjs file
   {
-    init: function (xhr) {
+    init (xhr) {
       xhr.open("GET", path + "bug475156.sjs");
       xhr.setRequestHeader("If-Match", "a1");
     },
 
-    loading: function (xhr) {
+    loading (xhr) {
     },
 
-    done: function (xhr) {
+    done (xhr) {
     },
   },
 ]

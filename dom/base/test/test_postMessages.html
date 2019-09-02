@@ -316,7 +316,7 @@ function test_windowToWindow() {
     clonableObjectsEveryWhere: true,
     clonableObjectsSameProcess: true,
     transferableObjects: true,
-    send: function(what, ports) {
+    send(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
 
@@ -329,7 +329,7 @@ function test_windowToWindow() {
       });
     },
 
-    finished: function() {
+    finished() {
       onmessage = null;
       next();
     }
@@ -370,7 +370,7 @@ function test_windowToIframeURL(url) {
       clonableObjectsEveryWhere: true,
       clonableObjectsSameProcess: true,
       transferableObjects: true,
-      send: function(what, ports) {
+      send(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
           try {
@@ -382,7 +382,7 @@ function test_windowToIframeURL(url) {
         });
       },
 
-      finished: function() {
+      finished() {
         document.body.removeChild(ifr);
         onmessage = null;
         next();
@@ -418,7 +418,7 @@ function test_workers() {
       clonableObjectsEveryWhere: true,
       clonableObjectsSameProcess: true,
       transferableObjects: true,
-      send: function(what, ports) {
+      send(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
           try {
@@ -430,7 +430,7 @@ function test_workers() {
         });
       },
 
-      finished: function() {
+      finished() {
         onmessage = null;
         next();
       }
@@ -462,7 +462,7 @@ function test_broadcastChannel() {
     clonableObjectsEveryWhere: true,
     clonableObjectsSameProcess: false,
     transferableObjects: false,
-    send: function(what, ports) {
+    send(what, ports) {
       return new Promise(function(r, rr) {
         if (ports.length) {
           rr();
@@ -474,7 +474,7 @@ function test_broadcastChannel() {
       });
     },
 
-    finished: function() {
+    finished() {
       onmessage = null;
       next();
     }
@@ -508,7 +508,7 @@ function test_broadcastChannel_inWorkers() {
       clonableObjectsEveryWhere: true,
       clonableObjectsSameProcess: false,
       transferableObjects: false,
-      send: function(what, ports) {
+      send(what, ports) {
         return new Promise(function(r, rr) {
           if (ports.length) {
             rr();
@@ -520,7 +520,7 @@ function test_broadcastChannel_inWorkers() {
         });
       },
 
-      finished: function() {
+      finished() {
         onmessage = null;
         next();
       }
@@ -550,7 +550,7 @@ function test_messagePort() {
     clonableObjectsEveryWhere: true,
     clonableObjectsSameProcess: false,
     transferableObjects: true,
-    send: function(what, ports) {
+    send(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
         try {
@@ -562,7 +562,7 @@ function test_messagePort() {
       });
     },
 
-    finished: function() {
+    finished() {
       onmessage = null;
       next();
     }
@@ -596,7 +596,7 @@ function test_messagePort_inWorkers() {
       clonableObjectsEveryWhere: true,
       clonableObjectsSameProcess: false,
       transferableObjects: true,
-      send: function(what, ports) {
+      send(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
           try {
@@ -608,7 +608,7 @@ function test_messagePort_inWorkers() {
         });
       },
 
-      finished: function() {
+      finished() {
         onmessage = null;
         next();
       }

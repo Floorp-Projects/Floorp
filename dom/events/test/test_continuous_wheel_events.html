@@ -2666,7 +2666,7 @@ function* testContinuousTrustedEvents()
 
     // Tests for accumulation delta when delta_multiplier_is customized.
     { description: "lineOrPageDelta should be recomputed by ESM (pixel) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
                                            ["mousewheel.default.delta_multiplier_y", 300]]},
                                   continueTest);
@@ -2720,7 +2720,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,   preventDefault: false, detail: Math.floor((gHorizontalLine / 4 + 1) * 2) },
         vertical:   { expected: true,   preventDefault: false, detail: Math.floor((gLineHeight / 8 + 1) * 3) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2728,7 +2728,7 @@ function* testContinuousTrustedEvents()
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 200],
                                            ["mousewheel.with_shift.delta_multiplier_y", 300]]},
                                   continueTest);
@@ -2782,7 +2782,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,   preventDefault: false, detail: Math.ceil(-(gHorizontalLine / 4 + 1) * 2) },
         vertical:   { expected: true,   preventDefault: false, detail: Math.ceil(-(gLineHeight / 8 + 1) * 3) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_shift.delta_multiplier_x", 100],
                                            ["mousewheel.with_shift.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2790,7 +2790,7 @@ function* testContinuousTrustedEvents()
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (line) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2844,7 +2844,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gHorizontalLine * 0.6) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2852,7 +2852,7 @@ function* testContinuousTrustedEvents()
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 200],
                                            ["mousewheel.default.delta_multiplier_y", -100]]},
                                   continueTest);
@@ -2906,7 +2906,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gHorizontalLine * -0.6) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gLineHeight * 0.4) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2914,7 +2914,7 @@ function* testContinuousTrustedEvents()
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (page) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 200]]},
                                   continueTest);
@@ -2968,7 +2968,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,  preventDefault: false, detail: Math.floor(gPageWidth * 0.4) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.floor(gPageHeight * 0.8) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);
@@ -2976,7 +2976,7 @@ function* testContinuousTrustedEvents()
     },
 
     { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #1",
-      prepare: function () {
+      prepare () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 200]]},
                                   continueTest);
@@ -3030,7 +3030,7 @@ function* testContinuousTrustedEvents()
       MozMousePixelScroll: {
         horizontal: { expected: true,  preventDefault: false, detail: Math.ceil(gPageWidth * -0.4) },
         vertical:   { expected: true,  preventDefault: false, detail: Math.ceil(gPageHeight * -0.8) } },
-      finished: function () {
+      finished () {
         SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
                                            ["mousewheel.default.delta_multiplier_y", 100]]},
                                   continueTest);

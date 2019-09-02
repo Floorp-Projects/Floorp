@@ -26,7 +26,7 @@ function resultCallback(aTestObj) {
   window.opener.postMessage(
     {
       type: "RESULT",
-      message: message,
+      message,
       result: aTestObj["status"] === aTestObj["PASS"],
     },
     PARENT_ORIGIN

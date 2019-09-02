@@ -300,7 +300,7 @@ function testBodyExtraction() {
 function testNullBodyStatus() {
   [204, 205, 304].forEach(function(status) {
     try {
-      var res = new Response(new Blob(), { status: status });
+      var res = new Response(new Blob(), { status });
       ok(
         false,
         "Response body provided but status code does not permit a body"
@@ -312,7 +312,7 @@ function testNullBodyStatus() {
 
   [204, 205, 304].forEach(function(status) {
     try {
-      var res = new Response(undefined, { status: status });
+      var res = new Response(undefined, { status });
       ok(true, "Response body provided but status code does not permit a body");
     } catch (e) {
       ok(

@@ -22,7 +22,7 @@ onnotificationclose = function(e) {
               e.notification.data["complex"] &&
               e.notification.data["complex"][0] == "jsval" &&
               e.notification.data["complex"][1] == 5,
-            windowOpened: windowOpened,
+            windowOpened,
           });
         });
       });

@@ -33,7 +33,7 @@ ctx.fillRect(30, 30, 50, 50);
 var imageData = ctx.createImageData(200, 200);
 
 // Clone it.
-window.postMessage({ imageData: imageData }, '*');
+window.postMessage({ imageData }, '*');
 ok(true, "Handled cross-compartment imagedata without throwing/crashing!");
 
 </script>

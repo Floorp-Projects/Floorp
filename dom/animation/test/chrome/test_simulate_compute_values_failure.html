@@ -54,7 +54,7 @@ function assert_properties_equal(actual, expected) {
 
 // Shorthand for constructing a value object
 function value(offset, value, composite, easing) {
-  return { offset: offset, value: value, easing: easing, composite: composite };
+  return { offset, value, easing, composite };
 }
 
 var gTests = [

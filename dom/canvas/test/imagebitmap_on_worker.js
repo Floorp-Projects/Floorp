@@ -1,7 +1,7 @@
 importScripts("imagebitmap_bug1239300.js");
 
 function ok(expect, msg) {
-  postMessage({ type: "status", status: !!expect, msg: msg });
+  postMessage({ type: "status", status: !!expect, msg });
 }
 
 function doneTask() {

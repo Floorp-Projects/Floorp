@@ -42,7 +42,7 @@ function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy");
 }
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic !== "csp-on-violate-policy") {
       return;
     }
@@ -56,7 +56,7 @@ examiner.prototype  = {
     }
     window.checkResults("inline-script-blocked");
   },
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }

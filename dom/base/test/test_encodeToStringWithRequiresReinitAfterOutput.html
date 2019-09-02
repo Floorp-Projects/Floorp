@@ -45,19 +45,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1352882
 
     encoder = getEncoder();
     var stream = {
-      close: function() {
-      },
+      close() {
+    },
 
-      flush: function() {
-      },
+      flush() {
+    },
 
-      write: function(buffer, length) {
-        return length;
-      },
+      write(buffer, length) {
+      return length;
+    },
 
-      writeFrom: function(buffer, length) {
-        return length;
-      },
+      writeFrom(buffer, length) {
+      return length;
+    },
     };
 
     encoder.setCharset("utf-8");

@@ -3,11 +3,11 @@ function info(message) {
 }
 
 function ok(test, message) {
-  postMessage({ type: "ok", test: test, message: message });
+  postMessage({ type: "ok", test, message });
 }
 
 function is(a, b, message) {
-  postMessage({ type: "is", test1: a, test2: b, message: message });
+  postMessage({ type: "is", test1: a, test2: b, message });
 }
 
 if (self.Notification) {

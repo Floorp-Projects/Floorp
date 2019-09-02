@@ -38,7 +38,7 @@ async function doTests() {
 
   try {
     await promiseU2FRegister(null, [{
-      version: version,
+      version,
       challenge: bytesToBase64UrlSafe(challenge),
     }], [], function(res){
       local_ok(false, "Shouldn't have gotten here on an insecure origin");

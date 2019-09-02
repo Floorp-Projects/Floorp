@@ -4,7 +4,7 @@ add_task(async function() {
   var statusTexts = [];
   var xhr = new XMLHttpRequest();
   var observer = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       try {
         var channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
         channel.getResponseHeader("Location");

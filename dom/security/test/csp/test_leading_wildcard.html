@@ -46,7 +46,7 @@ function examiner() {
   SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
 
    // allowed requests
    if (topic === "specialpowers-http-notify-request") {
@@ -76,7 +76,7 @@ examiner.prototype  = {
       }
     }
   },
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }

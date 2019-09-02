@@ -228,11 +228,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: gScrollable128
@@ -243,11 +243,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: gScrollable128
@@ -258,11 +258,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: gScrollable96
@@ -273,11 +273,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: gScrollable96
@@ -288,11 +288,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: gScrollable64
@@ -303,11 +303,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: gScrollable64
@@ -318,11 +318,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: gScrollable32
@@ -333,11 +333,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: gScrollable32
@@ -348,9 +348,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: gRoot
@@ -361,9 +361,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: gRoot
@@ -374,11 +374,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable128
@@ -389,11 +389,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable128
@@ -404,11 +404,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable96
@@ -419,11 +419,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable96
@@ -434,11 +434,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable64
@@ -449,11 +449,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable64
@@ -464,11 +464,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable32
@@ -479,11 +479,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable32
@@ -494,9 +494,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gRoot
@@ -507,9 +507,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gRoot
@@ -520,11 +520,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: null
@@ -535,11 +535,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: null
@@ -550,11 +550,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: null
@@ -565,11 +565,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: null
@@ -580,11 +580,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: null
@@ -595,11 +595,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: null
@@ -610,11 +610,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: null
@@ -625,11 +625,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: null
@@ -640,9 +640,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: null
@@ -653,9 +653,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: null
@@ -668,11 +668,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: gScrollable128
@@ -683,11 +683,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: gScrollable128
@@ -698,11 +698,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: gScrollable96
@@ -713,11 +713,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: gScrollable96
@@ -728,11 +728,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: gScrollable64
@@ -743,11 +743,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: gScrollable64
@@ -758,11 +758,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: gScrollable32
@@ -773,11 +773,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: gScrollable32
@@ -788,9 +788,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: gRoot
@@ -801,9 +801,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: gRoot
@@ -814,11 +814,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable128
@@ -829,11 +829,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable128
@@ -844,11 +844,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable96
@@ -859,11 +859,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable96
@@ -874,11 +874,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable64
@@ -889,11 +889,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable64
@@ -904,11 +904,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable32
@@ -919,11 +919,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gScrollable32
@@ -934,9 +934,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gRoot
@@ -947,9 +947,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 0.0, deltaY: -1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: null, y: gRoot
@@ -960,11 +960,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: null
@@ -975,11 +975,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable128.scrollLeft = 0;
         gScrollable128.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable128, y: null
@@ -990,11 +990,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: null
@@ -1005,11 +1005,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable96, y: null
@@ -1020,11 +1020,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: null
@@ -1035,11 +1035,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable64, y: null
@@ -1050,11 +1050,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: null
@@ -1065,11 +1065,11 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable32.scrollLeft = 0;
         gScrollable32.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gScrollable32, y: null
@@ -1080,9 +1080,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: null
@@ -1093,9 +1093,9 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PAGE,
         deltaX: -1.0, deltaY: 0.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
       },
-      cleanup: function () {
+      cleanup () {
       },
       expected: {
         x: gRoot, y: null
@@ -1108,14 +1108,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflow = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1127,14 +1127,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowX = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1146,14 +1146,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowY = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1165,14 +1165,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowX = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1184,14 +1184,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.0, deltaY: 1.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowY = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1203,14 +1203,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowX = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {
@@ -1222,14 +1222,14 @@ function* doTests()
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 1.0, deltaY: 0.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
-      prepare: function () {
+      prepare () {
         gScrollable64.style.overflowY = "hidden";
         gScrollable96.scrollLeft = 0;
         gScrollable96.scrollTop = 0;
         gScrollable64.scrollLeft = 0;
         gScrollable64.scrollTop = 0;
       },
-      cleanup: function () {
+      cleanup () {
         gScrollable64.style.overflow = "auto";
       },
       expected: {

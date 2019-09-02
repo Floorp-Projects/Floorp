@@ -87,7 +87,7 @@ function compareImageBitmapWithImageElement(imageBitmap, imageElement) {
   var yGap = imageElement.naturalHeight / 4;
   for (var y = 0; y < imageElement.naturalHeight; y += yGap) {
     for (var x = 0; x < imageElement.naturalWidth; x += xGap) {
-      pixels.push({ x: x, y: y });
+      pixels.push({ x, y });
     }
   }
 
@@ -123,7 +123,7 @@ function compareImageBitmapWithImageData(imageBitmap, imageData, info) {
   var yGap = imageBitmap.height / 4;
   for (var y = 0; y < imageBitmap.height; y += yGap) {
     for (var x = 0; x < imageBitmap.width; x += xGap) {
-      pixels.push({ x: x, y: y });
+      pixels.push({ x, y });
     }
   }
 

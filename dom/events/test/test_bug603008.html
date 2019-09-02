@@ -130,7 +130,7 @@ function testSingleTouch(name) {
   let touch1 = new testtouch({
     page: {x: Math.round(bcr.left + bcr.width/2),
            y: Math.round(bcr.top  + bcr.height/2)},
-    target: target
+    target
   });
   let event = new touchEvent({
     touches: [touch1],
@@ -176,7 +176,7 @@ function testSingleTouch2(name) {
     identifier: 0,
     page: {x: Math.round(bcr.left + bcr.width/2),
            y: Math.round(bcr.top  + bcr.height/2)},
-    target: target
+    target
   });
   let event1 = new touchEvent({
     touches: [touch1],
@@ -395,7 +395,7 @@ function testPreventDefault() {
   let touch1 = new testtouch({
     page: {x: bcr.left + bcr.width/2,
            y: bcr.top + bcr.height/2},
-    target: target
+    target
   });
   let event = new touchEvent({
     touches: [touch1],
@@ -507,7 +507,7 @@ function testNAC() {
   let touch1 = new testtouch({
     page: {x: Math.round(bcr.left + bcr.width/2),
            y: Math.round(bcr.top  + bcr.height/2)},
-    target: target
+    target
   });
   let event = new touchEvent({
     touches: [touch1],

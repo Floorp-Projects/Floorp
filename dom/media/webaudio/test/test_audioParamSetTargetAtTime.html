@@ -18,7 +18,7 @@ var TimeConstant = 10;
 var gTest = {
   length: 2048,
   numberOfChannels: 1,
-  createGraph: function(context) {
+  createGraph(context) {
     var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       sourceBuffer.getChannelData(0)[i] = 1;
@@ -36,7 +36,7 @@ var gTest = {
     source.start(0);
     return gain;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var T1 = 2048 / context.sampleRate;
     var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {

@@ -47,7 +47,7 @@ function workerTestGetPermissions(permissions, cb) {
   });
   postMessage({
     type: "getPermissions",
-    permissions: permissions,
+    permissions,
   });
 }
 
