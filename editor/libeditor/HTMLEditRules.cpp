@@ -1928,7 +1928,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     }
   }
 
-  nsCOMPtr<Element> listItem = IsInListItem(blockParent);
+  RefPtr<Element> listItem =
+      HTMLEditorRef().GetNearestAncestorListItemElement(*blockParent);
   if (listItem && listItem != host) {
     nsresult rv =
         MOZ_KnownLive(HTMLEditorRef())
@@ -5313,7 +5314,11 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     // we only want to indent that li once, we must keep track of the most
     // recent indented list item, and not indent it if we find another node
     // to act on that is still inside the same li.
-    RefPtr<Element> listItem = IsInListItem(curNode);
+    RefPtr<Element> listItem =
+        curNode->IsContent()
+            ? HTMLEditorRef().GetNearestAncestorListItemElement(
+                  *curNode->AsContent())
+            : nullptr;
     if (listItem) {
       if (indentedLI == listItem) {
         // already indented this list item
@@ -7940,21 +7945,23 @@ void HTMLEditRules::MakeTransitionList(
   }
 }
 
-Element* HTMLEditRules::IsInListItem(nsINode* aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  NS_ENSURE_TRUE(aNode, nullptr);
-  if (HTMLEditUtils::IsListItem(aNode)) {
-    return aNode->AsElement();
+Element* HTMLEditor::GetNearestAncestorListItemElement(
+    nsIContent& aContent) const {
+  // XXX Why don't we test whether aContent is in an editing host?
+  if (HTMLEditUtils::IsListItem(&aContent)) {
+    return aContent.AsElement();
   }
 
-  Element* parent = aNode->GetParentElement();
-  while (parent && HTMLEditorRef().IsDescendantOfEditorRoot(parent) &&
-         !HTMLEditUtils::IsTableElement(parent)) {
-    if (HTMLEditUtils::IsListItem(parent)) {
-      return parent;
+  // XXX This loop is too expensive since calling IsDescendantOfEditorRoot()
+  //     a lot.  Rewrite this with caching active editing host and check
+  //     whether we reach it or not.
+  for (Element* parentElement = aContent.GetParentElement();
+       parentElement && IsDescendantOfEditorRoot(parentElement) &&
+       !HTMLEditUtils::IsTableElement(parentElement);
+       parentElement = parentElement->GetParentElement()) {
+    if (HTMLEditUtils::IsListItem(parentElement)) {
+      return parentElement;
     }
-    parent = parent->GetParentElement();
   }
   return nullptr;
 }
@@ -10955,7 +10962,11 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
     // the same list item.  Since we only want to indent that li once, we
     // must keep track of the most recent indented list item, and not indent
     // it if we find another node to act on that is still inside the same li.
-    RefPtr<Element> listItem = IsInListItem(curNode);
+    RefPtr<Element> listItem =
+        curNode->IsContent()
+            ? HTMLEditorRef().GetNearestAncestorListItemElement(
+                  *curNode->AsContent())
+            : nullptr;
     if (listItem) {
       if (indentedLI == listItem) {
         // Already indented this list item

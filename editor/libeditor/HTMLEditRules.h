@@ -450,13 +450,6 @@ class HTMLEditRules : public TextEditRules {
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
   /**
-   * If aNode is the descendant of a listitem, return that li.  But table
-   * element boundaries are stoppers on the search.  Also stops on the active
-   * editor host (contenteditable).  Also test if aNode is an li itself.
-   */
-  Element* IsInListItem(nsINode* aNode);
-
-  /**
    * Called after handling edit action.  This may adjust Selection, remove
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
