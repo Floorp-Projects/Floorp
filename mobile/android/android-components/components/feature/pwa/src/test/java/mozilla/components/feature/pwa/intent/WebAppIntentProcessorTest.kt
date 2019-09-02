@@ -10,8 +10,8 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.components.browser.session.intent.getSessionId
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor.Companion.ACTION_VIEW_PWA

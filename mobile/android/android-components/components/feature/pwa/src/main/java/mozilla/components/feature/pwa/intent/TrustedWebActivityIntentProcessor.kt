@@ -17,8 +17,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.intent.IntentProcessor
-import mozilla.components.browser.session.intent.putSessionId
 import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.fetch.Client
@@ -26,6 +24,8 @@ import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.feature.OriginVerifierFeature
 import mozilla.components.feature.customtabs.isTrustedWebActivityIntent
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.intent.ext.putSessionId
+import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ext.toOrigin
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.SafeIntent

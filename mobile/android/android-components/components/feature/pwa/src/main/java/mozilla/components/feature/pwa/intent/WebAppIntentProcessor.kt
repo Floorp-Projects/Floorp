@@ -8,9 +8,9 @@ import android.content.Intent
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.intent.IntentProcessor
-import mozilla.components.browser.session.intent.putSessionId
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.intent.ext.putSessionId
+import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.toCustomTabConfig
