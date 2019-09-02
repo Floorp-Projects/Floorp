@@ -1544,9 +1544,10 @@
   value: true
   mirror: always
 
+# Allow Flash async drawing mode in 64-bit release builds.
 - name: dom.ipc.plugins.asyncdrawing.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.ipc.tabs.disabled
@@ -2304,6 +2305,13 @@
 #endif
   mirror: always
 
+# It is often desirable to automatically start vr presentation when
+# a user puts on the VR headset.  This is done by emitting the
+# Window.vrdisplayactivate event when the headset's sensors detect it
+# being worn.  This can result in WebVR content taking over the headset
+# when the user is using it outside the browser or inadvertent start of
+# presentation due to the high sensitivity of the proximity sensor in some
+# headsets, so it is off by default.
 - name: dom.vr.autoactivate.enabled
   type: RelaxedAtomicBool
   value: false
@@ -2317,6 +2325,7 @@
   value: 1000
   mirror: always
 
+# The threshold value of trigger inputs for VR controllers.
 - name: dom.vr.controller_trigger_threshold
   type: AtomicFloat
   value: 0.1f
@@ -2340,11 +2349,18 @@
   value: 50
   mirror: always
 
+# Minimum number of milliseconds the browser will wait before attempting
+# to re-start the VR service after an enumeration returned no devices.
 - name: dom.vr.external.notdetected.timeout
   type: RelaxedAtomicInt32
   value: 60000
   mirror: always
 
+# Minimum number of milliseconds the browser will wait before attempting
+# to re-start the VR service after a VR API (eg, OpenVR or Oculus)
+# requests that we shutdown and unload its libraries.
+# To ensure that we don't interfere with VR runtime software auto-updates,
+# we will not attempt to re-load the service until this timeout has elapsed.
 - name: dom.vr.external.quit.timeout
   type: RelaxedAtomicInt32
   value: 10000
@@ -2359,9 +2375,14 @@
   value: 5000
   mirror: always
 
+# Maximum number of milliseconds the browser will wait for content to call
+# VRDisplay.requestPresent after emitting vrdisplayactivate during VR
+# link traversal.  This prevents a long running event handler for
+# vrdisplayactivate from later calling VRDisplay.requestPresent, which would
+# result in a non-responsive browser in the VR headset.
 - name: dom.vr.navigation.timeout
   type: RelaxedAtomicInt32
-  value: 1000
+  value: 5000
   mirror: always
 
 # Oculus device
