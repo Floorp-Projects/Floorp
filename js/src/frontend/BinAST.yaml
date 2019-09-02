@@ -1051,7 +1051,7 @@ EmptyStatement:
 ExpressionStatement:
   build: |
     BINJS_TRY_DECL(result,
-                   handler_.newExprStatement(expression, tokenizer_->offset()));
+                   handler_.newExprStatement(expression));
 
 ForInOfBinding:
   init:
