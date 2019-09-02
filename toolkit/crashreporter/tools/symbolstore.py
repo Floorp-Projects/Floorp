@@ -840,19 +840,29 @@ class Dumper_Mac(Dumper):
             shutil.rmtree(dsymbundle)
         dsymutil = buildconfig.substs['DSYMUTIL']
         # dsymutil takes --arch=foo instead of -a foo like everything else
-        try:
-            cmd = ([dsymutil] +
-                   [a.replace('-a ', '--arch=') for a in self.archs if a] +
-                   [file])
-            print(' '.join(cmd), file=sys.stderr)
-            subprocess.check_call(cmd, stdout=open(os.devnull, 'w'))
-        except subprocess.CalledProcessError as e:
-            print('Error running dsymutil: %s' % str(e), file=sys.stderr)
-            raise
+        cmd = ([dsymutil] +
+               [a.replace('-a ', '--arch=') for a in self.archs if a] +
+               [file])
+        print(' '.join(cmd), file=sys.stderr)
 
+        dsymutil_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+        dsymout, dsymerr = dsymutil_proc.communicate()
+        if dsymutil_proc.returncode != 0:
+            raise RuntimeError('Error running dsymutil: %s' % dsymerr)
+
+        # Regular dsymutil won't produce a .dSYM for files without symbols.
         if not os.path.exists(dsymbundle):
-            # dsymutil won't produce a .dSYM for files without symbols
             print("No symbols found in file: %s" % (file,), file=sys.stderr)
+            return False
+
+        # llvm-dsymutil will produce a .dSYM for files without debug
+        # symbols, but only warns you in the output and doesn't actually
+        # fail.  We don't want to run dump_syms on such bundles, because
+        # asserts will fire in debug mode and who knows what will happen
+        # in release.
+        if 'warning: no debug symbols in' in dsymerr:
+            print(dsymerr, file=sys.stderr)
             return False
 
         elapsed = time.time() - t_start

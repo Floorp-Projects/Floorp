@@ -29,7 +29,7 @@ export class OnboardingCard extends React.PureComponent {
         <div className={`onboardingMessageImage ${content.icon}`} />
         <div className="onboardingContent">
           <span>
-            <h3
+            <h2
               className="onboardingTitle"
               data-l10n-id={content.title.string_id}
             />

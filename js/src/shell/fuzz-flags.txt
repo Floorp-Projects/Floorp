@@ -66,6 +66,7 @@
 --wasm-compiler=baseline
 --wasm-compiler=cranelift
 --test-wasm-await-tier2
+--wasm-disable-huge-memory
 
 # CPU instruction set-related
 --enable-avx

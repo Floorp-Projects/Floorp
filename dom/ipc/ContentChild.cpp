@@ -107,6 +107,7 @@
 #include "nsIWorkerDebuggerManager.h"
 #include "nsGeolocation.h"
 #include "audio_thread_priority.h"
+#include "nsIConsoleService.h"
 
 #if !defined(XP_WIN)
 #  include "mozilla/Omnijar.h"
@@ -512,7 +513,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
     }
 
     mChild->SendScriptError(msg, sourceName, sourceLine, lineNum, colNum, flags,
-                            category, fromPrivateWindow, fromChromeContext);
+                            category, fromPrivateWindow, 0, fromChromeContext);
     return NS_OK;
   }
 
@@ -961,16 +962,17 @@ nsresult ContentChild::ProvideWindowCommon(
   // parent. Otherwise, the parent could send messages to us before we have a
   // proper TabGroup for that actor.
   RefPtr<TabGroup> tabGroup;
+  RefPtr<BrowsingContext> openerBC;
   if (aTabOpener && !aForceNoOpener) {
     // The new actor will use the same tab group as the opener.
     tabGroup = aTabOpener->TabGroup();
+    if (aParent) {
+      openerBC = nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext();
+    }
   } else {
     tabGroup = new TabGroup();
   }
 
-  RefPtr<BrowsingContext> openerBC =
-      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
-              : nullptr;
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
@@ -1098,17 +1100,25 @@ nsresult ContentChild::ProvideWindowCommon(
     newChild->SetMaxTouchPoints(maxTouchPoints);
     newChild->SetHasSiblings(hasSiblings);
 
-    // Set the opener window for this window before we start loading the
-    // document inside of it. We have to do this before loading the remote
-    // scripts, because they can poke at the document and cause the Document
-    // to be created before the openerwindow
-    nsCOMPtr<mozIDOMWindowProxy> windowProxy =
-        do_GetInterface(newChild->WebNavigation());
-    if (!aForceNoOpener && windowProxy && aParent) {
-      nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
-      nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
-      outer->SetOpenerWindow(parent, *aWindowIsNew);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    if (nsCOMPtr<nsPIDOMWindowOuter> outer =
+            do_GetInterface(newChild->WebNavigation())) {
+      BrowsingContext* bc = outer->GetBrowsingContext();
+      auto parentBC =
+          aParent
+              ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()->Id()
+              : 0;
+
+      if (aForceNoOpener) {
+        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew || !bc->HadOriginalOpener());
+        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == 0);
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(!*aWindowIsNew ||
+                              bc->HadOriginalOpener() == !!parentBC);
+        MOZ_DIAGNOSTIC_ASSERT(bc->GetOpenerId() == parentBC);
+      }
     }
+#endif
 
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
@@ -4005,6 +4015,31 @@ void ContentChild::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
 
 void ContentChild::ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG) {
   mBrowsingContextGroupHolder.RemoveElement(aBCG);
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvScriptError(
+    const nsString& aMessage, const nsString& aSourceName,
+    const nsString& aSourceLine, const uint32_t& aLineNumber,
+    const uint32_t& aColNumber, const uint32_t& aFlags,
+    const nsCString& aCategory, const bool& aFromPrivateWindow,
+    const uint64_t& aInnerWindowId, const bool& aFromChromeContext) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to get console service"));
+
+  nsCOMPtr<nsIScriptError> scriptError(
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  NS_ENSURE_TRUE(scriptError,
+                 IPC_FAIL(this, "Failed to construct nsIScriptError"));
+
+  scriptError->InitWithWindowID(aMessage, aSourceName, aSourceLine, aLineNumber,
+                                aColNumber, aFlags, aCategory, aInnerWindowId,
+                                aFromChromeContext);
+  rv = consoleService->LogMessage(scriptError);
+  NS_ENSURE_SUCCESS(rv, IPC_FAIL(this, "Failed to log script error"));
+
+  return IPC_OK();
 }
 
 }  // namespace dom

@@ -1018,7 +1018,9 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
           // Set the base level and embedding level of the current run even
           // on an empty frame. Otherwise frame reordering will not be correct.
           frame->AdjustOffsetsForBidi(0, 0);
-          // Nothing more to do for an empty frame.
+          // Nothing more to do for an empty frame, except update
+          // lastRealFrame like we do below.
+          lastRealFrame = frameInfo;
           continue;
         }
         nsLineList::iterator currentLine = aBpd->mCurrentResolveLine.GetLine();

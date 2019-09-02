@@ -41,9 +41,13 @@ addMessageListener("PasswordManager:fillGeneratedPassword", function(message) {
 
 function shouldIgnoreLoginManagerEvent(event) {
   let nodePrincipal = event.target.nodePrincipal;
-  // If we have a null principal then prevent any more password manager code from running and
+  // If we have a system or null principal then prevent any more password manager code from running and
   // incorrectly using the document `location`. Also skip password manager for about: pages.
-  return nodePrincipal.isNullPrincipal || nodePrincipal.URI.schemeIs("about");
+  return (
+    nodePrincipal.isSystemPrincipal ||
+    nodePrincipal.isNullPrincipal ||
+    nodePrincipal.URI.schemeIs("about")
+  );
 }
 
 addEventListener("DOMFormBeforeSubmit", function(event) {

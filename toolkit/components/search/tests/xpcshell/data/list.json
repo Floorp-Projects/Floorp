@@ -9,7 +9,7 @@
   },
   "regionOverrides": {
     "RU": {
-      "engine": "engine-chromeicon"
+      "engine-resourceicon": "engine-chromeicon"
     }
   },
   "locales": {
@@ -23,7 +23,7 @@
     "fr": {
       "default": {
         "visibleDefaultEngines": [
-          "engine", "engine-pref"
+          "engine", "engine-pref", "engine-resourceicon"
         ]
       }
     }

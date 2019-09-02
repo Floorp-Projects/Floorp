@@ -83,8 +83,8 @@ login-item-origin-label = Website Address
 login-item-origin =
   .placeholder = https://www.example.com
 login-item-username-label = Username
-login-item-username =
-  .placeholder = name@example.com
+about-logins-login-item-username =
+  .placeholder = (no username)
 login-item-copy-username-button-text = Copy
 login-item-copied-username-button-text = Copied!
 login-item-password-label = Password
@@ -141,3 +141,14 @@ breach-alert-text = Passwords were leaked or stolen from this website since you 
 breach-alert-link = Learn more about this breach.
 breach-alert-dismiss =
     .title = Close this alert
+
+## Error Messages
+
+# This is an error message that appears when a user attempts to save
+# a new login that is identical to an existing saved login.
+# Variables:
+#   $loginTitle (String) - The title of the website associated with the login.
+about-logins-error-message-duplicate-login = An entry for { $loginTitle } with that username already exists.
+
+# This is a generic error message.
+about-logins-error-message-default = An error occurred while trying to save this password.

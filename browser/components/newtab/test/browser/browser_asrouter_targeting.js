@@ -826,16 +826,16 @@ add_task(async function check_hasAccessedFxAPanel() {
 add_task(async function check_isWhatsNewPanelEnabled() {
   is(
     await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
-    false,
-    "Not enabled yet"
+    true,
+    "Enabled by default"
   );
 
-  await pushPrefs(["browser.messaging-system.whatsNewPanel.enabled", true]);
+  await pushPrefs(["browser.messaging-system.whatsNewPanel.enabled", false]);
 
   is(
     await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
-    true,
-    "Should update based on pref"
+    false,
+    "Should update based on pref, e.g., for holdback"
   );
 });
 

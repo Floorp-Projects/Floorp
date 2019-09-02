@@ -103,7 +103,10 @@
       css: "@media (min-monochrome: 1.1) {}",
       error: "Found invalid value for media feature.",
     }, {
-      css: "@media (min-aspect-ratio: 1) {}",
+      css: "@media (min-aspect-ratio: 1 invalid) {}",
+      error: "Found invalid value for media feature.",
+    }, {
+      css: "@media (min-aspect-ratio: 1 / invalid) {}",
       error: "Found invalid value for media feature.",
     }, {
       css: "@media (orientation: invalid-orientation-value) {}",

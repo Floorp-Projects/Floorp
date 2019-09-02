@@ -446,6 +446,24 @@ class LayerManagerComposite final : public HostLayerManager {
                                gfx::IntRect aClipRect, bool aGrayscaleEffect,
                                bool aInvertEffect, float aContrastEffect);
 
+  /**
+   * Create or recycle native layers to cover aRegion or aRect.
+   * This method takes existing layers from the front of aLayersToRecycle (or
+   * creates new layers if no layers are left to recycle) and appends them to
+   * the end of mNativeLayers. The "take from front, add to back" approach keeps
+   * the layer to rect assignment stable between frames.
+   * Updates the rect and opaqueness on the layers. For layers that moved or
+   * resized, *aWindowInvalidRegion is updated to include the area impacted by
+   * the move.
+   * Any layers left in aLayersToRecycle are not needed and can be disposed of.
+   */
+  void PlaceNativeLayers(const gfx::IntRegion& aRegion, bool aOpaque,
+                         std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+                         gfx::IntRegion* aWindowInvalidRegion);
+  void PlaceNativeLayer(const gfx::IntRect& aRect, bool aOpaque,
+                        std::deque<RefPtr<NativeLayer>>* aLayersToRecycle,
+                        gfx::IntRegion* aWindowInvalidRegion);
+
   bool mUnusedApzTransformWarning;
   bool mDisabledApzWarning;
   RefPtr<Compositor> mCompositor;
@@ -466,7 +484,7 @@ class LayerManagerComposite final : public HostLayerManager {
   CompositorScreenshotGrabber mProfilerScreenshotGrabber;
   RefPtr<TextRenderer> mTextRenderer;
   RefPtr<NativeLayerRoot> mNativeLayerRoot;
-  RefPtr<NativeLayer> mNativeLayerForEntireWindow;
+  std::deque<RefPtr<NativeLayer>> mNativeLayers;
 
 #ifdef USE_SKIA
   /**

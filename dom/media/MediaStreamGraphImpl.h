@@ -442,6 +442,10 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    */
   void RemoveStreamGraphThread(MediaStream* aStream);
   /**
+   * Remove a stream from the graph. Main thread.
+   */
+  void RemoveStream(MediaStream* aStream);
+  /**
    * Remove aPort from the graph and release it.
    */
   void DestroyPort(MediaInputPort* aPort);
@@ -648,6 +652,15 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * callbacks to a common single thread, shared across GraphDrivers.
    */
   const UniquePtr<GraphRunner> mGraphRunner;
+
+  /**
+   * Main-thread view of the number of streams in this graph, for lifetime
+   * management.
+   *
+   * When this becomes zero, the graph is marked as forbidden to add more
+   * streams to. It will be shut down shortly after.
+   */
+  size_t mMainThreadStreamCount = 0;
 
   /**
    * Graphs own owning references to their driver, until shutdown. When a driver

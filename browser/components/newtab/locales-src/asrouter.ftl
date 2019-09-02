@@ -119,10 +119,10 @@ cfr-whatsnew-tracking-blocked-link-text = View Report
 
 cfr-whatsnew-lockwise-backup-title = Back up your passwords
 cfr-whatsnew-lockwise-backup-body =
-   Now generate secure passwords you can access anywhere you sign in.
+   Now generate secure passwords you can access anywhere you sign in.
 cfr-whatsnew-lockwise-backup-link-text = Turn on backups
 
-cfr-whatsnew-lockwise-take-title = Take your passwords with you
+cfr-whatsnew-lockwise-take-title = Take your passwords with you
 cfr-whatsnew-lockwise-take-body =
    The { -lockwise-brand-short-name } mobile app lets you securely access your
    backed up passwords from anywhere.

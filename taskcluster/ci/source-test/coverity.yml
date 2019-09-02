@@ -46,7 +46,7 @@ job-defaults:
 coverity:
     description: Run static-analysis (Coverity) on C/C++ patches
     treeherder:
-        symbol: coverity(cvsa)
+        symbol: cpp(coverity)
     run:
         cwd: '{checkout}'
         command: >-

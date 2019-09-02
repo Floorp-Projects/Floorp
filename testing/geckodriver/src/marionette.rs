@@ -108,7 +108,7 @@ impl MarionetteHandler {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = new_session_parameters
                 .match_browser(&mut fx_capabilities)?
-                .ok_or(WebDriverError::new(
+                .ok_or_else(|| WebDriverError::new(
                     ErrorStatus::SessionNotCreated,
                     "Unable to find a matching set of capabilities",
                 ))?;
@@ -142,7 +142,7 @@ impl MarionetteHandler {
     }
 
     fn start_browser(&mut self, port: u16, options: FirefoxOptions) -> WebDriverResult<()> {
-        let binary = options.binary.ok_or(WebDriverError::new(
+        let binary = options.binary.ok_or_else(|| WebDriverError::new(
             ErrorStatus::SessionNotCreated,
             "Expected browser binary location, but unable to find \
              binary in default location, no \
@@ -209,7 +209,7 @@ impl MarionetteHandler {
 
         for &(ref name, ref value) in prefs::DEFAULT.iter() {
             if !custom_profile || !prefs.contains_key(name) {
-                prefs.insert((*name).clone(), (*value).clone());
+                prefs.insert((*name).to_string(), (*value).clone());
             }
         }
 
@@ -356,7 +356,7 @@ pub struct MarionetteSession {
 
 impl MarionetteSession {
     pub fn new(session_id: Option<String>) -> MarionetteSession {
-        let initital_id = session_id.unwrap_or("".to_string());
+        let initital_id = session_id.unwrap_or_else(|| "".to_string());
         MarionetteSession {
             session_id: initital_id,
             protocol: None,
@@ -370,22 +370,19 @@ impl MarionetteSession {
         msg: &WebDriverMessage<GeckoExtensionRoute>,
         resp: &MarionetteResponse,
     ) -> WebDriverResult<()> {
-        match msg.command {
-            NewSession(_) => {
-                let session_id = try_opt!(
-                    try_opt!(
-                        resp.result.get("sessionId"),
-                        ErrorStatus::SessionNotCreated,
-                        "Unable to get session id"
-                    )
-                    .as_str(),
+        if let NewSession(_) = msg.command {
+            let session_id = try_opt!(
+                try_opt!(
+                    resp.result.get("sessionId"),
                     ErrorStatus::SessionNotCreated,
-                    "Unable to convert session id to string"
-                );
-                self.session_id = session_id.to_string().clone();
-            }
-            _ => {}
-        }
+                    "Unable to get session id"
+                )
+                .as_str(),
+                ErrorStatus::SessionNotCreated,
+                "Unable to convert session id to string"
+            );
+            self.session_id = session_id.to_string().clone();
+        };
         Ok(())
     }
 
@@ -420,7 +417,7 @@ impl MarionetteSession {
     }
 
     pub fn next_command_id(&mut self) -> MessageId {
-        self.command_id = self.command_id + 1;
+        self.command_id += 1;
         self.command_id
     }
 
@@ -485,7 +482,7 @@ impl MarionetteSession {
             | ExecuteAsyncScript(_)
             | GetAlertText
             | TakeScreenshot
-            | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
+            | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
             GetTimeouts => {
                 let script = match try_opt!(
                     resp.result.get("script"),
@@ -503,7 +500,7 @@ impl MarionetteSession {
                 // which was sent by Firefox 52 and earlier.
                 let page_load = try_opt!(
                     try_opt!(
-                        resp.result.get("pageLoad").or(resp.result.get("page load")),
+                        resp.result.get("pageLoad").or_else(|| resp.result.get("page load")),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
                     )
@@ -523,13 +520,13 @@ impl MarionetteSession {
                 );
 
                 WebDriverResponse::Timeouts(TimeoutsResponse {
-                    script: script,
-                    page_load: page_load,
-                    implicit: implicit,
+                    script,
+                    page_load,
+                    implicit,
                 })
             }
             Status => panic!("Got status command that should already have been handled"),
-            GetWindowHandles => WebDriverResponse::Generic(resp.to_value_response(false)?),
+            GetWindowHandles => WebDriverResponse::Generic(resp.into_value_response(false)?),
             NewWindow(_) => {
                 let handle: String = try_opt!(
                     try_opt!(
@@ -764,7 +761,7 @@ impl MarionetteSession {
             }
             DeleteSession => WebDriverResponse::DeleteSession,
             Extension(ref extension) => match extension {
-                GetContext => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                GetContext => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 SetContext(_) => WebDriverResponse::Void,
                 XblAnonymousChildren(_) => {
                     let els_vec = try_opt!(
@@ -787,9 +784,9 @@ impl MarionetteSession {
                     ))?;
                     WebDriverResponse::Generic(ValueResponse(serde_json::to_value(el)?))
                 }
-                InstallAddon(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                InstallAddon(_) => WebDriverResponse::Generic(resp.into_value_response(true)?),
                 UninstallAddon(_) => WebDriverResponse::Void,
-                TakeFullScreenshot => WebDriverResponse::Generic(resp.to_value_response(true)?),
+                TakeFullScreenshot => WebDriverResponse::Generic(resp.into_value_response(true)?),
             },
         })
     }
@@ -949,9 +946,9 @@ impl Serialize for MarionetteCommand {
 impl MarionetteCommand {
     fn new(id: MessageId, name: String, params: Map<String, Value>) -> MarionetteCommand {
         MarionetteCommand {
-            id: id,
-            name: name,
-            params: params,
+            id,
+            name,
+            params,
         }
     }
 
@@ -1070,7 +1067,7 @@ impl MarionetteCommand {
                 ErrorStatus::UnsupportedOperation,
                 "Operation not supported"
             );
-            let parameters = opt_parameters.unwrap_or(Ok(Map::new()))?;
+            let parameters = opt_parameters.unwrap_or_else(|| Ok(Map::new()))?;
 
             let req = MarionetteCommand::new(id, name.into(), parameters);
             MarionetteCommand::encode_msg(req)
@@ -1115,14 +1112,15 @@ impl<'de> Deserialize<'de> for MarionetteResponse {
 }
 
 impl MarionetteResponse {
-    fn to_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
-        let value: &Value = match value_required {
-            true => try_opt!(
+    fn into_value_response(self, value_required: bool) -> WebDriverResult<ValueResponse> {
+        let value: &Value = if value_required {
+            try_opt!(
                 self.result.get("value"),
                 ErrorStatus::UnknownError,
                 "Failed to find value field"
-            ),
-            false => &self.result,
+            )
+        } else {
+            &self.result
         };
 
         Ok(ValueResponse(value.clone()))
@@ -1187,13 +1185,13 @@ impl MarionetteConnection {
         );
         loop {
             // immediately abort connection attempts if process disappears
-            if let &mut Some(ref mut runner) = browser {
+            if let Some(ref mut runner) = *browser {
                 let exit_status = match runner.try_wait() {
                     Ok(Some(status)) => Some(
                         status
                             .code()
                             .map(|c| c.to_string())
-                            .unwrap_or("signal".into()),
+                            .unwrap_or_else(|| "signal".into()),
                     ),
                     Ok(None) => None,
                     Err(_) => Some("{unknown}".into()),
@@ -1353,7 +1351,7 @@ impl MarionetteConnection {
             };
             match byte {
                 '0'..='9' => {
-                    bytes = bytes * 10;
+                    bytes *= 10;
                     bytes += byte as usize - '0' as usize;
                 }
                 ':' => break,
@@ -1453,8 +1451,8 @@ impl ToMarionette<MarionetteCookie> for AddCookieParameters {
             value: self.value.clone(),
             path: self.path.clone(),
             domain: self.domain.clone(),
-            secure: self.secure.clone(),
-            http_only: self.httpOnly.clone(),
+            secure: self.secure,
+            http_only: self.httpOnly,
             expiry: match &self.expiry {
                 Some(date) => Some(date.to_marionette()?),
                 None => None,
@@ -1591,9 +1589,9 @@ impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
 impl ToMarionette<MarionetteTimeouts> for TimeoutsParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteTimeouts> {
         Ok(MarionetteTimeouts {
-            implicit: self.implicit.clone(),
-            page_load: self.page_load.clone(),
-            script: self.script.clone(),
+            implicit: self.implicit,
+            page_load: self.page_load,
+            script: self.script,
         })
     }
 }
@@ -1617,10 +1615,10 @@ impl ToMarionette<Map<String, Value>> for WebElement {
 impl ToMarionette<MarionetteWindowRect> for WindowRectParameters {
     fn to_marionette(&self) -> WebDriverResult<MarionetteWindowRect> {
         Ok(MarionetteWindowRect {
-            x: self.x.clone(),
-            y: self.y.clone(),
-            width: self.width.clone(),
-            height: self.height.clone(),
+            x: self.x,
+            y: self.y,
+            width: self.width,
+            height: self.height,
         })
     }
 }

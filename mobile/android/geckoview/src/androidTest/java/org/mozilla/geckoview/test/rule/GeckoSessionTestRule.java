@@ -1837,8 +1837,7 @@ public class GeckoSessionTestRule implements TestRule {
 
     public Object evaluateJS(final @NonNull GeckoSession session, final @NonNull String js) {
         // Let's make sure we have the port already
-        UiThreadUtils.waitForCondition(() -> mPorts.containsKey(session),
-                env.getDefaultTimeoutMillis());
+        UiThreadUtils.waitForCondition(() -> mPorts.containsKey(session), mTimeoutMillis);
 
         final JSONObject message = new JSONObject();
         final String id = UUID.randomUUID().toString();
@@ -1856,7 +1855,7 @@ public class GeckoSessionTestRule implements TestRule {
 
     private Object waitForMessage(String id) {
         UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
-                env.getDefaultTimeoutMillis());
+                mTimeoutMillis);
 
         final EvalJSResult result = mPendingMessages.get(id);
         mPendingMessages.remove(id);
@@ -2063,7 +2062,7 @@ public class GeckoSessionTestRule implements TestRule {
     private Object webExtensionApiCall(final String apiName, JSONObject args) throws JSONException {
         // Ensure background script is connected
         UiThreadUtils.waitForCondition(() -> RuntimeCreator.backgroundPort() != null,
-                env.getDefaultTimeoutMillis());
+                mTimeoutMillis);
 
         final String id = UUID.randomUUID().toString();
 

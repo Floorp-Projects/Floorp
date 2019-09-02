@@ -230,22 +230,6 @@ void ThreadedDriver::Start() {
   }
 }
 
-void ThreadedDriver::Revive() {
-  MOZ_ASSERT(NS_IsMainThread() && !ThreadRunning());
-  // Note: only called on MainThread, without monitor
-  // We know were weren't in a running state
-  LOG(LogLevel::Debug, ("AudioCallbackDriver reviving."));
-  // If we were switching, switch now. Otherwise, tell thread to run the main
-  // loop again.
-  MonitorAutoLock mon(mGraphImpl->GetMonitor());
-  if (NextDriver()) {
-    SwitchToNextDriver();
-  } else {
-    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
-    mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
-  }
-}
-
 void ThreadedDriver::Shutdown() {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   // mGraph's thread is not running so it's OK to do whatever here
@@ -441,19 +425,6 @@ AsyncCubebTask::Run() {
         return NS_ERROR_FAILURE;
       }
       mDriver->CompleteAudioContextOperations(mOperation);
-      break;
-    }
-    case AsyncCubebOperation::REVIVE: {
-      LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::REVIVE driver=%p",
-                            mDriver->GraphImpl(), mDriver.get()));
-      if (mDriver->IsStarted()) {
-        mDriver->Stop();
-      }
-      if (!mDriver->StartStream()) {
-        LOG(LogLevel::Warning,
-            ("%p: AsyncCubebOperation couldn't start the driver=%p.",
-             mDriver->GraphImpl(), mDriver.get()));
-      }
       break;
     }
     case AsyncCubebOperation::SHUTDOWN: {
@@ -741,22 +712,6 @@ void AudioCallbackDriver::Stop() {
     NS_WARNING("Could not stop cubeb stream for MSG.");
   }
   mStarted = false;
-}
-
-void AudioCallbackDriver::Revive() {
-  MOZ_ASSERT(NS_IsMainThread() && !ThreadRunning());
-  // Note: only called on MainThread, without monitor
-  // We know were weren't in a running state
-  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver reviving.", GraphImpl()));
-  // If we were switching, switch now. Otherwise, start the audio thread again.
-  MonitorAutoLock mon(GraphImpl()->GetMonitor());
-  if (NextDriver()) {
-    SwitchToNextDriver();
-  } else {
-    RefPtr<AsyncCubebTask> reviveEvent =
-        new AsyncCubebTask(this, AsyncCubebOperation::REVIVE);
-    reviveEvent->Dispatch();
-  }
 }
 
 void AudioCallbackDriver::RemoveMixerCallback() {

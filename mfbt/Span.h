@@ -808,6 +808,20 @@ AsWritableBytes(Span<ElementType, Extent> s) {
   return {reinterpret_cast<uint8_t*>(s.data()), s.size_bytes()};
 }
 
+/**
+ * View a span of uint8_t as a span of char.
+ */
+inline Span<const char> AsChars(Span<const uint8_t> s) {
+  return {reinterpret_cast<const char*>(s.data()), s.size()};
+}
+
+/**
+ * View a writable span of uint8_t as a span of char.
+ */
+inline Span<char> AsWritableChars(Span<uint8_t> s) {
+  return {reinterpret_cast<char*>(s.data()), s.size()};
+}
+
 //
 // MakeSpan() - Utility functions for creating Spans
 //

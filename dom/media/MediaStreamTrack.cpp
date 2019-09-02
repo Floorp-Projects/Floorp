@@ -12,6 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "systemservices/MediaUtils.h"
@@ -78,10 +79,7 @@ auto MediaStreamTrackSource::ApplyConstraints(
  */
 class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
  public:
-  explicit MSGListener(MediaStreamTrack* aTrack)
-      : mGraph(aTrack->GraphImpl()), mTrack(aTrack) {
-    MOZ_ASSERT(mGraph);
-  }
+  explicit MSGListener(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
 
   void DoNotifyPrincipalHandleChanged(
       const PrincipalHandle& aNewPrincipalHandle) {
@@ -97,7 +95,7 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
   void NotifyPrincipalHandleChanged(
       MediaStreamGraph* aGraph,
       const PrincipalHandle& aNewPrincipalHandle) override {
-    mGraph->DispatchToMainThreadStableState(
+    aGraph->DispatchToMainThreadStableState(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
             "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
@@ -105,11 +103,11 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
             aNewPrincipalHandle));
   }
 
-  void NotifyRemoved() override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     // `mTrack` is a WeakPtr and must be destroyed on main thread.
     // We dispatch ourselves to main thread here in case the MediaStreamGraph
     // is holding the last reference to us.
-    mGraph->DispatchToMainThreadStableState(
+    aGraph->DispatchToMainThreadStableState(
         NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
                                [self = RefPtr<MSGListener>(this)]() {}));
   }
@@ -121,20 +119,25 @@ class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
       return;
     }
 
-    mGraph->AbstractMainThread()->Dispatch(
-        NewRunnableMethod("MediaStreamTrack::OverrideEnded", mTrack.get(),
-                          &MediaStreamTrack::OverrideEnded));
+    if (!mTrack->GetParentObject()) {
+      return;
+    }
+
+    AbstractThread* mainThread =
+        nsGlobalWindowInner::Cast(mTrack->GetParentObject())
+            ->AbstractMainThreadFor(TaskCategory::Other);
+    mainThread->Dispatch(NewRunnableMethod("MediaStreamTrack::OverrideEnded",
+                                           mTrack.get(),
+                                           &MediaStreamTrack::OverrideEnded));
   }
 
-  void NotifyEnded() override {
-    mGraph->DispatchToMainThreadStableState(
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
+    aGraph->DispatchToMainThreadStableState(
         NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
                           &MSGListener::DoNotifyEnded));
   }
 
  protected:
-  const RefPtr<MediaStreamGraphImpl> mGraph;
-
   // Main thread only.
   WeakPtr<MediaStreamTrack> mTrack;
 };
@@ -185,10 +188,6 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
       mInputStream(aInputStream),
-      mStream(aReadyState == MediaStreamTrackState::Live
-                  ? mInputStream->Graph()->CreateTrackUnionStream()
-                  : nullptr),
-      mPort(mStream ? mStream->AllocateInputPort(mInputStream) : nullptr),
       mTrackID(aTrackID),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
@@ -198,9 +197,23 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
       mMuted(false),
       mConstraints(aConstraints) {
   if (!Ended()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mInputStream->IsDestroyed());
     GetSource().RegisterSink(mSink.get());
 
+    // Even if the input stream is destroyed we need mStream so that methods
+    // like AddListener still work. Keeping the number of paths to a minimum
+    // also helps prevent bugs elsewhere. We'll be ended through the
+    // MediaStreamTrackSource soon enough.
+    auto graph = mInputStream->IsDestroyed()
+                     ? MediaStreamGraph::GetInstanceIfExists(
+                           mWindow, mInputStream->GraphRate())
+                     : mInputStream->Graph();
+    MOZ_DIAGNOSTIC_ASSERT(graph,
+                          "A destroyed input stream is only expected when "
+                          "cloning, but since we're live there must be another "
+                          "live track that is keeping the graph alive");
+
+    mStream = graph->CreateTrackUnionStream();
+    mPort = mStream->AllocateInputPort(mInputStream);
     mMSGListener = new MSGListener(this);
     AddListener(mMSGListener);
   }

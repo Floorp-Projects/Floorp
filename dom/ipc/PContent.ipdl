@@ -961,10 +961,6 @@ parent:
     async SetGeolocationHigherAccuracy(bool enable);
 
     async ConsoleMessage(nsString message);
-    async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
-                      uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                      nsCString category, bool privateWindow,
-                      bool fromChromeContext);
     async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
                                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
                                nsCString category, bool privateWindow,
@@ -1406,6 +1402,11 @@ parent:
     async NotifyMediaAudibleChanged(BrowsingContext aContext, bool aAudible);
 
 both:
+    async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
+                      uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
+                      nsCString category, bool privateWindow, uint64_t innerWindowId,
+                      bool fromChromeContext);
+
     async CommitBrowsingContextTransaction(BrowsingContext aContext,
                                            BrowsingContextTransaction aTransaction,
                                            uint64_t aEpoch);

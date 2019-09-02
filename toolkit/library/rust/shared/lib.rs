@@ -52,6 +52,8 @@ extern crate arrayvec;
 
 extern crate audio_thread_priority;
 
+extern crate mdns_service;
+
 use std::boxed::Box;
 use std::env;
 use std::ffi::{CStr, CString};

@@ -12,7 +12,6 @@
 
 .breakpoints-exceptions-options *,
 .breakpoints-list * {
-  -moz-user-select: none;
   user-select: none;
 }
 

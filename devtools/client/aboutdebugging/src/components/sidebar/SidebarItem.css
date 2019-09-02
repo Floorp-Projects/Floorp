@@ -14,7 +14,7 @@
   padding-inline-end: var(--category-padding);
   padding-inline-start: var(--category-padding);
   transition: background-color var(--category-transition-duration);
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .sidebar-item--tall {

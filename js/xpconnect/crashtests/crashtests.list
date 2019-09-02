@@ -53,3 +53,4 @@ load 854604.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) load 898939.html
 pref(security.fileuri.strict_origin_policy,false) load 938297.html
 load 977538.html
+load 1577573.html

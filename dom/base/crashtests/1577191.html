@@ -1,0 +1,15 @@
+<!doctype html>
+<script>
+  function start () {
+    const frame = document.createElement('frame')
+    document.documentElement.appendChild(frame)
+    const o1 = document.createElement('c')
+    o1.insertBefore(frame, o1.childNodes[0])
+    SpecialPowers.gc();
+    const xhr = new XMLHttpRequest()
+    xhr.open('P', '', false)
+    xhr.send()
+  }
+
+  document.addEventListener('DOMContentLoaded', start)
+</script>

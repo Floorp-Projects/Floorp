@@ -293,7 +293,7 @@
   /* The geometry editor can be interacted with, so it needs to react to
      pointer events */
   pointer-events: auto;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 :-moz-native-anonymous .geometry-editor-offset-parent {
@@ -451,7 +451,7 @@
   font: var(--highlighter-font-family);
   font-size: 10px;
   pointer-events: none;
-  -moz-user-select: none;
+  user-select: none;
   box-sizing: border-box;
 }
 
@@ -612,7 +612,7 @@
 :-moz-native-anonymous .paused-dbg-toolbar {
   margin-top: 15px;
   display: inline-flex;
-  -moz-user-select: none;
+  user-select: none;
 
   color: var(--text-color);
   border-radius: 2px;
@@ -743,7 +743,13 @@
   color: var(--highlighter-infobar-color);
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::before {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:empty::before,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:empty::after,
+:-moz-native-anonymous .accessible-infobar-name:empty {
+  display: none;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio::before {
   content: "";
   height: 8px;
   width: 8px;
@@ -754,25 +760,39 @@
   margin-inline-end: 9px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty)::after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio::after {
   margin-inline-start: 2px;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after,
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AA::after,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
   color: #90E274;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).FAIL::after {
-  color: #E57180;
-  content: "⚠️";
+:-moz-native-anonymous .accessible-infobar-audit .accessible-audit::before,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.FAIL::after {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  content: "";
+  vertical-align: -2px;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA::after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.FAIL:after {
+  color: #E57180;
+  margin-inline-start: 3px;
+  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  fill: var(--red-40);
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AA::after {
   content: "AA\2713";
 }
 
-:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA::after {
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio.AAA::after {
   content: "AAA\2713";
 }
 
@@ -796,16 +816,8 @@
 }
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-audit::before {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  content: "";
   margin-inline-end: 4px;
-  vertical-align: -2px;
   background-image: none;
-  background-position: center;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
   fill: currentColor;
 }
 
@@ -823,7 +835,7 @@
   background-image: url(chrome://devtools/skin/images/info-small.svg);
 }
 
-:-moz-native-anonymous .accessible-infobar-name:not(:empty) {
+:-moz-native-anonymous .accessible-infobar-name {
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;

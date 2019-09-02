@@ -11,19 +11,14 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { threadFront, target } = dbg;
-
-  await threadFront.interrupt();
-
   // Rewind to the beginning of the recording.
-  await rewindToLine(threadFront, undefined);
+  await rewindToLine(dbg, undefined);
 
-  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
-  await resumeToLine(threadFront, 21);
-  await checkEvaluateInTopFrame(target, "number", 1);
-  await resumeToLine(threadFront, 21);
-  await checkEvaluateInTopFrame(target, "number", 2);
+  await addBreakpoint(dbg, "doc_rr_basic.html", 21);
+  await resumeToLine(dbg, 21);
+  await checkEvaluateInTopFrame(dbg, "number", 1);
+  await resumeToLine(dbg, 21);
+  await checkEvaluateInTopFrame(dbg, "number", 2);
 
-  await threadFront.removeBreakpoint(bp);
   await shutdownDebugger(dbg);
 });

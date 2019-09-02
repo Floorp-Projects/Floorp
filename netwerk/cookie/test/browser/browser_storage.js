@@ -35,7 +35,7 @@ CookiePolicyHelper.runTest("LocalStorage", {
       ok(false, "LocalStorage doesn't work");
     } catch (e) {
       ok(true, "LocalStorage doesn't work");
-      is(e.name, "TypeError", "We want a security error message.");
+      is(e.name, "SecurityError", "We want a security error message.");
     }
   },
 });

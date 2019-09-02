@@ -14,12 +14,18 @@ about-config-search-input =
     .placeholder = Search
 about-config-show-all = Show All
 
-about-config-pref-add = Add
-about-config-pref-toggle = Toggle
-about-config-pref-edit = Edit
-about-config-pref-save = Save
-about-config-pref-reset = Reset
-about-config-pref-delete = Delete
+about-config-pref-add-button =
+    .title = Add
+about-config-pref-toggle-button =
+    .title = Toggle
+about-config-pref-edit-button =
+    .title = Edit
+about-config-pref-save-button =
+    .title = Save
+about-config-pref-reset-button =
+    .title = Reset
+about-config-pref-delete-button =
+    .title = Delete
 
 ## Labels for the type selection radio buttons shown when adding preferences.
 about-config-pref-add-type-boolean = Boolean

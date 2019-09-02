@@ -364,7 +364,7 @@
 
 .call-tree-item .call-tree-cell,
 .call-tree-item .call-tree-cell[type=function] description {
-  -moz-user-select: text;
+  user-select: text;
   /* so that optimizations view doesn't break the lines in call tree */
   white-space: nowrap;
 }

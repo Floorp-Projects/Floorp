@@ -16,10 +16,6 @@
 }
 
 .tree.noselect {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
 }
 
@@ -136,7 +132,6 @@ menuitem {
   line-height: 20px;
   font-weight: 500;
   font-size: 13px;
-  -moz-user-select: none;
   user-select: none;
 }
 

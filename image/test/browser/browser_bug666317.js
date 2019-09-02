@@ -1,4 +1,5 @@
 waitForExplicitFinish();
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var pageSource =
   "<html><body>" +
@@ -8,9 +9,7 @@ var pageSource =
   "</body></html>";
 
 var oldDiscardingPref, oldTab, newTab;
-var prefBranch = Cc["@mozilla.org/preferences-service;1"]
-  .getService(Ci.nsIPrefService)
-  .getBranch("image.mem.");
+var prefBranch = Services.prefs.getBranch("image.mem.");
 
 var gWaitingForDiscard = false;
 var gScriptedObserver;
@@ -42,9 +41,7 @@ function currentRequest() {
 
 function isImgDecoded() {
   let request = currentRequest();
-  return request.imageStatus & Ci.imgIRequest.STATUS_DECODE_COMPLETE
-    ? true
-    : false;
+  return !!(request.imageStatus & Ci.imgIRequest.STATUS_DECODE_COMPLETE);
 }
 
 // Ensure that the image is decoded by drawing it to a canvas.
@@ -122,9 +119,7 @@ function step3() {
 function step4() {
   gWaitingForDiscard = true;
 
-  var os = Cc["@mozilla.org/observer-service;1"].getService(
-    Ci.nsIObserverService
-  );
+  var os = Services.obs;
   os.notifyObservers(null, "memory-pressure", "heap-minimize");
 
   // The DISCARD notification is delivered asynchronously. ImageObserver will

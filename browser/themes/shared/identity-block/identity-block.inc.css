@@ -12,8 +12,6 @@
      Individual icons can override this. */
   fill: currentColor;
   fill-opacity: .6;
-  /* This is needed in order to position the permission indicator. */
-  position: relative;
 }
 
 /* The tracking protection icon will be hidden if it is a chrome page. There
@@ -23,6 +21,7 @@
   padding-inline-start: 8px;
 }
 
+#identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
 #identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
 #identity-box[pageproxystate="invalid"] > #identity-icon-labels,
@@ -66,13 +65,8 @@
   color: #30e60b;
 }
 
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:not(:-moz-lwtheme),
-.urlbar-label:not(:-moz-lwtheme) {
-  color: GrayText;
-}
-
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels:-moz-lwtheme,
-.urlbar-label:-moz-lwtheme {
+#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-labels,
+.urlbar-label {
   opacity: .6;
 }
 
@@ -118,6 +112,7 @@
 
 .sharing-icon,
 #identity-icon,
+#permissions-granted-icon,
 #tracking-protection-icon,
 .notification-anchor-icon,
 #blocked-permissions-container > .blocked-permission-icon {
@@ -158,16 +153,13 @@
 #identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
-  -moz-context-properties: fill;
-  fill: #12BC00;
 }
 
-#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon[lock-icon-gray],
-#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon[lock-icon-gray],
-#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon[lock-icon-gray] {
-  fill-opacity: 0.6;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+#identity-box[pageproxystate="valid"].verifiedDomain > #identity-icon:not([lock-icon-gray]),
+#identity-box[pageproxystate="valid"].verifiedIdentity > #identity-icon:not([lock-icon-gray]),
+#identity-box[pageproxystate="valid"].mixedActiveBlocked > #identity-icon:not([lock-icon-gray]) {
+  fill-opacity: 1;
+  fill: #12BC00;
 }
 
 #identity-box[pageproxystate="valid"].weakCipher > #identity-icon,
@@ -176,7 +168,6 @@
 #identity-box[pageproxystate="valid"].certUserOverridden > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   fill: unset;
-  -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-box[pageproxystate="valid"].notSecure > #identity-icon,
@@ -185,19 +176,12 @@
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
 }
 
-#identity-box[pageproxystate="valid"].grantedPermissions::before {
-  background: url(chrome://browser/skin/badge-blue.svg);
-  content: "";
-  position: absolute;
-  bottom: 15px;
-  left: 14px;
-  height: 14px;
-  width: 14px;
+#permissions-granted-icon {
+  list-style-image: url(chrome://browser/skin/permissions.svg);
 }
 
-#identity-box[pageproxystate="valid"].grantedPermissions:-moz-locale-dir(rtl)::before {
-  left: unset;
-  right: 16px;
+#identity-box:not(.grantedPermissions) > #permissions-granted-icon {
+  display: none;
 }
 
 /* SHARING ICON */

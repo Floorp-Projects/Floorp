@@ -140,7 +140,7 @@ function main() {
   gImg.onerror = onError;
 
   // Create, customize & attach decoder observer.
-  observer = new ImageDecoderObserverStub();
+  var observer = new ImageDecoderObserverStub();
   observer.hasTransparency = onHasTransparency;
   observer.decodeComplete = onDecodeComplete;
   gMyDecoderObserver =

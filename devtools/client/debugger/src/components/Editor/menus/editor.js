@@ -163,8 +163,8 @@ const downloadFileItem = (
 const inlinePreviewItem = (editorActions: EditorItemActions) => ({
   id: "node-menu-inline-preview",
   label: features.inlinePreview
-    ? L10N.getStr("inlinePreview.disable.label")
-    : L10N.getStr("inlinePreview.enable.label"),
+    ? L10N.getStr("inlinePreview.hide.label")
+    : L10N.getStr("inlinePreview.show.label"),
   click: () => editorActions.toggleInlinePreview(!features.inlinePreview),
 });
 

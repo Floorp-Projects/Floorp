@@ -25,6 +25,11 @@ add_task(async function test_create_login() {
       loginList.classList.contains("no-logins"),
       "login-list should initially be in no logins view"
     );
+    is(
+      loginList._loginGuidsSortedOrder.length,
+      0,
+      "login list should be empty"
+    );
   });
 
   let testCases = [
@@ -46,56 +51,65 @@ add_task(async function test_create_login() {
       (_, data) => data == "addLogin"
     );
 
-    await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
-      let loginList = Cu.waiveXrays(
-        content.document.querySelector("login-list")
-      );
-      let createButton = loginList._createLoginButton;
-      is(
-        content.getComputedStyle(loginList._blankLoginListItem).display,
-        "none",
-        "the blank login list item should be hidden initially"
-      );
-      ok(
-        !createButton.disabled,
-        "Create button should not be disabled initially"
-      );
+    await ContentTask.spawn(
+      browser,
+      [originTuple, i],
+      async ([aOriginTuple, index]) => {
+        let loginList = Cu.waiveXrays(
+          content.document.querySelector("login-list")
+        );
+        let createButton = loginList._createLoginButton;
+        ok(
+          ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+          "the blank login list item should be hidden initially"
+        );
+        ok(
+          !createButton.disabled,
+          "Create button should not be disabled initially"
+        );
 
-      createButton.click();
+        createButton.click();
 
-      isnot(
-        content.getComputedStyle(loginList._blankLoginListItem).display,
-        "none",
-        "the blank login list item should be visible after clicking on the create button"
-      );
-      ok(
-        createButton.disabled,
-        "Create button should be disabled after being clicked"
-      );
+        ok(
+          ContentTaskUtils.is_visible(loginList._blankLoginListItem),
+          "the blank login list item should be visible after clicking on the create button"
+        );
+        ok(
+          createButton.disabled,
+          "Create button should be disabled after being clicked"
+        );
 
-      let loginItem = Cu.waiveXrays(
-        content.document.querySelector("login-item")
-      );
+        let loginItem = Cu.waiveXrays(
+          content.document.querySelector("login-item")
+        );
 
-      let originInput = loginItem.shadowRoot.querySelector(
-        "input[name='origin']"
-      );
-      let usernameInput = loginItem.shadowRoot.querySelector(
-        "input[name='username']"
-      );
-      let passwordInput = loginItem.shadowRoot.querySelector(
-        "input[name='password']"
-      );
+        let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
+        is(
+          ContentTaskUtils.is_hidden(cancelButton),
+          index == 0,
+          "cancel button should be hidden in create mode with no logins saved"
+        );
 
-      originInput.value = aOriginTuple[0];
-      usernameInput.value = "testuser1";
-      passwordInput.value = "testpass1";
+        let originInput = loginItem.shadowRoot.querySelector(
+          "input[name='origin']"
+        );
+        let usernameInput = loginItem.shadowRoot.querySelector(
+          "input[name='username']"
+        );
+        let passwordInput = loginItem.shadowRoot.querySelector(
+          "input[name='password']"
+        );
 
-      let saveChangesButton = loginItem.shadowRoot.querySelector(
-        ".save-changes-button"
-      );
-      saveChangesButton.click();
-    });
+        originInput.value = aOriginTuple[0];
+        usernameInput.value = "testuser1";
+        passwordInput.value = "testpass1";
+
+        let saveChangesButton = loginItem.shadowRoot.querySelector(
+          ".save-changes-button"
+        );
+        saveChangesButton.click();
+      }
+    );
 
     info("waiting for login to get added to storage");
     await storageChangedPromised;
@@ -105,84 +119,77 @@ add_task(async function test_create_login() {
       "passwordmgr-storage-changed",
       (_, data) => data == "modifyLogin"
     );
-    let expectedCount = i + 1;
-    await ContentTask.spawn(
-      browser,
-      { expectedCount, originTuple },
-      async ({ expectedCount: aExpectedCount, originTuple: aOriginTuple }) => {
-        ok(
-          !content.document.documentElement.classList.contains("no-logins"),
-          "Should no longer be in no logins view"
-        );
-        let loginList = Cu.waiveXrays(
-          content.document.querySelector("login-list")
-        );
-        ok(
-          !loginList.classList.contains("no-logins"),
-          "login-list should no longer be in no logins view"
-        );
-        is(
-          content.getComputedStyle(loginList._blankLoginListItem).display,
-          "none",
-          "the blank login list item should be hidden after adding new login"
-        );
-        ok(
-          !loginList._createLoginButton.disabled,
-          "Create button shouldn't be disabled after exiting create login view"
-        );
+    await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
+      ok(
+        !content.document.documentElement.classList.contains("no-logins"),
+        "Should no longer be in no logins view"
+      );
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      ok(
+        !loginList.classList.contains("no-logins"),
+        "login-list should no longer be in no logins view"
+      );
+      ok(
+        ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
+        "the blank login list item should be hidden after adding new login"
+      );
+      ok(
+        !loginList._createLoginButton.disabled,
+        "Create button shouldn't be disabled after exiting create login view"
+      );
 
-        let loginGuid = await ContentTaskUtils.waitForCondition(() => {
-          return loginList._loginGuidsSortedOrder.find(
-            guid => loginList._logins[guid].login.origin == aOriginTuple[1]
-          );
-        }, "Waiting for login to be displayed");
-        ok(loginGuid, "Expected login found in login-list");
+      let loginGuid = await ContentTaskUtils.waitForCondition(() => {
+        return loginList._loginGuidsSortedOrder.find(
+          guid => loginList._logins[guid].login.origin == aOriginTuple[1]
+        );
+      }, "Waiting for login to be displayed");
+      ok(loginGuid, "Expected login found in login-list");
 
-        let loginItem = Cu.waiveXrays(
-          content.document.querySelector("login-item")
-        );
-        is(loginItem._login.guid, loginGuid, "login-item should match");
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
+      is(loginItem._login.guid, loginGuid, "login-item should match");
 
-        let { login, listItem } = loginList._logins[loginGuid];
-        ok(
-          listItem.classList.contains("selected"),
-          "list item should be selected"
-        );
-        ok(
-          !!listItem,
-          `Stored login should only include the origin of the URL provided during creation (${
-            aOriginTuple[1]
-          })`
-        );
-        is(
-          login.username,
-          "testuser1",
-          "Stored login should have username provided during creation"
-        );
-        is(
-          login.password,
-          "testpass1",
-          "Stored login should have password provided during creation"
-        );
+      let { login, listItem } = loginList._logins[loginGuid];
+      ok(
+        listItem.classList.contains("selected"),
+        "list item should be selected"
+      );
+      is(
+        login.origin,
+        aOriginTuple[1],
+        "Stored login should only include the origin of the URL provided during creation"
+      );
+      is(
+        login.username,
+        "testuser1",
+        "Stored login should have username provided during creation"
+      );
+      is(
+        login.password,
+        "testpass1",
+        "Stored login should have password provided during creation"
+      );
 
-        let editButton = loginItem.shadowRoot.querySelector(".edit-button");
-        editButton.click();
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      editButton.click();
 
-        let usernameInput = loginItem.shadowRoot.querySelector(
-          "input[name='username']"
-        );
-        let passwordInput = loginItem.shadowRoot.querySelector(
-          "input[name='password']"
-        );
-        usernameInput.value = "testuser2";
-        passwordInput.value = "testpass2";
+      let usernameInput = loginItem.shadowRoot.querySelector(
+        "input[name='username']"
+      );
+      let passwordInput = loginItem.shadowRoot.querySelector(
+        "input[name='password']"
+      );
+      usernameInput.value = "testuser2";
+      passwordInput.value = "testpass2";
 
-        let saveChangesButton = loginItem.shadowRoot.querySelector(
-          ".save-changes-button"
-        );
-        saveChangesButton.click();
-      }
-    );
+      let saveChangesButton = loginItem.shadowRoot.querySelector(
+        ".save-changes-button"
+      );
+      saveChangesButton.click();
+    });
 
     info("waiting for login to get modified in storage");
     await storageChangedPromised;
@@ -195,8 +202,9 @@ add_task(async function test_create_login() {
       let login = Object.values(loginList._logins).find(
         obj => obj.login.origin == aOriginTuple[1]
       ).login;
-      ok(
-        !!login,
+      is(
+        login.origin,
+        aOriginTuple[1],
         "Stored login should only include the origin of the URL provided during creation"
       );
       is(
@@ -211,6 +219,15 @@ add_task(async function test_create_login() {
       );
     });
   }
+
+  await ContentTask.spawn(browser, testCases.length, async testCasesLength => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    is(
+      loginList._loginGuidsSortedOrder.length,
+      5,
+      "login list should have a login per testcase"
+    );
+  });
 });
 
 add_task(async function test_cancel_create_login() {
@@ -221,9 +238,8 @@ add_task(async function test_cancel_create_login() {
       loginList._selectedGuid,
       "there should be a selected guid before create mode"
     );
-    is(
-      content.getComputedStyle(loginList._blankLoginListItem).display,
-      "none",
+    ok(
+      ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden before create mode"
     );
 
@@ -236,9 +252,8 @@ add_task(async function test_cancel_create_login() {
       !loginList._selectedGuid,
       "there should be no selected guid when in create mode"
     );
-    isnot(
-      content.getComputedStyle(loginList._blankLoginListItem).display,
-      "none",
+    ok(
+      ContentTaskUtils.is_visible(loginList._blankLoginListItem),
       "the blank login list item should be visible in create mode"
     );
 
@@ -250,10 +265,111 @@ add_task(async function test_cancel_create_login() {
       loginList._selectedGuid,
       "there should be a selected guid after canceling create mode"
     );
-    is(
-      content.getComputedStyle(loginList._blankLoginListItem).display,
-      "none",
+    ok(
+      ContentTaskUtils.is_hidden(loginList._blankLoginListItem),
       "the blank login list item should be hidden after canceling create mode"
+    );
+  });
+});
+
+add_task(
+  async function test_cancel_create_login_with_filter_showing_one_login() {
+    let browser = gBrowser.selectedBrowser;
+    await ContentTask.spawn(browser, null, async () => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+
+      let loginFilter = Cu.waiveXrays(
+        content.document.querySelector("login-filter")
+      );
+      loginFilter.value = "bugzilla.mozilla.org";
+      is(
+        loginList._list.querySelectorAll(
+          ".login-list-item[data-guid]:not([hidden])"
+        ).length,
+        1,
+        "filter should have one login showing"
+      );
+      let visibleLoginGuid = loginList.shadowRoot.querySelectorAll(
+        ".login-list-item[data-guid]:not([hidden])"
+      )[0].dataset.guid;
+
+      let createButton = loginList._createLoginButton;
+      createButton.click();
+
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
+      let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
+      ok(
+        ContentTaskUtils.is_visible(cancelButton),
+        "cancel button should be visible in create mode with one login showing"
+      );
+      cancelButton.click();
+
+      is(
+        loginFilter.value,
+        "bugzilla.mozilla.org",
+        "login-filter should not be cleared if there was a login in the list"
+      );
+      is(
+        loginList.shadowRoot.querySelectorAll(
+          ".login-list-item[data-guid]:not([hidden])"
+        )[0].dataset.guid,
+        visibleLoginGuid,
+        "the same login should still be visible"
+      );
+    });
+  }
+);
+
+add_task(async function test_cancel_create_login_with_logins_filtered_out() {
+  let browser = gBrowser.selectedBrowser;
+  await ContentTask.spawn(browser, null, async () => {
+    let loginFilter = Cu.waiveXrays(
+      content.document.querySelector("login-filter")
+    );
+    loginFilter.value = "XXX-no-logins-should-match-this-XXX";
+    await Promise.resolve();
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    is(
+      loginList._list.querySelectorAll(
+        ".login-list-item[data-guid]:not([hidden])"
+      ).length,
+      0,
+      "filter should have no logins showing"
+    );
+
+    let createButton = loginList._createLoginButton;
+    createButton.click();
+
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
+    ok(
+      ContentTaskUtils.is_visible(cancelButton),
+      "cancel button should be visible in create mode with no logins showing"
+    );
+    cancelButton.click();
+    await Promise.resolve();
+
+    is(
+      loginFilter.value,
+      "",
+      "login-filter should be cleared if there were no logins in the list"
+    );
+    let visibleLoginItems = loginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]:not([hidden])"
+    );
+    is(
+      visibleLoginItems.length,
+      5,
+      "all logins should be visible with blank filter"
+    );
+    is(
+      loginList._selectedGuid,
+      visibleLoginItems[0].dataset.guid,
+      "the first item in the list should be selected"
     );
   });
 });

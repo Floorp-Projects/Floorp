@@ -54,6 +54,8 @@ exclude: true
 - Added [`onCloseTab`][70.21] to [`WebExtensionController.TabDelegate`][70.19] to handle
   [`browser.tabs.remove`][70.22] calls by WebExtensions.
   ([bug 1565782]({{bugzilla}}1565782))
+- Added onSlowScript to [`ContentDelegate`][70.23] which allows handling of slow and hung scripts.
+  ([bug 1621094]({{bugzilla}}1621094))
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -77,6 +79,7 @@ exclude: true
 [70.20]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create
 [70.21]: {{javadoc_uri}}/WebExtensionController.TabDelegate.html#onCloseTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-
 [70.22]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove
+[70.23]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -320,4 +323,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3dc92af421d9e7e2393619f7a17c57422aa51699
+[api-version]: 4199a7a889674d4402926366a7f4fb2f93de5c46

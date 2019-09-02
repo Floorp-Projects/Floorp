@@ -703,7 +703,8 @@ class MediaPipelineTransmit::PipelineListener
   // Implement MediaStreamTrackListener
   void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
-  void NotifyEnabledStateChanged(bool aEnabled) override;
+  void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
+                                 bool aEnabled) override;
 
   // Implement DirectMediaStreamTrackListener
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -1088,7 +1089,7 @@ void MediaPipelineTransmit::PipelineListener::NotifyQueuedChanges(
 }
 
 void MediaPipelineTransmit::PipelineListener::NotifyEnabledStateChanged(
-    bool aEnabled) {
+    MediaStreamGraph* aGraph, bool aEnabled) {
   if (mConduit->type() != MediaSessionConduit::VIDEO) {
     return;
   }

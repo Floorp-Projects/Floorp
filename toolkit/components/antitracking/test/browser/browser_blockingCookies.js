@@ -10,17 +10,20 @@ AntiTracking.runTestInNormalAndPrivateMode(
     document.cookie = "name=value";
     is(document.cookie, "", "No cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
-    // Let's do it twice.
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
+    for (let arg of ["?checkonly", "?redirect-checkonly"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+      // Let's do it twice.
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+    }
 
     is(document.cookie, "", "Still no cookies for me");
   },
@@ -29,21 +32,29 @@ AntiTracking.runTestInNormalAndPrivateMode(
   async _ => {
     is(document.cookie, "", "No cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
+    // Note: The ?redirect test is _not_ using checkonly, so it will actually
+    // set our foopy=1 cookie.
+    for (let arg of ["?checkonly", "?redirect"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+    }
 
     document.cookie = "name=value";
     ok(document.cookie.includes("name=value"), "Some cookies for me");
     ok(document.cookie.includes("foopy=1"), "Some cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-present", "We should have cookies");
-      });
+    for (let arg of ["", "?redirect"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-present", "We should have cookies");
+        });
+    }
 
     ok(document.cookie.length, "Some Cookies for me");
   },
@@ -69,17 +80,20 @@ AntiTracking.runTestInNormalAndPrivateMode(
     document.cookie = "name=value";
     is(document.cookie, "", "No cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
-    // Let's do it twice.
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
+    for (let arg of ["", "?redirect"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+      // Let's do it twice.
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+    }
 
     is(document.cookie, "", "Still no cookies for me");
 
@@ -114,21 +128,29 @@ AntiTracking.runTestInNormalAndPrivateMode(
 
     is(document.cookie, "", "No cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-not-present", "We should not have cookies");
-      });
+    // Note: The ?redirect test is _not_ using checkonly, so it will actually
+    // set our foopy=1 cookie.
+    for (let arg of ["?checkonly", "?redirect"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-not-present", "We should not have cookies");
+        });
+    }
 
     document.cookie = "name=value";
     ok(document.cookie.includes("name=value"), "Some cookies for me");
     ok(document.cookie.includes("foopy=1"), "Some cookies for me");
 
-    await fetch("server.sjs")
-      .then(r => r.text())
-      .then(text => {
-        is(text, "cookie-present", "We should have cookies");
-      });
+    for (let arg of ["", "?redirect"]) {
+      info(`checking with arg=${arg}`);
+      await fetch("server.sjs" + arg)
+        .then(r => r.text())
+        .then(text => {
+          is(text, "cookie-present", "We should have cookies");
+        });
+    }
 
     ok(document.cookie.length, "Some Cookies for me");
 

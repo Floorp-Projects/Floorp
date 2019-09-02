@@ -67,6 +67,7 @@ const augmentVanillaLoginObject = login => {
 var AboutLoginsParent = {
   _l10n: null,
   _subscribers: new WeakSet(),
+  _observersAdded: false,
 
   // Listeners are added in BrowserGlue.jsm
   async receiveMessage(message) {
@@ -100,7 +101,12 @@ var AboutLoginsParent = {
           usernameField: "",
           passwordField: "",
         });
-        Services.logins.addLogin(LoginHelper.vanillaObjectToLogin(newLogin));
+        newLogin = LoginHelper.vanillaObjectToLogin(newLogin);
+        try {
+          Services.logins.addLogin(newLogin);
+        } catch (error) {
+          this.handleLoginStorageErrors(newLogin, error, message);
+        }
         break;
       }
       case "AboutLogins:DeleteLogin": {
@@ -247,13 +253,12 @@ var AboutLoginsParent = {
         break;
       }
       case "AboutLogins:Subscribe": {
-        if (
-          !ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length
-        ) {
+        if (!this._observersAdded) {
           Services.obs.addObserver(this, "passwordmgr-crypto-login");
           Services.obs.addObserver(this, "passwordmgr-crypto-loginCanceled");
           Services.obs.addObserver(this, "passwordmgr-storage-changed");
           Services.obs.addObserver(this, UIState.ON_UPDATE);
+          this._observersAdded = true;
         }
         this._subscribers.add(message.target);
 
@@ -459,11 +464,23 @@ var AboutLoginsParent = {
         if (loginUpdates.hasOwnProperty("password")) {
           modifiedLogin.password = loginUpdates.password;
         }
-
-        Services.logins.modifyLogin(logins[0], modifiedLogin);
+        try {
+          Services.logins.modifyLogin(logins[0], modifiedLogin);
+        } catch (error) {
+          this.handleLoginStorageErrors(modifiedLogin, error, message);
+        }
         break;
       }
     }
+  },
+
+  handleLoginStorageErrors(login, error, message) {
+    const messageManager = message.target.messageManager;
+    const errorMessage = error.message;
+    messageManager.sendAsyncMessage("AboutLogins:ShowLoginItemError", {
+      login: augmentVanillaLoginObject(LoginHelper.loginToVanillaObject(login)),
+      errorMessage,
+    });
   },
 
   async observe(subject, topic, type) {
@@ -472,6 +489,7 @@ var AboutLoginsParent = {
       Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
       Services.obs.removeObserver(this, "passwordmgr-storage-changed");
       Services.obs.removeObserver(this, UIState.ON_UPDATE);
+      this._observersAdded = false;
       return;
     }
 

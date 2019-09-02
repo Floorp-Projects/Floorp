@@ -1,6 +1,7 @@
 import json
 import os
 import socket
+import sys
 import threading
 import time
 import traceback
@@ -33,8 +34,8 @@ class WebDriverBaseProtocolPart(BaseProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
-    def execute_script(self, script, async=False):
-        method = self.webdriver.execute_async_script if async else self.webdriver.execute_script
+    def execute_script(self, script, asynchronous=False):
+        method = self.webdriver.execute_async_script if asynchronous else self.webdriver.execute_script
         return method(script)
 
     def set_timeout(self, timeout):
@@ -232,10 +233,14 @@ class WebDriverProtocol(Protocol):
     def teardown(self):
         self.logger.debug("Hanging up on WebDriver session")
         try:
-            self.webdriver.quit()
-        except Exception:
-            pass
-        del self.webdriver
+            self.webdriver.end()
+        except Exception as e:
+            message = str(getattr(e, "message", ""))
+            if message:
+                message += "\n"
+            message += traceback.format_exc(e)
+            self.logger.debug(message)
+        self.webdriver = None
 
     def is_alive(self):
         try:
@@ -277,7 +282,10 @@ class WebDriverRun(object):
                 # it can if self._run fails to set self.result due to raising
                 self.result = False, ("INTERNAL-ERROR", "self._run didn't set a result")
             else:
-                self.result = False, ("EXTERNAL-TIMEOUT", None)
+                message = "Waiting on browser:\n"
+                # get a traceback for the current stack of the executor thread
+                message += "".join(traceback.format_stack(sys._current_frames()[executor.ident]))
+                self.result = False, ("EXTERNAL-TIMEOUT", message)
 
         return self.result
 
@@ -359,7 +367,7 @@ class WebDriverTestharnessExecutor(TestharnessExecutor):
 
         while True:
             result = protocol.base.execute_script(
-                self.script_resume % format_map, async=True)
+                self.script_resume % format_map, asynchronous=True)
 
             # As of 2019-03-29, WebDriver does not define expected behavior for
             # cases where the browser crashes during script execution:
@@ -393,7 +401,7 @@ if (location.href === "about:blank") {
   callback(true);
 } else {
   document.addEventListener("readystatechange", () => {if (document.readyState !== "loading") {callback(true)}});
-}""", async=True)
+}""", asynchronous=True)
             except client.JavascriptErrorException:
                 # We can get an error here if the script runs in the initial about:blank
                 # document before it has navigated, with the driver returning an error

@@ -149,7 +149,10 @@ pageInfoTreeView.prototype = {
     return 0;
   },
   getImageSrc(row, column) {},
-  getCellValue(row, column) {},
+  getCellValue(row, column) {
+    let col = column != null ? column : this.copycol;
+    return row < 0 || col < 0 ? "" : this.data[row][col] || "";
+  },
   toggleOpenState(index) {},
   cycleHeader(col) {},
   selectionChanged() {},
@@ -268,6 +271,19 @@ const nsIPermissionManager = Ci.nsIPermissionManager;
 
 const nsICertificateDialogs = Ci.nsICertificateDialogs;
 const CERTIFICATEDIALOGS_CONTRACTID = "@mozilla.org/nsCertificateDialogs;1";
+
+// clipboard helper
+function getClipboardHelper() {
+  try {
+    return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+      Ci.nsIClipboardHelper
+    );
+  } catch (e) {
+    // do nothing, later code will handle the error
+    return null;
+  }
+}
+const gClipboardHelper = getClipboardHelper();
 
 // namespaces, don't need all of these yet...
 const XLinkNS = "http://www.w3.org/1999/xlink";
@@ -846,10 +862,18 @@ function onBlockImage() {
 
   var checkbox = document.getElementById("blockImage");
   var uri = Services.io.newURI(document.getElementById("imageurltext").value);
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    gDocInfo.principal.originAttributes
+  );
   if (checkbox.checked) {
-    permissionManager.add(uri, "image", nsIPermissionManager.DENY_ACTION);
+    permissionManager.addFromPrincipal(
+      principal,
+      "image",
+      nsIPermissionManager.DENY_ACTION
+    );
   } else {
-    permissionManager.remove(uri, "image");
+    permissionManager.removeFromPrincipal(principal, "image");
   }
 }
 
@@ -1095,7 +1119,14 @@ function makeBlockImage(url) {
       document.l10n.setAttributes(checkbox, "media-block-image", {
         website: uri.host,
       });
-      var perm = permissionManager.testPermission(uri, "image");
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        gDocInfo.principal.originAttributes
+      );
+      let perm = permissionManager.testPermissionFromPrincipal(
+        principal,
+        "image"
+      );
       checkbox.checked = perm == nsIPermissionManager.DENY_ACTION;
     } else {
       checkbox.hidden = true;
@@ -1158,6 +1189,37 @@ function formatDate(datestr, unknown) {
     timeStyle: "long",
   });
   return dateTimeFormatter.format(date);
+}
+
+function doCopy() {
+  if (!gClipboardHelper) {
+    return;
+  }
+
+  var elem = document.commandDispatcher.focusedElement;
+
+  if (elem && elem.localName == "tree") {
+    var view = elem.view;
+    var selection = view.selection;
+    var text = [],
+      tmp = "";
+    var min = {},
+      max = {};
+
+    var count = selection.getRangeCount();
+
+    for (var i = 0; i < count; i++) {
+      selection.getRangeAt(i, min, max);
+
+      for (var row = min.value; row <= max.value; row++) {
+        tmp = view.getCellValue(row, null);
+        if (tmp) {
+          text.push(tmp);
+        }
+      }
+    }
+    gClipboardHelper.copyString(text.join("\n"));
+  }
 }
 
 function doSelectAllMedia() {
