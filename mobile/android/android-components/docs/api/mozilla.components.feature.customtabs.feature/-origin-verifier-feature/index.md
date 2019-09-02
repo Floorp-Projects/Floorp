@@ -8,7 +8,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `OriginVerifierFeature(httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, packageManager: <ERROR CLASS>, dispatch: (`[`CustomTabsAction`](../../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)` |
+| [&lt;init&gt;](-init-.md) | `OriginVerifierFeature(httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, packageManager: <ERROR CLASS>, apiKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, dispatch: (`[`CustomTabsAction`](../../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)` |
 
 ### Functions
 

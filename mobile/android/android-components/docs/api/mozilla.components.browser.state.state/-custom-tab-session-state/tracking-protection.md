@@ -2,7 +2,7 @@
 
 # trackingProtection
 
-`val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L19)
+`val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L20)
 
 Overrides [SessionState.trackingProtection](../-session-state/tracking-protection.md)
 

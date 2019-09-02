@@ -31,7 +31,6 @@
 | [org.mozilla.telemetry.measurement.ArchMeasurement](../org.mozilla.telemetry.measurement/-arch-measurement/index.md) |  |
 | [mozilla.components.browser.search.provider.AssetsSearchEngineProvider](../mozilla.components.browser.search.provider/-assets-search-engine-provider/index.md) | SearchEngineProvider implementation to load the included search engines from assets. |
 | [mozilla.components.lib.jexl.ast.AstNode](../mozilla.components.lib.jexl.ast/-ast-node/index.md) | A node of the abstract syntax tree. |
-| [mozilla.components.lib.jexl.ast.AstType](../mozilla.components.lib.jexl.ast/-ast-type/index.md) |  |
 | [mozilla.components.browser.toolbar.AsyncAutocompleteDelegate](../mozilla.components.browser.toolbar/-async-autocomplete-delegate/index.md) | An autocomplete delegate which is aware of its parent scope (to check for cancellations). Responsible for processing autocompletion results and discarding stale results when [urlView](#) moved on. |
 | [mozilla.components.browser.toolbar.AsyncFilterListener](../mozilla.components.browser.toolbar/-async-filter-listener/index.md) | Wraps [filter](#) execution in a coroutine context, cancelling prior executions on every invocation. [coroutineContext](../mozilla.components.browser.toolbar/-async-filter-listener/coroutine-context.md) must be of type that doesn't propagate cancellation of its children upwards. |
 | [mozilla.components.service.sync.logins.AsyncLoginsStorage](../mozilla.components.service.sync.logins/-async-logins-storage/index.md) | An interface equivalent to the LoginsStorage interface, but where operations are asynchronous. |
@@ -121,11 +120,11 @@
 | [mozilla.components.service.glean.private.CustomDistributionMetricType](../mozilla.components.service.glean.private/-custom-distribution-metric-type/index.md) | This implements the developer facing API for recording custom distribution metrics. |
 | [mozilla.components.browser.domains.CustomDomains](../mozilla.components.browser.domains/-custom-domains/index.md) | Contains functionality to manage custom domains for auto-completion. |
 | [mozilla.components.browser.domains.autocomplete.CustomDomainsProvider](../mozilla.components.browser.domains.autocomplete/-custom-domains-provider/index.md) | Provides autocomplete functionality for domains based on a list managed by [CustomDomains](../mozilla.components.browser.domains/-custom-domains/index.md). |
-| [mozilla.components.browser.session.tab.CustomTabActionButtonConfig](../mozilla.components.browser.session.tab/-custom-tab-action-button-config/index.md) |  |
-| [mozilla.components.browser.session.tab.CustomTabConfig](../mozilla.components.browser.session.tab/-custom-tab-config/index.md) | Holds configuration data for a Custom Tab. |
+| [mozilla.components.browser.state.state.CustomTabActionButtonConfig](../mozilla.components.browser.state.state/-custom-tab-action-button-config/index.md) |  |
+| [mozilla.components.browser.state.state.CustomTabConfig](../mozilla.components.browser.state.state/-custom-tab-config/index.md) | Holds configuration data for a Custom Tab. |
 | [mozilla.components.feature.customtabs.CustomTabIntentProcessor](../mozilla.components.feature.customtabs/-custom-tab-intent-processor/index.md) | Processor for intents which trigger actions related to custom tabs. |
 | [mozilla.components.browser.state.action.CustomTabListAction](../mozilla.components.browser.state.action/-custom-tab-list-action/index.md) | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) implementations related to updating [BrowserState.customTabs](../mozilla.components.browser.state.state/-browser-state/custom-tabs.md). |
-| [mozilla.components.browser.session.tab.CustomTabMenuItem](../mozilla.components.browser.session.tab/-custom-tab-menu-item/index.md) |  |
+| [mozilla.components.browser.state.state.CustomTabMenuItem](../mozilla.components.browser.state.state/-custom-tab-menu-item/index.md) |  |
 | [mozilla.components.browser.state.state.CustomTabSessionState](../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) | Value type that represents the state of a Custom Tab. |
 | [mozilla.components.feature.customtabs.store.CustomTabState](../mozilla.components.feature.customtabs.store/-custom-tab-state/index.md) | Value type that represents the state of a single custom tab accessible from both the service and activity. |
 | [mozilla.components.feature.customtabs.store.CustomTabsAction](../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md) |  |
@@ -212,6 +211,7 @@
 | [org.mozilla.telemetry.measurement.FirstRunProfileDateMeasurement](../org.mozilla.telemetry.measurement/-first-run-profile-date-measurement/index.md) | This measurement will save the timestamp of the first time it was instantiated and report this as profile creation date. |
 | [mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage](../mozilla.components.service.fretboard.storage.flatfile/-flat-file-experiment-storage/index.md) | Class which uses a flat JSON file as an experiment storage mechanism |
 | [kotlin.Float](../mozilla.components.lib.jexl.ext/kotlin.-float/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [kotlinx.coroutines.flow.Flow](../mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/index.md) (extensions in package mozilla.components.support.ktx.kotlinx.coroutines.flow) |  |
 | [androidx.fragment.app.Fragment](../mozilla.components.lib.state.ext/androidx.fragment.app.-fragment/index.md) (extensions in package mozilla.components.lib.state.ext) |  |
 | [mozilla.components.service.fretboard.Fretboard](../mozilla.components.service.fretboard/-fretboard/index.md) | Entry point of the library |
 | [mozilla.components.feature.session.FullScreenFeature](../mozilla.components.feature.session/-full-screen-feature/index.md) | Feature implementation for handling fullscreen mode (exiting and back button presses). |

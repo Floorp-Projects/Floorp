@@ -8,6 +8,9 @@
 |---|---|
 | [BrowserState](-browser-state/index.md) | `data class BrowserState : `[`State`](../mozilla.components.lib.state/-state.md)<br>Value type that represents the complete state of the browser/engine. |
 | [ContentState](-content-state/index.md) | `data class ContentState`<br>Value type that represents the state of the content within a [SessionState](-session-state/index.md). |
+| [CustomTabActionButtonConfig](-custom-tab-action-button-config/index.md) | `data class CustomTabActionButtonConfig` |
+| [CustomTabConfig](-custom-tab-config/index.md) | `data class CustomTabConfig`<br>Holds configuration data for a Custom Tab. |
+| [CustomTabMenuItem](-custom-tab-menu-item/index.md) | `data class CustomTabMenuItem` |
 | [CustomTabSessionState](-custom-tab-session-state/index.md) | `data class CustomTabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a Custom Tab. |
 | [SecurityInfoState](-security-info-state/index.md) | `data class SecurityInfoState`<br>A value type holding security information for a Session. |
 | [SessionState](-session-state/index.md) | `interface SessionState`<br>Interface for states that contain a [ContentState](-content-state/index.md) and can be accessed via an [id](-session-state/id.md). |

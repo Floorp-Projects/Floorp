@@ -7,7 +7,7 @@
 Value type that represents the state of a single custom tab
 accessible from both the service and activity.
 
-This data is meant to supplement [mozilla.components.browser.session.tab.CustomTabConfig](../../mozilla.components.browser.session.tab/-custom-tab-config/index.md),
+This data is meant to supplement [mozilla.components.browser.session.tab.CustomTabConfig](#),
 not replace it. It only contains data that the service also needs to work with.
 
 ### Constructors
