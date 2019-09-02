@@ -91,7 +91,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
   void FlushLine();
-  void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
+  void CreateQuotesAndIndent(nsAString& aResult);
 
   void Output(nsString& aString);
   void Write(const nsAString& aString);
