@@ -21,14 +21,15 @@ use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebu
 use crate::prim_store::{PrimitiveStoreStats};
 use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp};
-use crate::render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskGraph, RenderTaskGraphCounters};
+use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTaskGraphCounters};
+use crate::render_task::{RenderTask, RenderTaskLocation};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{ScenePipeline, SceneProperties};
 use crate::scene_builder::DocumentStats;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
-use crate::tiling::{Frame, RenderPassKind, RenderTargetContext};
+use crate::render_task_graph::{Frame, RenderPassKind, RenderTargetContext};
 use crate::util::MaxRect;
 
 
@@ -99,7 +100,7 @@ impl FrameGlobalResources {
     }
 }
 
-/// A builder structure for `tiling::Frame`
+/// A builder structure for `render_task_graph::Frame`
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
     output_rect: DeviceIntRect,

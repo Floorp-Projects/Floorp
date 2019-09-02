@@ -21,13 +21,13 @@ use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGM
 use crate::prim_store::{recompute_snap_offsets};
 use crate::prim_store::image::ImageSource;
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskGraph};
+use crate::render_task_graph::{RenderTaskId, RenderTaskGraph, RenderTargetContext};
+use crate::render_task::RenderTaskAddress;
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
-use crate::tiling::{RenderTargetContext};
 use crate::util::{project_rect, TransformedRectKind};
 
 // Special sentinel value recognized by the shader. It is considered to be

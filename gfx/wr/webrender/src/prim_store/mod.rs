@@ -39,8 +39,9 @@ use crate::prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 #[cfg(debug_assertions)]
 use crate::render_backend::{FrameId};
 use crate::render_backend::DataStores;
+use crate::render_task_graph::RenderTaskId;
 use crate::render_task::{RenderTask, RenderTaskCacheKey, to_cache_size};
-use crate::render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
+use crate::render_task::{RenderTaskCacheKeyKind, RenderTaskCacheEntryHandle};
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ImageProperties, ImageRequest};
 use crate::scene::SceneProperties;

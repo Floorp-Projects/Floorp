@@ -24,7 +24,7 @@ use std::sync::Arc;
 use crate::capture::{CaptureConfig, ExternalCaptureImage};
 #[cfg(feature = "replay")]
 use crate::capture::PlainExternalImage;
-use crate::tiling;
+use crate::render_task_graph;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
@@ -473,9 +473,9 @@ impl TextureUpdateList {
     }
 }
 
-/// Wraps a tiling::Frame, but conceptually could hold more information
+/// Wraps a render_task_graph::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
-    pub frame: tiling::Frame,
+    pub frame: render_task_graph::Frame,
     pub is_new_scene: bool,
 }
 

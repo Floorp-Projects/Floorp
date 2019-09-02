@@ -28,8 +28,9 @@ use crate::image::{compute_tile_size, compute_tile_range, for_each_tile_in_range
 use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
 use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
-use crate::render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
-use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskGraph};
+use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
+use crate::render_task::{RenderTaskCache, RenderTaskCacheKey};
+use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::{Iter, IterMut};
