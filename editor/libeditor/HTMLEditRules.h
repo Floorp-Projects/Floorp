@@ -488,23 +488,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE EditActionResult ReturnInParagraph(Element& aParentDivOrP);
 
   /**
-   * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.
-   *
-   * @param aParentDivOrP       The parent block to be split.  This must be <p>
-   *                            or <div> element.
-   * @param aStartOfRightNode   The point to be start of right node after
-   *                            split.  This must be descendant of
-   *                            aParentDivOrP.
-   * @param aNextBRNode         Next <br> node if there is.  Otherwise, nullptr.
-   *                            If this is not nullptr, the <br> node may be
-   *                            removed.
-   */
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitParagraph(
-      Element& aParentDivOrP,
-      const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
-
-  /**
    * ReturnInListItem() handles insertParagraph command (i.e., handling
    * Enter key press) in a list item element.
    *

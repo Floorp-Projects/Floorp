@@ -1780,6 +1780,24 @@ class HTMLEditor final : public TextEditor,
   bool IsEmptyBlockElement(Element& aElement,
                            IgnoreSingleBR aIgnoreSingleBR) const;
 
+  /**
+   * SplitParagraph() splits the parent block, aParentDivOrP, at
+   * aStartOfRightNode.
+   *
+   * @param aParentDivOrP       The parent block to be split.  This must be <p>
+   *                            or <div> element.
+   * @param aStartOfRightNode   The point to be start of right node after
+   *                            split.  This must be descendant of
+   *                            aParentDivOrP.
+   * @param aNextBRNode         Next <br> node if there is.  Otherwise, nullptr.
+   *                            If this is not nullptr, the <br> node may be
+   *                            removed.
+   */
+  template <typename PT, typename CT>
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitParagraph(
+      Element& aParentDivOrP,
+      const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
