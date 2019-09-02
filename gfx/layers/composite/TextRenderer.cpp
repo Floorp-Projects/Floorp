@@ -126,10 +126,32 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
   RefPtr<DrawTarget> dt =
       Factory::CreateDrawTarget(BackendType::SKIA, size, sTextureFormat);
 
-  // Initialize the surface to transparent white.
-  dt->FillRect(Rect(0, 0, size.width, size.height),
-               ColorPattern(Color(1.0, 1.0, 1.0, sBackgroundOpacity)),
-               DrawOptions(1.0, CompositionOp::OP_SOURCE));
+  RenderTextToDrawTarget(dt, aText, aTargetPixelWidth, aFontType);
+  RefPtr<SourceSurface> surf = dt->Snapshot();
+  RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
+  RefPtr<DataTextureSource> src = aProvider->CreateDataTextureSource();
+
+  if (!src->Update(dataSurf)) {
+    // Upload failed.
+    return nullptr;
+  }
+
+  return src;
+}
+
+void TextRenderer::RenderTextToDrawTarget(DrawTarget* aDrawTarget,
+                                          const string& aText,
+                                          uint32_t aTargetPixelWidth,
+                                          FontType aFontType) {
+  if (!EnsureInitialized(aFontType)) {
+    return;
+  }
+
+  // Initialize the DrawTarget to transparent white.
+  IntSize size = aDrawTarget->GetSize();
+  aDrawTarget->FillRect(Rect(0, 0, size.width, size.height),
+                        ColorPattern(Color(1.0, 1.0, 1.0, sBackgroundOpacity)),
+                        DrawOptions(1.0, CompositionOp::OP_SOURCE));
 
   IntPoint currentPos;
 
@@ -138,7 +160,7 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
 
   const unsigned int kGlyphsPerLine = info->mTextureWidth / info->mCellWidth;
 
-  // Copy our glyphs onto the surface.
+  // Copy our glyphs onto the DrawTarget.
   for (uint32_t i = 0; i < aText.length(); i++) {
     if (aText[i] == '\n' ||
         (aText[i] == ' ' && currentPos.x > int32_t(aTargetPixelWidth))) {
@@ -155,21 +177,10 @@ RefPtr<TextureSource> TextRenderer::RenderText(TextureSourceProvider* aProvider,
                     cellIndexY * info->mCellHeight, glyphWidth,
                     info->mCellHeight);
 
-    dt->CopySurface(cache->mGlyphBitmaps, srcRect, currentPos);
+    aDrawTarget->CopySurface(cache->mGlyphBitmaps, srcRect, currentPos);
 
     currentPos.x += glyphWidth;
   }
-
-  RefPtr<SourceSurface> surf = dt->Snapshot();
-  RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
-  RefPtr<DataTextureSource> src = aProvider->CreateDataTextureSource();
-
-  if (!src->Update(dataSurf)) {
-    // Upload failed.
-    return nullptr;
-  }
-
-  return src;
 }
 
 /* static */ const FontBitmapInfo* TextRenderer::GetFontInfo(FontType aType) {
