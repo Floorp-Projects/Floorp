@@ -55,7 +55,7 @@ class ManifestIssue extends PureComponent {
     const icon = this.getIconData(level);
 
     return li(
-      { className: `manifest-warning ${className ? className : ""}` },
+      { className: `js-manifest-issue ${className ? className : ""}` },
       Localized(
         { id: icon.localizationId, attrs: { alt: true, title: true } },
         img({

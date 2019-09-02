@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Manifest does not render the issues section when the manifest is valid 1`] = `
-<article>
+<article
+  className="js-manifest"
+>
   <Localized
     id="manifest-view-header"
   >
@@ -64,7 +66,9 @@ exports[`Manifest does not render the issues section when the manifest is valid 
 `;
 
 exports[`Manifest renders the expected snapshot for a simple manifest 1`] = `
-<article>
+<article
+  className="js-manifest"
+>
   <Localized
     id="manifest-view-header"
   >
