@@ -685,7 +685,7 @@ class HuffmanPreludeReader {
         : cx_(cx_), owner(owner), identity(identity) {}
 
     MOZ_MUST_USE JS::Result<Ok> operator()(const List& list) {
-      fprintf(stderr, "PushEntryMatcher visiting List %s\n",
+      fprintf(stderr, "PushEntryMatcher Visiting List %s\n",
               describeBinASTList(list.contents));
       auto& table = owner.dictionary.tableForListLength(list.contents);
       if (table.is<HuffmanTableUnreachable>()) {
@@ -693,7 +693,7 @@ class HuffmanPreludeReader {
         // 2. Add the field to the set of visited fields
         table = {mozilla::VariantType<HuffmanTableInitializing>{}};
 
-        // Read the length immediately.
+        // Read the lengths immediately.
         MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
       }
 
@@ -1028,6 +1028,8 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
   MOZ_TRY(readStringPrelude());
   MOZ_TRY(readHuffmanPrelude());
 
+  fprintf(stderr, "\n\n\n----- Finished decoding prelude at %ld\n\n\n\n",
+          current_ - start_);
   return Ok();
 }
 
@@ -1292,21 +1294,25 @@ BinASTTokenReaderContext::readFieldFromTable(const Context& context) {
 }
 
 JS::Result<bool> BinASTTokenReaderContext::readBool(const Context& context) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("bool", context);
   return readFieldFromTable<HuffmanTableIndexedSymbolsBool>(context);
 }
 
 JS::Result<double> BinASTTokenReaderContext::readDouble(
     const Context& context) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("double", context);
   return readFieldFromTable<HuffmanTableExplicitSymbolsF64>(context);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
     const Context& context) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("atom?", context);
   return readFieldFromTable<HuffmanTableIndexedSymbolsOptionalLiteralString>(
       context);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(const Context& context) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("atom", context);
   return readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(context);
 }
 
@@ -1331,7 +1337,14 @@ JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out, const Context&) {
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const Context& context) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("variant",
+                                                             context);
   return readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(context);
+}
+
+JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
+    const Context& context) {
+  return readFieldFromTable<HuffmanTableExplicitSymbolsU32>(context);
 }
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
@@ -1455,11 +1468,6 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readUnpackedLong() {
   return result;
 }
 
-JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
-    const Context&) {
-  return readVarU32<Compression::No>();
-}
-
 BinASTTokenReaderContext::AutoTaggedTuple::AutoTaggedTuple(
     BinASTTokenReaderContext& reader)
     : AutoBase(reader) {}
@@ -1519,6 +1527,8 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
 
     const uint32_t keyBits = key.leadingBits(iter.key.bitLength);
     if (keyBits == iter.key.bits) {
+      fprintf(stderr, "HuffmanTableImpl: Decoded with %u (%u bits)\n", keyBits,
+              iter.key.bitLength);
       // Entry found.
       return HuffmanEntry<const T*>(iter.key.bits, iter.key.bitLength,
                                     &iter.value);
@@ -1823,7 +1833,6 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
     HuffmanTableExplicitSymbolsListLength& table, const List& list) {
-  // BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
   BINJS_MOZ_TRY_DECL(length, reader.readUnpackedLong());
   if (length > MAX_LIST_LENGTH) {
     return raiseInvalidTableData(list.identity);
