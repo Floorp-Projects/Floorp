@@ -242,9 +242,7 @@
             app:argType="string" />
         <action
             android:id="@+id/action_bookmarkFragment_to_browserFragment"
-            app:destination="@id/browserFragment"
-            app:popUpTo="@id/libraryFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/browserFragment"/>
         <action
             android:id="@+id/action_bookmarkFragment_self"
             app:destination="@id/bookmarkFragment" />
