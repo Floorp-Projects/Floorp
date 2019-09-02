@@ -20,7 +20,6 @@ addLoadEvent(function() {
   is(conv.channelInterpretation, "speakers", "Correct channelCountInterpretation for the Convolver node");
 
   is(conv.buffer, null, "Default buffer value");
-  conv.buffer = context.createBuffer(2, 1024, 22050);
   is(conv.normalize, true, "Default normalize value");
 
   SimpleTest.finish();
