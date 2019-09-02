@@ -310,6 +310,7 @@
                 <textbox id="security-identity-verifier-value" readonly="true"
                          flex="1"/>
                 <button id="security-view-cert" data-l10n-id="security-view"
+                        collapsed="true"
                         oncommand="security.viewCert();"/>
               </hbox>
             </row>
