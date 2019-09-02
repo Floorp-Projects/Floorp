@@ -860,7 +860,6 @@ Maybe<gfx::IntRect> CompositorOGL::BeginRenderingToNativeLayer(
   }
   SetRenderTarget(rt);
   mCurrentNativeLayer = aNativeLayer;
-  mPixelsPerFrame += rect.Area();
 
   mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
                           mClearColor.a);
@@ -881,8 +880,10 @@ Maybe<gfx::IntRect> CompositorOGL::BeginRenderingToNativeLayer(
                                         clearRect.Width(), clearRect.Height());
       mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
     }
+    mPixelsPerFrame += rtClip->Area();
   } else {
     mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+    mPixelsPerFrame += rect.Area();
   }
 
   return Some(rect);
