@@ -59,7 +59,7 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
 #[cfg(feature = "replay")]
-use crate::render_task_graph::Frame;
+use crate::frame_builder::Frame;
 use time::precise_time_ns;
 use crate::util::{Recycler, VecHelper, drain_filter};
 

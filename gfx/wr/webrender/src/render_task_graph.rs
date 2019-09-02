@@ -8,22 +8,20 @@
 //! module.
 
 use api::{ColorF, BorderStyle, PipelineId, PremultipliedColorF};
-use api::{DocumentLayer, ImageFormat, LineOrientation};
+use api::{ImageFormat, LineOrientation};
 use api::units::*;
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, ClipBatcher, resolve_image, BatchBuilder};
 use crate::clip::ClipStore;
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX};
-use crate::debug_render::DebugItem;
 use crate::device::{Texture};
 use crate::frame_builder::FrameGlobalResources;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
-use crate::gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
+use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex, Swizzle, TextureSource};
-use crate::picture::{RecordedDirtyRegion, SurfaceInfo};
+use crate::picture::SurfaceInfo;
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
-use crate::profiler::FrameProfileCounters;
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task::{BlitSource, RenderTargetKind, RenderTask, RenderTaskKind, RenderTaskAddress, RenderTaskData};
 use crate::render_task::{ClearMode, RenderTaskLocation, ScalingTask, SvgFilterInfo};
@@ -1685,59 +1683,6 @@ impl RenderPass {
                 );
             }
         }
-    }
-}
-
-/// A rendering-oriented representation of the frame built by the render backend
-/// and presented to the renderer.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct Frame {
-    /// The origin on content produced by the render tasks.
-    pub content_origin: DeviceIntPoint,
-    /// The rectangle to show the frame in, on screen.
-    pub device_rect: DeviceIntRect,
-    pub background_color: Option<ColorF>,
-    pub layer: DocumentLayer,
-    pub passes: Vec<RenderPass>,
-    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
-    pub profile_counters: FrameProfileCounters,
-
-    pub transform_palette: Vec<TransformData>,
-    pub render_tasks: RenderTaskGraph,
-    pub prim_headers: PrimitiveHeaders,
-
-    /// The GPU cache frame that the contents of Self depend on
-    pub gpu_cache_frame_id: FrameId,
-
-    /// List of textures that we don't know about yet
-    /// from the backend thread. The render thread
-    /// will use a callback to resolve these and
-    /// patch the data structures.
-    pub deferred_resolves: Vec<DeferredResolve>,
-
-    /// True if this frame contains any render tasks
-    /// that write to the texture cache.
-    pub has_texture_cache_tasks: bool,
-
-    /// True if this frame has been drawn by the
-    /// renderer.
-    pub has_been_rendered: bool,
-
-    /// Dirty regions recorded when generating this frame. Empty when not in
-    /// testing.
-    #[cfg_attr(feature = "serde", serde(skip))]
-    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
-
-    /// Debugging information to overlay for this frame.
-    pub debug_items: Vec<DebugItem>,
-}
-
-impl Frame {
-    // This frame must be flushed if it writes to the
-    // texture cache, and hasn't been drawn yet.
-    pub fn must_be_drawn(&self) -> bool {
-        self.has_texture_cache_tasks && !self.has_been_rendered
     }
 }
 
