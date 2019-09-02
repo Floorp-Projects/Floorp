@@ -1302,6 +1302,19 @@ enum class BinASTStringEnum: uint16_t {
                     })
                     .format("\\\n")
             ));
+            buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_WEBIDL_ORDER(F) \\\n {variants}\n",
+                enum_macro_name = enum_macro_name,
+                variants = enum_.strings()
+                    .iter()
+                    .map(|variant_string| {
+                        format!("   F({enum_name}, {variant_name}, \"{variant_string}\")",
+                            enum_name = enum_name,
+                            variant_name = self.variants_by_symbol.get(variant_string).unwrap(),
+                            variant_string = variant_string
+                        )
+                    })
+                    .format("\\\n")
+            ));
             buffer.push_str(&format!("\nconst size_t BIN_AST_STRING_ENUM_{enum_macro_name}_LIMIT = {len};\n\n\n",
                 enum_macro_name = enum_macro_name,
                 len = enum_.strings().len(),
