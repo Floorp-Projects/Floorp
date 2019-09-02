@@ -4724,56 +4724,11 @@ pref("dom.vr.external.quit.timeout", 10000);
 // vrdisplayactivate from later calling VRDisplay.requestPresent, which would
 // result in a non-responsive browser in the VR headset.
 pref("dom.vr.navigation.timeout", 5000);
-// Minimum number of milliseconds after content has stopped VR presentation
-// before the Oculus session is re-initialized to an invisible / tracking
-// only mode.  If this value is too high, users will need to wait longer
-// after stopping WebVR presentation before automatically returning to the
-// Oculus home interface.  (They can immediately return to the Oculus Home
-// interface through the Oculus HUD without waiting this duration)
-// If this value is too low, the Oculus Home interface may be visible
-// momentarily during VR link navigation.
-pref("dom.vr.oculus.present.timeout", 500);
-// When enabled, Oculus sessions may be created with the ovrInit_Invisible
-// flag if a page is using tracking but not presenting.  When a page
-// begins presenting VR frames, the session will be re-initialized without
-// the flag.  This eliminates the "Firefox not responding" warnings in
-// the headset, but might not be compatible with all versions of the Oculus
-// runtime.
-pref("dom.vr.oculus.invisible.enabled", true);
-// Minimum number of milliseconds that the browser will wait before
-// attempting to poll again for connected VR controllers.  The browser
-// will not attempt to poll for VR controllers until it needs to use them.
-pref("dom.vr.controller.enumerate.interval", 1000);
-// Minimum number of milliseconds that the browser will wait before
-// attempting to poll again for connected VR displays.  The browser
-// will not attempt to poll for VR displays until it needs to use
-// them, such as when detecting a WebVR site.
-pref("dom.vr.display.enumerate.interval", 5000);
-// Minimum number of milliseconds that the VR session will be kept
-// alive after the browser and content no longer are using the
-// hardware.  If a VR multitasking environment, this should be set
-// very low or set to 0.
-pref("dom.vr.inactive.timeout", 5000);
-// Pose prediction reduces latency effects by returning future predicted HMD
-// poses to callers of the WebVR API.  This currently only has an effect for
-// Oculus Rift on SDK 0.8 or greater.
-pref("dom.vr.poseprediction.enabled", true);
-// Starting VR presentation is only allowed within a user gesture or event such
-// as VRDisplayActivate triggered by the system.  dom.vr.require-gesture allows
-// this requirement to be disabled for special cases such as during automated
-// tests or in a headless kiosk system.
-pref("dom.vr.require-gesture", true);
-// Puppet device, used for simulating VR hardware within tests and dev tools
-pref("dom.vr.puppet.enabled", false);
 // path to OSVR DLLs
 pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");
 pref("gfx.vr.osvr.clientLibPath", "");
 pref("gfx.vr.osvr.clientKitLibPath", "");
-// The number of milliseconds since last frame start before triggering a new frame.
-// When content is failing to submit frames on time or the lower level VR platform API's
-// are rejecting frames, it determines the rate at which RAF callbacks will be called.
-pref("dom.vr.display.rafMaxDuration", 50);
 
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.
@@ -5001,9 +4956,6 @@ pref("dom.presentation.session_transport.data_channel.enable", false);
     pref("intl.allow-insecure-text-input", false);
   #endif
 #endif // XP_MACOSX
-
-// Enable meta-viewport support in remote APZ-enabled frames.
-pref("dom.meta-viewport.enabled", false);
 
 // Search service settings
 pref("browser.search.log", false);
