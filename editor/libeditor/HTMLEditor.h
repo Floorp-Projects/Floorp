@@ -1798,6 +1798,20 @@ class HTMLEditor final : public TextEditor,
       Element& aParentDivOrP,
       const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
 
+  /**
+   * HandleInsertParagraphInParagraph() does the right thing for Enter key
+   * press or 'insertParagraph' command in aParentDivOrP.  aParentDivOrP will
+   * be split at start of first selection range.
+   *
+   * @param aParentDivOrP   The parent block.  This must be <p> or <div>
+   *                        element.
+   * @return                Returns with NS_OK if this doesn't meat any
+   *                        unexpected situation.  If this method tries to
+   *                        split the paragraph, marked as handled.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleInsertParagraphInParagraph(Element& aParentDivOrP);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

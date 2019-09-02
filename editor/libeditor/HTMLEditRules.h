@@ -474,20 +474,6 @@ class HTMLEditRules : public TextEditRules {
                                        int32_t aOffset);
 
   /**
-   * ReturnInParagraph() does the right thing for Enter key press or
-   * 'insertParagraph' command in aParentDivOrP.  aParentDivOrP will be
-   * split at start of first selection range.
-   *
-   * @param aParentDivOrP   The parent block.  This must be <p> or <div>
-   *                        element.
-   * @return                Returns with NS_OK if this doesn't meat any
-   *                        unexpected situation.  If this method tries to
-   *                        split the paragraph, marked as handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult ReturnInParagraph(Element& aParentDivOrP);
-
-  /**
    * ReturnInListItem() handles insertParagraph command (i.e., handling
    * Enter key press) in a list item element.
    *
