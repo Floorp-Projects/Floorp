@@ -58,12 +58,6 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
 loader.lazyRequireGetter(
   this,
-  "EmulationFront",
-  "devtools/shared/fronts/emulation",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "PriorityLevels",
   "devtools/client/shared/components/NotificationBox",
   true
@@ -560,22 +554,13 @@ ResponsiveUI.prototype = {
 
   async connectToServer() {
     // The client being instantiated here is separate from the toolbox. It is being used
-    // separately and has a life cycle that doesn't correspond to the toolbox. As a
-    // result, it does not have a target, so we are not using `target.getFront` here. See
-    // also the implementation for about:debugging
+    // separately and has a life cycle that doesn't correspond to the toolbox.
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     await this.client.connect();
     const targetFront = await this.client.mainRoot.getTab();
-    this.emulationFront = new EmulationFront(this.client);
-    // Because we are not using getFront (see previous comment), we have to do what it
-    // does and manually set the front's actor ID here.
-    // Once bug 1465635 is resolved, we will be able to use getFront from here and remove
-    // this.
-    this.emulationFront.actorID =
-      targetFront.targetForm[this.emulationFront.formAttributeName];
-    this.emulationFront.manage(this.emulationFront);
+    this.emulationFront = await targetFront.getFront("emulation");
   },
 
   /**
