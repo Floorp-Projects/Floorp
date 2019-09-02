@@ -20,6 +20,12 @@ importScripts(
 // the wasm code, and returns the symbol table or an error. Then it shuts down
 // itself.
 
+const {
+  CompactSymbolTable,
+  WasmMemBuffer,
+  get_compact_symbol_table,
+} = wasm_bindgen;
+
 // Read an open OS.File instance into the Uint8Array dataBuf.
 function readFileInto(file, dataBuf) {
   // Ideally we'd be able to call file.readTo(dataBuf) here, but readTo no
@@ -53,82 +59,40 @@ onmessage = async e => {
     // Instantiate the WASM module.
     await wasm_bindgen(module);
 
-    const { CompactSymbolTable, wasm } = wasm_bindgen;
-
-    const binaryFile = OS.File.open(binaryPath, { read: true });
-    const binaryDataBufLen = binaryFile.stat().size;
-
     // Read the binary file into WASM memory.
-    const binaryDataBufPtr = wasm.__wbindgen_malloc(binaryDataBufLen);
-    const binaryDataBuf = new Uint8Array(
-      wasm.memory.buffer,
-      binaryDataBufPtr,
-      binaryDataBufLen
-    );
-    readFileInto(binaryFile, binaryDataBuf);
+    const binaryFile = OS.File.open(binaryPath, { read: true });
+    const binaryData = new WasmMemBuffer(binaryFile.stat().size, array => {
+      readFileInto(binaryFile, array);
+    });
     binaryFile.close();
 
     // Do the same for the debug file, if it is supplied and different from the
     // binary file. This is only the case on Windows.
-    let debugDataBufLen = binaryDataBufLen;
-    let debugDataBufPtr = binaryDataBufPtr;
+    let debugData = binaryData;
     if (debugPath && debugPath !== binaryPath) {
       const debugFile = OS.File.open(debugPath, { read: true });
-      debugDataBufLen = debugFile.stat().size;
-      debugDataBufPtr = wasm.__wbindgen_malloc(debugDataBufLen);
-      const debugDataBuf = new Uint8Array(
-        wasm.memory.buffer,
-        debugDataBufPtr,
-        debugDataBufLen
-      );
-      readFileInto(debugFile, debugDataBuf);
+      debugData = new WasmMemBuffer(debugFile.stat().size, array => {
+        readFileInto(debugFile, array);
+      });
       debugFile.close();
     }
-
-    // Call get_compact_symbol_table. We're calling the raw wasm function
-    // instead of the binding function that wasm-bindgen generated for us,
-    // because the generated function doesn't let us pass binaryDataBufPtr
-    // or debugDataBufPtr and would force another copy.
-    //
-    // The rust definition of get_compact_symbol_table is:
-    //
-    // #[wasm_bindgen]
-    // pub fn get_compact_symbol_table(binary_data: &[u8], debug_data: &[u8], breakpad_id: &str, dest: &mut CompactSymbolTable) -> bool
-    //
-    // It gets exposed as a wasm function with the following signature:
-    //
-    // pub fn get_compact_symbol_table(binaryDataBufPtr: u32, binaryDataBufLen: u32, debugDataBufPtr: u32, debugDataBufLen: u32, breakpadIdPtr: u32, breakpadIdLen: u32, destPtr: u32) -> u32
-    //
-    // We're relying on implementation details of wasm-bindgen here. The above
-    // is true as of wasm-bindgen 0.2.32.
-
-    // Convert the breakpadId string into bytes in wasm memory.
-    const breakpadIdBuf = new TextEncoder("utf-8").encode(breakpadId);
-    const breakpadIdLen = breakpadIdBuf.length;
-    const breakpadIdPtr = wasm.__wbindgen_malloc(breakpadIdLen);
-    new Uint8Array(wasm.memory.buffer).set(breakpadIdBuf, breakpadIdPtr);
 
     const output = new CompactSymbolTable();
     let succeeded;
     try {
-      succeeded =
-        wasm.get_compact_symbol_table(
-          binaryDataBufPtr,
-          binaryDataBufLen,
-          debugDataBufPtr,
-          debugDataBufLen,
-          breakpadIdPtr,
-          breakpadIdLen,
-          output.ptr
-        ) !== 0;
+      succeeded = get_compact_symbol_table(
+        binaryData,
+        debugData,
+        breakpadId,
+        output
+      );
     } catch (e) {
       succeeded = false;
     }
 
-    wasm.__wbindgen_free(breakpadIdPtr, breakpadIdLen);
-    wasm.__wbindgen_free(binaryDataBufPtr, binaryDataBufLen);
-    if (debugDataBufPtr != binaryDataBufPtr) {
-      wasm.__wbindgen_free(debugDataBufPtr, debugDataBufLen);
+    binaryData.free();
+    if (debugData != binaryData) {
+      debugData.free();
     }
 
     if (!succeeded) {
