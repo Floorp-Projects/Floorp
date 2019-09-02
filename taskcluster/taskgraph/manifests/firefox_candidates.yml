@@ -183,7 +183,6 @@ mapping:
         all_locales: true
         description: "Localized repack that grabs a packaged en-US Firefox and repackages it as locale-specific Firefox"
         locale_prefix: ''
-        source_path_modifier: '${locale}'
         from:
             - langpack-copy
             - signing
