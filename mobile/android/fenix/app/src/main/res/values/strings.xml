@@ -645,7 +645,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">You\'ll be logged out of most sites</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">You’ll be logged out of most sites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Cached images and files</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -756,7 +756,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Use email instead</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won\'t delete any of your browsing data on this device.</string>
+    <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Disconnect</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
