@@ -449,6 +449,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   NodeSet& gcSweepGroupEdges() {
     return gcGraphEdges;  // Defined in GraphNodeBase base class.
   }
+  bool hasSweepGroupEdgeTo(Zone* otherZone) const {
+    return gcGraphEdges.has(otherZone);
+  }
   MOZ_MUST_USE bool addSweepGroupEdgeTo(Zone* otherZone) {
     MOZ_ASSERT(otherZone->isGCMarking());
     return gcSweepGroupEdges().put(otherZone);
