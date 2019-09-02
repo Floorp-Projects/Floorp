@@ -132,6 +132,11 @@ const ActorRegistry = {
       constructor: "ActorRegistryActor",
       type: { global: true },
     });
+    this.registerModule("devtools/server/actors/addon/addons", {
+      prefix: "addons",
+      constructor: "AddonsActor",
+      type: { global: true },
+    });
     this.registerModule("devtools/server/actors/device", {
       prefix: "device",
       constructor: "DeviceActor",
