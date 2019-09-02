@@ -13,7 +13,7 @@
 var gTest = {
   length: 2048,
   numberOfChannels: 6,
-  createGraph: function(context) {
+  createGraph(context) {
     var buffers = [];
     for (var j = 0; j < 6; ++j) {
       var buffer = context.createBuffer(2, 2048, context.sampleRate);
@@ -38,7 +38,7 @@ var gTest = {
 
     return merger;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     var expectedBuffer = context.createBuffer(6, 2048, context.sampleRate);
     for (var i = 0; i < 6; ++i) {
       for (var j = 0; j < 2048; ++j) {

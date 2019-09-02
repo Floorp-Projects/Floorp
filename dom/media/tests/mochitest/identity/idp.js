@@ -20,12 +20,12 @@
   }
 
   IDPJS.prototype = {
-    getLogin: function() {
+    getLogin() {
       return fetch(
         "https://example.com/.well-known/idp-proxy/idp.sjs?" + this.id
       ).then(response => response.status === 200);
     },
-    checkLogin: function(result) {
+    checkLogin(result) {
       return this.getLogin().then(loggedIn => {
         if (loggedIn) {
           return result;
@@ -38,7 +38,7 @@
       });
     },
 
-    borkResult: function(result) {
+    borkResult(result) {
       if (instructions.some(is("throw"))) {
         throw new Error("Throwing!");
       }
@@ -55,7 +55,7 @@
       return Promise.resolve(result);
     },
 
-    _selectUsername: function(usernameHint) {
+    _selectUsername(usernameHint) {
       dump("_selectUsername: usernameHint(" + usernameHint + ")\n");
       var username = "someone@" + this.domain;
       if (usernameHint) {
@@ -69,7 +69,7 @@
       return username;
     },
 
-    generateAssertion: function(payload, origin, options) {
+    generateAssertion(payload, origin, options) {
       dump(
         "idp: generateAssertion(" +
           payload +
@@ -95,7 +95,7 @@
       });
     },
 
-    validateAssertion: function(assertion, origin) {
+    validateAssertion(assertion, origin) {
       dump("idp: validateAssertion(" + assertion + ")\n");
       var assertion = JSON.parse(assertion);
       if (instructions.some(is("bad-validate"))) {

@@ -8,7 +8,7 @@ onerror = function(message, filename, lineno) {
     seenScopeError = true;
     postMessage({
       type: "scope",
-      data: { message: message, filename: filename, lineno: lineno },
+      data: { message, filename, lineno },
     });
     return true;
   }

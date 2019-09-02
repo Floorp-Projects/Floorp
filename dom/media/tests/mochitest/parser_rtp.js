@@ -83,7 +83,7 @@ var ParseRtpPacket = buffer => {
     // |                             ....                              |
     let addExtension = (id, len) =>
       header.extensions.push({
-        id: id,
+        id,
         data: new DataView(buffer, offset, len),
       });
     let extensionId = view.getUint16(offset);
@@ -127,5 +127,5 @@ var ParseRtpPacket = buffer => {
       }
     }
   }
-  return { type: "rtp", header: header, payload: new DataView(buffer, offset) };
+  return { type: "rtp", header, payload: new DataView(buffer, offset) };
 };

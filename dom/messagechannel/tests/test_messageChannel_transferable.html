@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       if (evt.data.status == 'READY') {
-        a.port1.postMessage({ab: ab, cb: ab}, [ab]);
+        a.port1.postMessage({ab, cb: ab}, [ab]);
         ok(ab.byteLength == 0, "PostMessage - The size is: 0 == " + ab.byteLength)
       } else {
         ok(false, "Unknown message");

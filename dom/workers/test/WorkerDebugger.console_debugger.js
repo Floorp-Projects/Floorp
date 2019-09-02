@@ -1,7 +1,7 @@
 "use strict";
 
 function ok(a, msg) {
-  postMessage(JSON.stringify({ type: "status", what: !!a, msg: msg }));
+  postMessage(JSON.stringify({ type: "status", what: !!a, msg }));
 }
 
 function is(a, b, msg) {

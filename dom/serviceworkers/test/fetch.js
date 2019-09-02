@@ -24,7 +24,7 @@ addEventListener("fetch", function(event) {
     let url = param["url"];
     let mode = param["mode"];
 
-    event.respondWith(fetch(url, { mode: mode }));
+    event.respondWith(fetch(url, { mode }));
   }
 });
 

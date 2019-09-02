@@ -6,7 +6,7 @@ self.addEventListener("fetch", function(event) {
         if (client.url.includes("plugins.html")) {
           client.postMessage({
             destination: event.request.destination,
-            resource: resource,
+            resource,
           });
         }
       });

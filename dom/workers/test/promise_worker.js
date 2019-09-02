@@ -840,7 +840,7 @@ function promiseResolveArray() {
 
 function promiseResolveThenable() {
   var p = Promise.resolve({
-    then: function(onFulfill, onReject) {
+    then(onFulfill, onReject) {
       onFulfill(2);
     },
   });

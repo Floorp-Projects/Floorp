@@ -10,7 +10,7 @@ const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 const USER_CONTEXT_ID = 3;
 
 let mockAlertsService = {
-  showAlert: function(alert, alertListener) {
+  showAlert(alert, alertListener) {
     ok(true, "Showing alert");
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function() {
@@ -22,7 +22,7 @@ let mockAlertsService = {
     }, 100);
   },
 
-  showAlertNotification: function(
+  showAlertNotification(
     imageUrl,
     title,
     text,
@@ -37,14 +37,14 @@ let mockAlertsService = {
     this.showAlert();
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsISupports) || aIID.equals(Ci.nsIAlertsService)) {
       return this;
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter != null) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }

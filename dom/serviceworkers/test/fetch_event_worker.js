@@ -84,7 +84,7 @@ onfetch = function(ev) {
     ev.respondWith(
       new Response(
         new ReadableStream({
-          start: function(controller) {
+          start(controller) {
             controller.enqueue(
               new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21])
             );

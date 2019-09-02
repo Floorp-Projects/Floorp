@@ -13,8 +13,8 @@ onfetch = function(e) {
         return fetch(url, {
           method: e.request.method,
           headers: e.request.headers,
-          body: body,
-          mode: mode,
+          body,
+          mode,
           credentials: e.request.credentials,
           redirect: e.request.redirect,
           cache: e.request.cache,

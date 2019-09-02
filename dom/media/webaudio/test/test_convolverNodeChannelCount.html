@@ -17,7 +17,7 @@ const outputLength = 2048; // < signalLength + responseLength to test bug 910171
 var gTest = {
   length: outputLength,
   numberOfChannels: 2,
-  createGraph: function(context) {
+  createGraph(context) {
     var buffer = context.createBuffer(2, signalLength, context.sampleRate);
     for (var i = 0; i < signalLength; ++i) {
       var sample = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);

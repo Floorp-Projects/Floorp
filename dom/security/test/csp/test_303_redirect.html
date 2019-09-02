@@ -27,7 +27,7 @@ function examiner() {
 }
 
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic === "specialpowers-http-notify-request") {
       // this is used to fail the test - if we see the POST to the target of the redirect
       // we know this is a fail
@@ -45,7 +45,7 @@ examiner.prototype  = {
 
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }

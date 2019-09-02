@@ -10,7 +10,7 @@ var WebVRHelpers = (function() {
   };
 
   var API = {
-    RequestPresentOnVRDisplay: RequestPresentOnVRDisplay,
+    RequestPresentOnVRDisplay,
 
     none: false,
   };

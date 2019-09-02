@@ -16,7 +16,7 @@
             seenWindowError = true;
             messageCallback({
               type: "window",
-              data: { message: message, filename: filename, lineno: lineno }
+              data: { message, filename, lineno }
             });
             return true;
           }

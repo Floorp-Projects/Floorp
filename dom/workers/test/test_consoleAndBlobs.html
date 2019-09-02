@@ -19,18 +19,18 @@
 
   var order = 0;
   consoleListener.prototype  = {
-    observe: function(aSubject, aTopic, aData) {
-      ok(true, "Something has been received");
-      is(aTopic, "console-api-log-event");
+    observe(aSubject, aTopic, aData) {
+    ok(true, "Something has been received");
+    is(aTopic, "console-api-log-event");
 
-      var obj = aSubject.wrappedJSObject;
-      if (obj.arguments[0] && obj.arguments[0].msg === 'consoleAndBlobs') {
-        SpecialPowers.removeObserver(this, "console-api-log-event");
-        is(obj.arguments[0].blob.size, 3, "The size is correct");
-        is(obj.arguments[0].blob.type, 'foo/bar', "The type is correct");
-        SimpleTest.finish();
-      }
+    var obj = aSubject.wrappedJSObject;
+    if (obj.arguments[0] && obj.arguments[0].msg === 'consoleAndBlobs') {
+      SpecialPowers.removeObserver(this, "console-api-log-event");
+      is(obj.arguments[0].blob.size, 3, "The size is correct");
+      is(obj.arguments[0].blob.type, 'foo/bar', "The type is correct");
+      SimpleTest.finish();
     }
+  }
   }
 
   var cl = new consoleListener();

@@ -12,36 +12,36 @@
       var gTest = {
         length: 256,
         numberOfChannels: 1,
-        createGraph: function(context) {
-          var sourceBuffer = context.createBuffer(1, 256, context.sampleRate);
-          var data = sourceBuffer.getChannelData(0);
-          for (var j = 0; j < data.length; j++) {
-              data[j] = 1;
-          }
+        createGraph(context) {
+    var sourceBuffer = context.createBuffer(1, 256, context.sampleRate);
+    var data = sourceBuffer.getChannelData(0);
+    for (var j = 0; j < data.length; j++) {
+        data[j] = 1;
+    }
 
-          var source = context.createBufferSource();
-          source.buffer = sourceBuffer;
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
 
-          var source = context.createBufferSource();
-          source.buffer = sourceBuffer;
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
 
-          var gain1 = context.createGain();
-          var gain2 = context.createGain();
-          var gain3 = context.createGain();
-          var merger = context.createChannelMerger(3);
+    var gain1 = context.createGain();
+    var gain2 = context.createGain();
+    var gain3 = context.createGain();
+    var merger = context.createChannelMerger(3);
 
-          source.connect(gain1);
-          source.connect(gain2);
-          source.connect(gain3);
-          gain1.connect(merger);
-          gain2.connect(merger);
-          gain3.connect(merger);
-          source.start();
+    source.connect(gain1);
+    source.connect(gain2);
+    source.connect(gain3);
+    gain1.connect(merger);
+    gain2.connect(merger);
+    gain3.connect(merger);
+    source.start();
 
-          source.disconnect();
+    source.disconnect();
 
-          return merger;
-        }
+    return merger;
+  }
       };
 
       runTest();

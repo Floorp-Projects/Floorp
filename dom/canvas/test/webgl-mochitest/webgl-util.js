@@ -161,15 +161,15 @@ WebGLUtil = (function() {
   }
 
   return {
-    setErrorFunc: setErrorFunc,
-    setWarningFunc: setWarningFunc,
+    setErrorFunc,
+    setWarningFunc,
 
-    getWebGL: getWebGL,
-    withWebGL2: withWebGL2,
-    createShaderById: createShaderById,
-    createProgramByIds: createProgramByIds,
+    getWebGL,
+    withWebGL2,
+    createShaderById,
+    createProgramByIds,
 
-    linkProgramByIds: function(gl, vertSrcElem, fragSrcElem) {
+    linkProgramByIds(gl, vertSrcElem, fragSrcElem) {
       const prog = gl.createProgram();
 
       function attachShaderById(type, srcElem) {

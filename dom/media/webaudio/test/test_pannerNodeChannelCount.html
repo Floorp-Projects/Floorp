@@ -13,7 +13,7 @@
 var gTest = {
   length: 2048,
   numberOfChannels: 2,
-  createGraph: function(context) {
+  createGraph(context) {
     var buffer = context.createBuffer(2, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       var sample = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);

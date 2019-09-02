@@ -15,7 +15,7 @@ SimpleTest.requestFlakyTimeout("This test needs to wait until the AudioDestinati
 var gTest = {
   length: 16384,
   numberOfChannels: 1,
-  createGraphAsync: function(context, callback) {
+  createGraphAsync(context, callback) {
     var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       sourceBuffer.getChannelData(0)[i] = 1;

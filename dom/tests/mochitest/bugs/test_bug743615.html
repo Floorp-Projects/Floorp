@@ -42,8 +42,8 @@ function startTest() {
   ok(checkPattern(imageData, pattern), 'Can read it back before sending');
 
   // PostMessage it to ourselves.
-  window.postMessage({ imageData: imageData,
-                       pattern: pattern,
+  window.postMessage({ imageData,
+                       pattern,
                        dataRef: imageData.data }, '*');
 }
 
@@ -62,7 +62,7 @@ function windowMessage(evt) {
   setPattern(imageData, pattern);
   var worker = new Worker('worker_bug743615.js');
   worker.onmessage = workerMessage;
-  worker.postMessage( {imageData: imageData, pattern: pattern });
+  worker.postMessage( {imageData, pattern });
 }
 
 function workerMessage(evt) {

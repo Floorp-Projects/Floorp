@@ -1,11 +1,11 @@
 importScripts("common_temporaryFileBlob.js");
 
 function info(msg) {
-  postMessage({ type: "info", msg: msg });
+  postMessage({ type: "info", msg });
 }
 
 function ok(a, msg) {
-  postMessage({ type: "check", what: !!a, msg: msg });
+  postMessage({ type: "check", what: !!a, msg });
 }
 
 function is(a, b, msg) {

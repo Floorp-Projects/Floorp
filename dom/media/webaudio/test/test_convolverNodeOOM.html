@@ -14,7 +14,7 @@ var gTest = {
   length: 2048,
   numberOfChannels: 1,
   skipOfflineContextTests: true,
-  createGraph: function(context) {
+  createGraph(context) {
     var source = context.createOscillator();
     var convolver = context.createConvolver();
     // Very big buffer that results in an OOM

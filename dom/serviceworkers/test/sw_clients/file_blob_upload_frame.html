@@ -36,7 +36,7 @@ function makeFileBlob(obj) {
 
       var blob = new Blob([JSON.stringify(obj)],
                           { type: 'application/json' });
-      var data = { blob: blob, index: 5 };
+      var data = { blob, index: 5 };
 
       objectStore = db.transaction('test', 'readwrite').objectStore('test');
       objectStore.add(data).onsuccess = function(evt1) {
@@ -63,7 +63,7 @@ addEventListener('message', function(evt) {
     }).then(function(response) {
       return response.json();
     }).then(function(result) {
-      parent.postMessage({ status: 'OK', result: result }, '*');
+      parent.postMessage({ status: 'OK', result }, '*');
     }).catch(function(e) {
       parent.postMessage({ status: 'ERROR', result: e.toString() }, '*');
     });

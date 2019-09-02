@@ -28,7 +28,7 @@ function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy");
 }
 examiner.prototype  = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     // subject should be an nsURI... though could be null since CSP
     // prohibits cross-origin URI reporting during frame ancestors checks.
     if (subject && !SpecialPowers.can_QI(subject))
@@ -60,7 +60,7 @@ examiner.prototype  = {
 
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
-  remove: function() {
+  remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }

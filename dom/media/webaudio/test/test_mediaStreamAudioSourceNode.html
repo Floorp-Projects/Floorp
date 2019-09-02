@@ -23,7 +23,7 @@ function createBuffer(context) {
 var gTest = {
   length: 2048,
   skipOfflineContextTests: true,
-  createGraph: function(context) {
+  createGraph(context) {
     var sourceGraph = new AudioContext();
     var source = sourceGraph.createBufferSource();
     source.buffer = createBuffer(context);
@@ -37,7 +37,7 @@ var gTest = {
     mediaStreamSource.channelCountMode = "explicit";
     return mediaStreamSource;
   },
-  createExpectedBuffers: function(context) {
+  createExpectedBuffers(context) {
     return createBuffer(context);
   },
 };

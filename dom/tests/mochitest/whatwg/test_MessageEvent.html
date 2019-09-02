@@ -37,8 +37,8 @@ function sendMsg()
   try
   {
     var evt = new MessageEvent('message', {
-      bubbles: bubbles, cancelable: cancelable, data: data,
-      origin: origin, lastEventId: lastEventId, source: window});
+      bubbles, cancelable, data,
+      origin, lastEventId, source: window});
     ok(evt instanceof MessageEvent, "I ordered a MessageEvent!");
   
     is(evt.data, data, "unexpected data");

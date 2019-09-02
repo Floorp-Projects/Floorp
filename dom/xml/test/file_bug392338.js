@@ -1,7 +1,7 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var modifyObserver = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "http-on-modify-request") {
       var testOk = false;
       try {

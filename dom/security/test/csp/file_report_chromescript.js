@@ -6,7 +6,7 @@ Cu.importGlobalProperties(["TextDecoder"]);
 const reportURI = "http://mochi.test:8888/foo.sjs";
 
 var openingObserver = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     // subject should be an nsURI
     if (subject.QueryInterface == undefined) {
       return;

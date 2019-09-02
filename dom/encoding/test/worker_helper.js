@@ -8,7 +8,7 @@ function runTestInWorker(files) {
     var asserts;
     test = function(func, msg) {
       asserts = [];
-      tests.push({ asserts: asserts, msg: msg });
+      tests.push({ asserts, msg });
     };
     assert_equals = function(result, expected, msg) {
       asserts.push(["assert_equals", result, expected, msg]);

@@ -22,11 +22,11 @@ var l = document.getElementsByTagName("body");
 var it = Object.getPrototypeOf(l).item;
 Object.defineProperty(Object.getPrototypeOf(l), "item",
 {
-  get: function() { return it; },
+  get() { return it; },
 });
 Object.defineProperty(Object.getPrototypeOf(l), "foopy",
 {
-  get: function() { return this[0]; },
+  get() { return this[0]; },
 });
 is(l.foopy, document.body,
    "Should end up with the body correctly when getting via [0]");

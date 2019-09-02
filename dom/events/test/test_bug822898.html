@@ -47,9 +47,9 @@ function createTestEventValue(name) {
   return function() {
     let event = new PointerEvent("pointerdown", {
       bubbles: true, cancelable: true, view: window,
-      detail: detail, screenX: screenX, screenY: screenY, clientX: clientX, clientY: clientY,
-      ctrlKey: ctrlKey, altKey: altKey, shiftKey: shiftKey, metaKey: metaKey,
-      button: button, relatedTarget: null, pointerId: pointerId
+      detail, screenX, screenY, clientX, clientY,
+      ctrlKey, altKey, shiftKey, metaKey,
+      button, relatedTarget: null, pointerId
     });
 
 

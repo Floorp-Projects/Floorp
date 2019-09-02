@@ -123,16 +123,16 @@ DriverInfo = (function() {
   dump(x => console.log(x));
 
   return {
-    DRIVER: DRIVER,
-    OS: OS,
-    dump: dump,
-    getDriver: function() {
+    DRIVER,
+    OS,
+    dump,
+    getDriver() {
       return kDriver;
     },
-    getOS: function() {
+    getOS() {
       return kOS;
     },
-    getOSVersion: function() {
+    getOSVersion() {
       return kOSVersion;
     },
   };

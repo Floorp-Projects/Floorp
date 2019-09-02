@@ -1,5 +1,5 @@
 function my_ok(v, msg) {
-  postMessage({ type: "ok", value: v, msg: msg });
+  postMessage({ type: "ok", value: v, msg });
 }
 
 function finish() {

@@ -4,7 +4,7 @@
  */
 
 function ok(a, msg) {
-  postMessage({ type: "status", status: !!a, msg: msg });
+  postMessage({ type: "status", status: !!a, msg });
 }
 
 onmessage = function(event) {

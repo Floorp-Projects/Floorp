@@ -521,7 +521,7 @@ function Matrix3D() {
 }
 
 Matrix3D.prototype = {
-  translate: function(x, y, z, result) {
+  translate(x, y, z, result) {
     result = result || new Matrix3D();
     var m = result.m;
 
@@ -547,7 +547,7 @@ Matrix3D.prototype = {
 
     return result;
   },
-  inverse: function(matrix, result) {
+  inverse(matrix, result) {
     result = result || new Matrix3D();
     var m = matrix.m, r = result.m;
 
@@ -575,7 +575,7 @@ Matrix3D.prototype = {
     for (var i = 0; i < 16; i++) r[i] /= det;
     return result;
   },
-  multiply: function(left, result) {
+  multiply(left, result) {
     result = result || new Matrix3D();
     var a = this.m, b = left.m, r = result.m;
 
@@ -601,7 +601,7 @@ Matrix3D.prototype = {
 
     return result;
   },
-  scale: function(x, y, z, result) {
+  scale(x, y, z, result) {
     result = result || new Matrix3D();
     var m = result.m;
 
@@ -627,7 +627,7 @@ Matrix3D.prototype = {
 
     return result;
   },
-  rotate: function(a, x, y, z, result) {
+  rotate(a, x, y, z, result) {
     result = result || new Matrix3D();
     var m = result.m;
 
@@ -657,7 +657,7 @@ Matrix3D.prototype = {
 
     return result;
   },
-  swap: function(result) {
+  swap(result) {
     result = result || new Matrix3D();
     for (var x = 0; x < 16; x++)
       result.m[x] = this.m[Math.floor(x/4) + (x%4)*4];

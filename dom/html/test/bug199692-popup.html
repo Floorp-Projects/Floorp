@@ -107,7 +107,7 @@ function getCoords(elt)
     y += elt.offsetTop;
   } while ((elt = elt.offsetParent));
 
-  return { x: x, y: y };
+  return { x, y };
 }
 
 var elts = ["txt", "empty", "whitespace", "static", "fixed", "absolute",

@@ -11,7 +11,7 @@ function feedback() {
 }
 
 function ok(status, msg) {
-  postMessage({ type: "status", status: !!status, msg: msg });
+  postMessage({ type: "status", status: !!status, msg });
 }
 
 function is(a, b, msg) {

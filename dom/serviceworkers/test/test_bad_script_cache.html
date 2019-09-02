@@ -34,7 +34,7 @@ async function runTest() {
     const script = 'update_worker.sjs';
     const scope = 'bad-script-cache';
 
-    reg = await navigator.serviceWorker.register(script, { scope: scope });
+    reg = await navigator.serviceWorker.register(script, { scope });
     await waitForState(reg.installing, 'activated');
 
     // Verify the service worker script cache has the worker script stored.

@@ -194,9 +194,7 @@ var check_use_counter_iframe = async function(
   await waitForPageLoad(gBrowser.selectedBrowser);
 
   // Inject our desired file into the iframe of the newly-loaded page.
-  await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(
-    opts
-  ) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, { file }, function(opts) {
     let iframe = content.document.getElementById("content");
     iframe.src = opts.file;
 
@@ -268,22 +266,20 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
   await waitForPageLoad(gBrowser.selectedBrowser);
 
   // Inject our desired file into the img of the newly-loaded page.
-  await ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { file: file },
-    async function(opts) {
-      let img = content.document.getElementById("display");
-      img.src = opts.file;
+  await ContentTask.spawn(gBrowser.selectedBrowser, { file }, async function(
+    opts
+  ) {
+    let img = content.document.getElementById("display");
+    img.src = opts.file;
 
-      return new Promise(resolve => {
-        let listener = event => {
-          img.removeEventListener("load", listener, true);
-          resolve();
-        };
-        img.addEventListener("load", listener, true);
-      });
-    }
-  );
+    return new Promise(resolve => {
+      let listener = event => {
+        img.removeEventListener("load", listener, true);
+        resolve();
+      };
+      img.addEventListener("load", listener, true);
+    });
+  });
 
   // Tear down the page.
   let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);

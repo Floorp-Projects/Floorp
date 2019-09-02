@@ -91,7 +91,7 @@ function testShouldIntercept(behavior, lifetime, done) {
       status: "ok"
     }, {
       status: "registrationdone",
-      next: function() {
+      next() {
         iframe.addEventListener("load", testIframeLoaded);
         iframe.src = origin + basePath + "iframe1.html";
       }
@@ -104,14 +104,14 @@ function testShouldIntercept(behavior, lifetime, done) {
       status: "swresponse",
     }, {
       status: "worker-swresponse",
-      next: function() {
+      next() {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
     }, {
       status: "controlled",
     }, {
       status: "unregistrationdone",
-      next: function() {
+      next() {
         window.onmessage = null;
         proxyWindow.close();
         ok(true, "Test finished successfully");
@@ -130,7 +130,7 @@ function testShouldNotRegister(behavior, lifetime, done) {
   ]}, function() {
     runTest([{
       status: "registrationfailed",
-      next: function() {
+      next() {
         iframe.addEventListener("load", testIframeLoaded);
         iframe.src = origin + basePath + "iframe1.html";
       }
@@ -143,7 +143,7 @@ function testShouldNotRegister(behavior, lifetime, done) {
       status: "networkresponse",
     }, {
       status: "worker-networkresponse",
-      next: function() {
+      next() {
         window.onmessage = null;
         proxyWindow.close();
         ok(true, "Test finished successfully");
@@ -165,7 +165,7 @@ function testShouldNotIntercept(behavior, lifetime, done) {
       status: "ok"
     }, {
       status: "registrationdone",
-      next: function() {
+      next() {
         SpecialPowers.pushPrefEnv({"set": [
             ["network.cookie.cookieBehavior", behavior],
             ["network.cookie.lifetimePolicy", lifetime],
@@ -188,14 +188,14 @@ function testShouldNotIntercept(behavior, lifetime, done) {
       status: "networkresponse",
     }, {
       status: "worker-networkresponse",
-      next: function() {
+      next() {
         iframe.src = thirdPartyOrigin + basePath + "unregister.html";
       }
     }, {
       status: "uncontrolled",
     }, {
       status: "getregistrationfailed",
-      next: function() {
+      next() {
         SpecialPowers.pushPrefEnv({"set": [
             ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
             ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
@@ -213,7 +213,7 @@ function testShouldNotIntercept(behavior, lifetime, done) {
       status: "controlled",
     }, {
       status: "unregistrationdone",
-      next: function() {
+      next() {
         window.onmessage = null;
         proxyWindow.close();
         ok(true, "Test finished successfully");
