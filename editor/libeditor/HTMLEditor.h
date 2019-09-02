@@ -1748,6 +1748,13 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   InsertPaddingBRElementForEmptyLastLineIfNeeded(Element& aElement);
 
+  /**
+   * This method inserts a padding `<br>` element for empty last line if
+   * selection is collapsed and container of the range needs it.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

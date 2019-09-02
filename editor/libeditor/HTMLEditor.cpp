@@ -2273,9 +2273,6 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
 
   MOZ_ASSERT(&aTagName != nsGkAtoms::dd && &aTagName != nsGkAtoms::dt);
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext);
@@ -2304,14 +2301,11 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
     return rv;
   }
 
-  nsDependentAtomString tagName(&aTagName);
-  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrRemoveBlock);
-  subActionInfo.blockType = &tagName;
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() failed");
+  return rv;
 }
 
 NS_IMETHODIMP
