@@ -663,6 +663,15 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   size_t mMainThreadStreamCount = 0;
 
   /**
+   * Main-thread view of the number of ports in this graph, to catch bugs.
+   *
+   * When this becomes zero, and mMainThreadStreamCount is 0, the graph is
+   * marked as forbidden to add more ControlMessages to. It will be shut down
+   * shortly after.
+   */
+  size_t mMainThreadPortCount = 0;
+
+  /**
    * Graphs own owning references to their driver, until shutdown. When a driver
    * switch occur, previous driver is either deleted, or it's ownership is
    * passed to a event that will take care of the asynchronous cleanup, as
