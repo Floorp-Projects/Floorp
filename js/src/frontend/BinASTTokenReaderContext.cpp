@@ -856,7 +856,7 @@ class HuffmanPreludeReader {
       // array lookup.
 
       const auto& table = owner.dictionary.tableForField(entry.identity);
-      if (table.is<HuffmanTableUnreachable>()) {
+      if (table.is<HuffmanTableInitializing>()) {
         return Ok();
       }
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
