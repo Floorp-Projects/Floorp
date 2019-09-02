@@ -695,28 +695,15 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
 }
 
 void BrowsingContext::NotifyUserGestureActivation() {
-  // We would set the user gesture activation flag on the top level browsing
-  // context, which would automatically be sync to other top level browsing
-  // contexts which are in the different process.
-  RefPtr<BrowsingContext> topLevelBC = Top();
-  USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
-                      topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(true);
+  SetIsActivatedByUserGesture(true);
+
+  // TODO: Bug 1577499 - Implement transient activation flag
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
-  // We would reset the user gesture activation flag on the top level browsing
-  // context, which would automatically be sync to other top level browsing
-  // contexts which are in the different process.
-  RefPtr<BrowsingContext> topLevelBC = Top();
-  USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
-                      topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(false);
-}
+  SetIsActivatedByUserGesture(false);
 
-bool BrowsingContext::GetUserGestureActivation() {
-  RefPtr<BrowsingContext> topLevelBC = Top();
-  return topLevelBC->GetIsActivatedByUserGesture();
+  // TODO: Bug 1577499 - Implement transient activation flag
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
@@ -1053,7 +1040,6 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
 }
 
 void BrowsingContext::DidSetIsActivatedByUserGesture() {
-  MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
   USER_ACTIVATION_LOG(
       "Set user gesture activation %d for %s browsing context 0x%08" PRIx64,
       mIsActivatedByUserGesture, XRE_IsParentProcess() ? "Parent" : "Child",
