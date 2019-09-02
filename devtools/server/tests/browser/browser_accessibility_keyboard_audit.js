@@ -18,6 +18,7 @@ const {
         FOCUSABLE_POSITIVE_TABINDEX,
         INTERACTIVE_NO_ACTION,
         INTERACTIVE_NOT_FOCUSABLE,
+        MOUSE_INTERACTIVE_ONLY,
         NO_FOCUS_VISIBLE,
       },
     },
@@ -90,6 +91,22 @@ add_task(async function() {
     ],
     ["Focusable ARIA button with focus styling.", "#focusable-2", null],
     ["Focusable ARIA button with browser styling.", "#focusable-3", null],
+    [
+      "Not focusable, non-semantic element that has a click handler.",
+      "#mouse-only-1",
+      { score: FAIL, issue: MOUSE_INTERACTIVE_ONLY },
+    ],
+    [
+      "Focusable, non-semantic element that has a click handler.",
+      "#focusable-4",
+      { score: WARNING, issue: FOCUSABLE_NO_SEMANTICS },
+    ],
+    [
+      "Not focusable, ARIA button that has a click handler.",
+      "#button-7",
+      { score: FAIL, issue: INTERACTIVE_NOT_FOCUSABLE },
+    ],
+    ["Focusable, ARIA button with a click handler.", "#button-8", null],
   ];
 
   for (const [description, selector, expected] of tests) {
