@@ -393,6 +393,20 @@ class HuffmanPreludeReader {
     };
   };
 
+#ifdef DEBUG
+  // Utility struct, designed to inspect an `Entry` while debugging.
+  struct PrintEntry {
+    const char* text;
+    explicit PrintEntry(const char* text) : text(text) {}
+    void print(const NormalizedInterfaceAndField& identity) {
+      fprintf(stderr, "Context: %s, Identity: %hu\n", text, identity.identity);
+    }
+    void operator()(const EntryBase& entry) { print(entry.identity); }
+    PrintEntry() = delete;
+  };
+#endif  // DEBUG
+
+ public:
   // The entries in the grammar.
   using Entry = mozilla::Variant<
       // Primitives
@@ -400,18 +414,14 @@ class HuffmanPreludeReader {
       // Combinators
       Interface, MaybeInterface, List, Sum, MaybeSum, StringEnum>;
 
+ private:
   // A stack of entries to process. We always process the latest entry added.
   Vector<Entry> stack;
 
   // Enqueue an entry to the stack.
   MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
                                         const Entry& entry) {
-    if (!dictionary.tableForField(identity).is<HuffmanTableUnreachable>()) {
-      // Entry already initialized.
-      return Ok();
-    }
-    BINJS_TRY(stack.append(entry));
-    return Ok();
+    return entry.match(PushEntryMatcher(cx_, *this, identity));
   }
 
   // Enqueue all the fields of an interface to the stack.
@@ -474,8 +484,8 @@ class HuffmanPreludeReader {
   // Read a table in the non-optimized format.
   //
   // Entries in the table are represented in an order that is specific to each
-  // type. See the documentation of each `EntryMatcher::operator()` for a
-  // discussion on each order.
+  // type. See the documentation of each `ReadPoppedEntryMatcher::operator()`
+  // for a discussion on each order.
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(
       typename Entry::Table& table, Entry entry) {
@@ -541,10 +551,10 @@ class HuffmanPreludeReader {
 
   // Two-arguments version: pass table explicitly. Generally called from single-
   // argument version, but may be called manually, e.g. for list lengths, as
-  // their tables don't field in `dictionary.tableForField`.
+  // their tables don't appear in `dictionary.tableForField`.
   template <typename HuffmanTable, typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(HuffmanTable& table, Entry entry) {
-    if (!table.template is<HuffmanTableUnreachable>()) {
+    if (!table.template is<HuffmanTableInitializing>()) {
       // We're attempting to re-read a table that has already been read.
       return raiseDuplicateTableError(entry.identity);
     }
@@ -584,12 +594,116 @@ class HuffmanPreludeReader {
   // table.
   Vector<uint8_t> auxStorageBitLengths;
 
-  // Implementation of pattern-matching cases for `entry.match`.
-  struct EntryMatcher {
+  /*
+  Implementation of "To push a field" from the specs.
+
+  As per the spec:
+
+  1. If the field is in the set of visited contexts, stop
+  2. Add the field to the set of visited fields
+  3. If the field has a FrozenArray type
+    a. Determine if the array type is always empty
+    b. If so, stop
+  4. If the effective type is a monomorphic interface, push all of the
+  interface’s fields
+  5. Otherwise, push the field onto the stack
+  */
+  struct PushEntryMatcher {
+    JSContext* cx_;
+
     // The owning HuffmanPreludeReader.
     HuffmanPreludeReader& owner;
 
-    explicit EntryMatcher(HuffmanPreludeReader& owner) : owner(owner) {}
+    NormalizedInterfaceAndField identity;
+
+    PushEntryMatcher(JSContext* cx_, HuffmanPreludeReader& owner,
+                     NormalizedInterfaceAndField identity)
+        : cx_(cx_), owner(owner), identity(identity) {}
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const List& list) {
+      auto& table = owner.dictionary.tableForListLength(list.contents);
+      if (!table.is<HuffmanTableUnreachable>()) {
+        // Spec:
+        // 1. If the field is in the set of visited contexts, stop.
+        return Ok();
+      }
+      // Spec:
+      // 2. Add the field to the set of visited fields
+      table = {mozilla::VariantType<HuffmanTableInitializing>{}};
+
+      // Read the length immediately.
+      MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
+
+      auto& length = table.as<HuffmanTableExplicitSymbolsListLength>();
+      if (length.impl.length() == 1 && length.impl.begin()->value == 0) {
+        // Spec:
+        // 3. If the field has a FrozenArray type
+        //   a. Determine if the array type is always empty
+        //   b. If so, stop
+        return Ok();
+      }
+
+      // Spec:
+      // To determine a field’s effective type:
+      // 1. If the field’s type is an array type, the effective type is the
+      // array element type. Stop.
+
+      // We now recurse with the contents of the list/array.
+      switch (list.contents) {
+#define WRAP_LIST_2(_, CONTENT) CONTENT
+#define EMIT_CASE(LIST_NAME, _CONTENT_TYPE, _HUMAN_NAME, TYPE) \
+  case BinASTList::LIST_NAME:                                  \
+    return owner.pushValue(list.identity, Entry(TYPE(list.identity)));
+
+        FOR_EACH_BIN_LIST(EMIT_CASE, WRAP_PRIMITIVE, WRAP_INTERFACE,
+                          WRAP_MAYBE_INTERFACE, WRAP_LIST_2, WRAP_SUM,
+                          WRAP_MAYBE_SUM, WRAP_STRING_ENUM,
+                          WRAP_MAYBE_STRING_ENUM)
+#undef EMIT_CASE
+#undef WRAP_LIST_2
+      }
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& interface) {
+      // Spec
+      // 4. If the effective type is a monomorphic interface, push all of the
+      // interface’s fields
+      return owner.pushFields(interface.kind);
+    }
+
+    // Generic implementation for other cases.
+    template <class Entry>
+    MOZ_MUST_USE JS::Result<Ok> operator()(const Entry& entry) {
+      // Spec:
+      // 1. If the field is in the set of visited contexts, stop.
+      auto& table = owner.dictionary.tableForField(identity);
+      if (!table.is<HuffmanTableUnreachable>()) {
+        // Entry already initialized/initializing.
+        return Ok();
+      }
+
+      // Spec:
+      // 2. Add the field to the set of visited fields
+      table = {mozilla::VariantType<HuffmanTableInitializing>{}};
+#ifdef DEBUG_BINAST
+      entry.match(PrintEntry("pushValue"));
+#endif  // DEBUG_BINAST
+
+      // Spec:
+      // 5. Otherwise, push the field onto the stack
+      BINJS_TRY(owner.stack.append(entry));
+      return Ok();
+    }
+  };
+
+  // Implementation of pattern-matching cases for `entry.match`.
+  struct ReadPoppedEntryMatcher {
+    // The owning HuffmanPreludeReader.
+    HuffmanPreludeReader& owner;
+
+    explicit ReadPoppedEntryMatcher(HuffmanPreludeReader& owner)
+        : owner(owner) {}
 
     // Lazy.
     // Values: no value/
@@ -686,26 +800,6 @@ class HuffmanPreludeReader {
       return owner.readTable<Number>(entry);
     }
 
-    MOZ_MUST_USE JS::Result<Ok> operator()(const List& entry) {
-      // Read the model for the length of the list.
-      MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(
-          owner.dictionary.tableForListLength(entry.contents), entry)));
-
-      // Now read the model for the contents of the list.
-      switch (entry.contents) {
-#define EMIT_CASE(LIST_NAME, _CONTENT_NAME, _HUMAN_NAME, TYPE) \
-  case BinASTList::LIST_NAME:                                  \
-    return owner.pushValue(entry.identity, Entry(TYPE(entry.identity)));
-
-        FOR_EACH_BIN_LIST(EMIT_CASE, WRAP_PRIMITIVE, WRAP_INTERFACE,
-                          WRAP_MAYBE_INTERFACE, WRAP_LIST, WRAP_SUM,
-                          WRAP_MAYBE_SUM, WRAP_STRING_ENUM,
-                          WRAP_MAYBE_STRING_ENUM)
-#undef EMIT_CASE
-      }
-      return Ok();
-    }
-
     MOZ_MUST_USE JS::Result<Ok> operator()(const String& entry) {
       return owner.readTable<String>(entry);
     }
@@ -722,6 +816,11 @@ class HuffmanPreludeReader {
       // FIXME: Read table.
       // FIXME: Initialize table.
       MOZ_CRASH("Unimplemented");
+      return Ok();
+    }
+
+    MOZ_MUST_USE JS::Result<Ok> operator()(const List&) {
+      MOZ_CRASH("Unreachable");
       return Ok();
     }
   };
@@ -1007,6 +1106,12 @@ BinASTTokenReaderContext::raiseInvalidValue(const Context&) {
   return cx_->alreadyReportedError();
 }
 
+MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&>
+BinASTTokenReaderContext::raiseNotInPrelude(const Context&) {
+  errorReporter_->errorNoOffset(JSMSG_BINAST, "Value is not in prelude");
+  return cx_->alreadyReportedError();
+}
+
 struct ExtractBinASTInterfaceAndFieldMatcher {
   BinASTInterfaceAndField operator()(
       const BinASTTokenReaderBase::FieldContext& context) {
@@ -1030,6 +1135,9 @@ BinASTTokenReaderContext::readFieldFromTable(const Context& context) {
       context.match(ExtractBinASTInterfaceAndFieldMatcher());
   const auto& table =
       dictionary.tableForField(NormalizedInterfaceAndField(identity));
+  if (!table.is<Table>()) {
+    return raiseNotInPrelude(context);
+  }
   const auto lookup = table.as<Table>().impl.lookup(
       bitBuffer.getHuffmanLookup<Compression::No>());
   MOZ_TRY(
@@ -1154,6 +1262,7 @@ template <Compression compression>
 JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
   uint32_t result = 0;
   uint32_t shift = 0;
+  const uint8_t* start = current_;
   while (true) {
     MOZ_ASSERT(shift < 32);
     uint32_t byte;
@@ -1168,6 +1277,8 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
     shift += 7;
 
     if ((byte & 0x80) == 0) {
+      const uint8_t* end = current_;
+      fprintf(stderr, "readVarU32: %ld => %ud\n", end - start, result);
       return result;
     }
 
@@ -1175,6 +1286,16 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
       return raiseError("Overflow during readVarU32");
     }
   }
+}
+
+JS::Result<uint32_t> BinASTTokenReaderContext::readUnpackedLong() {
+  uint8_t bytes[4];
+  uint32_t length = 4;
+  MOZ_TRY(
+      (readBuf<Compression::No, EndOfFilePolicy::RaiseError>(bytes, length)));
+  const uint32_t result = uint32_t(bytes[0]) << 24 | uint32_t(bytes[1]) << 16 |
+                          uint32_t(bytes[2]) << 8 | uint32_t(bytes[3]);
+  return result;
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
@@ -1321,7 +1442,13 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::run(size_t initialCapacity) {
   MOZ_TRY(pushFields(BinASTKind::Script));
   while (stack.length() > 0) {
     const Entry entry = stack.popCopy();
-    MOZ_TRY(entry.match(EntryMatcher(*this)));
+#ifdef DEBUG_BINAST
+    entry.match(PrintEntry("pop"));
+#endif  // DEBUG_BINAST
+    MOZ_TRY(entry.match(ReadPoppedEntryMatcher(*this)));
+#ifdef DEBUG_BINAST
+    entry.match(PrintEntry("pop complete"));
+#endif  // DEBUG_BINAST
   }
   return Ok();
 }
@@ -1533,7 +1660,8 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
     HuffmanTableExplicitSymbolsListLength& table, const List& list) {
-  BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  // BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  BINJS_MOZ_TRY_DECL(length, reader.readUnpackedLong());
   if (length > MAX_LIST_LENGTH) {
     return raiseInvalidTableData(list.identity);
   }
