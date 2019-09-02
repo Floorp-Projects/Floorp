@@ -1081,7 +1081,8 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
       // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__QRST_UVWX`.
       this->bits += reversedByte;
       this->bitLength += BIT_BUFFER_READ_UNIT;
-      MOZ_ASSERT(bits >> this->bitLength == 0);
+      MOZ_ASSERT_IF(this->bitLength != 32 /* >> 32 is UB */,
+                    bits >> this->bitLength == 0);
 
       // 5. Continue as long as we don't have enough bits.
     }
@@ -1363,7 +1364,7 @@ JS::Result<Ok> HuffmanTableImpl<T, N>::addSymbol(uint32_t bits,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
   MOZ_ASSERT(values.empty() || values.back().key.bitLength <= bitLength,
              "Symbols must be ranked by increasing bits length");
-  MOZ_ASSERT(bits >> bitLength == 0);
+  MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
   if (!values.emplaceBack(bits, bitLength, std::move(value))) {
     MOZ_CRASH();  // Memory was reserved in `init()`.
   }
@@ -1844,7 +1845,10 @@ HuffmanTableListLength& HuffmanDictionary::tableForListLength(BinASTList list) {
 
 uint32_t HuffmanLookup::leadingBits(const uint8_t bitLength) const {
   MOZ_ASSERT(bitLength <= this->bitLength);
-  return this->bits >> (32 - bitLength);
+  const uint32_t result = bitLength == 0
+                              ? 0  // Shifting a uint32_t by 32 bits is UB.
+                              : this->bits >> uint32_t(32 - bitLength);
+  return result;
 }
 
 }  // namespace frontend
