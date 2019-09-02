@@ -42,12 +42,14 @@
 #  include "ProfilerMarkerPayload.h"
 #endif
 
+using namespace std;
+
 namespace mozilla {
 
 namespace layers {
 
 // defined in CompositorBridgeParent.cpp
-typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
+typedef map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
 extern LayerTreeMap sIndirectLayerTrees;
 extern StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
 void UpdateIndirectTree(LayersId aId, Layer* aRoot,

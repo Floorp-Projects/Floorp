@@ -8,6 +8,8 @@
 #include "BufferCache.h"
 #include "MLGDevice.h"
 
+using namespace std;
+
 namespace mozilla {
 namespace layers {
 

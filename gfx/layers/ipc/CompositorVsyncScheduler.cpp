@@ -42,6 +42,7 @@ namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
+using namespace std;
 
 CompositorVsyncScheduler::Observer::Observer(CompositorVsyncScheduler* aOwner)
     : mMutex("CompositorVsyncScheduler.Observer.Mutex"), mOwner(aOwner) {}

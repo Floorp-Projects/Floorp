@@ -32,6 +32,8 @@
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
+using namespace std;
+
 namespace mozilla {
 namespace layers {
 

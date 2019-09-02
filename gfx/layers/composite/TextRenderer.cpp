@@ -17,6 +17,7 @@ namespace mozilla {
 namespace layers {
 
 using namespace gfx;
+using namespace std;
 
 const Float sBackgroundOpacity = 0.8f;
 const SurfaceFormat sTextureFormat = SurfaceFormat::B8G8R8A8;
@@ -50,7 +51,7 @@ TextRenderer::~TextRenderer() {}
 
 TextRenderer::FontCache::~FontCache() { mGlyphBitmaps->Unmap(); }
 
-void TextRenderer::RenderText(Compositor* aCompositor, const std::string& aText,
+void TextRenderer::RenderText(Compositor* aCompositor, const string& aText,
                               const IntPoint& aOrigin,
                               const Matrix4x4& aTransform, uint32_t aTextSize,
                               uint32_t aTargetPixelWidth, FontType aFontType) {
@@ -79,7 +80,7 @@ void TextRenderer::RenderText(Compositor* aCompositor, const std::string& aText,
   aCompositor->DrawQuad(Rect(drawRect), clip, chain, 1.0f, transform);
 }
 
-IntSize TextRenderer::ComputeSurfaceSize(const std::string& aText,
+IntSize TextRenderer::ComputeSurfaceSize(const string& aText,
                                          uint32_t aTargetPixelWidth,
                                          FontType aFontType) {
   if (!EnsureInitialized(aFontType)) {
