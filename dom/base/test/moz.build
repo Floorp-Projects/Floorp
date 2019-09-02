@@ -24,7 +24,8 @@ BROWSER_CHROME_MANIFESTS += [
 
 TEST_DIRS += [
     'gtest',
-    'jsmodules'
+    'jsmodules',
+    'useractivation',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.base.test.chrome += [
