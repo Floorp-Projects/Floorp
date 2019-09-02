@@ -34,6 +34,7 @@ const {
         FOCUSABLE_POSITIVE_TABINDEX,
         INTERACTIVE_NO_ACTION,
         INTERACTIVE_NOT_FOCUSABLE,
+        MOUSE_INTERACTIVE_ONLY,
         NO_FOCUS_VISIBLE,
       },
       [AUDIT_TYPE.TEXT_LABEL]: {
@@ -684,6 +685,7 @@ class Keyboard extends AuditReport {
       [FOCUSABLE_POSITIVE_TABINDEX]: "accessibility.keyboard.issue.tabindex",
       [INTERACTIVE_NO_ACTION]: "accessibility.keyboard.issue.action",
       [INTERACTIVE_NOT_FOCUSABLE]: "accessibility.keyboard.issue.focusable",
+      [MOUSE_INTERACTIVE_ONLY]: "accessibility.keyboard.issue.mouse.only",
       [NO_FOCUS_VISIBLE]: "accessibility.keyboard.issue.focus.visible",
     };
   }
