@@ -7,7 +7,6 @@
 #include "domstubs.idl"
 
 interface nsIContent;
-interface nsIArray;
 
 webidl Document;
 webidl Element;
@@ -388,15 +387,6 @@ interface nsIHTMLEditor : nsISupports
    */
   [can_run_script]
   void setBackgroundColor(in AString aColor);
-
-  /**
-   * Find all the nodes in the document which contain references
-   * to outside URIs (e.g. a href, img src, script src, etc.)
-   * The objects in the array will be type nsIURIRefObject.
-   *
-   * @return aNodeList    the linked nodes found
-   */
-  nsIArray getLinkedObjects();
 
   /**
    * A boolean which is true is the HTMLEditor has been instantiated
