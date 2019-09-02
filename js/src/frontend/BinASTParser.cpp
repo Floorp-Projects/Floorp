@@ -3969,24 +3969,21 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
   MOZ_TRY_VAR(pattern,
               tokenizer_->readAtom(Context(FieldContext(
                   BinASTInterfaceAndField::LiteralRegExpExpression__Pattern))));
-  Chars flags(cx_);
-  MOZ_TRY(tokenizer_->readChars(
-      flags,
-      Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
-
-  RegExpFlags reflags = RegExpFlag::NoFlags;
-  for (auto c : flags) {
-    if (c == 'g' && !reflags.global()) {
-      reflags |= RegExpFlag::Global;
-    } else if (c == 'i' && !reflags.ignoreCase()) {
-      reflags |= RegExpFlag::IgnoreCase;
-    } else if (c == 'm' && !reflags.multiline()) {
-      reflags |= RegExpFlag::Multiline;
-    } else if (c == 'u' && !reflags.unicode()) {
-      reflags |= RegExpFlag::Unicode;
-    } else if (c == 'y' && !reflags.sticky()) {
-      reflags |= RegExpFlag::Sticky;
-    } else {
+  RegExpFlags reflags = JS::RegExpFlag::NoFlags;
+  auto flagsContext = Context(
+      FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags));
+  if (mozilla::IsSame<Tok, BinASTTokenReaderContext>::value) {
+    // Hack: optimized `readChars` is not implemented for
+    // `BinASTTokenReaderContext`.
+    RootedAtom flags(cx_);
+    MOZ_TRY_VAR(flags, tokenizer_->readAtom(flagsContext));
+    if (!this->parseRegExpFlags(flags, &reflags)) {
+      return raiseError("Invalid regexp flags");
+    }
+  } else {
+    Chars flags(cx_);
+    MOZ_TRY(tokenizer_->readChars(flags, flagsContext));
+    if (!this->parseRegExpFlags(flags, &reflags)) {
       return raiseError("Invalid regexp flags");
     }
   }
