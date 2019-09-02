@@ -105,6 +105,10 @@
 #  include "windows.h"
 #  include "winbase.h"
 #endif
+#if (MOZ_WIDGET_GTK)
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#endif
 
 #include "npapi.h"
 
@@ -358,9 +362,18 @@ nsPluginHost::nsPluginHost()
   mOverrideInternalTypes =
       Preferences::GetBool("plugin.override_internal_types", false);
 
-  mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
-
-  Preferences::AddStrongObserver(this, "plugin.disable");
+  bool waylandBackend = false;
+#if MOZ_WIDGET_GTK
+  GdkDisplay* display = gdk_display_get_default();
+  if (display) {
+    waylandBackend = !GDK_IS_X11_DISPLAY(display);
+  }
+#endif
+  mPluginsDisabled =
+      Preferences::GetBool("plugin.disable", false) || waylandBackend;
+  if (!waylandBackend) {
+    Preferences::AddStrongObserver(this, "plugin.disable");
+  }
 
   nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
