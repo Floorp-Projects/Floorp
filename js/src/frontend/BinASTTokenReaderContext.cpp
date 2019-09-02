@@ -1199,6 +1199,9 @@ BinASTTokenReaderContext::readSkippableSubTree(const Context&) {
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
     BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
     const Context& context, AutoTaggedTuple& guard) {
+  js::frontend::BinASTTokenReaderBase::ContextPrinter::print("enterTaggedTuple",
+                                                             context);
+
   if (context.is<BinASTTokenReaderBase::RootContext>()) {
     // For the moment, the format hardcodes `Script` as root.
     tag = BinASTKind::Script;
