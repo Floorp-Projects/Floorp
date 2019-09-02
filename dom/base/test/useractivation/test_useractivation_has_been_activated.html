@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>User activation test: has been user gesture activated</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe></iframe>
+<iframe></iframe>
+<script>
+
+function waitForEvent(aTarget, aEvent) {
+  return new Promise((aResolve) => {
+    aTarget.addEventListener(aEvent, function listener(event) {
+      aResolve();
+    }, { once: true });
+  });
+}
+
+add_task(async function checkInitialStatus() {
+  ok(!SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on top-level document");
+  ok(!SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on second iframe");
+});
+
+add_task(async function triggerUserActivation() {
+  // Trigger user activation on the first iframe.
+  SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
+  // We should also propagate to all the ancestors.
+  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the top-level document");
+  ok(SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the second iframe");
+});
+
+add_task(async function iframeNavigation() {
+  frames[0].frameElement.src = "file_empty.html";
+  await waitForEvent(frames[0].frameElement, "load");
+  // We should reset the flag on iframe that navigates away from current page,
+  // but the flag on its ancestor isn't changed.
+  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the top-level document");
+  ok(!SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the first iframe");
+  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
+     "check has-been-user-activated on the second iframe");
+});
+
+add_task(async function endTests() {
+  // Reset the activation flag in order not to interfere following test in the
+  // verify mode which would run the test using same document couple times.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+});
+
+</script>
+</body>

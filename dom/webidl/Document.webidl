@@ -563,6 +563,8 @@ partial interface Document {
   // For testing only.
   [ChromeOnly]
   void clearUserGestureActivation();
+  [ChromeOnly]
+  readonly attribute boolean hasBeenUserGestureActivated;
 };
 
 // Extension to give chrome JS the ability to set an event handler which is
