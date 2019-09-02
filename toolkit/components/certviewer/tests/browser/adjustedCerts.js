@@ -36,14 +36,18 @@ const adjustedCerts = [
         sectionItems: [
           {
             label: "Not Before",
-            info: "5/7/2018, 9:00:00 PM (Brasilia Standard Time)",
+            info: {
+              local: "5/7/2018, 9:00:00 PM (Brasilia Standard Time)",
+              utc: "Tue, 08 May 2018 00:00:00 GMT",
+            },
           },
-          { label: "Not Before UTC", info: "Tue, 08 May 2018 00:00:00 GMT" },
           {
             label: "Not After",
-            info: "6/3/2020, 9:00:00 AM (Brasilia Standard Time)",
+            info: {
+              local: "6/3/2020, 9:00:00 AM (Brasilia Standard Time)",
+              utc: "Wed, 03 Jun 2020 12:00:00 GMT",
+            },
           },
-          { label: "Not After UTC", info: "Wed, 03 Jun 2020 12:00:00 GMT" },
         ],
         Critical: false,
       },
@@ -210,12 +214,14 @@ const adjustedCerts = [
           },
           { label: "name", info: "Google “Pilot”" },
           { label: "signatureAlgorithm", info: "SHA-256 ECDSA" },
+          { label: "version", info: 1 },
           {
             label: "timestamp",
-            info: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+            info: {
+              local: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+              utc: "Tue, 08 May 2018 20:12:39 GMT",
+            },
           },
-          { label: "timestampUTC", info: "Tue, 08 May 2018 20:12:39 GMT" },
-          { label: "version", info: 1 },
           {
             label: "logId",
             info:
@@ -223,12 +229,14 @@ const adjustedCerts = [
           },
           { label: "name", info: "DigiCert Server" },
           { label: "signatureAlgorithm", info: "SHA-256 ECDSA" },
+          { label: "version", info: 1 },
           {
             label: "timestamp",
-            info: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+            info: {
+              local: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+              utc: "Tue, 08 May 2018 20:12:39 GMT",
+            },
           },
-          { label: "timestampUTC", info: "Tue, 08 May 2018 20:12:39 GMT" },
-          { label: "version", info: 1 },
           {
             label: "logId",
             info:
@@ -236,12 +244,14 @@ const adjustedCerts = [
           },
           { label: "name", info: "Google “Skydiver”" },
           { label: "signatureAlgorithm", info: "SHA-256 ECDSA" },
+          { label: "version", info: 1 },
           {
             label: "timestamp",
-            info: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+            info: {
+              local: "5/8/2018, 5:12:39 PM (Brasilia Standard Time)",
+              utc: "Tue, 08 May 2018 20:12:39 GMT",
+            },
           },
-          { label: "timestampUTC", info: "Tue, 08 May 2018 20:12:39 GMT" },
-          { label: "version", info: 1 },
         ],
         Critical: false,
       },
