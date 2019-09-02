@@ -1109,6 +1109,17 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // edit sub-action handler
   /**
+   * CanHandleHTMLEditSubAction() checks whether there is at least one
+   * selection range or not, and whether the first range is editable.
+   * If it's not editable, `Canceled()` of the result returns true.
+   * If `Selection` is in odd situation, returns an error.
+   *
+   * XXX I think that `IsSelectionEditable()` is better name, but it's already
+   *     in `EditorBase`...
+   */
+  EditActionResult CanHandleHTMLEditSubAction() const;
+
+  /**
    * Called before inserting something into the editor.
    * This method may removes mPaddingBRElementForEmptyEditor if there is.
    * Therefore, this method might cause destroying the editor.
@@ -1696,8 +1707,9 @@ class HTMLEditor final : public TextEditor,
       nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
 
   /**
-   * FormatBlockContainer() is implementation of "formatBlock" command of
-   * `Document.execCommand()`.  This applies block style or removes it.
+   * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
+   * command of `Document.execCommand()`.  This applies block style or removes
+   * it.
    * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
    *       return NS_OK, editor may have been destroyed.
    *
@@ -1711,7 +1723,7 @@ class HTMLEditor final : public TextEditor,
    *                            called.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  FormatBlockContainer(nsAtom& aBlockType);
+  FormatBlockContainerWithTransaction(nsAtom& aBlockType);
 
   /**
    * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if
@@ -2855,14 +2867,14 @@ class HTMLEditor final : public TextEditor,
   nsresult MakeDefinitionListItemWithTransaction(nsAtom& aTagName);
 
   /**
-   * InsertBasicBlockWithTransaction() inserts a block element whose name
-   * is aTagName at selection.
+   * FormatBlockContainerAsSubAction() inserts a block element whose name
+   * is aTagName at selection.  If selection is not collapsed and aTagName is
+   * nsGkAtoms::normal or nsGkAtoms::_empty, this removes block containers.
    *
    * @param aTagName            A block level element name.  Must NOT be
    *                            nsGkAtoms::dt nor nsGkAtoms::dd.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertBasicBlockWithTransaction(nsAtom& aTagName);
+  MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerAsSubAction(nsAtom& aTagName);
 
   /**
    * Increase/decrease the font size of selection.

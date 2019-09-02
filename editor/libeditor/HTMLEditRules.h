@@ -367,18 +367,6 @@ class HTMLEditRules : public TextEditRules {
                                             bool* aHandled);
 
   /**
-   * WillMakeBasicBlock() called before changing block style around Selection.
-   * This method actually does something with calling FormatBlockContainer().
-   *
-   * @param aBlockType          Necessary block style as string.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillMakeBasicBlock(const nsAString& aBlockType,
-                                           bool* aCancel, bool* aHandled);
-
-  /**
    * Called after creating a basic block, indenting, outdenting or aligning
    * contents.  This method inserts a padding <br> element for empty last line
    * if start container of Selection needs it.
