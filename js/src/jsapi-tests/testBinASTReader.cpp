@@ -466,15 +466,3 @@ BEGIN_TEST(testBinASTReaderMultipartECMAScript2) {
   return true;
 }
 END_TEST(testBinASTReaderMultipartECMAScript2)
-
-BEGIN_TEST(testBinASTReaderContextECMAScript2) {
-#if defined(XP_WIN)
-  runTestFromPath<js::frontend::BinASTTokenReaderContext>(
-      cx, "jsapi-tests\\binast\\parser\\context\\");
-#else
-  runTestFromPath<js::frontend::BinASTTokenReaderContext>(
-      cx, "jsapi-tests/binast/parser/context/");
-#endif  // defined(XP_XIN)
-  return true;
-}
-END_TEST(testBinASTReaderContextECMAScript2)
