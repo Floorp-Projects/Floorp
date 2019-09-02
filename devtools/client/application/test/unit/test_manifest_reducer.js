@@ -18,6 +18,7 @@ add_task(async function() {
 
   const action = updateManifest({ name: "foo" }, "some error");
   const newState = manifestReducer(state, action);
-  equal(newState.manifest.name, "foo");
+  equal(newState.manifest.identity[0].key, "name");
+  equal(newState.manifest.identity[0].value, "foo");
   equal(newState.errorMessage, "some error");
 });

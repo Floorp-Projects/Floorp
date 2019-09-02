@@ -1,45 +1,36 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ManifestPage renders the expected snapshot 1`] = `
+exports[`ManifestPage renders the expected snapshot when there is a manifest 1`] = `
 <section
   className="app-page "
 >
   <Connect(ManifestLoader) />
   <Manifest
-    icons={Array []}
+    icons={
+      Array [
+        Object {
+          "key": "1x1",
+          "value": "something.png",
+        },
+      ]
+    }
     identity={
       Array [
         Object {
           "key": "name",
-          "value": "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
-        },
-        Object {
-          "key": "short_name",
-          "value": "Na",
+          "value": "foo",
         },
       ]
     }
     presentation={
       Array [
         Object {
-          "key": "display",
-          "value": "browser",
+          "key": "lorem",
+          "value": "ipsum",
         },
         Object {
-          "key": "orientation",
-          "value": "landscape",
-        },
-        Object {
-          "key": "start_url",
-          "value": "root",
-        },
-        Object {
-          "key": "theme_color",
-          "value": "#345",
-        },
-        Object {
-          "key": "background_color",
-          "value": "#F9D",
+          "key": "foo",
+          "value": "bar",
         },
       ]
     }
@@ -47,18 +38,19 @@ exports[`ManifestPage renders the expected snapshot 1`] = `
       Array [
         Object {
           "level": "warning",
-          "message": "Icons item at index 0 is invalid.",
-        },
-        Object {
-          "level": "error",
-          "message": "Random JSON error",
-        },
-        Object {
-          "level": "warning",
-          "message": "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
+          "message": "This is a warning",
         },
       ]
     }
   />
+</section>
+`;
+
+exports[`ManifestPage renders the expected snapshot when there is no manifest 1`] = `
+<section
+  className="app-page app-page--empty"
+>
+  <Connect(ManifestLoader) />
+  <ManifestEmpty />
 </section>
 `;
