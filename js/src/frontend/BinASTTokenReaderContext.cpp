@@ -1344,10 +1344,15 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
   }
 
   // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
-  const uint8_t bitLength =
-      std::min<uint8_t>(this->bitLength, MAX_PREFIX_BIT_LENGTH);
-  const uint32_t bitsPrefix = bits & (uint64_t)0x00000000FFFFFFFF;
-  return HuffmanLookup(bitsPrefix, bitLength);
+  if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {
+    return HuffmanLookup(this->bits, this->bitLength);
+  }
+  // Keep only 32 bits. We perform the operation on 64 bits to avoid any
+  // arithmetics surprise.
+  const uint64_t bitPrefix =
+      this->bits >> (this->bitLength - MAX_PREFIX_BIT_LENGTH);
+  MOZ_ASSERT(bitPrefix < uint32_t(-1));
+  return HuffmanLookup(bitPrefix, MAX_PREFIX_BIT_LENGTH);
 }
 
 template <>
@@ -1358,6 +1363,15 @@ void BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
   MOZ_ASSERT(bitLength <= this->bitLength);
 
   this->bitLength -= bitLength;
+
+  // Now zero out the bits that are beyond `this->bitLength`.
+  const uint64_t mask =
+      this->bitLength == 0
+          ? 0  // >> 64 is UB for a uint64_t
+          : uint64_t(-1) >> (BIT_BUFFER_SIZE - this->bitLength);
+  this->bits &= mask;
+  MOZ_ASSERT_IF(this->bitLength != BIT_BUFFER_SIZE,
+                this->bits >> this->bitLength == 0);
 }
 
 void BinASTTokenReaderContext::traceMetadata(JSTracer* trc) {
@@ -1687,8 +1701,17 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
   // provide bounded-time lookup.
-  fprintf(stderr, "HuffmanTableImpl::lookup among %lu values\n",
+  fprintf(stderr, "HuffmanTableImpl::lookup among %lu values\n[",
           values.length());
+
+  for (const auto& iter : values) {
+    fprintf(stderr, "(%u, %u)", iter.key.bits, iter.key.bitLength);
+  }
+  fprintf(stderr, "] vs. [");
+  for (uint32_t i = 0; i <= key.bitLength; ++i) {
+    fprintf(stderr, "(%u, %u)", key.leadingBits(i), i);
+  }
+  fprintf(stderr, "]\n");
 
   for (const auto& iter : values) {
     if (iter.key.bitLength > key.bitLength) {
@@ -2195,11 +2218,11 @@ HuffmanTableListLength& HuffmanDictionary::tableForListLength(BinASTList list) {
   return listLengths[static_cast<size_t>(list)];
 }
 
-uint32_t HuffmanLookup::leadingBits(const uint8_t bitLength) const {
-  MOZ_ASSERT(bitLength <= this->bitLength);
+uint32_t HuffmanLookup::leadingBits(const uint8_t aBitLength) const {
+  MOZ_ASSERT(aBitLength <= this->bitLength);
   const uint32_t result =
-      bitLength == 0 ? 0  // Shifting a uint32_t by 32 bits is UB.
-                     : this->bits >> uint32_t(this->bitLength - bitLength);
+      (aBitLength == 0) ? 0  // Shifting a uint32_t by 32 bits is UB.
+                        : this->bits >> uint32_t(this->bitLength - aBitLength);
   return result;
 }
 
