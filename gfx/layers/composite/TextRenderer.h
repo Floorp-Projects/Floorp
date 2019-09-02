@@ -32,7 +32,7 @@ class TextRenderer final {
   TextRenderer() = default;
 
   RefPtr<TextureSource> RenderText(TextureSourceProvider* aProvider,
-                                   const std::string& aText, uint32_t aTextSize,
+                                   const std::string& aText,
                                    uint32_t aTargetPixelWidth,
                                    FontType aFontType);
 
