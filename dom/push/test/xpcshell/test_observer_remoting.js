@@ -5,6 +5,22 @@ const pushNotifier = Cc["@mozilla.org/push/Notifier;1"].getService(
 );
 
 add_task(async function test_observer_remoting() {
+  /**
+   * Do nothing if dom.serviceWorkers.parent_intercept=true.
+   *
+   * This exists because the test harness can't read the value of prefs if they
+   * aren't set with --setpref. This can be removed when bug 1577912 is
+   * resolved or Service Workers' child-intercept implementation is removed,
+   * whichever comes first.
+   */
+  const isParentInterceptEnabled = Cc["@mozilla.org/serviceworkers/manager;1"]
+    .getService(Ci.nsIServiceWorkerManager)
+    .isParentInterceptEnabled();
+
+  if (isParentInterceptEnabled) {
+    return;
+  }
+
   do_get_profile();
   if (isParent) {
     await testInParent();
