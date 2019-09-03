@@ -109,6 +109,19 @@ tracking_protection</td>
         </td>
         <td>2020-03-01</td>
     </tr>
+    <tr>
+       <td>whats_new_tapped</td>
+       <td>event</td>
+       <td>A user opened the "what's new" page button</td>
+       <td><a href="https://github.com/mozilla-mobile/fenix/pull/5090">link</a></td>
+       <td>
+           <table>
+                <tr><td>source</td><td>The location from which the user selected the what's new button. Either 'about' or 'home'</td>
+                </tr>
+            </table>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
 </table>
 </pre>
 

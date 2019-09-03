@@ -116,6 +116,20 @@ events:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  whats_new_tapped:
+    type: event
+    description: >
+        A user opened the "what's new" page button
+    extra_keys:
+      source:
+        description: "The location from which the user selected the what's new button. Either 'about' or 'home'"
+    bugs:
+      - 5021
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5090
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 search_shortcuts:
   opened:
