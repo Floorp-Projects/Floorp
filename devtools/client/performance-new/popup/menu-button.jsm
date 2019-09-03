@@ -110,8 +110,7 @@ function initialize() {
     tooltiptext: "profiler-button.tooltiptext",
     onViewShowing: event => {
       const iframe = getIframeFromEvent(event);
-      iframe.src =
-        "chrome://devtools/content/performance-new/popup/popup.xhtml";
+      iframe.src = "chrome://devtools/content/performance-new/popup/popup.html";
 
       // Provide a mechanism for the iframe to close the popup.
       iframe.contentWindow.gClosePopup = () => {
@@ -122,20 +121,6 @@ function initialize() {
       iframe.contentWindow.gResizePopup = height => {
         iframe.style.height = `${Math.min(600, height)}px`;
       };
-
-      // The popup has an annoying rendering "blip" when first rendering the react
-      // components. This adds a blocker until the content is ready to show.
-      event.detail.addBlocker(
-        new Promise(resolve => {
-          iframe.contentWindow.gReportReady = () => {
-            // Delete the function gReportReady so we don't leave any dangling
-            // references between windows.
-            delete iframe.contentWindow.gReportReady;
-            // Now resolve this promise to open the window.
-            resolve();
-          };
-        })
-      );
     },
     onViewHiding(event) {
       const iframe = getIframeFromEvent(event);

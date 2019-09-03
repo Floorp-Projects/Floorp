@@ -137,8 +137,6 @@ function objdirs(state = [], action) {
  *   perfFront - The current Front to the Perf actor.
  *   receiveProfile - A function to receive the profile and open it into a new window.
  *   setRecordingPreferences - A function to set the recording settings.
- *   isPopup - A boolean value that sets lets the UI know if it is in the popup window
- *             or inside of devtools.
  * }
  */
 function initializedValues(state = null, action) {
@@ -148,7 +146,6 @@ function initializedValues(state = null, action) {
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
         setRecordingPreferences: action.setRecordingPreferences,
-        isPopup: Boolean(action.isPopup),
       };
     default:
       return state;

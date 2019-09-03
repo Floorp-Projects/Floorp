@@ -50,7 +50,7 @@ const primeSymbolStore = libs => {
 const state = intializeState();
 
 function adjustState(newState) {
-  // Deep clone the object, since this can be called through popup.xhtml,
+  // Deep clone the object, since this can be called through popup.html,
   // which can be unloaded thus leaving this object dead.
   newState = JSON.parse(JSON.stringify(newState));
   Object.assign(state, newState);
@@ -110,7 +110,7 @@ async function captureProfile() {
 
   receiveProfile(profile, getSymbols);
 
-  Services.profiler.StopProfiler();
+  Services.profiler.ResumeSampling();
 }
 
 /**
@@ -143,7 +143,7 @@ function startProfiler() {
   );
 }
 
-function stopProfiler() {
+async function stopProfiler() {
   Services.profiler.StopProfiler();
 }
 
@@ -226,100 +226,6 @@ function getStoredStateOrNull() {
   return null;
 }
 
-function _getArrayOfStringsPref(prefName, defaultValue) {
-  let array;
-  try {
-    const text = Services.prefs.getCharPref(prefName);
-    array = JSON.parse(text);
-  } catch (error) {
-    return defaultValue;
-  }
-
-  if (
-    Array.isArray(array) &&
-    array.every(feature => typeof feature === "string")
-  ) {
-    return array;
-  }
-
-  return defaultValue;
-}
-
-function _getArrayOfStringsHostPref(prefName, defaultValue) {
-  let array;
-  try {
-    const text = Services.prefs.getStringPref(
-      prefName,
-      JSON.stringify(defaultValue)
-    );
-    array = JSON.parse(text);
-  } catch (error) {
-    return defaultValue;
-  }
-
-  if (
-    Array.isArray(array) &&
-    array.every(feature => typeof feature === "string")
-  ) {
-    return array;
-  }
-
-  return defaultValue;
-}
-
-function getRecordingPreferencesFromBrowser(defaultSettings = {}) {
-  const [entries, interval, features, threads, objdirs] = [
-    Services.prefs.getIntPref(
-      `devtools.performance.recording.entries`,
-      defaultSettings.entries
-    ),
-    Services.prefs.getIntPref(
-      `devtools.performance.recording.interval`,
-      defaultSettings.interval
-    ),
-    _getArrayOfStringsPref(
-      `devtools.performance.recording.features`,
-      defaultSettings.features
-    ),
-    _getArrayOfStringsPref(
-      `devtools.performance.recording.threads`,
-      defaultSettings.threads
-    ),
-    _getArrayOfStringsHostPref(
-      "devtools.performance.recording.objdirs",
-      defaultSettings.objdirs
-    ),
-  ];
-
-  // The pref stores the value in usec.
-  const newInterval = interval / 1000;
-  return { entries, interval: newInterval, features, threads, objdirs };
-}
-
-function setRecordingPreferencesOnBrowser(settings) {
-  Services.prefs.setIntPref(
-    `devtools.performance.recording.entries`,
-    settings.entries
-  );
-  Services.prefs.setIntPref(
-    `devtools.performance.recording.interval`,
-    // The pref stores the value in usec.
-    settings.interval * 1000
-  );
-  Services.prefs.setCharPref(
-    `devtools.performance.recording.features`,
-    JSON.stringify(settings.features)
-  );
-  Services.prefs.setCharPref(
-    `devtools.performance.recording.threads`,
-    JSON.stringify(settings.threads)
-  );
-  Services.prefs.setCharPref(
-    "devtools.performance.recording.objdirs",
-    JSON.stringify(settings.objdirs)
-  );
-}
-
 function intializeState() {
   const storedState = getStoredStateOrNull();
   if (storedState) {
@@ -375,6 +281,4 @@ var EXPORTED_SYMBOLS = [
   "toggleProfiler",
   "isRunningObserver",
   "platform",
-  "getRecordingPreferencesFromBrowser",
-  "setRecordingPreferencesOnBrowser",
 ];

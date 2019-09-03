@@ -1,0 +1,397 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  background: rgb(250,250,250);
+  font: message-box;
+  user-select: none;
+  cursor: default;
+  overflow: auto;
+}
+
+* {
+  flex-shrink: 0;
+}
+
+body {
+  margin: 0;
+}
+
+.status-display {
+  margin: 0;
+  padding: 10px 4px;
+  position: relative;
+}
+
+.status-display::before {
+  content: '';
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  vertical-align: top;
+  margin: -2px 3px -20px;
+}
+
+:root.status-stopped .status-display:not(.status-display-stopped) { display: none; }
+:root.status-running .status-display:not(.status-display-running) { display: none; }
+
+.status-display-stopped {
+  background: hsl(210, 80%, 85%);
+}
+
+.status-display-running {
+  background: hsl(90, 70%, 70%);
+}
+
+.status-display-stopped::before {
+  background: hsl(210, 70%, 60%);
+}
+
+.status-display-running::before {
+  background: hsl(90, 80%, 40%);
+  border-radius: 100%;
+}
+
+.status-display-button {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  padding: 2.5px;
+  border: 0.5px solid transparent;
+  border-radius: 2px;
+}
+
+.status-display-button:hover {
+  box-shadow: inset 0 0.5px hsla(0,0%,100%,0.3);
+  color: black;
+}
+
+.status-display-button:hover:active {
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.button-start {
+  border-color: hsl(210, 30%, 60%);
+  background: rgba(0,0,0,0.08);
+  color: hsl(210, 80%, 20%);
+}
+
+.button-cancel {
+  border-color: hsl(90, 40%, 50%);
+  background: rgba(0,0,0,0.08);
+  color: hsl(90, 80%, 20%);
+}
+
+.button-start:hover {
+  border-color: hsl(90, 40%, 50%);
+  background: linear-gradient(hsl(90, 70%, 68%), hsl(90, 70%, 58%));
+  color: hsl(90, 80%, 20%);
+}
+
+.button-cancel:hover {
+  background: linear-gradient(hsl(0, 95%, 68%), hsl(0, 95%, 58%));
+  border-color: hsl(0, 90%, 30%);
+}
+
+.button-start:hover:active {
+  background: linear-gradient(hsl(90, 70%, 50%), hsl(90, 70%, 45%));
+}
+
+.button-cancel:hover:active {
+  background: linear-gradient(hsl(0, 90%, 50%), hsl(0, 90%, 45%));
+}
+
+#button-capture {
+  margin: 6px 5px 5px;
+  height: auto;
+  text-align: left;
+  padding: 5px 2px;
+  padding-left: 32px;
+  border: 1px solid #DDD;
+  box-shadow: 0 1px rgba(0,0,0,0.3);
+  border-radius: 5px;
+  background: linear-gradient(#FAFAFA, #EEE);
+  display: block;
+  position: relative;
+}
+
+:root.status-stopped #button-capture {
+  color: GrayText;
+}
+
+:root.status-running #button-capture:hover {
+  background: linear-gradient(#EEE, #DDD);
+}
+
+:root.status-running #button-capture:hover:active {
+  background: #CCC;
+  border-color: #BBB;
+}
+
+#capture-label {
+  display: flex;
+  flex-flow: row nowrap;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+#capture-label::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: url(icons/capture-profile-icon.svg);
+  top: 6px;
+  left: 10px;
+}
+
+:root.status-stopped #capture-label::before {
+  opacity: 0.5;
+}
+
+.keyboard-hint {
+  font-size: 1rem;
+  font-weight: normal;
+  flex: 1;
+  text-align: center;
+}
+
+kbd {
+  font-size: 10px;
+  background-color: hsla(0,0%,100%,0.4);
+  border: 1px solid #CCC;
+  border-radius: 0.2em;
+  display: inline-block;
+  padding: 0.1em 0.35em;
+  box-shadow: 0 0.1em 0 #BBB;
+  margin: 0 0.15em;
+  font-family: inherit;
+}
+
+#help-capture {
+  margin: 0;
+}
+
+.info-density {
+  margin: 4px 12px;
+  display: grid;
+  grid-template-columns: 7em auto;
+  grid-template-rows: auto;
+}
+
+.info-density > dt {
+  grid-column: 1;
+  padding: 2px 0;
+}
+
+.info-density > dd {
+  grid-column: 2;
+  margin: 0;
+  padding: 5px 0 3px;
+}
+
+.settings {
+  background: #FFFFFF;
+}
+
+.settings:not(.open) > .settings-content,
+.settings:not(.open) > .settings-apply-button-wrapper {
+  display: none;
+}
+
+#settings-label {
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: bold;
+  background: #EEE;
+}
+
+#settings-label:hover {
+  background: #DDD;
+}
+
+#settings-label:hover:active {
+  background: #CCC;
+}
+
+#settings-label::before {
+  content: '';
+  display: inline-block;
+  border-left: 9px solid #BBB;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  margin-right: 5px;
+}
+
+.settings.open > #settings-label::before {
+  transform: rotate(90deg);
+}
+
+.discrete-level {
+  display: flex;
+  height: 100%;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.discrete-level-notch {
+  flex: 1;
+  margin-right: 1px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+}
+
+.discrete-level-notch.normal.active {
+  border-color: hsl(90, 90%, 40%);
+  background-color: hsla(90, 90%, 40%, 0.5);
+}
+
+.discrete-level-notch.warning.active {
+  border-color: hsl(45, 100%, 49%);
+  background-color: hsla(45, 100%, 49%, 0.5);
+}
+
+.discrete-level-notch.critical.active {
+  border-color: hsl(0, 90%, 40%);
+  background-color: hsla(0, 90%, 40%, 0.5);
+}
+
+.settings-content {
+  margin: 0;
+  padding: 0 10px 18px;
+  line-height: 22px;
+  display: grid;
+  grid-template-columns: 8em auto;
+  grid-template-rows: auto;
+}
+
+.settings-setting-label {
+  margin: 0;
+  font-size: 100%;
+  font-weight: normal;
+}
+
+.range-with-value {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.range-input {
+  margin: 0;
+  width: 0;
+  flex: 1;
+}
+
+.range-value {
+  margin-left: 10px;
+  width: 4em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settings-textbox {
+  min-width: 0;
+}
+
+.features-list {
+  margin: 0;
+  padding: 2px 0 0;
+  line-height: 20px;
+}
+
+.features-list > li {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-apply-button-wrapper {
+  padding: 4px 10px;
+  margin: 0;
+  text-align: right;
+  bottom: 0;
+  right: 0;
+  position: fixed;
+  width: 100%;
+  background: #eee;
+}
+
+.perf-settings-row {
+  display: flex;
+  overflow: hidden;
+  line-height: 1.8;
+}
+
+.perf-settings-row.focused {
+  background-color: #0074e8;
+  color: #ffffff;
+}
+
+.perf-settings-text-input {
+  width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.perf-settings-text-label {
+  flex: 1;
+}
+
+.perf-settings-details-contents {
+  padding: 4px;
+  margin: 0 0 18px;
+  border: #ededf0 1px solid;
+  background-color: #f9f9fa;
+}
+
+.perf-settings-details {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.perf-settings-summary {
+  height: 30px;
+  cursor: default;
+  user-select: none;
+}
+
+.perf-settings-thread-columns {
+  margin-bottom: 20px;
+  display: flex;
+  line-height: 2;
+}
+
+.perf-settings-thread-column {
+  flex: 1;
+}
+
+.perf-settings-checkbox-label {
+  display: block;
+}
+
+.perf-settings-feature-label {
+  margin: 8px 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.perf-settings-checkbox {
+  align-self: flex-start;
+}
+
+.perf-settings-feature-title {
+  margin-left: 20px;
+  flex: 1 100%;
+  line-height: 1.6;
+}
+
+.perf-settings-feature-name {
+  color: #0060df;
+  line-height: 1.6;
+}
+
+.perf-settings-subtext {
+  font-weight: bold;
+}

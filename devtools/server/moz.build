@@ -10,7 +10,6 @@ DIRS += [
     'actors',
     'connectors',
     'performance',
-    'performance-new',
     'socket',
     'startup',
 ]
