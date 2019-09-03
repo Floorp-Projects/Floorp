@@ -84,6 +84,7 @@ import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.whatsnew.WhatsNew
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment(), AccountObserver {
@@ -567,6 +568,19 @@ class HomeFragment : Fragment(), AccountObserver {
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
                             SupportUtils.SumoTopic.HELP
+                        ),
+                        newTab = true,
+                        from = BrowserDirection.FromHome
+                    )
+                }
+                HomeMenu.Item.WhatsNew -> {
+                    invokePendingDeleteJobs()
+                    hideOnboardingIfNeeded()
+                    WhatsNew.userViewedWhatsNew(context!!)
+                    (activity as HomeActivity).openToBrowserAndLoad(
+                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                            context!!,
+                            SupportUtils.SumoTopic.WHATS_NEW
                         ),
                         newTab = true,
                         from = BrowserDirection.FromHome

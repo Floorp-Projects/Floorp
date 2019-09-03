@@ -81,6 +81,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
+        <TextView
+            android:id="@+id/whats_new_button"
+            android:layout_margin="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/about_whats_new"
+            android:textSize="16sp"
+            android:textColor="?accent"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            app:layout_constraintTop_toBottomOf="@id/view_licenses_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

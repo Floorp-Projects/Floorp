@@ -217,4 +217,7 @@
 
     <!-- Private Browsing Mode Persistent Notification -->
     <color name="pbm_notification_color">#592ACB</color>
+
+    <!-- Notification Color -->
+    <color name="whats_new_notification_color">#00B3F4</color>
 </resources>

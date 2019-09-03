@@ -17,8 +17,11 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kotlinx.android.synthetic.main.fragment_about.*
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.whatsnew.WhatsNew
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
 /**
@@ -69,6 +72,21 @@ class AboutFragment : Fragment() {
         view_licenses_button.setOnClickListener {
             startActivity(Intent(context, OssLicensesMenuActivity::class.java))
             OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses_title, appName))
+        }
+
+        with(whats_new_button) {
+            text = getString(R.string.about_whats_new, getString(R.string.app_name))
+            setOnClickListener {
+                WhatsNew.userViewedWhatsNew(context!!)
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                        context!!,
+                        SupportUtils.SumoTopic.WHATS_NEW
+                    ),
+                    newTab = true,
+                    from = BrowserDirection.FromAbout
+                )
+            }
         }
     }
 

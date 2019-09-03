@@ -42,6 +42,8 @@
     <string name="browser_menu_stop">Stop</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">What\'s New</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
@@ -817,6 +819,8 @@
     <string name="about_your_rights">Your rights</string>
     <!-- About page link text to open open source licenses screen -->
     <string name="about_open_source_licenses">Open source libraries we use</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">What\'s new in %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS Libraries</string>

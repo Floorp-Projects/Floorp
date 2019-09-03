@@ -5,17 +5,21 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.whatsnew.WhatsNew
 
 class HomeMenu(
     private val context: Context,
     private val onItemTapped: (Item) -> Unit = {}
 ) {
     sealed class Item {
+        object WhatsNew : Item()
         object Help : Item()
         object Settings : Item()
         object Library : Item()
@@ -30,7 +34,7 @@ class HomeMenu(
                 R.drawable.ic_settings,
                 ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
-                onItemTapped.invoke(HomeMenu.Item.Settings)
+                onItemTapped.invoke(Item.Settings)
             },
 
             BrowserMenuImageText(
@@ -38,7 +42,7 @@ class HomeMenu(
                 R.drawable.ic_library,
                 ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
-                onItemTapped.invoke(HomeMenu.Item.Library)
+                onItemTapped.invoke(Item.Library)
             },
 
             BrowserMenuDivider(),
@@ -47,7 +51,21 @@ class HomeMenu(
                 R.drawable.ic_help,
                 ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
-                onItemTapped.invoke(HomeMenu.Item.Help)
-            })
+                onItemTapped.invoke(Item.Help)
+            },
+
+            BrowserMenuHighlightableItem(
+                context.getString(R.string.browser_menu_whats_new),
+                R.drawable.ic_whats_new,
+                highlight = BrowserMenuHighlightableItem.Highlight(
+                    startImageResource = R.drawable.ic_whats_new_notification,
+                    backgroundResource = ThemeManager.resolveAttribute(R.attr.selectableItemBackground, context),
+                    colorResource = ContextCompat.getColor(context, R.color.whats_new_notification_color)
+                ),
+                isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
+            ) {
+                onItemTapped.invoke(Item.WhatsNew)
+            }
+        )
     }
 }
