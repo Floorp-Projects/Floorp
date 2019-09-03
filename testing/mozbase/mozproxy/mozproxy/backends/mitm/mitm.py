@@ -83,11 +83,13 @@ class Mitmproxy(Playback):
 
         if self.config.get("playback_version") is None:
             LOG.info("mitmproxy was not provided with a 'playback_version' "
-                     "getting 'playback_version' from 'playback_binary_manifest'")
-            if "4.0.4" in self.config["playback_binary_manifest"]:
-                self.config["playback_version"] = "4.0.4"
-            else:
-                self.config["playback_version"] = "2.0.2"
+                     "Using default playback version: 4.0.4")
+            self.config["playback_version"] = "4.0.4"
+
+        if self.config.get("playback_binary_manifest") is None:
+            LOG.info("mitmproxy was not provided with a 'playback_binary_manifest' "
+                     "Using default playback_binary_manifest")
+            self.config["playback_binary_manifest"] = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
 
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
@@ -209,19 +211,7 @@ class Mitmproxy(Playback):
                 recording_paths = [recording_path.replace("\\", "\\\\\\")
                                    for recording_path in recording_paths]
 
-            if self.config["playback_version"] == "2.0.2":
-                args = [
-                    "--replay-kill-extra",
-                    "-v",
-                    "--script",
-                    '""{} {}""'.format(script, " ".join(recording_paths)),
-                ]
-
-                if not self.config["playback_upstream_cert"]:
-                    LOG.info("No upstream certificate sniffing")
-                    args.insert(0, "--no-upstream-cert")
-                self.playback.config["playback_tool_args"] = args
-            elif self.config["playback_version"] == "4.0.4":
+            if self.config["playback_version"] == "4.0.4":
                 args = [
                     "-v",
                     "--set",

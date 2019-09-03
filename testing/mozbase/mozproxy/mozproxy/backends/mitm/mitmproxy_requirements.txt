@@ -17,7 +17,7 @@ hyperframe==4.0.2
 idna==2.5
 jsbeautifier==1.6.12
 kaitaistruct==0.6
-mitmproxy==2.0.2
+mitmproxy==4.0.4
 packaging==16.8
 passlib==1.7.1
 pathtools==0.1.2
