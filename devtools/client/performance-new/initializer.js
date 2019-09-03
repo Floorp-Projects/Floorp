@@ -22,8 +22,8 @@ const actions = require("devtools/client/performance-new/store/actions");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const {
   receiveProfile,
-  getRecordingPreferencesFromDebuggee,
-  setRecordingPreferencesOnDebuggee,
+  getRecordingPreferences,
+  setRecordingPreferences,
 } = require("devtools/client/performance-new/browser");
 
 /**
@@ -45,14 +45,14 @@ async function gInit(perfFront, preferenceFront) {
       // to what's in the target's preferences. This way the preferences are stored
       // on the target. This could be useful for something like Android where you might
       // want to tweak the settings.
-      recordingSettingsFromPreferences: await getRecordingPreferencesFromDebuggee(
+      recordingSettingsFromPreferences: await getRecordingPreferences(
         preferenceFront,
         selectors.getRecordingSettings(store.getState())
       ),
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
       setRecordingPreferences: () =>
-        setRecordingPreferencesOnDebuggee(
+        setRecordingPreferences(
           preferenceFront,
           selectors.getRecordingSettings(store.getState())
         ),
