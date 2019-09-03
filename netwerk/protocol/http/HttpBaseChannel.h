@@ -53,6 +53,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/dom/ReferrerInfo.h"
+#include "mozilla/dom/DOMTypes.h"
 
 #define HTTP_BASE_CHANNEL_IID                        \
   {                                                  \
@@ -471,8 +472,40 @@ class HttpBaseChannel : public nsHashPropertyBag,
   }
 
   // Set referrerInfo and compute the referrer header if neccessary.
+  // Pass true for aSetOriginal if this is a new referrer and should
+  // overwrite the 'original' value, false if this is a mutation (like
+  // stripping the path).
   nsresult SetReferrerInfo(nsIReferrerInfo* aReferrerInfo, bool aClone,
-                           bool aCompute);
+                           bool aCompute, bool aSetOriginal = true);
+
+  struct ReplacementChannelConfig {
+    ReplacementChannelConfig() = default;
+    explicit ReplacementChannelConfig(
+        const dom::ReplacementChannelConfigInit& aInit);
+
+    uint32_t loadFlags = 0;
+    uint32_t redirectFlags = 0;
+    uint32_t classOfService = 0;
+    Maybe<bool> privateBrowsing = Nothing();
+    Maybe<nsCString> method;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    Maybe<dom::TimedChannelInfo> timedChannel;
+
+    dom::ReplacementChannelConfigInit Serialize();
+  };
+
+  // Create a ReplacementChannelConfig object that can be used to duplicate the
+  // current channel.
+  ReplacementChannelConfig CloneReplacementChannelConfig(
+      bool aPreserveMethod, uint32_t aRedirectFlags,
+      uint32_t aExtraLoadFlags = 0);
+
+  static void ConfigureReplacementChannel(nsIChannel*,
+                                          const ReplacementChannelConfig&);
+
+  // Called before we create the redirect target channel.
+  already_AddRefed<nsILoadInfo> CloneLoadInfoForRedirect(
+      nsIURI* aNewURI, uint32_t aRedirectFlags);
 
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
@@ -540,10 +573,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void AssertPrivateBrowsingId();
 #endif
 
-  // Called before we create the redirect target channel.
-  already_AddRefed<nsILoadInfo> CloneLoadInfoForRedirect(
-      nsIURI* newURI, uint32_t redirectFlags);
-
   static void CallTypeSniffers(void* aClosure, const uint8_t* aData,
                                uint32_t aCount);
 
@@ -573,6 +602,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+  // We cache the original value of mReferrerInfo, since
+  // we trim the referrer to not expose the full path to remote
+  // usage.
+  nsCOMPtr<nsIReferrerInfo> mOriginalReferrerInfo;
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
   nsCOMPtr<nsIURI> mAPIRedirectToURI;
   nsCOMPtr<nsIURI> mProxyURI;

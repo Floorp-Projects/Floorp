@@ -367,3 +367,25 @@ interface nsIChannel : nsIRequest
 %}
 
 };
+
+[builtinclass, scriptable, uuid(1ebbff64-d742-4f4a-aad5-4df2d1eb937a)]
+interface nsIIdentChannel : nsIChannel
+{
+    /**
+     * Unique ID of the channel, shared between parent and child. Needed if
+     * the channel activity needs to be monitored across process boundaries,
+     * like in devtools net monitor. See bug 1274556.
+     */
+    [must_use] attribute uint64_t channelId;
+
+%{ C++
+  inline uint64_t ChannelId()
+  {
+    uint64_t value = 0;
+    if (NS_SUCCEEDED(GetChannelId(&value))) {
+      return value;
+    }
+    return 0;
+  }
+%}
+};

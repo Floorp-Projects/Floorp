@@ -28,6 +28,7 @@ class NullHttpChannel final : public nsINullChannel,
   NS_DECL_NSITIMEDCHANNEL
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
+  NS_DECL_NSIIDENTCHANNEL
 
   NullHttpChannel();
 

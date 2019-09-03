@@ -528,7 +528,7 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean isDocshellReload;
 
   /**
-   * True if the load was initiated by a form request. 
+   * True if the load was initiated by a form request.
    * This is important to know to handle the CSP directive navigate-to.
    */
   [infallible] attribute boolean isFormSubmission;
@@ -1049,13 +1049,19 @@ interface nsILoadInfo : nsISupports
   /**
    * Set a custom performance storage. This is meant to be executed only for
    * workers. If a PerformanceStorage is not set, the loadingDocument->Window
-   * Performance object will be used instead.
+   * Performance object will be returned instead.
    */
   [noscript, nostdcall, notxpcom]
   void SetPerformanceStorage(in PerformanceStoragePtr aPerformanceStorage);
 
   /**
-   * Get the PerformanceStorage.
+   * Get the custom PerformanceStorage if set by SetPerformanceStorage.
+   * Otherwise the loadingDocument->Window Performance object will be returned
+   * instead if all the following conditions are met:
+   * - the triggeringPrincipal is the same as the loadingDocument's principal.
+   * - if the external content policy type is TYPE_SUBDOCUMENT then loading
+   *   wasn't caused by processing the attributes of the browsing context
+   *   container.
    */
   [noscript, nostdcall, notxpcom]
   PerformanceStoragePtr GetPerformanceStorage();
@@ -1063,7 +1069,7 @@ interface nsILoadInfo : nsISupports
   /**
    * Returns the CSP (or Preload CSP for preloads) which should be enforced
    * when fetching the resource this loadinfo belongs to.
-   * 
+   *
    * a) Non-navigations:
    * For non-navigation loads, GetCSP() returns what the spec refers to as the
    * "request's client's global object's CSP list". In practice, if this is the

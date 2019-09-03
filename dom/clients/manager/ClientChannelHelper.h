@@ -22,10 +22,18 @@ class ClientInfo;
 // properly handle creating a new ClientSource on cross-origin redirect
 // and propagate the current reserved/initial client on same-origin
 // redirect.
+// Pass true for aManagedInParent if redirects will be handled in the
+// parent process (by a channel with AddClientChannelHelperInParent),
+// and this process only sees a single switch to the final channel,
+// as done by DocumentChannel.
 nsresult AddClientChannelHelper(nsIChannel* aChannel,
                                 Maybe<ClientInfo>&& aReservedClientInfo,
                                 Maybe<ClientInfo>&& aInitialClientInfo,
-                                nsISerialEventTarget* aEventTarget);
+                                nsISerialEventTarget* aEventTarget,
+                                bool aManagedInParent);
+
+nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
+                                        nsISerialEventTarget* aEventTarget);
 
 }  // namespace dom
 }  // namespace mozilla

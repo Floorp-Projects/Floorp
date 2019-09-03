@@ -7324,16 +7324,12 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
+  nsCOMPtr<nsICrossProcessSwitchChannel> httpParent =
+      do_QueryInterface(parentChannel);
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
-      CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
-  redirectLoadInfo->SetResultPrincipalURI(mURI);
-
-  httpParent->TriggerCrossProcessRedirect(this, redirectLoadInfo,
-                                          mCrossProcessRedirectIdentifier);
+  httpParent->TriggerCrossProcessSwitch(this, mCrossProcessRedirectIdentifier);
 
   // This will suspend the channel
   rv = WaitForRedirectCallback();
@@ -10378,7 +10374,9 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
                                                      isPrivate)) {
         nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
             referrerInfo->CloneWithNewPolicy(ReferrerPolicy::_empty);
-        SetReferrerInfo(newReferrerInfo, false, true);
+        // Pass false for the 3rd bool to not overwrite the original
+        // referrer for these referrer policy mutations.
+        SetReferrerInfo(newReferrerInfo, false, true, false);
       }
     }
   }

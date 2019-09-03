@@ -199,6 +199,16 @@ bool ClientManagerService::AddSource(ClientSourceParent* aSource) {
     return false;
   }
   entry.OrInsert([&] { return aSource; });
+
+  // Now that we've been created, notify any handles that were
+  // waiting on us.
+  auto* handles = mPendingHandles.GetValue(aSource->Info().Id());
+  if (handles) {
+    for (auto handle : *handles) {
+      handle->FoundSource(aSource);
+    }
+  }
+  mPendingHandles.Remove(aSource->Info().Id());
   return true;
 }
 
@@ -230,6 +240,20 @@ ClientSourceParent* ClientManagerService::FindSource(
   }
 
   return source;
+}
+
+void ClientManagerService::WaitForSource(ClientHandleParent* aHandle,
+                                         const nsID& aID) {
+  auto& entry = mPendingHandles.GetOrInsert(aID);
+  entry.AppendElement(aHandle);
+}
+
+void ClientManagerService::StopWaitingForSource(ClientHandleParent* aHandle,
+                                                const nsID& aID) {
+  auto* entry = mPendingHandles.GetValue(aID);
+  if (entry) {
+    entry->RemoveElement(aHandle);
+  }
 }
 
 void ClientManagerService::AddManager(ClientManagerParent* aManager) {
