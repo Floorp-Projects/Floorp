@@ -24,16 +24,30 @@ const FILENAME_OUTPUT = "RootHashes.inc";
 const FILENAME_TRUST_ANCHORS = "KnownRootHashes.json";
 const ROOT_NOT_ASSIGNED = -1;
 
-const JSON_HEADER =
-  "// This Source Code Form is subject to the terms of the Mozilla Public\n" +
-  "// License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
-  "// file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
-  "//\n" +
-  "//***************************************************************************\n" +
-  "// This is an automatically generated file. It's used to maintain state for\n" +
-  "// runs of genRootCAHashes.js; you should never need to manually edit it\n" +
-  "//***************************************************************************\n" +
-  "\n";
+const JSON_HEADER = `// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+//
+//***************************************************************************
+// This is an automatically generated file. It's used to maintain state for
+// runs of genRootCAHashes.js; you should never need to manually edit it
+//***************************************************************************
+
+// Notes:
+// binNumber 1 used to be for "GTE_CyberTrust_Global_Root", but that root was
+// removed from the built-in roots module, so now it is used to indicate that
+// the certificate is not a built-in and was found in the softoken (cert9.db).
+
+// binNumber 2 used to be for "Thawte_Server_CA", but that root was removed from
+// the built-in roots module, so now it is used to indicate that the certificate
+// is not a built-in and was found on an external PKCS#11 token.
+
+// binNumber 3 used to be for "Thawte_Premium_Server_CA", but that root was
+// removed from the built-in roots module, so now it is used to indicate that
+// the certificate is not a built-in and was temporarily imported from the OS as
+// part of the "Enterprise Roots" feature.
+
+`;
 
 const FILE_HEADER =
   "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
@@ -219,7 +233,6 @@ if (arguments.length != 1) {
 }
 
 var trustAnchorsFile = FileUtils.getFile("CurWorkD", [FILENAME_TRUST_ANCHORS]);
-// let rootHashesFile = FileUtils.getFile("CurWorkD", arguments[0]);
 var rootHashesFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 rootHashesFile.initWithPath(arguments[0]);
 
