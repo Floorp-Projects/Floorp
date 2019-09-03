@@ -187,14 +187,14 @@ class CrashReporterTest {
 
         reporter.onCrash(
             mock(),
-            Crash.UncaughtExceptionCrash(RuntimeException()))
+            Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf()))
 
         assertTrue(exceptionCrash)
         assertFalse(nativeCrash)
 
         reporter.onCrash(
             mock(),
-            Crash.NativeCodeCrash("", true, "", false)
+            Crash.NativeCodeCrash("", true, "", false, arrayListOf())
         )
 
         assertFalse(exceptionCrash)
@@ -237,7 +237,8 @@ class CrashReporterTest {
             "dump.path",
             true,
             "extras.path",
-            isFatal = false)
+            isFatal = false,
+            breadcrumbs = arrayListOf())
         reporter.onCrash(context, nativeCrash)
 
         verify(pendingIntent).send(eq(context), eq(0), any())

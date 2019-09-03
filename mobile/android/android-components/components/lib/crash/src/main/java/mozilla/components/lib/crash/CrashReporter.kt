@@ -49,6 +49,7 @@ class CrashReporter(
     private val nonFatalCrashIntent: PendingIntent? = null
 ) {
     internal val logger = Logger("mozac/CrashReporter")
+    internal val crashBreadcrumbs = arrayListOf<Breadcrumb>()
 
     init {
         if (services.isEmpty()) {
@@ -83,6 +84,22 @@ class CrashReporter(
         }
 
         logger.info("Crash report submitted to ${services.size} services")
+    }
+
+    /**
+     * Add a crash breadcrumb to all registered services with breadcrumb support.
+     *
+     * ```Kotlin
+     *   crashReporter.recordCrashBreadcrumb(
+     *       Breadcrumb("Settings button clicked", data, "UI", Level.INFO, Type.USER)
+     *   )
+     * ```
+     */
+    fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
+        if (crashBreadcrumbs.size >= BREADCRUMB_MAX_NUM) {
+            crashBreadcrumbs.removeAt(0)
+        }
+        crashBreadcrumbs.add(breadcrumb)
     }
 
     internal fun onCrash(context: Context, crash: Crash) {
@@ -174,6 +191,9 @@ class CrashReporter(
     )
 
     companion object {
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal const val BREADCRUMB_MAX_NUM = 20
+
         @Volatile
         private var instance: CrashReporter? = null
 

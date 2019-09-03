@@ -22,7 +22,8 @@ class CrashTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-            false
+            false,
+            arrayListOf()
         )
 
         val intent = Intent()
@@ -47,7 +48,7 @@ class CrashTest {
     fun `Serialize and deserialize UncaughtExceptionCrash`() {
         val exception = RuntimeException("Hello World!")
 
-        val originalCrash = Crash.UncaughtExceptionCrash(exception)
+        val originalCrash = Crash.UncaughtExceptionCrash(exception, arrayListOf())
 
         val intent = Intent()
         originalCrash.fillIn(intent)
@@ -69,13 +70,13 @@ class CrashTest {
 
         assertTrue(Crash.isCrashIntent(
             Intent().apply {
-                Crash.UncaughtExceptionCrash(RuntimeException()).fillIn(this)
+                Crash.UncaughtExceptionCrash(RuntimeException(), arrayListOf()).fillIn(this)
             }
         ))
 
         assertTrue(Crash.isCrashIntent(
             Intent().apply {
-                val crash = Crash.NativeCodeCrash("", true, "", false)
+                val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
                 crash.fillIn(this)
             }
         ))
