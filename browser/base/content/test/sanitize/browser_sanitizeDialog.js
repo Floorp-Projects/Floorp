@@ -490,8 +490,6 @@ add_task(async function test_form_entries() {
 
 // Test for offline cache deletion
 add_task(async function test_offline_cache() {
-  Services.prefs.setBoolPref("browser.cache.offline.enable", true);
-  Services.prefs.setBoolPref("browser.cache.offline.storage.enable", true);
   // Prepare stuff, we will work with www.example.com
   var URL = "http://www.example.com";
   var URI = makeURI(URL);
@@ -570,8 +568,6 @@ add_task(async function test_offline_cache() {
     cacheListener
   );
   await wh.promiseClosed;
-  Services.prefs.clearUserPref("browser.cache.offline.enable");
-  Services.prefs.clearUserPref("browser.cache.offline.storage.enable");
 });
 
 // Test for offline apps permission deletion
