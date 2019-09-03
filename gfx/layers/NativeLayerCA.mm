@@ -303,11 +303,11 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurfaceLocked(const MutexAutoLock&
   }
 
   // Delete all other unused surfaces.
-  if (mSurfaceRegistry) {
-    for (auto unusedSurf : unusedSurfaces) {
+  for (auto unusedSurf : unusedSurfaces) {
+    if (mSurfaceRegistry) {
       mSurfaceRegistry->UnregisterSurface(unusedSurf.mSurface);
-      mFramebuffers.erase(unusedSurf.mSurface);
     }
+    mFramebuffers.erase(unusedSurf.mSurface);
   }
   unusedSurfaces.clear();
 
