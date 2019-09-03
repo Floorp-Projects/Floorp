@@ -658,6 +658,10 @@ class FullParseHandler {
                            TokenPos(expr->pn_pos.begin, end), expr);
   }
 
+  UnaryNodeType newExprStatement(Node expr) {
+    return newExprStatement(expr, expr->pn_pos.end);
+  }
+
   TernaryNodeType newIfStatement(uint32_t begin, Node cond, Node thenBranch,
                                  Node elseBranch) {
     TernaryNode* node =
