@@ -21,7 +21,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 12);
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -33,7 +33,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
@@ -41,7 +41,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[2]
@@ -92,7 +92,7 @@ add_task(async function() {
   );
   testParamsTab3();
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[7]
@@ -100,7 +100,7 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", '{ "foo": "bar" }', "");
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[8]
@@ -144,7 +144,7 @@ add_task(async function() {
 
     is(
       tabpanel.querySelectorAll(".tree-section").length,
-      3,
+      2,
       "The number of param tree sections displayed in this tabpanel is incorrect."
     );
     is(

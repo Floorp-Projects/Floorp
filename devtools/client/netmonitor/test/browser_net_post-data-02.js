@@ -7,6 +7,7 @@
  * Tests if the POST requests display the correct information in the UI,
  * for raw payloads with attached content-type headers.
  */
+
 add_task(async function() {
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
@@ -22,7 +23,7 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   // Wait for all tree view updated by react
-  wait = waitForDOM(document, "#params-panel .tree-section", 2);
+  wait = waitForDOM(document, "#params-panel .tree-section");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -37,17 +38,17 @@ add_task(async function() {
 
   ok(
     tabpanel.querySelector(".treeTable"),
-    "The request params doesn't have the intended visibility."
+    "The request params doesn't have the indended visibility."
   );
   ok(
     tabpanel.querySelector(".editor-mount") === null,
-    "The request post data doesn't have the indented visibility."
+    "The request post data doesn't have the indended visibility."
   );
 
   is(
     tabpanel.querySelectorAll(".tree-section").length,
-    2,
-    "There should be 2 tree sections displayed in this tabpanel."
+    1,
+    "There should be 1 tree sections displayed in this tabpanel."
   );
   is(
     tabpanel.querySelectorAll(".empty-notice").length,

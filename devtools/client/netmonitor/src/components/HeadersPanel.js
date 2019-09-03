@@ -9,9 +9,6 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   getFormattedIPAndPort,
@@ -28,9 +25,6 @@ const {
   writeHeaderText,
 } = require("../utils/request-utils");
 const { HeadersProvider, HeaderList } = require("../utils/headers-provider");
-const {
-  setTargetSearchResult,
-} = require("devtools/client/netmonitor/src/actions/search");
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -87,8 +81,6 @@ class HeadersPanel extends Component {
       request: PropTypes.object.isRequired,
       renderValue: PropTypes.func,
       openLink: PropTypes.func,
-      resetTargetSearchResult: PropTypes.func,
-      targetSearchResult: PropTypes.object,
     };
   }
 
@@ -128,20 +120,14 @@ class HeadersPanel extends Component {
     ]);
   }
 
-  getHeadersTitle(headers, title) {
-    let result;
-    if (headers && headers.headers.length) {
-      result = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
-    }
-
-    return result;
-  }
-
   getProperties(headers, title) {
     let propertiesResult;
 
     if (headers && headers.headers.length) {
-      const headerKey = this.getHeadersTitle(headers, title);
+      const headerKey = `${title} (${getFormattedSize(
+        headers.headersSize,
+        3
+      )})`;
 
       propertiesResult = {
         [headerKey]: new HeaderList(headers.headers),
@@ -191,67 +177,6 @@ class HeadersPanel extends Component {
       return "UPLOAD";
     }
     return "REQUEST";
-  }
-
-  /**
-   * Get path for target header if it's set. It's used to select
-   * the header automatically within the tree of headers.
-   * Note that the target header is set by the Search panel.
-   */
-  getTargetHeaderPath(searchResult) {
-    if (!searchResult) {
-      return null;
-    }
-    if (
-      searchResult.type !== "requestHeaders" &&
-      searchResult.type !== "responseHeaders" &&
-      searchResult.type !== "requestHeadersFromUploadStream"
-    ) {
-      return null;
-    }
-    const {
-      request: {
-        requestHeaders,
-        requestHeadersFromUploadStream: uploadHeaders,
-        responseHeaders,
-      },
-    } = this.props;
-    // Using `HeaderList` ensures that we'll get the same
-    // header index as it's used in the tree.
-    const getPath = (headers, title) => {
-      return (
-        "/" +
-        this.getHeadersTitle(headers, title) +
-        "/" +
-        new HeaderList(headers.headers).headers.findIndex(
-          header => header.name == searchResult.label
-        )
-      );
-    };
-    // Calculate target header path according to the header type.
-    switch (searchResult.type) {
-      case "requestHeaders":
-        return getPath(requestHeaders, REQUEST_HEADERS);
-      case "responseHeaders":
-        return getPath(responseHeaders, RESPONSE_HEADERS);
-      case "requestHeadersFromUploadStream":
-        return getPath(uploadHeaders, REQUEST_HEADERS_FROM_UPLOAD);
-    }
-    return null;
-  }
-
-  /**
-   * Ensure that the selected target header is visible to the user.
-   */
-  scrollToHeader() {
-    const { targetSearchResult, resetTargetSearchResult } = this.props;
-    const path = this.getTargetHeaderPath(targetSearchResult);
-    const element = document.getElementById(path);
-    if (element) {
-      element.scrollIntoView({ block: "center" });
-    }
-
-    resetTargetSearchResult();
   }
 
   /**
@@ -439,7 +364,6 @@ class HeadersPanel extends Component {
     const {
       openLink,
       cloneSelectedRequest,
-      targetSearchResult,
       request: {
         fromCache,
         fromServiceWorker,
@@ -593,23 +517,15 @@ class HeadersPanel extends Component {
       ),
       PropertiesView({
         object,
-        ref: () => this.scrollToHeader(),
-        selected: this.getTargetHeaderPath(targetSearchResult),
         provider: HeadersProvider,
         filterPlaceHolder: HEADERS_FILTER_TEXT,
         sectionNames: Object.keys(object),
         renderRow: this.renderRow,
         renderValue: this.renderValue,
         openLink,
-        targetSearchResult,
       })
     );
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(HeadersPanel);
+module.exports = HeadersPanel;
