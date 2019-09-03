@@ -2186,18 +2186,10 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
 }
 
 HuffmanDictionary::HuffmanDictionary(JSContext* cx)
-    : fields(cx), listLengths(cx) {
-  // Initialize `fields`. We have reserved space statically, this cannot fail.
-  for (size_t i = 0; i < BINAST_INTERFACE_AND_FIELD_LIMIT; ++i) {
-    fields.infallibleEmplaceBack(HuffmanTableUnreachable{});
-  }
-
-  // Initialize `listLengths`. We have reserved space statically, this cannot
-  // fail.
-  for (size_t i = 0; i < BINAST_NUMBER_OF_LIST_TYPES; ++i) {
-    listLengths.infallibleEmplaceBack(HuffmanTableUnreachable{});
-  }
-}
+    : fields(BINAST_PARAM_NUMBER_OF_INTERFACE_AND_FIELD(
+          mozilla::AsVariant(HuffmanTableUnreachable()))),
+      listLengths(BINAST_PARAM_NUMBER_OF_LIST_TYPES(
+          mozilla::AsVariant(HuffmanTableUnreachable()))) {}
 
 HuffmanTable& HuffmanDictionary::tableForField(
     NormalizedInterfaceAndField index) {
