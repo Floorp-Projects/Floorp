@@ -32,6 +32,8 @@ class XULLabelAccessible : public HyperTextAccessibleWrap {
  protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
+  virtual void DispatchClickEvent(nsIContent* aContent,
+                                  uint32_t aActionIndex) const override;
 
  private:
   RefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
