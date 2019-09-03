@@ -2067,6 +2067,8 @@ MessageChannel::MessageTask::GetType(uint32_t* aType) {
     // has been.
     return NS_ERROR_FAILURE;
   }
+
+  *aType = Msg().type();
   return NS_OK;
 }
 
