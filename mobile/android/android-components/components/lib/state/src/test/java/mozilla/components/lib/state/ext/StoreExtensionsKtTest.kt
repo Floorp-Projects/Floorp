@@ -215,7 +215,7 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi
-    fun `Reading state updates from Flow`() {
+    fun `Reading state updates from Flow with lifecycle owner`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
         val store = Store(
@@ -272,7 +272,104 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi
-    fun `Reading state from scoped flow`() {
+    fun `Reading state updates from Flow without lifecycle owner`() {
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        var receivedValue = 0
+        var latch = CountDownLatch(1)
+
+        val flow = store.flow()
+
+        val job = GlobalScope.launch {
+            flow.collect { state ->
+                receivedValue = state.counter
+                latch.countDown()
+            }
+        }
+
+        // Receiving immediately
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(23, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(24, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(25, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+
+        latch = CountDownLatch(1)
+
+        runBlocking { job.cancelAndJoin() }
+
+        // Receiving nothing anymore since coroutine is cancelled
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+    }
+
+    @Test
+    @Synchronized
+    @ExperimentalCoroutinesApi
+    fun `Reading state from scoped flow without lifecycle owner`() {
+        val store = Store(
+            TestState(counter = 23),
+            ::reducer
+        )
+
+        var receivedValue = 0
+        var latch = CountDownLatch(1)
+
+        val scope = store.flowScoped() { flow ->
+            flow.collect { state ->
+                receivedValue = state.counter
+                latch.countDown()
+            }
+        }
+
+        // Receiving immediately
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(23, receivedValue)
+
+        // Updating state: Nothing received yet.
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(24, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(25, receivedValue)
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertTrue(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+
+        scope.cancel()
+
+        latch = CountDownLatch(1)
+        store.dispatch(TestAction.IncrementAction).joinBlocking()
+        assertFalse(latch.await(1, TimeUnit.SECONDS))
+        assertEquals(26, receivedValue)
+    }
+
+    @Test
+    @Synchronized
+    @ExperimentalCoroutinesApi
+    fun `Reading state from scoped flow with lifecycle owner`() {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
         val store = Store(
