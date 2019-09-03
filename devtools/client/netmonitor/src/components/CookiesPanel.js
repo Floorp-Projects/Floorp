@@ -9,10 +9,16 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 const { sortObjectKeys } = require("../utils/sort-utils");
+const {
+  setTargetSearchResult,
+} = require("devtools/client/netmonitor/src/actions/search");
 
 // Component
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -35,6 +41,8 @@ class CookiesPanel extends Component {
       connector: PropTypes.object.isRequired,
       openLink: PropTypes.func,
       request: PropTypes.object.isRequired,
+      resetTargetSearchResult: PropTypes.func,
+      targetSearchResult: PropTypes.object,
     };
   }
 
@@ -77,6 +85,56 @@ class CookiesPanel extends Component {
     }, {});
   }
 
+  /**
+   * If target cookie (coming from the Search panel) is set, let's
+   * scroll the content so the cookie is visible. This is used for
+   * search result navigation, which happens when the user clicks
+   * on a search result coming from a cookie.
+   */
+  scrollToCookie() {
+    const { targetSearchResult, resetTargetSearchResult } = this.props;
+    if (!targetSearchResult) {
+      return;
+    }
+
+    const path = this.getTargetCookiePath(targetSearchResult);
+    const element = document.getElementById(path);
+    if (element) {
+      element.scrollIntoView({ block: "center" });
+    }
+
+    resetTargetSearchResult();
+  }
+
+  /**
+   * Returns unique cookie path that identifies cookie location
+   * within the Tree component. The path is calculated from
+   * labels used to render the tree items.
+   * This path is used to highlight the cookie and ensure
+   * that it's properly scrolled within the visible view-port.
+   */
+  getTargetCookiePath(searchResult) {
+    if (!searchResult) {
+      return null;
+    }
+
+    if (
+      searchResult.type !== "requestCookies" &&
+      searchResult.type !== "responseCookies"
+    ) {
+      return null;
+    }
+
+    return (
+      "/" +
+      (searchResult.type == "requestCookies"
+        ? REQUEST_COOKIES
+        : RESPONSE_COOKIES) +
+      "/" +
+      searchResult.label
+    );
+  }
+
   render() {
     let {
       request: {
@@ -84,6 +142,7 @@ class CookiesPanel extends Component {
         responseCookies = { cookies: [] },
       },
       openLink,
+      targetSearchResult,
     } = this.props;
 
     requestCookies = requestCookies.cookies || requestCookies;
@@ -111,12 +170,20 @@ class CookiesPanel extends Component {
       { className: "panel-container" },
       PropertiesView({
         object,
+        ref: () => this.scrollToCookie(),
+        selected: this.getTargetCookiePath(targetSearchResult),
         filterPlaceHolder: COOKIES_FILTER_TEXT,
         sectionNames: SECTION_NAMES,
         openLink,
+        targetSearchResult,
       })
     );
   }
 }
 
-module.exports = CookiesPanel;
+module.exports = connect(
+  null,
+  dispatch => ({
+    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+  })
+)(CookiesPanel);
