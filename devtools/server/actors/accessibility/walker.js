@@ -8,6 +8,9 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleWalkerSpec } = require("devtools/shared/specs/accessibility");
+const {
+  simulation: { COLOR_TRANSFORMATION_MATRICES },
+} = require("./constants");
 
 loader.lazyRequireGetter(
   this,
@@ -319,6 +322,22 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
   get rootDoc() {
     return this.targetActor && this.targetActor.window.document;
+  },
+
+  get colorMatrix() {
+    if (!this.targetActor.docShell) {
+      return null;
+    }
+
+    const colorMatrix = this.targetActor.docShell.getColorMatrix();
+    if (
+      colorMatrix.length === 0 ||
+      colorMatrix === COLOR_TRANSFORMATION_MATRICES.NONE
+    ) {
+      return null;
+    }
+
+    return colorMatrix;
   },
 
   reset() {
