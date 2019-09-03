@@ -2,4 +2,4 @@
 
 # getBuilders
 
-`open fun getBuilders(): `[`MutableCollection`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-collection/index.html)`<`[`TelemetryPingBuilder`](../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L130)
+`open fun getBuilders(): `[`MutableCollection`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-collection/index.html)`<`[`TelemetryPingBuilder`](../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L135)

@@ -2,4 +2,4 @@
 
 # queueEvent
 
-`open fun queueEvent(event: `[`TelemetryEvent`](../../org.mozilla.telemetry.event/-telemetry-event/index.md)`): `[`Telemetry`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L95)
+`open fun queueEvent(event: `[`TelemetryEvent`](../../org.mozilla.telemetry.event/-telemetry-event/index.md)`): `[`Telemetry`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L100)
