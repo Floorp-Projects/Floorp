@@ -295,7 +295,7 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
                                         Register ptrScratch_,
                                         AnyRegister outany, Register64 out64) {
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   MOZ_ASSERT(ptr_ == ptrScratch_);
 
@@ -364,7 +364,7 @@ void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
                                          Register memoryBase_, Register ptr_,
                                          Register ptrScratch_) {
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   MOZ_ASSERT(ptr_ == ptrScratch_);
 
