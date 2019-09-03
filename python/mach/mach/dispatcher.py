@@ -108,7 +108,7 @@ class CommandAction(argparse.Action):
             if command == 'help':
                 if args and args[0] not in ['-h', '--help']:
                     # Make sure args[0] is indeed a command.
-                    self._handle_command_help(parser, args[0], args)
+                    self._handle_command_help(parser, args[0], args, namespace.print_command)
                 else:
                     self._handle_main_help(parser, namespace.verbose)
                 sys.exit(0)
@@ -118,10 +118,10 @@ class CommandAction(argparse.Action):
                     # -- is in command arguments
                     if '-h' in args[:args.index('--')] or '--help' in args[:args.index('--')]:
                         # Honor -h or --help only if it appears before --
-                        self._handle_command_help(parser, command, args)
+                        self._handle_command_help(parser, command, args, namespace.print_command)
                         sys.exit(0)
                 else:
-                    self._handle_command_help(parser, command, args)
+                    self._handle_command_help(parser, command, args, namespace.print_command)
                     sys.exit(0)
         else:
             raise NoCommandError()
@@ -136,6 +136,12 @@ class CommandAction(argparse.Action):
         if command not in self._mach_registrar.command_handlers:
             # Try to find similar commands, may raise UnknownCommandError.
             command = self._suggest_command(command)
+
+        # This is used by the `mach` driver to find the command name amidst
+        # global arguments.
+        if namespace.print_command:
+            print(command)
+            sys.exit(0)
 
         handler = self._mach_registrar.command_handlers.get(command)
 
@@ -304,11 +310,15 @@ class CommandAction(argparse.Action):
                 group = extra_groups[group_name]
             group.add_argument(*arg[0], **arg[1])
 
-    def _handle_command_help(self, parser, command, args):
+    def _handle_command_help(self, parser, command, args, print_command):
         handler = self._mach_registrar.command_handlers.get(command)
 
         if not handler:
             raise UnknownCommandError(command, 'query')
+
+        if print_command:
+            print(command)
+            sys.exit(0)
 
         if handler.subcommand_handlers:
             self._handle_subcommand_help(parser, handler, args)

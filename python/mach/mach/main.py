@@ -434,12 +434,6 @@ To see more help for a specific command, run:
 
         handler = getattr(args, 'mach_handler')
 
-        # This is used by the `mach` driver to find the command name amidst
-        # global arguments.
-        if args.print_command:
-            print(handler.name)
-            sys.exit(0)
-
         # Add JSON logging to a file if requested.
         if args.logfile:
             self.log_manager.add_json_handler(args.logfile)
