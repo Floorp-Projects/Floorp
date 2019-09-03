@@ -1289,9 +1289,15 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len}
             .sum();
         buffer.push_str(&format!("
 // The total number of fields across all interfaces. Used typically to maintain a probability table per field.
-const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {};
+const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {number};
 
-", total_number_of_fields));
+// Create parameters list to pass mozilla::Array constructor.
+// The number of parameters equals to BINAST_INTERFACE_AND_FIELD_LIMIT.
+#define BINAST_PARAM_NUMBER_OF_INTERFACE_AND_FIELD(X) {param}
+
+", number=total_number_of_fields, param=(0..total_number_of_fields)
+                                 .map(|_| "(X)")
+                                 .format(",")));
 
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
@@ -1448,11 +1454,19 @@ enum class BinASTList: uint16_t {
 };
 ");
 
+        let number_of_lists = self.list_parsers_to_generate.len();
+
         buffer.push_str(&format!("
 // The number of distinct list types in the grammar. Used typically to maintain a probability table per list type.
-const size_t BINAST_NUMBER_OF_LIST_TYPES = {};
+const size_t BINAST_NUMBER_OF_LIST_TYPES = {number};
 
-", self.list_parsers_to_generate.len()));
+// Create parameters list to pass mozilla::Array constructor.
+// The number of parameters equals to BINAST_NUMBER_OF_LIST_TYPES.
+#define BINAST_PARAM_NUMBER_OF_LIST_TYPES(X) {param}
+
+", number=number_of_lists, param=(0..number_of_lists)
+                                 .map(|_| "(X)")
+                                 .format(",")));
 
         buffer.push_str(&format!("
 #define FOR_EACH_BIN_SUM(F) \\
