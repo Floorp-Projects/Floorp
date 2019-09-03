@@ -63,7 +63,7 @@ function adjustState(newState) {
   }
 }
 
-function getSymbols(debugName, breakpadId) {
+async function getSymbols(debugName, breakpadId) {
   if (symbolCache.size === 0) {
     primeSymbolStore(Services.profiler.sharedLibraries);
   }
