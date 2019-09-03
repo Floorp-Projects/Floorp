@@ -5,13 +5,19 @@
 package mozilla.components.feature.toolbar
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.content.blocking.Tracker
+import androidx.annotation.VisibleForTesting.PRIVATE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
+import mozilla.components.feature.toolbar.internal.URLRenderer
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Presenter implementation for a toolbar implementation in order to update the toolbar whenever
@@ -20,107 +26,72 @@ import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 @Suppress("TooManyFunctions")
 class ToolbarPresenter(
     private val toolbar: Toolbar,
-    private val sessionManager: SessionManager,
-    private val sessionId: String? = null,
+    private val store: BrowserStore,
+    private val customTabId: String? = null,
     urlRenderConfiguration: ToolbarFeature.UrlRenderConfiguration? = null
-) : SelectionAwareSessionObserver(sessionManager) {
-
+) {
     @VisibleForTesting
     internal var renderer = URLRenderer(toolbar, urlRenderConfiguration)
+
+    private var scope: CoroutineScope? = null
 
     /**
      * Start presenter: Display data in toolbar.
      */
     fun start() {
-        observeIdOrSelected(sessionId)
-        initializeView()
-
         renderer.start()
+
+        scope = store.flowScoped { flow ->
+            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
+                .ifChanged()
+                .collect { state ->
+                    if (state == null) {
+                        clear()
+                    } else {
+                        render(state)
+                    }
+                }
+        }
     }
 
-    override fun stop() {
-        super.stop()
+    fun stop() {
+        scope?.cancel()
 
         renderer.stop()
     }
 
-    /**
-     * A new session has been selected: Update toolbar to display data of new session.
-     */
-    override fun onSessionSelected(session: Session) {
-        super.onSessionSelected(session)
-        initializeView()
-    }
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun render(tab: SessionState) {
+        renderer.post(tab.content.url)
 
-    override fun onAllSessionsRemoved() {
-        initializeView()
-    }
+        toolbar.setSearchTerms(tab.content.searchTerms)
+        toolbar.displayProgress(tab.content.progress)
 
-    override fun onSessionRemoved(session: Session) {
-        if (sessionManager.selectedSession == null) {
-            initializeView()
-        }
-    }
-
-    internal fun initializeView() {
-        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
-            ?: sessionManager.selectedSession
-
-        renderer.post(session?.url ?: "")
-
-        toolbar.setSearchTerms(session?.searchTerms ?: "")
-        toolbar.displayProgress(session?.progress ?: 0)
-        updateToolbarSecurity(session?.securityInfo ?: Session.SecurityInfo())
-
-        if (session != null) {
-            updateToolbarTrackingProtection(session)
+        toolbar.siteSecure = if (tab.content.securityInfo.secure) {
+            Toolbar.SiteSecurity.SECURE
         } else {
-            toolbar.siteTrackingProtection = SiteTrackingProtection.OFF_GLOBALLY
+            Toolbar.SiteSecurity.INSECURE
+        }
+
+        toolbar.siteTrackingProtection = when {
+            tab.trackingProtection.enabled && tab.trackingProtection.blockedTrackers.isNotEmpty() ->
+                SiteTrackingProtection.ON_TRACKERS_BLOCKED
+
+            tab.trackingProtection.enabled -> SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+
+            else -> SiteTrackingProtection.OFF_GLOBALLY
         }
     }
 
-    override fun onUrlChanged(session: Session, url: String) {
-        renderer.post(url)
-        updateToolbarTrackingProtection(session)
-    }
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun clear() {
+        renderer.post("")
 
-    override fun onProgress(session: Session, progress: Int) {
-        toolbar.displayProgress(progress)
-    }
+        toolbar.setSearchTerms("")
+        toolbar.displayProgress(0)
 
-    override fun onSearch(session: Session, searchTerms: String) {
-        toolbar.setSearchTerms(searchTerms)
-    }
+        toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
 
-    override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) =
-        updateToolbarSecurity(securityInfo)
-
-    override fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) {
-        updateToolbarTrackingProtection(session)
-    }
-
-    override fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) {
-        updateToolbarTrackingProtection(session)
-    }
-
-    private fun updateToolbarSecurity(securityInfo: Session.SecurityInfo) =
-        when (securityInfo.secure) {
-            true -> toolbar.siteSecure = Toolbar.SiteSecurity.SECURE
-            false -> toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
-        }
-
-    private fun updateToolbarTrackingProtection(session: Session) {
-        val areTrackersBlocked = session.trackersBlocked.isNotEmpty()
-        val siteTrackingProtection = when (session.trackerBlockingEnabled) {
-            true -> {
-                if (areTrackersBlocked) {
-                    SiteTrackingProtection.ON_TRACKERS_BLOCKED
-                } else {
-                    SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
-                }
-            }
-            false -> SiteTrackingProtection.OFF_GLOBALLY
-        }
-        toolbar.siteTrackingProtection = siteTrackingProtection
+        toolbar.siteTrackingProtection = SiteTrackingProtection.OFF_GLOBALLY
     }
 }

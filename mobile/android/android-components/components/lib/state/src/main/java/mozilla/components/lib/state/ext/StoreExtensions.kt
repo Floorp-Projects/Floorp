@@ -142,15 +142,19 @@ fun <S : State, A : Action> Store<S, A>.channel(
 @ExperimentalCoroutinesApi
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flow(
-    owner: LifecycleOwner = ProcessLifecycleOwner.get()
+    owner: LifecycleOwner? = null
 ): Flow<S> {
     return channelFlow {
         val subscription = observeManually { state ->
             runBlocking { send(state) }
         }
 
-        subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
-            owner.lifecycle.addObserver(this)
+        if (owner == null) {
+            subscription.resume()
+        } else {
+            subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
+                owner.lifecycle.addObserver(this)
+            }
         }
 
         awaitClose {
@@ -172,7 +176,7 @@ fun <S : State, A : Action> Store<S, A>.flow(
 @ExperimentalCoroutinesApi
 @MainThread
 fun <S : State, A : Action> Store<S, A>.flowScoped(
-    owner: LifecycleOwner = ProcessLifecycleOwner.get(),
+    owner: LifecycleOwner? = null,
     block: suspend (Flow<S>) -> Unit
 ): CoroutineScope {
     return MainScope().apply {

@@ -21,7 +21,7 @@ data class CustomTabSessionState(
     val config: CustomTabConfig
 ) : SessionState
 
-internal fun createCustomTab(
+fun createCustomTab(
     url: String,
     id: String = UUID.randomUUID().toString(),
     config: CustomTabConfig = CustomTabConfig()

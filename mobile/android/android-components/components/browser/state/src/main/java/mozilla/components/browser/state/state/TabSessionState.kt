@@ -24,7 +24,7 @@ data class TabSessionState(
     val parentId: String? = null
 ) : SessionState
 
-internal fun createTab(
+fun createTab(
     url: String,
     private: Boolean = false,
     id: String = UUID.randomUUID().toString(),
