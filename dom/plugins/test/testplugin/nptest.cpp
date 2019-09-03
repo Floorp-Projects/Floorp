@@ -60,7 +60,9 @@
 #  include <pthread.h>
 #endif
 
-using namespace std;
+using std::list;
+using std::ostringstream;
+using std::string;
 
 #define PLUGIN_VERSION "1.0.0.0"
 

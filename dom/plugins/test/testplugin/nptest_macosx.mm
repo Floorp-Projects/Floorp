@@ -36,8 +36,6 @@
 #include <CoreServices/CoreServices.h>
 #include <algorithm>
 
-using namespace std;
-
 bool pluginSupportsWindowMode() { return false; }
 
 bool pluginSupportsWindowlessMode() { return true; }
@@ -274,4 +272,4 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, int32_t rectInde
   MOZ_CRASH("Unexpected RectEdge?!");
 }
 
-void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error) {}
+void pluginDoInternalConsistencyCheck(InstanceData* instanceData, std::string& error) {}

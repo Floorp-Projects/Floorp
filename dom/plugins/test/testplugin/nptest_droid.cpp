@@ -35,7 +35,6 @@
 #include "npapi.h"
 
 struct _PlatformData {};
-using namespace std;
 
 bool pluginSupportsWindowMode() { return false; }
 
@@ -78,4 +77,4 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
 }
 
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData,
-                                      string& error) {}
+                                      std::string& error) {}
