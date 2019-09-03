@@ -785,7 +785,7 @@
         <toolbarbutton id="PanelUI-fxa-menu-sendtab-not-configured-button"
                        class="PanelUI-fxa-signin-button"
                        label="&fxa.menu.signin.label;"
-                       oncommand="gSync.openFxAEmailFirstPageFromFxaMenu(this);"/>
+                       oncommand="gSync.openPrefsFromFxaMenu('send_tab', this);"/>
       </vbox>
     </panelview>
     <panelview id="PanelUI-fxa-menu-sendtab-no-devices" flex="1" class="PanelUI-subView">
