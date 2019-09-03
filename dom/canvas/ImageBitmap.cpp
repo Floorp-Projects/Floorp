@@ -1544,8 +1544,9 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   MOZ_ASSERT(aImgContainer);
 
   // Get the surface out.
-  uint32_t frameFlags =
-      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_WANT_DATA_SURFACE;
+  uint32_t frameFlags = imgIContainer::FLAG_SYNC_DECODE |
+                        imgIContainer::FLAG_ASYNC_NOTIFY |
+                        imgIContainer::FLAG_WANT_DATA_SURFACE;
   uint32_t whichFrame = imgIContainer::FRAME_FIRST;
   RefPtr<SourceSurface> surface =
       aImgContainer->GetFrame(whichFrame, frameFlags);

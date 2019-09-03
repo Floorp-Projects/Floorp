@@ -29,7 +29,8 @@ nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage) {
 
 GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage) {
   RefPtr<SourceSurface> surface = aImage->GetFrame(
-      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+      imgIContainer::FRAME_CURRENT,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
 
   // If the last call failed, it was probably because our call stack originates
   // in an imgINotificationObserver event, meaning that we're not allowed

@@ -500,7 +500,8 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
 
     surface = drawTarget->Snapshot();
   } else {
-    surface = aImage->GetFrame(aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
+    surface = aImage->GetFrame(aWhichFrame,
+                               imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   }
 
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
