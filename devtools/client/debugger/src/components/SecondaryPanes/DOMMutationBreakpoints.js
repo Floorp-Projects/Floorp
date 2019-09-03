@@ -29,7 +29,6 @@ type Props = {
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
   unHighlightDomElement: typeof actions.unHighlightDomElement,
-  openInspector: typeof actions.openInspector,
   deleteBreakpoint: typeof deleteDOMMutationBreakpoint,
   toggleBreakpoint: typeof toggleDOMMutationBreakpointState,
   setSkipPausing: typeof actions.setSkipPausing,
@@ -91,20 +90,10 @@ class DOMMutationBreakpointsContents extends Component<Props> {
     );
   }
 
-  /* eslint-disable react/no-danger */
   renderEmpty() {
-    const { openInspector } = this.props;
-    const text = L10N.getStr("noDomMutationBreakpoints").replace(
-      "{{link}}",
-      `<a>${L10N.getStr("inspectorTool")}</a>`
-    );
-
     return (
       <div className="dom-mutation-empty">
-        <div
-          onClick={() => openInspector()}
-          dangerouslySetInnerHTML={{ __html: text }}
-        />
+        {L10N.getStr("noDomMutationBreakpointsText")}
       </div>
     );
   }
@@ -146,7 +135,6 @@ class DomMutationBreakpoints extends Component<Props> {
         highlightDomElement={this.props.highlightDomElement}
         unHighlightDomElement={this.props.unHighlightDomElement}
         setSkipPausing={this.props.setSkipPausing}
-        openInspector={this.props.openInspector}
       />
     );
   }
@@ -161,6 +149,5 @@ export default connect(
     highlightDomElement: actions.highlightDomElement,
     unHighlightDomElement: actions.unHighlightDomElement,
     setSkipPausing: actions.setSkipPausing,
-    openInspector: actions.openInspector,
   }
 )(DomMutationBreakpoints);
