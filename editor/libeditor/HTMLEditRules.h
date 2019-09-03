@@ -119,14 +119,6 @@ class HTMLEditRules : public TextEditRules {
   }
 
   /**
-   * WillInsertParagraphSeparator() is called when insertParagraph command is
-   * executed or something equivalent.  This method actually tries to insert
-   * new paragraph or <br> element, etc.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult WillInsertParagraphSeparator();
-
-  /**
    * If aNode is a text node that contains only collapsed whitespace, delete
    * it.  It doesn't serve any useful purpose, and we don't want it to confuse
    * code that doesn't correctly skip over it.

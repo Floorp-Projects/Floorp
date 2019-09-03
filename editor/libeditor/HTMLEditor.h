@@ -144,7 +144,7 @@ class HTMLEditor final : public TextEditor,
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
-  NS_IMETHOD InsertLineBreak() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() override;
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(
@@ -214,7 +214,8 @@ class HTMLEditor final : public TextEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult InsertParagraphSeparatorAsAction(nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertParagraphSeparatorAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult
   InsertElementAtSelectionAsAction(Element* aElement, bool aDeleteSelection,
@@ -1850,6 +1851,13 @@ class HTMLEditor final : public TextEditor,
    */
   Element* GetNearestAncestorListItemElement(nsIContent& aContent) const;
 
+  /**
+   * InsertParagraphSeparatorAsSubAction() handles insertPargraph commad
+   * (i.e., handling Enter key press) with the above helper methods.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  InsertParagraphSeparatorAsSubAction();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
@@ -1858,12 +1866,6 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
-
-  /**
-   * InsertParagraphSeparatorAsSubAction() inserts a line break if it's
-   * HTMLEditor and it's possible.
-   */
-  nsresult InsertParagraphSeparatorAsSubAction();
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectAllInternal() override;

@@ -94,5 +94,6 @@ interface nsIPlaintextEditor : nsISupports
    * it may enter a character, split a node in the tree, etc.
    * This may be more efficient than calling InsertText with a newline.
    */
+  [can_run_script]
   void insertLineBreak();
 };
