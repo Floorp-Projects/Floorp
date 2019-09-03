@@ -1754,10 +1754,11 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
   MOZ_ASSERT(tagName);
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
-    nsresult rv = MakeDefinitionListItemWithTransaction(*tagName);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "MakeDefinitionListItemWithTransaction() failed");
-    return EditorBase::ToGenericNSResult(rv);
+    EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
+        *tagName, EmptyString(), SelectAllOfCurrentList::No);
+    NS_WARNING_ASSERTION(result.Succeeded(),
+                         "MakeOrChangeListAndListItemAsSubAction() failed");
+    return EditorBase::ToGenericNSResult(result.Rv());
   }
   nsresult rv = FormatBlockContainerAsSubAction(*tagName);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2026,112 +2027,37 @@ HTMLEditor::GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign) {
 }
 
 NS_IMETHODIMP
-HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
+HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool aEntireList,
                              const nsAString& aBulletType) {
-  nsresult rv = MakeOrChangeListAsAction(aListType, entireList, aBulletType);
+  RefPtr<nsAtom> listTagName = NS_Atomize(aListType);
+  if (NS_WARN_IF(!listTagName)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult rv = MakeOrChangeListAsAction(
+      *listTagName, aBulletType,
+      aEntireList ? SelectAllOfCurrentList::Yes : SelectAllOfCurrentList::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to make or change list");
   return rv;
 }
 
-nsresult HTMLEditor::MakeOrChangeListAsAction(const nsAString& aListType,
-                                              bool entireList,
-                                              const nsAString& aBulletType,
-                                              nsIPrincipal* aPrincipal) {
+nsresult HTMLEditor::MakeOrChangeListAsAction(
+    nsAtom& aListTagName, const nsAString& aBulletType,
+    SelectAllOfCurrentList aSelectAllOfCurrentList, nsIPrincipal* aPrincipal) {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<nsAtom> listAtom = NS_Atomize(aListType);
-  if (NS_WARN_IF(!listAtom)) {
-    return NS_ERROR_INVALID_ARG;
-  }
   AutoEditActionDataSetter editActionData(
-      *this, HTMLEditUtils::GetEditActionForInsert(*listAtom), aPrincipal);
+      *this, HTMLEditUtils::GetEditActionForInsert(aListTagName), aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  bool cancel, handled;
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eCreateOrChangeList, nsIEditor::eNext);
-
-  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeList);
-  subActionInfo.blockType = &aListType;
-  subActionInfo.entireList = entireList;
-  subActionInfo.bulletType = &aBulletType;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (!handled && SelectionRefPtr()->IsCollapsed()) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    EditorDOMPoint atStartOfSelection(firstRange->StartRef());
-    if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Have to find a place to put the list.
-    EditorDOMPoint pointToInsertList(atStartOfSelection);
-
-    while (!CanContainTag(*pointToInsertList.GetContainer(), *listAtom)) {
-      pointToInsertList.Set(pointToInsertList.GetContainer());
-      if (NS_WARN_IF(!pointToInsertList.IsSet()) ||
-          NS_WARN_IF(!pointToInsertList.GetContainerAsContent())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    if (pointToInsertList.GetContainer() != atStartOfSelection.GetContainer()) {
-      // We need to split up to the child of parent.
-      SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          MOZ_KnownLive(*pointToInsertList.GetChild()), atStartOfSelection,
-          SplitAtEdges::eAllowToCreateEmptyContainer);
-      if (NS_WARN_IF(splitNodeResult.Failed())) {
-        return EditorBase::ToGenericNSResult(splitNodeResult.Rv());
-      }
-      pointToInsertList = splitNodeResult.SplitPoint();
-      if (NS_WARN_IF(!pointToInsertList.IsSet())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    // Create a list and insert it before the right node if we split some
-    // parents of start of selection above, or just start of selection
-    // otherwise.
-    RefPtr<Element> newList =
-        CreateNodeWithTransaction(*listAtom, pointToInsertList);
-    if (NS_WARN_IF(!newList)) {
-      return NS_ERROR_FAILURE;
-    }
-    // make a list item
-    RefPtr<Element> newItem =
-        CreateNodeWithTransaction(*nsGkAtoms::li, EditorDOMPoint(newList, 0));
-    if (NS_WARN_IF(!newItem)) {
-      return NS_ERROR_FAILURE;
-    }
-    ErrorResult error;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(newItem, 0), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return EditorBase::ToGenericNSResult(error.StealNSResult());
-    }
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
+      aListTagName, aBulletType, aSelectAllOfCurrentList);
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "MakeOrChangeListAndListItemAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 NS_IMETHODIMP
@@ -2184,43 +2110,6 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
   rv = rules->DidDoAction(subActionInfo, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (!mRules) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  MOZ_ASSERT(&aTagName == nsGkAtoms::dt || &aTagName == nsGkAtoms::dd);
-
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  bool cancel, handled;
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eCreateOrChangeDefinitionList, nsIEditor::eNext);
-
-  nsDependentAtomString tagName(&aTagName);
-  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeDefinitionList);
-  subActionInfo.blockType = &tagName;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!handled) {
-    // todo: no default for now.  we count on rules to handle it.
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
   return NS_OK;
 }

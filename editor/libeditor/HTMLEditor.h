@@ -262,8 +262,23 @@ class HTMLEditor final : public TextEditor,
   nsresult RemoveListAsAction(const nsAString& aListType,
                               nsIPrincipal* aPrincipal = nullptr);
 
-  MOZ_CAN_RUN_SCRIPT nsresult MakeOrChangeListAsAction(
-      const nsAString& aListType, bool entireList, const nsAString& aBulletType,
+  /**
+   * MakeOrChangeListAsAction() makes selected hard lines list element(s).
+   *
+   * @param aListElementTagName         The new list element tag name.  Must be
+   *                                    nsGkAtoms::ul, nsGkAtoms::ol or
+   *                                    nsGkAtoms::dl.
+   * @param aBulletType                 If this is not empty string, it's set
+   *                                    to `type` attribute of new list item
+   *                                    elements.  Otherwise, existing `type`
+   *                                    attributes will be removed.
+   * @param aSelectAllOfCurrentList     Yes if this should treat all of
+   *                                    ancestor list element at selection.
+   */
+  enum class SelectAllOfCurrentList { Yes, No };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MakeOrChangeListAsAction(
+      nsAtom& aListElementTagName, const nsAString& aBulletType,
+      SelectAllOfCurrentList aSelectAllOfCurrentList,
       nsIPrincipal* aPrincipal = nullptr);
 
   /**
@@ -1896,21 +1911,42 @@ class HTMLEditor final : public TextEditor,
    *       NS_OK.
    *
    * @param aListElementTagName         The new list element tag name.
-   * @param aSelectAllOfCurrentList     true if this should treat all of
-   *                                    ancestor list element at selection.
-   * @param aBulletType                 Can be nullptr.  If this is not a
-   *                                    nullptr and the value is not empty,
-   *                                    it's set to `type` attribute of new
-   *                                    list item elements.  Otherwise,
-   *                                    existing `type` attributes will be
-   *                                    removed.
    * @param aListItemElementTagName     The new list item element tag name.
+   * @param aBulletType                 If this is not empty string, it's set
+   *                                    to `type` attribute of new list item
+   *                                    elements.  Otherwise, existing `type`
+   *                                    attributes will be removed.
+   * @param aSelectAllOfCurrentList     Yes if this should treat all of
+   *                                    ancestor list element at selection.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   ChangeSelectedHardLinesToList(nsAtom& aListElementTagName,
-                                bool aSelectAllOfCurrentList,
-                                const nsAString* aBulletType,
-                                nsAtom& aListItemElementTagName);
+                                nsAtom& aListItemElementTagName,
+                                const nsAString& aBulletType,
+                                SelectAllOfCurrentList aSelectAllOfCurrentList);
+
+  /**
+   * MakeOrChangeListAndListItemAsSubAction() handles create list commands with
+   * current selection.  If
+   *
+   * @param aListElementOrListItemElementTagName
+   *                                    The new list element tag name or
+   *                                    new list item tag name.
+   *                                    If the former, list item tag name will
+   *                                    be computed automatically.  Otherwise,
+   *                                    list tag name will be computed.
+   * @param aBulletType                 If this is not empty string, it's set
+   *                                    to `type` attribute of new list item
+   *                                    elements.  Otherwise, existing `type`
+   *                                    attributes will be removed.
+   * @param aSelectAllOfCurrentList     Yes if this should treat all of
+   *                                    ancestor list element at selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  MakeOrChangeListAndListItemAsSubAction(
+      nsAtom& aListElementOrListItemElementTagName,
+      const nsAString& aBulletType,
+      SelectAllOfCurrentList aSelectAllOfCurrentList);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -3022,7 +3058,8 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aTagName            Must be nsGkAtoms::dt or nsGkAtoms::dd.
    */
-  nsresult MakeDefinitionListItemWithTransaction(nsAtom& aTagName);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MakeDefinitionListItemWithTransaction(nsAtom& aTagName);
 
   /**
    * FormatBlockContainerAsSubAction() inserts a block element whose name

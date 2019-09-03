@@ -284,8 +284,9 @@ nsresult ListCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
     return rv;
   }
 
-  rv = aHTMLEditor->MakeOrChangeListAsAction(listType, false, EmptyString(),
-                                             aPrincipal);
+  rv = aHTMLEditor->MakeOrChangeListAsAction(
+      *aTagName, EmptyString(), HTMLEditor::SelectAllOfCurrentList::No,
+      aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "MakeOrChangeListAsAction() failed");
   return rv;
 }

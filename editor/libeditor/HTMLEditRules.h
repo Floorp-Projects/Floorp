@@ -243,16 +243,6 @@ class HTMLEditRules : public TextEditRules {
   DeleteElementsExceptTableRelatedElements(nsINode& aNode);
 
   /**
-   * XXX Should document what this does.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillMakeList(const nsAString* aListType,
-                                     bool aEntireList,
-                                     const nsAString* aBulletType,
-                                     bool* aCancel, bool* aHandled,
-                                     const nsAString* aItemType = nullptr);
-
-  /**
    * Called before removing a list element.  This method actually removes
    * list elements and list item elements at Selection.  And move contents
    * in them where the removed list was.
@@ -342,21 +332,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
                                                  bool* aHandled);
-
-  /**
-   * Called before creating aDefinitionListItemTag around Selection.  This
-   * method just calls WillMakeList() with "dl" as aListType and
-   * aDefinitionListItemTag as aItemType.
-   *
-   * @param aDefinitionListItemTag  Should be "dt" or "dd".
-   * @param aEntireList             XXX not sure
-   * @param aCancel                 Returns true if the operation is canceled.
-   * @param aHandled                Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillMakeDefListItem(const nsAString* aBlockType,
-                                            bool aEntireList, bool* aCancel,
-                                            bool* aHandled);
 
   /**
    * Called before changing an element to absolute positioned.
