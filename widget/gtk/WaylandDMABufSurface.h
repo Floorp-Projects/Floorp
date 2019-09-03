@@ -10,11 +10,34 @@
 #include <stdint.h>
 #include "mozilla/widget/nsWaylandDisplay.h"
 
+typedef void* EGLImageKHR;
+typedef void* EGLSyncKHR;
+
 #define DMABUF_BUFFER_PLANES 4
 
+namespace mozilla {
+namespace layers {
+class SurfaceDescriptor;
+}
+}  // namespace mozilla
+
+typedef enum {
+  // Use alpha pixel format
+  DMABUF_ALPHA = 1 << 0,
+  // Surface is used as texture and may be also shared
+  DMABUF_TEXTURE = 1 << 1,
+  // Automatically create wl_buffer / EGLImage in Create routines.
+  DMABUF_CREATE_WL_BUFFER = 1 << 2,
+} WaylandDMABufSurfaceFlags;
+
+// TODO - create as ref-counted?
 class WaylandDMABufSurface {
  public:
-  bool Create(int aWidth, int aHeight, bool aHasAlpha = true);
+  bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
+  bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
+
+  bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
+
   bool Resize(int aWidth, int aHeight);
   void Release();
   void Clear();
@@ -23,15 +46,24 @@ class WaylandDMABufSurface {
 
   int GetWidth() { return mWidth; };
   int GetHeight() { return mHeight; };
+  mozilla::gfx::SurfaceFormat GetFormat();
+  bool HasAlpha();
 
   void* MapReadOnly(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
-                    uint32_t* aStride);
-  void* MapReadOnly(uint32_t* aStride);
+                    uint32_t* aStride = nullptr);
+  void* MapReadOnly(uint32_t* aStride = nullptr);
   void* Map(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
-            uint32_t* aStride);
-  void* Map(uint32_t* aStride);
-  bool IsMapped() { return mMappedRegion; };
+            uint32_t* aStride = nullptr);
+  void* Map(uint32_t* aStride = nullptr);
+  void* GetMappedRegion() { return mMappedRegion; };
+  uint32_t GetMappedRegionStride() { return mMappedRegionStride; };
+  bool IsMapped() { return (mMappedRegion != nullptr); };
   void Unmap();
+
+  bool IsEGLSupported(mozilla::gl::GLContext* aGLContext);
+  bool CreateEGLImage(mozilla::gl::GLContext* aGLContext);
+  void ReleaseEGLImage(mozilla::gl::GLContext* aGLContext);
+  EGLImageKHR GetEGLImage() { return mEGLImage; };
 
   void SetWLBuffer(struct wl_buffer* aWLBuffer);
   wl_buffer* GetWLBuffer();
@@ -44,12 +76,21 @@ class WaylandDMABufSurface {
   ~WaylandDMABufSurface();
 
  private:
+  bool CreateWLBuffer();
+
+  void FillFdData(struct gbm_import_fd_data& aData);
+  void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
+
+ private:
+  int mSurfaceFlags;
+
   int mWidth;
   int mHeight;
   mozilla::widget::GbmFormat* mGmbFormat;
 
   wl_buffer* mWLBuffer;
   void* mMappedRegion;
+  uint32_t mMappedRegionStride;
 
   struct gbm_bo* mGbmBufferObject;
   uint64_t mBufferModifier;
@@ -57,6 +98,10 @@ class WaylandDMABufSurface {
   int mDmabufFds[DMABUF_BUFFER_PLANES];
   uint32_t mStrides[DMABUF_BUFFER_PLANES];
   uint32_t mOffsets[DMABUF_BUFFER_PLANES];
+  uint32_t mGbmBufferFlags;
+
+  EGLImageKHR mEGLImage;
+  GLuint mGLFbo;
 
   bool mWLBufferAttached;
   bool mFastWLBufferCreation;
