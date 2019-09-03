@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.3.101';
-var pdfjsBuild = '31f31930';
+var pdfjsVersion = '2.3.129';
+var pdfjsBuild = '3dfce2d4';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1322,7 +1322,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.3.101',
+    apiVersion: '2.3.129',
     source: {
       data: source.data,
       url: source.url,
@@ -1659,7 +1659,7 @@ class PDFPageProxy {
       };
       stats.time('Page Request');
 
-      this._transport.messageHandler.send('RenderPageRequest', {
+      this._pumpOperatorList({
         pageIndex: this.pageNumber - 1,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true
@@ -1681,6 +1681,11 @@ class PDFPageProxy {
 
       if (error) {
         internalRenderTask.capability.reject(error);
+
+        this._abortOperatorList({
+          intentState,
+          reason: error
+        });
       } else {
         internalRenderTask.capability.resolve();
       }
@@ -1762,7 +1767,7 @@ class PDFPageProxy {
 
       this._stats.time('Page Request');
 
-      this._transport.messageHandler.send('RenderPageRequest', {
+      this._pumpOperatorList({
         pageIndex: this.pageIndex,
         intent: renderingIntent
       });
@@ -1822,18 +1827,25 @@ class PDFPageProxy {
     this.destroyed = true;
     this._transport.pageCache[this.pageIndex] = null;
     const waitOn = [];
-    Object.keys(this.intentStates).forEach(function (intent) {
+    Object.keys(this.intentStates).forEach(intent => {
+      const intentState = this.intentStates[intent];
+
+      this._abortOperatorList({
+        intentState,
+        reason: new Error('Page was destroyed.'),
+        force: true
+      });
+
       if (intent === 'oplist') {
         return;
       }
 
-      const intentState = this.intentStates[intent];
       intentState.renderTasks.forEach(function (renderTask) {
         const renderCompleted = renderTask.capability.promise.catch(function () {});
         waitOn.push(renderCompleted);
         renderTask.cancel();
       });
-    }, this);
+    });
     this.objs.clear();
     this.annotationsPromise = null;
     this.pendingCleanup = false;
@@ -1875,9 +1887,7 @@ class PDFPageProxy {
     }
   }
 
-  _renderPageChunk(operatorListChunk, intent) {
-    const intentState = this.intentStates[intent];
-
+  _renderPageChunk(operatorListChunk, intentState) {
     for (let i = 0, ii = operatorListChunk.length; i < ii; i++) {
       intentState.operatorList.fnArray.push(operatorListChunk.fnArray[i]);
       intentState.operatorList.argsArray.push(operatorListChunk.argsArray[i]);
@@ -1892,6 +1902,85 @@ class PDFPageProxy {
     if (operatorListChunk.lastChunk) {
       this._tryCleanup();
     }
+  }
+
+  _pumpOperatorList(args) {
+    (0, _util.assert)(args.intent, 'PDFPageProxy._pumpOperatorList: Expected "intent" argument.');
+
+    const readableStream = this._transport.messageHandler.sendWithStream('GetOperatorList', args);
+
+    const reader = readableStream.getReader();
+    const intentState = this.intentStates[args.intent];
+    intentState.streamReader = reader;
+
+    const pump = () => {
+      reader.read().then(({
+        value,
+        done
+      }) => {
+        if (done) {
+          intentState.streamReader = null;
+          return;
+        }
+
+        if (this._transport.destroyed) {
+          return;
+        }
+
+        this._renderPageChunk(value.operatorList, intentState);
+
+        pump();
+      }, reason => {
+        intentState.streamReader = null;
+
+        if (this._transport.destroyed) {
+          return;
+        }
+
+        if (intentState.operatorList) {
+          intentState.operatorList.lastChunk = true;
+
+          for (let i = 0; i < intentState.renderTasks.length; i++) {
+            intentState.renderTasks[i].operatorListChanged();
+          }
+
+          this._tryCleanup();
+        }
+
+        if (intentState.displayReadyCapability) {
+          intentState.displayReadyCapability.reject(reason);
+        } else if (intentState.opListReadCapability) {
+          intentState.opListReadCapability.reject(reason);
+        } else {
+          throw reason;
+        }
+      });
+    };
+
+    pump();
+  }
+
+  _abortOperatorList({
+    intentState,
+    reason,
+    force = false
+  }) {
+    (0, _util.assert)(reason instanceof Error, 'PDFPageProxy._abortOperatorList: Expected "reason" argument.');
+
+    if (!intentState.streamReader) {
+      return;
+    }
+
+    if (!force && intentState.renderTasks.length !== 0) {
+      return;
+    }
+
+    if (reason instanceof _display_utils.RenderingCancelledException) {
+      return;
+    }
+
+    intentState.streamReader.cancel(new _util.AbortException(reason && reason.message));
+    intentState.streamReader = null;
   }
 
   get stats() {
@@ -2490,15 +2579,6 @@ class WorkerTransport {
 
       page._startRenderPage(data.transparency, data.intent);
     }, this);
-    messageHandler.on('RenderPageChunk', function (data) {
-      if (this.destroyed) {
-        return;
-      }
-
-      const page = this.pageCache[data.pageIndex];
-
-      page._renderPageChunk(data.operatorList, data.intent);
-    }, this);
     messageHandler.on('commonobj', function (data) {
       if (this.destroyed) {
         return;
@@ -2616,32 +2696,6 @@ class WorkerTransport {
           loaded: data.loaded,
           total: data.total
         });
-      }
-    }, this);
-    messageHandler.on('PageError', function (data) {
-      if (this.destroyed) {
-        return;
-      }
-
-      const page = this.pageCache[data.pageIndex];
-      const intentState = page.intentStates[data.intent];
-
-      if (intentState.operatorList) {
-        intentState.operatorList.lastChunk = true;
-
-        for (let i = 0; i < intentState.renderTasks.length; i++) {
-          intentState.renderTasks[i].operatorListChanged();
-        }
-
-        page._tryCleanup();
-      }
-
-      if (intentState.displayReadyCapability) {
-        intentState.displayReadyCapability.reject(new Error(data.error));
-      } else if (intentState.opListReadCapability) {
-        intentState.opListReadCapability.reject(new Error(data.error));
-      } else {
-        throw new Error(data.error);
       }
     }, this);
     messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
@@ -3118,9 +3172,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.3.101';
+const version = '2.3.129';
 exports.version = version;
-const build = '31f31930';
+const build = '3dfce2d4';
 exports.build = build;
 
 /***/ }),
@@ -8248,12 +8302,9 @@ var renderTextLayer = function renderTextLayerClosure() {
     return !NonWhitespaceRegexp.test(str);
   }
 
-  var styleBuf = ['left: ', 0, 'px; top: ', 0, 'px; font-size: ', 0, 'px; font-family: ', '', ';'];
-
   function appendText(task, geom, styles) {
     var textDiv = document.createElement('span');
     var textDivProperties = {
-      style: null,
       angle: 0,
       canvasWidth: 0,
       isWhitespace: false,
@@ -8303,17 +8354,10 @@ var renderTextLayer = function renderTextLayerClosure() {
       top = tx[5] - fontAscent * Math.cos(angle);
     }
 
-    styleBuf[1] = left;
-    styleBuf[3] = top;
-    styleBuf[5] = fontHeight;
-    styleBuf[7] = style.fontFamily;
-    const styleStr = styleBuf.join('');
-
-    if (task._enhanceTextSelection) {
-      textDivProperties.style = styleStr;
-    }
-
-    textDiv.setAttribute('style', styleStr);
+    textDiv.style.left = `${left}px`;
+    textDiv.style.top = `${top}px`;
+    textDiv.style.fontSize = `${fontHeight}px`;
+    textDiv.style.fontFamily = style.fontFamily;
     textDiv.textContent = geom.str;
 
     if (task._fontInspectorEnabled) {
@@ -8728,30 +8772,34 @@ var renderTextLayer = function renderTextLayerClosure() {
     },
 
     _layoutText(textDiv) {
-      let textLayerFrag = this._container;
-
-      let textDivProperties = this._textDivProperties.get(textDiv);
+      const textDivProperties = this._textDivProperties.get(textDiv);
 
       if (textDivProperties.isWhitespace) {
         return;
       }
 
-      let fontSize = textDiv.style.fontSize;
-      let fontFamily = textDiv.style.fontFamily;
-
-      if (fontSize !== this._layoutTextLastFontSize || fontFamily !== this._layoutTextLastFontFamily) {
-        this._layoutTextCtx.font = fontSize + ' ' + fontFamily;
-        this._layoutTextLastFontSize = fontSize;
-        this._layoutTextLastFontFamily = fontFamily;
-      }
-
-      let width = this._layoutTextCtx.measureText(textDiv.textContent).width;
-
       let transform = '';
 
-      if (textDivProperties.canvasWidth !== 0 && width > 0) {
-        textDivProperties.scale = textDivProperties.canvasWidth / width;
-        transform = `scaleX(${textDivProperties.scale})`;
+      if (textDivProperties.canvasWidth !== 0) {
+        const {
+          fontSize,
+          fontFamily
+        } = textDiv.style;
+
+        if (fontSize !== this._layoutTextLastFontSize || fontFamily !== this._layoutTextLastFontFamily) {
+          this._layoutTextCtx.font = `${fontSize} ${fontFamily}`;
+          this._layoutTextLastFontSize = fontSize;
+          this._layoutTextLastFontFamily = fontFamily;
+        }
+
+        const {
+          width
+        } = this._layoutTextCtx.measureText(textDiv.textContent);
+
+        if (width > 0) {
+          textDivProperties.scale = textDivProperties.canvasWidth / width;
+          transform = `scaleX(${textDivProperties.scale})`;
+        }
       }
 
       if (textDivProperties.angle !== 0) {
@@ -8759,13 +8807,16 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
 
       if (transform.length > 0) {
-        textDivProperties.originalTransform = transform;
+        if (this._enhanceTextSelection) {
+          textDivProperties.originalTransform = transform;
+        }
+
         textDiv.style.transform = transform;
       }
 
       this._textDivProperties.set(textDiv, textDivProperties);
 
-      textLayerFrag.appendChild(textDiv);
+      this._container.appendChild(textDiv);
     },
 
     _render: function TextLayer_render(timeout) {
@@ -8832,6 +8883,10 @@ var renderTextLayer = function renderTextLayerClosure() {
         this._bounds = null;
       }
 
+      const NO_PADDING = '0 0 0 0';
+      const transformBuf = [],
+            paddingBuf = [];
+
       for (var i = 0, ii = this._textDivs.length; i < ii; i++) {
         const div = this._textDivs[i];
 
@@ -8842,45 +8897,51 @@ var renderTextLayer = function renderTextLayerClosure() {
         }
 
         if (expandDivs) {
-          let transform = '',
-              padding = '';
+          transformBuf.length = 0;
+          paddingBuf.length = 0;
 
-          if (divProps.scale !== 1) {
-            transform = `scaleX(${divProps.scale})`;
+          if (divProps.originalTransform) {
+            transformBuf.push(divProps.originalTransform);
           }
 
-          if (divProps.angle !== 0) {
-            transform = `rotate(${divProps.angle}deg) ${transform}`;
+          if (divProps.paddingTop > 0) {
+            paddingBuf.push(`${divProps.paddingTop}px`);
+            transformBuf.push(`translateY(${-divProps.paddingTop}px)`);
+          } else {
+            paddingBuf.push(0);
           }
 
-          if (divProps.paddingLeft !== 0) {
-            padding += ` padding-left: ${divProps.paddingLeft / divProps.scale}px;`;
-            transform += ` translateX(${-divProps.paddingLeft / divProps.scale}px)`;
+          if (divProps.paddingRight > 0) {
+            paddingBuf.push(`${divProps.paddingRight / divProps.scale}px`);
+          } else {
+            paddingBuf.push(0);
           }
 
-          if (divProps.paddingTop !== 0) {
-            padding += ` padding-top: ${divProps.paddingTop}px;`;
-            transform += ` translateY(${-divProps.paddingTop}px)`;
+          if (divProps.paddingBottom > 0) {
+            paddingBuf.push(`${divProps.paddingBottom}px`);
+          } else {
+            paddingBuf.push(0);
           }
 
-          if (divProps.paddingRight !== 0) {
-            padding += ` padding-right: ${divProps.paddingRight / divProps.scale}px;`;
+          if (divProps.paddingLeft > 0) {
+            paddingBuf.push(`${divProps.paddingLeft / divProps.scale}px`);
+            transformBuf.push(`translateX(${-divProps.paddingLeft / divProps.scale}px)`);
+          } else {
+            paddingBuf.push(0);
           }
 
-          if (divProps.paddingBottom !== 0) {
-            padding += ` padding-bottom: ${divProps.paddingBottom}px;`;
+          const padding = paddingBuf.join(' ');
+
+          if (padding !== NO_PADDING) {
+            div.style.padding = padding;
           }
 
-          if (padding !== '') {
-            div.setAttribute('style', divProps.style + padding);
-          }
-
-          if (transform !== '') {
-            div.style.transform = transform;
+          if (transformBuf.length) {
+            div.style.transform = transformBuf.join(' ');
           }
         } else {
-          div.style.padding = 0;
-          div.style.transform = divProps.originalTransform || '';
+          div.style.padding = null;
+          div.style.transform = divProps.originalTransform;
         }
       }
     }
