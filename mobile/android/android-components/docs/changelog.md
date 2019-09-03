@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 11.0.0-SNAPSHOT  (In Development)
+# 12.0.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/70?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/72?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 11.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/71?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v11.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v11.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v11.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-icons**
   * Ensures icons are not cached on the disk in private sessions.
