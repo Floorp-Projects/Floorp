@@ -9,9 +9,9 @@ import android.content.Intent.ACTION_VIEW
 import android.content.res.Resources
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.intent.IntentProcessor
-import mozilla.components.browser.session.intent.putSessionId
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.intent.ext.putSessionId
+import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent

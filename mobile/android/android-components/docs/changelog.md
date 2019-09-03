@@ -46,6 +46,9 @@ permalink: /changelog/
 * **service-telemetry**
   * This component is now deprecated. Please use the [Glean SDK](https://mozilla.github.io/glean/book/index.html) instead. This library will not be removed until all projects using it start using the Glean SDK.
 
+* **browser-session**, **feature-intent**
+  * ⚠️ **This is a breaking change**: Moved `Intent` related code from `browser-session` to `feature-intent`.
+
 # 10.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v10.0.1)

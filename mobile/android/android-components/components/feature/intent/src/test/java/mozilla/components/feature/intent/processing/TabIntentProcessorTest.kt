@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.intent
+package mozilla.components.feature.intent.processing
 
 import android.content.Intent
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -24,20 +25,17 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
 
-@Suppress("Deprecation")
 @RunWith(AndroidJUnit4::class)
-class IntentProcessorTest {
+@ExperimentalCoroutinesApi
+class TabIntentProcessorTest {
 
     private val sessionManager = mock<SessionManager>()
     private val session = mock<Session>()
@@ -53,12 +51,12 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun processWithDefaultHandlers() {
+    fun processViewIntent() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
         val useCases = SessionUseCases(sessionManager)
         val handler =
-            IntentProcessor(useCases, sessionManager, searchUseCases, testContext)
+            TabIntentProcessor(sessionManager, useCases.loadUrl, searchUseCases.newTabSearch)
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
 
@@ -80,13 +78,11 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun processWithDefaultHandlersUsingSelectedSession() {
-        val handler = IntentProcessor(
-            sessionUseCases,
+    fun processViewIntentUsingSelectedSession() = runBlockingTest {
+        val handler = TabIntentProcessor(
             sessionManager,
-            searchUseCases,
-            testContext,
-            useDefaultHandlers = true,
+            sessionUseCases.loadUrl,
+            searchUseCases.newTabSearch,
             openNewTab = false
         )
         val intent = mock<Intent>()
@@ -98,16 +94,14 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun processWithDefaultHandlersHavingNoSelectedSession() {
+    fun processViewIntentHavingNoSelectedSession() = runBlockingTest {
         whenever(sessionManager.selectedSession).thenReturn(null)
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val handler = IntentProcessor(
-            sessionUseCases,
+        val handler = TabIntentProcessor(
             sessionManager,
-            searchUseCases,
-            testContext,
-            useDefaultHandlers = true,
+            sessionUseCases.loadUrl,
+            searchUseCases.newTabSearch,
             openNewTab = false
         )
         val intent = mock<Intent>()
@@ -119,81 +113,10 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun processWithoutDefaultHandlers() {
-        val handler = IntentProcessor(
-            sessionUseCases,
-            sessionManager,
-            searchUseCases,
-            testContext,
-            useDefaultHandlers = false
-        )
-        val intent = mock<Intent>()
-        whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
-
-        handler.process(intent)
-        verifyZeroInteractions(engineSession)
-    }
-
-    @Test
-    fun processWithCustomHandlers() {
-        val handler = IntentProcessor(
-            sessionUseCases,
-            sessionManager,
-            searchUseCases,
-            testContext,
-            useDefaultHandlers = false
-        )
-        val intent = mock<Intent>()
-        whenever(intent.action).thenReturn(Intent.ACTION_SEND)
-
-        var handlerInvoked = false
-        handler.registerHandler(Intent.ACTION_SEND) {
-            handlerInvoked = true
-            true
-        }
-
-        handler.process(intent)
-        assertTrue(handlerInvoked)
-
-        handlerInvoked = false
-        handler.unregisterHandler(Intent.ACTION_SEND)
-
-        handler.process(intent)
-        assertFalse(handlerInvoked)
-    }
-
-    @Test
-    fun processCustomTabIntentWithDefaultHandlers() {
-        val engine = mock<Engine>()
-        val sessionManager = spy(SessionManager(engine))
-        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
-        val useCases = SessionUseCases(sessionManager)
-
-        val handler = IntentProcessor(useCases, sessionManager, searchUseCases, testContext)
-
-        val intent = mock<Intent>()
-        whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
-        whenever(intent.hasExtra(CustomTabsIntent.EXTRA_SESSION)).thenReturn(true)
-        whenever(intent.dataString).thenReturn("http://mozilla.org")
-        whenever(intent.putExtra(any(), any<String>())).thenReturn(intent)
-
-        handler.process(intent)
-        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null))
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
-
-        val customTabSession = sessionManager.all[0]
-        assertNotNull(customTabSession)
-        assertEquals("http://mozilla.org", customTabSession.url)
-        assertEquals(Source.CUSTOM_TAB, customTabSession.source)
-        assertNotNull(customTabSession.customTabConfig)
-    }
-
-    @Test
-    fun `load URL on ACTION_SEND if text contains URL`() {
+    fun `load URL on ACTION_SEND if text contains URL`() = runBlockingTest {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -220,7 +143,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun `perform search on ACTION_SEND if text (no URL) provided`() {
+    fun `perform search on ACTION_SEND if text (no URL) provided`() = runBlockingTest {
         val engine = mock<Engine>()
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
@@ -231,7 +154,7 @@ class IntentProcessorTest {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -248,8 +171,8 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun `processor handles ACTION_SEND with empty text`() {
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
+    fun `processor handles ACTION_SEND with empty text`() = runBlockingTest {
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
 
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_SEND)

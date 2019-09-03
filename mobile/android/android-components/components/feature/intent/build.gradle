@@ -26,7 +26,6 @@ android {
 dependencies {
     implementation project(':concept-engine')
     implementation project(':browser-session')
-    implementation project(':feature-customtabs')
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':support-utils')

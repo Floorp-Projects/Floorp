@@ -28,6 +28,7 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
     implementation project(':feature-session')
+    implementation project(':feature-intent')
     implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':support-utils')
