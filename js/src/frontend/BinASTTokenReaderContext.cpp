@@ -2195,7 +2195,7 @@ HuffmanDictionary::HuffmanDictionary(JSContext* cx)
 
   // Initialize `listLengths`. We have reserved space statically, this cannot
   // fail.
-  for (size_t i = 0; i < BINAST_INTERFACE_AND_FIELD_LIMIT; ++i) {
+  for (size_t i = 0; i < BINAST_NUMBER_OF_LIST_TYPES; ++i) {
     HuffmanTableListLength listLengthDefaultValue(HuffmanTableUnreachable{});
     listLengths.infallibleAppend(std::move(listLengthDefaultValue));
   }
