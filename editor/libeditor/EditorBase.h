@@ -820,7 +820,7 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eCreateOrRemoveBlock:
         case EditSubAction::eMergeBlockContents:
         case EditSubAction::eRemoveList:
-        case EditSubAction::eCreateOrChangeDefinitionList:
+        case EditSubAction::eCreateOrChangeDefinitionListItem:
         case EditSubAction::eInsertElement:
         case EditSubAction::eInsertQuotation:
         case EditSubAction::eInsertQuotedText:
