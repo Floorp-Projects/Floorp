@@ -309,6 +309,10 @@ addon-details {
   align-self: flex-end;
 }
 
+.addon-detail-contribute-button:dir(rtl) {
+  background-position-x: right 8px;
+}
+
 .addon-detail-row {
   display: flex;
   justify-content: space-between;
