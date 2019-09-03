@@ -1149,10 +1149,10 @@ BinASTTokenReaderContext::readFieldFromTable(const Context& context) {
   if (!table.is<Table>()) {
     return raiseNotInPrelude(context);
   }
-  const auto lookup = table.as<Table>().impl.lookup(
-      bitBuffer.getHuffmanLookup<Compression::No>());
-  MOZ_TRY(
-      bitBuffer.advanceBitBuffer<Compression::No>(*this, lookup.key.bitLength));
+  BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
+  const auto lookup = table.as<Table>().impl.lookup(bits);
+  
+  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
     return raiseInvalidValue(context);
   }
@@ -1219,9 +1219,10 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
         tag = BinASTKind::Script;
         return Ok();
       },
-      [](const BinASTTokenReaderBase::ListContext&) -> JS::Result<Ok> {
-        MOZ_CRASH(
-            "We shouldn't have generated a ListContext for enterTaggedTuple");
+      [this, context,
+       &tag](const BinASTTokenReaderBase::ListContext&) -> JS::Result<Ok> {
+        MOZ_TRY_VAR(
+            tag, (readFieldFromTable<HuffmanTableIndexedSymbolsSum>(context)));
         return Ok();
       },
       [this, context,
@@ -1241,10 +1242,9 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   const auto identity =
       context.as<BinASTTokenReaderBase::ListContext>().content;
   const auto& table = dictionary.tableForListLength(identity);
-  MOZ_TRY(const auto bits = bitBuffer.getHuffmanLookup<Compression::No>(*this));
+  BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto lookup =
       table.as<HuffmanTableExplicitSymbolsListLength>().impl.lookup(bits);
-  
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
     return raiseInvalidValue(context);
