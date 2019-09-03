@@ -2386,6 +2386,7 @@ struct StackMapGenerator {
 
     // Add the completed map to the running collection thereof.
     if (!stackMaps_->add((uint8_t*)(uintptr_t)assemblerOffset, stackMap)) {
+      stackMap->destroy();
       return false;
     }
 
