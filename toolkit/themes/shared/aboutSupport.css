@@ -95,6 +95,11 @@ td.integer {
   overflow: auto;
 }
 
+#enumerate-database-result {
+  max-height: 200px;
+  overflow: auto;
+}
+
 .hidden {
   display: none;
 }
