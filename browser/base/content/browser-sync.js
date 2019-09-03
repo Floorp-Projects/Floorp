@@ -787,19 +787,18 @@ var gSync = {
     const fragment = document.createDocumentFragment();
 
     const state = UIState.get();
-    if (
-      state.status == UIState.STATUS_SIGNED_IN &&
-      this.sendTabTargets.length > 0
-    ) {
-      this._appendSendTabDeviceList(
-        fragment,
-        createDeviceNodeFn,
-        url,
-        title,
-        multiselected
-      );
-    } else if (state.status == UIState.STATUS_SIGNED_IN) {
-      this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
+    if (state.status == UIState.STATUS_SIGNED_IN) {
+      if (this.sendTabTargets.length > 0) {
+        this._appendSendTabDeviceList(
+          fragment,
+          createDeviceNodeFn,
+          url,
+          title,
+          multiselected
+        );
+      } else {
+        this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
+      }
     } else if (
       state.status == UIState.STATUS_NOT_VERIFIED ||
       state.status == UIState.STATUS_LOGIN_FAILED
