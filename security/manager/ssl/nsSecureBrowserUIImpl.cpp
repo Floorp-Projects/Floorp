@@ -236,6 +236,14 @@ void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
   if (doc->GetHasCookiesLoaded()) {
     mEvent |= STATE_COOKIES_LOADED;
   }
+
+  if (doc->GetHasTrackerCookiesLoaded()) {
+    mEvent |= STATE_COOKIES_LOADED_TRACKER;
+  }
+
+  if (doc->GetHasSocialTrackerCookiesLoaded()) {
+    mEvent |= STATE_COOKIES_LOADED_SOCIALTRACKER;
+  }
 }
 
 // Helper function to determine if the given URI can be considered secure.

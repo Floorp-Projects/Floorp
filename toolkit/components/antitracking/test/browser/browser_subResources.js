@@ -225,6 +225,16 @@ add_task(async function() {
     ok(item[2] >= 1, "Correct repeat count reported");
   };
 
+  let expectTrackerCookiesLoaded = item => {
+    is(
+      item[0],
+      Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER,
+      "Correct blocking type reported"
+    );
+    is(item[1], true, "Correct blocking status reported");
+    ok(item[2] >= 1, "Correct repeat count reported");
+  };
+
   let log = JSON.parse(await browser.getContentBlockingLog());
   for (let trackerOrigin in log) {
     is(
@@ -233,11 +243,12 @@ add_task(async function() {
       "Correct tracker origin must be reported"
     );
     let originLog = log[trackerOrigin];
-    is(originLog.length, 4, "We should have 4 entries in the compressed log");
+    is(originLog.length, 5, "We should have 4 entries in the compressed log");
     expectTrackerFound(originLog[0]);
     expectCookiesLoaded(originLog[1]);
-    expectTrackerBlocked(originLog[2], true);
-    expectTrackerBlocked(originLog[3], false);
+    expectTrackerCookiesLoaded(originLog[2]);
+    expectTrackerBlocked(originLog[3], true);
+    expectTrackerBlocked(originLog[4], false);
   }
 
   info("Removing the tab");

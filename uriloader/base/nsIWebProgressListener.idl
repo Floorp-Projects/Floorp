@@ -285,6 +285,23 @@ interface nsIWebProgressListener : nsISupports
    * STATE_BLOCKED_UNSAFE_CONTENT
    *   Content which againts SafeBrowsing list has been blocked from loading.
    *
+   * STATE_COOKIES_LOADED
+   *   Performed a storage access check, which usually means something like a
+   *   cookie or a storage item was loaded/stored on the current tab.
+   *   Alternatively this could indicate that something in the current tab
+   *   attempted to communicate with its same-origin counterparts in other
+   *   tabs.
+   *
+   * STATE_COOKIES_LOADED_TRACKER
+   *   Similar to STATE_COOKIES_LOADED, but only sent if the subject of the
+   *   action was a third-party tracker when the active cookie policy imposes
+   *   restrictions on such content.
+   *
+   * STATE_COOKIES_LOADED_SOCIALTRACKER
+   *   Similar to STATE_COOKIES_LOADED, but only sent if the subject of the
+   *   action was a third-party social tracker when the active cookie policy
+   *   imposes restrictions on such content.
+   *
    * STATE_COOKIES_BLOCKED_BY_PERMISSION
    *   Rejected for custom site permission.
    *
@@ -316,6 +333,8 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT    = 0x00200000;
   const unsigned long STATE_BLOCKED_UNSAFE_CONTENT         = 0x00004000;
   const unsigned long STATE_COOKIES_LOADED                 = 0x00008000;
+  const unsigned long STATE_COOKIES_LOADED_TRACKER         = 0x00040000;
+  const unsigned long STATE_COOKIES_LOADED_SOCIALTRACKER   = 0x00080000;
   const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION  = 0x10000000;
   const unsigned long STATE_COOKIES_BLOCKED_TRACKER        = 0x20000000;
   const unsigned long STATE_COOKIES_BLOCKED_ALL            = 0x40000000;

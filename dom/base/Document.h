@@ -1279,11 +1279,48 @@ class Document : public nsINode,
   }
 
   /**
-   * Get cookies loaded flag for this document.
+   * Get the cookies loaded flag for this document.
    */
   bool GetHasCookiesLoaded() {
     return mContentBlockingLog.HasBlockedAnyOfType(
         nsIWebProgressListener::STATE_COOKIES_LOADED);
+  }
+
+  /**
+   * Set the tracker cookies loaded flag for this document.
+   */
+  void SetHasTrackerCookiesLoaded(bool aHasTrackerCookiesLoaded,
+                                  const nsACString& aOriginLoaded) {
+    RecordContentBlockingLog(
+        aOriginLoaded, nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER,
+        aHasTrackerCookiesLoaded);
+  }
+
+  /**
+   * Get the tracker cookies loaded flag for this document.
+   */
+  bool GetHasTrackerCookiesLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER);
+  }
+
+  /**
+   * Set the social tracker cookies loaded flag for this document.
+   */
+  void SetHasSocialTrackerCookiesLoaded(bool aHasSocialTrackerCookiesLoaded,
+                                        const nsACString& aOriginLoaded) {
+    RecordContentBlockingLog(
+        aOriginLoaded,
+        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
+        aHasSocialTrackerCookiesLoaded);
+  }
+
+  /**
+   * Get the social tracker cookies loaded flag for this document.
+   */
+  bool GetHasSocialTrackerCookiesLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER);
   }
 
   /**
