@@ -418,7 +418,8 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
 WindowBackBufferDMABuf::WindowBackBufferDMABuf(
     nsWaylandDisplay* aWaylandDisplay, int aWidth, int aHeight)
     : WindowBackBuffer(aWaylandDisplay) {
-  mDMAbufSurface.Create(aWidth, aHeight);
+  mDMAbufSurface.Create(aWidth, aHeight,
+                        DMABUF_ALPHA | DMABUF_CREATE_WL_BUFFER);
 
   LOGWAYLAND(("%s [%p] Created DMABuf buffer [%d x %d]\n", __PRETTY_FUNCTION__,
               (void*)this, aWidth, aHeight));
