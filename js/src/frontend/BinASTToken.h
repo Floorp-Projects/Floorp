@@ -1849,7 +1849,7 @@ const size_t
     INTERFACE(AssertedVarScope),                                                      \
     "ArrowExpressionContentsWithFunctionBody::bodyScope")                             \
   F(ArrowExpressionContentsWithFunctionBody, Body, 3,                                 \
-    LIST(FunctionBody, Statement),                                                    \
+    LIST(ListOfStatement, SUM(Statement)),                                            \
     "ArrowExpressionContentsWithFunctionBody::body")
 
 // The number of fields of interface ArrowExpressionContentsWithFunctionBody.
@@ -2164,12 +2164,13 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_BLOCK = 2;
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_BREAK_STATEMENT = 1;
 
 // Strongly typed iteration through the fields of interface CallExpression.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_CALL_EXPRESSION(                      \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,     \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                        \
-  F(CallExpression, Callee, 0, SUM(ExpressionOrSuper),                        \
-    "CallExpression::callee")                                                 \
-  F(CallExpression, Arguments, 1, LIST(Arguments, ExpressionOrSpreadElement), \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_CALL_EXPRESSION(                  \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
+  F(CallExpression, Callee, 0, SUM(ExpressionOrSuper),                    \
+    "CallExpression::callee")                                             \
+  F(CallExpression, Arguments, 1,                                         \
+    LIST(Arguments, SUM(ExpressionOrSpreadElement)),                      \
     "CallExpression::arguments")
 
 // The number of fields of interface CallExpression.
@@ -2648,8 +2649,8 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FORMAL_PARAMETERS = 2;
     "FunctionExpressionContents::params")                                      \
   F(FunctionExpressionContents, BodyScope, 4, INTERFACE(AssertedVarScope),     \
     "FunctionExpressionContents::bodyScope")                                   \
-  F(FunctionExpressionContents, Body, 5, LIST(FunctionBody, Statement),        \
-    "FunctionExpressionContents::body")
+  F(FunctionExpressionContents, Body, 5,                                       \
+    LIST(ListOfStatement, SUM(Statement)), "FunctionExpressionContents::body")
 
 // The number of fields of interface FunctionExpressionContents.
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FUNCTION_EXPRESSION_CONTENTS =
@@ -2657,19 +2658,19 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FUNCTION_EXPRESSION_CONTENTS =
 
 // Strongly typed iteration through the fields of interface
 // FunctionOrMethodContents.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_FUNCTION_OR_METHOD_CONTENTS(      \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
-  F(FunctionOrMethodContents, IsThisCaptured, 0, PRIMITIVE(Boolean),      \
-    "FunctionOrMethodContents::isThisCaptured")                           \
-  F(FunctionOrMethodContents, ParameterScope, 1,                          \
-    INTERFACE(AssertedParameterScope),                                    \
-    "FunctionOrMethodContents::parameterScope")                           \
-  F(FunctionOrMethodContents, Params, 2, INTERFACE(FormalParameters),     \
-    "FunctionOrMethodContents::params")                                   \
-  F(FunctionOrMethodContents, BodyScope, 3, INTERFACE(AssertedVarScope),  \
-    "FunctionOrMethodContents::bodyScope")                                \
-  F(FunctionOrMethodContents, Body, 4, LIST(FunctionBody, Statement),     \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_FUNCTION_OR_METHOD_CONTENTS(          \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,     \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                        \
+  F(FunctionOrMethodContents, IsThisCaptured, 0, PRIMITIVE(Boolean),          \
+    "FunctionOrMethodContents::isThisCaptured")                               \
+  F(FunctionOrMethodContents, ParameterScope, 1,                              \
+    INTERFACE(AssertedParameterScope),                                        \
+    "FunctionOrMethodContents::parameterScope")                               \
+  F(FunctionOrMethodContents, Params, 2, INTERFACE(FormalParameters),         \
+    "FunctionOrMethodContents::params")                                       \
+  F(FunctionOrMethodContents, BodyScope, 3, INTERFACE(AssertedVarScope),      \
+    "FunctionOrMethodContents::bodyScope")                                    \
+  F(FunctionOrMethodContents, Body, 4, LIST(ListOfStatement, SUM(Statement)), \
     "FunctionOrMethodContents::body")
 
 // The number of fields of interface FunctionOrMethodContents.
@@ -2684,7 +2685,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_FUNCTION_OR_METHOD_CONTENTS =
     "GetterContents::isThisCaptured")                                     \
   F(GetterContents, BodyScope, 1, INTERFACE(AssertedVarScope),            \
     "GetterContents::bodyScope")                                          \
-  F(GetterContents, Body, 2, LIST(FunctionBody, Statement),               \
+  F(GetterContents, Body, 2, LIST(ListOfStatement, SUM(Statement)),       \
     "GetterContents::body")
 
 // The number of fields of interface GetterContents.
@@ -2993,11 +2994,12 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_LITERAL_STRING_EXPRESSION = 1;
 const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_MODULE = 3;
 
 // Strongly typed iteration through the fields of interface NewExpression.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_NEW_EXPRESSION(                      \
-    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM,    \
-    STRING_ENUM, OPTIONAL_STRING_ENUM)                                       \
-  F(NewExpression, Callee, 0, SUM(Expression), "NewExpression::callee")      \
-  F(NewExpression, Arguments, 1, LIST(Arguments, ExpressionOrSpreadElement), \
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_NEW_EXPRESSION(                   \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)                                    \
+  F(NewExpression, Callee, 0, SUM(Expression), "NewExpression::callee")   \
+  F(NewExpression, Arguments, 1,                                          \
+    LIST(Arguments, SUM(ExpressionOrSpreadElement)),                      \
     "NewExpression::arguments")
 
 // The number of fields of interface NewExpression.
@@ -3079,7 +3081,7 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_SCRIPT = 3;
   F(SetterContents, Param, 2, SUM(Parameter), "SetterContents::param")    \
   F(SetterContents, BodyScope, 3, INTERFACE(AssertedVarScope),            \
     "SetterContents::bodyScope")                                          \
-  F(SetterContents, Body, 4, LIST(FunctionBody, Statement),               \
+  F(SetterContents, Body, 4, LIST(ListOfStatement, SUM(Statement)),       \
     "SetterContents::body")
 
 // The number of fields of interface SetterContents.
@@ -3623,8 +3625,6 @@ const size_t BIN_AST_STRING_ENUM_VARIABLE_DECLARATION_KIND_LIMIT = 3;
                           OPTIONAL_STRING_ENUM)                                \
   F(Arguments, ExpressionOrSpreadElement, "Arguments",                         \
     LIST(Arguments, SUM(ExpressionOrSpreadElement)))                           \
-  F(FunctionBody, Statement, "FunctionBody",                                   \
-    LIST(FunctionBody, SUM(Statement)))                                        \
   F(ListOfAssertedBoundName, AssertedBoundName, "ListOfAssertedBoundName",     \
     LIST(ListOfAssertedBoundName, INTERFACE(AssertedBoundName)))               \
   F(ListOfAssertedDeclaredName, AssertedDeclaredName,                          \
