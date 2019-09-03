@@ -6,7 +6,6 @@
 DevToolsModules(
     'background.jsm',
     'menu-button.jsm',
-    'popup.js',
 )
 
 with Files('**'):
