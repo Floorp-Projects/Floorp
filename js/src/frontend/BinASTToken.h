@@ -3454,6 +3454,14 @@ const size_t BINASTSTRINGENUM_LIMIT = 6;
   F(AssertedDeclaredKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
     "var")
 
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_ASSERTED_DECLARED_KIND_BY_WEBIDL_ORDER( \
+    F)                                                                              \
+  F(AssertedDeclaredKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
+    "var")                                                                          \
+  F(AssertedDeclaredKind, AssertedDeclaredKindNonConstLexical,                      \
+    "non-const lexical")                                                            \
+  F(AssertedDeclaredKind, AssertedDeclaredKindConstLexical, "const lexical")
+
 const size_t BIN_AST_STRING_ENUM_ASSERTED_DECLARED_KIND_LIMIT = 3;
 
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_BINARY_OPERATOR_BY_STRING_ORDER(F) \
@@ -3483,6 +3491,33 @@ const size_t BIN_AST_STRING_ENUM_ASSERTED_DECLARED_KIND_LIMIT = 3;
   F(BinaryOperator, BinaryOperatorBitOr, "|")                                  \
   F(BinaryOperator, BinaryOperatorLogicalOr, "||")
 
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_BINARY_OPERATOR_BY_WEBIDL_ORDER(F) \
+  F(BinaryOperator, BinaryOperatorComma, ",")                                  \
+  F(BinaryOperator, BinaryOperatorLogicalOr, "||")                             \
+  F(BinaryOperator, BinaryOperatorLogicalAnd, "&&")                            \
+  F(BinaryOperator, BinaryOperatorBitOr, "|")                                  \
+  F(BinaryOperator, BinaryOperatorBitXor, "^")                                 \
+  F(BinaryOperator, BinaryOperatorBitAnd, "&")                                 \
+  F(BinaryOperator, BinaryOperatorEq, "==")                                    \
+  F(BinaryOperator, BinaryOperatorNeq, "!=")                                   \
+  F(BinaryOperator, BinaryOperatorStrictEq, "===")                             \
+  F(BinaryOperator, BinaryOperatorStrictNeq, "!==")                            \
+  F(BinaryOperator, BinaryOperatorLessThan, "<")                               \
+  F(BinaryOperator, BinaryOperatorLeqThan, "<=")                               \
+  F(BinaryOperator, BinaryOperatorGreaterThan, ">")                            \
+  F(BinaryOperator, BinaryOperatorGeqThan, ">=")                               \
+  F(BinaryOperator, BinaryOperatorIn, "in")                                    \
+  F(BinaryOperator, BinaryOperatorInstanceof, "instanceof")                    \
+  F(BinaryOperator, BinaryOperatorLsh, "<<")                                   \
+  F(BinaryOperator, BinaryOperatorRsh, ">>")                                   \
+  F(BinaryOperator, BinaryOperatorUrsh, ">>>")                                 \
+  F(BinaryOperator, BinaryOperatorOrUnaryOperatorPlus, "+")                    \
+  F(BinaryOperator, BinaryOperatorOrUnaryOperatorMinus, "-")                   \
+  F(BinaryOperator, BinaryOperatorMul, "*")                                    \
+  F(BinaryOperator, BinaryOperatorDiv, "/")                                    \
+  F(BinaryOperator, BinaryOperatorMod, "%")                                    \
+  F(BinaryOperator, BinaryOperatorPow, "**")
+
 const size_t BIN_AST_STRING_ENUM_BINARY_OPERATOR_LIMIT = 25;
 
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_BY_STRING_ORDER( \
@@ -3500,6 +3535,21 @@ const size_t BIN_AST_STRING_ENUM_BINARY_OPERATOR_LIMIT = 25;
   F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitXorAssign, "^=")             \
   F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitOrAssign, "|=")
 
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_BY_WEBIDL_ORDER( \
+    F)                                                                                    \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorPlusAssign, "+=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorMinusAssign, "-=")              \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorMulAssign, "*=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorDivAssign, "/=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorModAssign, "%=")                \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorPowAssign, "**=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorLshAssign, "<<=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorRshAssign, ">>=")               \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorUrshAssign, ">>>=")             \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitOrAssign, "|=")              \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitXorAssign, "^=")             \
+  F(CompoundAssignmentOperator, CompoundAssignmentOperatorBitAndAssign, "&=")
+
 const size_t BIN_AST_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_LIMIT = 12;
 
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UNARY_OPERATOR_BY_STRING_ORDER(F) \
@@ -3511,9 +3561,22 @@ const size_t BIN_AST_STRING_ENUM_COMPOUND_ASSIGNMENT_OPERATOR_LIMIT = 12;
   F(UnaryOperator, UnaryOperatorVoid, "void")                                 \
   F(UnaryOperator, UnaryOperatorBitNot, "~")
 
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UNARY_OPERATOR_BY_WEBIDL_ORDER(F) \
+  F(UnaryOperator, BinaryOperatorOrUnaryOperatorPlus, "+")                    \
+  F(UnaryOperator, BinaryOperatorOrUnaryOperatorMinus, "-")                   \
+  F(UnaryOperator, UnaryOperatorNot, "!")                                     \
+  F(UnaryOperator, UnaryOperatorBitNot, "~")                                  \
+  F(UnaryOperator, UnaryOperatorTypeof, "typeof")                             \
+  F(UnaryOperator, UnaryOperatorVoid, "void")                                 \
+  F(UnaryOperator, UnaryOperatorDelete, "delete")
+
 const size_t BIN_AST_STRING_ENUM_UNARY_OPERATOR_LIMIT = 7;
 
 #define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UPDATE_OPERATOR_BY_STRING_ORDER(F) \
+  F(UpdateOperator, UpdateOperatorIncr, "++")                                  \
+  F(UpdateOperator, UpdateOperatorDecr, "--")
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_UPDATE_OPERATOR_BY_WEBIDL_ORDER(F) \
   F(UpdateOperator, UpdateOperatorIncr, "++")                                  \
   F(UpdateOperator, UpdateOperatorDecr, "--")
 
@@ -3525,6 +3588,13 @@ const size_t BIN_AST_STRING_ENUM_UPDATE_OPERATOR_LIMIT = 2;
   F(VariableDeclarationKind, VariableDeclarationKindLet, "let")                        \
   F(VariableDeclarationKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
     "var")
+
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_VARIABLE_DECLARATION_KIND_BY_WEBIDL_ORDER( \
+    F)                                                                                 \
+  F(VariableDeclarationKind, AssertedDeclaredKindOrVariableDeclarationKindVar,         \
+    "var")                                                                             \
+  F(VariableDeclarationKind, VariableDeclarationKindLet, "let")                        \
+  F(VariableDeclarationKind, VariableDeclarationKindConst, "const")
 
 const size_t BIN_AST_STRING_ENUM_VARIABLE_DECLARATION_KIND_LIMIT = 3;
 
