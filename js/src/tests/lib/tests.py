@@ -168,8 +168,6 @@ class RefTestCase(object):
         self.options = []
         # [str]: JIT flags to pass to the shell
         self.jitflags = []
-        # [str]: flags to never pass to the shell for this test
-        self.ignoredflags = []
         # str or None: path to reflect-stringify.js file to test
         # instead of actually running tests
         self.test_reflect_stringify = None
@@ -231,9 +229,6 @@ class RefTestCase(object):
             cmd += ["--module", self.abs_path()]
         else:
             cmd += ["-f", self.abs_path()]
-        for flag in self.ignoredflags:
-            if flag in cmd:
-                cmd.remove(flag)
         return cmd
 
     def __str__(self):

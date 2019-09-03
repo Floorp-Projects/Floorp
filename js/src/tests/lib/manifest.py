@@ -154,10 +154,6 @@ def _parse_one(testcase, terms, xul_tester):
             if xul_tester.test(cond):
                 testcase.expect = testcase.enable = False
             pos += 1
-        elif parts[pos].startswith('ignore-flag'):
-            flag = parts[pos][len('ignore-flag('):-1]
-            testcase.ignoredflags.append(flag)
-            pos += 1
         elif parts[pos].startswith('random-if'):
             cond = parts[pos][len('random-if('):-1]
             if xul_tester.test(cond):
@@ -203,8 +199,7 @@ def _build_manifest_script_entry(script_name, test):
         terms = " ".join([term for term in test.terms.split()
                           if not (term == "module" or
                                   term == "async" or
-                                  term.startswith("error:") or
-                                  term.startswith("ignore-flag("))])
+                                  term.startswith("error:"))])
         if terms:
             line.append(terms)
     if test.error:

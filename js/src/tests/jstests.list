@@ -267,37 +267,36 @@ skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
-ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
+skip script test262/built-ins/Function/internals/Call/class-ctor-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
-# All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/arguments-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/desc-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/get/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/has/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/apply/arguments-realm.js
+skip script test262/built-ins/Proxy/apply/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/construct/arguments-realm.js
+skip script test262/built-ins/Proxy/construct/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/defineProperty/desc-realm.js
+skip script test262/built-ins/Proxy/defineProperty/null-handler-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js
+skip script test262/built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/get/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js
+skip script test262/built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/has/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js
+skip script test262/built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
 
 # Errors thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
-ignore-flag(--more-compartments) script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
+skip script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 
@@ -399,36 +398,35 @@ skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-htm
 skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508683
-# All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/global/cross-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/source/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/global/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
 # All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
+skip script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
+skip script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
+skip script test262/built-ins/String/prototype/toString/non-generic-realm.js
+skip script test262/built-ins/String/prototype/toString/non-generic-realm.js
+skip script test262/built-ins/Proxy/apply/null-handler-realm.js
+skip script test262/built-ins/Proxy/apply/null-handler-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
+skip script test262/built-ins/Proxy/construct/null-handler-realm.js
+skip script test262/built-ins/Proxy/construct/null-handler-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
+skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1560355
 skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
