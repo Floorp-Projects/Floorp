@@ -213,7 +213,9 @@ namespace mozilla {
 
 Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
                         const StaticXREAppData& aAppData) {
-  EnsureCommandlineSafe(argc, argv);
+  // Note: keep in sync with nsBrowserApp.
+  const wchar_t* acceptableParams[] = {L"url", nullptr};
+  EnsureCommandlineSafe(argc, argv, acceptableParams);
 
   SetLauncherErrorAppData(aAppData);
 
