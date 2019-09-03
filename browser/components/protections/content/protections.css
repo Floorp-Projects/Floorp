@@ -161,15 +161,16 @@ a.hidden,
 #protection-details {
   padding: 4px;
   padding-inline-start: 24px;
-}
-
-#protection-details {
   -moz-context-properties: fill;
   fill: currentColor;
   background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
   font-size: 0.75em;
   display: inline;
   cursor: default;
+}
+
+#protection-details:dir(rtl) {
+  background-position-x: right 3px;
 }
 
 #protection-details:hover,
