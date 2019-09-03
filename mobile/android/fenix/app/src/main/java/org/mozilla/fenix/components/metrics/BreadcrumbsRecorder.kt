@@ -10,27 +10,24 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import io.sentry.Sentry
-import io.sentry.event.Breadcrumb
-import io.sentry.event.BreadcrumbBuilder
-import org.mozilla.fenix.components.isSentryEnabled
+import mozilla.components.lib.crash.Breadcrumb
+import mozilla.components.lib.crash.CrashReporter
 
 /**
- * Records breadcrumbs in Sentry when the fragment changes.
+ * Records breadcrumbs when the fragment changes.
  *
  * Should be registered as a [LifecycleObserver] on an activity if telemetry is enabled.
  * It will automatically be removed when the lifecycle owner is destroyed.
  */
-class SentryBreadcrumbsRecorder(
+class BreadcrumbsRecorder(
+    private val crashReporter: CrashReporter,
     private val navController: NavController,
     private val getBreadcrumbMessage: (NavDestination) -> String
 ) : NavController.OnDestinationChangedListener, LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onCreate() {
-        if (isSentryEnabled()) {
-            navController.addOnDestinationChangedListener(this)
-        }
+        navController.addOnDestinationChangedListener(this)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
@@ -46,12 +43,12 @@ class SentryBreadcrumbsRecorder(
         destination: NavDestination,
         arguments: Bundle?
     ) {
-        Sentry.getContext().recordBreadcrumb(
-            BreadcrumbBuilder()
-                .setCategory("DestinationChanged")
-                .setMessage(getBreadcrumbMessage(destination))
-                .setLevel(Breadcrumb.Level.INFO)
-                .build()
+        crashReporter.recordCrashBreadcrumb(
+            Breadcrumb(
+                message = getBreadcrumbMessage(destination),
+                category = "DestinationChanged",
+                level = Breadcrumb.Level.INFO
+            )
         )
     }
 }

@@ -18,7 +18,7 @@ import org.mozilla.fenix.theme.CustomTabThemeManager
 import java.security.InvalidParameterException
 
 open class CustomTabActivity : HomeActivity() {
-    final override fun getSentryBreadcrumbMessage(destination: NavDestination): String {
+    final override fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
         return "Changing to fragment $fragmentName, isCustomTab: true"
     }

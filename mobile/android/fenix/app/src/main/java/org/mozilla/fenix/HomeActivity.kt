@@ -35,9 +35,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.SentryBreadcrumbsRecorder
+import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
@@ -96,9 +95,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         setupToolbarAndNavigation()
 
         if (settings.isTelemetryEnabled) {
-            if (isSentryEnabled()) {
-                lifecycle.addObserver(SentryBreadcrumbsRecorder(navHost.navController, ::getSentryBreadcrumbMessage))
-            }
+            lifecycle.addObserver(BreadcrumbsRecorder(components.analytics.crashReporter,
+                navHost.navController, ::getBreadcrumbMessage))
 
             intent
                 ?.toSafeIntent()
@@ -157,7 +155,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         super.onBackPressed()
     }
 
-    protected open fun getSentryBreadcrumbMessage(destination: NavDestination): String {
+    protected open fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
         return "Changing to fragment $fragmentName, isCustomTab: false"
     }
