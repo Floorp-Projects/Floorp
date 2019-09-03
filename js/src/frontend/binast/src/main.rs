@@ -884,7 +884,8 @@ impl CPPExporter {
                 "".to_string()
             }
         };
-        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra}{before_context}{context});\n",
+        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra}{before_context}{context});
+",
             prefix = prefix,
             type_ok = type_ok,
             kind = kind,
@@ -917,7 +918,8 @@ impl CPPExporter {
                 "".to_string()
             }
         };
-        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args}{extra}{before_context}{context})",
+        format!("{parser_class_template}JS::Result<{type_ok}>
+{parser_class_name}::parse{prefix}{kind}({args}{extra}{before_context}{context})",
             parser_class_template = self.rules.parser_class_template,
             prefix = prefix,
             type_ok = type_ok,
@@ -1105,7 +1107,10 @@ impl CPPExporter {
             .sorted()
             .collect_vec();
         let kind_limit = node_names.len();
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("
+#define FOR_EACH_BIN_KIND(F) \\
+{nodes}
+",
             nodes = node_names.iter()
                 .map(|name| format!("    F({enum_name}, \"{spec_name}\", {macro_name})",
                     enum_name = name.to_cpp_enum_case(),
@@ -1120,8 +1125,11 @@ enum class BinASTKind: uint16_t {
 };
 ");
 
-        buffer.push_str(&format!("\n// The number of distinct values of BinASTKind.\nconst size_t BINASTKIND_LIMIT = {};\n\n\n", kind_limit));
-        buffer.push_str("\n\n");
+        buffer.push_str(&format!("
+// The number of distinct values of BinASTKind.
+const size_t BINASTKIND_LIMIT = {};
+
+", kind_limit));
         if self.rules.hpp_tokens_field_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_field_doc.reindent(""));
         }
@@ -1131,7 +1139,10 @@ enum class BinASTKind: uint16_t {
             .sorted()
             .collect_vec();
         let field_limit = field_names.len();
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_FIELD(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("
+#define FOR_EACH_BIN_FIELD(F) \\
+{nodes}
+",
             nodes = field_names.iter()
                 .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
                     spec_name = name,
@@ -1144,9 +1155,17 @@ enum class BinASTField: uint16_t {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinASTField.\nconst size_t BINASTFIELD_LIMIT = {};\n", field_limit));
+        buffer.push_str(&format!("
+// The number of distinct values of BinASTField.
+const size_t BINASTFIELD_LIMIT = {};
 
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_INTERFACE_AND_FIELD(F) \\\n{nodes}\n",
+", field_limit));
+
+        buffer.push_str(&format!("
+
+#define FOR_EACH_BIN_INTERFACE_AND_FIELD(F) \\
+{nodes}
+",
             nodes = self.syntax.interfaces_by_name()
                 .iter()
                 .sorted_by_key(|a| a.0)
@@ -1233,9 +1252,12 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
             let interface_enum_name = interface_name.to_cpp_enum_case();
             let interface_spec_name = interface_name.clone();
             let interface_macro_name = interface.name().to_cpp_macro_case();
-            buffer.push_str(&format!("\n\n
+            buffer.push_str(&format!("
+
 // Strongly typed iteration through the fields of interface {interface_enum_name}.
-#define FOR_EACH_BIN_FIELD_IN_INTERFACE_{interface_macro_name}(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\\n{nodes}\n",
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_{interface_macro_name}(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\
+{nodes}
+",
                 interface_macro_name = interface_macro_name,
                 interface_enum_name = interface_enum_name.clone(),
                 nodes = interface.contents().fields()
@@ -1265,7 +1287,11 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len}
             .values()
             .map(|interface| interface.contents().fields().len())
             .sum();
-        buffer.push_str(&format!("\n// The total number of fields across all interfaces. Used typically to maintain a probability table per field.\nconst size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {};\n\n\n", total_number_of_fields));
+        buffer.push_str(&format!("
+// The total number of fields across all interfaces. Used typically to maintain a probability table per field.
+const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {};
+
+", total_number_of_fields));
 
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
@@ -1279,7 +1305,10 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len}
             .collect_vec();
         let variants_limit = enum_variants.len();
 
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("
+#define FOR_EACH_BIN_VARIANT(F) \\
+{nodes}
+",
             nodes = enum_variants.into_iter()
                 .map(|(symbol, name)| format!("    F({variant_name}, \"{spec_name}\")",
                     spec_name = symbol,
@@ -1293,10 +1322,17 @@ enum class BinASTVariant: uint16_t {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinASTVariant.\nconst size_t BINASTVARIANT_LIMIT = {};\n\n\n",
+        buffer.push_str(&format!("
+// The number of distinct values of BinASTVariant.
+const size_t BINASTVARIANT_LIMIT = {};
+
+",
             variants_limit));
 
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_STRING_ENUM(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("
+#define FOR_EACH_BIN_STRING_ENUM(F) \\
+{nodes}
+",
             nodes = self.syntax.string_enums_by_name()
                 .keys()
                 .sorted()
@@ -1314,7 +1350,11 @@ enum class BinASTStringEnum: uint16_t {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinASTStringEnum.\nconst size_t BINASTSTRINGENUM_LIMIT = {};\n\n\n",
+        buffer.push_str(&format!("
+// The number of distinct values of BinASTStringEnum.
+const size_t BINASTSTRINGENUM_LIMIT = {};
+
+",
             self.syntax.string_enums_by_name().len()));
 
         for (name, enum_) in self.syntax.string_enums_by_name()
@@ -1324,7 +1364,10 @@ enum class BinASTStringEnum: uint16_t {
         {
             let enum_name = name.to_str().to_class_cases();
             let enum_macro_name = name.to_cpp_macro_case();
-            buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_STRING_ORDER(F) \\\n {variants}\n",
+            buffer.push_str(&format!("
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_STRING_ORDER(F) \\
+ {variants}
+",
                 enum_macro_name = enum_macro_name,
                 variants = enum_.strings()
                     .iter()
@@ -1339,7 +1382,10 @@ enum class BinASTStringEnum: uint16_t {
                     })
                     .format("\\\n")
             ));
-            buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_WEBIDL_ORDER(F) \\\n {variants}\n",
+            buffer.push_str(&format!("
+#define FOR_EACH_BIN_VARIANT_IN_STRING_ENUM_{enum_macro_name}_BY_WEBIDL_ORDER(F) \\
+ {variants}
+",
                 enum_macro_name = enum_macro_name,
                 variants = enum_.strings()
                     .iter()
@@ -1352,7 +1398,10 @@ enum class BinASTStringEnum: uint16_t {
                     })
                     .format("\\\n")
             ));
-            buffer.push_str(&format!("\nconst size_t BIN_AST_STRING_ENUM_{enum_macro_name}_LIMIT = {len};\n\n\n",
+            buffer.push_str(&format!("
+
+const size_t BIN_AST_STRING_ENUM_{enum_macro_name}_LIMIT = {len};
+",
                 enum_macro_name = enum_macro_name,
                 len = enum_.strings().len(),
             ));
@@ -1372,7 +1421,9 @@ enum class BinASTStringEnum: uint16_t {
 // - STRING_ENUM: wrapper for non-optional string enum types - called as `STRING_ENUNM(typename)`
 // - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called as `OPTIONAL_STRING_ENUM(typename)` where
 //      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
-#define FOR_EACH_BIN_LIST(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\\n{nodes}\n",
+#define FOR_EACH_BIN_LIST(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\
+{nodes}
+",
             nodes = self.canonical_list_parsers.values()
                 .sorted_by_key(|data| &data.name)
                 .into_iter()
@@ -1396,9 +1447,17 @@ enum class BinASTList: uint16_t {
 #undef NOTHING
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct list types in the grammar. Used typically to maintain a probability table per list type.\nconst size_t BINAST_NUMBER_OF_LIST_TYPES = {};\n\n\n", self.list_parsers_to_generate.len()));
 
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_SUM(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("
+// The number of distinct list types in the grammar. Used typically to maintain a probability table per list type.
+const size_t BINAST_NUMBER_OF_LIST_TYPES = {};
+
+", self.list_parsers_to_generate.len()));
+
+        buffer.push_str(&format!("
+#define FOR_EACH_BIN_SUM(F) \\
+{nodes}
+",
             nodes = self.syntax.resolved_sums_of_interfaces_by_name()
                 .iter()
                 .sorted_by_key(|a| a.0)
@@ -1416,7 +1475,11 @@ enum class BinASTSum: uint16_t {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct sum types in the grammar. Used typically to maintain a probability table per sum type.\nconst size_t BINAST_NUMBER_OF_SUM_TYPES = {};\n\n\n",
+        buffer.push_str(&format!("
+// The number of distinct sum types in the grammar. Used typically to maintain a probability table per sum type.
+const size_t BINAST_NUMBER_OF_SUM_TYPES = {};
+
+",
             self.syntax.resolved_sums_of_interfaces_by_name().len()));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
@@ -1653,7 +1716,9 @@ impl CPPExporter {
         let kind = name.to_class_cases();
 
         if self.refgraph.is_used(name.to_rc_string().clone()) {
-            let rendered_bnf = format!("/*\n{name} ::= {nodes}\n*/",
+            let rendered_bnf = format!("/*
+{name} ::= {nodes}
+*/",
                 nodes = nodes.iter()
                     .format("\n    "),
                 name = name.to_str());
@@ -1673,7 +1738,8 @@ impl CPPExporter {
 
     MOZ_TRY(guard.done());
     return result;
-}}\n",
+}}
+",
                 bnf = rendered_bnf,
                 call = self.get_method_call("result", name,
                                             "Sum", INTERFACE_ARGS,
@@ -1720,7 +1786,9 @@ impl CPPExporter {
                 arm_after = rule_for_this_arm.after_arm.reindent("        ")
                     .newline_if_not_empty()));
         }
-        buffer.push_str(&format!("\n{first_line}
+        buffer.push_str(&format!("
+
+{first_line}
 {{
     {type_ok} result;
     switch (kind) {{{cases}
@@ -1774,7 +1842,8 @@ impl CPPExporter {
 {first_line}
 {{
     return raiseError(\"FIXME: Not implemented yet in this preview release ({kind})\");
-}}\n",
+}}
+",
                     first_line = first_line,
                     kind = kind,
                 );
@@ -1793,7 +1862,9 @@ impl CPPExporter {
         };
 
 
-        let rendered = format!("\n{first_line}
+        let rendered = format!("
+
+{first_line}
 {{
     uint32_t length;
     AutoList guard(*tokenizer_);
@@ -1809,7 +1880,8 @@ impl CPPExporter {
 
     MOZ_TRY(guard.done());
     return result;
-}}\n",
+}}
+",
             first_line = first_line,
             content_kind =
                 self.canonical_list_parsers.get(&parser.elements).unwrap() // Each list parser has a deduplicated representative
@@ -2083,7 +2155,10 @@ impl CPPExporter {
 
         if self.refgraph.is_used(name.to_rc_string().clone()) {
             // Generate comments
-            let comment = format!("\n/*\n{}*/\n", ToWebidl::interface(interface, "", "    "));
+            let comment = format!("
+/*
+{}*/
+", ToWebidl::interface(interface, "", "    "));
             buffer.push_str(&comment);
 
             // Generate public method
@@ -2367,8 +2442,12 @@ impl CPPExporter {
         buffer.push_str("\n");
 
         // 1. Typesums
-        buffer.push_str("\n\n// ----- Sums of interfaces (autogenerated, by lexicographical order)\n");
-        buffer.push_str("// Sums of sums are flattened.\n");
+        buffer.push_str("
+
+// ----- Sums of interfaces (autogenerated, by lexicographical order)
+");
+        buffer.push_str("// Sums of sums are flattened.
+");
 
         let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name()
             .iter()
@@ -2379,8 +2458,12 @@ impl CPPExporter {
         }
 
         // 2. Single interfaces
-        buffer.push_str("\n\n// ----- Interfaces (autogenerated, by lexicographical order)\n");
-        buffer.push_str("// When fields have a non-trivial type, implementation is deanonymized and delegated to another parser.\n");
+        buffer.push_str("
+
+// ----- Interfaces (autogenerated, by lexicographical order)
+");
+        buffer.push_str("// When fields have a non-trivial type, implementation is deanonymized and delegated to another parser.
+");
         let interfaces_by_name = self.syntax.interfaces_by_name()
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
@@ -2390,7 +2473,10 @@ impl CPPExporter {
         }
 
         // 3. String Enums
-        buffer.push_str("\n\n// ----- String enums (autogenerated, by lexicographical order)\n");
+        buffer.push_str("
+
+// ----- String enums (autogenerated, by lexicographical order)
+");
         {
             let string_enums_by_name = self.syntax.string_enums_by_name()
                 .iter()
@@ -2420,7 +2506,12 @@ impl CPPExporter {
                         .format("\n")
                 );
 
-                let rendered_doc = format!("/*\nenum {kind} {{\n{cases}\n}};\n*/\n",
+                let rendered_doc = format!("/*
+enum {kind} {{
+{cases}
+}};
+*/
+",
                     kind = kind,
                     cases = enum_.strings()
                             .iter()
@@ -2444,13 +2535,19 @@ impl CPPExporter {
         }
 
         // 4. Lists
-        buffer.push_str("\n\n// ----- Lists (autogenerated, by lexicographical order)\n");
+        buffer.push_str("
+
+// ----- Lists (autogenerated, by lexicographical order)
+");
         for parser in &self.list_parsers_to_generate {
             self.generate_implement_list(&mut buffer, parser);
         }
 
         // 5. Optional values
-        buffer.push_str("\n\n    // ----- Default values (by lexicographical order)\n");
+        buffer.push_str("
+
+    // ----- Default values (by lexicographical order)
+");
         for parser in &self.option_parsers_to_generate {
             self.generate_implement_option(&mut buffer, parser);
         }
