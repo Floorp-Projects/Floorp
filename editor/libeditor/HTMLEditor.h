@@ -1948,6 +1948,13 @@ class HTMLEditor final : public TextEditor,
       const nsAString& aBulletType,
       SelectAllOfCurrentList aSelectAllOfCurrentList);
 
+  /**
+   * If aNode is a text node that contains only collapsed whitespace or empty
+   * and editable.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteNodeIfInvisibleAndEditableTextNode(nsINode& aNode);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
