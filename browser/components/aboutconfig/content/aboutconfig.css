@@ -50,6 +50,9 @@ body.config-warning {
   background-size: 12px 12px;
   padding-inline-start: 30px;
   z-index: 1;
+  /* Set horizontal margin to 0 to ensure alignment with table. */
+  margin-right: 0;
+  margin-left: 0;
 }
 
 #about-config-search:dir(rtl) {
