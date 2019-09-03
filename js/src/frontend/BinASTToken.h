@@ -3746,6 +3746,11 @@ const char* describeBinASTInterfaceAndField(
  */
 const char* describeBinASTVariant(const BinASTVariant& variant);
 
+/**
+ * Return a string describing a `BinASTList`.
+ */
+const char* describeBinASTList(const BinASTList& list);
+
 }  // namespace frontend
 }  // namespace js
 
