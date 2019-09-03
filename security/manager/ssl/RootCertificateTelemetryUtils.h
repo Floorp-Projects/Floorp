@@ -17,9 +17,16 @@ namespace psm {
 // RootHashes.inc is updated to include them. 0 is reserved by
 // genRootCAHashes.js for the unknowns.
 #define ROOT_CERTIFICATE_UNKNOWN 0
+// 1 indicates the CA is not a built-in and comes from the softoken (cert9.db)
+#define ROOT_CERTIFICATE_SOFTOKEN 1
+// 2 indicates the CA is not a bilt-in and comes from an external PKCS#11 token
+#define ROOT_CERTIFICATE_EXTERNAL_TOKEN 2
+// 3 indicates the CA is not a built-in and comes from the OS via the
+// "Enterprise Roots" feature
+#define ROOT_CERTIFICATE_ENTERPRISE_ROOT 3
 #define ROOT_CERTIFICATE_HASH_FAILURE -1
 
-int32_t RootCABinNumber(const SECItem* cert);
+int32_t RootCABinNumber(const SECItem* cert, PK11SlotInfo* slot);
 
 void AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe,
                                   const CERTCertificate* cert);
