@@ -7,10 +7,11 @@
 #ifndef frontend_BinASTTokenReaderContext_h
 #define frontend_BinASTTokenReaderContext_h
 
+#include "mozilla/Array.h"       // mozilla::Array
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
-
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Variant.h"     // mozilla::Variant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
@@ -324,7 +325,7 @@ class HuffmanDictionary {
   //
   // The mapping from `(Interface, Field) -> index` is extracted statically from
   // the webidl specs.
-  Vector<HuffmanTable, BINAST_INTERFACE_AND_FIELD_LIMIT> fields;
+  mozilla::Array<HuffmanTable, BINAST_INTERFACE_AND_FIELD_LIMIT> fields;
 
   // Huffman tables for list lengths. Some tables may be
   // `HuffmanTableUnreacheable` if they represent lists that actually do not
@@ -332,7 +333,8 @@ class HuffmanDictionary {
   //
   // The mapping from `List -> index` is extracted statically from the webidl
   // specs.
-  Vector<HuffmanTableListLength, BINAST_NUMBER_OF_LIST_TYPES> listLengths;
+  mozilla::Array<HuffmanTableListLength, BINAST_NUMBER_OF_LIST_TYPES>
+      listLengths;
 };
 
 /**
