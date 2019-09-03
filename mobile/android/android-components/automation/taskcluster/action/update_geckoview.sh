@@ -40,25 +40,38 @@ git commit -m \
 	--author="MickeyMoz <sebastian@mozilla.com>" \
 || { echo "No new GeckoView version ($CHANNEL) available"; exit 0; }
 
+# This will be 'engine-gecko-$CHANNEL' for non-release channels.
+# Intentionally left empty.
+COMPONENT_NAME=
+
 # Build and test engine component as well as sample browser
 if [ "$CHANNEL" = "nightly" ]
 then
+    COMPONENT_NAME="engine-gecko-nightly"
     ./gradlew browser-engine-gecko-nightly:assemble \
           browser-engine-gecko-nightly:test \
           sample-browser:assembleGeckoNightlyUniversal
 elif [ "$CHANNEL" = "beta" ]
 then
+    COMPONENT_NAME="engine-gecko-beta"
     ./gradlew browser-engine-gecko-beta:assemble \
           browser-engine-gecko-beta:test \
           sample-browser:assembleGeckoBetaUniversal
 elif [ "$CHANNEL" = "release" ]
 then
+    COMPONENT_NAME="engine-gecko"
     ./gradlew browser-engine-gecko:assemble \
           browser-engine-gecko:test \
           sample-browser:assembleGeckoReleaseArm
 else
     echo "Unknown channel: $CHANNEL"
     exit 1
+fi
+
+# The build system automatically updates the docs. Add them to the
+# docs PR, if they exist.
+if git add components/browser/${COMPONENT_NAME}/docs/metrics.md ; then
+    git commit --no-edit --amend
 fi
 
 # Get token for using GitHub
