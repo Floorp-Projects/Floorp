@@ -1160,6 +1160,12 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
   MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant ||
              aAllowMode == eAllowOnAnySite);
 
+  if (!aParentPrincipal || !aTrackingPrincipal) {
+    LOG(("Invalid input arguments passed"));
+    return FirstPartyStorageAccessGrantPromise::CreateAndReject(false,
+                                                                __func__);
+  };
+
   nsCOMPtr<nsIURI> parentPrincipalURI;
   Unused << aParentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
   LOG_SPEC(("Saving a first-party storage permission on %s for "
