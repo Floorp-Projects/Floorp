@@ -532,19 +532,19 @@ class HuffmanPreludeReader {
     uint32_t code = 0;
     MOZ_TRY(table.impl.init(cx_, numberOfSymbols));
 
+    // Iterate through non-0 entries.
     size_t nextIndex = 1;
     for (size_t i = 0; i < numberOfSymbols; i = nextIndex) {
       // Look for the next non-0 length.
       // We are guaranteed to always have one as
       // `auxStorageBitLengths[numberOfSymbols] != 0`.
-      for (size_t j = i + 1; j <= numberOfSymbols; ++j) {
-        if (auxStorageBitLengths[j] != 0) {
-          nextIndex = j;
+      for (nextIndex = i + 1; nextIndex <= numberOfSymbols; ++nextIndex) {
+        if (auxStorageBitLengths[nextIndex] != 0) {
           break;
         }
       }
 
-      // Read the symbol.
+      // Read the symbol. We need to do this even if `bitLength == 0`.
       // If `Entry` is an indexed type, it is fetched directly from the grammar.
       BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>(entry, i));
 
@@ -567,6 +567,11 @@ class HuffmanPreludeReader {
       MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
 
       code = (code + 1) << (nextBitLength - bitLength);
+    }
+
+    if (table.impl.length() == 0) {
+      // At this stage, an empty table makes no sense.
+      return raiseInvalidTableData(entry.identity);
     }
 
     auxStorageBitLengths.clear();
@@ -1697,8 +1702,12 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Number>(
 // Read the number of symbols from the grammar.
 template <>
 MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
-    const List&) {
-  return 1;
+    const List& list) {
+  BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  if (length > MAX_NUMBER_OF_SYMBOLS) {
+    return raiseInvalidTableData(list.identity);
+  }
+  return length;
 }
 
 // Read a single symbol from the stream.
