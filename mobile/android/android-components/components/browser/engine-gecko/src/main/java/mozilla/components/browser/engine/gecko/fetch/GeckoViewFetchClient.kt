@@ -38,23 +38,15 @@ class GeckoViewFetchClient(
     internal var executor: GeckoWebExecutor = GeckoWebExecutor(runtime)
 
     @Throws(IOException::class)
-    @Suppress("ComplexMethod")
     override fun fetch(request: Request): Response {
-        val webRequest = with(request) {
-            WebRequest.Builder(url)
-                .method(method.name)
-                .addHeadersFrom(request, defaultHeaders)
-                .addBodyFrom(request)
-                .cacheMode(if (request.useCaches) CACHE_MODE_DEFAULT else CACHE_MODE_RELOAD)
-                .build()
-        }
+        val webRequest = request.toWebRequest(defaultHeaders)
 
         val readTimeOut = request.readTimeout ?: maxReadTimeOut
         val readTimeOutMillis = readTimeOut.let { (timeout, unit) ->
             unit.toMillis(timeout)
         }
 
-        try {
+        return try {
             var fetchFlags = 0
             if (request.cookiePolicy == Request.CookiePolicy.OMIT) {
                 fetchFlags += GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
@@ -63,7 +55,7 @@ class GeckoViewFetchClient(
                 fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
             }
             val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
-            return webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
+            webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()
         } catch (e: WebRequestError) {
@@ -75,6 +67,13 @@ class GeckoViewFetchClient(
         const val MAX_READ_TIMEOUT_MINUTES = 5L
     }
 }
+
+private fun Request.toWebRequest(defaultHeaders: Headers): WebRequest = WebRequest.Builder(url)
+    .method(method.name)
+    .addHeadersFrom(this, defaultHeaders)
+    .addBodyFrom(this)
+    .cacheMode(if (useCaches) CACHE_MODE_DEFAULT else CACHE_MODE_RELOAD)
+    .build()
 
 private fun WebRequest.Builder.addHeadersFrom(request: Request, defaultHeaders: Headers): WebRequest.Builder {
     defaultHeaders.filter { header ->

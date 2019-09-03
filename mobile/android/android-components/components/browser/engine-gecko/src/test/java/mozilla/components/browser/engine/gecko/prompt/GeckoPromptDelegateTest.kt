@@ -774,7 +774,6 @@ class GeckoPromptDelegateTest {
 
     @Test
     fun `Calling onColorPrompt must provide a Color PromptRequest`() {
-
         val mockSession = GeckoEngineSession(mock())
         var request: PromptRequest? = null
         var onConfirmWasCalled = false

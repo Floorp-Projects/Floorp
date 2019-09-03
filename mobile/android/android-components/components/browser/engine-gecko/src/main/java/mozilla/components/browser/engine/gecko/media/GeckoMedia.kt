@@ -49,7 +49,7 @@ internal class GeckoMedia(
 private class MediaDelegate(
     private val media: GeckoMedia
 ) : MediaElement.Delegate {
-    @Suppress("ComplexMethod")
+
     override fun onPlaybackStateChange(mediaElement: MediaElement, mediaState: Int) {
         when (mediaState) {
             MEDIA_STATE_PLAY -> media.playbackState = Media.PlaybackState.PLAY

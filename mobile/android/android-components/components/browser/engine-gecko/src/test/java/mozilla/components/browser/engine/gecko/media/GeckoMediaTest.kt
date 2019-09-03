@@ -81,6 +81,23 @@ class GeckoMediaTest {
     }
 
     @Test
+    fun `GeckoMedia observer is notified when its playback state changes`() {
+        val mediaElement: MediaElement = mock()
+
+        val media = GeckoMedia(mediaElement)
+
+        val captor = argumentCaptor<MediaElement.Delegate>()
+        verify(mediaElement).delegate = captor.capture()
+        val delegate = captor.value
+
+        val observer: Media.Observer = mock()
+        media.register(observer)
+
+        delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_PLAYING)
+        verify(observer).onPlaybackStateChanged(media, Media.PlaybackState.PLAYING)
+    }
+
+    @Test
     fun `GeckoMedia exposes Metadata`() {
         val mediaElement: MediaElement = mock()
 
