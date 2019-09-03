@@ -3275,9 +3275,9 @@ void nsStyleContent::TriggerImageLoads(Document& aDocument,
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
     : mContents(aSource.mContents),
-      mIncrements(aSource.mIncrements),
-      mResets(aSource.mResets),
-      mSets(aSource.mSets) {
+      mCounterIncrement(aSource.mCounterIncrement),
+      mCounterReset(aSource.mCounterReset),
+      mCounterSet(aSource.mCounterSet) {
   MOZ_COUNT_CTOR(nsStyleContent);
 }
 
@@ -3286,8 +3286,10 @@ nsChangeHint nsStyleContent::CalcDifference(
   // Unfortunately we need to reframe even if the content lengths are the same;
   // a simple reflow will not pick up different text or different image URLs,
   // since we set all that up in the CSSFrameConstructor
-  if (mContents != aNewData.mContents || mIncrements != aNewData.mIncrements ||
-      mResets != aNewData.mResets || mSets != aNewData.mSets) {
+  if (mContents != aNewData.mContents ||
+      mCounterIncrement != aNewData.mCounterIncrement ||
+      mCounterReset != aNewData.mCounterReset ||
+      mCounterSet != aNewData.mCounterSet) {
     return nsChangeHint_ReconstructFrame;
   }
 
