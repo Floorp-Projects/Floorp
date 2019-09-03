@@ -34,9 +34,7 @@ class AnnexB {
       mozilla::MediaRawData* aSample, bool aAddSPS = true);
   // Convert a sample from Annex B to AVCC.
   // an AVCC extradata must not be set.
-  static bool ConvertSampleToAVCC(
-      mozilla::MediaRawData* aSample,
-      const RefPtr<mozilla::MediaByteBuffer>& aAVCCHeader = nullptr);
+  static bool ConvertSampleToAVCC(mozilla::MediaRawData* aSample);
   static mozilla::Result<mozilla::Ok, nsresult> ConvertSampleTo4BytesAVCC(
       mozilla::MediaRawData* aSample);
 
