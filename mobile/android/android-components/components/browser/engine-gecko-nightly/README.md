@@ -14,6 +14,9 @@ implementation "org.mozilla.components:browser-engine-gecko-nightly:{latest-vers
 
 ### Integration with the Glean SDK
 
+#### Before using this component
+Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
+
 The [Glean SDK](../../../components/service/glean/README.md) can be used to collect [Gecko Telemetry](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html).
 Applications using both this component and the Glean SDK should setup the Gecko Telemetry delegate
 as shown below:

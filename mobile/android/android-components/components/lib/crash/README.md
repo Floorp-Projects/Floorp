@@ -92,7 +92,8 @@ CrashReporter(
 ### Sending crash reports to Glean
 
 [Glean](https://docs.telemetry.mozilla.org/concepts/glean/glean.html) is a new way to collect telemetry by Mozilla. 
-This will record crash counts as a labelled counter with each label corresponding to a specific type of crash (`native_code_crash`, and `unhandled_exception`, currently). The list of collected metrics is available in the [metrics.yaml file](metrics.yaml). 
+This will record crash counts as a labeled counter with each label corresponding to a specific type of crash (`native_code_crash`, and `unhandled_exception`, currently).
+The list of collected metrics is available in the [metrics.yaml file](metrics.yaml), with their documentation [living here](docs/metrics.md).
 Due to the fact that Glean can only be recorded to in the main process and lib-crash runs in a separate process when it runs to handle the crash, 
 lib-crash persists the data in a file format and then reads and records the data from the main process when the application is next run since the `GleanCrashReporterService`
 constructor is loaded from the main process.
@@ -108,7 +109,7 @@ CrashReporter(
 ```
 
 ⚠️ Note: In order for Glean to be able to record to metrics, it **MUST** be initialized within the application before instantiating the `GleanCrashReporterService` and registering it with the `CrashReporter`.
-⚠️ Note: Applications using the `GleanCrashReporterService` are required to undergo Data Collection Review for the crash counts that they will be collecting.
+⚠️ Note: Applications using the `GleanCrashReporterService` are **required** to undergo [Data Collection Review](https://wiki.mozilla.org/Firefox/Data_Collection) for the crash counts that they will be collecting.
 
 ### Showing a crash reporter prompt
 
