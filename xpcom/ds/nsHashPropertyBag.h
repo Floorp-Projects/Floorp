@@ -55,4 +55,8 @@ class nsHashPropertyBagCC final : public nsHashPropertyBagBase {
   virtual ~nsHashPropertyBagCC() {}
 };
 
+inline nsISupports* ToSupports(nsHashPropertyBagBase* aPropertyBag) {
+  return static_cast<nsIWritablePropertyBag*>(aPropertyBag);
+}
+
 #endif /* nsHashPropertyBag_h___ */

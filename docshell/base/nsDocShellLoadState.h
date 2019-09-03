@@ -35,7 +35,8 @@ class nsDocShellLoadState final {
   NS_INLINE_DECL_REFCOUNTING(nsDocShellLoadState);
 
   explicit nsDocShellLoadState(nsIURI* aURI);
-  explicit nsDocShellLoadState(mozilla::dom::DocShellLoadStateInit& aLoadState);
+  explicit nsDocShellLoadState(
+      const mozilla::dom::DocShellLoadStateInit& aLoadState);
 
   static nsresult CreateFromPendingChannel(nsIChildChannel* aPendingChannel,
                                            nsDocShellLoadState** aResult);

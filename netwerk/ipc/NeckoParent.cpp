@@ -18,6 +18,7 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
 #include "mozilla/net/DataChannelParent.h"
+#include "mozilla/net/DocumentChannelParent.h"
 #include "mozilla/net/SimpleChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/Unused.h"
@@ -403,6 +404,37 @@ mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
     const FTPChannelCreationArgs& aOpenArgs) {
   FTPChannelParent* p = static_cast<FTPChannelParent*>(aActor);
   if (!p->Init(aOpenArgs)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+already_AddRefed<PDocumentChannelParent>
+NeckoParent::AllocPDocumentChannelParent(
+    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+    const DocumentChannelCreationArgs& args) {
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+      GetRequestingPrincipal(Some(args.loadInfo()));
+
+  nsCOMPtr<nsILoadContext> loadContext;
+  const char* error = CreateChannelLoadContext(
+      aBrowser, Manager(), aSerialized, requestingPrincipal, loadContext);
+  if (error) {
+    return nullptr;
+  }
+  PBOverrideStatus overrideStatus =
+      PBOverrideStatusFromLoadContext(aSerialized);
+  RefPtr<DocumentChannelParent> p =
+      new DocumentChannelParent(aBrowser, loadContext, overrideStatus);
+  return p.forget();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
+    PDocumentChannelParent* aActor, const PBrowserOrId& aBrowser,
+    const SerializedLoadContext& aSerialized,
+    const DocumentChannelCreationArgs& aArgs) {
+  DocumentChannelParent* p = static_cast<DocumentChannelParent*>(aActor);
+  if (!p->Init(aArgs)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

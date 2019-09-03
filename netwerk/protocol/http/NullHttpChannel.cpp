@@ -12,7 +12,7 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel, nsIHttpChannel,
-                  nsITimedChannel)
+                  nsIIdentChannel, nsITimedChannel)
 
 NullHttpChannel::NullHttpChannel()
     : mAllRedirectsSameOrigin(false), mAllRedirectsPassTimingAllowCheck(false) {
