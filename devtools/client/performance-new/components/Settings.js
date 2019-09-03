@@ -346,7 +346,7 @@ class Settings extends PureComponent {
 
   _renderThreads() {
     return details(
-      { className: "perf-settings-details" },
+      { className: "perf-settings-details", onToggle: _handleToggle },
       summary(
         {
           className: "perf-settings-summary",
@@ -397,7 +397,7 @@ class Settings extends PureComponent {
 
   _renderFeatures() {
     return details(
-      { className: "perf-settings-details" },
+      { className: "perf-settings-details", onToggle: _handleToggle },
       summary(
         {
           className: "perf-settings-summary",
@@ -445,7 +445,10 @@ class Settings extends PureComponent {
   _renderLocalBuildSection() {
     const { objdirs } = this.props;
     return details(
-      { className: "perf-settings-details" },
+      {
+        className: "perf-settings-details",
+        onToggle: _handleToggle,
+      },
       summary(
         {
           className: "perf-settings-summary",
@@ -541,6 +544,12 @@ function _intervalTextDisplay(value) {
  */
 function _entriesTextDisplay(value) {
   return formatFileSize(value * PROFILE_ENTRY_SIZE);
+}
+
+function _handleToggle() {
+  if (window.gResizePopup) {
+    window.gResizePopup(document.body.clientHeight);
+  }
 }
 
 function mapStateToProps(state) {
