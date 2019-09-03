@@ -16,6 +16,8 @@ port.onMessage.addListener((event) => {
   }));
 });
 
+// We should use pagehide/pageshow events instead, to better handle page navigation events.
+// See https://github.com/mozilla-mobile/android-components/issues/2984.
 window.addEventListener("unload", (event) => { port.disconnect() }, false);
 
 /*

@@ -307,9 +307,9 @@ class FxaAccountManagerTest {
         assertEquals(0, syncStatusObserver.onErrorCount)
 
         // No periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY))).await()
 
-        assertEquals(setOf(SyncEngine.History), manager.supportedSyncEngines())
+        assertEquals(setOf(SyncEngine.HISTORY), manager.supportedSyncEngines())
         assertNotNull(latestSyncManager)
         assertNotNull(latestSyncManager?.dispatcher)
         assertNotNull(latestSyncManager?.dispatcher?.inner)
@@ -318,9 +318,9 @@ class FxaAccountManagerTest {
         verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // With periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History, SyncEngine.Passwords), 60 * 1000L)).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.PASSWORDS), 60 * 1000L)).await()
 
-        assertEquals(setOf(SyncEngine.History, SyncEngine.Passwords), manager.supportedSyncEngines())
+        assertEquals(setOf(SyncEngine.HISTORY, SyncEngine.PASSWORDS), manager.supportedSyncEngines())
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
         verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
@@ -364,7 +364,7 @@ class FxaAccountManagerTest {
 
         // With a sync config this time.
         var latestSyncManager: TestSyncManager? = null
-        val syncConfig = SyncConfig(setOf(SyncEngine.History), syncPeriodInMinutes = 120L)
+        val syncConfig = SyncConfig(setOf(SyncEngine.HISTORY), syncPeriodInMinutes = 120L)
         val manager = object : TestableFxaAccountManager(
             context = testContext,
             config = ServerConfig.release("dummyId", "http://auth-url/redirect"),
@@ -433,7 +433,7 @@ class FxaAccountManagerTest {
 //        assertEquals(1, syncStatusObserver.onErrorCount)
 
         // Turn off periodic syncing.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY))).await()
 
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()

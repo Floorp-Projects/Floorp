@@ -45,11 +45,11 @@ interface SyncStatusObserver {
 object GlobalSyncableStoreProvider {
     private val stores: MutableMap<String, SyncableStore> = mutableMapOf()
 
-    fun configureStore(storePair: Pair<String, SyncableStore>) {
-        stores[storePair.first] = storePair.second
+    fun configureStore(storePair: Pair<SyncEngine, SyncableStore>) {
+        stores[storePair.first.nativeName] = storePair.second
     }
 
-    fun getStore(name: String): SyncableStore? {
+    internal fun getStore(name: String): SyncableStore? {
         return stores[name]
     }
 }

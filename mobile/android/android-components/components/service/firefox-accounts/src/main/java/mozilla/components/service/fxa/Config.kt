@@ -44,9 +44,14 @@ data class SyncConfig(
 
 /**
  * Describes possible sync engines that device can support.
- */
-enum class SyncEngine {
-    History,
-    Bookmarks,
-    Passwords,
+ * @property nativeName Internally, Rust SyncManager represents engines as strings. Forward-compatibility
+ * with new engines is one of the reasons for this. E.g. during any sync, an engine may appear that we
+ * do not know about. At the public API level, we expose a concrete [SyncEngine] type to allow for more
+ * robust integrations. We do not expose "unknown" engines via our public API, but do handle them
+ * internally (by persisting their enabled/disabled status).
+*/
+enum class SyncEngine(val nativeName: String) {
+    HISTORY("history"),
+    BOOKMARKS("bookmarks"),
+    PASSWORDS("passwords"),
 }

@@ -43,5 +43,6 @@ dependencies {
     implementation project(':support-rusthttp')
     implementation project(':lib-fetch-httpurlconnection')
 
+    implementation Dependencies.kotlin_reflect
     implementation Dependencies.androidx_recyclerview
 }

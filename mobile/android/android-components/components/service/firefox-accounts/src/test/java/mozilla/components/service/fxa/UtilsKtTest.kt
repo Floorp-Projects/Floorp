@@ -188,11 +188,4 @@ class UtilsKtTest {
             throw FxaPanicException("dunno")
         }
     }
-
-    @Test
-    fun `sync engine native name conversions`() {
-        assertEquals("passwords", SyncEngine.Passwords.toNativeString())
-        assertEquals("history", SyncEngine.History.toNativeString())
-        assertEquals("bookmarks", SyncEngine.Bookmarks.toNativeString())
-    }
 }

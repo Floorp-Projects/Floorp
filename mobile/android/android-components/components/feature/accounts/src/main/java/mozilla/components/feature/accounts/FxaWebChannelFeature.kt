@@ -20,7 +20,6 @@ import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.toAuthType
-import mozilla.components.service.fxa.toNativeString
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
@@ -34,6 +33,8 @@ import java.util.WeakHashMap
  * For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
  * This feature uses a web extension to communicate with FxA Web Content.
  *
+ * Boilerplate around installing and communicating with the extension will be cleaned up as part https://github.com/mozilla-mobile/android-components/issues/4297.
+ *
  * @property context a reference to the context.
  * @property customTabSessionId optional custom tab session ID, if feature is being used with a custom tab.
  * @property engine a reference to application's browser engine.
@@ -41,7 +42,7 @@ import java.util.WeakHashMap
  * @property accountManager a reference to application's [FxaAccountManager].
  */
 @Suppress("TooManyFunctions")
-class WebChannelFeature(
+class FxaWebChannelFeature(
     private val context: Context,
     private val customTabSessionId: String?,
     private val engine: Engine,
@@ -74,12 +75,12 @@ class WebChannelFeature(
     /* ktlint-disable no-multi-spaces */
     /**
      * Communication channel is established from fxa-web-content to this class via webextension, as follows:
-     * [fxa-web-content] <--js events--> [fxawebchannel.js webextension] <--port messages--> [WebChannelFeature]
+     * [fxa-web-content] <--js events--> [fxawebchannel.js webextension] <--port messages--> [FxaWebChannelFeature]
      *
      * Overall message flow, as implemented by this class, is documented below. For detailed message descriptions, see:
      * https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md
      *
-     * [fxa-web-channel]            [WebChannelFeature]         Notes:
+     * [fxa-web-channel]            [FxaWebChannelFeature]         Notes:
      *     loaded           ------>          |                  fxa web content loaded
      *     fxa-status       ------>          |                  web content requests account status & device capabilities
      *        |             <------ fxa-status-response         this class responds, based on state of [accountManager]
@@ -269,7 +270,7 @@ class WebChannelFeature(
                         data.put("capabilities", JSONObject().also { capabilities ->
                             capabilities.put("engines", JSONArray().also { engines ->
                                 accountManager.supportedSyncEngines()?.forEach { engine ->
-                                    engines.put(engine.toNativeString())
+                                    engines.put(engine.nativeName)
                                 } ?: emptyArray<SyncEngine>()
                             })
                         })

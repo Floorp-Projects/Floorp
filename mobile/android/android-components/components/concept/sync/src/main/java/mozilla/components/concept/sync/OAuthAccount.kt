@@ -23,6 +23,7 @@ class AuthException(type: AuthExceptionType, cause: Exception? = null) : Throwab
 /**
  * An object that represents a login flow initiated by [OAuthAccount].
  * @property state OAuth state parameter, identifying a specific authentication flow.
+ * This string is randomly generated during [OAuthAccount.beginOAuthFlowAsync] and [OAuthAccount.beginPairingFlowAsync].
  * @property url Url which needs to be loaded to go through the authentication flow identified by [state].
  */
 data class AuthFlowUrl(val state: String, val url: String)

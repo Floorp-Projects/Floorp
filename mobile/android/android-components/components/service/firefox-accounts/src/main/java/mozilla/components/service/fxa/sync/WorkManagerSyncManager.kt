@@ -25,7 +25,6 @@ import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.authErrorRegistry
-import mozilla.components.service.fxa.toNativeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -218,7 +217,7 @@ class WorkManagerSyncDispatcher(
 
     private fun getWorkerData(): Data {
         val dataBuilder = Data.Builder().putStringArray(
-            KEY_DATA_STORES, supportedEngines.map { it.toNativeString() }.toTypedArray()
+            KEY_DATA_STORES, supportedEngines.map { it.nativeName }.toTypedArray()
         )
 
         return dataBuilder.build()
