@@ -872,7 +872,8 @@ nsresult InsertParagraphCommand::DoCommand(Command aCommand,
   if (!htmlEditor) {
     return NS_OK;  // Do nothing for now.
   }
-  nsresult rv = htmlEditor->InsertParagraphSeparatorAsAction(aPrincipal);
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->InsertParagraphSeparatorAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "InsertParagraphSeparatorAsAction() failed");
   return rv;
