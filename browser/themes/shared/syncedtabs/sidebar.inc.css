@@ -334,3 +334,10 @@ body[lwt-sidebar-highlight] .item.selected:focus > .item-title-container {
   background-color: var(--lwt-sidebar-highlight-background-color);
   color: var(--lwt-sidebar-highlight-text-color);
 }
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  .tabs-container .item-tabs-list .item-icon-container {
+    image-rendering: -moz-crisp-edges;
+  }
+}
