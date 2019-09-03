@@ -13,7 +13,6 @@ const {
   CLOSE_SEARCH,
   UPDATE_SEARCH_STATUS,
   SEARCH_STATUS,
-  SET_TARGET_SEARCH_RESULT,
 } = require("../constants");
 
 const {
@@ -23,9 +22,8 @@ const {
   getRequestById,
 } = require("../selectors/index");
 
-const { selectRequest } = require("./selection");
-const { selectDetailsPanelTab } = require("./ui");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
+
 const { searchInResource } = require("../workers/search/index");
 
 /**
@@ -212,34 +210,6 @@ function stopOngoingSearch() {
   };
 }
 
-/**
- * This action is fired when the user selects a search result
- * within the Search panel. It opens the details side bar and
- * selects the right side panel to show the context of the
- * clicked search result.
- */
-function navigate(searchResult) {
-  return (dispatch, getState) => {
-    // Store target search result in Search reducer. It's used
-    // for search result navigation within the side panels.
-    dispatch(setTargetSearchResult(searchResult));
-
-    // Preselect the right side panel.
-    dispatch(selectDetailsPanelTab(searchResult.panel));
-
-    // Select related request in the UI (it also opens the
-    // right side bar automatically).
-    dispatch(selectRequest(searchResult.parentResource.id));
-  };
-}
-
-function setTargetSearchResult(searchResult) {
-  return {
-    type: SET_TARGET_SEARCH_RESULT,
-    searchResult,
-  };
-}
-
 module.exports = {
   search,
   closeSearch,
@@ -247,6 +217,4 @@ module.exports = {
   clearSearchResults,
   addSearchQuery,
   toggleSearchPanel,
-  navigate,
-  setTargetSearchResult,
 };
