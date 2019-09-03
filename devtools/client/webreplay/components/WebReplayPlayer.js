@@ -9,6 +9,12 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { sortBy, range } = require("devtools/client/shared/vendor/lodash");
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "pointEquals",
+  "resource://devtools/shared/execution-point-utils.js"
+);
+
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
@@ -79,6 +85,15 @@ function getClosestMessage(messages, executionPoint) {
   return sortBy(messages, message =>
     Math.abs(progress - getMessageProgress(message))
   )[0];
+}
+
+function sameLocation(m1, m2) {
+  const f1 = m1.frame;
+  const f2 = m2.frame;
+
+  return (
+    f1.source === f2.source && f1.line === f2.line && f1.column === f2.column
+  );
 }
 
 /*
@@ -186,6 +201,10 @@ class WebReplayPlayer extends Component {
         executionPoint
       );
 
+      const pausedMessage = this.state.messages.find(message =>
+        pointEquals(message.executionPoint, executionPoint)
+      );
+
       this.setState({
         executionPoint,
         recordingEndpoint,
@@ -193,12 +212,13 @@ class WebReplayPlayer extends Component {
         seeking: false,
         recording: false,
         closestMessage,
+        pausedMessage,
       });
     }
   }
 
   onResumed(packet) {
-    this.setState({ paused: false, closestMessage: null });
+    this.setState({ paused: false, closestMessage: null, pausedMessage: null });
   }
 
   onProgress(packet) {
@@ -469,6 +489,7 @@ class WebReplayPlayer extends Component {
     const {
       messages,
       executionPoint,
+      pausedMessage,
       highlightedMessage,
       cachedPoints,
     } = this.state;
@@ -499,18 +520,29 @@ class WebReplayPlayer extends Component {
       message.executionPoint &&
       !cachedPoints.includes(message.executionPoint.progress);
 
+    const atPausedLocation =
+      pausedMessage && sameLocation(pausedMessage, message);
+
+    const { source, line, column } = message.frame;
+    const filename = source.split("/").pop();
+    let frameLocation = `${filename}:${line}`;
+    if (column > 100) {
+      frameLocation += `:${column}`;
+    }
+
     return dom.a({
       className: classname("message", {
         overlayed: isOverlayed,
         future: isFuture,
         highlighted: isHighlighted,
         uncached,
+        location: atPausedLocation,
       }),
       style: {
         left: `${Math.max(offset - markerWidth / 2, 0)}px`,
         zIndex: `${index + 100}`,
       },
-      title: getFormatStr("jumpMessage", index + 1),
+      title: getFormatStr("jumpMessage2", frameLocation),
       onClick: e => {
         e.preventDefault();
         e.stopPropagation();

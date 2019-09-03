@@ -437,8 +437,10 @@
   --progress-recording-background: hsl(0, 100%, 97%);
   --progress-playing-background: hsl(207, 100%, 97%);
   --recording-marker-background: hsl(14.9, 100%, 67%);
-  --recording-marker-background-hover: hsl(14.9, 100%, 47%);
   --replaying-marker-background: var(--blue-40);
+  --replaying-marker-highlighted-background: var(--blue-60);
+  --replaying-marker-location-background: var(--blue-50);
+  --recording-marker-background-hover: hsl(14.9, 100%, 47%);
   --replaying-marker-background-hover: var(--blue-60);
   --progress-recording-line: #d0021b;
   --progressbar-background: #fff;
@@ -459,6 +461,8 @@
   --recording-marker-background: #9b3131;
   --recording-marker-background-hover: #a82323;
   --replaying-marker-background: #266fb1;
+  --replaying-marker-highlighted-background: #3084d0;
+  --replaying-marker-location-background: #3084d0;
   --replaying-marker-background-hover: #3a8edb;
   --progressbar-background: #0c0c0d;
   --proggressbar-border-color: #31313d;
@@ -529,13 +533,17 @@
 }
 
 .webreplay-player .message.highlighted {
-  background-color: var(--blue-60);
+  background-color: var(--replaying-marker-highlighted-background);
   transform: scale(1.25);
   transition-duration: 100ms;
 }
 
 .webreplay-player .message.uncached {
   opacity: 0.5;
+}
+
+.webreplay-player .message.location {
+  background: var(--replaying-marker-location-background);
 }
 
 .webreplay-player .recording .message.highlighted {
