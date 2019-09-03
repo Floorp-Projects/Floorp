@@ -177,6 +177,33 @@ if CONFIG['LIBJPEG_TURBO_ASFLAGS']:
             'simd/i386/jsimd.c',
             'simd/i386/jsimdcpu.asm',
         ]
+elif CONFIG['CPU_ARCH'].startswith('ppc'):
+    # PowerPC has no assembly files, but still needs its own headers.
+    LOCAL_INCLUDES += ['/media/libjpeg/simd/powerpc']
+
+    # For libjpeg's internal runtime detection to work, jsimd.c must NOT
+    # be compiled with -maltivec (otherwise it gets statically set),
+    # but everything else should be. If -maltivec was already
+    # specified in .mozconfig, though, then this won't harm anything.
+    ppc_vmx_sources = [
+        'simd/powerpc/jccolor-altivec.c',
+        'simd/powerpc/jcgray-altivec.c',
+        'simd/powerpc/jcsample-altivec.c',
+        'simd/powerpc/jdcolor-altivec.c',
+        'simd/powerpc/jdmerge-altivec.c',
+        'simd/powerpc/jdsample-altivec.c',
+        'simd/powerpc/jfdctfst-altivec.c',
+        'simd/powerpc/jfdctint-altivec.c',
+        'simd/powerpc/jidctfst-altivec.c',
+        'simd/powerpc/jidctint-altivec.c',
+        'simd/powerpc/jquanti-altivec.c',
+    ]
+    SOURCES += ppc_vmx_sources
+    SOURCES += [
+        'simd/powerpc/jsimd.c',
+    ]
+    for srcfile in ppc_vmx_sources:
+        SOURCES[srcfile].flags += CONFIG['PPC_VMX_FLAGS']
 else: # No SIMD support?
     SOURCES += [
         'jsimd_none.c',
