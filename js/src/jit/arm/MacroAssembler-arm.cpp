@@ -5928,7 +5928,7 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   MOZ_ASSERT(ptr == ptrScratch);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   Scalar::Type type = access.type();
 
@@ -5999,7 +5999,7 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
   MOZ_ASSERT(ptr == ptrScratch);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   unsigned byteSize = access.byteSize();
   Scalar::Type type = access.type();
@@ -6060,7 +6060,7 @@ void MacroAssemblerARM::wasmUnalignedLoadImpl(
   MOZ_ASSERT(tmp != ptr);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   if (offset) {
     ScratchRegisterScope scratch(asMasm());
@@ -6152,7 +6152,7 @@ void MacroAssemblerARM::wasmUnalignedStoreImpl(
                 valOrTmp != val64.high && valOrTmp != val64.low);
 
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+  MOZ_ASSERT(offset < wasm::MaxOffsetGuardLimit);
 
   unsigned byteSize = access.byteSize();
   MOZ_ASSERT(byteSize == 8 || byteSize == 4 || byteSize == 2);
