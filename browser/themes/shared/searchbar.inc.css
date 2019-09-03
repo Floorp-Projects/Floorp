@@ -203,7 +203,7 @@
   min-height: 32px;
   border-top: 1px solid var(--panel-separator-color);
   background-color: var(--arrowpanel-dimmed);
-  color: var(--panel-disabled-color);
+  color: inherit !important; /* Overriding toolbarbutton.css on Linux. */
 }
 
 .search-setting-button-compact {
