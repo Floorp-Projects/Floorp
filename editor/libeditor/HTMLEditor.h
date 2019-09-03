@@ -1884,6 +1884,34 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE CreateElementResult ChangeListElementType(
       Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
 
+  /**
+   * ChangeSelectedHardLinesToList() converts selected ranges to specified
+   * list element.  If there is different type of list elements, this method
+   * converts them to specified list items too.  Basically, each hard line
+   * will be wrapped with a list item element.  However, only when `<p>`
+   * element is selected, its child `<br>` elements won't be treated as
+   * hard line separators.  Perhaps, this is a bug.
+   * NOTE: This method creates AutoSelectionRestorer.  Therefore, each caller
+   *       need to check if the editor is still available even if this returns
+   *       NS_OK.
+   *
+   * @param aListElementTagName         The new list element tag name.
+   * @param aSelectAllOfCurrentList     true if this should treat all of
+   *                                    ancestor list element at selection.
+   * @param aBulletType                 Can be nullptr.  If this is not a
+   *                                    nullptr and the value is not empty,
+   *                                    it's set to `type` attribute of new
+   *                                    list item elements.  Otherwise,
+   *                                    existing `type` attributes will be
+   *                                    removed.
+   * @param aListItemElementTagName     The new list item element tag name.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  ChangeSelectedHardLinesToList(nsAtom& aListElementTagName,
+                                bool aSelectAllOfCurrentList,
+                                const nsAString* aBulletType,
+                                nsAtom& aListItemElementTagName);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

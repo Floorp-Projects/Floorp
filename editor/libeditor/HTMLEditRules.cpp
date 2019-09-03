@@ -4003,8 +4003,6 @@ nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
 
-  *aHandled = true;
-
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
                       .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
@@ -4013,39 +4011,44 @@ nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
     }
   }
 
-  // MakeList() creates AutoSelectionRestorer.
+  // ChangeSelectedHardLinesToList() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = MakeList(listType, aEntireList, aBulletType, aCancel, *itemType);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
-      NS_WARN_IF(!CanHandleEditAction())) {
+  EditActionResult result =
+      MOZ_KnownLive(HTMLEditorRef())
+          .ChangeSelectedHardLinesToList(listType, aEntireList, aBulletType,
+                                         *itemType);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(result.Failed())) {
+    return result.Rv();
   }
+  *aCancel = result.Canceled();
+  *aHandled = result.Handled();
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
-                                 const nsAString* aBulletType, bool* aCancel,
-                                 nsAtom& aItemType) {
-  AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
+    nsAtom& aListElementTagName, bool aSelectAllOfCurrentList,
+    const nsAString* aBulletType, nsAtom& aListItemElementTagName) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+
+  AutoSelectionRestorer restoreSelectionLater(*this);
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
   Element* parentListElement =
-      aEntireList ? HTMLEditorRef().GetParentListElementAtSelection() : nullptr;
+      aSelectAllOfCurrentList ? GetParentListElementAtSelection() : nullptr;
   if (parentListElement) {
     arrayOfNodes.AppendElement(OwningNonNull<nsINode>(*parentListElement));
   } else {
-    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
     nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-                arrayOfNodes, EditSubAction::eCreateOrChangeList,
-                HTMLEditor::CollectNonEditableNodes::No);
+        SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+            arrayOfNodes, EditSubAction::eCreateOrChangeList,
+            CollectNonEditableNodes::No);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionResult(rv);
     }
   }
 
@@ -4053,8 +4056,7 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
   bool bOnlyBreaks = true;
   for (auto& curNode : arrayOfNodes) {
     // if curNode is not a Break or empty inline, we're done
-    if (!TextEditUtils::IsBreak(curNode) &&
-        !HTMLEditorRef().IsEmptyInineNode(curNode)) {
+    if (!TextEditUtils::IsBreak(curNode) && !IsEmptyInineNode(curNode)) {
       bOnlyBreaks = false;
       break;
     }
@@ -4066,94 +4068,82 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // if only breaks, delete them
     if (bOnlyBreaks) {
       for (auto& node : arrayOfNodes) {
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*node);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        nsresult rv = DeleteNodeWithTransaction(*node);
+        if (NS_WARN_IF(Destroyed())) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditActionResult(rv);
         }
       }
     }
 
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
 
     EditorDOMPoint atStartOfSelection(firstRange->StartRef());
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
 
     // Make sure we can put a list here.
-    if (!HTMLEditorRef().CanContainTag(*atStartOfSelection.GetContainer(),
-                                       aListType)) {
-      *aCancel = true;
-      return NS_OK;
+    if (!CanContainTag(*atStartOfSelection.GetContainer(),
+                       aListElementTagName)) {
+      return EditActionCanceled();
     }
 
     SplitNodeResult splitAtSelectionStartResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .MaybeSplitAncestorsForInsertWithTransaction(aListType,
-                                                         atStartOfSelection);
+        MaybeSplitAncestorsForInsertWithTransaction(aListElementTagName,
+                                                    atStartOfSelection);
     if (NS_WARN_IF(splitAtSelectionStartResult.Failed())) {
-      return splitAtSelectionStartResult.Rv();
+      return EditActionResult(splitAtSelectionStartResult.Rv());
     }
-    RefPtr<Element> theList =
-        MOZ_KnownLive(HTMLEditorRef())
-            .CreateNodeWithTransaction(
-                aListType, splitAtSelectionStartResult.SplitPoint());
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    RefPtr<Element> theList = CreateNodeWithTransaction(
+        aListElementTagName, splitAtSelectionStartResult.SplitPoint());
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(!theList)) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
 
-    RefPtr<Element> theListItem =
-        MOZ_KnownLive(HTMLEditorRef())
-            .CreateNodeWithTransaction(aItemType, EditorDOMPoint(theList, 0));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    RefPtr<Element> theListItem = CreateNodeWithTransaction(
+        aListItemElementTagName, EditorDOMPoint(theList, 0));
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(!theListItem)) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
 
     // remember our new block for postprocessing
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-        theListItem;
+    TopLevelEditSubActionDataRef().mNewBlockElement = theListItem;
     // Put selection in new list item and don't restore the Selection.
     restoreSelectionLater.Abort();
     ErrorResult error;
     SelectionRefPtr()->Collapse(EditorRawDOMPoint(theListItem, 0), error);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
-      return NS_ERROR_EDITOR_DESTROYED;
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (NS_WARN_IF(!error.Failed())) {
-      return error.StealNSResult();
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+    return EditActionResult(error.StealNSResult());
   }
 
   // if there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
   if (arrayOfNodes.Length() == 1) {
     if (Element* deepestDivBlockquoteOrListElement =
-            HTMLEditorRef()
-                .GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
-                    arrayOfNodes[0])) {
+            GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
+                arrayOfNodes[0])) {
       if (deepestDivBlockquoteOrListElement->IsAnyOfHTMLElements(
               nsGkAtoms::div, nsGkAtoms::blockquote)) {
         arrayOfNodes.Clear();
-        HTMLEditorRef().CollectChildren(
-            *deepestDivBlockquoteOrListElement, arrayOfNodes, 0,
-            HTMLEditor::CollectListChildren::No,
-            HTMLEditor::CollectTableChildren::No,
-            HTMLEditor::CollectNonEditableNodes::Yes);
+        CollectChildren(*deepestDivBlockquoteOrListElement, arrayOfNodes, 0,
+                        CollectListChildren::No, CollectTableChildren::No,
+                        CollectNonEditableNodes::Yes);
       } else {
         arrayOfNodes.ReplaceElementAt(
             0, OwningNonNull<nsINode>(*deepestDivBlockquoteOrListElement));
@@ -4169,9 +4159,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
 
   for (uint32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
-    RefPtr<Element> newBlock;
     if (NS_WARN_IF(!arrayOfNodes[i]->IsContent())) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
     OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
 
@@ -4182,297 +4171,307 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
       curList = nullptr;
     }
 
-    // If curNode is a break, delete it, and quit remembering prev list item.
-    // If an empty inline container, delete it, but still remember the previous
-    // item.
-    if (HTMLEditorRef().IsEditable(curNode) &&
-        (TextEditUtils::IsBreak(curNode) ||
-         HTMLEditorRef().IsEmptyInineNode(curNode))) {
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    // If current node is a `<br>` element, delete it and forget previous
+    // list item element.
+    // If current node is an empty inline node, just delete it.
+    if (IsEditable(curNode) &&
+        (curNode->IsHTMLElement(nsGkAtoms::br) || IsEmptyInineNode(curNode))) {
+      nsresult rv = DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionResult(rv);
       }
-      if (TextEditUtils::IsBreak(curNode)) {
+      if (curNode->IsHTMLElement(nsGkAtoms::br)) {
         prevListItem = nullptr;
       }
       continue;
     }
 
     if (HTMLEditUtils::IsList(curNode)) {
-      // do we have a curList already?
+      // If we met a list element and current list element is not a descendant
+      // of the list, append current node to end of the current list element.
+      // Then, wrap it with list item element and delete the old container.
       if (curList && !EditorUtils::IsDescendantOf(*curNode, *curList)) {
-        // move all of our children into curList.  cheezy way to do it: move
-        // whole list and then RemoveContainerWithTransaction() on the list.
-        // ChangeListElementType() first: that routine handles converting the
-        // list item types, if needed.
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .MoveNodeToEndWithTransaction(*curNode, *curList);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        nsresult rv = MoveNodeToEndWithTransaction(*curNode, *curList);
+        if (NS_WARN_IF(Destroyed())) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditActionResult(rv);
         }
         CreateElementResult convertListTypeResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .ChangeListElementType(MOZ_KnownLive(*curNode->AsElement()),
-                                       aListType, aItemType);
+            ChangeListElementType(MOZ_KnownLive(*curNode->AsElement()),
+                                  aListElementTagName, aListItemElementTagName);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
-          return convertListTypeResult.Rv();
+          return EditActionResult(convertListTypeResult.Rv());
         }
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RemoveBlockContainerWithTransaction(
-                     MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        rv = RemoveBlockContainerWithTransaction(
+            MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
+        if (NS_WARN_IF(Destroyed())) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditActionResult(rv);
         }
-        newBlock = convertListTypeResult.forget();
-      } else {
-        // replace list with new list type
-        CreateElementResult convertListTypeResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .ChangeListElementType(MOZ_KnownLive(*curNode->AsElement()),
-                                       aListType, aItemType);
-        if (NS_WARN_IF(convertListTypeResult.Failed())) {
-          return convertListTypeResult.Rv();
-        }
-        curList = convertListTypeResult.forget();
+        prevListItem = nullptr;
+        continue;
       }
+
+      // If current list element is in found list element or we've not met a
+      // list element, convert current list element to proper type.
+      CreateElementResult convertListTypeResult =
+          ChangeListElementType(MOZ_KnownLive(*curNode->AsElement()),
+                                aListElementTagName, aListItemElementTagName);
+      if (NS_WARN_IF(convertListTypeResult.Failed())) {
+        return EditActionResult(convertListTypeResult.Rv());
+      }
+      curList = convertListTypeResult.forget();
       prevListItem = nullptr;
       continue;
     }
 
     EditorDOMPoint atCurNode(curNode);
     if (NS_WARN_IF(!atCurNode.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionResult(NS_ERROR_FAILURE);
     }
     MOZ_ASSERT(atCurNode.IsSetAndValid());
     if (HTMLEditUtils::IsListItem(curNode)) {
-      if (!atCurNode.IsContainerHTMLElement(&aListType)) {
-        // list item is in wrong type of list. if we don't have a curList,
-        // split the old list and make a new list of correct type.
+      // If current list item element is not in proper list element, we need
+      // to conver the list element.
+      if (!atCurNode.IsContainerHTMLElement(&aListElementTagName)) {
+        // If we've not met a list element or current node is not in current
+        // list element, insert a list element at current node and set
+        // current list element to the new one.
         if (!curList || EditorUtils::IsDescendantOf(*curNode, *curList)) {
           if (NS_WARN_IF(!atCurNode.GetContainerAsContent())) {
-            return NS_ERROR_FAILURE;
+            return EditActionResult(NS_ERROR_FAILURE);
           }
           ErrorResult error;
           nsCOMPtr<nsIContent> newLeftNode =
-              MOZ_KnownLive(HTMLEditorRef())
-                  .SplitNodeWithTransaction(atCurNode, error);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+              SplitNodeWithTransaction(atCurNode, error);
+          if (NS_WARN_IF(Destroyed())) {
             error.SuppressException();
-            return NS_ERROR_EDITOR_DESTROYED;
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(error.Failed())) {
-            return error.StealNSResult();
+            return EditActionResult(error.StealNSResult());
           }
-          newBlock = newLeftNode ? newLeftNode->AsElement() : nullptr;
-          curList =
-              MOZ_KnownLive(HTMLEditorRef())
-                  .CreateNodeWithTransaction(
-                      aListType, EditorDOMPoint(atCurNode.GetContainer()));
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+          curList = CreateNodeWithTransaction(
+              aListElementTagName, EditorDOMPoint(atCurNode.GetContainer()));
+          if (NS_WARN_IF(Destroyed())) {
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(!curList)) {
-            return NS_ERROR_FAILURE;
+            return EditActionResult(NS_ERROR_FAILURE);
           }
         }
-        // move list item to new list
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .MoveNodeToEndWithTransaction(*curNode, *curList);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        // Then, move current node into current list element.
+        nsresult rv = MoveNodeToEndWithTransaction(*curNode, *curList);
+        if (NS_WARN_IF(Destroyed())) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditActionResult(rv);
         }
-        // convert list item type if needed
-        if (!curNode->IsHTMLElement(&aItemType)) {
-          newBlock = MOZ_KnownLive(HTMLEditorRef())
-                         .ReplaceContainerWithTransaction(
-                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+        // Convert list item type if current node is different list item type.
+        if (!curNode->IsHTMLElement(&aListItemElementTagName)) {
+          RefPtr<Element> newListItemElement = ReplaceContainerWithTransaction(
+              MOZ_KnownLive(*curNode->AsElement()), aListItemElementTagName);
+          if (NS_WARN_IF(Destroyed())) {
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
-          if (NS_WARN_IF(!newBlock)) {
-            return NS_ERROR_FAILURE;
+          if (NS_WARN_IF(!newListItemElement)) {
+            return EditActionResult(NS_ERROR_FAILURE);
           }
         }
       } else {
-        // item is in right type of list.  But we might still have to move it.
-        // and we might need to convert list item types.
+        // If we've not met a list element, set current list element to the
+        // parent of current list item element.
         if (!curList) {
           curList = atCurNode.GetContainerAsElement();
-        } else if (atCurNode.GetContainer() != curList) {
-          // move list item to new list
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .MoveNodeToEndWithTransaction(*curNode, *curList);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+          NS_WARNING_ASSERTION(
+              HTMLEditUtils::IsList(curList),
+              "Current list item parent is not a list element");
+        }
+        // If current list item element is not a child of current list element,
+        // move it into current list item.
+        else if (atCurNode.GetContainer() != curList) {
+          nsresult rv = MoveNodeToEndWithTransaction(*curNode, *curList);
+          if (NS_WARN_IF(Destroyed())) {
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
+            return EditActionResult(rv);
           }
         }
-        if (!curNode->IsHTMLElement(&aItemType)) {
-          newBlock = MOZ_KnownLive(HTMLEditorRef())
-                         .ReplaceContainerWithTransaction(
-                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
+        // Then, if current list item element is not proper type for current
+        // list element, convert list item element to proper element.
+        if (!curNode->IsHTMLElement(&aListItemElementTagName)) {
+          RefPtr<Element> newListItemElement = ReplaceContainerWithTransaction(
+              MOZ_KnownLive(*curNode->AsElement()), aListItemElementTagName);
+          if (NS_WARN_IF(Destroyed())) {
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
-          if (NS_WARN_IF(!newBlock)) {
-            return NS_ERROR_FAILURE;
+          if (NS_WARN_IF(!newListItemElement)) {
+            return EditActionResult(NS_ERROR_FAILURE);
           }
         }
       }
-      nsCOMPtr<Element> curElement = do_QueryInterface(curNode);
+      Element* curElement = Element::FromNode(curNode);
       if (NS_WARN_IF(!curElement)) {
-        return NS_ERROR_FAILURE;
+        return EditActionResult(NS_ERROR_FAILURE);
       }
+      // If bullet type is specified, set list type attribute.
+      // XXX Cannot we set type attribute before inserting the list item
+      //     element into the DOM tree?
       if (aBulletType && !aBulletType->IsEmpty()) {
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .SetAttributeWithTransaction(
-                              *curElement, *nsGkAtoms::type, *aBulletType);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+        nsresult rv = SetAttributeWithTransaction(
+            MOZ_KnownLive(*curElement), *nsGkAtoms::type, *aBulletType);
+        if (NS_WARN_IF(Destroyed())) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+          return EditActionResult(rv);
         }
-      } else {
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .RemoveAttributeWithTransaction(*curElement, *nsGkAtoms::type);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        continue;
+      }
+
+      // Otherwise, remove list type attribute if there is.
+      if (!curElement->HasAttr(nsGkAtoms::type)) {
+        continue;
+      }
+      nsresult rv = RemoveAttributeWithTransaction(MOZ_KnownLive(*curElement),
+                                                   *nsGkAtoms::type);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionResult(rv);
       }
       continue;
     }
 
-    // if we hit a div clear our prevListItem, insert divs contents
-    // into our node array, and remove the div
+    MOZ_ASSERT(!HTMLEditUtils::IsList(curNode) &&
+               !HTMLEditUtils::IsListItem(curNode));
+
+    // If current node is a `<div>` element, replace it in the array with
+    // its children.
+    // XXX I think that this should be done when we collect the nodes above.
+    //     Then, we can change this `for` loop to ranged-for loop.
     if (curNode->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
-      HTMLEditorRef().CollectChildren(*curNode, arrayOfNodes, i + 1,
-                                      HTMLEditor::CollectListChildren::Yes,
-                                      HTMLEditor::CollectTableChildren::Yes,
-                                      HTMLEditor::CollectNonEditableNodes::Yes);
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .RemoveContainerWithTransaction(
-                            MOZ_KnownLive(*curNode->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      CollectChildren(*curNode, arrayOfNodes, i + 1, CollectListChildren::Yes,
+                      CollectTableChildren::Yes, CollectNonEditableNodes::Yes);
+      nsresult rv =
+          RemoveContainerWithTransaction(MOZ_KnownLive(*curNode->AsElement()));
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionResult(rv);
       }
       listCount = arrayOfNodes.Length();
       continue;
     }
 
-    // need to make a list to put things in if we haven't already,
+    // If we've not met a list element, create a list element and make it
+    // current list element.
     if (!curList) {
       SplitNodeResult splitCurNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeSplitAncestorsForInsertWithTransaction(aListType,
-                                                           atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(aListElementTagName,
+                                                      atCurNode);
       if (NS_WARN_IF(splitCurNodeResult.Failed())) {
-        return splitCurNodeResult.Rv();
+        return EditActionResult(splitCurNodeResult.Rv());
       }
-      curList = MOZ_KnownLive(HTMLEditorRef())
-                    .CreateNodeWithTransaction(aListType,
-                                               splitCurNodeResult.SplitPoint());
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      prevListItem = nullptr;
+      curList = CreateNodeWithTransaction(aListElementTagName,
+                                          splitCurNodeResult.SplitPoint());
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(!curList)) {
-        return NS_ERROR_FAILURE;
+        return EditActionResult(NS_ERROR_FAILURE);
       }
-      // remember our new block for postprocessing
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement = curList;
-      // curList is now the correct thing to put curNode in
-      prevListItem = nullptr;
+      // Set new block element of top level edit sub-action to the new list
+      // element for setting selection into it.
+      // XXX This must be wrong.  If we're handling nested edit action,
+      //     we shouldn't overwrite the new block element.
+      TopLevelEditSubActionDataRef().mNewBlockElement = curList;
 
       // atCurNode is now referring the right node with mOffset but
       // referring the left node with mRef.  So, invalidate it now.
       atCurNode.Clear();
     }
 
-    // if curNode isn't a list item, we must wrap it in one
-    nsCOMPtr<Element> listItem;
-    if (!HTMLEditUtils::IsListItem(curNode)) {
-      if (HTMLEditor::NodeIsInlineStatic(curNode) && prevListItem) {
-        // this is a continuation of some inline nodes that belong together in
-        // the same list item.  use prevListItem
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .MoveNodeToEndWithTransaction(*curNode, *prevListItem);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } else {
-        // don't wrap li around a paragraph.  instead replace paragraph with li
-        if (curNode->IsHTMLElement(nsGkAtoms::p)) {
-          listItem = MOZ_KnownLive(HTMLEditorRef())
-                         .ReplaceContainerWithTransaction(
-                             MOZ_KnownLive(*curNode->AsElement()), aItemType);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(!listItem)) {
-            return NS_ERROR_FAILURE;
-          }
-        } else {
-          listItem = MOZ_KnownLive(HTMLEditorRef())
-                         .InsertContainerWithTransaction(*curNode, aItemType);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(!listItem)) {
-            return NS_ERROR_FAILURE;
-          }
-        }
-        if (HTMLEditor::NodeIsInlineStatic(curNode)) {
-          prevListItem = listItem;
-        } else {
-          prevListItem = nullptr;
-        }
-      }
-    } else {
-      listItem = curNode->AsElement();
-    }
-
-    if (listItem) {
-      // if we made a new list item, deal with it: tuck the listItem into the
-      // end of the active list
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeToEndWithTransaction(*listItem, *curList);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    // If we're currently handling contents of a list item and current node
+    // is not a block element, move current node into the list item.
+    if (HTMLEditor::NodeIsInlineStatic(curNode) && prevListItem) {
+      nsresult rv = MoveNodeToEndWithTransaction(*curNode, *prevListItem);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return EditActionResult(rv);
       }
+      continue;
     }
+
+    // If current node is a paragraph, that means that it does not contain
+    // block children so that we can just replace it with new list item
+    // element and move it into current list element.
+    // XXX This is too rough handling.  If web apps modifies DOM tree directly,
+    //     any elements can have block elements as children.
+    if (curNode->IsHTMLElement(nsGkAtoms::p)) {
+      RefPtr<Element> newListItemElement = ReplaceContainerWithTransaction(
+          MOZ_KnownLive(*curNode->AsElement()), aListItemElementTagName);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(!newListItemElement)) {
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
+      prevListItem = nullptr;
+      nsresult rv = MoveNodeToEndWithTransaction(*newListItemElement, *curList);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionResult(rv);
+      }
+      // XXX Why don't we set `type` attribute here??
+      continue;
+    }
+
+    // If current node is not a paragraph, wrap current node with new list
+    // item element and move it into current list element.
+    RefPtr<Element> newListItemElement =
+        InsertContainerWithTransaction(*curNode, aListItemElementTagName);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(!newListItemElement)) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    // If current node is not a block element, new list item should have
+    // following inline nodes too.
+    if (HTMLEditor::NodeIsInlineStatic(curNode)) {
+      prevListItem = newListItemElement;
+    } else {
+      prevListItem = nullptr;
+    }
+    nsresult rv = MoveNodeToEndWithTransaction(*newListItemElement, *curList);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionResult(rv);
+    }
+    // XXX Why don't we set `type` attribute here??
   }
 
-  return NS_OK;
+  return EditActionHandled();
 }
 
 nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
