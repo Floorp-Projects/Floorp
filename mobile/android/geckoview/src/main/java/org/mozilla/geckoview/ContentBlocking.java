@@ -752,6 +752,8 @@ public class ContentBlocking {
 
     // Match flags with nsIWebProgressListener.idl.
     private static final long STATE_COOKIES_LOADED = 0x8000L;
+    private static final long STATE_COOKIES_LOADED_TRACKER = 0x40000L;
+    private static final long STATE_COOKIES_LOADED_SOCIALTRACKER = 0x80000L;
     private static final long STATE_COOKIES_BLOCKED_TRACKER = 0x20000000L;
     private static final long STATE_COOKIES_BLOCKED_ALL = 0x40000000L;
     private static final long STATE_COOKIES_BLOCKED_FOREIGN = 0x80L;
@@ -775,7 +777,11 @@ public class ContentBlocking {
         if ((geckoCat & STATE_COOKIES_BLOCKED_FOREIGN) != 0) {
             return CookieBehavior.ACCEPT_FIRST_PARTY;
         }
-        if ((geckoCat & STATE_COOKIES_BLOCKED_TRACKER) != 0) {
+        // If we receive STATE_COOKIES_LOADED_{SOCIAL,}TRACKER we know that this
+        // setting would block this cookie.
+        if ((geckoCat & (STATE_COOKIES_BLOCKED_TRACKER |
+                         STATE_COOKIES_LOADED_TRACKER |
+                         STATE_COOKIES_LOADED_SOCIALTRACKER)) != 0) {
             return CookieBehavior.ACCEPT_NON_TRACKERS;
         }
         if ((geckoCat & STATE_COOKIES_BLOCKED_ALL) != 0) {

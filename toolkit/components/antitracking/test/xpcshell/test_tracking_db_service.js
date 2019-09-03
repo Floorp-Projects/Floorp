@@ -66,12 +66,20 @@ const LOG = {
   "https://7.example.com": [
     [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED, true, 1],
   ],
-  // Cookie blocked for other reason (not a tracker)
+  // Tracker cookie loaded but not blocked.
   "https://8.example.com": [
+    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER, true, 1],
+  ],
+  // Social tracker cookie loaded but not blocked.
+  "https://9.example.com": [
+    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1],
+  ],
+  // Cookie blocked for other reason (not a tracker)
+  "https://10.example.com": [
     [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION, true, 2],
   ],
   // Fingerprinters set to block, but this one has an exception
-  "https://9.example.com": [
+  "https://11.example.com": [
     [Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT, false, 1],
   ],
 };

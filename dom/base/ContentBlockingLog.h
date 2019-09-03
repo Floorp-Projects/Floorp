@@ -38,6 +38,8 @@ class ContentBlockingLog final {
 
     bool mHasTrackingContentLoaded;
     Maybe<bool> mHasCookiesLoaded;
+    Maybe<bool> mHasTrackerCookiesLoaded;
+    Maybe<bool> mHasSocialTrackerCookiesLoaded;
     nsTArray<LogEntry> mLogs;
   };
 
@@ -97,16 +99,7 @@ class ContentBlockingLog final {
         return;
       }
 
-      if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        entry.mData->mHasTrackingContentLoaded = aBlocked;
-        return;
-      }
-      if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
-        if (entry.mData->mHasCookiesLoaded.isSome()) {
-          entry.mData->mHasCookiesLoaded.ref() = aBlocked;
-        } else {
-          entry.mData->mHasCookiesLoaded.emplace(aBlocked);
-        }
+      if (RecordLogEntryInCustomField(aType, entry, aBlocked)) {
         return;
       }
       if (!entry.mData->mLogs.IsEmpty()) {
@@ -152,6 +145,13 @@ class ContentBlockingLog final {
     } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
       MOZ_ASSERT(entry->mData->mHasCookiesLoaded.isNothing());
       entry->mData->mHasCookiesLoaded.emplace(aBlocked);
+    } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
+      MOZ_ASSERT(entry->mData->mHasTrackerCookiesLoaded.isNothing());
+      entry->mData->mHasTrackerCookiesLoaded.emplace(aBlocked);
+    } else if (aType ==
+               nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
+      MOZ_ASSERT(entry->mData->mHasSocialTrackerCookiesLoaded.isNothing());
+      entry->mData->mHasSocialTrackerCookiesLoaded.emplace(aBlocked);
     } else {
       entry->mData->mLogs.AppendElement(
           LogEntry{aType, 1u, aBlocked, aReason,
@@ -175,24 +175,7 @@ class ContentBlockingLog final {
 
       w.StartArrayProperty(entry.mOrigin.get(), w.SingleLineStyle);
 
-      if (entry.mData->mHasTrackingContentLoaded) {
-        w.StartArrayElement(w.SingleLineStyle);
-        {
-          w.IntElement(nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
-          w.BoolElement(true);  // blocked
-          w.IntElement(1);      // repeat count
-        }
-        w.EndArray();
-      }
-      if (entry.mData->mHasCookiesLoaded.isSome()) {
-        w.StartArrayElement(w.SingleLineStyle);
-        {
-          w.IntElement(nsIWebProgressListener::STATE_COOKIES_LOADED);
-          w.BoolElement(entry.mData->mHasCookiesLoaded.value());  // blocked
-          w.IntElement(1);  // repeat count
-        }
-        w.EndArray();
-      }
+      StringifyCustomFields(entry, w);
       for (const LogEntry& item : entry.mData->mLogs) {
         w.StartArrayElement(w.SingleLineStyle);
         {
@@ -232,6 +215,18 @@ class ContentBlockingLog final {
             entry.mData->mHasCookiesLoaded.value()) {
           return true;
         }
+      } else if (aType ==
+                 nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
+        if (entry.mData->mHasTrackerCookiesLoaded.isSome() &&
+            entry.mData->mHasTrackerCookiesLoaded.value()) {
+          return true;
+        }
+      } else if (aType ==
+                 nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
+        if (entry.mData->mHasSocialTrackerCookiesLoaded.isSome() &&
+            entry.mData->mHasSocialTrackerCookiesLoaded.value()) {
+          return true;
+        }
       } else {
         for (const auto& item : entry.mData->mLogs) {
           if (((item.mType & aType) != 0) && item.mBlocked) {
@@ -254,6 +249,85 @@ class ContentBlockingLog final {
                                 entry.mData->mLogs.ShallowSizeOfExcludingThis(
                                     aSizes.mState.mMallocSizeOf);
       }
+    }
+  }
+
+ private:
+  bool RecordLogEntryInCustomField(uint32_t aType, OriginEntry& aEntry,
+                                   bool aBlocked) {
+    if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
+      aEntry.mData->mHasTrackingContentLoaded = aBlocked;
+      return true;
+    }
+    if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+      if (aEntry.mData->mHasCookiesLoaded.isSome()) {
+        aEntry.mData->mHasCookiesLoaded.ref() = aBlocked;
+      } else {
+        aEntry.mData->mHasCookiesLoaded.emplace(aBlocked);
+      }
+      return true;
+    }
+    if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
+      if (aEntry.mData->mHasTrackerCookiesLoaded.isSome()) {
+        aEntry.mData->mHasTrackerCookiesLoaded.ref() = aBlocked;
+      } else {
+        aEntry.mData->mHasTrackerCookiesLoaded.emplace(aBlocked);
+      }
+      return true;
+    }
+    if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
+      if (aEntry.mData->mHasSocialTrackerCookiesLoaded.isSome()) {
+        aEntry.mData->mHasSocialTrackerCookiesLoaded.ref() = aBlocked;
+      } else {
+        aEntry.mData->mHasSocialTrackerCookiesLoaded.emplace(aBlocked);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  void StringifyCustomFields(const OriginEntry& aEntry, JSONWriter& aWriter) {
+    if (aEntry.mData->mHasTrackingContentLoaded) {
+      aWriter.StartArrayElement(aWriter.SingleLineStyle);
+      {
+        aWriter.IntElement(
+            nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+        aWriter.BoolElement(true);  // blocked
+        aWriter.IntElement(1);      // repeat count
+      }
+      aWriter.EndArray();
+    }
+    if (aEntry.mData->mHasCookiesLoaded.isSome()) {
+      aWriter.StartArrayElement(aWriter.SingleLineStyle);
+      {
+        aWriter.IntElement(nsIWebProgressListener::STATE_COOKIES_LOADED);
+        aWriter.BoolElement(
+            aEntry.mData->mHasCookiesLoaded.value());  // blocked
+        aWriter.IntElement(1);                         // repeat count
+      }
+      aWriter.EndArray();
+    }
+    if (aEntry.mData->mHasTrackerCookiesLoaded.isSome()) {
+      aWriter.StartArrayElement(aWriter.SingleLineStyle);
+      {
+        aWriter.IntElement(
+            nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER);
+        aWriter.BoolElement(
+            aEntry.mData->mHasTrackerCookiesLoaded.value());  // blocked
+        aWriter.IntElement(1);                                // repeat count
+      }
+      aWriter.EndArray();
+    }
+    if (aEntry.mData->mHasSocialTrackerCookiesLoaded.isSome()) {
+      aWriter.StartArrayElement(aWriter.SingleLineStyle);
+      {
+        aWriter.IntElement(
+            nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER);
+        aWriter.BoolElement(
+            aEntry.mData->mHasSocialTrackerCookiesLoaded.value());  // blocked
+        aWriter.IntElement(1);  // repeat count
+      }
+      aWriter.EndArray();
     }
   }
 
