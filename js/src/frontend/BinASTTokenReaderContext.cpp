@@ -495,6 +495,24 @@ class HuffmanPreludeReader {
 
     MOZ_ASSERT(numberOfSymbols <= MAX_NUMBER_OF_SYMBOLS);
 
+    if (numberOfSymbols == 1) {
+      // Special case: only one symbol.
+      BINJS_MOZ_TRY_DECL(bitLength, reader.readByte<Compression::No>());
+      if (bitLength != 0) {
+        // Since there is a single symbol, it doesn't make sense to have a non-0
+        // bit length.
+        return raiseInvalidTableData(entry.identity);
+      }
+
+      // Read the symbol.
+      // If `Entry` is an indexed type, it is fetched directly from the grammar.
+      BINJS_MOZ_TRY_DECL(
+          symbol, readSymbol<Entry>(entry, /* First and only value */ 0));
+
+      MOZ_TRY(table.impl.initWithSingleValue(cx_, std::move(symbol)));
+      return Ok();
+    }
+
     // Data is presented in an order that doesn't match our memory
     // representation, so we need to copy `numberOfSymbols` entries.
     // We use an auxiliary vector to avoid allocating each time.
@@ -505,10 +523,6 @@ class HuffmanPreludeReader {
     // First read the bit lengths for all symbols.
     for (size_t i = 0; i < numberOfSymbols; ++i) {
       BINJS_MOZ_TRY_DECL(bitLength, reader.readByte<Compression::No>());
-      if (bitLength == 0) {
-        // A value with a bits length of 0? That makes no sense.
-        return raiseInvalidTableData(entry.identity);
-      }
       BINJS_TRY(auxStorageBitLengths.append(bitLength));
     }
     // Append a terminator.
@@ -518,19 +532,37 @@ class HuffmanPreludeReader {
     uint32_t code = 0;
     MOZ_TRY(table.impl.init(cx_, numberOfSymbols));
 
-    for (size_t i = 0; i < numberOfSymbols; ++i) {
-      const auto bitLength = auxStorageBitLengths[i];
-      const auto nextBitLength =
-          auxStorageBitLengths[i + 1];  // Valid thanks to the terminator.
-      if (bitLength > nextBitLength) {
-        // By format invariant, bit lengths are always ranked by increasing
-        // order.
-        return raiseInvalidTableData(entry.identity);
+    size_t nextIndex = 1;
+    for (size_t i = 0; i < numberOfSymbols; i = nextIndex) {
+      // Look for the next non-0 length.
+      // We are guaranteed to always have one as
+      // `auxStorageBitLengths[numberOfSymbols] != 0`.
+      for (size_t j = i + 1; j <= numberOfSymbols; ++j) {
+        if (auxStorageBitLengths[j] != 0) {
+          nextIndex = j;
+          break;
+        }
       }
 
       // Read the symbol.
       // If `Entry` is an indexed type, it is fetched directly from the grammar.
       BINJS_MOZ_TRY_DECL(symbol, readSymbol<Entry>(entry, i));
+
+      const auto bitLength = auxStorageBitLengths[i];
+      if (bitLength == 0) {
+        // In a table with multiple values, we use a bitLength of 0 to represent
+        // an absent symbol, so let's skip to `nextIndex`.
+        continue;
+      }
+
+      // Look for the next non-0.
+      const auto nextBitLength =
+          auxStorageBitLengths[nextIndex];  // Valid thanks to the terminator.
+      if (bitLength > nextBitLength) {
+        // By format invariant, bit lengths are always ranked by increasing
+        // order.
+        return raiseInvalidTableData(entry.identity);
+      }
 
       MOZ_TRY(table.impl.addSymbol(code, bitLength, std::move(symbol)));
 
