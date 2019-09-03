@@ -38,6 +38,12 @@ void js::Mutex::ShutDown() {
 }
 
 void js::Mutex::lock() {
+  preLockChecks();
+  impl_.lock();
+  postLockChecks();
+}
+
+void js::Mutex::preLockChecks() const {
   auto& stack = heldMutexStack();
   if (!stack.empty()) {
     const Mutex& prev = *stack.back();
@@ -49,19 +55,24 @@ void js::Mutex::lock() {
       MOZ_CRASH("Mutex ordering violation");
     }
   }
+}
 
-  MutexImpl::lock();
-
+void js::Mutex::postLockChecks() {
   AutoEnterOOMUnsafeRegion oomUnsafe;
+  auto& stack = heldMutexStack();
   if (!stack.append(this)) {
     oomUnsafe.crash("js::Mutex::lock");
   }
 }
 
 void js::Mutex::unlock() {
+  preUnlockChecks();
+  impl_.unlock();
+}
+
+void js::Mutex::preUnlockChecks() {
   auto& stack = heldMutexStack();
   MOZ_ASSERT(stack.back() == this);
-  MutexImpl::unlock();
   stack.popBack();
 }
 

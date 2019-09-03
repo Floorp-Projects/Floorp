@@ -202,7 +202,7 @@ class ExclusiveWaitableData : public ExclusiveData<T> {
 
     void wait() {
       auto* parent = static_cast<const ExclusiveWaitableData*>(this->parent());
-      parent->condVar_.impl_.wait(parent->lock_);
+      parent->condVar_.wait(parent->lock_);
     }
 
     void notify_one() {
