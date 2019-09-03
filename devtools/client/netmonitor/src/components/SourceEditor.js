@@ -6,14 +6,9 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  connect,
-} = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Editor = require("devtools/client/shared/sourceeditor/editor");
-const {
-  setTargetSearchResult,
-} = require("devtools/client/netmonitor/src/actions/search");
+
 const { div } = dom;
 
 /**
@@ -26,11 +21,6 @@ class SourceEditor extends Component {
       mode: PropTypes.string,
       // Source editor content
       text: PropTypes.string,
-      // Auto scroll to specific line
-      scrollToLine: PropTypes.number,
-      // Reset target search result that has been used for navigation in this panel.
-      // This is done to avoid second navigation the next time.
-      resetTargetSearchResult: PropTypes.func,
     };
   }
 
@@ -57,21 +47,18 @@ class SourceEditor extends Component {
       this.editorSetModeTimeout = setTimeout(() => {
         this.editorSetModeTimeout = null;
         this.editor.setMode(mode);
-        this.scrollToLine();
       });
     });
   }
 
   shouldComponentUpdate(nextProps) {
     return (
-      nextProps.mode !== this.props.mode ||
-      nextProps.text !== this.props.text ||
-      nextProps.scrollToLine !== this.props.scrollToLine
+      nextProps.mode !== this.props.mode || nextProps.text !== this.props.text
     );
   }
 
   componentDidUpdate(prevProps) {
-    const { mode, scrollToLine, text } = this.props;
+    const { mode, text } = this.props;
 
     // Bail out if the editor has been destroyed in the meantime.
     if (this.editor.isDestroyed()) {
@@ -94,10 +81,7 @@ class SourceEditor extends Component {
       this.editorSetModeTimeout = setTimeout(() => {
         this.editorSetModeTimeout = null;
         this.editor.setMode(mode);
-        this.scrollToLine();
       });
-    } else if (prevProps.scrollToLine !== scrollToLine) {
-      this.scrollToLine();
     }
   }
 
@@ -105,21 +89,6 @@ class SourceEditor extends Component {
     clearTimeout(this.editorTimeout);
     clearTimeout(this.editorSetModeTimeout);
     this.editor.destroy();
-  }
-
-  scrollToLine() {
-    const { scrollToLine, resetTargetSearchResult } = this.props;
-
-    if (scrollToLine) {
-      this.editor.setCursor(
-        {
-          line: scrollToLine - 1,
-        },
-        "center"
-      );
-    }
-
-    resetTargetSearchResult();
   }
 
   render() {
@@ -130,9 +99,4 @@ class SourceEditor extends Component {
   }
 }
 
-module.exports = connect(
-  null,
-  dispatch => ({
-    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
-  })
-)(SourceEditor);
+module.exports = SourceEditor;
