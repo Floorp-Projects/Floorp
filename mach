@@ -138,8 +138,15 @@ run_py() {
 }
 
 first_arg=$1
+if [ "$first_arg" = "help" ]; then
+    # When running `./mach help <command>`, the correct Python for <command>
+    # needs to be used.
+    first_arg=$2
+fi
+
 if [ -z "$first_arg" ]; then
-    run_py python3
+    # User ran `./mach` or `./mach help`, use Python 3.
+    run_py python3 "$@"
 fi
 
 case "${first_arg}" in
