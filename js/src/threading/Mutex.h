@@ -79,10 +79,9 @@ class Mutex {
 
  private:
   const MutexId id_;
+  Mutex* prev_ = nullptr;
 
-  using MutexVector = mozilla::Vector<const Mutex*>;
-  static MOZ_THREAD_LOCAL(MutexVector*) HeldMutexStack;
-  static MutexVector& heldMutexStack();
+  static MOZ_THREAD_LOCAL(Mutex*) HeldMutexStack;
 #endif
 
  private:

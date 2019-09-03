@@ -12,30 +12,13 @@ using namespace js;
 
 #ifdef DEBUG
 
-MOZ_THREAD_LOCAL(js::Mutex::MutexVector*) js::Mutex::HeldMutexStack;
+MOZ_THREAD_LOCAL(js::Mutex*) js::Mutex::HeldMutexStack;
 
 /* static */
 bool js::Mutex::Init() { return HeldMutexStack.init(); }
 
 /* static */
-void js::Mutex::ShutDown() {
-  js_delete(HeldMutexStack.get());
-  HeldMutexStack.set(nullptr);
-}
-
-/* static */ js::Mutex::MutexVector& js::Mutex::heldMutexStack() {
-  MOZ_ASSERT(js::IsInitialized());
-  auto stack = HeldMutexStack.get();
-  if (!stack) {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    stack = js_new<MutexVector>();
-    if (!stack) {
-      oomUnsafe.crash("js::Mutex::heldMutexStack");
-    }
-    HeldMutexStack.set(stack);
-  }
-  return *stack;
-}
+void js::Mutex::ShutDown() { MOZ_ASSERT(HeldMutexStack.get() == nullptr); }
 
 void js::Mutex::lock() {
   preLockChecks();
@@ -44,25 +27,22 @@ void js::Mutex::lock() {
 }
 
 void js::Mutex::preLockChecks() const {
-  auto& stack = heldMutexStack();
-  if (!stack.empty()) {
-    const Mutex& prev = *stack.back();
-    if (id_.order <= prev.id_.order) {
+  Mutex* prev = HeldMutexStack.get();
+  if (prev) {
+    if (id_.order <= prev->id_.order) {
       fprintf(stderr,
               "Attempt to acquire mutex %s with order %d while holding %s with "
               "order %d\n",
-              id_.name, id_.order, prev.id_.name, prev.id_.order);
+              id_.name, id_.order, prev->id_.name, prev->id_.order);
       MOZ_CRASH("Mutex ordering violation");
     }
   }
 }
 
 void js::Mutex::postLockChecks() {
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  auto& stack = heldMutexStack();
-  if (!stack.append(this)) {
-    oomUnsafe.crash("js::Mutex::lock");
-  }
+  MOZ_ASSERT(prev_ == nullptr);
+  prev_ = HeldMutexStack.get();
+  HeldMutexStack.set(this);
 }
 
 void js::Mutex::unlock() {
@@ -71,18 +51,23 @@ void js::Mutex::unlock() {
 }
 
 void js::Mutex::preUnlockChecks() {
-  auto& stack = heldMutexStack();
-  MOZ_ASSERT(stack.back() == this);
-  stack.popBack();
+  Mutex* stack = HeldMutexStack.get();
+  MOZ_ASSERT(stack == this);
+  HeldMutexStack.set(prev_);
+  prev_ = nullptr;
 }
 
 bool js::Mutex::ownedByCurrentThread() const {
-  auto& stack = heldMutexStack();
-  for (size_t i = 0; i < stack.length(); i++) {
-    if (stack[i] == this) {
+  Mutex* stack = HeldMutexStack.get();
+
+  while (stack) {
+    if (stack == this) {
       return true;
     }
+
+    stack = stack->prev_;
   }
+
   return false;
 }
 
