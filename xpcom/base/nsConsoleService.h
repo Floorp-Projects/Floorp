@@ -80,8 +80,6 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
 
   ~nsConsoleService();
 
-  nsresult MaybeForwardScriptError(nsIConsoleMessage* aMessage, bool* sent);
-
   void ClearMessagesForWindowID(const uint64_t innerID);
   void ClearMessages();
 
