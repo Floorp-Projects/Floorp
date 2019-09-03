@@ -1516,7 +1516,7 @@ JS::Result<JSAtom*> BinASTTokenReaderContext::readPropertyKey(
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out, const Context&) {
-  return raiseError("Not Yet Implemented");
+  return raiseError("readChars is not implemented in BinASTTokenReaderContext");
 }
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(

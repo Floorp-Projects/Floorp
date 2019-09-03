@@ -314,6 +314,44 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
+  template <typename CharsT>
+  bool parseRegExpFlags(CharsT flags, size_t length, JS::RegExpFlags* reflags) {
+    MOZ_ASSERT(*reflags == JS::RegExpFlag::NoFlags);
+    for (size_t i = 0; i < length; i++) {
+      auto c = flags[i];
+      if (c == 'g' && !reflags->global()) {
+        *reflags |= JS::RegExpFlag::Global;
+      } else if (c == 'i' && !reflags->ignoreCase()) {
+        *reflags |= JS::RegExpFlag::IgnoreCase;
+      } else if (c == 'm' && !reflags->multiline()) {
+        *reflags |= JS::RegExpFlag::Multiline;
+      } else if (c == 'u' && !reflags->unicode()) {
+        *reflags |= JS::RegExpFlag::Unicode;
+      } else if (c == 'y' && !reflags->sticky()) {
+        *reflags |= JS::RegExpFlag::Sticky;
+      } else {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool parseRegExpFlags(Chars flags, JS::RegExpFlags* reflags) {
+    return parseRegExpFlags(flags.begin(), flags.end() - flags.begin(),
+                            reflags);
+  }
+
+  bool parseRegExpFlags(HandleAtom flags, JS::RegExpFlags* reflags) {
+    JS::AutoCheckCannotGC nogc;
+    if (flags->hasLatin1Chars()) {
+      return parseRegExpFlags(flags->latin1Chars(nogc), flags->length(),
+                              reflags);
+    }
+    return parseRegExpFlags(flags->twoByteChars(nogc), flags->length(),
+                            reflags);
+  }
+
  private:
   // Some methods in this class require access to auto-generated methods in
   // BinASTParser which derives this class.
