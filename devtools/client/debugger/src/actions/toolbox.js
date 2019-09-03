@@ -29,12 +29,6 @@ export function openElementInInspectorCommand(grip: Grip) {
   };
 }
 
-export function openInspector(grip: Grip) {
-  return async ({ panel }: ThunkArgs) => {
-    return panel.openInspector();
-  };
-}
-
 export function highlightDomElement(grip: Grip) {
   return async ({ panel }: ThunkArgs) => {
     return panel.highlightDomElement(grip);

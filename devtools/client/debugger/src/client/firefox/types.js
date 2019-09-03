@@ -383,7 +383,6 @@ export type ThreadFront = {
 export type Panel = {|
   emit: (eventName: string) => void,
   openLink: (url: string) => void,
-  openInspector: () => void,
   openElementInInspector: (grip: Object) => void,
   openConsoleAndEvaluate: (input: string) => void,
   highlightDomElement: (grip: Object) => void,
