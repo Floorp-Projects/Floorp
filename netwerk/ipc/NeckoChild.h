@@ -36,6 +36,10 @@ class NeckoChild : public PNeckoChild {
       PHttpChannelChild* channel);
   bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor);
 
+  already_AddRefed<PDocumentChannelChild> AllocPDocumentChannelChild(
+      const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+      const DocumentChannelCreationArgs& args);
+
   PCookieServiceChild* AllocPCookieServiceChild();
   bool DeallocPCookieServiceChild(PCookieServiceChild*);
   PFTPChannelChild* AllocPFTPChannelChild(

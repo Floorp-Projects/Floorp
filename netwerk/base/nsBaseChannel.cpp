@@ -24,6 +24,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsRedirectHistoryEntry.h"
 
+using namespace mozilla;
+
 // This class is used to suspend a request across a function scope.
 class ScopedRequestSuspender {
  public:
@@ -86,7 +88,7 @@ nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
   nsSecurityFlags secFlags =
       mLoadInfo->GetSecurityFlags() & ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   nsCOMPtr<nsILoadInfo> newLoadInfo =
-      static_cast<mozilla::net::LoadInfo*>(mLoadInfo.get())
+      static_cast<net::LoadInfo*>(mLoadInfo.get())
           ->CloneWithNewSecFlags(secFlags);
 
   nsCOMPtr<nsIPrincipal> uriPrincipal;
@@ -99,7 +101,7 @@ nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
   // nsBaseChannel hst no thing to do with HttpBaseChannel, we would not care
   // about referrer and remote address in this case
   nsCOMPtr<nsIRedirectHistoryEntry> entry =
-      new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
+      new net::nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
 
   newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
 
@@ -144,8 +146,7 @@ nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
 
   // Notify consumer, giving chance to cancel redirect.
 
-  RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
-      new nsAsyncRedirectVerifyHelper();
+  auto redirectCallbackHelper = MakeRefPtr<net::nsAsyncRedirectVerifyHelper>();
 
   bool checkRedirectSynchronously = !openNewChannel;
   nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
@@ -334,7 +335,7 @@ void nsBaseChannel::ClassifyURI() {
   }
 
   if (NS_ShouldClassifyChannel(this)) {
-    RefPtr<nsChannelClassifier> classifier = new nsChannelClassifier(this);
+    auto classifier = MakeRefPtr<net::nsChannelClassifier>(this);
     if (classifier) {
       classifier->Start();
     } else {
@@ -346,13 +347,22 @@ void nsBaseChannel::ClassifyURI() {
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(nsBaseChannel, nsHashPropertyBag, nsIRequest,
-                            nsIChannel, nsIThreadRetargetableRequest,
-                            nsIInterfaceRequestor, nsITransportEventSink,
-                            nsIRequestObserver, nsIStreamListener,
-                            nsIThreadRetargetableStreamListener,
-                            nsIAsyncVerifyRedirectCallback,
-                            nsIPrivateBrowsingChannel)
+NS_IMPL_ADDREF(nsBaseChannel)
+NS_IMPL_RELEASE(nsBaseChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsBaseChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mChannelId.isSome())
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateBrowsingChannel)
+NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest
@@ -699,6 +709,27 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
 }
 
 //-----------------------------------------------------------------------------
+// nsBaseChannel::nsIIdentChannel
+
+NS_IMETHODIMP
+nsBaseChannel::GetChannelId(uint64_t* aChannelId) {
+  if (!mChannelId) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *aChannelId = *mChannelId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::SetChannelId(uint64_t aChannelId) {
+  if (!mChannelId) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  *mChannelId = aChannelId;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 // nsBaseChannel::nsITransportEventSink
 
 NS_IMETHODIMP
@@ -841,7 +872,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* stream,
     if (NS_IsMainThread()) {
       OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
     } else {
-      class OnTransportStatusAsyncEvent : public mozilla::Runnable {
+      class OnTransportStatusAsyncEvent : public Runnable {
         RefPtr<nsBaseChannel> mChannel;
         int64_t mProgress;
         int64_t mContentLength;
@@ -849,7 +880,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* stream,
        public:
         OnTransportStatusAsyncEvent(nsBaseChannel* aChannel, int64_t aProgress,
                                     int64_t aContentLength)
-            : mozilla::Runnable("OnTransportStatusAsyncEvent"),
+            : Runnable("OnTransportStatusAsyncEvent"),
               mChannel(aChannel),
               mProgress(aProgress),
               mContentLength(aContentLength) {}

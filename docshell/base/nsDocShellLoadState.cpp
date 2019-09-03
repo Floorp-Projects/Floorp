@@ -38,7 +38,8 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 }
 
-nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
+nsDocShellLoadState::nsDocShellLoadState(
+    const DocShellLoadStateInit& aLoadState) {
   MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
   mKeepResultPrincipalURIIfSet = aLoadState.KeepResultPrincipalURIIfSet();
@@ -64,6 +65,8 @@ nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
   mCsp = aLoadState.Csp();
+  mPostDataStream = aLoadState.PostDataStream();
+  mHeadersStream = aLoadState.HeadersStream();
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
@@ -476,5 +479,8 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.Csp() = mCsp;
   loadState.ReferrerInfo() = mReferrerInfo;
+  loadState.PostDataStream() = mPostDataStream;
+  loadState.HeadersStream() = mHeadersStream;
+
   return loadState;
 }
