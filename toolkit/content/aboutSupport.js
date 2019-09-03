@@ -868,24 +868,27 @@ var snapshotFormatters = {
       let button = $("enumerate-database-button");
       if (button) {
         button.addEventListener("click", function(event) {
-          let {KeyValueService} = ChromeUtils.import("resource://gre/modules/kvstore.jsm");
+          let { KeyValueService } = ChromeUtils.import(
+            "resource://gre/modules/kvstore.jsm"
+          );
           let currProfDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
           let path = currProfDir.path + "/mediacapabilities";
 
           function enumerateDatabase(name) {
             KeyValueService.getOrCreate(path, name)
-            .then(database => {
-              return database.enumerate();
-            })
-            .then(enumerator => {
-              var logs = [];
-              logs.push(`${name}:`);
-              while (enumerator.hasMoreElements()) {
-                const { key, value } = enumerator.getNext();
-                logs.push(`${key}: ${value}`);
-              }
-              $("enumerate-database-result").textContent += logs.join("\n") + "\n";
-            });
+              .then(database => {
+                return database.enumerate();
+              })
+              .then(enumerator => {
+                var logs = [];
+                logs.push(`${name}:`);
+                while (enumerator.hasMoreElements()) {
+                  const { key, value } = enumerator.getNext();
+                  logs.push(`${key}: ${value}`);
+                }
+                $("enumerate-database-result").textContent +=
+                  logs.join("\n") + "\n";
+              });
           }
 
           $("enumerate-database-result").style.display = "block";
