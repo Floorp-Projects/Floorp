@@ -63,6 +63,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   void InsertPresentWaitQuery();
   bool WaitForPreviousPresentQuery();
   bool ResizeBufferIfNeeded();
+  bool CreateEGLSurface();
   void DestroyEGLSurface();
   ID3D11Device* GetDeviceOfEGLDisplay();
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);

@@ -400,14 +400,32 @@ bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
     return true;
   }
 
-  HRESULT hr;
-  RefPtr<ID3D11Texture2D> backBuf;
-
   // Release EGLSurface of back buffer before calling ResizeBuffers().
   DestroyEGLSurface();
 
-  // Reset buffer size
-  mBufferSize.reset();
+  mBufferSize = Some(size);
+
+  if (!CreateEGLSurface()) {
+    mBufferSize.reset();
+    return false;
+  }
+
+  return true;
+}
+
+bool RenderCompositorANGLE::CreateEGLSurface() {
+  MOZ_ASSERT(mBufferSize.isSome());
+  MOZ_ASSERT(mEGLSurface == EGL_NO_SURFACE);
+
+  HRESULT hr;
+  RefPtr<ID3D11Texture2D> backBuf;
+
+  if (mBufferSize.isNothing()) {
+    gfxCriticalNote << "Buffer size is invalid";
+    return false;
+  }
+
+  const LayoutDeviceIntSize& size = mBufferSize.ref();
 
   // Resize swap chain
   DXGI_SWAP_CHAIN_DESC desc;
@@ -462,7 +480,6 @@ bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
   }
 
   mEGLSurface = surface;
-  mBufferSize = Some(size);
 
   return true;
 }
