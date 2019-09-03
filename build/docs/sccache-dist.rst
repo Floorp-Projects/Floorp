@@ -82,7 +82,6 @@ similar.
 * Collect the IP of your builder and request assignment of a static IP in a bug
   filed in
   `NetOps :: Other <https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=NetOps%3A%20Office%20Other>`_
-  cc sccache-admins@mozilla.com on this bug.
 
 * File a bug in
   `Infrastructure :: Other <https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure+%26+Operations&component=Infrastructure%3A+Other>`_
@@ -94,6 +93,8 @@ similar.
 
 * The instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-build-server
   should contain everything else required to configure and run the server.
+  *NOTE* Port 10500 will be used by convention for builders in offices.
+  Please use port 10500 in the `public_addr` section of your builder config.
 
 
 Common questions/considerations
