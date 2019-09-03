@@ -55,6 +55,12 @@ internal object ContentStateReducer {
                     it
                 }
             }
+            is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = action.hitResult)
+            }
+            is ContentAction.ConsumeHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = null)
+            }
         }
     }
 }

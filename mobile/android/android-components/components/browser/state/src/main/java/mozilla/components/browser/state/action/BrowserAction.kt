@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.state.Action
 
@@ -176,7 +177,17 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
      */
-    data class ConsumeDownloadAction(val sessionId: String, val download: DownloadState) : ContentAction()
+    data class ConsumeDownloadAction(val sessionId: String, val download: DownloadState? = null) : ContentAction()
+
+    /**
+     * Updates the [HitResult] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateHitResultAction(val sessionId: String, val hitResult: HitResult) : ContentAction()
+
+    /**
+     * Removes the [HitResult] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeHitResultAction(val sessionId: String) : ContentAction()
 }
 
 /**

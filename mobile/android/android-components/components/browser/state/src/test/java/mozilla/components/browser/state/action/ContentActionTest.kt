@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -290,5 +291,43 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertNull(tab.content.download)
+    }
+
+    @Test
+    fun `UpdateHitResultAction updates hit result`() {
+        assertNull(tab.content.hitResult)
+
+        val hitResult1: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult1)
+        ).joinBlocking()
+
+        assertEquals(hitResult1, tab.content.hitResult)
+
+        val hitResult2: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult2)
+        ).joinBlocking()
+
+        assertEquals(hitResult2, tab.content.hitResult)
+    }
+
+    @Test
+    fun `ConsumeHitResultAction removes hit result`() {
+        val hitResult: HitResult = mock()
+
+        store.dispatch(
+            ContentAction.UpdateHitResultAction(tab.id, hitResult)
+        ).joinBlocking()
+
+        assertEquals(hitResult, tab.content.hitResult)
+
+        store.dispatch(
+            ContentAction.ConsumeHitResultAction(tab.id, hitResult)
+        ).joinBlocking()
+
+        assertNull(tab.content.hitResult)
     }
 }
