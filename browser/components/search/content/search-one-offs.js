@@ -172,7 +172,7 @@ class SearchOneOffs {
    * Width in pixels of the one-off buttons.
    */
   get buttonWidth() {
-    return this.compact ? 40 : 48;
+    return 48;
   }
 
   /**
@@ -476,51 +476,45 @@ class SearchOneOffs {
       return;
     }
 
-    // this.buttonWidth is for the compact settings button.
-    let buttonsWidth = this.compact
-      ? this._textboxWidth - this.buttonWidth - this.header.clientWidth
-      : this.popup.clientWidth;
-
-    // There's one weird thing to guard against: when layout pixels
-    // aren't an integral multiple of device pixels, the last button
-    // of each row sometimes gets pushed to the next row, depending on the
-    // panel and button widths.
-    // This is likely because the clientWidth getter rounds the value, but
-    // the panel's border width is not an integer.
-    // As a workaround, decrement the width if the scale is not an integer.
-    let scale = window.windowUtils.screenPixelsPerCSSPixel;
-    if (Math.floor(scale) != scale) {
-      --buttonsWidth;
-    }
-
-    // If the header string is very long, then the searchbar buttons will
-    // overflow their container unless max-width is set.
     if (this.compact) {
       this.spacerCompact.setAttribute("flex", "1");
-    } else {
+    }
+
+    if (this.popup) {
+      let buttonsWidth = this.popup.clientWidth;
+
+      // There's one weird thing to guard against: when layout pixels
+      // aren't an integral multiple of device pixels, the last button
+      // of each row sometimes gets pushed to the next row, depending on the
+      // panel and button widths.
+      // This is likely because the clientWidth getter rounds the value, but
+      // the panel's border width is not an integer.
+      // As a workaround, decrement the width if the scale is not an integer.
+      let scale = window.windowUtils.screenPixelsPerCSSPixel;
+      if (Math.floor(scale) != scale) {
+        --buttonsWidth;
+      }
+
+      // If the header string is very long, then the searchbar buttons will
+      // overflow their container unless max-width is set.
       this.buttons.style.setProperty("max-width", `${buttonsWidth}px`);
+
+      // In very narrow windows, we should always have at least one button
+      // per row.
+      buttonsWidth = Math.max(buttonsWidth, this.buttonWidth);
+
+      let enginesPerRow = Math.floor(buttonsWidth / this.buttonWidth);
+      // There will be an empty area of:
+      //   buttonsWidth - enginesPerRow * this.buttonWidth  px
+      // at the end of each row.
+
+      // If the <div> with the list of search engines doesn't have
+      // a fixed height, the panel will be sized incorrectly, causing the bottom
+      // of the suggestion <tree> to be hidden.
+      let rowCount = Math.ceil(oneOffCount / enginesPerRow);
+      let height = rowCount * this.buttonHeight;
+      this.buttons.style.setProperty("height", `${height}px`);
     }
-
-    // 24: 12px left padding + 12px right padding.
-    if (this.compact) {
-      buttonsWidth -= 24;
-    }
-
-    // In very narrow windows, we should always have at least one button
-    // per row.
-    buttonsWidth = Math.max(buttonsWidth, this.buttonWidth);
-
-    let enginesPerRow = Math.floor(buttonsWidth / this.buttonWidth);
-    // There will be an empty area of:
-    //   buttonsWidth - enginesPerRow * this.buttonWidth  px
-    // at the end of each row.
-
-    // If the <div> with the list of search engines doesn't have
-    // a fixed height, the panel will be sized incorrectly, causing the bottom
-    // of the suggestion <tree> to be hidden.
-    let rowCount = Math.ceil(oneOffCount / enginesPerRow);
-    let height = rowCount * this.buttonHeight;
-    this.buttons.style.setProperty("height", `${height}px`);
     // Ensure we can refer to the settings buttons by ID:
     let origin = this.telemetryOrigin;
     this.settingsButton.id = origin + "-anon-search-settings";
