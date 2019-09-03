@@ -894,7 +894,6 @@ JS::Result<Ok>
 BinASTTokenReaderContext::readBuf<Compression::No, EndOfFilePolicy::BestEffort>(
     uint8_t* bytes, uint32_t& len) {
   len = std::min((uint32_t)(stop_ - current_), len);
-
   return Base::readBuf(bytes, len);
 }
 
