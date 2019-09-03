@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+function start () {
+  const frame = document.createElementNS('http://www.w3.org/1999/xhtml', 'frame')
+  document.documentElement.appendChild(frame)
+  frame.contentWindow.eval('window.top.context=new AudioContext()')
+  document.documentElement.innerHTML = ''
+  context.createMediaElementSource(new Audio(''))
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+</html>
