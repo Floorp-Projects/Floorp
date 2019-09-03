@@ -12,7 +12,8 @@
 // Central definition point for mutex ordering.
 //
 // Mutexes can only be acquired in increasing order. This prevents the
-// possibility of deadlock.
+// possibility of deadlock. Mutexes with the same order cannot be held
+// at the same time.
 
 #define FOR_EACH_MUTEX(_)             \
   _(TestMutex, 100)                   \
