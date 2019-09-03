@@ -4,7 +4,7 @@
  */
 
 const URL =
-  "http://mochi.test:8888/browser/browser/base/content/test/general/test_offline_gzip.html";
+  "https://example.com/browser/browser/base/content/test/general/test_offline_gzip.html";
 
 registerCleanupFunction(function() {
   // Clean up after ourself
