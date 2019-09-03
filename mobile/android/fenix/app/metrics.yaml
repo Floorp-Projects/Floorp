@@ -852,6 +852,28 @@ sync_account:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  send_tab:
+    type: event
+    description: >
+      A user sent the current tab to another FxA device
+    bugs:
+      - 4908
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5106
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  sign_in_to_send_tab:
+    type: event
+    description: >
+      A user pressed the "sign in to send tab" button inside the share tab menu
+    bugs:
+      - 4908
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5106
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 history:
   opened:
