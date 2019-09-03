@@ -2,4 +2,4 @@
 
 # scheduleUpload
 
-`open fun scheduleUpload(): `[`Telemetry`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L134)
+`open fun scheduleUpload(): `[`Telemetry`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L139)

@@ -2,7 +2,7 @@
 
 # TelemetryHolder
 
-`open class TelemetryHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/TelemetryHolder.java#L12)
+`open class TelemetryHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/TelemetryHolder.java#L16)
 
 Holder of a static reference to the Telemetry instance. This is required for background services that somehow need to get access to the configuration and storage. This is not particular nice. Hopefully we can replace this with something better.
 

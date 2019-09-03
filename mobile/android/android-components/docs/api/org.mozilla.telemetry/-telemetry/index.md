@@ -2,7 +2,7 @@
 
 # Telemetry
 
-`open class Telemetry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L38)
+`open class Telemetry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L43)
 
 ### Constructors
 
