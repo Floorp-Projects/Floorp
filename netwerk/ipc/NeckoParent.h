@@ -127,6 +127,15 @@ class NeckoParent : public PNeckoParent {
   PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
                                           const uint16_t& port);
 
+  already_AddRefed<PDocumentChannelParent> AllocPDocumentChannelParent(
+      const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+      const DocumentChannelCreationArgs& args);
+  virtual mozilla::ipc::IPCResult RecvPDocumentChannelConstructor(
+      PDocumentChannelParent* aActor, const PBrowserOrId& aBrowser,
+      const SerializedLoadContext& aSerialized,
+      const DocumentChannelCreationArgs& aArgs) override;
+  bool DeallocPDocumentChannelParent(PDocumentChannelParent* channel);
+
   bool DeallocPTCPSocketParent(PTCPSocketParent*);
   PTCPServerSocketParent* AllocPTCPServerSocketParent(
       const uint16_t& aLocalPort, const uint16_t& aBacklog,

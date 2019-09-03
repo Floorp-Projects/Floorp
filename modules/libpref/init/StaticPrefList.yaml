@@ -901,6 +901,12 @@
   value: 2048
   mirror: always
 
+# If set, use DocumentChannel with nsDocShell in place of HttpChannel.
+- name: browser.tabs.documentchannel
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.tabs.remote.desktopbehavior
   type: bool
   value: false

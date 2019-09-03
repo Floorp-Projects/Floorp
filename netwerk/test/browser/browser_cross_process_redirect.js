@@ -247,7 +247,11 @@ add_task(async function() {
     }
   );
 
-  let browser1LoadHasStopped = BrowserTestUtils.browserStopped(browser1);
+  let browser1LoadHasStopped = BrowserTestUtils.browserStopped(
+    browser1,
+    undefined,
+    true
+  );
 
   await BrowserTestUtils.loadURI(
     browser1,
@@ -267,7 +271,11 @@ add_task(async function() {
     "example.org",
     true
   );
-  let browser1LoadHasStoppedAgain = BrowserTestUtils.browserStopped(browser1);
+  let browser1LoadHasStoppedAgain = BrowserTestUtils.browserStopped(
+    browser1,
+    undefined,
+    true
+  );
   await BrowserTestUtils.loadURI(
     browser1,
     kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html"

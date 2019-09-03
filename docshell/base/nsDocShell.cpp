@@ -70,6 +70,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 
+#include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
@@ -6363,41 +6364,63 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     return;
   }
 
-  // Below a URI visit is saved (see AddURIVisit method doc).
-  // The visit chain looks something like:
-  //   ...
-  //   Site N - 1
-  //                =>  Site N
-  //   (redirect to =>) Site N + 1 (we are here!)
+  // DocumentChannel only reports a single redirect via the normal
+  // confirmation mechanism (when they replace themselves with a real
+  // channel), but can have had an arbitrary number
+  // of redirects handled in the parent process.
+  // Query the full redirect chain directly, so that we can add history
+  // entries for them.
+  if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aOldChannel)) {
+    nsCOMPtr<nsIURI> previousURI;
+    uint32_t previousFlags = 0;
+    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
 
-  // Get N - 1 and transition type
-  nsCOMPtr<nsIURI> previousURI;
-  uint32_t previousFlags = 0;
-  ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
-
-  if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
-      ChannelIsPost(aOldChannel)) {
-    // 1. Internal redirects are ignored because they are specific to the
-    //    channel implementation.
-    // 2. POSTs are not saved by global history.
-    //
-    // Regardless, we need to propagate the previous visit to the new
-    // channel.
+    for (auto redirect : docChannel->GetRedirectChain()) {
+      if (!redirect.isPost()) {
+        AddURIVisit(redirect.uri(), previousURI, previousFlags,
+                    redirect.responseStatus());
+        previousURI = redirect.uri();
+        previousFlags = redirect.redirectFlags();
+      }
+    }
     SaveLastVisit(aNewChannel, previousURI, previousFlags);
   } else {
-    // Get the HTTP response code, if available.
-    uint32_t responseStatus = 0;
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
-    if (httpChannel) {
-      Unused << httpChannel->GetResponseStatus(&responseStatus);
+    // Below a URI visit is saved (see AddURIVisit method doc).
+    // The visit chain looks something like:
+    //   ...
+    //   Site N - 1
+    //                =>  Site N
+    //   (redirect to =>) Site N + 1 (we are here!)
+
+    // Get N - 1 and transition type
+    nsCOMPtr<nsIURI> previousURI;
+    uint32_t previousFlags = 0;
+    ExtractLastVisit(aOldChannel, getter_AddRefs(previousURI), &previousFlags);
+
+    if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL ||
+        ChannelIsPost(aOldChannel)) {
+      // 1. Internal redirects are ignored because they are specific to the
+      //    channel implementation.
+      // 2. POSTs are not saved by global history.
+      //
+      // Regardless, we need to propagate the previous visit to the new
+      // channel.
+      SaveLastVisit(aNewChannel, previousURI, previousFlags);
+    } else {
+      // Get the HTTP response code, if available.
+      uint32_t responseStatus = 0;
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
+      if (httpChannel) {
+        Unused << httpChannel->GetResponseStatus(&responseStatus);
+      }
+
+      // Add visit N -1 => N
+      AddURIVisit(oldURI, previousURI, previousFlags, responseStatus);
+
+      // Since N + 1 could be the final destination, we will not save N => N + 1
+      // here.  OnNewURI will do that, so we will cache it.
+      SaveLastVisit(aNewChannel, oldURI, aRedirectFlags);
     }
-
-    // Add visit N -1 => N
-    AddURIVisit(oldURI, previousURI, previousFlags, responseStatus);
-
-    // Since N + 1 could be the final destination, we will not save N => N + 1
-    // here.  OnNewURI will do that, so we will cache it.
-    SaveLastVisit(aNewChannel, oldURI, aRedirectFlags);
   }
 
   // check if the new load should go through the application cache.
@@ -6732,11 +6755,10 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           }
 
           if (doCreateAlternate) {
+            nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
             // Skip doing this if our channel was redirected, because we
             // shouldn't be guessing things about the post-redirect URI.
-            nsLoadFlags loadFlags = 0;
-            if (NS_FAILED(aChannel->GetLoadFlags(&loadFlags)) ||
-                (loadFlags & nsIChannel::LOAD_REPLACE)) {
+            if (!info->RedirectChain().IsEmpty()) {
               doCreateAlternate = false;
             }
           }
@@ -9761,6 +9783,344 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return aTriggeringPrincipal->Equals(tmpResultPrincipal);
 }
 
+static bool HasHttpScheme(nsIURI* aURI) {
+  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https"));
+}
+
+/* static */ bool nsDocShell::CreateChannelForLoadState(
+    nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
+    nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
+    const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
+    nsIChannel** aChannel) {
+  if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
+      HasHttpScheme(aLoadState->URI())) {
+    RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
+        aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
+        aIsActive, aIsTopLevelDoc);
+    child->SetNotificationCallbacks(aCallbacks);
+    child.forget(aChannel);
+    aRv = NS_OK;
+    return true;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  nsAutoString srcdoc;
+  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+  if (isSrcdoc) {
+    srcdoc = aLoadState->SrcdocData();
+  } else {
+    srcdoc = VoidString();
+  }
+
+  nsIURI* baseURI = aLoadState->BaseURI();
+  if (!isSrcdoc) {
+    aRv = NS_NewChannelInternal(getter_AddRefs(channel), aLoadState->URI(),
+                                aLoadInfo,
+                                nullptr,  // PerformanceStorage
+                                nullptr,  // loadGroup
+                                aCallbacks, aLoadFlags);
+
+    if (NS_FAILED(aRv)) {
+      if (aRv == NS_ERROR_UNKNOWN_PROTOCOL && aDocShell) {
+        // This is a uri with a protocol scheme we don't know how
+        // to handle.  Embedders might still be interested in
+        // handling the load, though, so we fire a notification
+        // before throwing the load away.
+        bool abort = false;
+        nsresult rv = aDocShell->mContentListener->OnStartURIOpen(
+            aLoadState->URI(), &abort);
+        if (NS_SUCCEEDED(rv) && abort) {
+          // Hey, they're handling the load for us!  How convenient!
+          aRv = NS_OK;
+          return false;
+        }
+      }
+      return false;
+    }
+
+    if (baseURI) {
+      nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
+      if (vsc) {
+        aRv = vsc->SetBaseURI(baseURI);
+        MOZ_ASSERT(NS_SUCCEEDED(aRv));
+      }
+    }
+  } else if (SchemeIsViewSource(aLoadState->URI())) {
+    nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
+    if (!vsh) {
+      aRv = NS_ERROR_FAILURE;
+      return false;
+    }
+
+    aRv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, srcdoc, aLoadInfo,
+                                getter_AddRefs(channel));
+  } else {
+    aRv = NS_NewInputStreamChannelInternal(
+        getter_AddRefs(channel), aLoadState->URI(), srcdoc,
+        NS_LITERAL_CSTRING("text/html"), aLoadInfo, true);
+    NS_ENSURE_SUCCESS(aRv, false);
+    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
+    MOZ_ASSERT(isc);
+    isc->SetBaseURI(baseURI);
+  }
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
+  if (csp) {
+    // Navigational requests that are same origin need to be upgraded in case
+    // upgrade-insecure-requests is present.
+    bool upgradeInsecureRequests = false;
+    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+    if (upgradeInsecureRequests) {
+      // only upgrade if the navigation is same origin
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      aRv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+          channel, getter_AddRefs(resultPrincipal));
+      NS_ENSURE_SUCCESS(aRv, false);
+      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
+                                       resultPrincipal)) {
+        aLoadInfo->SetUpgradeInsecureRequests();
+      }
+    }
+
+    // For document loads we store the CSP that potentially needs to
+    // be inherited by the new document, e.g. in case we are loading
+    // an opaque origin like a data: URI. The actual inheritance
+    // check happens within Document::InitCSP().
+    // Please create an actual copy of the CSP (do not share the same
+    // reference) otherwise a Meta CSP of an opaque origin will
+    // incorrectly be propagated to the embedding document.
+    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+    aLoadInfo->SetCSPToInherit(cspToInherit);
+  }
+
+  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+      do_QueryInterface(channel);
+  if (appCacheChannel) {
+    // Any document load should not inherit application cache.
+    appCacheChannel->SetInheritApplicationCache(false);
+
+    // Loads with the correct permissions should check for a matching
+    // application cache.
+    if (GeckoProcessType_Default != XRE_GetProcessType()) {
+      // Permission will be checked in the parent process
+      appCacheChannel->SetChooseApplicationCache(true);
+    } else if (aDocShell) {
+      // TODO: Figure out how to handle this in the parent,
+      // on behalf of a content process.
+      nsCOMPtr<nsIScriptSecurityManager> secMan =
+          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+
+      if (secMan) {
+        nsCOMPtr<nsIPrincipal> principal;
+        secMan->GetDocShellContentPrincipal(aLoadState->URI(), aDocShell,
+                                            getter_AddRefs(principal));
+        appCacheChannel->SetChooseApplicationCache(
+            NS_ShouldCheckAppCache(principal));
+      }
+    }
+  }
+
+  // hack
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(
+      do_QueryInterface(channel));
+  nsCOMPtr<nsIURI> referrer;
+  nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
+  if (referrerInfo) {
+    referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
+  }
+  if (httpChannelInternal) {
+    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
+      aRv = httpChannelInternal->SetThirdPartyFlags(
+          nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+      MOZ_ASSERT(NS_SUCCEEDED(aRv));
+    }
+    if (aLoadState->FirstParty()) {
+      aRv = httpChannelInternal->SetDocumentURI(aLoadState->URI());
+      MOZ_ASSERT(NS_SUCCEEDED(aRv));
+    } else {
+      aRv = httpChannelInternal->SetDocumentURI(referrer);
+      MOZ_ASSERT(NS_SUCCEEDED(aRv));
+    }
+    aRv = httpChannelInternal->SetRedirectMode(
+        nsIHttpChannelInternal::REDIRECT_MODE_MANUAL);
+    MOZ_ASSERT(NS_SUCCEEDED(aRv));
+  }
+
+  nsCOMPtr<nsIURI> rpURI;
+  aLoadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
+  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
+  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
+  if (originalResultPrincipalURI &&
+      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
+    // Unconditionally override, we want the replay to be equal to what has
+    // been captured.
+    aLoadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
+  }
+
+  if (httpChannel) {
+    if (aLoadState->HeadersStream()) {
+      aRv = AddHeadersToChannel(aLoadState->HeadersStream(), httpChannel);
+    }
+    // Set the referrer explicitly
+    // Referrer is currenly only set for link clicks here.
+    if (referrerInfo) {
+      aRv = httpChannel->SetReferrerInfo(referrerInfo);
+      MOZ_ASSERT(NS_SUCCEEDED(aRv));
+    }
+  }
+
+  // Mark the http channel as UrgentStart for top level document loading
+  // in active tab.
+  if (aIsActive) {
+    if (httpChannel && aIsTopLevelDoc) {
+      nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+      if (cos) {
+        cos->AddClassFlags(nsIClassOfService::UrgentStart);
+      }
+    }
+  }
+
+  channel.forget(aChannel);
+  return true;
+}
+
+/* static */ nsresult nsDocShell::ConfigureChannel(
+    nsIChannel* aChannel, nsDocShellLoadState* aLoadState,
+    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey) {
+  nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
+  if (props) {
+    nsCOMPtr<nsIURI> referrer;
+    nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
+    if (referrerInfo) {
+      referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
+    }
+
+    // save true referrer for those who need it (e.g. xpinstall whitelisting)
+    // Currently only http and ftp channels support this.
+    props->SetPropertyAsInterface(
+        NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
+  }
+
+  nsresult rv = NS_OK;
+  if (aLoadState->OriginalURI()) {
+    aChannel->SetOriginalURI(aLoadState->OriginalURI());
+    // The LOAD_REPLACE flag and its handling here will be removed as part
+    // of bug 1319110.  For now preserve its restoration here to not break
+    // any code expecting it being set specially on redirected channels.
+    // If the flag has originally been set to change result of
+    // NS_GetFinalChannelURI it won't have any effect and also won't cause
+    // any harm.
+    if (aLoadState->LoadReplace()) {
+      uint32_t loadFlags;
+      aChannel->GetLoadFlags(&loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aChannel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
+    }
+  } else {
+    aChannel->SetOriginalURI(aLoadState->URI());
+  }
+
+  const nsACString& typeHint = aLoadState->TypeHint();
+  if (!typeHint.IsVoid()) {
+    aChannel->SetContentType(typeHint);
+  }
+
+  const nsAString& fileName = aLoadState->FileName();
+  if (!fileName.IsVoid()) {
+    rv = aChannel->SetContentDisposition(nsIChannel::DISPOSITION_ATTACHMENT);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!fileName.IsEmpty()) {
+      rv = aChannel->SetContentDispositionFilename(fileName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
+
+  // figure out if we need to set the post data stream on the channel...
+  if (aLoadState->PostDataStream()) {
+    nsCOMPtr<nsIFormPOSTActionChannel> postChannel(do_QueryInterface(aChannel));
+    if (postChannel) {
+      // XXX it's a bit of a hack to rewind the postdata stream here but
+      // it has to be done in case the post data is being reused multiple
+      // times.
+      nsCOMPtr<nsISeekableStream> postDataSeekable =
+          do_QueryInterface(aLoadState->PostDataStream());
+      if (postDataSeekable) {
+        rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // we really need to have a content type associated with this stream!!
+      postChannel->SetUploadStream(aLoadState->PostDataStream(), EmptyCString(),
+                                   -1);
+    }
+
+    /* If there is a valid postdata *and* it is a History Load,
+     * set up the cache key on the channel, to retrieve the
+     * data *only* from the cache. If it is a normal reload, the
+     * cache is free to go to the server for updated postdata.
+     */
+    if (cacheChannel && aCacheKey != 0) {
+      if (aLoadType == LOAD_HISTORY ||
+          aLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
+        cacheChannel->SetCacheKey(aCacheKey);
+        uint32_t loadFlags;
+        if (NS_SUCCEEDED(aChannel->GetLoadFlags(&loadFlags))) {
+          aChannel->SetLoadFlags(loadFlags |
+                                 nsICachingChannel::LOAD_ONLY_FROM_CACHE);
+        }
+      } else if (aLoadType == LOAD_RELOAD_NORMAL) {
+        cacheChannel->SetCacheKey(aCacheKey);
+      }
+    }
+  } else {
+    /* If there is no postdata, set the cache key on the channel, and
+     * do not set the LOAD_ONLY_FROM_CACHE flag, so that the channel
+     * will be free to get it from net if it is not found in cache.
+     * New cache may use it creatively on CGI pages with GET
+     * method and even on those that say "no-cache"
+     */
+    if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL ||
+        aLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
+        aLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
+        aLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
+      if (cacheChannel && aCacheKey != 0) {
+        cacheChannel->SetCacheKey(aCacheKey);
+      }
+    }
+  }
+
+  nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(aChannel);
+  if (scriptChannel) {
+    // Allow execution against our context if the principals match
+    scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
+  }
+
+  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
+    nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(aChannel);
+    if (props) {
+      props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
+                               true);
+    }
+  }
+
+  // TODO: What should we do with this?
+  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(aChannel));
+  if (timedChannel) {
+    timedChannel->SetTimingEnabled(true);
+
+    if (aInitiatorType) {
+      timedChannel->SetInitiatorType(*aInitiatorType);
+    }
+  }
+
+  return rv;
+}
+
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                bool aLoadFromExternal, nsIDocShell** aDocShell,
                                nsIRequest** aRequest) {
@@ -9845,21 +10205,14 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // open a channel for the url
   nsCOMPtr<nsIChannel> channel;
 
-  nsAutoString srcdoc;
-  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
-  if (isSrcdoc) {
-    srcdoc = aLoadState->SrcdocData();
-  } else {
-    srcdoc = VoidString();
-  }
-
   // If we have a pending channel, use the channel we've already created here.
   // We don't need to set up load flags for our channel, as it has already been
   // created.
   nsCOMPtr<nsIChildChannel> pendingChannel =
       aLoadState->GetPendingRedirectedChannel();
   if (pendingChannel) {
-    MOZ_ASSERT(!isSrcdoc, "pending channel for srcdoc load?");
+    MOZ_ASSERT(!aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC),
+               "pending channel for srcdoc load?");
 
     channel = do_QueryInterface(pendingChannel);
     MOZ_ASSERT(channel, "nsIChildChannel isn't a nsIChannel?");
@@ -9954,6 +10307,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool inheritAttrs = false, inheritPrincipal = false;
 
   if (aLoadState->PrincipalToInherit()) {
+    bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
     inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
         aLoadState->PrincipalToInherit(), aLoadState->URI(),
         true,  // aInheritForAboutBlank
@@ -10045,107 +10399,29 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     loadInfo->SetIsFormSubmission(true);
   }
 
-  nsIURI* baseURI = aLoadState->BaseURI();
-  if (!isSrcdoc) {
-    rv = NS_NewChannelInternal(
-        getter_AddRefs(channel), aLoadState->URI(), loadInfo,
-        nullptr,  // PerformanceStorage
-        nullptr,  // loadGroup
-        static_cast<nsIInterfaceRequestor*>(this), loadFlags);
-
-    if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
-        // This is a uri with a protocol scheme we don't know how
-        // to handle.  Embedders might still be interested in
-        // handling the load, though, so we fire a notification
-        // before throwing the load away.
-        bool abort = false;
-        nsresult rv2 =
-            mContentListener->OnStartURIOpen(aLoadState->URI(), &abort);
-        if (NS_SUCCEEDED(rv2) && abort) {
-          // Hey, they're handling the load for us!  How convenient!
-          return NS_OK;
-        }
-      }
-      return rv;
-    }
-
-    if (baseURI) {
-      nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
-      if (vsc) {
-        rv = vsc->SetBaseURI(baseURI);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-      }
-    }
-  } else if (SchemeIsViewSource(aLoadState->URI())) {
-    nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
-    NS_ENSURE_TRUE(vsh, NS_ERROR_FAILURE);
-
-    rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, srcdoc, loadInfo,
-                               getter_AddRefs(channel));
-  } else {
-    rv = NS_NewInputStreamChannelInternal(
-        getter_AddRefs(channel), aLoadState->URI(), srcdoc,
-        NS_LITERAL_CSTRING("text/html"), loadInfo, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
-    MOZ_ASSERT(isc);
-    isc->SetBaseURI(baseURI);
+  /* Get the cache Key from SH */
+  uint32_t cacheKey = 0;
+  if (mLSHE) {
+    cacheKey = mLSHE->GetCacheKey();
+  } else if (mOSHE) {  // for reload cases
+    cacheKey = mOSHE->GetCacheKey();
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
-  if (csp) {
-    // Navigational requests that are same origin need to be upgraded in case
-    // upgrade-insecure-requests is present.
-    bool upgradeInsecureRequests = false;
-    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
-    if (upgradeInsecureRequests) {
-      // only upgrade if the navigation is same origin
-      nsCOMPtr<nsIPrincipal> resultPrincipal;
-      rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-          channel, getter_AddRefs(resultPrincipal));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
-                                       resultPrincipal)) {
-        loadInfo->SetUpgradeInsecureRequests();
-      }
+  const nsString* initiatorType = nullptr;
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+  if (IsFrame() && win) {
+    nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
+    if (frameElement) {
+      initiatorType = &frameElement->LocalName();
     }
-
-    // For document loads we store the CSP that potentially needs to
-    // be inherited by the new document, e.g. in case we are loading
-    // an opaque origin like a data: URI. The actual inheritance
-    // check happens within Document::InitCSP().
-    // Please create an actual copy of the CSP (do not share the same
-    // reference) otherwise a Meta CSP of an opaque origin will
-    // incorrectly be propagated to the embedding document.
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    loadInfo->SetCSPToInherit(cspToInherit);
   }
 
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-      do_QueryInterface(channel);
-  if (appCacheChannel) {
-    // Any document load should not inherit application cache.
-    appCacheChannel->SetInheritApplicationCache(false);
-
-    // Loads with the correct permissions should check for a matching
-    // application cache.
-    if (GeckoProcessType_Default != XRE_GetProcessType()) {
-      // Permission will be checked in the parent process
-      appCacheChannel->SetChooseApplicationCache(true);
-    } else {
-      nsCOMPtr<nsIScriptSecurityManager> secMan =
-          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
-      if (secMan) {
-        nsCOMPtr<nsIPrincipal> principal;
-        secMan->GetDocShellContentPrincipal(aLoadState->URI(), this,
-                                            getter_AddRefs(principal));
-        appCacheChannel->SetChooseApplicationCache(
-            NS_ShouldCheckAppCache(principal));
-      }
-    }
+  bool isActive =
+      mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
+  if (!CreateChannelForLoadState(
+          aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
+          cacheKey, isActive, isTopLevelDoc, rv, getter_AddRefs(channel))) {
+    return rv;
   }
 
   // Make sure to give the caller a channel if we managed to create one
@@ -10154,34 +10430,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     NS_ADDREF(*aRequest = channel);
   }
 
-  if (aLoadState->OriginalURI()) {
-    channel->SetOriginalURI(aLoadState->OriginalURI());
-    // The LOAD_REPLACE flag and its handling here will be removed as part
-    // of bug 1319110.  For now preserve its restoration here to not break
-    // any code expecting it being set specially on redirected channels.
-    // If the flag has originally been set to change result of
-    // NS_GetFinalChannelURI it won't have any effect and also won't cause
-    // any harm.
-    if (aLoadState->LoadReplace()) {
-      uint32_t loadFlags;
-      channel->GetLoadFlags(&loadFlags);
-      NS_ENSURE_SUCCESS(rv, rv);
-      channel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
-    }
-  } else {
-    channel->SetOriginalURI(aLoadState->URI());
-  }
-
-  nsCOMPtr<nsIURI> rpURI;
-  loadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
-  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
-  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
-  if (originalResultPrincipalURI &&
-      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
-    // Unconditionally override, we want the replay to be equal to what has
-    // been captured.
-    loadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
-  }
+  rv =
+      ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   const nsACString& typeHint = aLoadState->TypeHint();
   if (!typeHint.IsVoid()) {
@@ -10189,16 +10440,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     mContentTypeHint = typeHint;
   } else {
     mContentTypeHint.Truncate();
-  }
-
-  const nsAString& fileName = aLoadState->FileName();
-  if (!fileName.IsVoid()) {
-    rv = channel->SetContentDisposition(nsIChannel::DISPOSITION_ATTACHMENT);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!fileName.IsEmpty()) {
-      rv = channel->SetContentDispositionFilename(fileName);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   if (mLoadType == LOAD_NORMAL_ALLOW_MIXED_CONTENT ||
@@ -10218,158 +10459,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     rv = nsContentUtils::CheckSameOrigin(mMixedContentChannel, channel);
     if (NS_FAILED(rv) || NS_FAILED(SetMixedContentChannel(channel))) {
       SetMixedContentChannel(nullptr);
-    }
-  }
-
-  // hack
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(
-      do_QueryInterface(channel));
-  nsCOMPtr<nsIURI> referrer;
-  nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
-  if (referrerInfo) {
-    referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
-  }
-  if (httpChannelInternal) {
-    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
-      rv = httpChannelInternal->SetThirdPartyFlags(
-          nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-    if (aLoadState->FirstParty()) {
-      rv = httpChannelInternal->SetDocumentURI(aLoadState->URI());
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    } else {
-      rv = httpChannelInternal->SetDocumentURI(referrer);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-    rv = httpChannelInternal->SetRedirectMode(
-        nsIHttpChannelInternal::REDIRECT_MODE_MANUAL);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-
-  Unused << rv;  // Keep Coverity happy
-
-  nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(channel));
-  if (props) {
-    // save true referrer for those who need it (e.g. xpinstall whitelisting)
-    // Currently only http and ftp channels support this.
-    props->SetPropertyAsInterface(
-        NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
-  }
-
-  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
-  /* Get the cache Key from SH */
-  uint32_t cacheKey = 0;
-  if (cacheChannel) {
-    if (mLSHE) {
-      cacheKey = mLSHE->GetCacheKey();
-    } else if (mOSHE) {  // for reload cases
-      cacheKey = mOSHE->GetCacheKey();
-    }
-  }
-
-  // figure out if we need to set the post data stream on the channel...
-  if (aLoadState->PostDataStream()) {
-    nsCOMPtr<nsIFormPOSTActionChannel> postChannel(do_QueryInterface(channel));
-    if (postChannel) {
-      // XXX it's a bit of a hack to rewind the postdata stream here but
-      // it has to be done in case the post data is being reused multiple
-      // times.
-      nsCOMPtr<nsISeekableStream> postDataSeekable =
-          do_QueryInterface(aLoadState->PostDataStream());
-      if (postDataSeekable) {
-        rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // we really need to have a content type associated with this stream!!
-      postChannel->SetUploadStream(aLoadState->PostDataStream(), EmptyCString(),
-                                   -1);
-    }
-
-    /* If there is a valid postdata *and* it is a History Load,
-     * set up the cache key on the channel, to retrieve the
-     * data *only* from the cache. If it is a normal reload, the
-     * cache is free to go to the server for updated postdata.
-     */
-    if (cacheChannel && cacheKey != 0) {
-      if (mLoadType == LOAD_HISTORY ||
-          mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
-        cacheChannel->SetCacheKey(cacheKey);
-        uint32_t loadFlags;
-        if (NS_SUCCEEDED(channel->GetLoadFlags(&loadFlags))) {
-          channel->SetLoadFlags(loadFlags |
-                                nsICachingChannel::LOAD_ONLY_FROM_CACHE);
-        }
-      } else if (mLoadType == LOAD_RELOAD_NORMAL) {
-        cacheChannel->SetCacheKey(cacheKey);
-      }
-    }
-  } else {
-    /* If there is no postdata, set the cache key on the channel, and
-     * do not set the LOAD_ONLY_FROM_CACHE flag, so that the channel
-     * will be free to get it from net if it is not found in cache.
-     * New cache may use it creatively on CGI pages with GET
-     * method and even on those that say "no-cache"
-     */
-    if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL ||
-        mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
-        mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
-        mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
-      if (cacheChannel && cacheKey != 0) {
-        cacheChannel->SetCacheKey(cacheKey);
-      }
-    }
-  }
-
-  if (httpChannel) {
-    if (aLoadState->HeadersStream()) {
-      rv = AddHeadersToChannel(aLoadState->HeadersStream(), httpChannel);
-    }
-    // Set the referrer explicitly
-    // Referrer is currenly only set for link clicks here.
-    if (referrerInfo) {
-      rv = httpChannel->SetReferrerInfo(referrerInfo);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
-
-  nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
-  if (scriptChannel) {
-    // Allow execution against our context if the principals match
-    scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-  }
-
-  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
-    nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
-    if (props) {
-      props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
-                               true);
-    }
-  }
-
-  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(channel));
-  if (timedChannel) {
-    timedChannel->SetTimingEnabled(true);
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
-    if (IsFrame() && win) {
-      nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
-      if (frameElement) {
-        timedChannel->SetInitiatorType(frameElement->LocalName());
-      }
-    }
-  }
-
-  // Mark the http channel as UrgentStart for top level document loading
-  // in active tab.
-  if (mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY))) {
-    if (httpChannel && isTopLevelDoc) {
-      nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-      if (cos) {
-        cos->AddClassFlags(nsIClassOfService::UrgentStart);
-      }
     }
   }
 
@@ -10405,8 +10494,8 @@ static nsresult AppendSegmentToString(nsIInputStream* aIn, void* aClosure,
   return NS_OK;
 }
 
-nsresult nsDocShell::AddHeadersToChannel(nsIInputStream* aHeadersData,
-                                         nsIChannel* aGenericChannel) {
+/* static */ nsresult nsDocShell::AddHeadersToChannel(
+    nsIInputStream* aHeadersData, nsIChannel* aGenericChannel) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aGenericChannel);
   NS_ENSURE_STATE(httpChannel);
 
@@ -10600,15 +10689,19 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   }
   // TODO: more attributes need to be updated on the LoadInfo (bug 1561706)
 
+  // Let the client channel helper know if we are using DocumentChannel,
+  // since redirects get handled in the parent process in that case.
+  RefPtr<net::DocumentChannelChild> docChannel = do_QueryObject(aChannel);
+
   // Since we are loading a document we need to make sure the proper reserved
   // and initial client data is stored on the nsILoadInfo.  The
   // ClientChannelHelper does this and ensures that it is propagated properly
   // on redirects.  We pass no reserved client here so that the helper will
   // create the reserved ClientSource if necessary.
   Maybe<ClientInfo> noReservedClient;
-  rv = AddClientChannelHelper(aChannel, std::move(noReservedClient),
-                              GetInitialClientInfo(),
-                              win->EventTargetFor(TaskCategory::Other));
+  rv = AddClientChannelHelper(
+      aChannel, std::move(noReservedClient), GetInitialClientInfo(),
+      win->EventTargetFor(TaskCategory::Other), !!docChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aURILoader->OpenURI(aChannel, aOpenFlags, this);

@@ -21,6 +21,7 @@ namespace dom {
 
 class ClientManagerParent;
 class ClientSourceParent;
+class ClientHandleParent;
 class ContentParent;
 
 // Define a singleton service to manage client activity throughout the
@@ -30,6 +31,10 @@ class ClientManagerService final {
   // Store the ClientSourceParent objects in a hash table.  We want to
   // optimize for insertion, removal, and lookup by UUID.
   nsDataHashtable<nsIDHashKey, ClientSourceParent*> mSourceTable;
+
+  // The set of handles waiting for their corresponding ClientSourceParent
+  // to be created.
+  nsDataHashtable<nsIDHashKey, nsTArray<ClientHandleParent*>> mPendingHandles;
 
   nsTArray<ClientManagerParent*> mManagerList;
 
@@ -52,6 +57,12 @@ class ClientManagerService final {
 
   ClientSourceParent* FindSource(
       const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  // Called when a ClientHandle is created before the corresponding
+  // ClientSource. Will call FoundSource on the ClientHandleParent when it
+  // becomes available.
+  void WaitForSource(ClientHandleParent* aHandle, const nsID& aID);
+  void StopWaitingForSource(ClientHandleParent* aHandle, const nsID& aID);
 
   void AddManager(ClientManagerParent* aManager);
 
