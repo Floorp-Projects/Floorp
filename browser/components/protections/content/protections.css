@@ -193,6 +193,10 @@ a.hidden,
   margin-bottom: 0;
 }
 
+#protection-details:dir(rtl) {
+  background-position-x: right 3px;
+}
+
 #protection-details:hover,
 #protection-details:focus {
   background-color: var(--in-content-button-background);
