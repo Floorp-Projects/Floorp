@@ -1706,6 +1706,11 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         mozilla::dom::Performance* perf = innerWindow->GetPerformance();
         if (perf) {
           timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
+          // 0 is an inappropriate mixin for this this area; however CSS Animations
+          // needs to have it's Time Reduction Logic refactored, so it's currently
+          // only clamping for RFP mode. RFP mode gives a much lower time precision,
+          // so we accept the security leak here for now
+          timeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(timeStamp, 0, TimerPrecisionType::RFPOnly);
         }
         // else window is partially torn down already
       }
@@ -1720,11 +1725,6 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         CallbackDebuggerNotificationGuard guard(
             global, DebuggerNotificationType::RequestAnimationFrameCallback);
 
-        // 0 is an inappropriate mixin for this this area; however CSS Animations
-        // needs to have it's Time Reduction Logic refactored, so it's currently
-        // only clamping for RFP mode. RFP mode gives a much lower time precision,
-        // so we accept the security leak here for now
-        timeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(timeStamp, 0, TimerPrecisionType::RFPOnly);
         // MOZ_KnownLive is OK, because the stack array frameRequestCallbacks
         // keeps callback alive and the mCallback strong reference can't be
         // mutated by the call.
