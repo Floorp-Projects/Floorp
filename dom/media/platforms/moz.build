@@ -116,17 +116,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
         'android/AndroidDecoderModule.h',
-        'android/AndroidEncoderModule.h',
         'android/JavaCallbacksSupport.h',
     ]
     UNIFIED_SOURCES += [
-        'android/AndroidDataEncoder.cpp',
         'android/AndroidDecoderModule.cpp',
-        'android/AndroidEncoderModule.cpp',
         'android/RemoteDataDecoder.cpp',
-    ]
-    LOCAL_INCLUDES += [
-        '/media/libyuv/libyuv/include',
     ]
 
 FINAL_LIBRARY = 'xul'
