@@ -233,3 +233,6 @@ jobs:
     webrender-updater:
         symbol: I(wrupdater)
         parent: debian9-base
+    visual-metrics:
+        symbol: I(visual-metrics)
+        parent: debian9-base
