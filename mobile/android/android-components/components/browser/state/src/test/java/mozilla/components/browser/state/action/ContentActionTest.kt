@@ -9,10 +9,12 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -250,5 +252,43 @@ class ContentActionTest {
         assertNotEquals("I am a custom tab", updatedOtherCustomTab.content.title)
         assertNotEquals("I am a custom tab", tab.content.title)
         assertNotEquals("I am a custom tab", otherTab.content.title)
+    }
+
+    @Test
+    fun `UpdateDownloadAction updates download`() {
+        assertNull(tab.content.download)
+
+        val download1: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download1)
+        ).joinBlocking()
+
+        assertEquals(download1, tab.content.download)
+
+        val download2: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download2)
+        ).joinBlocking()
+
+        assertEquals(download2, tab.content.download)
+    }
+
+    @Test
+    fun `ConsumeDownloadAction removes download`() {
+        val download: DownloadState = mock()
+
+        store.dispatch(
+            ContentAction.UpdateDownloadAction(tab.id, download)
+        ).joinBlocking()
+
+        assertEquals(download, tab.content.download)
+
+        store.dispatch(
+            ContentAction.ConsumeDownloadAction(tab.id, download)
+        ).joinBlocking()
+
+        assertNull(tab.content.download)
     }
 }
