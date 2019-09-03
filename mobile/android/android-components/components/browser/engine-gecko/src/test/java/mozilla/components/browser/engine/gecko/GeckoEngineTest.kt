@@ -140,8 +140,8 @@ class GeckoEngineTest {
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
 
-        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.RECOMMENDED))
-
+        val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
+        assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
         assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
@@ -214,14 +214,11 @@ class GeckoEngineTest {
                 cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
             )
 
-        assertEquals(
-            TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
-            contentBlockingSettings.cookieBehavior
-        )
+        assertEquals(CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id, contentBlockingSettings.cookieBehavior)
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
 
-        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL.id, contentBlockingSettings.cookieBehavior)
+        assertEquals(CookiePolicy.ACCEPT_ALL.id, contentBlockingSettings.cookieBehavior)
     }
 
     @Test
@@ -416,8 +413,8 @@ class GeckoEngineTest {
 
         println(version)
 
-        assertTrue(version.major >= 68)
-        assertTrue(version.isAtLeast(68, 0, 0))
+        assertTrue(version.major >= 69)
+        assertTrue(version.isAtLeast(69, 0, 0))
     }
 
     private fun ContentBlocking.Settings.contains(vararg safeBrowsingPolicies: SafeBrowsingPolicy) =

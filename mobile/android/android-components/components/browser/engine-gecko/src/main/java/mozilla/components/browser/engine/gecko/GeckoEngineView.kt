@@ -44,6 +44,11 @@ class GeckoEngineView @JvmOverloads constructor(
         override fun onCrash() {
             rebind()
         }
+
+        override fun onProcessKilled() {
+            rebind()
+        }
+
         override fun onAppPermissionRequest(permissionRequest: PermissionRequest) = Unit
         override fun onContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
     }

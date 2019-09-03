@@ -138,14 +138,16 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
+        assertEquals(trackingStrictCategories, contentBlockingSettings.antiTrackingCategories)
 
         val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
-        assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
-        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(safeStrictBrowsingCategories, contentBlockingSettings.safeBrowsingCategories)
 
         engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
-        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.PHISHING))
+        assertEquals(SafeBrowsingPolicy.PHISHING.id, contentBlockingSettings.safeBrowsingCategories)
+
+        assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.strict())
+        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         try {
             engine.settings.domStorageEnabled
@@ -194,27 +196,38 @@ class GeckoEngineTest {
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, ContentBlocking.AT_STRICT)
+        assertEquals(trackingStrictCategories, contentBlockingSettings.antiTrackingCategories)
 
-        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.RECOMMENDED))
+        assertEquals(SafeBrowsingPolicy.RECOMMENDED.id, contentBlockingSettings.safeBrowsingCategories)
 
-        val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
-        assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
-
-        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehavior)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
         assertFalse(engine.settings.allowAutoplayMedia)
         assertTrue(engine.settings.suspendMediaWhenInactive)
 
+        engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
         engine.settings.trackingProtectionPolicy =
             TrackingProtectionPolicy.select(
                 trackingCategories = arrayOf(TrackingProtectionPolicy.TrackingCategory.AD),
                 cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
             )
 
-        assertEquals(CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id, contentBlockingSettings.cookieBehavior)
+        assertEquals(
+            TrackingProtectionPolicy.TrackingCategory.AD.id,
+            contentBlockingSettings.antiTrackingCategories
+        )
+
+        assertEquals(
+            SafeBrowsingPolicy.PHISHING.id,
+            contentBlockingSettings.safeBrowsingCategories
+        )
+
+        assertEquals(
+            CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
+            contentBlockingSettings.cookieBehavior
+        )
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
 
@@ -416,7 +429,4 @@ class GeckoEngineTest {
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
     }
-
-    private fun ContentBlocking.Settings.contains(vararg safeBrowsingPolicies: SafeBrowsingPolicy) =
-        (safeBrowsingPolicies.sumBy { it.id } and this.categories) != 0
 }

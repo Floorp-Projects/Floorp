@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.engine.gecko.prompt
+package mozilla.components.browser.engine.gecko.webextension
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
-import mozilla.components.browser.engine.gecko.webextension.GeckoPort
-import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.support.test.argumentCaptor
@@ -88,7 +86,7 @@ class GeckoWebExtensionTest {
         val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
         assertFalse(extension.hasContentMessageHandler(session, "mozacTest"))
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
-        verify(geckoSession).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))
+        verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
 
         // Verify messages are forwarded to message handler and return value passed on
         val message: Any = mock()
