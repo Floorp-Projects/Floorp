@@ -219,6 +219,10 @@ template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     const RangeBoundary& aPoint);
 template EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     const RawRangeBoundary& aPoint);
+template Element* HTMLEditor::GetInvisibleBRElementAt(
+    const EditorDOMPoint& aPoint);
+template Element* HTMLEditor::GetInvisibleBRElementAt(
+    const EditorRawDOMPoint& aPoint);
 
 HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
@@ -3484,8 +3488,10 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
     }
 
     // Do br adjustment.
-    RefPtr<Element> brNode =
-        CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
+    EditorRawDOMPoint endOfLeftBlock;
+    endOfLeftBlock.SetToEndOf(leftBlock);
+    RefPtr<Element> invisibleBRElement =
+        HTMLEditorRef().GetInvisibleBRElementAt(endOfLeftBlock);
     EditActionResult ret(NS_OK);
     if (NS_WARN_IF(mergeLists)) {
       // Since 2002, here was the following comment:
@@ -3521,9 +3527,9 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       // atRightBlockChild is now invalid.
       atRightBlockChild.Clear();
     }
-    if (brNode) {
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*brNode);
+    if (invisibleBRElement) {
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .DeleteNodeWithTransaction(*invisibleBRElement);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3580,8 +3586,8 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       }
     }
     // Do br adjustment.
-    RefPtr<Element> brNode = CheckForInvisibleBR(
-        *leftBlock, BRLocation::beforeBlock, leftBlockChild.Offset());
+    RefPtr<Element> invisibleBRElement =
+        HTMLEditorRef().GetInvisibleBRElementAt(leftBlockChild);
     EditActionResult ret(NS_OK);
     if (mergeLists) {
       // XXX Why do we ignore the result of MoveContents()?
@@ -3664,9 +3670,9 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         return ret;
       }
     }
-    if (brNode) {
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*brNode);
+    if (invisibleBRElement) {
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .DeleteNodeWithTransaction(*invisibleBRElement);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3697,8 +3703,10 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
     return EditActionIgnored(rv);
   }
   // Do br adjustment.
-  RefPtr<Element> brNode =
-      CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
+  EditorRawDOMPoint endOfLeftBlock;
+  endOfLeftBlock.SetToEndOf(leftBlock);
+  RefPtr<Element> invisibleBRElement =
+      HTMLEditorRef().GetInvisibleBRElementAt(endOfLeftBlock);
   EditActionResult ret(NS_OK);
   if (mergeLists ||
       leftBlock->NodeInfo()->NameAtom() == rightBlock->NodeInfo()->NameAtom()) {
@@ -3726,8 +3734,9 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       return ret;
     }
   }
-  if (brNode) {
-    rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*brNode);
+  if (invisibleBRElement) {
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .DeleteNodeWithTransaction(*invisibleBRElement);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -6691,44 +6700,20 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
   return NS_OK;
 }
 
-Element* HTMLEditRules::CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
-                                            int32_t aOffset) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+template <typename PT, typename CT>
+Element* HTMLEditor::GetInvisibleBRElementAt(
+    const EditorDOMPointBase<PT, CT>& aPoint) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPoint.IsSet());
 
-  nsCOMPtr<nsINode> testNode;
-  int32_t testOffset = 0;
-
-  if (aWhere == BRLocation::blockEnd) {
-    // No block crossing
-    nsCOMPtr<nsIContent> rightmostNode =
-        HTMLEditorRef().GetRightmostChild(&aBlock, true);
-
-    if (!rightmostNode) {
-      return nullptr;
-    }
-
-    testNode = rightmostNode->GetParentNode();
-    // Since rightmostNode is always the last child, its index is equal to the
-    // child count, so instead of ComputeIndexOf() we use the faster
-    // GetChildCount(), and assert the equivalence below.
-    testOffset = testNode->GetChildCount();
-
-    // Use offset + 1, so last node is included in our evaluation
-    MOZ_ASSERT(testNode->ComputeIndexOf(rightmostNode) + 1 == testOffset);
-  } else if (aOffset) {
-    testNode = &aBlock;
-    // We'll check everything to the left of the input position
-    testOffset = aOffset;
-  } else {
+  if (aPoint.IsStartOfContainer()) {
     return nullptr;
   }
 
-  WSRunObject wsTester(&HTMLEditorRef(), testNode, testOffset);
-  if (WSType::br == wsTester.mStartReason) {
-    return wsTester.mStartReasonNode->AsElement();
-  }
-
-  return nullptr;
+  WSRunObject wsTester(this, aPoint);
+  return WSType::br == wsTester.mStartReason
+             ? wsTester.mStartReasonNode->AsElement()
+             : nullptr;
 }
 
 size_t HTMLEditor::CollectChildren(

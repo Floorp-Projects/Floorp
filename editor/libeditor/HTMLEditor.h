@@ -1955,6 +1955,13 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   DeleteNodeIfInvisibleAndEditableTextNode(nsINode& aNode);
 
+  /**
+   * If aPoint follows invisible `<br>` element, returns the invisible `<br>`
+   * element.  Otherwise, nullptr.
+   */
+  template <typename PT, typename CT>
+  Element* GetInvisibleBRElementAt(const EditorDOMPointBase<PT, CT>& aPoint);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
