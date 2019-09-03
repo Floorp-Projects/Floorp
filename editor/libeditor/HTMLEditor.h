@@ -1867,6 +1867,23 @@ class HTMLEditor final : public TextEditor,
    */
   static bool NodesInDifferentTableElements(nsINode& aNode1, nsINode& aNode2);
 
+  /**
+   * ChangeListElementType() replaces child list items of aListElement with
+   * new list item element whose tag name is aNewListItemTag.
+   * Note that if there are other list elements as children of aListElement,
+   * this calls itself recursively even though it's invalid structure.
+   *
+   * @param aListElement        The list element whose list items will be
+   *                            replaced.
+   * @param aNewListTag         New list tag name.
+   * @param aNewListItemTag     New list item tag name.
+   * @return                    New list element or an error code if it fails.
+   *                            New list element may be aListElement if its
+   *                            tag name is same as aNewListTag.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE CreateElementResult ChangeListElementType(
+      Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
