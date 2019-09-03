@@ -864,6 +864,43 @@ var snapshotFormatters = {
       $.append($("media-" + side + "-devices-tbody"), rows);
     }
 
+    function insertEnumerateDatabase() {
+      let button = $("enumerate-database-button");
+      if (button) {
+        button.addEventListener("click", function(event) {
+          let {KeyValueService} = ChromeUtils.import("resource://gre/modules/kvstore.jsm");
+          let currProfDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+          let path = currProfDir.path + "/mediacapabilities";
+
+          function enumerateDatabase(name) {
+            KeyValueService.getOrCreate(path, name)
+            .then(database => {
+              return database.enumerate();
+            })
+            .then(enumerator => {
+              var logs = [];
+              logs.push(`${name}:`);
+              while (enumerator.hasMoreElements()) {
+                const { key, value } = enumerator.getNext();
+                logs.push(`${key}: ${value}`);
+              }
+              $("enumerate-database-result").textContent += logs.join("\n") + "\n";
+            });
+          }
+
+          $("enumerate-database-result").style.display = "block";
+          $("enumerate-database-result").classList.remove("no-copy");
+          $("enumerate-database-result").textContent = "";
+
+          enumerateDatabase("video/av1");
+          enumerateDatabase("video/vp8");
+          enumerateDatabase("video/vp9");
+          enumerateDatabase("video/avc");
+          enumerateDatabase("video/theora");
+        });
+      }
+    }
+
     // Basic information
     insertBasicInfo("audio-backend", data.currentAudioBackend);
     insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
@@ -874,6 +911,9 @@ var snapshotFormatters = {
 
     // Input devices information
     insertDeviceInfo("input", data.audioInputDevices);
+
+    // Media Capabilitites
+    insertEnumerateDatabase();
   },
 
   javaScript(data) {

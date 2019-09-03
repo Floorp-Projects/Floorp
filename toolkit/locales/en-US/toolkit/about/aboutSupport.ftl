@@ -117,6 +117,12 @@ sandbox-sys-call-number = Syscall
 sandbox-sys-call-args = Arguments
 safe-mode-title = Try Safe Mode
 restart-in-safe-mode-label = Restart with Add-ons Disabled…
+
+## Media titles
+
+audio-backend = Audio Backend
+max-audio-channels = Max Channels
+sample-rate = Preferred Sample Rate
 media-title = Media
 media-output-devices-title = Output Devices
 media-input-devices-title = Input Devices
@@ -129,6 +135,11 @@ media-device-format = Format
 media-device-channels = Channels
 media-device-rate = Rate
 media-device-latency = Latency
+media-capabilities-title = Media Capabilities
+# List all the entries of the database.
+media-capabilities-enumerate = Enumerate database
+##
+
 intl-title = Internationalization & Localization
 intl-app-title = Application Settings
 intl-locales-requested = Requested Locales
@@ -255,11 +266,6 @@ content-uses-tiling = Uses Tiling (Content)
 off-main-thread-paint-enabled = Off Main Thread Painting Enabled
 off-main-thread-paint-worker-count = Off Main Thread Painting Worker Count
 target-frame-rate = Target Frame Rate
-
-audio-backend = Audio Backend
-max-audio-channels = Max Channels
-channel-layout = Preferred Channel Layout
-sample-rate = Preferred Sample Rate
 
 min-lib-versions = Expected minimum version
 loaded-lib-versions = Version in use
