@@ -187,11 +187,10 @@ class CreateCollectionFragment : DialogFragment() {
 
     private fun closeTabsIfNecessary(tabs: List<Tab>) {
         // Only close the tabs if the user is not on the BrowserFragment
-        if (viewModel.previousFragmentId == R.id.browserFragment) {
+        if (viewModel.previousFragmentId == R.id.browserFragment) { return }
             val components = requireComponents
             tabs.asSequence()
                 .mapNotNull { tab -> components.core.sessionManager.findSessionById(tab.sessionId) }
                 .forEach { session -> components.useCases.tabsUseCases.removeTab(session) }
         }
-    }
 }
