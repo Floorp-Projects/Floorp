@@ -524,6 +524,8 @@ cbindgen-types = [
     { gecko = "StyleVariantAlternatesList", servo = "values::specified::font::VariantAlternatesList" },
     { gecko = "StyleSVGPaintOrder", servo = "values::specified::svg::SVGPaintOrder" },
     { gecko = "StyleClipRectOrAuto", servo = "values::computed::ClipRectOrAuto" },
+    { gecko = "StyleCounterSetOrReset", servo = "values::computed::CounterSetOrReset" },
+    { gecko = "StyleCounterIncrement", servo = "values::computed::CounterIncrement" },
 ]
 
 mapped-generic-types = [

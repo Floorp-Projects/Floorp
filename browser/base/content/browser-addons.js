@@ -437,13 +437,41 @@ var gXPInstallObserver = {
     "xpinstall-disabled",
   ],
 
-  // Remove all opened addon installation notifications
+  /**
+   * Remove all opened addon installation notifications
+   *
+   * @param {*} browser - Browser to remove notifications for
+   * @returns {boolean} - true if notifications have been removed.
+   */
   removeAllNotifications(browser) {
     let notifications = this.NOTIFICATION_IDS.map(id =>
       PopupNotifications.getNotification(id, browser)
     ).filter(notification => notification != null);
 
     PopupNotifications.remove(notifications, true);
+
+    return notifications.length > 0;
+  },
+
+  logWarningFullScreenInstallBlocked() {
+    // If notifications have been removed, log a warning to the website console
+    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+      Ci.nsIScriptError
+    );
+    let message = gBrowserBundle.GetStringFromName(
+      "addonInstallFullScreenBlocked"
+    );
+    consoleMsg.initWithWindowID(
+      message,
+      gBrowser.currentURI.spec,
+      null,
+      0,
+      0,
+      Ci.nsIScriptError.warningFlag,
+      "FullScreen",
+      gBrowser.selectedBrowser.innerWindowID
+    );
+    Services.console.logMessage(consoleMsg);
   },
 
   observe(aSubject, aTopic, aData) {
@@ -515,6 +543,11 @@ var gXPInstallObserver = {
           secondaryActions,
           options
         );
+        break;
+      }
+      case "addon-install-fullscreen-blocked": {
+        // AddonManager denied installation because we are in DOM fullscreen
+        this.logWarningFullScreenInstallBlocked();
         break;
       }
       case "addon-install-origin-blocked": {
