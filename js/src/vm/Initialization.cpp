@@ -223,8 +223,6 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 
   js::wasm::ShutDown();
 
-  js::Mutex::ShutDown();
-
   // The only difficult-to-address reason for the restriction that you can't
   // call JS_Init/stuff/JS_ShutDown multiple times is the Windows PRMJ
   // NowInit initialization code, which uses PR_CallOnce to initialize the
