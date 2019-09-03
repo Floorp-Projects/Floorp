@@ -809,10 +809,6 @@ toolbarspring {
   .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
     image-rendering: -moz-crisp-edges;
   }
-  /* Synced Tabs sidebar */
-  html|*.tabs-container html|*.item-tabs-list html|*.item-icon-container {
-    image-rendering: -moz-crisp-edges;
-  }
 }
 
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
