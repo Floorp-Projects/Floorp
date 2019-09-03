@@ -1672,11 +1672,16 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
 // ------ Strings, non-nullable
 // varnum (index)
 
-// Read the number of symbols from the metadata.
+// Read the number of symbols from the stream.
 template <>
 MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
-    const String&) {
-  return reader.metadata_->numStrings();
+    const String& string) {
+  BINJS_MOZ_TRY_DECL(length, reader.readVarU32<Compression::No>());
+  if (length > MAX_NUMBER_OF_SYMBOLS ||
+      length > reader.metadata_->numStrings()) {
+    return raiseInvalidTableData(string.identity);
+  }
+  return length;
 }
 
 // Read a single symbol from the stream.
