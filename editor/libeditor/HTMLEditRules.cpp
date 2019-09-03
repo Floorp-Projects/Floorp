@@ -2551,11 +2551,14 @@ nsresult HTMLEditRules::WillDeleteSelection(
       //     non-empty text node.  For now, we should keep our traditional
       //     behavior same as Chromium for backward compatibility.
 
-      rv = DeleteNodeIfCollapsedText(nodeAsText);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .DeleteNodeIfInvisibleAndEditableTextNode(nodeAsText);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove collapsed text");
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "DeleteNodeIfInvisibleAndEditableTextNode() failed, but ignored");
 
       rv = MOZ_KnownLive(HTMLEditorRef())
                .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
@@ -3222,20 +3225,22 @@ nsresult HTMLEditRules::WillDeleteSelection(
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
                                  address_of(endNode), &endOffset);
 
-    nsresult rv = DeleteNodeIfCollapsedText(*startNode);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .DeleteNodeIfInvisibleAndEditableTextNode(*startNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "Failed to delete start node even though it's collapsed text");
-    rv = DeleteNodeIfCollapsedText(*endNode);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteNodeIfInvisibleAndEditableTextNode() failed to "
+                         "remove start node, but ignored");
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .DeleteNodeIfInvisibleAndEditableTextNode(*endNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "Failed to delete end node even though it's collapsed text");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteNodeIfInvisibleAndEditableTextNode() failed to "
+                         "remove end node, but ignored");
   }
 
   // If we're joining blocks: if deleting forward the selection should be
@@ -3266,26 +3271,24 @@ nsresult HTMLEditRules::WillDeleteSelection(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::DeleteNodeIfInvisibleAndEditableTextNode(nsINode& aNode) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   Text* text = aNode.GetAsText();
   if (!text) {
     return NS_OK;
   }
 
-  if (HTMLEditorRef().IsVisibleTextNode(*text)) {
+  if (IsVisibleTextNode(*text) || !IsModifiableNode(*text)) {
     return NS_OK;
   }
 
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(aNode);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = DeleteNodeWithTransaction(aNode);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DeleteNodeWithTransaction() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
