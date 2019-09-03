@@ -1118,7 +1118,8 @@ struct AssemblerBufferWithConstantPools
     inhibitNops_ = false;
   }
   void assertNoPoolAndNoNops() {
-    MOZ_ASSERT(inhibitNops_ && (isPoolEmptyFor(InstSize) || canNotPlacePool_));
+    MOZ_ASSERT(inhibitNops_);
+    MOZ_ASSERT_IF(!this->oom(), isPoolEmptyFor(InstSize) || canNotPlacePool_);
   }
 
   void align(unsigned alignment) { align(alignment, alignFillInst_); }

@@ -504,11 +504,28 @@ class HTMLEditor final : public TextEditor,
     mComposerCommandsUpdater = aComposerCommandsUpdater;
   }
 
+  nsStaticAtom& DefaultParagraphSeparatorTagName() const {
+    return HTMLEditor::ToParagraphSeparatorTagName(mDefaultParagraphSeparator);
+  }
   ParagraphSeparator GetDefaultParagraphSeparator() const {
     return mDefaultParagraphSeparator;
   }
   void SetDefaultParagraphSeparator(ParagraphSeparator aSep) {
     mDefaultParagraphSeparator = aSep;
+  }
+  static nsStaticAtom& ToParagraphSeparatorTagName(
+      ParagraphSeparator aSeparator) {
+    switch (aSeparator) {
+      case ParagraphSeparator::div:
+        return *nsGkAtoms::div;
+      case ParagraphSeparator::p:
+        return *nsGkAtoms::p;
+      case ParagraphSeparator::br:
+        return *nsGkAtoms::br;
+      default:
+        MOZ_ASSERT_UNREACHABLE("New paragraph separator isn't handled here");
+        return *nsGkAtoms::div;
+    }
   }
 
   /**
@@ -1109,6 +1126,17 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // edit sub-action handler
   /**
+   * CanHandleHTMLEditSubAction() checks whether there is at least one
+   * selection range or not, and whether the first range is editable.
+   * If it's not editable, `Canceled()` of the result returns true.
+   * If `Selection` is in odd situation, returns an error.
+   *
+   * XXX I think that `IsSelectionEditable()` is better name, but it's already
+   *     in `EditorBase`...
+   */
+  EditActionResult CanHandleHTMLEditSubAction() const;
+
+  /**
    * Called before inserting something into the editor.
    * This method may removes mPaddingBRElementForEmptyEditor if there is.
    * Therefore, this method might cause destroying the editor.
@@ -1696,8 +1724,9 @@ class HTMLEditor final : public TextEditor,
       nsTArray<OwningNonNull<nsINode>>& aNodeArray, nsAtom& aBlockTag);
 
   /**
-   * FormatBlockContainer() is implementation of "formatBlock" command of
-   * `Document.execCommand()`.  This applies block style or removes it.
+   * FormatBlockContainerWithTransaction() is implementation of "formatBlock"
+   * command of `Document.execCommand()`.  This applies block style or removes
+   * it.
    * NOTE: This creates AutoSelectionRestorer.  Therefore, even when this
    *       return NS_OK, editor may have been destroyed.
    *
@@ -1711,7 +1740,7 @@ class HTMLEditor final : public TextEditor,
    *                            called.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  FormatBlockContainer(nsAtom& aBlockType);
+  FormatBlockContainerWithTransaction(nsAtom& aBlockType);
 
   /**
    * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if
@@ -1735,6 +1764,39 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   InsertPaddingBRElementForEmptyLastLineIfNeeded(Element& aElement);
+
+  /**
+   * This method inserts a padding `<br>` element for empty last line if
+   * selection is collapsed and container of the range needs it.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+
+  /**
+   * IsEmptyBlockElement() returns true if aElement is a block level element
+   * and it doesn't have any visible content.
+   */
+  enum class IgnoreSingleBR { Yes, No };
+  bool IsEmptyBlockElement(Element& aElement,
+                           IgnoreSingleBR aIgnoreSingleBR) const;
+
+  /**
+   * SplitParagraph() splits the parent block, aParentDivOrP, at
+   * aStartOfRightNode.
+   *
+   * @param aParentDivOrP       The parent block to be split.  This must be <p>
+   *                            or <div> element.
+   * @param aStartOfRightNode   The point to be start of right node after
+   *                            split.  This must be descendant of
+   *                            aParentDivOrP.
+   * @param aNextBRNode         Next <br> node if there is.  Otherwise, nullptr.
+   *                            If this is not nullptr, the <br> node may be
+   *                            removed.
+   */
+  template <typename PT, typename CT>
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SplitParagraph(
+      Element& aParentDivOrP,
+      const EditorDOMPointBase<PT, CT>& aStartOfRightNode, nsIContent* aBRNode);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -2855,14 +2917,14 @@ class HTMLEditor final : public TextEditor,
   nsresult MakeDefinitionListItemWithTransaction(nsAtom& aTagName);
 
   /**
-   * InsertBasicBlockWithTransaction() inserts a block element whose name
-   * is aTagName at selection.
+   * FormatBlockContainerAsSubAction() inserts a block element whose name
+   * is aTagName at selection.  If selection is not collapsed and aTagName is
+   * nsGkAtoms::normal or nsGkAtoms::_empty, this removes block containers.
    *
    * @param aTagName            A block level element name.  Must NOT be
    *                            nsGkAtoms::dt nor nsGkAtoms::dd.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult InsertBasicBlockWithTransaction(nsAtom& aTagName);
+  MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerAsSubAction(nsAtom& aTagName);
 
   /**
    * Increase/decrease the font size of selection.

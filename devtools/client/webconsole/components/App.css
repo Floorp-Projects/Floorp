@@ -265,13 +265,11 @@ body {
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton::before {
   background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
   background-size: 16px;
-  fill: var(--comment-node-color);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton::before {
   background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
   background-size: 16px;
-  fill: var(--comment-node-color);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {

@@ -6961,7 +6961,7 @@
 # Negate scroll, true will make the mouse scroll wheel move the screen the
 # same direction as with most desktops or laptops.
 - name: ui.scrolling.negate_wheel_scroll
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_ANDROID@
   mirror: always
 

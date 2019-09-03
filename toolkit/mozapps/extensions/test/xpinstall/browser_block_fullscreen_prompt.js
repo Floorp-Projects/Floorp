@@ -45,7 +45,7 @@ add_task(async function testFullscreenBlockAddonInstallPrompt() {
 
   // Trigger addon installation and expect it to be blocked
   let addonEventPromise = TestUtils.topicObserved(
-    "addon-install-blocked-silent"
+    "addon-install-fullscreen-blocked"
   );
   await triggerInstall(gBrowser.selectedBrowser, { XPI: "amosigned.xpi" });
   await addonEventPromise;
