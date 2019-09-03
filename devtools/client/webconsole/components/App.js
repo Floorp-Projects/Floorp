@@ -352,7 +352,7 @@ class App extends Component {
           this.node = node;
         },
       },
-      ...children
+      children
     );
   }
 
@@ -382,12 +382,13 @@ class App extends Component {
           })
         : null,
       dom.div(
-        { className: "flexible-output-input" },
+        { className: "flexible-output-input", key: "in-out-container" },
         consoleOutput,
         notificationBox,
         jsterm
       ),
       GridElementWidthResizer({
+        key: "editor-resizer",
         enabled: editorFeatureEnabled && editorMode,
         position: "end",
         className: "editor-resizer",
