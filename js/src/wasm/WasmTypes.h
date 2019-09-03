@@ -2330,13 +2330,19 @@ static_assert(MaxMemoryAccessSize < GuardSize,
 static_assert(OffsetGuardLimit < UINT32_MAX,
               "checking for overflow against OffsetGuardLimit is enough.");
 
-static constexpr bool GetOffsetGuardLimit(bool hugeMemory) {
+static constexpr size_t GetOffsetGuardLimit(bool hugeMemory) {
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
   return hugeMemory ? HugeOffsetGuardLimit : OffsetGuardLimit;
 #else
   return OffsetGuardLimit;
 #endif
 }
+
+#ifdef WASM_SUPPORTS_HUGE_MEMORY
+static const size_t MaxOffsetGuardLimit = HugeOffsetGuardLimit;
+#else
+static const size_t MaxOffsetGuardLimit = OffsetGuardLimit;
+#endif
 
 // Return whether the given immediate satisfies the constraints of the platform
 // (viz. that, on ARM, IsValidARMImmediate).
