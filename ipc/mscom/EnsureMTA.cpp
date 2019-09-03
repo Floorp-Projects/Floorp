@@ -75,7 +75,7 @@ nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
         SystemGroup::Dispatch(
             TaskCategory::Other,
             NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
-                                   setClearOnShutdown));
+                                   std::move(setClearOnShutdown)));
 
         return bgData;
       }());
