@@ -173,7 +173,20 @@ void LayerManagerComposite::Destroy() {
     mRoot = nullptr;
     mClonedLayerTreeProperties = nullptr;
     mProfilerScreenshotGrabber.Destroy();
+
     if (mNativeLayerRoot) {
+      if (mGPUStatsLayer) {
+        mNativeLayerRoot->RemoveLayer(mGPUStatsLayer);
+        mGPUStatsLayer = nullptr;
+      }
+      if (mUnusedTransformWarningLayer) {
+        mNativeLayerRoot->RemoveLayer(mUnusedTransformWarningLayer);
+        mUnusedTransformWarningLayer = nullptr;
+      }
+      if (mDisabledApzWarningLayer) {
+        mNativeLayerRoot->RemoveLayer(mDisabledApzWarningLayer);
+        mDisabledApzWarningLayer = nullptr;
+      }
       for (const auto& nativeLayer : mNativeLayers) {
         mNativeLayerRoot->RemoveLayer(nativeLayer);
       }
