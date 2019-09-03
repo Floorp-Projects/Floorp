@@ -12,6 +12,7 @@
 #pragma warning(pop)
 
 #include "Authenticode.h"
+#include "BaseProfiler.h"
 #include "CrashAnnotations.h"
 #include "MozglueUtils.h"
 #include "UntrustedDllsHandler.h"
@@ -659,9 +660,26 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
     glue::UntrustedDllsHandler::Init();
   }
 
+  // There are a couple of exceptional cases where we skip user32.dll check.
+  // - If the the process was bootstrapped by the launcher process, AppInit
+  //   DLLs will be intercepted by the new DllBlockList.  No need to check
+  //   here.
+  // - The code to initialize the base profiler loads winmm.dll which
+  //   statically links user32.dll on an older Windows.  This means if the base
+  //   profiler is active before coming here, we cannot fully intercept AppInit
+  //   DLLs.  Given that the base profiler is used outside the typical use
+  //   cases, it's ok not to check user32.dll in this scenario.
+  const bool skipUser32Check =
+      (sInitFlags & eDllBlocklistInitFlagWasBootstrapped)
+#ifdef MOZ_BASE_PROFILER
+      || (!IsWin10AnniversaryUpdateOrLater()
+          && baseprofiler::profiler_is_active())
+#endif
+      ;
+
   // In order to be effective against AppInit DLLs, the blocklist must be
   // initialized before user32.dll is loaded into the process (bug 932100).
-  if (GetModuleHandleA("user32.dll")) {
+  if (!skipUser32Check && GetModuleHandleW(L"user32.dll")) {
     sUser32BeforeBlocklist = true;
 #ifdef DEBUG
     printf_stderr("DLL blocklist was unable to intercept AppInit DLLs.\n");
