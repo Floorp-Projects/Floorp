@@ -24,6 +24,19 @@ const PROPERTIES_RESET_WHEN_ACTIVE = [
   "text-shadow",
 ];
 
+// Duplicated in SelectChild.jsm
+// Please keep these lists in sync.
+const SUPPORTED_PROPERTIES = [
+  "direction",
+  "color",
+  "background-color",
+  "text-shadow",
+  "font-family",
+  "font-weight",
+  "font-size",
+  "font-style",
+];
+
 const customStylingEnabled = Services.prefs.getBoolPref(
   "dom.forms.select.customstyling"
 );
@@ -119,22 +132,24 @@ var SelectParentHelper = {
         );
       }
 
-      let ruleBody = "";
-      for (let property in selectStyle) {
+      let addedRule = false;
+      for (let property of SUPPORTED_PROPERTIES) {
         if (property == "background-color" || property == "direction") {
           continue;
         } // Handled above, or before.
-        if (selectStyle[property] != uaStyle[property]) {
-          ruleBody += `${property}: ${selectStyle[property]};`;
+        if (
+          !selectStyle[property] ||
+          selectStyle[property] == uaStyle[property]
+        ) {
+          continue;
         }
+        if (!addedRule) {
+          sheet.insertRule("#ContentSelectDropdown > menupopup {}", 0);
+          addedRule = true;
+        }
+        sheet.cssRules[0][property] = selectStyle[property];
       }
-      if (ruleBody) {
-        sheet.insertRule(
-          `#ContentSelectDropdown > menupopup {
-          ${ruleBody}
-        }`,
-          0
-        );
+      if (addedRule) {
         sheet.insertRule(
           `#ContentSelectDropdown > menupopup > :not([_moz-menuactive="true"]) {
             color: inherit;
@@ -416,29 +431,30 @@ var SelectParentHelper = {
       }
 
       if (customStylingEnabled) {
-        let ruleBody = "";
-        for (let property in style) {
+        let addedRule = false;
+        for (const property of SUPPORTED_PROPERTIES) {
           if (property == "direction" || property == "font-size") {
             continue;
           } // handled above
-          if (style[property] == selectStyle[property]) {
+          if (!style[property] || style[property] == selectStyle[property]) {
             continue;
           }
           if (PROPERTIES_RESET_WHEN_ACTIVE.includes(property)) {
-            ruleBody += `${property}: ${style[property]};`;
+            if (!addedRule) {
+              sheet.insertRule(
+                `#ContentSelectDropdown > menupopup > :nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
+              }`,
+                0
+              );
+              addedRule = true;
+            }
+            sheet.cssRules[0][property] = style[property];
           } else {
             item.style.setProperty(property, style[property]);
           }
         }
 
-        if (ruleBody) {
-          sheet.insertRule(
-            `#ContentSelectDropdown > menupopup > :nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
-            ${ruleBody}
-          }`,
-            0
-          );
-
+        if (addedRule) {
           if (
             style["text-shadow"] != "none" &&
             style["text-shadow"] != selectStyle["text-shadow"]
