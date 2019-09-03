@@ -12,7 +12,7 @@ use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDispla
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::units::*;
-use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
+use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
@@ -1297,7 +1297,7 @@ impl<'a> DisplayListFlattener<'a> {
 
                     for _ in 0 .. item_clip_node.count {
                         // Get the id of the clip sources entry for that clip chain node.
-                        let (handle, spatial_node_index, local_pos, has_complex_clip) = {
+                        let (handle, has_complex_clip) = {
                             let clip_chain = self
                                 .clip_store
                                 .get_clip_chain(clip_node_clip_chain_id);
@@ -1306,8 +1306,6 @@ impl<'a> DisplayListFlattener<'a> {
 
                             (
                                 clip_chain.handle,
-                                clip_chain.spatial_node_index,
-                                clip_chain.local_pos,
                                 clip_chain.has_complex_clip,
                             )
                         };
@@ -1318,8 +1316,6 @@ impl<'a> DisplayListFlattener<'a> {
                             .clip_store
                             .add_clip_chain_node(
                                 handle,
-                                local_pos,
-                                spatial_node_index,
                                 clip_chain_id,
                                 has_complex_clip,
                             );
@@ -1398,8 +1394,7 @@ impl<'a> DisplayListFlattener<'a> {
     // just return the parent clip chain id directly.
     fn build_clip_chain(
         &mut self,
-        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
-        spatial_node_index: SpatialNodeIndex,
+        clip_items: Vec<ClipItemKey>,
         parent_clip_chain_id: ClipChainId,
     ) -> ClipChainId {
         if clip_items.is_empty() {
@@ -1407,18 +1402,16 @@ impl<'a> DisplayListFlattener<'a> {
         } else {
             let mut clip_chain_id = parent_clip_chain_id;
 
-            for (local_pos, item) in clip_items {
+            for item in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
-                let has_complex_clip = item.has_complex_clip();
+                let has_complex_clip = item.kind.has_complex_clip();
                 let handle = self.interners
                     .clip
                     .intern(&item, || ());
 
                 clip_chain_id = self.clip_store.add_clip_chain_node(
                     handle,
-                    local_pos,
-                    spatial_node_index,
                     clip_chain_id,
                     has_complex_clip,
                 );
@@ -1533,7 +1526,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
-        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
+        clip_items: Vec<ClipItemKey>,
         prim: P,
     )
     where
@@ -1543,7 +1536,6 @@ impl<'a> DisplayListFlattener<'a> {
         if prim.is_visible() {
             let clip_chain_id = self.build_clip_chain(
                 clip_items,
-                clip_and_scroll.spatial_node_index,
                 clip_and_scroll.clip_chain_id,
             );
             self.add_prim_to_draw_list(
@@ -1559,7 +1551,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
-        clip_items: Vec<(LayoutPoint, ClipItemKey)>,
+        clip_items: Vec<ClipItemKey>,
         prim: P,
     )
     where
@@ -2154,7 +2146,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Map from parent ClipId to existing clip-chain.
         let mut parent_clip_chain_index = self.id_to_index_mapper.get_clip_chain_id(space_and_clip.clip_id);
         // Map the ClipId for the positioning node to a spatial node index.
-        let spatial_node = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
         let mut clip_count = 0;
 
@@ -2164,34 +2156,39 @@ impl<'a> DisplayListFlattener<'a> {
         //           interning and chaining code.
 
         // Build the clip sources from the supplied region.
+        let item = ClipItemKey {
+            kind: ClipItemKeyKind::rectangle(clip_region.main, ClipMode::Clip),
+            spatial_node_index,
+        };
         let handle = self
             .interners
             .clip
-            .intern(&ClipItemKey::rectangle(clip_region.main.size, ClipMode::Clip), || ());
+            .intern(&item, || ());
 
         parent_clip_chain_index = self
             .clip_store
             .add_clip_chain_node(
                 handle,
-                clip_region.main.origin,
-                spatial_node,
                 parent_clip_chain_index,
                 false,
             );
         clip_count += 1;
 
         if let Some(ref image_mask) = clip_region.image_mask {
+            let item = ClipItemKey {
+                kind: ClipItemKeyKind::image_mask(image_mask),
+                spatial_node_index,
+            };
+
             let handle = self
                 .interners
                 .clip
-                .intern(&ClipItemKey::image_mask(image_mask), || ());
+                .intern(&item, || ());
 
             parent_clip_chain_index = self
                 .clip_store
                 .add_clip_chain_node(
                     handle,
-                    image_mask.rect.origin,
-                    spatial_node,
                     parent_clip_chain_index,
                     true,
                 );
@@ -2199,17 +2196,24 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         for region in clip_region.complex_clips {
+            let item = ClipItemKey {
+                kind: ClipItemKeyKind::rounded_rect(
+                    region.rect,
+                    region.radii,
+                    region.mode,
+                ),
+                spatial_node_index,
+            };
+
             let handle = self
                 .interners
                 .clip
-                .intern(&ClipItemKey::rounded_rect(region.rect.size, region.radii, region.mode), || ());
+                .intern(&item, || ());
 
             parent_clip_chain_index = self
                 .clip_store
                 .add_clip_chain_node(
                     handle,
-                    region.rect.origin,
-                    spatial_node,
                     parent_clip_chain_index,
                     true,
                 );

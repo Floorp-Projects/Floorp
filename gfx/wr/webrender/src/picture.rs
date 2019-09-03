@@ -817,23 +817,11 @@ impl PartialEq for PrimitiveDescriptor {
 pub struct ClipDescriptor {
     /// The uid is guaranteed to uniquely describe the content of the clip node.
     uid: ItemUid,
-    /// The origin defines the relative position of this clip template.
-    origin: PointKey,
 }
 
 impl PartialEq for ClipDescriptor {
     fn eq(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-
         if self.uid != other.uid {
-            return false;
-        }
-
-        if !self.origin.x.approx_eq_eps(&other.origin.x, &EPSILON) {
-            return false;
-        }
-
-        if !self.origin.y.approx_eq_eps(&other.origin.y, &EPSILON) {
             return false;
         }
 
@@ -1489,13 +1477,13 @@ impl TileCacheInstance {
             for clip_instance in clip_instances {
                 prim_info.clips.push(ClipDescriptor {
                     uid: clip_instance.handle.uid(),
-                    origin: clip_instance.local_pos.into(),
                 });
 
                 // If the clip has the same spatial node, the relative transform
                 // will always be the same, so there's no need to depend on it.
-                if clip_instance.spatial_node_index != self.spatial_node_index {
-                    prim_info.clip_spatial_nodes.insert(clip_instance.spatial_node_index);
+                let clip_node = &data_stores.clip[clip_instance.handle];
+                if clip_node.item.spatial_node_index != self.spatial_node_index {
+                    prim_info.clip_spatial_nodes.insert(clip_node.item.spatial_node_index);
                 }
             }
         }
