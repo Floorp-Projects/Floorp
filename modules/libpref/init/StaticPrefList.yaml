@@ -6299,11 +6299,6 @@
   value: false
   mirror: always
 
-- name: network.delay.tracking.load
-  type: uint32_t
-  value: 0
-  mirror: always
-
 - name: network.dns.disablePrefetchFromHTTPS
   type: bool
   value: true
