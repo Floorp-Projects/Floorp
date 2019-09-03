@@ -110,7 +110,7 @@ async function captureProfile() {
 
   receiveProfile(profile, getSymbols);
 
-  Services.profiler.ResumeSampling();
+  Services.profiler.StopProfiler();
 }
 
 /**
