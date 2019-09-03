@@ -27,7 +27,7 @@ function HTMLPreview({ responseContent }) {
 HTMLPreview.displayName = "HTMLPreview";
 
 HTMLPreview.propTypes = {
-  requestContent: PropTypes.object.isRequired,
+  responseContent: PropTypes.object.isRequired,
 };
 
 module.exports = HTMLPreview;

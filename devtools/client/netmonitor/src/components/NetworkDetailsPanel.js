@@ -36,6 +36,7 @@ function NetworkDetailsPanel({
   toggleNetworkDetails,
   openNetworkDetails,
   openLink,
+  targetSearchResult,
 }) {
   if (!request) {
     return null;
@@ -54,6 +55,7 @@ function NetworkDetailsPanel({
           sourceMapService,
           toggleNetworkDetails,
           openNetworkDetails,
+          targetSearchResult,
         })
       : CustomRequestPanel({
           connector,
@@ -74,12 +76,14 @@ NetworkDetailsPanel.propTypes = {
   sourceMapService: PropTypes.object,
   toggleNetworkDetails: PropTypes.func.isRequired,
   openLink: PropTypes.func,
+  targetSearchResult: PropTypes.object,
 };
 
 module.exports = connect(
   state => ({
     activeTabId: state.ui.detailsPanelSelectedTab,
     request: getSelectedRequest(state),
+    targetSearchResult: state.search.targetSearchResult,
   }),
   dispatch => ({
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
