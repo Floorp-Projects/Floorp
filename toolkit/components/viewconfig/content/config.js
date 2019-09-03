@@ -363,6 +363,74 @@ function fetchPref(prefName, prefIndex) {
 }
 
 async function onConfigLoad() {
+  let configContext = document.getElementById("configContext");
+  configContext.addEventListener("popupshowing", function(event) {
+    if (event.target == this) {
+      updateContextMenu();
+    }
+  });
+
+  let commandListeners = {
+    toggleSelected: ModifySelected,
+    modifySelected: ModifySelected,
+    copyPref,
+    copyName,
+    copyValue,
+    resetSelected: ResetSelected,
+  };
+
+  configContext.addEventListener("command", e => {
+    if (e.target.id in commandListeners) {
+      commandListeners[e.target.id]();
+    }
+  });
+
+  let configString = document.getElementById("configString");
+  configString.addEventListener("command", function() {
+    NewPref(nsIPrefBranch.PREF_STRING);
+  });
+
+  let configInt = document.getElementById("configInt");
+  configInt.addEventListener("command", function() {
+    NewPref(nsIPrefBranch.PREF_INT);
+  });
+
+  let configBool = document.getElementById("configBool");
+  configBool.addEventListener("command", function() {
+    NewPref(nsIPrefBranch.PREF_BOOL);
+  });
+
+  let keyVKReturn = document.getElementById("keyVKReturn");
+  keyVKReturn.addEventListener("command", ModifySelected);
+
+  let textBox = document.getElementById("textbox");
+  textBox.addEventListener("command", FilterPrefs);
+
+  let configFocuSearch = document.getElementById("configFocuSearch");
+  configFocuSearch.addEventListener("command", function() {
+    textBox.focus();
+  });
+
+  let configFocuSearch2 = document.getElementById("configFocuSearch2");
+  configFocuSearch2.addEventListener("command", function() {
+    textBox.focus();
+  });
+
+  let warningButton = document.getElementById("warningButton");
+  warningButton.addEventListener("command", ShowPrefs);
+
+  let configTree = document.getElementById("configTree");
+  configTree.addEventListener("select", function() {
+    window.updateCommands("select");
+  });
+
+  let configTreeBody = document.getElementById("configTreeBody");
+  configTreeBody.addEventListener("dblclick", function(event) {
+    if (event.button == 0) {
+      ModifySelected();
+    }
+  });
+
   // Load strings
   let [
     lockDefault,
@@ -756,3 +824,6 @@ function recordTelemetryOnce(categoryLabel) {
     gCategoriesRecordedOnce.add(categoryLabel);
   }
 }
+
+window.onload = onConfigLoad;
+window.onunload = onConfigUnload;
