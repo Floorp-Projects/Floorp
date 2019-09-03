@@ -7,7 +7,7 @@ use api::{LineStyle, LineOrientation, ClipMode, DirtyRect, MixBlendMode, ColorF,
 use api::units::*;
 use crate::border::BorderSegmentCacheKey;
 use crate::box_shadow::{BoxShadowCacheKey};
-use crate::clip::{ClipDataStore, ClipItem, ClipStore, ClipNodeRange, ClipNodeFlags};
+use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange, ClipNodeFlags};
 use crate::clip_scroll_tree::SpatialNodeIndex;
 use crate::device::TextureFilter;
 use crate::filterdata::SFilterData;
@@ -538,18 +538,18 @@ impl RenderTask {
         for i in 0 .. clip_node_range.count {
             let clip_instance = clip_store.get_instance_from_range(&clip_node_range, i);
             let clip_node = &mut clip_data_store[clip_instance.handle];
-            match clip_node.item {
-                ClipItem::BoxShadow(ref mut info) => {
-                    let (cache_size, cache_key) = info.cache_key
+            match clip_node.item.kind {
+                ClipItemKind::BoxShadow { ref mut source } => {
+                    let (cache_size, cache_key) = source.cache_key
                         .as_ref()
                         .expect("bug: no cache key set")
                         .clone();
                     let blur_radius_dp = cache_key.blur_radius_dp as f32;
-                    let clip_data_address = gpu_cache.get_address(&info.clip_data_handle);
+                    let clip_data_address = gpu_cache.get_address(&source.clip_data_handle);
 
                     // Request a cacheable render task with a blurred, minimal
                     // sized box-shadow rect.
-                    info.cache_handle = Some(resource_cache.request_render_task(
+                    source.cache_handle = Some(resource_cache.request_render_task(
                         RenderTaskCacheKey {
                             size: cache_size,
                             kind: RenderTaskCacheKeyKind::BoxShadow(cache_key),
@@ -563,7 +563,7 @@ impl RenderTask {
                             let mask_task = RenderTask::new_rounded_rect_mask(
                                 cache_size,
                                 clip_data_address,
-                                info.minimal_shadow_rect.origin,
+                                source.minimal_shadow_rect.origin,
                                 device_pixel_scale,
                                 fb_config,
                             );
@@ -583,7 +583,7 @@ impl RenderTask {
                         }
                     ));
                 }
-                ClipItem::Rectangle(_, ClipMode::Clip) => {
+                ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {
                     if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
                         // This is conservative - it's only the case that we actually need
                         // a clear here if we end up adding this mask via add_tiled_clip_mask,
@@ -592,9 +592,9 @@ impl RenderTask {
                         needs_clear = true;
                     }
                 }
-                ClipItem::Rectangle(_, ClipMode::ClipOut) |
-                ClipItem::RoundedRectangle(..) |
-                ClipItem::Image { .. } => {}
+                ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } |
+                ClipItemKind::RoundedRectangle { .. } |
+                ClipItemKind::Image { .. } => {}
             }
         }
 
