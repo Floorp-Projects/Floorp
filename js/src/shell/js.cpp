@@ -4002,8 +4002,6 @@ static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 static void WorkerMain(WorkerInput* input) {
   MOZ_ASSERT(input->parentRuntime);
 
-  auto mutexShutdown = mozilla::MakeScopeExit([] { Mutex::ShutDown(); });
-
   JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L,
                                 input->parentRuntime);
   if (!cx) {
@@ -4303,8 +4301,6 @@ static void WatchdogMain(JSContext* cx) {
       }
     }
   }
-
-  Mutex::ShutDown();
 }
 
 static bool ScheduleWatchdog(JSContext* cx, double t) {
@@ -7129,8 +7125,6 @@ struct BufferStreamState {
 static ExclusiveWaitableData<BufferStreamState>* bufferStreamState;
 
 static void BufferStreamMain(BufferStreamJob* job) {
-  auto mutexShutdown = MakeScopeExit([] { Mutex::ShutDown(); });
-
   const uint8_t* bytes;
   size_t byteLength;
   JS::OptimizedEncodingListener* listener;

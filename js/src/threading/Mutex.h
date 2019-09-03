@@ -51,10 +51,8 @@ class Mutex {
  public:
 #ifdef DEBUG
   static bool Init();
-  static void ShutDown();
 #else
   static bool Init() { return true; }
-  static void ShutDown() {}
 #endif
 
   explicit Mutex(const MutexId& id)
