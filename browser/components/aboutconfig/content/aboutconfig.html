@@ -5,6 +5,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:">
     <meta charset="utf-8">
     <link rel="stylesheet" media="screen, projection" type="text/css"
           href="chrome://global/skin/in-content/common.css">
@@ -36,7 +37,7 @@
       </div>
 
       <div class="button-container">
-        <button autofocus onclick="onWarningButtonClick();"
+        <button autofocus id="warningButton"
                 data-l10n-id="about-config-warning-button"></button>
       </div>
     </div>
