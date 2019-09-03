@@ -49,7 +49,7 @@ abstract class InflationAwareFeature(
      * when the view is inflated.
      */
     override fun start() {
-        // We don't do anything because we only want to start the feature when it's being used.
+        feature?.start()
     }
 
     override fun stop() {
