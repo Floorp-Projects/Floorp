@@ -1906,6 +1906,11 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
   }
 
   if (sGCTimer) {
+    if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
+      // Force full GCs when called from reftests so that we collect dead zones
+      // that have not been scheduled for collection.
+      sNeedsFullGC = true;
+    }
     GCTimerFired(nullptr, reinterpret_cast<void*>(aReason));
     return;
   }
