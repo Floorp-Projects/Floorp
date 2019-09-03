@@ -55,11 +55,8 @@ class ParamsPanel extends Component {
       openLink: PropTypes.func,
       request: PropTypes.object.isRequired,
       updateRequest: PropTypes.func.isRequired,
+      targetSearchResult: PropTypes.object,
     };
-  }
-
-  constructor(props) {
-    super(props);
   }
 
   componentDidMount() {
@@ -76,6 +73,19 @@ class ParamsPanel extends Component {
       "requestPostData",
     ]);
     updateFormDataSections(nextProps);
+  }
+
+  /**
+   * Update only if:
+   * 1) The rendered object has changed
+   * 2) The user selected another search result target.
+   */
+  shouldComponentUpdate(nextProps) {
+    return (
+      this.props.request !== nextProps.request ||
+      (this.props.targetSearchResult !== nextProps.targetSearchResult &&
+        nextProps.targetSearchResult !== null)
+    );
   }
 
   /**
@@ -105,10 +115,19 @@ class ParamsPanel extends Component {
     }, {});
   }
 
+  parseJSON(postData) {
+    try {
+      return JSON.parse(postData);
+    } catch (err) {
+      // Continue regardless of parsing error
+    }
+    return null;
+  }
+
   render() {
-    const { openLink, request } = this.props;
+    const { openLink, request, targetSearchResult } = this.props;
     const { formDataSections, mimeType, requestPostData, url } = request;
-    let postData = requestPostData ? requestPostData.postData.text : null;
+    const postData = requestPostData ? requestPostData.postData.text : null;
     const query = getUrlQuery(url);
 
     if (
@@ -120,7 +139,7 @@ class ParamsPanel extends Component {
     }
 
     const object = {};
-    let json, error;
+    let error;
 
     // Query String section
     if (query) {
@@ -138,6 +157,7 @@ class ParamsPanel extends Component {
     const limit = Services.prefs.getIntPref(
       "devtools.netmonitor.requestBodyLimit"
     );
+
     // Check if the request post data has been truncated, in which case no parse should
     // be attempted.
     if (postData && limit <= postData.length) {
@@ -146,25 +166,29 @@ class ParamsPanel extends Component {
 
     if (formDataSections && formDataSections.length === 0 && postData) {
       if (!error) {
-        try {
-          json = JSON.parse(postData);
-        } catch (err) {
-          // Continue regardless of parsing error
-        }
+        const json = this.parseJSON(postData);
 
         if (json) {
           object[JSON_SCOPE_NAME] = sortObjectKeys(json);
         }
+      }
+    }
+
+    let expandedNodes;
+    if (postData) {
+      let scrollToLine;
+      if (targetSearchResult && targetSearchResult.line) {
+        scrollToLine = targetSearchResult.line;
+        expandedNodes = new Set(["/" + PARAMS_POST_PAYLOAD]);
       }
 
       object[PARAMS_POST_PAYLOAD] = {
         EDITOR_CONFIG: {
           text: postData,
           mode: mimeType.replace(/;.+/, ""),
+          scrollToLine,
         },
       };
-    } else {
-      postData = "";
     }
 
     return div(
@@ -172,9 +196,11 @@ class ParamsPanel extends Component {
       error && div({ className: "request-error-header", title: error }, error),
       PropertiesView({
         object,
+        expandedNodes,
         filterPlaceHolder: PARAMS_FILTER_TEXT,
         sectionNames: SECTION_NAMES,
         openLink,
+        targetSearchResult,
       })
     );
   }
