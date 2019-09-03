@@ -71,13 +71,10 @@ Build servers must run linux and use bubblewrap 3.0+ for sandboxing of compile
 processes. This requires a kernel 4.6 or greater, so Ubuntu 18+, RHEL 8, or
 similar.
 
-* Acquire a recent build of sccache. ``./mach bootstrap`` or
-  ``./mach artifact toolchain --from-build linux64-sccache`` will provide this.
-  ``cargo install`` may also be used, but ensure the version for the ``sccache``
-  and ``sccache-dist`` binaries you end up using is 0.2.10 or above.
-  Alternatively, the source is available at https://github.com/mozilla/sccache
-  and should be built with the ``dist-server`` feature selected if building from
-  there.
+* Run ``./mach bootstrap`` or
+  ``./mach artifact toolchain --from-build linux64-sccache`` to acquire a recent
+  version of ``sccache-dist``. Please use a ``sccache-dist`` binary acquired in
+  this fashion to ensure compatibility with statically linked dependencies.
 
 * Collect the IP of your builder and request assignment of a static IP in a bug
   filed in
