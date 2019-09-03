@@ -528,7 +528,8 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
 
   nsCOMPtr<nsIFile> imageFile(mImageFile);
   RefPtr<mozilla::gfx::SourceSurface> surface = imgContainer->GetFrame(
-      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
+      imgIContainer::FRAME_FIRST,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "ToastNotificationHandler::AsyncWriteBitmap",
       [self, imageFile, surface]() -> void {
