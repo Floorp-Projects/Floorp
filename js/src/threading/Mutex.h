@@ -25,23 +25,6 @@ struct MutexId {
   uint32_t order;
 };
 
-#ifndef DEBUG
-
-class Mutex : public mozilla::detail::MutexImpl {
- public:
-  static bool Init() { return true; }
-  static void ShutDown() {}
-
-  explicit Mutex(const MutexId& id)
-      : mozilla::detail::MutexImpl(
-            mozilla::recordreplay::Behavior::DontPreserve) {}
-
-  using MutexImpl::lock;
-  using MutexImpl::unlock;
-};
-
-#else
-
 // In debug builds, js::Mutex is a wrapper over MutexImpl that checks correct
 // locking order is observed.
 //
@@ -49,18 +32,34 @@ class Mutex : public mozilla::detail::MutexImpl {
 // to check this.
 class Mutex : public mozilla::detail::MutexImpl {
  public:
+#ifdef DEBUG
   static bool Init();
   static void ShutDown();
+#else
+  static bool Init() { return true; }
+  static void ShutDown() {}
+#endif
 
   explicit Mutex(const MutexId& id)
       : mozilla::detail::MutexImpl(
-            mozilla::recordreplay::Behavior::DontPreserve),
-        id_(id) {
+            mozilla::recordreplay::Behavior::DontPreserve)
+#ifdef DEBUG
+        , id_(id)
+#endif
+  {
     MOZ_ASSERT(id_.order != 0);
   }
 
+#ifdef DEBUG
   void lock();
   void unlock();
+#else
+  using MutexImpl::lock;
+  using MutexImpl::unlock;
+#endif
+
+#ifdef DEBUG
+ public:
   bool ownedByCurrentThread() const;
 
  private:
@@ -69,9 +68,8 @@ class Mutex : public mozilla::detail::MutexImpl {
   using MutexVector = mozilla::Vector<const Mutex*>;
   static MOZ_THREAD_LOCAL(MutexVector*) HeldMutexStack;
   static MutexVector& heldMutexStack();
-};
-
 #endif
+};
 
 }  // namespace js
 
