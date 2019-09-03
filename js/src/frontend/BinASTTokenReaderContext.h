@@ -59,12 +59,15 @@ struct NormalizedInterfaceAndField {
 // Whenever a lookup is performed, the consumer MUST look at the `bitLength` of
 // the returned `HuffmanKey` and consume as many bits from the bit stream.
 struct HuffmanLookup {
-  HuffmanLookup(uint32_t bits, uint8_t bitLength)
+  HuffmanLookup(const uint32_t bits, const uint8_t bitLength)
       // We zero out the highest `32 - bitLength` bits.
-      : bits(bits & (uint32_t(0xFFFFFFFF) >> (32 - bitLength))),
+      : bits(bitLength == 0
+                 ? 0  // >> 32 is UB
+                 : (bits & (uint32_t(0xFFFFFFFF) >> (32 - bitLength)))),
         bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
-    MOZ_ASSERT(bits >> bitLength == 0);
+    MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */,
+                  this->bits >> bitLength == 0);
   }
 
   // Return the `bitLength` leading bits of this superset, in the order
@@ -85,14 +88,14 @@ struct HuffmanLookup {
   //
   // If `bitLength < 32`, the unused highest bits are guaranteed
   // to be 0.
-  uint32_t bits;
+  const uint32_t bits;
 
   // The actual length of buffer `bits`.
   //
   // MUST be within `[0, 32]`.
   //
   // If `bitLength < 32`, it means that some of the highest bits are unused.
-  uint8_t bitLength;
+  const uint8_t bitLength;
 };
 
 // A Huffman Key.
@@ -108,7 +111,7 @@ struct HuffmanKey {
   HuffmanKey(const uint32_t bits, const uint8_t bitLength)
       : bits(bits), bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
-    MOZ_ASSERT(bits >> bitLength == 0);
+    MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
   }
 
   // The buffer holding the bits.
@@ -118,14 +121,14 @@ struct HuffmanKey {
   //
   // If `bitLength < 32`, the unused highest bits are guaranteed
   // to be 0.
-  uint32_t bits;
+  const uint32_t bits;
 
   // The actual length of buffer `bits`.
   //
   // MUST be within `[0, 32]`.
   //
   // If `bitLength < 32`, it means that some of the highest bits are unused.
-  uint8_t bitLength;
+  const uint8_t bitLength;
 };
 
 // An entry in a Huffman table.
