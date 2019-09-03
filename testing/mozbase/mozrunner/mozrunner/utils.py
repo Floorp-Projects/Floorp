@@ -252,6 +252,9 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
     if not mozinfo.info.get('debug'):
         return None
 
+    if os.getenv('MOZ_DISABLE_STACK_FIX', 0):
+        return None
+
     def import_stack_fixer_module(module_name):
         sys.path.insert(0, utilityPath)
         module = __import__(module_name, globals(), locals(), [])
