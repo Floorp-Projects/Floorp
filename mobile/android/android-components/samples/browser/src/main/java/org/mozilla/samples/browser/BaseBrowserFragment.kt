@@ -73,7 +73,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         toolbarFeature.set(
             feature = ToolbarFeature(
                 layout.toolbar,
-                components.sessionManager,
+                components.store,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId),

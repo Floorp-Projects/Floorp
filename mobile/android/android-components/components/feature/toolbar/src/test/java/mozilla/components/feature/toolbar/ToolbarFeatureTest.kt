@@ -6,6 +6,7 @@
 
 package mozilla.components.feature.toolbar
 
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.verify
@@ -14,11 +15,11 @@ class ToolbarFeatureTest {
 
     @Test
     fun `when app is backgrounded, toolbar onStop method is called`() {
-        val toolbarFeature = ToolbarFeature(
-                toolbar = mock(), sessionManager = mock(), loadUrlUseCase = mock())
+        val toolbar: Toolbar = mock()
+        val toolbarFeature = ToolbarFeature(toolbar, store = mock(), loadUrlUseCase = mock())
 
         toolbarFeature.stop()
 
-        verify(toolbarFeature.toolbar).onStop()
+        verify(toolbar).onStop()
     }
 }
