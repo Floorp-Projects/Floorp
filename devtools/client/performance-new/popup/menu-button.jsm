@@ -110,7 +110,8 @@ function initialize() {
     tooltiptext: "profiler-button.tooltiptext",
     onViewShowing: event => {
       const iframe = getIframeFromEvent(event);
-      iframe.src = "chrome://devtools/content/performance-new/popup/popup.html";
+      iframe.src =
+        "chrome://devtools/content/performance-new/popup/popup.xhtml";
 
       // Provide a mechanism for the iframe to close the popup.
       iframe.contentWindow.gClosePopup = () => {
