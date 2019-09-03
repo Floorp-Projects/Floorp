@@ -1,0 +1,185 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html class="status-running">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+<body>
+  <p class="status-display status-display-running">
+    The profiler is recording.
+    <input type="button" class="status-display-button button-cancel" value="Discard &amp; Stop">
+  </p>
+
+  <p class="status-display status-display-stopped">
+    The profiler is stopped.
+    <input type="button" class="status-display-button button-start" value="Start">
+  </p>
+
+  <button id="button-capture">
+    <strong id="capture-label">Capture Profile <span class="keyboard-hint"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>2</kbd></span></strong>
+    <p id="help-capture">Capture the current contents of the profile buffer and open the profile in a new tab.</p>
+  </button>
+
+  <dl class="info-density">
+    <dt>Overhead:</dt>
+    <dd>
+      <div class="discrete-level">
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch normal active"></span>
+        <span class="discrete-level-notch warning active"></span>
+        <span class="discrete-level-notch warning active"></span>
+        <span class="discrete-level-notch warning active"></span>
+        <span class="discrete-level-notch warning active"></span>
+        <span class="discrete-level-notch warning inactive"></span>
+        <span class="discrete-level-notch warning inactive"></span>
+        <span class="discrete-level-notch warning inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+        <span class="discrete-level-notch critical inactive"></span>
+      </div>
+    </dd>
+  </dl>
+
+  <section class="settings">
+    <h1 id="settings-label">Settings</h1>
+    <section class="settings-content">
+      <h1 class="settings-setting-label">Interval:</h1>
+      <span class="range-with-value">
+        <input type="range" class="range-input interval-range" min="0" max="100">
+        <span class="range-value interval-value">1 ms</span>
+      </span>
+      <h1 class="settings-setting-label windowlength">Window length:</h1>
+      <span class="range-with-value windowlength">
+        <input type="range" class="range-input windowlength-range" min="0" max="100">
+        <span class="range-value windowlength-value">20 sec</span>
+      </span>
+      <h1 class="settings-setting-label">Buffer size:</h1>
+      <span class="range-with-value">
+        <input type="range" class="range-input buffersize-range" min="0" max="100">
+        <span class="range-value buffersize-value">90 MB</span>
+      </span>
+      <div class="perf-settings-details">
+        <summary class="perf-settings-summary" id="perf-settings-threads-summary">Threads:</summary>
+        <div class="perf-settings-details-contents">
+            <div class="perf-settings-thread-columns">
+              <div class="perf-settings-thread-column"><label class="perf-settings-checkbox-label" title="The main processes for both the parent process, and content processes"><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-gecko-main" type="checkbox" value="GeckoMain" />GeckoMain</label><label
+                  class="perf-settings-checkbox-label" title="Composites together different painted elements on the page."><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-compositor" type="checkbox" value="Compositor" />Compositor</label><label
+                  class="perf-settings-checkbox-label" title="This handle both web workers and service workers"><input class="perf-settings-checkbox"
+                    id="perf-settings-thread-checkbox-dom-worker" type="checkbox" value="DOM Worker" />DOM Worker</label><label
+                  class="perf-settings-checkbox-label" title="When WebRender is enabled, the thread that executes OpenGL calls"><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-renderer" type="checkbox" value="Renderer" />Renderer</label></div>
+              <div class="perf-settings-thread-column"><label class="perf-settings-checkbox-label" title="The WebRender RenderBackend thread"><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-render-backend" type="checkbox" value="RenderBackend" />RenderBackend</label><label
+                  class="perf-settings-checkbox-label" title="When off-main-thread painting is enabled, the thread on which painting happens"><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-paint-worker" type="checkbox" value="PaintWorker" />PaintWorker</label><label
+                  class="perf-settings-checkbox-label" title="Style computation is split into multiple threads"><input class="perf-settings-checkbox"
+                    id="perf-settings-thread-checkbox-style-thread" type="checkbox" value="StyleThread" />StyleThread</label><label
+                  class="perf-settings-checkbox-label" title="The thread where networking code runs any blocking socket calls"><input
+                    class="perf-settings-checkbox" id="perf-settings-thread-checkbox-socket-thread" type="checkbox" value="Socket Thread" />Socket
+                  Thread</label></div>
+              <div class="perf-settings-thread-column"><label class="perf-settings-checkbox-label" title="TODO"><input class="perf-settings-checkbox"
+                    id="perf-settings-thread-checkbox-stream-trans" type="checkbox" value="StreamTrans" />StreamTrans</label><label
+                  class="perf-settings-checkbox-label" title="Image decoding threads"><input class="perf-settings-checkbox"
+                    id="perf-settings-thread-checkbox-img-decoder" type="checkbox" value="ImgDecoder" />ImgDecoder</label><label
+                  class="perf-settings-checkbox-label" title="DNS resolution happens on this thread"><input class="perf-settings-checkbox"
+                    id="perf-settings-thread-checkbox-dns-resolver" type="checkbox" value="DNS Resolver" />DNS Resolver</label></div>
+            </div>
+            <div class="perf-settings-row"><label class="perf-settings-text-label" title="These thread names are a comma separated list that is used to enable profiling of the threads in the profiler. The name needs to be only a partial match of the thread name to be included. It is whitespace sensitive.">
+                <div>Add custom threads by name:</div><input class="perf-settings-text-input" id="perf-settings-thread-text"
+                  type="text" value="GeckoMain,Compositor" />
+              </label></div>
+        </div>
+      </div>
+      <div class="perf-settings-details">
+        <summary class="perf-settings-summary" id="perf-settings-features-summary">Features:</summary>
+        <div class="perf-settings-details-contents">
+          <label class="perf-settings-checkbox-label perf-settings-feature-label"><input
+              class="perf-settings-checkbox" id="perf-settings-feature-checkbox-stackwalk" type="checkbox" value="stackwalk" />
+            <div class="perf-settings-feature-name">Native Stacks</div>
+            <div class="perf-settings-feature-title">Record native stacks (C++ and Rust). This is not available on all
+              platforms.<span class="perf-settings-subtext"> (Recommended on by default.)</span></div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-js" type="checkbox" value="js" />
+            <div class="perf-settings-feature-name">JavaScript</div>
+            <div class="perf-settings-feature-title">Record JavaScript stack information, and interleave it with native
+              stacks.<span class="perf-settings-subtext"> (Recommended on by default.)</span></div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label" id="java"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-java" type="checkbox" value="java" />
+            <div class="perf-settings-feature-name">Java</div>
+            <div class="perf-settings-feature-title">Profile Java code.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-responsiveness" type="checkbox" value="responsiveness" />
+            <div class="perf-settings-feature-name">Responsiveness</div>
+            <div class="perf-settings-feature-title">Collect thread responsiveness information.<span class="perf-settings-subtext">
+                (Recommended on by default.)</span></div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-leaf" type="checkbox" value="leaf" />
+            <div class="perf-settings-feature-name">Native Leaf Stack</div>
+            <div class="perf-settings-feature-title">Record the native memory address of the leaf-most stack. This could be
+              useful on platforms that do not support stack walking.<span class="perf-settings-subtext"> (Recommended on by
+                default.)</span></div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-screenshots" type="checkbox" value="screenshots" />
+            <div class="perf-settings-feature-name">Screenshots</div>
+            <div class="perf-settings-feature-title">Capture screenshots of browser windows.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-mainthreadio" type="checkbox" value="mainthreadio" />
+            <div class="perf-settings-feature-name">Main Thread IO</div>
+            <div class="perf-settings-feature-title">Record main thread I/O markers.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-privacy" type="checkbox" value="privacy" />
+            <div class="perf-settings-feature-name">Privacy</div>
+            <div class="perf-settings-feature-title">Remove some potentially user-identifiable information.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-seqstyle" type="checkbox" value="seqstyle" />
+            <div class="perf-settings-feature-name">Sequential Styling</div>
+            <div class="perf-settings-feature-title">Disable parallel traversal in styling.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-trackopts" type="checkbox" value="trackopts" />
+            <div class="perf-settings-feature-name">JIT Optimizations</div>
+            <div class="perf-settings-feature-title">Track JIT optimizations in the JS engine.</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-tasktracer" type="checkbox" value="tasktracer" />
+            <div class="perf-settings-feature-name">TaskTracer</div>
+            <div class="perf-settings-feature-title">Enable TaskTracer (Experimental, requires custom build.)</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+              id="perf-settings-feature-checkbox-jstracer" type="checkbox" value="jstracer" />
+            <div class="perf-settings-feature-name">JSTracer</div>
+            <div class="perf-settings-feature-title">Trace JS engine (Experimental, requires custom build.)</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+            id="perf-settings-feature-checkbox-jsallocations" type="checkbox" value="jsallocations" />
+            <div class="perf-settings-feature-name">JS Allocations</div>
+            <div class="perf-settings-feature-title">Track JavaScript allocations (Experimental.)</div>
+          </label><label class="perf-settings-checkbox-label perf-settings-feature-label"><input class="perf-settings-checkbox"
+            id="perf-settings-feature-checkbox-preferencereads" type="checkbox" value="preferencereads" />
+            <div class="perf-settings-feature-name">Preference Reads</div>
+            <div class="perf-settings-feature-title">Track Preference Reads</div>
+          </label>
+
+        </div>
+      </div>
+    </section>
+    <section class="settings-apply-button-wrapper"><input type="button" class="settings-apply-button" value="Apply (Restart Profiler)"></section>
+  </section>
+
+  <script src="initializer.js"></script>
+</body>
+</html>
