@@ -113,6 +113,40 @@ function getImageCtx(win, bounds, zoom, scale, node) {
 }
 
 /**
+ * Calculate the transformed RGBA when a color matrix is set in docShell by
+ * multiplying the color matrix with the RGBA vector.
+ *
+ * @param  {Array}  rgba
+ *         Original RGBA array which we want to transform.
+ * @param  {Array}  colorMatrix
+ *         Flattened 4x5 color matrix that is set in docShell.
+ *         A 4x5 matrix of the form:
+ *           1  2  3  4  5
+ *           6  7  8  9  10
+ *           11 12 13 14 15
+ *           16 17 18 19 20
+ *         will be set in docShell as:
+ *           [1, 6, 11, 16, 2, 7, 12, 17, 3, 8, 13, 18, 4, 9, 14, 19, 5, 10, 15, 20]
+ * @return {Array}
+ *         Transformed RGBA after the color matrix is multiplied with the original RGBA.
+ */
+function getTransformedRGBA(rgba, colorMatrix) {
+  const transformedRGBA = [0, 0, 0, 0];
+
+  // Only use the first four columns of the color matrix corresponding to R, G, B and A
+  // color channels respectively. The fifth column is a fixed offset that does not need
+  // to be considered for the matrix multiplication. We end up multiplying a 4x4 color
+  // matrix with a 4x1 RGBA vector.
+  for (let i = 0; i < 16; i++) {
+    const row = i % 4;
+    const col = Math.floor(i / 4);
+    transformedRGBA[row] += colorMatrix[i] * rgba[col];
+  }
+
+  return transformedRGBA;
+}
+
+/**
  * Find RGBA or a range of RGBAs for the background pixels under the text.
  *
  * @param  {DOMNode}  node
@@ -190,6 +224,9 @@ function getBackgroundFor(node, { win, bounds, size, isBoldText }) {
  *                                            Bounds for the accessible object.
  *         - win                              {Object}
  *                                            Target window.
+ *         - appliedColorMatrix               {Array|null}
+ *                                            Simulation color matrix applied to
+ *                                            to the viewport, if it exists.
  * @return {Object}
  *         An object that may contain one or more of the following fields: error,
  *         isLargeText, value, min, max values for contrast.
@@ -204,9 +241,12 @@ async function getContrastRatioFor(node, options = {}) {
     };
   }
 
-  const { color, isLargeText, isBoldText, size, opacity } = props;
-
-  const rgba = await getBackgroundFor(node, {
+  const { isLargeText, isBoldText, size, opacity } = props;
+  const { appliedColorMatrix } = options;
+  const color = appliedColorMatrix
+    ? getTransformedRGBA(props.color, appliedColorMatrix)
+    : props.color;
+  let rgba = await getBackgroundFor(node, {
     ...options,
     isBoldText,
     size,
@@ -235,13 +275,26 @@ async function getContrastRatioFor(node, options = {}) {
 
     return getContrastRatioAgainstBackground(
       {
-        value: [r, g, b, a],
+        value: appliedColorMatrix
+          ? getTransformedRGBA([r, g, b, a], appliedColorMatrix)
+          : [r, g, b, a],
       },
       {
         color,
         isLargeText,
       }
     );
+  }
+
+  if (appliedColorMatrix) {
+    rgba = rgba.value
+      ? {
+          value: getTransformedRGBA(rgba.value, appliedColorMatrix),
+        }
+      : {
+          min: getTransformedRGBA(rgba.min, appliedColorMatrix),
+          max: getTransformedRGBA(rgba.max, appliedColorMatrix),
+        };
   }
 
   return getContrastRatioAgainstBackground(rgba, {
