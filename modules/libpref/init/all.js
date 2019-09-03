@@ -5057,12 +5057,8 @@ pref("dom.event.default_to_passive_touch_listeners", true);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);
 
-#ifdef NIGHTLY_BUILD
-  // Disable moz* APIs in DataTransfer
-  pref("dom.datatransfer.mozAtAPIs", false);
-#else
-  pref("dom.datatransfer.mozAtAPIs", true);
-#endif
+// Disable moz* APIs in DataTransfer
+pref("dom.datatransfer.mozAtAPIs", false);
 
 // Turn off fission frameloader swapping while regressions are being fixed.
 // Should be turned back on to resolve bug 1551993.
