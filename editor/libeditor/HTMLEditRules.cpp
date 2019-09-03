@@ -88,7 +88,7 @@ static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
     case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eMergeBlockContents:
     case EditSubAction::eRemoveList:
-    case EditSubAction::eCreateOrChangeDefinitionList:
+    case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotation:
     case EditSubAction::eInsertQuotedText:
@@ -774,9 +774,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eDeleteSelectedContent:
       return WillDeleteSelection(aInfo.collapsedAction, aInfo.stripWrappers,
                                  aCancel, aHandled);
-    case EditSubAction::eCreateOrChangeList:
-      return WillMakeList(aInfo.blockType, aInfo.entireList, aInfo.bulletType,
-                          aCancel, aHandled);
     case EditSubAction::eIndent:
       return WillIndent(aCancel, aHandled);
     case EditSubAction::eOutdent:
@@ -798,9 +795,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       }
       return NS_OK;
     }
-    case EditSubAction::eCreateOrChangeDefinitionList:
-      return WillMakeDefListItem(aInfo.blockType, aInfo.entireList, aCancel,
-                                 aHandled);
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
       nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
@@ -814,6 +808,8 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
     case EditSubAction::eIncreaseZIndex:
       return WillRelativeChangeZIndex(1, aCancel, aHandled);
+    case EditSubAction::eCreateOrChangeDefinitionListItem:
+    case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -858,6 +854,8 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
+    case EditSubAction::eCreateOrChangeDefinitionListItem:
+    case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
@@ -3965,80 +3963,104 @@ nsresult HTMLEditRules::DidDeleteSelection() {
   return rv;
 }
 
-nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
-                                     bool aEntireList,
-                                     const nsAString* aBulletType,
-                                     bool* aCancel, bool* aHandled,
-                                     const nsAString* aItemType) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
+    nsAtom& aListElementOrListItemElementTagName, const nsAString& aBulletType,
+    SelectAllOfCurrentList aSelectAllOfCurrentList) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(&aListElementOrListItemElementTagName == nsGkAtoms::ul ||
+             &aListElementOrListItemElementTagName == nsGkAtoms::ol ||
+             &aListElementOrListItemElementTagName == nsGkAtoms::dl ||
+             &aListElementOrListItemElementTagName == nsGkAtoms::dd ||
+             &aListElementOrListItemElementTagName == nsGkAtoms::dt);
 
-  if (NS_WARN_IF(!aListType) || NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  if (!mRules) {
+    return EditActionIgnored(NS_ERROR_NOT_INITIALIZED);
   }
 
-  *aCancel = false;
-  *aHandled = false;
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (result.Canceled() || NS_WARN_IF(result.Failed())) {
+    return result;
+  }
 
-  OwningNonNull<nsAtom> listType = NS_Atomize(*aListType);
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+
+  // XXX EditSubAction::eCreateOrChangeDefinitionListItem and
+  //     EditSubAction::eCreateOrChangeList are treated differently in
+  //     HTMLEditor::MaybeSplitElementsAtEveryBRElement().  Only when
+  //     EditSubAction::eCreateOrChangeList, it splits inline nodes.
+  //     Currently, it shouldn't be done when we called for formatting
+  //     `<dd>` or `<dt>` by
+  //     HTMLEditor::MakeDefinitionListItemWithTransaction().  But this
+  //     difference may be a bug.  We should investigate this later.
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this,
+      &aListElementOrListItemElementTagName == nsGkAtoms::dd ||
+              &aListElementOrListItemElementTagName == nsGkAtoms::dt
+          ? EditSubAction::eCreateOrChangeDefinitionListItem
+          : EditSubAction::eCreateOrChangeList,
+      nsIEditor::eNext);
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // deduce what tag to use for list items
-  RefPtr<nsAtom> itemType;
-  if (aItemType) {
-    itemType = NS_Atomize(*aItemType);
-  } else if (listType == nsGkAtoms::dl) {
-    itemType = nsGkAtoms::dd;
+  nsAtom* listTagName = nullptr;
+  nsAtom* listItemTagName = nullptr;
+  if (&aListElementOrListItemElementTagName == nsGkAtoms::ul ||
+      &aListElementOrListItemElementTagName == nsGkAtoms::ol) {
+    listTagName = &aListElementOrListItemElementTagName;
+    listItemTagName = nsGkAtoms::li;
+  } else if (&aListElementOrListItemElementTagName == nsGkAtoms::dl) {
+    listTagName = &aListElementOrListItemElementTagName;
+    listItemTagName = nsGkAtoms::dd;
+  } else if (&aListElementOrListItemElementTagName == nsGkAtoms::dd ||
+             &aListElementOrListItemElementTagName == nsGkAtoms::dt) {
+    listTagName = nsGkAtoms::dl;
+    listItemTagName = &aListElementOrListItemElementTagName;
   } else {
-    itemType = nsGkAtoms::li;
+    return EditActionResult(NS_ERROR_INVALID_ARG);
   }
 
-  // convert the selection ranges into "promoted" selection ranges:
-  // this basically just expands the range to include the immediate
-  // block parent, and then further expands to include any ancestors
-  // whose children are all in the range
-
+  // Expands selection range to include the immediate block parent, and then
+  // further expands to include any ancestors whose children are all in the
+  // range.
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionResult(rv);
     }
   }
 
   // ChangeSelectedHardLinesToList() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  EditActionResult result =
-      MOZ_KnownLive(HTMLEditorRef())
-          .ChangeSelectedHardLinesToList(listType, aEntireList, aBulletType,
-                                         *itemType);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  result = ChangeSelectedHardLinesToList(MOZ_KnownLive(*listTagName),
+                                         MOZ_KnownLive(*listItemTagName),
+                                         aBulletType, aSelectAllOfCurrentList);
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  if (NS_WARN_IF(result.Failed())) {
-    return result.Rv();
-  }
-  *aCancel = result.Canceled();
-  *aHandled = result.Handled();
-  return NS_OK;
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "ChangeSelectedHardLinesToList() failed");
+  return result;
 }
 
 EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
-    nsAtom& aListElementTagName, bool aSelectAllOfCurrentList,
-    const nsAString* aBulletType, nsAtom& aListItemElementTagName) {
+    nsAtom& aListElementTagName, nsAtom& aListItemElementTagName,
+    const nsAString& aBulletType,
+    SelectAllOfCurrentList aSelectAllOfCurrentList) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
   Element* parentListElement =
-      aSelectAllOfCurrentList ? GetParentListElementAtSelection() : nullptr;
+      aSelectAllOfCurrentList == SelectAllOfCurrentList::Yes
+          ? GetParentListElementAtSelection()
+          : nullptr;
   if (parentListElement) {
     arrayOfNodes.AppendElement(OwningNonNull<nsINode>(*parentListElement));
   } else {
@@ -4326,9 +4348,9 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       // If bullet type is specified, set list type attribute.
       // XXX Cannot we set type attribute before inserting the list item
       //     element into the DOM tree?
-      if (aBulletType && !aBulletType->IsEmpty()) {
+      if (!aBulletType.IsEmpty()) {
         nsresult rv = SetAttributeWithTransaction(
-            MOZ_KnownLive(*curElement), *nsGkAtoms::type, *aBulletType);
+            MOZ_KnownLive(*curElement), *nsGkAtoms::type, aBulletType);
         if (NS_WARN_IF(Destroyed())) {
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -4536,21 +4558,6 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
         return rv;
       }
     }
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::WillMakeDefListItem(const nsAString* aItemType,
-                                            bool aEntireList, bool* aCancel,
-                                            bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // for now we let WillMakeList handle this
-  NS_NAMED_LITERAL_STRING(listType, "dl");
-  nsresult rv = WillMakeList(&listType.AsString(), aEntireList, nullptr,
-                             aCancel, aHandled, aItemType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
   return NS_OK;
 }
