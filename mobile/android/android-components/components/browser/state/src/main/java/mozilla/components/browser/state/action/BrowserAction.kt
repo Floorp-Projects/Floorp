@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.state.Action
 
@@ -166,6 +167,16 @@ sealed class ContentAction : BrowserAction() {
      * Updates the thumbnail of the [ContentState] with the given [sessionId].
      */
     data class UpdateThumbnailAction(val sessionId: String, val thumbnail: Bitmap) : ContentAction()
+
+    /**
+     * Updates the [DownloadState] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateDownloadAction(val sessionId: String, val download: DownloadState) : ContentAction()
+
+    /**
+     * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeDownloadAction(val sessionId: String, val download: DownloadState) : ContentAction()
 }
 
 /**
