@@ -3353,6 +3353,30 @@ const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_YIELD_STAR_EXPRESSION = 1;
 // a probability table per field.
 const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = 275;
 
+// Create parameters list to pass mozilla::Array constructor.
+// The number of parameters equals to BINAST_INTERFACE_AND_FIELD_LIMIT.
+#define BINAST_PARAM_NUMBER_OF_INTERFACE_AND_FIELD(X)                        \
+  (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X),  \
+      (X), (X), (X), (X), (X), (X), (X), (X)
+
 /**
  * The different variants of Binary AST string enums, as per
  * the specifications of Binary AST, as a single macro and
@@ -3698,6 +3722,12 @@ enum class BinASTList : uint16_t {
 // The number of distinct list types in the grammar. Used typically to maintain
 // a probability table per list type.
 const size_t BINAST_NUMBER_OF_LIST_TYPES = 22;
+
+// Create parameters list to pass mozilla::Array constructor.
+// The number of parameters equals to BINAST_NUMBER_OF_LIST_TYPES.
+#define BINAST_PARAM_NUMBER_OF_LIST_TYPES(X)                                 \
+  (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), (X), \
+      (X), (X), (X), (X), (X), (X), (X)
 
 #define FOR_EACH_BIN_SUM(F)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
   F(ArrowExpression, "ArrowExpression", ARROW_EXPRESSION,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
