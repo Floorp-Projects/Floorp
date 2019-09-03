@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.101';
-const pdfjsBuild = '31f31930';
+const pdfjsVersion = '2.3.129';
+const pdfjsBuild = '3dfce2d4';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.101';
+    let workerVersion = '2.3.129';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -551,24 +551,27 @@ var WorkerMessageHandler = {
         return page.getAnnotationsData(intent);
       });
     });
-    handler.on('RenderPageRequest', function wphSetupRenderPage(data) {
+    handler.on('GetOperatorList', function wphSetupRenderPage(data, sink) {
       var pageIndex = data.pageIndex;
       pdfManager.getPage(pageIndex).then(function (page) {
-        var task = new WorkerTask('RenderPageRequest: page ' + pageIndex);
+        var task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
         startWorkerTask(task);
         const start = verbosity >= _util.VerbosityLevel.INFOS ? Date.now() : 0;
         page.getOperatorList({
           handler,
+          sink,
           task,
           intent: data.intent,
           renderInteractiveForms: data.renderInteractiveForms
-        }).then(function (operatorList) {
+        }).then(function (operatorListInfo) {
           finishWorkerTask(task);
 
           if (start) {
-            (0, _util.info)(`page=${pageIndex + 1} - getOperatorList: time=` + `${Date.now() - start}ms, len=${operatorList.totalLength}`);
+            (0, _util.info)(`page=${pageIndex + 1} - getOperatorList: time=` + `${Date.now() - start}ms, len=${operatorListInfo.length}`);
           }
-        }, function (e) {
+
+          sink.close();
+        }, function (reason) {
           finishWorkerTask(task);
 
           if (task.terminated) {
@@ -578,31 +581,7 @@ var WorkerMessageHandler = {
           handler.send('UnsupportedFeature', {
             featureId: _util.UNSUPPORTED_FEATURES.unknown
           });
-          var minimumStackMessage = 'worker.js: while trying to getPage() and getOperatorList()';
-          var wrappedException;
-
-          if (typeof e === 'string') {
-            wrappedException = {
-              message: e,
-              stack: minimumStackMessage
-            };
-          } else if (typeof e === 'object') {
-            wrappedException = {
-              message: e.message || e.toString(),
-              stack: e.stack || minimumStackMessage
-            };
-          } else {
-            wrappedException = {
-              message: 'Unknown exception type: ' + typeof e,
-              stack: minimumStackMessage
-            };
-          }
-
-          handler.send('PageError', {
-            pageIndex,
-            error: wrappedException,
-            intent: data.intent
-          });
+          sink.error(reason);
         });
       });
     }, this);
@@ -639,7 +618,6 @@ var WorkerMessageHandler = {
           }
 
           sink.error(reason);
-          throw reason;
         });
       });
     });
@@ -3091,6 +3069,7 @@ class Page {
 
   getOperatorList({
     handler,
+    sink,
     task,
     intent,
     renderInteractiveForms
@@ -3109,7 +3088,7 @@ class Page {
     });
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     const pageListPromise = dataPromises.then(([contentStream]) => {
-      const opList = new _operator_list.OperatorList(intent, handler, this.pageIndex);
+      const opList = new _operator_list.OperatorList(intent, sink, this.pageIndex);
       handler.send('StartRenderPage', {
         transparency: partialEvaluator.hasBlendModes(this.resources),
         pageIndex: this.pageIndex,
@@ -3127,7 +3106,9 @@ class Page {
     return Promise.all([pageListPromise, this._parsedAnnotations]).then(function ([pageOpList, annotations]) {
       if (annotations.length === 0) {
         pageOpList.flush(true);
-        return pageOpList;
+        return {
+          length: pageOpList.totalLength
+        };
       }
 
       const opListPromises = [];
@@ -3147,7 +3128,9 @@ class Page {
 
         pageOpList.addOp(_util.OPS.endAnnotations, []);
         pageOpList.flush(true);
-        return pageOpList;
+        return {
+          length: pageOpList.totalLength
+        };
       });
     });
   }
@@ -19779,12 +19762,12 @@ var OperatorList = function OperatorListClosure() {
   var CHUNK_SIZE = 1000;
   var CHUNK_SIZE_ABOUT = CHUNK_SIZE - 5;
 
-  function OperatorList(intent, messageHandler, pageIndex) {
-    this.messageHandler = messageHandler;
+  function OperatorList(intent, streamSink, pageIndex) {
+    this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
 
-    if (messageHandler && intent !== 'oplist') {
+    if (streamSink && intent !== 'oplist') {
       this.optimizer = new QueueOptimizer(this);
     } else {
       this.optimizer = new NullOptimizer(this);
@@ -19795,11 +19778,16 @@ var OperatorList = function OperatorListClosure() {
     this.pageIndex = pageIndex;
     this.intent = intent;
     this.weight = 0;
+    this._resolved = streamSink ? null : Promise.resolve();
   }
 
   OperatorList.prototype = {
     get length() {
       return this.argsArray.length;
+    },
+
+    get ready() {
+      return this._resolved || this._streamSink.ready;
     },
 
     get totalLength() {
@@ -19810,7 +19798,7 @@ var OperatorList = function OperatorListClosure() {
       this.optimizer.push(fn, args);
       this.weight++;
 
-      if (this.messageHandler) {
+      if (this._streamSink) {
         if (this.weight >= CHUNK_SIZE) {
           this.flush();
         } else if (this.weight >= CHUNK_SIZE_ABOUT && (fn === _util.OPS.restore || fn === _util.OPS.endText)) {
@@ -19881,7 +19869,8 @@ var OperatorList = function OperatorListClosure() {
       this.optimizer.flush();
       const length = this.length;
       this._totalLength += length;
-      this.messageHandler.send('RenderPageChunk', {
+
+      this._streamSink.enqueue({
         operatorList: {
           fnArray: this.fnArray,
           argsArray: this.argsArray,
@@ -19890,7 +19879,8 @@ var OperatorList = function OperatorListClosure() {
         },
         pageIndex: this.pageIndex,
         intent: this.intent
-      }, this._transfers);
+      }, 1, this._transfers);
+
       this.dependencies = Object.create(null);
       this.fnArray.length = 0;
       this.argsArray.length = 0;
@@ -20449,6 +20439,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         operatorList.addDependencies(tilingOpList.dependencies);
         operatorList.addOp(fn, tilingPatternIR);
       }, reason => {
+        if (reason instanceof _util.AbortException) {
+          return;
+        }
+
         if (this.options.ignoreErrors) {
           this.handler.send('UnsupportedFeature', {
             featureId: _util.UNSUPPORTED_FEATURES.unknown
@@ -20802,8 +20796,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
 
       return new Promise(function promiseBody(resolve, reject) {
-        var next = function (promise) {
-          promise.then(function () {
+        let next = function (promise) {
+          Promise.all([promise, operatorList.ready]).then(function () {
             try {
               promiseBody(resolve, reject);
             } catch (ex) {
@@ -20887,6 +20881,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
                 resolveXObject();
               }).catch(function (reason) {
+                if (reason instanceof _util.AbortException) {
+                  return;
+                }
+
                 if (self.options.ignoreErrors) {
                   self.handler.send('UnsupportedFeature', {
                     featureId: _util.UNSUPPORTED_FEATURES.unknown
@@ -21136,6 +21134,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         closePendingRestoreOPS();
         resolve();
       }).catch(reason => {
+        if (reason instanceof _util.AbortException) {
+          return;
+        }
+
         if (this.options.ignoreErrors) {
           this.handler.send('UnsupportedFeature', {
             featureId: _util.UNSUPPORTED_FEATURES.unknown
