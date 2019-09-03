@@ -510,17 +510,6 @@ class HTMLEditRules : public TextEditRules {
                      nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
 
   /**
-   * XXX Should document what this does.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeList(nsAtom& aListType, bool aEntireList,
-                                 const nsAString* aBulletType, bool* aCancel,
-                                 nsAtom& aItemType);
-
-  /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
    * of aStartNode in aEditingHostElement.
    * If found empty ancestor is a list item element, inserts a <br> element
