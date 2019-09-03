@@ -1,5 +1,5 @@
 # Always ignore node_modules.
-**/node_modules/**/*.*
+**/node_modules/
 
 # Always ignore crashtests - specially crafted files that originally caused a
 # crash.
