@@ -37,6 +37,9 @@ void js::Mutex::preLockChecks() const {
 }
 
 void js::Mutex::postLockChecks() {
+  MOZ_ASSERT(owningThread_.isNothing());
+  owningThread_.emplace(ThreadId::ThisThreadId());
+
   MOZ_ASSERT(prev_ == nullptr);
   prev_ = HeldMutexStack.get();
   HeldMutexStack.set(this);
@@ -52,6 +55,10 @@ void js::Mutex::preUnlockChecks() {
   MOZ_ASSERT(stack == this);
   HeldMutexStack.set(prev_);
   prev_ = nullptr;
+
+  MOZ_ASSERT(owningThread_.isSome() &&
+             ThreadId::ThisThreadId() == owningThread_.value());
+  owningThread_.reset();
 }
 
 bool js::Mutex::ownedByCurrentThread() const {

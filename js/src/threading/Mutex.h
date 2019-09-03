@@ -13,6 +13,8 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Vector.h"
 
+#include "threading/ThreadId.h"
+
 namespace js {
 
 // A MutexId secifies the name and mutex order for a mutex.
@@ -78,6 +80,7 @@ class Mutex {
  private:
   const MutexId id_;
   Mutex* prev_ = nullptr;
+  mozilla::Maybe<ThreadId> owningThread_;
 
   static MOZ_THREAD_LOCAL(Mutex*) HeldMutexStack;
 #endif
