@@ -2089,7 +2089,6 @@ void HelperThread::ThreadMain(void* arg) {
   mozilla::recordreplay::AutoDisallowThreadEvents d;
 
   static_cast<HelperThread*>(arg)->threadLoop();
-  Mutex::ShutDown();
 }
 
 void HelperThread::handleWasmTier1Workload(AutoLockHelperThreadState& locked) {
