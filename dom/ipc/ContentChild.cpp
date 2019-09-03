@@ -3612,7 +3612,8 @@ mozilla::ipc::IPCResult ContentChild::RecvSaveRecording(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
-    const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
+    const uint32_t& aRegistrarId, nsIURI* aURI,
+    const ReplacementChannelConfigInit& aConfig,
     const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
     nsIURI* aOriginalURI, const uint64_t& aIdentifier,
     const uint32_t& aRedirectMode) {
@@ -3625,11 +3626,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   nsCOMPtr<nsIChannel> newChannel;
-  rv = NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo,
-                             nullptr,  // PerformanceStorage
-                             nullptr,  // aLoadGroup
-                             nullptr,  // aCallbacks
-                             aNewLoadFlags);
+  rv = NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo);
 
   // We are sure this is a HttpChannelChild because the parent
   // is always a HTTP channel.
@@ -3658,6 +3655,9 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
+
+  HttpBaseChannel::ReplacementChannelConfig config(aConfig);
+  HttpBaseChannel::ConfigureReplacementChannel(newChannel, config);
 
   // connect parent.
   rv = httpChild->ConnectParent(aRegistrarId);  // creates parent channel

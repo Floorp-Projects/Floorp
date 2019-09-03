@@ -51,6 +51,7 @@ EXPORTS.mozilla.net += [
     'HttpInfo.h',
     'nsServerTiming.h',
     'NullHttpChannel.h',
+    'ParentChannelListener.h',
     'PHttpChannelParams.h',
     'PSpdyPush.h',
     'TimingStruct.h',
