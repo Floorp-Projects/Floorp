@@ -521,25 +521,6 @@ class HTMLEditRules : public TextEditRules {
                                  nsAtom& aItemType);
 
   /**
-   * ConvertListType() replaces child list items of aListElement with
-   * new list item element whose tag name is aNewListItemTag.
-   * Note that if there are other list elements as children of aListElement,
-   * this calls itself recursively even though it's invalid structure.
-   *
-   * @param aListElement        The list element whose list items will be
-   *                            replaced.
-   * @param aNewListTag         New list tag name.
-   * @param aNewListItemTag     New list item tag name.
-   * @return                    New list element or an error code if it fails.
-   *                            New list element may be aListElement if its
-   *                            tag name is same as aNewListTag.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE CreateElementResult ConvertListType(Element& aListElement,
-                                                   nsAtom& aListType,
-                                                   nsAtom& aItemType);
-
-  /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
    * of aStartNode in aEditingHostElement.
    * If found empty ancestor is a list item element, inserts a <br> element
