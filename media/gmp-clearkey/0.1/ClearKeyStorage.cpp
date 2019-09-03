@@ -28,7 +28,10 @@
 #include <vector>
 
 using namespace cdm;
-using namespace std;
+
+using std::function;
+using std::string;
+using std::vector;
 
 class WriteRecordClient : public FileIOClient {
  public:

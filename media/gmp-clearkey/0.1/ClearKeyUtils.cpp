@@ -39,7 +39,10 @@
 #include "psshparser/PsshParser.h"
 
 using namespace cdm;
-using namespace std;
+
+using std::string;
+using std::stringstream;
+using std::vector;
 
 void CK_Log(const char* aFmt, ...) {
   FILE* out = stdout;
@@ -65,8 +68,8 @@ void CK_Log(const char* aFmt, ...) {
 }
 
 static bool PrintableAsString(const uint8_t* aBytes, uint32_t aLength) {
-  return all_of(aBytes, aBytes + aLength,
-                [](uint8_t c) { return isprint(c) == 1; });
+  return std::all_of(aBytes, aBytes + aLength,
+                     [](uint8_t c) { return isprint(c) == 1; });
 }
 
 void CK_LogArray(const char* prepend, const uint8_t* aData,
@@ -104,7 +107,7 @@ void ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
     oaes_encrypt(aes, &aIV[0], CENC_KEY_LEN, &enc[0], &encLen);
 
     assert(encLen >= 2 * OAES_BLOCK_SIZE + CENC_KEY_LEN);
-    size_t blockLen = min(aData.size() - i, CENC_KEY_LEN);
+    size_t blockLen = std::min(aData.size() - i, CENC_KEY_LEN);
     for (size_t j = 0; j < blockLen; j++) {
       aData[i + j] ^= enc[2 * OAES_BLOCK_SIZE + j];
     }
