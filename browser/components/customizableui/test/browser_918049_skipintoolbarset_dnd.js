@@ -29,8 +29,6 @@ add_task(async function() {
     libraryButton.parentNode.id,
     "Should be next to library button"
   );
-  // await this event because otherwise the next drag can mix up button orders.
-  await waitForElementShown(skippedItem);
   simulateItemDrag(libraryButton, skippedItem, "start");
   let libraryWrapper = libraryButton.parentNode;
   is(
