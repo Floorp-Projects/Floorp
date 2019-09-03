@@ -16,7 +16,7 @@ add_task(async function() {
     `Dog = "Snoopy"`,
     `document
        .querySelectorAll("*")
-       .forEach(console.log)`,
+       .forEach(() => {})`,
     `document`,
     `"😎"`,
   ];
