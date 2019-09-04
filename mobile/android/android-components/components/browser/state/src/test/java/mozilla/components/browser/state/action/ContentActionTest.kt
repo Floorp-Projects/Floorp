@@ -287,7 +287,7 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, download)
+            ContentAction.ConsumeDownloadAction(tab.id)
         ).joinBlocking()
 
         assertNull(tab.content.download)
@@ -325,7 +325,7 @@ class ContentActionTest {
         assertEquals(hitResult, tab.content.hitResult)
 
         store.dispatch(
-            ContentAction.ConsumeHitResultAction(tab.id, hitResult)
+            ContentAction.ConsumeHitResultAction(tab.id)
         ).joinBlocking()
 
         assertNull(tab.content.hitResult)

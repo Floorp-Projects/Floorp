@@ -177,7 +177,7 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Removes the [DownloadState] of the [ContentState] with the given [sessionId].
      */
-    data class ConsumeDownloadAction(val sessionId: String, val download: DownloadState? = null) : ContentAction()
+    data class ConsumeDownloadAction(val sessionId: String) : ContentAction()
 
     /**
      * Updates the [HitResult] of the [ContentState] with the given [sessionId].

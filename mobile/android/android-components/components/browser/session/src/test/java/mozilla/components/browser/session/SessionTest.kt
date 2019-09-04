@@ -549,6 +549,28 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when download changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.download = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumeDownloadAction(session.id))
+
+        val download: Download = mock()
+        `when`(download.id).thenReturn("1")
+        `when`(download.url).thenReturn("https://www.mozilla.org")
+        `when`(download.destinationDirectory).thenReturn("test")
+        session.download = Consumable.from(download)
+        verify(store).dispatch(ContentAction.UpdateDownloadAction(session.id, download.toDownloadState()))
+
+        session.download.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumeDownloadAction(session.id))
+    }
+
+    @Test
     fun `observer is notified when title changes`() {
         val observer = mock(Session.Observer::class.java)
 
