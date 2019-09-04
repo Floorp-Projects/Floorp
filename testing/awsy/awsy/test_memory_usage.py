@@ -95,7 +95,6 @@ class TestMemoryUsage(AwsyTestCase):
             'playback_tool': 'mitmproxy',
             'playback_version': '4.0.4',
             'playback_pageset_manifest': tp6_pageset_manifest,
-            'playback_upstream_cert': False,
             'platform': mozinfo.os,
             'obj_path': self._webroot_dir,
             'binary': self._binary,
