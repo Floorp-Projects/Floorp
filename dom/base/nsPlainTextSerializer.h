@@ -92,7 +92,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EnsureVerticalSpace(int32_t noOfRows);
 
   void FlushLine();
-  void CreateQuotesAndIndent(nsAString& aResult) const;
 
   void Output(nsString& aString);
   void Write(const nsAString& aString);
@@ -221,6 +220,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   class CurrentLine {
    public:
     void ResetContentAndIndentationHeader();
+
+    void CreateQuotesAndIndent(nsAString& aResult) const;
 
     Indentation mIndentation;
 
