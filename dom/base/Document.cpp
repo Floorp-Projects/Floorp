@@ -14402,7 +14402,8 @@ bool Document::InlineScriptAllowedByCSP() {
 }
 
 void Document::ReportUseCounters() {
-  static const bool sDebugUseCounters = false;
+  static const bool kDebugUseCounters = false;
+
   if (mReportedUseCounters) {
     return;
   }
@@ -14418,7 +14419,7 @@ void Document::ReportUseCounters() {
       return;
     }
 
-    if (sDebugUseCounters) {
+    if (kDebugUseCounters) {
       nsCString spec = uri->GetSpecOrDefault();
 
       // URIs can be rather long for data documents, so truncate them to
@@ -14464,7 +14465,7 @@ void Document::ReportUseCounters() {
       bool value = GetUseCounter(uc);
 
       if (value) {
-        if (sDebugUseCounters) {
+        if (kDebugUseCounters) {
           const char* name = Telemetry::GetHistogramName(id);
           if (name) {
             printf("  %s", name);
@@ -14483,7 +14484,7 @@ void Document::ReportUseCounters() {
         value = GetUseCounter(uc) || GetChildDocumentUseCounter(uc);
 
         if (value) {
-          if (sDebugUseCounters) {
+          if (kDebugUseCounters) {
             const char* name = Telemetry::GetHistogramName(id);
             if (name) {
               printf("  %s", name);
