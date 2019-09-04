@@ -830,6 +830,48 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
   Services.logins.removeAllLogins();
 });
 
+add_task(async function test_saveUsingEnter() {
+  async function testWithTextboxSelector(fieldSelector) {
+    let storageChangedPromise = TestUtils.topicObserved(
+      "passwordmgr-storage-changed",
+      (_, data) => data == "addLogin"
+    );
+
+    info("Waiting for form submit and doorhanger interaction");
+    await testSubmittingLoginForm("subtst_notifications_1.html", async function(
+      fieldValues
+    ) {
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+      ok(notif, "got notification popup");
+      is(
+        Services.logins.getAllLogins().length,
+        0,
+        "Should not have any logins yet"
+      );
+      await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+      let notificationElement = PopupNotifications.panel.childNodes[0];
+      let textbox = notificationElement.querySelector(fieldSelector);
+      textbox.focus();
+      await EventUtils.synthesizeKey("KEY_Enter");
+    });
+    await storageChangedPromise;
+
+    let logins = Services.logins.getAllLogins();
+    is(logins.length, 1, "Should only have 1 login");
+    let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
+    is(login.username, "notifyu1", "Check the username used on the new entry");
+    is(login.password, "notifyp1", "Check the password used on the new entry");
+    is(login.timesUsed, 1, "Check times used on new entry");
+
+    Services.logins.removeAllLogins();
+  }
+
+  await testWithTextboxSelector("#password-notification-password");
+  await testWithTextboxSelector("#password-notification-username");
+});
+
 add_task(async function test_noShowPasswordOnDismissal() {
   info("Check for no Show Password field when the doorhanger is dismissed");
 
