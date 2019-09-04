@@ -214,16 +214,11 @@ class Mitmproxy(Playback):
             if self.config["playback_version"] == "4.0.4":
                 args = [
                     "-v",
-                    "--set",
-                    "websocket=false",
-                    "--set",
-                    "server_replay_files={}".format(",".join(recording_paths)),
-                    "--scripts",
-                    script,
+                    "--set", "upstream_cert=false",
+                    "--set", "websocket=false",
+                    "--set", "server_replay_files={}".format(",".join(recording_paths)),
+                    "--scripts", script,
                 ]
-                if not self.config["playback_upstream_cert"]:
-                    LOG.info("No upstream certificate sniffing")
-                    args = ["--set", "upstream_cert=false"] + args
                 command.extend(args)
             else:
                 raise Exception("Mitmproxy version is unknown!")

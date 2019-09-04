@@ -470,11 +470,6 @@ class Raptor(Perftest):
             'playback_binary_manifest': test.get('playback_binary_manifest'),
             'playback_pageset_manifest': test.get('playback_pageset_manifest'),
         })
-        # By default we are connecting to upstream. In the future we might want
-        # to flip that default to false so all tests will stop connecting to
-        # the upstream server.
-        upstream = test.get("playback_upstream_cert", "true")
-        self.config["playback_upstream_cert"] = upstream.lower() in ("true", "1")
 
         for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
             if self.config.get(key) is None:
