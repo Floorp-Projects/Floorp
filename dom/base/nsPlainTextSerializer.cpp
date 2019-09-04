@@ -102,13 +102,9 @@ static void DetermineLineBreak(const int32_t aFlags, nsAString& aLineBreak) {
   }
 }
 
-nsPlainTextSerializer::CurrentLineContent::CurrentLineContent(
-    const int32_t aFlags)
-    : mFlags(aFlags) {
-}
-
-void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps() {
-  if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
+void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps(
+    const int32_t aFlags) {
+  if (!(aFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
     // First, replace all nbsp characters with spaces,
     // which the unicode encoder won't do for us.
     mValue.ReplaceChar(kNBSP, kSPACE);
@@ -140,8 +136,7 @@ uint32_t nsPlainTextSerializer::OutputManager::GetOutputLength() const {
 }
 
 nsPlainTextSerializer::nsPlainTextSerializer()
-    : mCurrentLineContent{kNoFlags},
-      mFloatingLines(-1),
+    : mFloatingLines(-1),
       mLineBreakDue(false),
       kSpace(NS_LITERAL_STRING(" "))  // Init of "constant"
 {
@@ -244,8 +239,6 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
   mFloatingLines = -1;
 
   mPreformattedBlockBoundary = false;
-
-  mCurrentLineContent = CurrentLineContent{mSettings.GetFlags()};
 
   return NS_OK;
 }
@@ -1153,7 +1146,7 @@ void nsPlainTextSerializer::FlushLine() {
       mOutputManager->Append(quotesAndIndent);
     }
 
-    mCurrentLineContent.MaybeReplaceNbsps();
+    mCurrentLineContent.MaybeReplaceNbsps(mSettings.GetFlags());
     mOutputManager->Append(mCurrentLineContent.mValue);
     ResetCurrentLineContentAndIndentationHeader();
   }
@@ -1419,7 +1412,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     mOutputManager->Append(quotesAndIndent);
   }
 
-  mCurrentLineContent.MaybeReplaceNbsps();
+  mCurrentLineContent.MaybeReplaceNbsps(mSettings.GetFlags());
   mOutputManager->Append(mCurrentLineContent.mValue);
   mOutputManager->AppendLineBreak();
   ResetCurrentLineContentAndIndentationHeader();
@@ -1602,7 +1595,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         mOutputManager->Append(quotesAndIndent);
       }
 
-      mCurrentLineContent.MaybeReplaceNbsps();
+      mCurrentLineContent.MaybeReplaceNbsps(mSettings.GetFlags());
 
       MOZ_ASSERT(mOutputManager);
 

@@ -202,18 +202,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   class CurrentLineContent {
    public:
     // @param aFlags As defined in nsIDocumentEncoder.idl.
-    explicit CurrentLineContent(int32_t aFlags);
-
-    void MaybeReplaceNbsps();
+    void MaybeReplaceNbsps(int32_t aFlags);
 
     nsString mValue;
 
     // The width of the line as it will appear on the screen (approx.).
     uint32_t mWidth = 0;
-
-   private:
-    // As defined in nsIDocumentEncoder.idl.
-    int32_t mFlags;
   };
 
   CurrentLineContent mCurrentLineContent;
