@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fxa
 
+import android.net.Uri
 import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,8 +12,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
-
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -94,7 +95,7 @@ class FirefoxAccount internal constructor(
         inner.close()
     }
 
-    override fun registerPersistenceCallback(callback: mozilla.components.concept.sync.StatePersistenceCallback) {
+    override fun registerPersistenceCallback(callback: StatePersistenceCallback) {
         persistCallback.setCallback(callback)
     }
 
@@ -104,18 +105,22 @@ class FirefoxAccount internal constructor(
      * @param scopes List of OAuth scopes for which the client wants access
      * @return Deferred<String> that resolves to the flow URL when complete
      */
-    override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<String?> {
+    override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth flow", { null }) {
-                inner.beginOAuthFlow(scopes.toTypedArray())
+                val url = inner.beginOAuthFlow(scopes.toTypedArray())
+                val state = Uri.parse(url).getQueryParameter("state")!!
+                AuthFlowUrl(state, url)
             }
         }
     }
 
-    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<String?> {
+    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth pairing flow", { null }) {
-                inner.beginPairingFlow(pairingUrl, scopes.toTypedArray())
+                val url = inner.beginPairingFlow(pairingUrl, scopes.toTypedArray())
+                val state = Uri.parse(url).getQueryParameter("state")!!
+                AuthFlowUrl(state, url)
             }
         }
     }

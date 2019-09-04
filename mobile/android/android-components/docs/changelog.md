@@ -44,6 +44,14 @@ permalink: /changelog/
   * **browser-engine-servo**
     * ❌ We removed the `browser-engine-servo` component since it was not being maintained, updated and used.
 
+* **concept-sync**, **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**:
+  * `SyncConfig`'s `syncableStores` has been renamed to `supportedEngines`, expressed via new enum type `SyncEngine`.
+  * `begin*` OAuthAccount methods now return an `AuthFlowUrl`, which encapsulates an OAuth state identifier.
+  * `AccountObserver:onAuthenticated` method now has `authType` parameter (instead of `newAccount`), which describes in detail what caused an authentication.
+  * `GlobalSyncableStoreProvider.configureStore` now takes a pair of `Pair<SyncEngine, SyncableStore>`, instead of allowing arbitrary string names for engines.
+  * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.  
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)

@@ -80,7 +80,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                         )
                         return@launch
                     }
-                    openWebView(url)
+                    openWebView(url.url)
                 }
             }
         )
@@ -90,7 +90,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
                 account.beginOAuthFlowAsync(scopes).await()?.let {
-                    openTab(it)
+                    openTab(it.url)
                 }
             }
         }
@@ -98,7 +98,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
                 account.beginOAuthFlowAsync(scopes).await()?.let {
-                    openWebView(it)
+                    openWebView(it.url)
                 }
             }
         }

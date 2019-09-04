@@ -21,6 +21,7 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.service.fxa.DeviceConfig
 import org.junit.Assert.assertEquals
 
@@ -129,8 +130,8 @@ class FirefoxAccountsAuthFeatureTest {
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
         `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
-        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred("auth://url"))
-        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl("authState", "auth://url")))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(AuthFlowUrl("authState", "auth://url")))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
 
         val manager = TestableFxaAccountManager(

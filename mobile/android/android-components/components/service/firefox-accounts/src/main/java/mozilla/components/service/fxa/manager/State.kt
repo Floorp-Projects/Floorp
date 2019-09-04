@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.manager
 
 import mozilla.components.concept.sync.AuthException
+import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.sharing.ShareableAccount
 
 /**
@@ -15,7 +16,7 @@ enum class AccountState {
     NotAuthenticated,
     AuthenticationProblem,
     AuthenticatedNoProfile,
-    AuthenticatedWithProfile
+    AuthenticatedWithProfile,
 }
 
 /**
@@ -34,7 +35,7 @@ internal sealed class Event {
     object AccountRestored : Event()
 
     object Authenticate : Event()
-    data class Authenticated(val code: String, val state: String) : Event() {
+    data class Authenticated(val authData: FxaAuthData) : Event() {
         override fun toString(): String {
             // data classes define their own toString, so we override it here as well as in the base
             // class to avoid exposing 'code' and 'state' in logs.
