@@ -1267,9 +1267,6 @@ pref("javascript.options.dump_stack_on_debuggee_would_run", false);
   pref("javascript.options.spectre.jit_to_C++_calls", true);
 #endif
 
-// Streams API
-pref("javascript.options.streams", true);
-
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 
@@ -4270,16 +4267,6 @@ pref("layers.max-active", -1);
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 
 pref("layers.single-tile.enabled", true);
-pref("layers.low-precision-buffer", false);
-pref("layers.progressive-paint", false);
-pref("layers.tiles.retain-back-buffer", true);
-#ifdef MOZ_WIDGET_ANDROID
-  pref("layers.tiles.edge-padding", true);
-#else
-  pref("layers.tiles.edge-padding", false);
-#endif
-
-pref("layers.draw-mask-debug", false);
 
 #ifdef MOZ_X11
   #ifdef MOZ_WIDGET_GTK
@@ -4292,9 +4279,6 @@ pref("layers.draw-mask-debug", false);
 #endif
 
 pref("widget.window-transforms.disabled", false);
-
-// Copy-on-write canvas
-pref("layers.shared-buffer-provider.enabled", true);
 
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
@@ -4927,12 +4911,6 @@ pref("dom.payments.request.supportedRegions", "US,CA");
   pref("toolkit.telemetry.overrideUpdateChannel", "nightly-asan");
 #endif
 
-#if defined(XP_WIN)
-  // Both this and the master "enabled" pref must be on to use Advanced Layers
-  // on Windows 7.
-  pref("layers.mlgpu.enable-on-windows7", true);
-#endif
-
 // Control whether clients.openWindow() opens windows in the same process
 // that called the API vs following our normal multi-process selection
 // algorithm.  Restricting openWindow to same process improves service worker
@@ -4962,8 +4940,6 @@ pref("dom.noopener.newprocess.enabled", true);
 #else
   pref("layers.omtp.enabled", false);
 #endif
-pref("layers.omtp.release-capture-on-main-thread", false);
-pref("layers.omtp.dump-capture", false);
 
 // Limits the depth of recursive conversion of data when opening
 // a content to view.  This is mostly intended to prevent infinite
