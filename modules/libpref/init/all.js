@@ -4192,35 +4192,8 @@ pref("image.mem.discardable", true);
   pref("image.mem.animated.use_heap", false);
 #endif
 
-// Enable extra information for debugging in the image memory reports.
-pref("image.mem.debug-reporting", false);
-
-// Decodes images into shared memory to allow direct use in separate
-// rendering processes. Only applicable with WebRender.
-pref("image.mem.shared", true);
-
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
-
-// What is the minimum buffer size in KB before using volatile memory over the
-// heap. On Android, volatile memory keeps file handles open for each buffer.
-#if defined(ANDROID)
-  pref("image.mem.volatile.min_threshold_kb", 100);
-#else
-  pref("image.mem.volatile.min_threshold_kb", -1);
-#endif
-
-// Whether we attempt to decode WebP images or not.
-pref("image.webp.enabled", true);
-
-// WebGL prefs
-pref("gl.require-hardware", false);
-#ifdef XP_MACOSX
-  pref("gl.multithreaded", true);
-#endif
-pref("gl.ignore-dx-interop2-blacklist", false);
-pref("gl.use-tls-is-current", 0);
-pref("gl.allow-high-power", true);
 
 #ifdef XP_MACOSX
   pref("webgl.1.allow-core-profiles", true);
