@@ -120,6 +120,8 @@ DWORD StartFirefoxThreadProc(_In_ LPVOID lpParameter) {
 
 // This export is responsible for starting up a new VR window in Firefox and
 // returning data related to its creation back to the caller.
+// See nsFxrCommandLineHandler::Handle for more details about the bootstrapping
+// process with Firefox.
 void CreateVRWindow(char* firefoxFolderPath, char* firefoxProfilePath,
                     uint32_t dxgiAdapterID, uint32_t widthHost,
                     uint32_t heightHost, uint32_t* windowId, void** hTex,

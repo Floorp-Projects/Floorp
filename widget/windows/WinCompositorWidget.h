@@ -104,6 +104,8 @@ class WinCompositorWidget : public CompositorWidget,
     return mTransparentSurfaceLock;
   }
 
+  void RequestFxrOutput();
+
  protected:
  private:
   HDC GetWindowSurface();

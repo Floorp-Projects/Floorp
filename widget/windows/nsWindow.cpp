@@ -657,6 +657,8 @@ nsWindow::nsWindow(bool aIsChildWindow)
 
   mSizeConstraintsScale = GetDefaultScale().scale;
 
+  mRequestFxrOutputPending = false;
+
   sInstanceCount++;
 }
 

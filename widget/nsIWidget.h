@@ -2067,6 +2067,10 @@ class nsIWidget : public nsISupports {
       const nsTArray<mozilla::FontRange>& aFontRangeArray,
       const bool aIsVertical, const LayoutDeviceIntPoint& aPoint) {}
 
+  virtual void RequestFxrOutput() {
+    MOZ_ASSERT(false, "This function should only execute in Windows");
+  }
+
 #if defined(MOZ_WIDGET_ANDROID)
   /**
    * RecvToolbarAnimatorMessageFromCompositor receive message from compositor
