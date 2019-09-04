@@ -1722,6 +1722,29 @@ class nsTArray_Impl
     return AppendElement<FallibleAlloc>();
   }
 
+  // This method removes a single element from this array, like
+  // std::vector::erase.
+  // @param pos to the element to remove
+  const_iterator RemoveElementAt(const_iterator pos) {
+    MOZ_ASSERT(pos.GetArray() == this);
+
+    RemoveElementAt(pos.GetIndex());
+    return pos;
+  }
+
+  // This method removes a range of elements from this array, like
+  // std::vector::erase.
+  // @param first iterator to the first of elements to remove
+  // @param last iterator to the last of elements to remove
+  const_iterator RemoveElementsAt(const_iterator first, const_iterator last) {
+    MOZ_ASSERT(first.GetArray() == this);
+    MOZ_ASSERT(last.GetArray() == this);
+    MOZ_ASSERT(last.GetIndex() >= first.GetIndex());
+
+    RemoveElementsAt(first.GetIndex(), last.GetIndex() - first.GetIndex());
+    return first;
+  }
+
   // This method removes a range of elements from this array.
   // @param aStart The starting index of the elements to remove.
   // @param aCount The number of elements to remove.
