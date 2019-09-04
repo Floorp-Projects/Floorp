@@ -59,6 +59,7 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
@@ -578,6 +579,7 @@ class HomeFragment : Fragment(), AccountObserver {
                     invokePendingDeleteJobs()
                     hideOnboardingIfNeeded()
                     WhatsNew.userViewedWhatsNew(context!!)
+                    context!!.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.HOME))
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,

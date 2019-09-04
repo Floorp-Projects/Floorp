@@ -330,6 +330,10 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PrivateBrowsingNotificationDeleteAndOpenTapped -> EventWrapper<NoExtraKeys>(
             { PrivateBrowsingMode.notificationDelete.record(it) }
         )
+        is Event.WhatsNewTapped -> EventWrapper(
+            { Events.whatsNewTapped.record(it) },
+            { Events.whatsNewTappedKeys.valueOf(it) }
+        )
 
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

@@ -21,6 +21,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.whatsnew.WhatsNew
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
@@ -77,6 +79,7 @@ class AboutFragment : Fragment() {
         with(whats_new_button) {
             text = getString(R.string.about_whats_new, getString(R.string.app_name))
             setOnClickListener {
+                context.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.ABOUT))
                 WhatsNew.userViewedWhatsNew(context!!)
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
