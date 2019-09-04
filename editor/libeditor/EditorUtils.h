@@ -195,6 +195,8 @@ class MOZ_STACK_CLASS MoveNodeResult final {
   }
   EditorDOMPoint NextInsertionPoint() const { return mNextInsertionPoint; }
 
+  void MarkAsHandled() { mHandled = true; }
+
   MoveNodeResult() : mRv(NS_ERROR_NOT_INITIALIZED), mHandled(false) {}
 
   explicit MoveNodeResult(nsresult aRv) : mRv(aRv), mHandled(false) {

@@ -175,21 +175,6 @@ class HTMLEditRules : public TextEditRules {
   TryToJoinBlocksWithTransaction(nsIContent& aLeftNode, nsIContent& aRightNode);
 
   /**
-   * MoveBlock() moves the content from aRightBlock starting from aRightOffset
-   * into aLeftBlock at aLeftOffset. Note that the "block" can be inline nodes
-   * between <br>s, or between blocks, etc.  DTD containment rules are followed
-   * throughout.
-   *
-   * @return            Sets handled to true if this actually joins the nodes.
-   *                    canceled is always false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult MoveBlock(Element& aLeftBlock,
-                                          Element& aRightBlock,
-                                          int32_t aLeftOffset,
-                                          int32_t aRightOffset);
-
-  /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
    * table related elements (except <table> itself) and their contents
    * from the DOM tree.
