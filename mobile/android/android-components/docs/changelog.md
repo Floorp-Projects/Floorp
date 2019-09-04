@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 69.0
+    * `browser-engine-gecko-beta`: GeckoView 70.0
+    * `browser-engine-gecko-nightly`: GeckoView 71.0
+
 * **feature-toolbar**
   *  ⚠️ **This is a breaking change**: The `feature-toolbar` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `ToolbarFeature` requires a `BrowserStore` instance instead of a `SessionManager` instance now.
 
