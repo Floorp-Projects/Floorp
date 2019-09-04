@@ -418,6 +418,28 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
   return result;
 }
 
+// This override of CreateCompositor is to add support for sending the IPC
+// call for RequesetFxrOutput as soon as the compositor for this widget is
+// available.
+void nsWindow::CreateCompositor() {
+  // there's no super??
+  nsWindowBase::CreateCompositor();
+
+  if (mRequestFxrOutputPending) {
+    GetRemoteRenderer()->SendRequestFxrOutput();
+  }
+}
+
+void nsWindow::RequestFxrOutput() {
+  if (GetRemoteRenderer() != nullptr) {
+    MOZ_CRASH("RequestFxrOutput should happen before Compositor is created.");
+  } else {
+    // The compositor isn't ready, so indicate to make the IPC call when
+    // it is available.
+    mRequestFxrOutputPending = true;
+  }
+}
+
 LayoutDeviceIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
   int32_t width = ::GetSystemMetrics(sIconMetrics[aSizeType].xMetric);
   int32_t height = ::GetSystemMetrics(sIconMetrics[aSizeType].yMetric);
