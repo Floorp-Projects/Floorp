@@ -612,7 +612,7 @@ void BackgroundHangMonitor::Startup() {
     return;
   }
 
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
+  if (!strcmp(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) {  // cached ClientID hasn't been read yet
       BackgroundHangThread::Startup();
       BackgroundHangManager::sInstance = new BackgroundHangManager();

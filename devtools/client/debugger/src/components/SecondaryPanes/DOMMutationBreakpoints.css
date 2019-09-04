@@ -3,10 +3,17 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
  .dom-mutation-empty {
-  padding: 6px 0;
+  padding: 6px 20px;
   text-align: center;
   font-style: italic;
   color: var(--theme-body-color);
+  white-space: normal;
+ }
+
+ .dom-mutation-empty a {
+   text-decoration: underline;
+   color: var(--theme-toolbar-selected-color);
+   cursor: pointer;
  }
 
 .dom-mutation-list * {
