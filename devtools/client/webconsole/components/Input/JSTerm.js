@@ -65,6 +65,8 @@ const {
   HISTORY_FORWARD,
 } = require("devtools/client/webconsole/constants");
 
+const JSTERM_CODEMIRROR_ORIGIN = "jsterm";
+
 /**
  * Create a JSTerminal (a JavaScript command line). This is attached to an
  * existing HeadsUpDisplay (a Web Console instance). This code is responsible
@@ -645,10 +647,20 @@ class JSTerm extends Component {
   /**
    * The editor "changes" event handler.
    */
-  _onEditorChanges() {
+  _onEditorChanges(cm, changes) {
     const value = this._getValue();
+
     if (this.lastInputValue !== value) {
-      if (this.props.autocomplete || this.autocompletePopup.isOpen) {
+      // We don't autocomplete if the changes were made by JsTerm (e.g. autocomplete was
+      // accepted).
+      const isJsTermChangeOnly = changes.every(
+        ({ origin }) => origin === JSTERM_CODEMIRROR_ORIGIN
+      );
+
+      if (
+        !isJsTermChangeOnly &&
+        (this.props.autocomplete || this.autocompletePopup.isOpen)
+      ) {
         this.autocompleteUpdate();
       }
       this.lastInputValue = value;
@@ -944,27 +956,15 @@ class JSTerm extends Component {
       return;
     }
 
-    const value = this._getValue();
-    let prefix = this.getInputValueBeforeCursor();
-    const suffix = value.replace(prefix, "");
+    const cursor = this.editor.getCursor();
+    const from = {
+      line: cursor.line,
+      ch: cursor.ch - numberOfCharsToReplaceCharsBeforeCursor,
+    };
 
-    if (numberOfCharsToReplaceCharsBeforeCursor) {
-      prefix = prefix.substring(
-        0,
-        prefix.length - numberOfCharsToReplaceCharsBeforeCursor
-      );
-    }
-
-    // We need to retrieve the cursor before setting the new value.
-    const { line, ch } = this.editor.getCursor();
-
-    this._setValue(prefix + str + suffix);
-
-    // Set the cursor on the same line it was already at, after the autocompleted text
-    this.editor.setCursor({
-      line,
-      ch: ch + str.length - numberOfCharsToReplaceCharsBeforeCursor,
-    });
+    this.editor
+      .getDoc()
+      .replaceRange(str, from, cursor, JSTERM_CODEMIRROR_ORIGIN);
   }
 
   /**
