@@ -3997,6 +3997,8 @@
   mirror: once
   do_not_use_directly: true
 
+# Preference that when switched at runtime will run a series of benchmarks
+# and output the result to stderr.
 - name: layers.bench.enabled
   type: RelaxedAtomicBool
   value: false
@@ -4036,9 +4038,14 @@
   value: true
   mirror: once
 
+# Enable DEAA antialiasing for transformed layers in the compositor.
 - name: layers.deaa.enabled
   type: RelaxedAtomicBool
+#if defined(MOZ_WIDGET_ANDROID)
   value: false
+#else
+  value: true
+#endif
   mirror: always
 
 - name: layers.draw-bigimage-borders
@@ -4160,19 +4167,22 @@
   value: true
   mirror: always
 
+# Whether to enable arbitrary layer geometry for OpenGL compositor.
 - name: layers.geometry.opengl.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
+# Whether to enable arbitrary layer geometry for Basic compositor.
 - name: layers.geometry.basic.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
+ # Whether to enable arbitrary layer geometry for DirectX compositor.
 - name: layers.geometry.d3d11.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: layers.gpu-process.allow-software
@@ -4205,7 +4215,15 @@
 
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  #if defined(NIGHTLY_BUILD)
+  value: 3
+  #else
   value: 1
+  #endif
+#else
+  value: 1
+#endif
   mirror: always
 
 # Note: This pref will only be used if it is less than layers.gpu-process.max_restarts.

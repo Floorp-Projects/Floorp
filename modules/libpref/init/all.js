@@ -636,15 +636,6 @@ pref("media.audiograph.single_thread.enabled", false);
   #endif
 #endif
 
-// Whether to enable arbitrary layer geometry for OpenGL compositor
-pref("layers.geometry.opengl.enabled", true);
-
-// Whether to enable arbitrary layer geometry for Basic compositor
-pref("layers.geometry.basic.enabled", true);
-
-// Whether to enable arbitrary layer geometry for DirectX compositor
-pref("layers.geometry.d3d11.enabled", true);
-
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
@@ -4223,27 +4214,6 @@ pref("network.tcp.tcp_fastopen_consecutive_failure_limit", 5);
 pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
 pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
 pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
-
-// Preference that when switched at runtime will run a series of benchmarks
-// and output the result to stderr.
-pref("layers.bench.enabled", false);
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  #ifdef NIGHTLY_BUILD
-    pref("layers.gpu-process.max_restarts", 3);
-  #endif
-#endif
-
-pref("layers.acceleration.draw-fps", false);
-
-// Enable DEAA antialiasing for transformed layers in the compositor
-#if !defined(MOZ_WIDGET_ANDROID)
-  // Desktop prefs
-  pref("layers.deaa.enabled", true);
-#else
-  // Mobile prefs
-  pref("layers.deaa.enabled", false);
-#endif
 
 #ifdef MOZ_X11
   #ifdef MOZ_WIDGET_GTK
