@@ -376,10 +376,7 @@ void ExecutionRunnable::RunOnWorkletThread() {
 
   JS::Rooted<JSObject*> module(cx);
   if (!ParseAndLinkModule(cx, &module)) {
-    ErrorResult error;
-    error.MightThrowJSException();
-    error.StealExceptionFromJSContext(cx);
-    mResult = error.StealNSResult();
+    mResult = NS_ERROR_DOM_ABORT_ERR;
     return;
   }
 
