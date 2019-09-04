@@ -89,8 +89,8 @@ void CompositorScreenshotGrabber::MaybeProcessQueue() {
 
 void CompositorScreenshotGrabber::NotifyEmptyFrame() {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker("NoCompositorScreenshot because nothing changed",
-                      JS::ProfilingCategoryPair::GRAPHICS);
+  PROFILER_ADD_MARKER("NoCompositorScreenshot because nothing changed",
+                      GRAPHICS);
 #endif
 }
 
