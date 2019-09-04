@@ -198,6 +198,16 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   Settings mSettings;
 
+  struct Indentation {
+    // The number of space characters to be inserted including the number of
+    // characters in mHeader.
+    int32_t mWidth = 0;
+
+    // The header that has to be written in the indent.
+    // That could be, for instance, the bullet in a bulleted list.
+    nsString mHeader;
+  };
+
   // Excludes indentation and quotes.
   class CurrentLineContent {
    public:
@@ -210,7 +220,16 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     uint32_t mWidth = 0;
   };
 
-  CurrentLineContent mCurrentLineContent;
+  struct CurrentLine {
+    Indentation mIndentation;
+
+    // The number of '>' characters.
+    int32_t mCiteQuoteLevel = 0;
+
+    CurrentLineContent mContent;
+  };
+
+  CurrentLine mCurrentLine;
 
   class OutputManager {
    public:
@@ -246,19 +265,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // old messages).
   bool mHasWrittenCiteBlockquote;
 
-  struct Indentation {
-    // The number of space characters to be inserted including the number of
-    // characters in mHeader.
-    int32_t mWidth = 0;
-
-    // The header that has to be written in the indent.
-    // That could be, for instance, the bullet in a bulleted list.
-    nsString mHeader;
-  };
-
-  Indentation mIndentation;
-
-  int32_t mCiteQuoteLevel;
   int32_t mFloatingLines;  // To store the number of lazy line breaks
 
   // The wrap column is how many standard sized chars (western languages)
