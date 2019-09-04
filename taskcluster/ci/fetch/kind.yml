@@ -14,3 +14,4 @@ jobs-from:
     - benchmarks.yml
     - toolchains.yml
     - chromium-fetch.yml
+    - visual-metrics.yml
