@@ -14,8 +14,11 @@ import os
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import Action, SUPPRESS
+from textwrap import dedent
 
 import mozpack.path as mozpath
+import voluptuous
+from taskgraph.decision import visual_metrics_jobs_schema
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 from .tasks import resolve_tests_by_suite
 
@@ -251,6 +254,62 @@ class DisablePgo(TryConfig):
             }
 
 
+visual_metrics_jobs_description = dedent("""\
+    The file should be a JSON file of the format:
+    {
+      "jobs": [
+        {
+          "browsertime_json_url": "http://example.com/browsertime.json",
+          "video_url": "http://example.com/video.mp4"
+        }
+      ]
+    }
+""")
+
+
+class VisualMetricsJobs(TryConfig):
+
+    arguments = [
+        [['--visual-metrics-jobs'],
+         {'dest': 'visual_metrics_jobs',
+          'metavar': 'PATH',
+          'help': (
+              'The path to a visual metrics jobs file. Only required when '
+              'running a "visual-metrics" job.\n'
+              '%s' % visual_metrics_jobs_description
+          )}],
+    ]
+
+    def try_config(self, **kwargs):
+        file_path = kwargs.get('visual_metrics_jobs')
+
+        if not file_path:
+            return None
+
+        try:
+            with open(file_path) as f:
+                visual_metrics_jobs = json.load(f)
+
+            visual_metrics_jobs_schema(visual_metrics_jobs)
+        except (IOError, OSError) as e:
+            print('Failed to read file %s: %s' % (file_path, f))
+            sys.exit(1)
+        except TypeError:
+            print('Failed to parse file %s as JSON: %s' % (file_path, f))
+            sys.exit(1)
+        except voluptuous.Error as e:
+            print(
+                'The file %s does not match the expected format: %s\n'
+                '%s'
+                % (file_path, e, visual_metrics_jobs_description)
+            )
+            sys.exit(1)
+
+        return {
+            'visual-metrics-jobs': visual_metrics_jobs,
+        }
+
+
 all_templates = {
     'artifact': Artifact,
     'browsertime': Browsertime,
@@ -260,4 +319,5 @@ all_templates = {
     'gecko-profile': GeckoProfile,
     'path': Path,
     'rebuild': Rebuild,
+    'visual-metrics-jobs': VisualMetricsJobs,
 }
