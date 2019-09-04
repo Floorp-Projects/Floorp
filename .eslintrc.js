@@ -43,34 +43,19 @@ module.exports = {
     "mozilla"
   ],
   "overrides": [{
-      "files": [
-        "*.html",
-        "*.xhtml",
-        "*.xul",
-        "*.xml",
-        "js/src/builtin/**/*.js",
-        "js/src/shell/**/*.js"
-      ],
-      "rules": {
-        // Curly brackets are required for all the tree via recommended.js,
-        // however these files aren't auto-fixable at the moment.
-        "curly": "off"
-      },
-    }, {
-    // These xbl bindings are assumed to be in the browser-window environment,
-    // we would mark it in the files, but ESLint made this more difficult with
-    // our xml processor, so we list them here. Bug 1397874 & co are working
-    // towards removing these files completely.
     "files": [
-      "browser/base/content/tabbrowser.xml",
-      "browser/base/content/urlbarBindings.xml",
-      "browser/components/search/content/search.xml",
-      "browser/components/translation/translation-infobar.xml",
-      "toolkit/components/prompts/content/tabprompts.xml"
+      "*.html",
+      "*.xhtml",
+      "*.xul",
+      "*.xml",
+      "js/src/builtin/**/*.js",
+      "js/src/shell/**/*.js"
     ],
-    "env": {
-      "mozilla/browser-window": true
-    }
+    "rules": {
+      // Curly brackets are required for all the tree via recommended.js,
+      // however these files aren't auto-fixable at the moment.
+      "curly": "off"
+    },
   }, {
     // TODO: Bug 1515949. Enable no-undef for gfx/
     "files": "gfx/layers/apz/test/mochitest/**",
