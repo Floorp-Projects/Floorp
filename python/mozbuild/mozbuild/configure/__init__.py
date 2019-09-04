@@ -885,15 +885,22 @@ class ConfigureSandbox(dict):
             def wrapper(*args, **kwargs):
                 if 'env' not in kwargs:
                     kwargs['env'] = dict(self._environ)
-                # subprocess on older Pythons can't handle unicode keys or
-                # values in environment dicts. Normalize automagically so
-                # callers don't have to deal with this.
+                # Subprocess on older Pythons can't handle unicode keys or
+                # values in environment dicts while subprocess on newer Pythons
+                # needs text in the env. Normalize automagically so callers
+                # don't have to deal with this.
                 env = {}
                 for k, v in six.iteritems(kwargs['env']):
-                    if isinstance(k, six.text_type):
-                        k = k.encode(system_encoding)
-                    if isinstance(v, six.text_type):
-                        v = v.encode(system_encoding)
+                    if sys.version_info[0] < 3:
+                        if isinstance(k, six.text_type):
+                            k = k.encode(system_encoding)
+                        if isinstance(v, six.text_type):
+                            v = v.encode(system_encoding)
+                    else:
+                        if isinstance(k, six.binary_type):
+                            k = k.decode(system_encoding)
+                        if isinstance(v, six.binary_type):
+                            v = v.decode(system_encoding)
                     env[k] = v
                 kwargs['env'] = env
                 return function(*args, **kwargs)
