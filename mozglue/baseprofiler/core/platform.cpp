@@ -3147,8 +3147,6 @@ static void racy_profiler_add_marker(
     return;
   }
 
-  AUTO_PROFILER_STATS(base_racy_profiler_add_marker);
-
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                          ? aPayload->GetStartTime()
                          : TimeStamp::NowUnfuzzed();
@@ -3178,6 +3176,7 @@ void profiler_add_marker(const char* aMarkerName,
 // This is a simplified version of profiler_add_marker that can be easily passed
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName) {
+  AUTO_PROFILER_STATS(base_add_marker);
   profiler_add_marker(aMarkerName, ProfilingCategoryPair::JS, nullptr);
 }
 
@@ -3237,6 +3236,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
     return;
   }
 
+  AUTO_PROFILER_STATS(base_add_marker_with_TracingMarkerPayload);
   auto payload = MakeUnique<TracingMarkerPayload>(
       aCategoryString, aKind, aDocShellId, aDocShellHistoryId);
   racy_profiler_add_marker(aMarkerName, aCategoryPair, std::move(payload));
@@ -3256,6 +3256,7 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
     return;
   }
 
+  AUTO_PROFILER_STATS(base_add_marker_with_TracingMarkerPayload);
   auto payload =
       MakeUnique<TracingMarkerPayload>(aCategoryString, aKind, aDocShellId,
                                        aDocShellHistoryId, std::move(aCause));
@@ -3269,6 +3270,7 @@ void profiler_add_text_marker(const char* aMarkerName, const std::string& aText,
                               const Maybe<std::string>& aDocShellId,
                               const Maybe<uint32_t>& aDocShellHistoryId,
                               UniqueProfilerBacktrace aCause) {
+  AUTO_PROFILER_STATS(base_add_marker_with_TextMarkerPayload);
   profiler_add_marker(
       aMarkerName, aCategoryPair,
       MakeUnique<TextMarkerPayload>(aText, aStartTime, aEndTime, aDocShellId,
