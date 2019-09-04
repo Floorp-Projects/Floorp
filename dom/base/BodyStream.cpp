@@ -343,9 +343,13 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_ERROR_FAILURE;
   }
 
+  JSObject* streamObj = mStreamHolder->GetReadableStreamBody();
+  if (!streamObj) {
+    return NS_ERROR_FAILURE;
+  }
+
   JSContext* cx = jsapi.cx();
-  MOZ_DIAGNOSTIC_ASSERT(mStreamHolder->GetReadableStreamBody());
-  JS::Rooted<JSObject*> stream(cx, mStreamHolder->GetReadableStreamBody());
+  JS::Rooted<JSObject*> stream(cx, streamObj);
 
   uint64_t size = 0;
   nsresult rv = mInputStream->Available(&size);
