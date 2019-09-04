@@ -4066,6 +4066,7 @@
   value: false
   mirror: always
 
+# If we're dumping layers, also dump the texture data
 - name: layers.dump-texture
   type: RelaxedAtomicBool
   value: false
@@ -4233,6 +4234,7 @@
   value: 0.25f
   mirror: always
 
+# Max number of layers per container. See Overwrite in mobile prefs.
 - name: layers.max-active
   type: RelaxedAtomicInt32
   value: -1
@@ -4306,6 +4308,10 @@
   value: false
   mirror: once
 
+# Compositor target frame rate. NOTE: If vsync is enabled the compositor
+# frame rate will still be capped.
+# -1 -> default (match layout.frame_rate or 60 FPS)
+# 0  -> full-tilt mode: Recomposite even if not transaction occured.
 - name: layers.offmainthreadcomposition.frame-rate
   type: RelaxedAtomicInt32
   value: -1
