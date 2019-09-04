@@ -15,11 +15,16 @@
 using namespace js;
 using namespace js::jit;
 
-void IonIC::updateBaseAddress(JitCode* code) {
-  fallbackLabel_.repoint(code);
-  rejoinLabel_.repoint(code);
+void IonIC::resetCodeRaw(IonScript* ionScript) {
+  codeRaw_ = fallbackAddr(ionScript);
+}
 
-  codeRaw_ = fallbackLabel_.raw();
+uint8_t* IonIC::fallbackAddr(IonScript* ionScript) const {
+  return ionScript->method()->raw() + fallbackOffset_;
+}
+
+uint8_t* IonIC::rejoinAddr(IonScript* ionScript) const {
+  return ionScript->method()->raw() + rejoinOffset_;
 }
 
 Register IonIC::scratchRegisterForEntryJump() {
@@ -71,11 +76,11 @@ Register IonIC::scratchRegisterForEntryJump() {
   MOZ_CRASH("Invalid kind");
 }
 
-void IonIC::discardStubs(Zone* zone) {
+void IonIC::discardStubs(Zone* zone, IonScript* ionScript) {
   if (firstStub_ && zone->needsIncrementalBarrier()) {
     // We are removing edges from IonIC to gcthings. Perform one final trace
     // of the stub for incremental GC, as it must know about those edges.
-    trace(zone->barrierTracer());
+    trace(zone->barrierTracer(), ionScript);
   }
 
 #ifdef JS_CRASH_DIAGNOSTICS
@@ -88,16 +93,16 @@ void IonIC::discardStubs(Zone* zone) {
 #endif
 
   firstStub_ = nullptr;
-  codeRaw_ = fallbackLabel_.raw();
+  resetCodeRaw(ionScript);
   state_.trackUnlinkedAllStubs();
 }
 
-void IonIC::reset(Zone* zone) {
-  discardStubs(zone);
+void IonIC::reset(Zone* zone, IonScript* ionScript) {
+  discardStubs(zone, ionScript);
   state_.reset();
 }
 
-void IonIC::trace(JSTracer* trc) {
+void IonIC::trace(JSTracer* trc, IonScript* ionScript) {
   if (script_) {
     TraceManuallyBarrieredEdge(trc, &script_, "IonIC::script_");
   }
@@ -112,7 +117,7 @@ void IonIC::trace(JSTracer* trc) {
     nextCodeRaw = stub->nextCodeRaw();
   }
 
-  MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
+  MOZ_ASSERT(nextCodeRaw == fallbackAddr(ionScript));
 }
 
 // This helper handles ICState updates/transitions while attaching CacheIR
@@ -121,7 +126,7 @@ template <typename IRGenerator, typename IC, typename... Args>
 static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
                              Args&&... args) {
   if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
+    ic->discardStubs(cx->zone(), ionScript);
   }
 
   if (ic->state().canAttachStub()) {
@@ -163,7 +168,7 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   }
 
   if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
+    ic->discardStubs(cx->zone(), ionScript);
   }
 
   bool attached = false;
@@ -245,7 +250,7 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
   AutoDetectInvalidation adi(cx, res, ionScript);
 
   if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
+    ic->discardStubs(cx->zone(), ionScript);
   }
 
   RootedValue val(cx, ObjectValue(*obj));
@@ -281,7 +286,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   DeferType deferType = DeferType::None;
 
   if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
+    ic->discardStubs(cx->zone(), ionScript);
   }
 
   if (ic->state().canAttachStub()) {
@@ -362,7 +367,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   // The SetProperty call might have entered this IC recursively, so try
   // to transition.
   if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
+    ic->discardStubs(cx->zone(), ionScript);
   }
 
   bool canAttachStub = ic->state().canAttachStub();

@@ -323,12 +323,13 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   void jump(JitCode* code) { branch(code); }
 
-  void jump(TrampolinePtr code) {
-    auto target = ImmPtr(code.value);
+  void jump(ImmPtr ptr) {
     BufferOffset bo = m_buffer.nextOffset();
-    addPendingJump(bo, target, RelocationKind::HARDCODED);
-    ma_jump(target);
+    addPendingJump(bo, ptr, RelocationKind::HARDCODED);
+    ma_jump(ptr);
   }
+
+  void jump(TrampolinePtr code) { jump(ImmPtr(code.value)); }
 
   void splitTag(Register src, Register dest) {
     ma_dsrl(dest, src, Imm32(JSVAL_TAG_SHIFT));

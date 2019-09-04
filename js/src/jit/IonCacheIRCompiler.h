@@ -41,7 +41,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   // this is a SetProp/SetElem stub.
   const PropertyTypeCheckInfo* typeCheckInfo_;
 
-  CodeOffsetJump rejoinOffset_;
   Vector<CodeOffset, 4, SystemAllocPolicy> nextCodeOffsets_;
   mozilla::Maybe<LiveRegisterSet> liveRegs_;
   mozilla::Maybe<CodeOffset> stubJitCodeOffset_;
