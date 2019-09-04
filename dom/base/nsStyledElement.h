@@ -82,13 +82,9 @@ class nsStyledElement : public nsStyledElementBase {
    * Create the style struct from the style attr.  Used when an element is
    * first put into a document.  Only has an effect if the old value is a
    * string.  If aForceInDataDoc is true, will reparse even if we're in a data
-   * document. If aForceIfAlreadyParsed is set, this will always reparse even
-   * if the value has already been parsed.
+   * document.
    */
-  nsresult ReparseStyleAttribute(bool aForceInDataDoc,
-                                 bool aForceIfAlreadyParsed);
-
-  virtual void NodeInfoChanged(mozilla::dom::Document* aOldDoc) override;
+  nsresult ReparseStyleAttribute(bool aForceInDataDoc);
 
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,

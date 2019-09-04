@@ -511,7 +511,8 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
       }
 
       RefPtr<SourceSurface> surface =
-          image->GetFrame(imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+          image->GetFrame(imgIContainer::FRAME_CURRENT,
+                          imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
       if (!surface) {
         continue;
       }

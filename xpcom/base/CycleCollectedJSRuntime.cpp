@@ -841,17 +841,15 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     if (aProgress == JS::GC_CYCLE_END) {
-      profiler_add_marker(
-          "GCMajor", JS::ProfilingCategoryPair::GCCC,
-          MakeUnique<GCMajorMarkerPayload>(aDesc.startTime(aContext),
-                                           aDesc.endTime(aContext),
-                                           aDesc.formatJSONProfiler(aContext)));
+      PROFILER_ADD_MARKER_WITH_PAYLOAD(
+          "GCMajor", GCCC, GCMajorMarkerPayload,
+          (aDesc.startTime(aContext), aDesc.endTime(aContext),
+           aDesc.formatJSONProfiler(aContext)));
     } else if (aProgress == JS::GC_SLICE_END) {
-      profiler_add_marker(
-          "GCSlice", JS::ProfilingCategoryPair::GCCC,
-          MakeUnique<GCSliceMarkerPayload>(
-              aDesc.lastSliceStart(aContext), aDesc.lastSliceEnd(aContext),
-              aDesc.sliceToJSONProfiler(aContext)));
+      PROFILER_ADD_MARKER_WITH_PAYLOAD(
+          "GCSlice", GCCC, GCSliceMarkerPayload,
+          (aDesc.lastSliceStart(aContext), aDesc.lastSliceEnd(aContext),
+           aDesc.sliceToJSONProfiler(aContext)));
     }
   }
 #endif
@@ -930,10 +928,10 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
 #ifdef MOZ_GECKO_PROFILER
   else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
            profiler_thread_is_being_profiled()) {
-    profiler_add_marker("GCMinor", JS::ProfilingCategoryPair::GCCC,
-                        MakeUnique<GCMinorMarkerPayload>(
-                            self->mLatestNurseryCollectionStart,
-                            TimeStamp::Now(), JS::MinorGcToJSON(aContext)));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(
+        "GCMinor", GCCC, GCMinorMarkerPayload,
+        (self->mLatestNurseryCollectionStart, TimeStamp::Now(),
+         JS::MinorGcToJSON(aContext)));
   }
 #endif
 

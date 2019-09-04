@@ -90,8 +90,11 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
+
+  void ResetCurrentLineContentAndIndentationHeader();
+
   void FlushLine();
-  void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
+  void CreateQuotesAndIndent(nsAString& aResult) const;
 
   void Output(nsString& aString);
   void Write(const nsAString& aString);
@@ -249,10 +252,18 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // old messages).
   bool mHasWrittenCiteBlockquote;
 
-  int32_t mIndent;
-  // mInIndentString keeps a header that has to be written in the indent.
-  // That could be, for instance, the bullet in a bulleted list.
-  nsString mInIndentString;
+  struct Indentation {
+    // The number of space characters to be inserted including the number of
+    // characters in mHeader.
+    int32_t mWidth = 0;
+
+    // The header that has to be written in the indent.
+    // That could be, for instance, the bullet in a bulleted list.
+    nsString mHeader;
+  };
+
+  Indentation mIndentation;
+
   int32_t mCiteQuoteLevel;
   int32_t mFloatingLines;  // To store the number of lazy line breaks
 

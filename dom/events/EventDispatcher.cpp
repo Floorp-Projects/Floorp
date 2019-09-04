@@ -1027,20 +1027,18 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
           nsCOMPtr<nsIDocShell> docShell;
           docShell = nsContentUtils::GetDocShellForEventTarget(aEvent->mTarget);
           DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
-          profiler_add_marker(
-              "DOMEvent", JS::ProfilingCategoryPair::DOM,
-              MakeUnique<DOMEventMarkerPayload>(
-                  typeStr, aEvent->mTimeStamp, "DOMEvent",
-                  TRACING_INTERVAL_START, docShellId, docShellHistoryId));
+          PROFILER_ADD_MARKER_WITH_PAYLOAD(
+              "DOMEvent", DOM, DOMEventMarkerPayload,
+              (typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_START,
+               docShellId, docShellHistoryId));
 
           EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                        aCallback, cd);
 
-          profiler_add_marker(
-              "DOMEvent", JS::ProfilingCategoryPair::DOM,
-              MakeUnique<DOMEventMarkerPayload>(
-                  typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_END,
-                  docShellId, docShellHistoryId));
+          PROFILER_ADD_MARKER_WITH_PAYLOAD(
+              "DOMEvent", DOM, DOMEventMarkerPayload,
+              (typeStr, aEvent->mTimeStamp, "DOMEvent", TRACING_INTERVAL_END,
+               docShellId, docShellHistoryId));
         } else
 #endif
         {

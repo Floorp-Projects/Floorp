@@ -1976,8 +1976,8 @@ already_AddRefed<IAPZCTreeManager> CompositorBridgeParent::GetAPZCTreeManager(
 static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (profiler_thread_is_being_profiled()) {
-    profiler_add_marker("VsyncTimestamp", JS::ProfilingCategoryPair::GRAPHICS,
-                        MakeUnique<VsyncMarkerPayload>(aVsyncTimestamp));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncTimestamp", GRAPHICS,
+                                     VsyncMarkerPayload, (aVsyncTimestamp));
   }
 }
 #endif
@@ -2523,6 +2523,7 @@ int32_t RecordContentFrameTime(
                           aUniqueStacks);
       }
     };
+    AUTO_PROFILER_STATS(add_marker_with_ContentFramePayload);
     profiler_add_marker_for_thread(
         profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
         "CONTENT_FRAME_TIME",

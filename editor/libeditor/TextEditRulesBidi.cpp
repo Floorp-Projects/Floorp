@@ -82,22 +82,4 @@ nsresult TextEditRules::CheckBidiLevelForDeletion(
   return NS_OK;
 }
 
-void TextEditRules::UndefineCaretBidiLevel() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  /**
-   * After inserting text the caret Bidi level must be set to the level of the
-   * inserted text.This is difficult, because we cannot know what the level is
-   * until after the Bidi algorithm is applied to the whole paragraph.
-   *
-   * So we set the caret Bidi level to UNDEFINED here, and the caret code will
-   * set it correctly later
-   */
-  RefPtr<nsFrameSelection> frameSelection =
-      SelectionRefPtr()->GetFrameSelection();
-  if (frameSelection) {
-    frameSelection->UndefineCaretBidiLevel();
-  }
-}
-
 }  // namespace mozilla

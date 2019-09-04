@@ -51,6 +51,8 @@
                                            ctx, flags)
 
 #  define PROFILER_ADD_MARKER(markerName, categoryPair)
+#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(markerName, categoryPair, \
+                                           PayloadType, payloadArgs)
 #  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, \
                                       count, cache, timings, redirect)
 
@@ -69,6 +71,7 @@
 
 #else  // !MOZ_GECKO_PROFILER
 
+#  include "BaseProfiler.h"
 #  include "js/AllocationRecording.h"
 #  include "js/ProfilingFrameIterator.h"
 #  include "js/ProfilingStack.h"
@@ -674,11 +677,29 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // certain length of time. A no-op if the profiler is inactive or in privacy
 // mode.
 
-#  define PROFILER_ADD_MARKER(markerName, categoryPair) \
-    profiler_add_marker(markerName, JS::ProfilingCategoryPair::categoryPair)
+#  define PROFILER_ADD_MARKER(markerName, categoryPair)                 \
+    do {                                                                \
+      AUTO_PROFILER_STATS(add_marker);                                  \
+      ::profiler_add_marker(markerName,                                 \
+                            ::JS::ProfilingCategoryPair::categoryPair); \
+    } while (false)
 
 void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair);
+
+// `PayloadType` is a sub-class of MarkerPayload, `parenthesizedPayloadArgs` is
+// the argument list used to construct that `PayloadType`. E.g.:
+// `PROFILER_ADD_MARKER_WITH_PAYLOAD("Load", DOM, TextMarkerPayload,
+//                                   ("text", start, end, ds, dsh))`
+#  define PROFILER_ADD_MARKER_WITH_PAYLOAD(                             \
+      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)  \
+    do {                                                                \
+      AUTO_PROFILER_STATS(add_marker_with_##PayloadType);               \
+      ::profiler_add_marker(                                            \
+          markerName, ::JS::ProfilingCategoryPair::categoryPair,        \
+          ::mozilla::MakeUnique<PayloadType> parenthesizedPayloadArgs); \
+    } while (false)
+
 void profiler_add_marker(const char* aMarkerName,
                          JS::ProfilingCategoryPair aCategoryPair,
                          mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);

@@ -119,14 +119,6 @@ class HTMLEditRules : public TextEditRules {
   }
 
   /**
-   * WillInsertParagraphSeparator() is called when insertParagraph command is
-   * executed or something equivalent.  This method actually tries to insert
-   * new paragraph or <br> element, etc.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult WillInsertParagraphSeparator();
-
-  /**
    * If aNode is a text node that contains only collapsed whitespace, delete
    * it.  It doesn't serve any useful purpose, and we don't want it to confuse
    * code that doesn't correctly skip over it.
@@ -450,27 +442,6 @@ class HTMLEditRules : public TextEditRules {
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
   /**
-   * If aNode is the descendant of a listitem, return that li.  But table
-   * element boundaries are stoppers on the search.  Also stops on the active
-   * editor host (contenteditable).  Also test if aNode is an li itself.
-   */
-  Element* IsInListItem(nsINode* aNode);
-
-  /**
-   * ReturnInListItem() handles insertParagraph command (i.e., handling
-   * Enter key press) in a list item element.
-   *
-   * @param aListItem           The list item which has the following point.
-   * @param aNode               Typically, Selection start container, where to
-   *                            insert a break.
-   * @param aOffset             Typically, Selection start offset in the
-   *                            start container, where to insert a break.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult ReturnInListItem(Element& aListItem, nsINode& aNode,
-                                         int32_t aOffset);
-
-  /**
    * Called after handling edit action.  This may adjust Selection, remove
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
@@ -537,36 +508,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE SplitRangeOffFromNodeResult
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
-
-  /**
-   * XXX Should document what this does.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeList(nsAtom& aListType, bool aEntireList,
-                                 const nsAString* aBulletType, bool* aCancel,
-                                 nsAtom& aItemType);
-
-  /**
-   * ConvertListType() replaces child list items of aListElement with
-   * new list item element whose tag name is aNewListItemTag.
-   * Note that if there are other list elements as children of aListElement,
-   * this calls itself recursively even though it's invalid structure.
-   *
-   * @param aListElement        The list element whose list items will be
-   *                            replaced.
-   * @param aNewListTag         New list tag name.
-   * @param aNewListItemTag     New list item tag name.
-   * @return                    New list element or an error code if it fails.
-   *                            New list element may be aListElement if its
-   *                            tag name is same as aNewListTag.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE CreateElementResult ConvertListType(Element& aListElement,
-                                                   nsAtom& aListType,
-                                                   nsAtom& aItemType);
 
   /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
@@ -726,14 +667,6 @@ class HTMLEditRules : public TextEditRules {
   template <typename PT, typename CT>
   nsIContent* FindNearEditableNode(const EditorDOMPointBase<PT, CT>& aPoint,
                                    nsIEditor::EDirection aDirection);
-  /**
-   * Returns true if aNode1 or aNode2 or both is the descendant of some type of
-   * table element, but their nearest table element ancestors differ.  "Table
-   * element" here includes not just <table> but also <td>, <tbody>, <tr>, etc.
-   * The nodes count as being their own descendants for this purpose, so a
-   * table element is its own nearest table element ancestor.
-   */
-  bool InDifferentTableElements(nsINode* aNode1, nsINode* aNode2);
 
   /**
    * RemoveEmptyNodesInChangedRange() removes all empty nodes in
