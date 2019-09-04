@@ -12,9 +12,9 @@
     </linearGradient>
   </defs>
   <svg width="16" height="16" x="0" y="0" preserveAspectRatio="xMidYMid meet">
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity="0" href="#b"/>
     </g>
   </svg>
@@ -27,9 +27,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity="0" href="#b"/>
     </g>
     <g mask="url(#e)">
@@ -45,9 +45,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity="0" href="#b"/>
     </g>
     <g mask="url(#d)">
@@ -63,9 +63,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity="0" href="#b"/>
     </g>
     <g mask="url(#f)">
@@ -81,9 +81,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".1" href="#b"/>
     </g>
     <g mask="url(#g)">
@@ -99,9 +99,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".2" href="#b"/>
     </g>
     <g mask="url(#h)">
@@ -117,9 +117,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".3" href="#b"/>
     </g>
     <g mask="url(#i)">
@@ -135,9 +135,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".4" href="#b"/>
     </g>
     <g mask="url(#j)">
@@ -153,9 +153,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".5" href="#b"/>
     </g>
     <g mask="url(#k)">
@@ -171,9 +171,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity=".6" href="#b"/>
     </g>
     <g mask="url(#l)">
@@ -189,9 +189,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".792" href="#b"/>
+      <use fill="#606060" fill-opacity=".792" href="#b"/>
       <use fill="url(#c)" fill-opacity=".7" href="#b"/>
     </g>
     <g mask="url(#m)">
@@ -207,9 +207,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".594" href="#b"/>
+      <use fill="#606060" fill-opacity=".594" href="#b"/>
       <use fill="url(#c)" fill-opacity=".8" href="#b"/>
     </g>
     <g mask="url(#n)">
@@ -225,9 +225,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".396" href="#b"/>
+      <use fill="#606060" fill-opacity=".396" href="#b"/>
       <use fill="url(#c)" fill-opacity=".9" href="#b"/>
     </g>
     <g mask="url(#o)">
@@ -243,9 +243,9 @@
         </g>
       </mask>
     </defs>
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".198" href="#b"/>
+      <use fill="#606060" fill-opacity=".198" href="#b"/>
       <use fill="url(#c)" fill-opacity="1" href="#b"/>
     </g>
     <g mask="url(#p)">
@@ -262,10 +262,10 @@
       </mask>
     </defs>
     <g opacity=".75">
-      <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+      <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     </g>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity="0" href="#b"/>
+      <use fill="#606060" fill-opacity="0" href="#b"/>
       <use fill="url(#c)" fill-opacity="1" href="#b"/>
     </g>
     <g mask="url(#q)">
@@ -282,10 +282,10 @@
       </mask>
     </defs>
     <g opacity=".5">
-      <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+      <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     </g>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity="0" href="#b"/>
+      <use fill="#606060" fill-opacity="0" href="#b"/>
       <use fill="url(#c)" fill-opacity="1" href="#b"/>
     </g>
     <g mask="url(#r)">
@@ -302,10 +302,10 @@
       </mask>
     </defs>
     <g opacity=".25">
-      <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+      <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     </g>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity="0" href="#b"/>
+      <use fill="#606060" fill-opacity="0" href="#b"/>
       <use fill="url(#c)" fill-opacity="1" href="#b"/>
     </g>
     <g mask="url(#s)">
@@ -313,9 +313,9 @@
     </g>
   </svg>
   <svg width="16" height="16" x="272" y="0" preserveAspectRatio="xMidYMid meet">
-    <use fill="#B0B0B3" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <use fill="#606060" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
     <g opacity="1" transform="translate(6.75 7.988)">
-      <use fill="#B0B0B3" fill-opacity=".99" href="#b"/>
+      <use fill="#606060" fill-opacity=".99" href="#b"/>
       <use fill="url(#c)" fill-opacity="0" href="#b"/>
     </g>
     <g mask="url(#M)">

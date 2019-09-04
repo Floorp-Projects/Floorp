@@ -8,6 +8,10 @@
   padding-inline-start: 6px;
   padding-inline-end: 6px;
   margin-inline-end: 4px;
+}
+
+#identity-box,
+#tracking-protection-icon-container {
   /* Set default fill for icons in the identity block.
      Individual icons can override this. */
   fill: currentColor;
@@ -221,8 +225,6 @@
 #tracking-protection-icon-container {
   padding-inline-start: 6px;
   padding-inline-end: 6px;
-  fill-opacity: .3;
-  fill: currentColor;
   /* Separator */
   border-inline-end: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
