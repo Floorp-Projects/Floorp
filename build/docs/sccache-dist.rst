@@ -71,18 +71,14 @@ Build servers must run linux and use bubblewrap 3.0+ for sandboxing of compile
 processes. This requires a kernel 4.6 or greater, so Ubuntu 18+, RHEL 8, or
 similar.
 
-* Acquire a recent build of sccache. ``./mach bootstrap`` or
-  ``./mach artifact toolchain --from-build linux64-sccache`` will provide this.
-  ``cargo install`` may also be used, but ensure the version for the ``sccache``
-  and ``sccache-dist`` binaries you end up using is 0.2.10 or above.
-  Alternatively, the source is available at https://github.com/mozilla/sccache
-  and should be built with the ``dist-server`` feature selected if building from
-  there.
+* Run ``./mach bootstrap`` or
+  ``./mach artifact toolchain --from-build linux64-sccache`` to acquire a recent
+  version of ``sccache-dist``. Please use a ``sccache-dist`` binary acquired in
+  this fashion to ensure compatibility with statically linked dependencies.
 
 * Collect the IP of your builder and request assignment of a static IP in a bug
   filed in
   `NetOps :: Other <https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=NetOps%3A%20Office%20Other>`_
-  cc sccache-admins@mozilla.com on this bug.
 
 * File a bug in
   `Infrastructure :: Other <https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure+%26+Operations&component=Infrastructure%3A+Other>`_
@@ -94,6 +90,8 @@ similar.
 
 * The instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-build-server
   should contain everything else required to configure and run the server.
+  *NOTE* Port 10500 will be used by convention for builders in offices.
+  Please use port 10500 in the `public_addr` section of your builder config.
 
 
 Common questions/considerations

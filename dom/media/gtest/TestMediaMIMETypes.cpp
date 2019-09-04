@@ -154,6 +154,30 @@ TEST(MediaMIMETypes, MediaCodecs)
   EXPECT_TRUE(two.ContainsAll(two));
   EXPECT_TRUE(two.ContainsAll(one));
   EXPECT_FALSE(one.ContainsAll(two));
+
+  // Check wide char case where both octets/bytes are relevant. Note we don't
+  // use `EqualsLiteral` here because at the time of writing it will place the
+  // literal into a narrow string which then doesn't compare correctly with
+  // the wide representation from MediaCodecs.
+  MediaCodecs euroSign(" € ");  // U+20AC
+  EXPECT_FALSE(euroSign.IsEmpty());
+  EXPECT_TRUE(euroSign.AsString().Equals(NS_LITERAL_STRING(" € ")));
+  EXPECT_FALSE(euroSign.Contains(NS_LITERAL_STRING("")));
+  EXPECT_TRUE(euroSign.Contains(NS_LITERAL_STRING("€")));
+  EXPECT_FALSE(euroSign.Contains(NS_LITERAL_STRING("€€")));
+  EXPECT_TRUE(euroSign.ContainsPrefix(NS_LITERAL_STRING("")));
+  EXPECT_TRUE(euroSign.ContainsPrefix(NS_LITERAL_STRING("€")));
+  EXPECT_FALSE(euroSign.ContainsPrefix(
+      NS_LITERAL_STRING("₭")));  // U+20AD -- ensure second octet is compared
+  EXPECT_FALSE(euroSign.ContainsPrefix(
+      NS_LITERAL_STRING("↬")));  // U+21AC -- ensure first octet is compared
+  EXPECT_FALSE(euroSign.ContainsPrefix(NS_LITERAL_STRING("€ ")));
+  iterations = 0;
+  for (const auto& codec : euroSign.Range()) {
+    ++iterations;
+    EXPECT_TRUE(codec.Equals(NS_LITERAL_STRING("€")));
+  }
+  EXPECT_EQ(1, iterations);
 }
 
 TEST(MediaMIMETypes, MakeMediaExtendedMIMEType_bad)

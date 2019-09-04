@@ -377,8 +377,10 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
     {gcstats::PhaseKind::SWEEP_OBJECT,
      {AllocKind::FUNCTION, AllocKind::FUNCTION_EXTENDED,
       AllocKind::OBJECT0_BACKGROUND, AllocKind::OBJECT2_BACKGROUND,
-      AllocKind::OBJECT4_BACKGROUND, AllocKind::OBJECT8_BACKGROUND,
-      AllocKind::OBJECT12_BACKGROUND, AllocKind::OBJECT16_BACKGROUND}},
+      AllocKind::ARRAYBUFFER4, AllocKind::OBJECT4_BACKGROUND,
+      AllocKind::ARRAYBUFFER8, AllocKind::OBJECT8_BACKGROUND,
+      AllocKind::ARRAYBUFFER12, AllocKind::OBJECT12_BACKGROUND,
+      AllocKind::ARRAYBUFFER16, AllocKind::OBJECT16_BACKGROUND}},
     {gcstats::PhaseKind::SWEEP_SCOPE,
      {
          AllocKind::SCOPE,
@@ -2377,15 +2379,26 @@ static constexpr AllocKinds UpdatePhaseOne{
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
-static constexpr AllocKinds UpdatePhaseThree{
-    AllocKind::LAZY_SCRIPT, AllocKind::SCOPE,
-    AllocKind::FUNCTION,    AllocKind::FUNCTION_EXTENDED,
-    AllocKind::OBJECT0,     AllocKind::OBJECT0_BACKGROUND,
-    AllocKind::OBJECT2,     AllocKind::OBJECT2_BACKGROUND,
-    AllocKind::OBJECT4,     AllocKind::OBJECT4_BACKGROUND,
-    AllocKind::OBJECT8,     AllocKind::OBJECT8_BACKGROUND,
-    AllocKind::OBJECT12,    AllocKind::OBJECT12_BACKGROUND,
-    AllocKind::OBJECT16,    AllocKind::OBJECT16_BACKGROUND};
+static constexpr AllocKinds UpdatePhaseThree{AllocKind::LAZY_SCRIPT,
+                                             AllocKind::SCOPE,
+                                             AllocKind::FUNCTION,
+                                             AllocKind::FUNCTION_EXTENDED,
+                                             AllocKind::OBJECT0,
+                                             AllocKind::OBJECT0_BACKGROUND,
+                                             AllocKind::OBJECT2,
+                                             AllocKind::OBJECT2_BACKGROUND,
+                                             AllocKind::ARRAYBUFFER4,
+                                             AllocKind::OBJECT4,
+                                             AllocKind::OBJECT4_BACKGROUND,
+                                             AllocKind::ARRAYBUFFER8,
+                                             AllocKind::OBJECT8,
+                                             AllocKind::OBJECT8_BACKGROUND,
+                                             AllocKind::ARRAYBUFFER12,
+                                             AllocKind::OBJECT12,
+                                             AllocKind::OBJECT12_BACKGROUND,
+                                             AllocKind::ARRAYBUFFER16,
+                                             AllocKind::OBJECT16,
+                                             AllocKind::OBJECT16_BACKGROUND};
 
 void GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone) {
   size_t bgTaskCount = CellUpdateBackgroundTaskCount();

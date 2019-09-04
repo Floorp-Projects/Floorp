@@ -7,23 +7,22 @@
 // runs of genRootCAHashes.js; you should never need to manually edit it
 //***************************************************************************
 
+// Notes:
+// binNumber 1 used to be for "GTE_CyberTrust_Global_Root", but that root was
+// removed from the built-in roots module, so now it is used to indicate that
+// the certificate is not a built-in and was found in the softoken (cert9.db).
+
+// binNumber 2 used to be for "Thawte_Server_CA", but that root was removed from
+// the built-in roots module, so now it is used to indicate that the certificate
+// is not a built-in and was found on an external PKCS#11 token.
+
+// binNumber 3 used to be for "Thawte_Premium_Server_CA", but that root was
+// removed from the built-in roots module, so now it is used to indicate that
+// the certificate is not a built-in and was temporarily imported from the OS as
+// part of the "Enterprise Roots" feature.
+
 {
   "roots": [
-    {
-      "label": "GTE_CyberTrust_Global_Root",
-      "binNumber": 1,
-      "sha256Fingerprint": "pTElGI0hEKqWSwLHt8baMgMXCJTl+3H/+2Zn1eaBCjY="
-    },
-    {
-      "label": "Thawte_Server_CA",
-      "binNumber": 2,
-      "sha256Fingerprint": "tEELc+Lm6spH+8Qvj6QBivQ4HcVM+qhEUEYe7QlFTek="
-    },
-    {
-      "label": "Thawte_Premium_Server_CA",
-      "binNumber": 3,
-      "sha256Fingerprint": "q3A2NlxxVKopwsKfXUGRFjsWKiIlARNX1W0H/6e8H3I="
-    },
     {
       "label": "OU_Equifax_Secure_Certificate_Authority_O_Equifax_C_US",
       "binNumber": 4,

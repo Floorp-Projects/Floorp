@@ -12,7 +12,7 @@ use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
 use crate::clip::{ClipStore};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
-use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
+use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItemKind};
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
 use crate::display_list_flattener::{CreateShadow, IsVisible};
@@ -3528,22 +3528,22 @@ impl<'a> GpuDataRequest<'a> {
 
             local_clip_count += 1;
 
-            let (local_clip_rect, radius, mode) = match clip_node.item {
-                ClipItem::RoundedRectangle(size, radii, clip_mode) => {
+            let (local_clip_rect, radius, mode) = match clip_node.item.kind {
+                ClipItemKind::RoundedRectangle { rect, radius, mode } => {
                     rect_clips_only = false;
-                    (LayoutRect::new(clip_instance.local_pos, size), Some(radii), clip_mode)
+                    (rect, Some(radius), mode)
                 }
-                ClipItem::Rectangle(size, mode) => {
-                    (LayoutRect::new(clip_instance.local_pos, size), None, mode)
+                ClipItemKind::Rectangle { rect, mode } => {
+                    (rect, None, mode)
                 }
-                ClipItem::BoxShadow(ref info) => {
+                ClipItemKind::BoxShadow { ref source } => {
                     rect_clips_only = false;
 
                     // For inset box shadows, we can clip out any
                     // pixels that are inside the shadow region
                     // and are beyond the inner rect, as they can't
                     // be affected by the blur radius.
-                    let inner_clip_mode = match info.clip_mode {
+                    let inner_clip_mode = match source.clip_mode {
                         BoxShadowClipMode::Outset => None,
                         BoxShadowClipMode::Inset => Some(ClipMode::ClipOut),
                     };
@@ -3552,21 +3552,18 @@ impl<'a> GpuDataRequest<'a> {
                     // box-shadow can have an effect on the result. This
                     // ensures clip-mask tasks get allocated for these
                     // pixel regions, even if no other clips affect them.
-                    let prim_shadow_rect = info.prim_shadow_rect.translate(
-                        LayoutVector2D::new(clip_instance.local_pos.x, clip_instance.local_pos.y),
-                    );
                     segment_builder.push_mask_region(
-                        prim_shadow_rect,
-                        prim_shadow_rect.inflate(
-                            -0.5 * info.original_alloc_size.width,
-                            -0.5 * info.original_alloc_size.height,
+                        source.prim_shadow_rect,
+                        source.prim_shadow_rect.inflate(
+                            -0.5 * source.original_alloc_size.width,
+                            -0.5 * source.original_alloc_size.height,
                         ),
                         inner_clip_mode,
                     );
 
                     continue;
                 }
-                ClipItem::Image { .. } => {
+                ClipItemKind::Image { .. } => {
                     // If we encounter an image mask, bail out from segment building.
                     // It's not possible to know which parts of the primitive are affected
                     // by the mask (without inspecting the pixels). We could do something
@@ -3874,6 +3871,7 @@ impl PrimitiveInstance {
                     &prim_info.clip_chain,
                     self.spatial_node_index,
                     &frame_context.clip_scroll_tree,
+                    &data_stores.clip,
                 );
 
                 let segment_clip_chain = frame_state

@@ -45,12 +45,16 @@ namespace gc {
     D(OBJECT0_BACKGROUND,  Object,       JSObject,          JSObject_Slots0,   true,   true,   true) \
     D(OBJECT2,             Object,       JSObject,          JSObject_Slots2,   false,  false,  true) \
     D(OBJECT2_BACKGROUND,  Object,       JSObject,          JSObject_Slots2,   true,   true,   true) \
+    D(ARRAYBUFFER4,        Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
     D(OBJECT4,             Object,       JSObject,          JSObject_Slots4,   false,  false,  true) \
     D(OBJECT4_BACKGROUND,  Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
+    D(ARRAYBUFFER8,        Object,       JSObject,          JSObject_Slots8,   true,   true,   true) \
     D(OBJECT8,             Object,       JSObject,          JSObject_Slots8,   false,  false,  true) \
     D(OBJECT8_BACKGROUND,  Object,       JSObject,          JSObject_Slots8,   true,   true,   true) \
+    D(ARRAYBUFFER12,       Object,       JSObject,          JSObject_Slots12,  true,   true,   true) \
     D(OBJECT12,            Object,       JSObject,          JSObject_Slots12,  false,  false,  true) \
     D(OBJECT12_BACKGROUND, Object,       JSObject,          JSObject_Slots12,  true,   true,   true) \
+    D(ARRAYBUFFER16,       Object,       JSObject,          JSObject_Slots16,  true,   true,   true) \
     D(OBJECT16,            Object,       JSObject,          JSObject_Slots16,  false,  false,  true) \
     D(OBJECT16_BACKGROUND, Object,       JSObject,          JSObject_Slots16,  true,   true,   true)
 
