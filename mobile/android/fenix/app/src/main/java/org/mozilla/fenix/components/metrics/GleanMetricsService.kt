@@ -242,6 +242,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAccountSyncNow -> EventWrapper<NoExtraKeys>(
             { SyncAccount.syncNow.record(it) }
         )
+        is Event.SignInToSendTab -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.signInToSendTab.record(it) }
+        )
+        is Event.SendTab -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.sendTab.record(it) }
+        )
         is Event.PreferenceToggled -> EventWrapper(
             { Events.preferenceToggled.record(it) },
             { Events.preferenceToggledKeys.valueOf(it) }

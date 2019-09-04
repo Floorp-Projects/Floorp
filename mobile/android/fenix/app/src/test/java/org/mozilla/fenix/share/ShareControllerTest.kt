@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.share
 
+import android.content.Context
 import android.content.Intent
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
@@ -24,11 +25,15 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.sendtab.SendTabUseCases
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.robolectric.RobolectricTestRunner
@@ -38,6 +43,8 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class ShareControllerTest {
+    private val context: Context = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
     private val fragment = mockk<Fragment>(relaxed = true)
     private val shareTabs = listOf(
         ShareTab("url0", "title0"),
@@ -52,7 +59,12 @@ class ShareControllerTest {
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
-    private val controller = DefaultShareController(fragment, shareTabs, sendTabUseCases, navController, dismiss)
+    private val controller = DefaultShareController(context, fragment, shareTabs, sendTabUseCases, navController, dismiss)
+
+    @Before
+    fun setUp() {
+        every { context.metrics } returns metrics
+    }
 
     @Test
     fun `handleShareClosed should call a passed in delegate to close this`() {
@@ -102,6 +114,7 @@ class ShareControllerTest {
 
         // Verify all the needed methods are called.
         verifyOrder {
+            metrics.track(Event.SendTab)
             sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
             tabSharedCallbackActivity.onTabsShared(capture(sharedTabsNumber))
             dismiss()
@@ -153,6 +166,7 @@ class ShareControllerTest {
         controller.handleSignIn()
 
         verifyOrder {
+            metrics.track(Event.SignInToSendTab)
             navController.nav(
                 R.id.shareFragment,
                 ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()

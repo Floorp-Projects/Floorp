@@ -71,6 +71,8 @@ sealed class Event {
     object SyncAccountOpened : Event()
     object SyncAccountClosed : Event()
     object SyncAccountSyncNow : Event()
+    object SendTab : Event()
+    object SignInToSendTab : Event()
     object HistoryOpened : Event()
     object HistoryItemShared : Event()
     object HistoryItemOpened : Event()

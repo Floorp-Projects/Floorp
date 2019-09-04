@@ -86,6 +86,7 @@ class ShareFragment : AppCompatDialogFragment() {
 
         shareInteractor = ShareInteractor(
             DefaultShareController(
+                context = requireContext(),
                 fragment = this,
                 sharedTabs = tabs,
                 navController = findNavController(),
