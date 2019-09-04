@@ -53,6 +53,27 @@ export class InfoItem extends HTMLElement {
         info.classList.toggle("long-hex-open");
       });
     }
+
+    let isURL = false;
+    if (
+      typeof this.item.info === "string" &&
+      this.item.info.startsWith("http")
+    ) {
+      try {
+        new URL(this.item.info);
+        isURL = true;
+      } catch (e) {}
+    }
+
+    if (isURL) {
+      let link = document.createElement("a");
+      link.setAttribute("href", this.item.info);
+      link.setAttribute("rel", "noreferrer noopener");
+      link.setAttribute("target", "_blank");
+      link.textContent = this.item.info;
+      info.textContent = "";
+      info.appendChild(link);
+    }
   }
 }
 
