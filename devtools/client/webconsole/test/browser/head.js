@@ -1477,7 +1477,7 @@ function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
 
 /**
  * Check that there is a message with the specified text that has the specified
- * stack information.
+ * stack information.  Self-hosted frames are ignored.
  * @param {WebConsole} hud
  * @param {string} text
  *        message substring to look for
@@ -1493,16 +1493,19 @@ async function checkMessageStack(hud, text, frameLines) {
 
   const framesNode = await waitFor(() => msgNode.querySelector(".frames"));
   const frameNodes = framesNode.querySelectorAll(".frame");
-  ok(
-    frameNodes.length == frameLines.length,
-    `Found ${frameLines.length} frames`
-  );
-  for (let i = 0; i < frameLines.length; i++) {
+  let frameLinesIndex = 0;
+  for (let i = 0; i < frameNodes.length; i++) {
+    if (frameNodes[i].querySelector(".filename").textContent == "self-hosted") {
+      continue;
+    }
     ok(
-      frameNodes[i].querySelector(".line").textContent == "" + frameLines[i],
-      `Found line ${frameLines[i]} for frame #${i}`
+      frameNodes[i].querySelector(".line").textContent ==
+        "" + frameLines[frameLinesIndex],
+      `Found line ${frameLines[frameLinesIndex]} for frame #${i}`
     );
+    frameLinesIndex++;
   }
+  is(frameLines.length, frameLinesIndex, `Found ${frameLines.length} frames`);
 }
 
 /**
