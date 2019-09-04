@@ -23,6 +23,7 @@ EXPORTS += [
     'VRDisplayPresentation.h',
     'VRManager.h',
     'VRPuppetCommandBuffer.h',
+    'VRShMem.h',
     'VRThread.h',
 ]
 

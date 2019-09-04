@@ -22,10 +22,38 @@
 #include "nsCOMPtr.h"
 
 #include "windows.h"
+#include "WinUtils.h"
 
 #include "VRShMem.h"
 
 NS_IMPL_ISUPPORTS(nsFxrCommandLineHandler, nsICommandLineHandler)
+
+// nsFxrCommandLineHandler acts in the middle of bootstrapping Firefox
+// Reality with desktop Firefox. Details of the processes involved are
+// described below:
+//
+//      Host
+// (vrhost!CreateVRWindow)      Fx Main                 Fx GPU
+//       |                         +                       +
+//  VRShMem creates shared         +                       +
+//  memory in OS                   +                       +
+//       |                         +                       +
+//  Launch firefox.exe             +                       +
+//  with --fxr                     +                       +
+//       |                         |                       +
+//  Wait for Signal...       nsFxrCLH handles param        +
+//       |                   joins VRShMem                 +
+//       |                   creates new window            |
+//       |                   sets .hwndFx in VRShMem       |
+//       |                         |                       |
+//       |                         |                  After compositor and
+//       |                         |                  swapchain created,
+//       |                         |                  share texture handle to
+//       |                         |                  VRShMem and set signal
+//  CreateVRWindow returns         |                       |
+//  to host                        |                       |
+//       |                         |                       |
+//
 
 NS_IMETHODIMP
 nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
@@ -60,24 +88,17 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
               nsPIDOMWindowOuter::From(newWindow));
       HWND hwndWidget = (HWND)newWidget->GetNativeData(NS_NATIVE_WINDOW);
 
-      // The CLH should have populated this first
+      // The CLH should populate these members first
       MOZ_ASSERT(windowState.hwndFx == 0);
       MOZ_ASSERT(windowState.textureFx == nullptr);
       windowState.hwndFx = (uint64_t)hwndWidget;
 
       shmem.PushWindowState(windowState);
-
-      // Notify the waiting process that the data is now available
-      HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
-                                    FALSE,                  // bInheritHandle
-                                    windowState.signalName  // lpName
-      );
-
-      ::SetEvent(hSignal);
-
       shmem.LeaveShMem();
 
-      ::CloseHandle(hSignal);
+      // The GPU process will notify the host that window creation is complete
+      // after output data is set in VRShMem
+      newWidget->RequestFxrOutput();
     } else {
       MOZ_CRASH("failed to start with --fxr");
     }

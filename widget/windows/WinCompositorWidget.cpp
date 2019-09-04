@@ -13,6 +13,7 @@
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
 #include "WinCompositorWindowThread.h"
+#include "VRShMem.h"
 
 #include <ddraw.h>
 
@@ -335,6 +336,35 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
     return;
   }
   mLastCompositorWndSize = size;
+}
+
+// TODO: Bug 1570128 - Forward request to swapchain
+// For now, this simply validates that data can be passed to Firefox Reality
+// host from the GPU process
+void WinCompositorWidget::RequestFxrOutput() {
+  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+  if (shmem.JoinShMem()) {
+    mozilla::gfx::VRWindowState windowState = {0};
+    shmem.PullWindowState(windowState);
+
+    // The CLH should have populated hwndFx first
+    MOZ_ASSERT(windowState.hwndFx != 0);
+    MOZ_ASSERT(windowState.textureFx == nullptr);
+
+    windowState.textureFx = (HANDLE)0xFFFFFFFF;
+
+    shmem.PushWindowState(windowState);
+    shmem.LeaveShMem();
+
+    // Notify the waiting host process that the data is now available
+    HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
+                                  FALSE,                  // bInheritHandle
+                                  windowState.signalName  // lpName
+    );
+
+    ::SetEvent(hSignal);
+    ::CloseHandle(hSignal);
+  }
 }
 
 }  // namespace widget

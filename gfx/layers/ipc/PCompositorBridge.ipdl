@@ -273,6 +273,9 @@ parent:
   sync EndRecording()
     returns (bool success);
 
+  // To set up sharing the composited output to Firefox Reality on Desktop
+  async RequestFxrOutput();
+
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
   // update progressively.
