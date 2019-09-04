@@ -422,6 +422,7 @@
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Share session</string>
 
+    <string name="paste">Paste</string>
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Bookmark menu</string>
@@ -871,4 +872,12 @@
     <string name="add_to_homescreen_cancel">Cancel</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Add</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Copy</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Paste &amp; Go</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Paste</string>
 </resources>

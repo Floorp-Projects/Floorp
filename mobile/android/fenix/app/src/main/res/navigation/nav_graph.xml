@@ -106,6 +106,10 @@
             android:id="@+id/action_searchFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment"
             app:popUpTo="@+id/searchFragment" />
+        <argument
+            android:name="pastedText"
+            app:argType="string"
+            app:nullable="true"/>
     </fragment>
 
     <fragment

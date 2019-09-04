@@ -233,7 +233,11 @@ class HomeFragment : Fragment(), AccountObserver {
         view.toolbar_wrapper.setOnClickListener {
             invokePendingDeleteJobs()
             onboarding.finish()
-            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null, true)
+            val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
+                sessionId = null,
+                showShortcutEnginePicker = true,
+                pastedText = null
+            )
             val extras =
                 FragmentNavigator.Extras.Builder()
                     .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
@@ -384,7 +388,11 @@ class HomeFragment : Fragment(), AccountObserver {
             }
             is TabAction.Add -> {
                 invokePendingDeleteJobs()
-                val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null, true)
+                val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
+                    sessionId = null,
+                    showShortcutEnginePicker = true,
+                    pastedText = null
+                )
                 nav(R.id.homeFragment, directions)
             }
             is TabAction.ShareTabs -> {

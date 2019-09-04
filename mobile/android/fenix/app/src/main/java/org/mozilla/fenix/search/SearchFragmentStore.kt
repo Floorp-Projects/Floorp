@@ -41,6 +41,7 @@ sealed class SearchEngineSource {
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
  * @property session The current session if available
+ * @property pastedText The text pasted from the long press toolbar menu
  */
 data class SearchFragmentState(
     val query: String,
@@ -51,7 +52,8 @@ data class SearchFragmentState(
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
-    val session: Session?
+    val session: Session?,
+    val pastedText: String? = null
 ) : State
 
 /**

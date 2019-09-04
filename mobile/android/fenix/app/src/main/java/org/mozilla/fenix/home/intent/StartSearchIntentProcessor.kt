@@ -24,7 +24,11 @@ class StartSearchIntentProcessor(
             out.putExtra(HomeActivity.OPEN_TO_SEARCH, false)
             metrics.track(Event.SearchWidgetNewTabPressed)
 
-            val directions = NavGraphDirections.actionGlobalSearch(sessionId = null, showShortcutEnginePicker = true)
+            val directions = NavGraphDirections.actionGlobalSearch(
+                sessionId = null,
+                showShortcutEnginePicker = true,
+                pastedText = null
+            )
             navController.nav(null, directions)
             true
         } else {

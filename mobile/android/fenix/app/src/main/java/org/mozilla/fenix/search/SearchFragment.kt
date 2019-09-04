@@ -74,6 +74,10 @@ class SearchFragment : Fragment(), BackHandler {
             ?.let { it.sessionId }
             ?.let(requireComponents.core.sessionManager::findSessionById)
 
+        val pastedText = arguments
+            ?.let(SearchFragmentArgs.Companion::fromBundle)
+            ?.let { it.pastedText }
+
         val displayShortcutEnginePicker = arguments
             ?.let(SearchFragmentArgs.Companion::fromBundle)
             ?.let { it.showShortcutEnginePicker } ?: false
@@ -95,7 +99,8 @@ class SearchFragment : Fragment(), BackHandler {
                     showClipboardSuggestions = requireContext().settings.shouldShowClipboardSuggestions,
                     showHistorySuggestions = requireContext().settings.shouldShowHistorySuggestions,
                     showBookmarkSuggestions = requireContext().settings.shouldShowBookmarkSuggestions,
-                    session = session
+                    session = session,
+                    pastedText = pastedText
                 )
             )
         }

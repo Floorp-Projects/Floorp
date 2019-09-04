@@ -17,6 +17,14 @@ open class BrowserToolbarInteractor(
     private val browserToolbarController: BrowserToolbarController
 ) : BrowserToolbarViewInteractor {
 
+    override fun onBrowserToolbarPaste(text: String) {
+        browserToolbarController.handleToolbarPaste(text)
+    }
+
+    override fun onBrowserToolbarPasteAndGo(text: String) {
+        browserToolbarController.handleToolbarPasteAndGo(text)
+    }
+
     override fun onBrowserToolbarClicked() {
         browserToolbarController.handleToolbarClick()
     }

@@ -65,7 +65,11 @@ class StartSearchIntentProcessorTest {
         verify { metrics.track(Event.SearchWidgetNewTabPressed) }
         verify {
             navController.navigate(
-                NavGraphDirections.actionGlobalSearch(sessionId = null, showShortcutEnginePicker = true)
+                NavGraphDirections.actionGlobalSearch(
+                    sessionId = null,
+                    showShortcutEnginePicker = true,
+                    pastedText = null
+                )
             )
         }
         verify { out.putExtra(HomeActivity.OPEN_TO_SEARCH, false) }

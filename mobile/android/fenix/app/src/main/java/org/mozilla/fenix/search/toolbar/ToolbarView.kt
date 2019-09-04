@@ -111,8 +111,14 @@ class ToolbarView(
 
     fun update(searchState: SearchFragmentState) {
         if (!isInitialized) {
-            view.url = searchState.query
-            view.setSearchTerms(searchState.session?.searchTerms ?: "")
+            view.url = searchState.pastedText ?: searchState.query
+
+            /* Only set the search terms if pasted text is null so that the search term doesn't
+            overwrite pastedText when view enters `editMode` */
+            if (searchState.pastedText.isNullOrEmpty()) {
+                view.setSearchTerms(searchState.session?.searchTerms ?: "")
+            }
+
             view.editMode()
             isInitialized = true
         }

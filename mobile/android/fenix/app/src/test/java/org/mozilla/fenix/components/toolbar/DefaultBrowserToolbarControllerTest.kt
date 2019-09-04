@@ -97,7 +97,10 @@ class DefaultBrowserToolbarControllerTest {
         verify {
             navController.nav(
                 R.id.browserFragment,
-                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment("1")
+                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                    sessionId = "1",
+                    pastedText = null
+                )
             )
         }
     }
@@ -243,7 +246,7 @@ class DefaultBrowserToolbarControllerTest {
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.NEW_PRIVATE_TAB)) }
         verify {
             val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(null)
+                .actionBrowserFragmentToSearchFragment(sessionId = null, pastedText = null)
             navController.nav(R.id.browserFragment, directions)
         }
         verify { browsingModeManager.mode = BrowsingMode.Private }
@@ -310,7 +313,7 @@ class DefaultBrowserToolbarControllerTest {
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.NEW_TAB)) }
         verify {
             val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(null)
+                .actionBrowserFragmentToSearchFragment(sessionId = null, pastedText = null)
             navController.nav(R.id.browserFragment, directions)
         }
         verify { browsingModeManager.mode = BrowsingMode.Normal }
@@ -337,7 +340,7 @@ class DefaultBrowserToolbarControllerTest {
         verify { viewModel.previousFragmentId = R.id.browserFragment }
         verify {
             val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(null)
+                .actionBrowserFragmentToSearchFragment(sessionId = null, pastedText = null)
             navController.nav(R.id.browserFragment, directions)
         }
     }
