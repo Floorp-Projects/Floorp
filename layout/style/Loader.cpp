@@ -2473,6 +2473,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Loader)
   if (tmp->mSheets) {
     tmp->mSheets->mCompleteSheets.Clear();
+    tmp->mSheets->mInlineSheets.Clear();
   }
   tmp->mObservers.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
