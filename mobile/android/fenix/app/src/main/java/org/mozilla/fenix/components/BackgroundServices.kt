@@ -16,6 +16,7 @@ import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
@@ -30,6 +31,7 @@ import mozilla.components.feature.push.PushType
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
@@ -77,7 +79,7 @@ class BackgroundServices(
     private val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
-        SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 240L) // four hours
+        SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 240L) // four hours
     }
 
     val pushConfig by lazy {
@@ -102,8 +104,8 @@ class BackgroundServices(
 
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
-        GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
-        GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarkStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.HISTORY to historyStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.BOOKMARKS to bookmarkStorage)
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {
@@ -139,8 +141,8 @@ class BackgroundServices(
             Settings.getInstance(context).fxaSignedIn = false
         }
 
-        override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-            if (newAccount) {
+        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+            if (authType != AuthType.Existing) {
                 push.subscribeForType(PushType.Services)
             }
 
@@ -168,7 +170,7 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
-        Settings.getInstance(context).fxaHasSyncedItems = syncConfig?.syncableStores?.isNotEmpty() ?: false
+        Settings.getInstance(context).fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
 
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 

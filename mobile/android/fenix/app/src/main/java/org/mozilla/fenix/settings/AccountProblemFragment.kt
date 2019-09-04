@@ -12,6 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -66,7 +67,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     // We're told our auth problems have been fixed; close this fragment.
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) = closeFragment()
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) = closeFragment()
 
     // We're told there are no more auth problems since there is no more account; close this fragment.
     override fun onLoggedOut() = closeFragment()

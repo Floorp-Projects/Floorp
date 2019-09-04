@@ -24,6 +24,7 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
@@ -326,7 +327,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         Navigation.findNavController(view!!).navigate(directions)
     }
 
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())

@@ -34,6 +34,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
@@ -242,7 +243,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         return bookmarkView.onBackPressed()
     }
 
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         bookmarkInteractor.onSignedIn()
         lifecycleScope.launch {
             refreshBookmarks()

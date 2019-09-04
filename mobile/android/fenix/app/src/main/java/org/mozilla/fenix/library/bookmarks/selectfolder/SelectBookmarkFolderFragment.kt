@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
@@ -127,7 +128,7 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             else -> super.onOptionsItemSelected(item)
         }
     }
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         bookmarkInteractor.onSignedIn()
     }
 

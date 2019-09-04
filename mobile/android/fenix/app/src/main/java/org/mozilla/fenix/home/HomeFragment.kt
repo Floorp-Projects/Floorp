@@ -41,6 +41,7 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.tab.collections.TabCollection
@@ -761,8 +762,8 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-        if (newAccount) {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        if (authType != AuthType.Existing) {
             view?.let {
                 FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
                     it.context.getString(R.string.onboarding_firefox_account_sync_is_on)

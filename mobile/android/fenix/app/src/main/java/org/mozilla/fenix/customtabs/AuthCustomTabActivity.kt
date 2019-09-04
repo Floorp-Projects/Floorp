@@ -5,6 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.ext.components
 
@@ -17,7 +18,7 @@ class AuthCustomTabActivity : CustomTabActivity() {
         /**
          * Navigate away from this activity when we have successful authentication
          */
-        override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
+        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             finish()
         }
     }
