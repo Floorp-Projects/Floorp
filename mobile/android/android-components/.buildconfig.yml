@@ -144,10 +144,6 @@ projects:
     path: components/browser/engine-system
     description: 'Engine implementation based on the system WebView.'
     publish: true
-  browser-engine-servo:
-    path: components/browser/engine-servo
-    description: 'Engine implementation based on the Servo Browser Engine.'
-    publish: true
   browser-errorpages:
     path: components/browser/errorpages
     description: 'Responsive browser error pages for Android apps.'

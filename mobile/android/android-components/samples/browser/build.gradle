@@ -47,10 +47,6 @@ android {
             dimension "engine"
         }
 
-        servo {
-            dimension "engine"
-        }
-
         // Processor architecture
         arm {
             dimension "abi"
@@ -92,10 +88,6 @@ android {
         if (!flavors.contains("universal") && flavors.contains("geckobeta")) {
             setIgnore(true)
         }
-
-        if (flavors.contains("servo") && !flavors.contains("arm") && !flavors.contains("x86")) {
-            setIgnore(true)
-        }
     }
 }
 
@@ -103,9 +95,6 @@ configurations {
     geckoReleaseArmImplementation {}
     geckoReleaseX86Implementation {}
     geckoReleaseAarch64Implementation {}
-
-    servoX86Implementation {}
-    servoArmImplementation {}
 }
 
 dependencies {
@@ -151,10 +140,6 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':feature-downloads')
     implementation project(':support-ktx')
-
-    servoImplementation project(':browser-engine-servo')
-    servoX86Implementation Dependencies.mozilla_servo_x86
-    servoArmImplementation Dependencies.mozilla_servo_arm
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
 
