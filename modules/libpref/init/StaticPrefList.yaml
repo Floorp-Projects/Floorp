@@ -4559,26 +4559,36 @@
   value: false
   mirror: always
 
+# One of several prefs affecting the maximum area to pre-render when animating
+# a large element on the compositor.
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# One of several prefs affecting the maximum area to pre-render when animating
+# a large element on the compositor.
 - name: layout.animation.prerender.viewport-ratio-limit-x
   type: AtomicFloat
   value: 1.125f
   mirror: always
 
+# One of several prefs affecting the maximum area to pre-render when animating
+# a large element on the compositor.
 - name: layout.animation.prerender.viewport-ratio-limit-y
   type: AtomicFloat
   value: 1.125f
   mirror: always
 
+# One of several prefs affecting the maximum area to pre-render when animating
+# a large element on the compositor.
 - name: layout.animation.prerender.absolute-limit-x
   type: RelaxedAtomicUint32
   value: 4096
   mirror: always
 
+# One of several prefs affecting the maximum area to pre-render when animating
+# a large element on the compositor.
 - name: layout.animation.prerender.absolute-limit-y
   type: RelaxedAtomicUint32
   value: 4096
@@ -5015,14 +5025,16 @@
   value: false
   mirror: always
 
+# Toggle retaining display lists between paints.
 - name: layout.display-list.retain
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
+# Toggle retaining display lists between paints.
 - name: layout.display-list.retain.chrome
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: layout.display-list.retain.verify
@@ -5035,21 +5047,26 @@
   value: false
   mirror: always
 
+# Set the maximum number of modified frames allowed before doing a full
+# display list rebuild.
 - name: layout.display-list.rebuild-frame-limit
   type: RelaxedAtomicUint32
   value: 500
   mirror: always
 
+# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump-content
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump-parent
   type: RelaxedAtomicBool
   value: false
