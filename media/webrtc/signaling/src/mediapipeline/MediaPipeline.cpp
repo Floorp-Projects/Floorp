@@ -1113,6 +1113,13 @@ void MediaPipelineTransmit::PipelineListener::
       gMediaPipelineLog, LogLevel::Info,
       ("MediaPipeline::NotifyDirectListenerUninstalled() listener=%p", this));
 
+  if (mConduit->type() == MediaSessionConduit::VIDEO) {
+    // Reset the converter's track-enabled state. If re-added to a new track
+    // later and that track is disabled, we will be signaled explicitly.
+    MOZ_ASSERT(mConverter);
+    mConverter->SetTrackEnabled(true);
+  }
+
   mDirectConnect = false;
 }
 
