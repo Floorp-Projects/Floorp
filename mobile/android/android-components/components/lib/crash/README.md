@@ -108,7 +108,6 @@ CrashReporter(
 ).install(applicationContext)
 ```
 
-⚠️ Note: In order for Glean to be able to record to metrics, it **MUST** be initialized within the application before instantiating the `GleanCrashReporterService` and registering it with the `CrashReporter`.
 ⚠️ Note: Applications using the `GleanCrashReporterService` are **required** to undergo [Data Collection Review](https://wiki.mozilla.org/Firefox/Data_Collection) for the crash counts that they will be collecting.
 
 ### Showing a crash reporter prompt
