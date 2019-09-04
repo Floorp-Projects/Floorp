@@ -7270,12 +7270,20 @@
 
 - name: webgl.max-contexts
   type: RelaxedAtomicUint32
+#ifdef ANDROID
+  value: 16
+#else
   value: 32
+#endif
   mirror: always
 
 - name: webgl.max-contexts-per-principal
   type: RelaxedAtomicUint32
+#ifdef ANDROID
+  value: 8
+#else
   value: 16
+#endif
   mirror: always
 
 - name: webgl.max-warnings-per-context
