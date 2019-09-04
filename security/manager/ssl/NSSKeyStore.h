@@ -30,7 +30,7 @@ class NSSKeyStore final : public AbstractOSKeyStore {
 
  private:
   nsresult InitToken();
-  UniquePK11SlotInfo mSlot = nullptr;
+  mozilla::UniquePK11SlotInfo mSlot = nullptr;
 };
 
 #endif  // NSSKeyStore_h

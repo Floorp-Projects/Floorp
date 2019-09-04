@@ -10,10 +10,15 @@
 #ifndef OSKeyStore_h
 #define OSKeyStore_h
 
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
 #include "nsIOSKeyStore.h"
+#include "nsIThread.h"
 #include "nsString.h"
+#include "ScopedNSSTypes.h"
 
 #include <memory>
+#include <vector>
 
 class AbstractOSKeyStore {
  public:
@@ -47,11 +52,11 @@ class AbstractOSKeyStore {
   /* These helper functions are implemented in OSKeyStore.cpp and implement
    * common functionality of the abstract key store to encrypt and decrypt.
    */
-  nsresult DoCipher(const UniquePK11SymKey& aSymKey,
+  nsresult DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
                     const std::vector<uint8_t>& inBytes,
                     std::vector<uint8_t>& outBytes, bool aEncrypt);
   nsresult BuildAesGcmKey(std::vector<uint8_t> keyBytes,
-                          /* out */ UniquePK11SymKey& aKey);
+                          /* out */ mozilla::UniquePK11SymKey& aKey);
 
  private:
   const size_t mKeyByteLength = 16;
