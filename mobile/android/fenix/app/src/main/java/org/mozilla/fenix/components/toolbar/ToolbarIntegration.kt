@@ -98,7 +98,7 @@ class ToolbarIntegration(
 
     private val toolbarPresenter: ToolbarPresenter = ToolbarPresenter(
         toolbar,
-        context.components.core.sessionManager,
+        context.components.core.store,
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
             PublicSuffixList(context),

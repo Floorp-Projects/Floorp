@@ -5,8 +5,8 @@
 package org.mozilla.fenix.customtabs
 
 import androidx.navigation.NavDestination
-import mozilla.components.browser.session.intent.getSessionId
 import mozilla.components.browser.session.runWithSession
+import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity

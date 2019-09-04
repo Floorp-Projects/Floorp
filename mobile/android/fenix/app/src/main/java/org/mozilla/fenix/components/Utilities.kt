@@ -7,7 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
-import mozilla.components.feature.intent.TabIntentProcessor
+import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.test.Mockable
