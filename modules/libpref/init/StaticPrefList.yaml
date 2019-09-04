@@ -5325,6 +5325,10 @@
 # These prefs use camel case instead of snake case for the getter because one
 # reviewer had an unshakeable preference for that. Who could that be?
 
+# If "media.autoplay.default" is not ALLOWED, and this pref is true,
+# then audible media would only be allowed to autoplay after website has
+# been activated by specific user gestures, but non-audible
+# media won't be restricted.
 - name: media.autoplay.enabled.user-gestures-needed
   type: bool
   value: false
@@ -5893,17 +5897,14 @@
   mirror: always
 
 - name: media.av1.use-dav1d
-#if defined(XP_WIN) && !defined(_ARM64_)
   type: RelaxedAtomicBool
+#if defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  type: RelaxedAtomicBool
   value: true
 #elif defined(XP_UNIX) && !defined(ANDROID)
-  type: RelaxedAtomicBool
   value: true
 #else
-  type: RelaxedAtomicBool
   value: false
 #endif
   mirror: always
@@ -6091,6 +6092,8 @@
 -   name: media.navigator.mediadatadecoder_h264_enabled
     type: RelaxedAtomicBool
   #if defined(ANDROID)
+    value: false
+  #elif defined(_ARM64_) && defined(XP_WIN)
     value: false
   #else
     value: true
