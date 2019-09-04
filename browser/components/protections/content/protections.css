@@ -26,7 +26,8 @@
 }
 
 body {
-  margin-top: 82px;
+  margin-top: 40px;
+  margin-bottom: 80px;
 }
 
 body[focuseddatatype=social] {
@@ -210,14 +211,14 @@ a.hidden,
 
 #graph-wrapper {
   width: 100%;
-  margin-top: 40px;
+  margin-top: 30px;
   margin-bottom: 25px;
 }
 
 #graph {
   display: grid;
   grid: repeat(10, 1fr) max-content / repeat(7, 1fr);
-  height: 175px;
+  height: 130px;
   margin-bottom: 10px;
 }
 
