@@ -39,6 +39,7 @@ class RecordingButton extends PureComponent {
       recordingState: PropTypes.string.isRequired,
       isSupportedPlatform: PropTypes.bool,
       recordingUnexpectedlyStopped: PropTypes.bool.isRequired,
+      isPopup: PropTypes.bool.isRequired,
 
       // DispatchProps
       startRecording: PropTypes.func.isRequired,
@@ -47,18 +48,39 @@ class RecordingButton extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this._getProfileAndStopProfiler = () =>
+      this.props.getProfileAndStopProfiler(window);
+  }
+
   renderButton(buttonSettings) {
-    const { disabled, label, onClick, additionalMessage } = buttonSettings;
+    const {
+      disabled,
+      label,
+      onClick,
+      additionalMessage,
+      isPrimary,
+      isPopup,
+    } = buttonSettings;
+
     const nbsp = "\u00A0";
+    const showAdditionalMessage = isPopup && additionalMessage;
+    const buttonClass = isPrimary ? "primary" : "default";
 
     return div(
       { className: "perf-button-container" },
-      div({ className: "perf-additional-message" }, additionalMessage || nbsp),
+      showAdditionalMessage
+        ? div(
+            { className: "perf-additional-message" },
+            additionalMessage || nbsp
+          )
+        : null,
       div(
         null,
         button(
           {
-            className: "devtools-button perf-button",
+            className: `perf-photon-button perf-photon-button-${buttonClass} perf-button`,
             "data-standalone": true,
             disabled,
             onClick,
@@ -72,7 +94,6 @@ class RecordingButton extends PureComponent {
   render() {
     const {
       startRecording,
-      getProfileAndStopProfiler,
       stopProfilerAndDiscardProfile,
       recordingState,
       isSupportedPlatform,
@@ -126,7 +147,8 @@ class RecordingButton extends PureComponent {
       case RECORDING:
         return this.renderButton({
           label: "Stop and grab the recording",
-          onClick: getProfileAndStopProfiler,
+          isPrimary: true,
+          onClick: this._getProfileAndStopProfiler,
           disabled: recordingState === REQUEST_TO_START_RECORDING,
         });
 
@@ -165,6 +187,7 @@ function mapStateToProps(state) {
     recordingUnexpectedlyStopped: selectors.getRecordingUnexpectedlyStopped(
       state
     ),
+    isPopup: selectors.getIsPopup(state),
   };
 }
 
