@@ -61,16 +61,6 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 't-win7-32-gpu',
       'hardware': 't-win10-64-hw',
     },
-    'windows7-32-pgo': {
-      'virtual': 't-win7-32',
-      'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows7-32-nightly': {
-      'virtual': 't-win7-32',
-      'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
-    },
     'windows7-32-shippable': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
@@ -101,17 +91,7 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 't-win10-64-gpu',
       'hardware': 't-win10-64-hw',
     },
-    'windows10-64-pgo': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
     'windows10-64-devedition': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows10-64-nightly': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu',
       'hardware': 't-win10-64-hw',
@@ -127,11 +107,6 @@ WINDOWS_WORKER_TYPES = {
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-qr': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows10-64-pgo-qr': {
       'virtual': 't-win10-64',
       'virtual-with-gpu': 't-win10-64-gpu',
       'hardware': 't-win10-64-hw',
