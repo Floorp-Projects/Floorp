@@ -3957,22 +3957,6 @@ pref("image.http.accept", "image/webp,*/*");
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
 
-#ifdef XP_MACOSX
-  pref("webgl.1.allow-core-profiles", true);
-#else
-  pref("webgl.1.allow-core-profiles", false);
-#endif
-pref("webgl.force-enabled", false);
-pref("webgl.disabled", false);
-pref("webgl.disable-angle", false);
-pref("webgl.disable-wgl", false);
-pref("webgl.min_capability_mode", false);
-pref("webgl.disable-extensions", false);
-pref("webgl.msaa-force", false);
-pref("webgl.prefer-16bpp", false);
-pref("webgl.default-low-power", false);
-pref("webgl.default-no-alpha", false);
-
 pref("webgl.enable-debug-renderer-info", true);
 pref("webgl.renderer-string-override", "");
 pref("webgl.vendor-string-override", "");

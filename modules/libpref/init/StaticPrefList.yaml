@@ -7145,7 +7145,11 @@
 
 - name: webgl.1.allow-core-profiles
   type: RelaxedAtomicBool
+#ifdef XP_MACOSX
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 
