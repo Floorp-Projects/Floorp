@@ -278,4 +278,18 @@ export default [
     rules: ["div { max-height: 500px; }"],
     isActive: true,
   },
+  {
+    info: "height is active on an svg <rect> element.",
+    property: "height",
+    createTestElement: main => {
+      main.innerHTML = `
+        <svg width=100 height=100>
+          <rect width=100 fill=green></rect>
+        </svg>
+      `;
+      return main.querySelector("rect");
+    },
+    rules: ["rect { height: 100px; }"],
+    isActive: true,
+  },
 ];
