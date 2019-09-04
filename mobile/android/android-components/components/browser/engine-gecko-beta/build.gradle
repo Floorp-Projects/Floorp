@@ -34,6 +34,8 @@ android {
 // file from AAR dependencies of this project rather than look
 // for it into the project directory.
 ext.allowMetricsFromAAR = true
+// Generate markdown docs for the collected Gecko metrics.
+ext.gleanGenerateMarkdownDocs = true
 
 dependencies {
     implementation project(':concept-engine')
