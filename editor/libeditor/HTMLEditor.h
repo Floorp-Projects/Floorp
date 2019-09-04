@@ -144,7 +144,7 @@ class HTMLEditor final : public TextEditor,
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
-  NS_IMETHOD InsertLineBreak() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() override;
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(
@@ -214,7 +214,8 @@ class HTMLEditor final : public TextEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  nsresult InsertParagraphSeparatorAsAction(nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertParagraphSeparatorAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult
   InsertElementAtSelectionAsAction(Element* aElement, bool aDeleteSelection,
@@ -1829,6 +1830,88 @@ class HTMLEditor final : public TextEditor,
   HandleInsertParagraphInHeadingElement(Element& aHeader, nsINode& aNode,
                                         int32_t aOffset);
 
+  /**
+   * HandleInsertParagraphInListItemElement() handles insertParagraph command
+   * (i.e., handling Enter key press) in a list item element.
+   *
+   * @param aListItem           The list item which has the following point.
+   * @param aNode               Typically, Selection start container, where to
+   *                            insert a break.
+   * @param aOffset             Typically, Selection start offset in the
+   *                            start container, where to insert a break.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  HandleInsertParagraphInListItemElement(Element& aListItem, nsINode& aNode,
+                                         int32_t aOffset);
+
+  /**
+   * GetNearestAncestorListItemElement() returns a list item element if
+   * aContent or its ancestor in editing host is one.  However, this won't
+   * cross table related element.
+   */
+  Element* GetNearestAncestorListItemElement(nsIContent& aContent) const;
+
+  /**
+   * InsertParagraphSeparatorAsSubAction() handles insertPargraph commad
+   * (i.e., handling Enter key press) with the above helper methods.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  InsertParagraphSeparatorAsSubAction();
+
+  /**
+   * Returns true if aNode1 or aNode2 or both is the descendant of some type of
+   * table element, but their nearest table element ancestors differ.  "Table
+   * element" here includes not just <table> but also <td>, <tbody>, <tr>, etc.
+   * The nodes count as being their own descendants for this purpose, so a
+   * table element is its own nearest table element ancestor.
+   */
+  static bool NodesInDifferentTableElements(nsINode& aNode1, nsINode& aNode2);
+
+  /**
+   * ChangeListElementType() replaces child list items of aListElement with
+   * new list item element whose tag name is aNewListItemTag.
+   * Note that if there are other list elements as children of aListElement,
+   * this calls itself recursively even though it's invalid structure.
+   *
+   * @param aListElement        The list element whose list items will be
+   *                            replaced.
+   * @param aNewListTag         New list tag name.
+   * @param aNewListItemTag     New list item tag name.
+   * @return                    New list element or an error code if it fails.
+   *                            New list element may be aListElement if its
+   *                            tag name is same as aNewListTag.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE CreateElementResult ChangeListElementType(
+      Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
+
+  /**
+   * ChangeSelectedHardLinesToList() converts selected ranges to specified
+   * list element.  If there is different type of list elements, this method
+   * converts them to specified list items too.  Basically, each hard line
+   * will be wrapped with a list item element.  However, only when `<p>`
+   * element is selected, its child `<br>` elements won't be treated as
+   * hard line separators.  Perhaps, this is a bug.
+   * NOTE: This method creates AutoSelectionRestorer.  Therefore, each caller
+   *       need to check if the editor is still available even if this returns
+   *       NS_OK.
+   *
+   * @param aListElementTagName         The new list element tag name.
+   * @param aSelectAllOfCurrentList     true if this should treat all of
+   *                                    ancestor list element at selection.
+   * @param aBulletType                 Can be nullptr.  If this is not a
+   *                                    nullptr and the value is not empty,
+   *                                    it's set to `type` attribute of new
+   *                                    list item elements.  Otherwise,
+   *                                    existing `type` attributes will be
+   *                                    removed.
+   * @param aListItemElementTagName     The new list item element tag name.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  ChangeSelectedHardLinesToList(nsAtom& aListElementTagName,
+                                bool aSelectAllOfCurrentList,
+                                const nsAString* aBulletType,
+                                nsAtom& aListItemElementTagName);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
@@ -1837,12 +1920,6 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
-
-  /**
-   * InsertParagraphSeparatorAsSubAction() inserts a line break if it's
-   * HTMLEditor and it's possible.
-   */
-  nsresult InsertParagraphSeparatorAsSubAction();
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectAllInternal() override;

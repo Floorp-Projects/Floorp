@@ -203,7 +203,7 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertLineBreak: {
-      UndefineCaretBidiLevel();
+      TextEditorRef().UndefineCaretBidiLevel();
       EditActionResult result = WillInsertLineBreak(aInfo.maxLength);
       if (NS_WARN_IF(result.Failed())) {
         return result.Rv();
@@ -215,11 +215,11 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     }
     case EditSubAction::eInsertText:
     case EditSubAction::eInsertTextComingFromIME:
-      UndefineCaretBidiLevel();
+      TextEditorRef().UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString, aInfo.maxLength);
     case EditSubAction::eSetText:
-      UndefineCaretBidiLevel();
+      TextEditorRef().UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString, aInfo.maxLength);
     case EditSubAction::eDeleteSelectedContent:
       return WillDeleteSelection(aInfo.collapsedAction, aCancel, aHandled);

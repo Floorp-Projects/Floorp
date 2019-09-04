@@ -6,7 +6,6 @@
 /**
  * Tests if the POST requests display the correct information in the UI.
  */
-
 add_task(async function() {
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
@@ -67,7 +66,7 @@ add_task(async function() {
   );
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#params-panel .tree-section", 2);
+  wait = waitForDOM(document, "#params-panel .tree-section", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -98,26 +97,26 @@ add_task(async function() {
 
   return teardown(monitor);
 
-  function testParamsTab(type) {
+  async function testParamsTab(type) {
     const tabpanel = document.querySelector("#params-panel");
 
     function checkVisibility(box) {
       is(
         !tabpanel.querySelector(".treeTable"),
         !box.includes("params"),
-        "The request params doesn't have the indended visibility."
+        "The request params doesn't have the intended visibility."
       );
       is(
         tabpanel.querySelector(".CodeMirror-code") === null,
         !box.includes("editor"),
-        "The request post data doesn't have the indended visibility."
+        "The request post data doesn't have the intended visibility."
       );
     }
 
     is(
       tabpanel.querySelectorAll(".tree-section").length,
-      2,
-      "There should be 2 tree sections displayed in this tabpanel."
+      type == "urlencoded" ? 3 : 2,
+      "There should be correct number of tree sections displayed in this tabpanel."
     );
     is(
       tabpanel.querySelectorAll(".empty-notice").length,

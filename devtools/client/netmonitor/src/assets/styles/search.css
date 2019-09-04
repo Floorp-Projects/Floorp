@@ -28,6 +28,10 @@
   color: var(--theme-text-color-inactive);
 }
 
+.search-panel .treeTable .resultLabel {
+  font-weight: bold;
+}
+
 .search-panel .treeTable .treeLabelCell {
   text-overflow: ellipsis;
   max-width: 0;

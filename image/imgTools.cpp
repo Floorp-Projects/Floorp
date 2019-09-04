@@ -335,7 +335,8 @@ imgTools::EncodeImage(imgIContainer* aContainer, const nsACString& aMimeType,
                       nsIInputStream** aStream) {
   // Use frame 0 from the image container.
   RefPtr<SourceSurface> frame = aContainer->GetFrame(
-      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
+      imgIContainer::FRAME_FIRST,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   RefPtr<DataSourceSurface> dataSurface;
@@ -380,10 +381,10 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
                      aScaledHeight == 0 ? imageHeight : aScaledHeight);
 
   // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame =
-      aContainer->GetFrameAtSize(scaledSize, imgIContainer::FRAME_FIRST,
-                                 imgIContainer::FLAG_HIGH_QUALITY_SCALING |
-                                     imgIContainer::FLAG_SYNC_DECODE);
+  RefPtr<SourceSurface> frame = aContainer->GetFrameAtSize(
+      scaledSize, imgIContainer::FRAME_FIRST,
+      imgIContainer::FLAG_HIGH_QUALITY_SCALING |
+          imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   // If the given surface is the right size/format, we can encode it directly.
@@ -445,7 +446,8 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
 
   // Use frame 0 from the image container.
   RefPtr<SourceSurface> frame = aContainer->GetFrame(
-      imgIContainer::FRAME_FIRST, imgIContainer::FLAG_SYNC_DECODE);
+      imgIContainer::FRAME_FIRST,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   int32_t frameWidth = frame->GetSize().width;

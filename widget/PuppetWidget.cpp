@@ -939,7 +939,8 @@ void PuppetWidget::SetCursor(nsCursor aCursor, imgIContainer* aCursorImage,
 
   if (aCursorImage) {
     RefPtr<SourceSurface> surface = aCursorImage->GetFrame(
-        imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+        imgIContainer::FRAME_CURRENT,
+        imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
     if (surface) {
       if (RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface()) {
         hasCustomCursor = true;

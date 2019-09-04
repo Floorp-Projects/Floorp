@@ -455,10 +455,22 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the current node is a non-replaced inline box.
+   * Returns whether this element uses CSS layout.
+   */
+  get hasCssLayout() {
+    return !this.isSvg && !this.isMathMl;
+  }
+
+  /**
+   * Check if the current node is a non-replaced CSS inline box.
    */
   get nonReplacedInlineBox() {
-    return this.nonReplaced && this.style && this.style.display === "inline";
+    return (
+      this.hasCssLayout &&
+      this.nonReplaced &&
+      this.style &&
+      this.style.display === "inline"
+    );
   }
 
   /**
@@ -521,6 +533,20 @@ class InactivePropertyHelper {
    */
   get nodeName() {
     return this.node.nodeName ? this.node.nodeName.toLowerCase() : null;
+  }
+
+  /**
+   * Return whether the node is a MathML element.
+   */
+  get isMathMl() {
+    return this.node.namespaceURI === "http://www.w3.org/1998/Math/MathML";
+  }
+
+  /**
+   * Return whether the node is an SVG element.
+   */
+  get isSvg() {
+    return this.node.namespaceURI === "http://www.w3.org/2000/svg";
   }
 
   /**

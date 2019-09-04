@@ -2035,6 +2035,12 @@ class EditorBase : public nsIEditor,
    */
   void HideCaret(bool aHide);
 
+ protected:  // Edit sub-action handler
+  /**
+   * UndefineCaretBidiLevel() resets bidi level of the caret.
+   */
+  void UndefineCaretBidiLevel() const;
+
  protected:  // Called by helper classes.
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
