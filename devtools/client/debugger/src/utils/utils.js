@@ -5,7 +5,7 @@
 // @flow
 
 import type { SourceContent } from "../types";
-import { saveAs } from "devtools-modules";
+import { saveAs } from "devtools-shared-utils";
 
 /**
  * Utils for utils, by utils
