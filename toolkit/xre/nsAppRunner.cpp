@@ -256,7 +256,7 @@ static const char kPrefHealthReportUploadEnabled[] =
 int gArgc;
 char** gArgv;
 
-static const char gToolkitVersion[] = NS_STRINGIFY(GRE_MILESTONE);
+static const char gToolkitVersion[] = MOZ_STRINGIFY(GRE_MILESTONE);
 // The gToolkitBuildID global is defined to MOZ_BUILDID via gen_buildid.py
 // in toolkit/library. See related comment in toolkit/library/moz.build.
 extern const char gToolkitBuildID[];
@@ -854,7 +854,7 @@ nsXULAppInfo::GetIsOfficialBranding(bool* aResult) {
 
 NS_IMETHODIMP
 nsXULAppInfo::GetDefaultUpdateChannel(nsACString& aResult) {
-  aResult.AssignLiteral(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+  aResult.AssignLiteral(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
   return NS_OK;
 }
 
@@ -1450,7 +1450,7 @@ static inline void DumpVersion() {
 
   // Use the displayed version
   // For example, for beta, we would display 42.0b2 instead of 42.0
-  printf("%s", NS_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
+  printf("%s", MOZ_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
 
   if (gAppData->copyright) {
     printf(", %s", (const char*)gAppData->copyright);
@@ -2155,7 +2155,8 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
       w.StringProperty("buildId", gAppData->buildID);
       w.StringProperty("name", gAppData->name);
       w.StringProperty("version", gAppData->version);
-      w.StringProperty("displayVersion", NS_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
+      w.StringProperty("displayVersion",
+                       MOZ_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
       w.StringProperty("vendor", gAppData->vendor);
       w.StringProperty("platformVersion", gToolkitVersion);
 #  ifdef TARGET_XPCOM_ABI
@@ -2286,7 +2287,7 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
     nsCString profileName;
     profileName.AssignLiteral("default");
 #  ifdef MOZ_DEDICATED_PROFILES
-    profileName.Append("-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+    profileName.Append("-" MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
 #  endif
     nsCOMPtr<nsIToolkitProfile> newProfile;
     rv = aProfileSvc->CreateUniqueProfile(nullptr, profileName,
@@ -3190,7 +3191,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::BuildID,
                                          nsDependentCString(mAppData->buildID));
 
-    nsDependentCString releaseChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+    nsDependentCString releaseChannel(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ReleaseChannel, releaseChannel);
 #ifdef MOZ_LINKER
@@ -3598,7 +3599,7 @@ static void SetShutdownChecks() {
   gShutdownChecks = SCM_CRASH;
 #  endif  // MOZ_CODE_COVERAGE
 #else
-  const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
+  const char* releaseChannel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
   if (strcmp(releaseChannel, "nightly") == 0 ||
       strcmp(releaseChannel, "default") == 0) {
     gShutdownChecks = SCM_RECORD;
@@ -3697,7 +3698,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
 #  else
   {
-    const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
+    const char* releaseChannel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
     if (strcmp(releaseChannel, "nightly") == 0 ||
         strcmp(releaseChannel, "default") == 0) {
       mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);

@@ -389,7 +389,7 @@ nsToolkitProfileService::nsToolkitProfileService()
       mCreatedAlternateProfile(false),
       mStartupReason(NS_LITERAL_STRING("unknown")),
       mMaybeLockProfile(false),
-      mUpdateChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL)),
+      mUpdateChannel(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)),
       mProfileDBExists(false),
       mProfileDBFileSize(0),
       mProfileDBModifiedTime(0),

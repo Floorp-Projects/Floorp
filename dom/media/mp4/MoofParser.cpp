@@ -9,22 +9,24 @@
 #include "MP4Interval.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/Logging.h"
 
 #if defined(MOZ_FMP4)
 extern mozilla::LogModule* GetDemuxerLog();
 
-#  define STRINGIFY(x) #  x
-#  define TOSTRING(x) STRINGIFY(x)
-#  define LOG_ERROR(name, arg, ...)                    \
-    MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Error, \
-            (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#  define LOG_WARN(name, arg, ...)                       \
-    MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Warning, \
-            (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#  define LOG_DEBUG(name, arg, ...)                    \
-    MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, \
-            (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#  define LOG_ERROR(name, arg, ...)                \
+    MOZ_LOG(                                       \
+        GetDemuxerLog(), mozilla::LogLevel::Error, \
+        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#  define LOG_WARN(name, arg, ...)                   \
+    MOZ_LOG(                                         \
+        GetDemuxerLog(), mozilla::LogLevel::Warning, \
+        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#  define LOG_DEBUG(name, arg, ...)                \
+    MOZ_LOG(                                       \
+        GetDemuxerLog(), mozilla::LogLevel::Debug, \
+        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 #else
 #  define LOG_ERROR(...)

@@ -422,7 +422,7 @@ bool GLLibraryEGL::DoEnsureInitialized(bool forceAccel,
 
 #  ifdef MOZ_D3DCOMPILER_VISTA_DLL
       if (LoadLibraryForEGLOnWindows(
-              NS_LITERAL_STRING(NS_STRINGIFY(MOZ_D3DCOMPILER_VISTA_DLL))))
+              NS_LITERAL_STRING(MOZ_STRINGIFY(MOZ_D3DCOMPILER_VISTA_DLL))))
         break;
 #  endif
 

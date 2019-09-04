@@ -11,6 +11,7 @@
 #include "gmp-api/gmp-video-codec.h"
 #include "WidevineUtils.h"
 #include "GMPLog.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/Move.h"
 
 #ifdef XP_WIN
@@ -54,9 +55,6 @@ void* ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData) {
   return aUserData;
 }
 
-#define STRINGIFY(s) _STRINGIFY(s)
-#define _STRINGIFY(s) #s
-
 #ifdef MOZILLA_OFFICIAL
 static cdm::HostFile TakeToCDMHostFile(HostFileData& aHostFileData) {
   return cdm::HostFile(aHostFileData.mBinary.Path().get(),
@@ -76,7 +74,7 @@ GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
   // Note: we must call the VerifyCdmHost_0 function if it's present before
   // we call the initialize function.
   auto verify = reinterpret_cast<decltype(::VerifyCdmHost_0)*>(
-      PR_FindFunctionSymbol(mLib, STRINGIFY(VerifyCdmHost_0)));
+      PR_FindFunctionSymbol(mLib, MOZ_STRINGIFY(VerifyCdmHost_0)));
   if (verify) {
     nsTArray<cdm::HostFile> files;
     for (HostFileData& hostFile : mHostFiles) {
@@ -88,12 +86,12 @@ GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
 #endif
 
   auto init = reinterpret_cast<decltype(::INITIALIZE_CDM_MODULE)*>(
-      PR_FindFunctionSymbol(mLib, STRINGIFY(INITIALIZE_CDM_MODULE)));
+      PR_FindFunctionSymbol(mLib, MOZ_STRINGIFY(INITIALIZE_CDM_MODULE)));
   if (!init) {
     return GMPGenericErr;
   }
 
-  GMP_LOG(STRINGIFY(INITIALIZE_CDM_MODULE) "()");
+  GMP_LOG(MOZ_STRINGIFY(INITIALIZE_CDM_MODULE) "()");
   init();
 
   return GMPNoErr;

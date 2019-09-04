@@ -44,7 +44,7 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
     nsCOMPtr<nsIFile> dir;
     nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile),
                                       getter_AddRefs(dir));
-    NS_NAMED_LITERAL_CSTRING(kOmnijarName, NS_STRINGIFY(OMNIJAR_NAME));
+    NS_NAMED_LITERAL_CSTRING(kOmnijarName, MOZ_STRINGIFY(OMNIJAR_NAME));
     if (NS_FAILED(dir->Clone(getter_AddRefs(file))) ||
         NS_FAILED(file->AppendNative(kOmnijarName))) {
       return;
@@ -84,7 +84,7 @@ void Omnijar::InitOne(nsIFile* aPath, Type aType) {
 
   RefPtr<nsZipArchive> outerReader;
   RefPtr<nsZipHandle> handle;
-  if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, NS_STRINGIFY(OMNIJAR_NAME),
+  if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, MOZ_STRINGIFY(OMNIJAR_NAME),
                                      getter_AddRefs(handle)))) {
     outerReader = zipReader;
     zipReader = new nsZipArchive();
@@ -156,7 +156,7 @@ nsresult Omnijar::GetURIString(Type aType, nsACString& aResult) {
     aResult += omniJarSpec;
     aResult += "!";
     if (IsNested(aType)) {
-      aResult += "/" NS_STRINGIFY(OMNIJAR_NAME) "!";
+      aResult += "/" MOZ_STRINGIFY(OMNIJAR_NAME) "!";
     }
   } else {
     nsCOMPtr<nsIFile> dir;

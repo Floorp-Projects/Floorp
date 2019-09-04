@@ -29,8 +29,6 @@
 
 extern mozilla::LogModule* GetMediaSourceSamplesLog();
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
 #define MSE_DEBUG(arg, ...)                                            \
   DDMOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug,      \
             "(%s)::%s: " arg, mType.OriginalString().Data(), __func__, \

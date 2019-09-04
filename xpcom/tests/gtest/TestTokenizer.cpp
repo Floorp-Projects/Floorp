@@ -666,7 +666,7 @@ TEST(Tokenizer, IntegerReading)
 #define STR_INT_MORE_THAN_64_BITS "922337203685477580899"
 
   {
-    Tokenizer p(NS_STRINGIFY(INT_6_BITS));
+    Tokenizer p(MOZ_STRINGIFY(INT_6_BITS));
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
@@ -706,7 +706,7 @@ TEST(Tokenizer, IntegerReading)
   }
 
   {
-    Tokenizer p(NS_STRINGIFY(INT_30_BITS));
+    Tokenizer p(MOZ_STRINGIFY(INT_30_BITS));
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
@@ -737,7 +737,7 @@ TEST(Tokenizer, IntegerReading)
   }
 
   {
-    Tokenizer p(NS_STRINGIFY(INT_32_BITS));
+    Tokenizer p(MOZ_STRINGIFY(INT_32_BITS));
     uint32_t u32;
     int32_t s32;
     EXPECT_FALSE(p.ReadInteger(&s32));
@@ -748,7 +748,7 @@ TEST(Tokenizer, IntegerReading)
   }
 
   {
-    Tokenizer p(NS_STRINGIFY(INT_50_BITS));
+    Tokenizer p(MOZ_STRINGIFY(INT_50_BITS));
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
