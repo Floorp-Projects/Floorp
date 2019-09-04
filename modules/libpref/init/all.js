@@ -651,11 +651,6 @@ pref("apz.overscroll.stretch_factor", "0.35");
   pref("gfx.hidpi.enabled", 2);
 #endif
 
-// Default to containerless scrolling
-pref("layout.scroll.root-frame-containers", false);
-
-pref("layout.scrollbars.always-layerize-track", false);
-
 pref("gfx.color_management.display_profile", "");
 
 pref("gfx.downloadable_fonts.enabled", true);
@@ -2629,47 +2624,11 @@ pref("layout.word_select.stop_at_underscore", false);
 // Windows default is 1 for word delete behavior, the rest as for 2.
 pref("layout.selection.caret_style", 0);
 
-// pref to report CSS errors to the error console
-pref("layout.css.report_errors", true);
-
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the
 // interpretation of physical units such as "pt".
 pref("layout.css.dpi", -1);
-
-// Set the threshold distance in CSS pixels below which scrolling will snap to
-// an edge, when scroll snapping is set to "proximity".
-pref("layout.css.scroll-snap.proximity-threshold", 200);
-
-// When selecting the snap point for CSS scroll snapping, the velocity of the
-// scroll frame is clamped to this speed, in CSS pixels / s.
-pref("layout.css.scroll-snap.prediction-max-velocity", 2000);
-
-// When selecting the snap point for CSS scroll snapping, the velocity of the
-// scroll frame is integrated over this duration, in seconds.  The snap point
-// best suited for this position is selected, enabling the user to perform fling
-// gestures.
-pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
-
-// Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
-pref("layout.css.scroll-behavior.enabled", true);
-
-// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
-// Spring-constant controls the strength of the simulated MSD
-// (Mass-Spring-Damper)
-pref("layout.css.scroll-behavior.spring-constant", "250.0");
-
-// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
-// Damping-ratio controls the dampening force of the simulated MSD
-// (Mass-Spring-Damper).
-// When below 1.0, the system is under-damped; it may overshoot the target and
-// oscillate.
-// When greater than 1.0, the system is over-damped; it will reach the target at
-// reduced speed without overshooting.
-// When equal to 1.0, the system is critically-damped; it will reach the target
-// at the greatest speed without overshooting.
-pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -2680,11 +2639,6 @@ pref("layout.scrollbar.side", 0);
 
 // pref to stop overlay scrollbars from fading out, for testing purposes
 pref("layout.testing.overlay-scrollbars.always-visible", false);
-
-// pref to control browser frame rate, in Hz. A value <= 0 means choose
-// automatically based on knowledge of the platform (or 60Hz if no platform-
-// specific information is available).
-pref("layout.frame_rate", -1);
 
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
