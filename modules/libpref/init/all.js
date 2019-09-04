@@ -4132,65 +4132,12 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 // Image-related prefs
 //
 
-// The maximum size (in kB) that the aggregate frames of an animation can use
-// before it starts to discard already displayed frames and redecode them as
-// necessary.
-pref("image.animated.decode-on-demand.threshold-kb", 20480);
-
-// The minimum number of frames we want to have buffered ahead of an
-// animation's currently displayed frame.
-pref("image.animated.decode-on-demand.batch-size", 6);
-
-// Resume an animated image from the last displayed frame rather than
-// advancing when out of view.
-pref("image.animated.resume-from-last-displayed", true);
-
-// Maximum number of surfaces for an image before entering "factor of 2" mode.
-// This in addition to the number of "native" sizes of an image. A native size
-// is a size for which we can decode a frame without up or downscaling. Most
-// images only have 1, but some (i.e. ICOs) may have multiple frames for the
-// same data at different sizes.
-pref("image.cache.factor2.threshold-surfaces", 4);
-
-// Maximum size of a surface in KB we are willing to produce when rasterizing
-// an SVG.
-pref("image.cache.max-rasterized-svg-threshold-kb", 204800);
-
-// Decode all images automatically on load, ignoring our normal heuristics.
-pref("image.decode-immediately.enabled", false);
-
-// Whether we attempt to downscale images during decoding.
-pref("image.downscale-during-decode.enabled", true);
-
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/webp,*/*");
-
-// The threshold for inferring that changes to an <img> element's |src|
-// attribute by JavaScript represent an animation, in milliseconds. If the |src|
-// attribute is changing more frequently than this value, then we enter a
-// special "animation mode" which is designed to eliminate flicker. Set to 0 to
-// disable.
-pref("image.infer-src-animation.threshold-ms", 2000);
-
-// Whether the network request priority should be adjusted according
-// the layout and view frame position of each particular image.
-pref("image.layout_network_priority", true);
 
 //
 // Image memory management prefs
 //
-
-// Discards inactive image frames and re-decodes them on demand from
-// compressed data.
-pref("image.mem.discardable", true);
-
-// Whether the heap should be used for frames from animated images. On Android,
-// volatile memory keeps file handles open for each buffer.
-#if defined(ANDROID)
-  pref("image.mem.animated.use_heap", true);
-#else
-  pref("image.mem.animated.use_heap", false);
-#endif
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
