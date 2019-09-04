@@ -715,9 +715,9 @@ PlacesViewBase.prototype = {
     }
 
     if (!hasMultipleURIs) {
-      aPopup.setAttribute("singleitempopup", "true");
+      aPopup.setAttribute("nofooterpopup", "true");
     } else {
-      aPopup.removeAttribute("singleitempopup");
+      aPopup.removeAttribute("nofooterpopup");
     }
 
     if (!hasMultipleURIs) {
