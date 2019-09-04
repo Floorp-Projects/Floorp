@@ -105,7 +105,7 @@ bool JSContext::init(ContextKind kind) {
   // Skip most of the initialization if this thread will not be running JS.
   if (kind == ContextKind::MainThread) {
     TlsContext.set(this);
-    currentThread_ = ThisThread::GetId();
+    currentThread_ = ThreadId::ThisThreadId();
     if (!regexpStack.ref().init()) {
       return false;
     }
@@ -1337,7 +1337,7 @@ JSContext::~JSContext() {
 void JSContext::setHelperThread(AutoLockHelperThreadState& locked) {
   MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
   TlsContext.set(this);
-  currentThread_ = ThisThread::GetId();
+  currentThread_ = ThreadId::ThisThreadId();
 }
 
 void JSContext::clearHelperThread(AutoLockHelperThreadState& locked) {

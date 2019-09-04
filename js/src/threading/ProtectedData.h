@@ -219,7 +219,7 @@ class CheckThreadLocal {
   Thread::Id id;
 
  public:
-  CheckThreadLocal() : id(ThisThread::GetId()) {}
+  CheckThreadLocal() : id(ThreadId::ThisThreadId()) {}
 
   void check() const;
 #endif

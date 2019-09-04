@@ -30,7 +30,6 @@ namespace js {
 class ThreadId::PlatformData {
   friend class Thread;
   friend class ThreadId;
-  friend ThreadId ThisThread::GetId();
   pthread_t ptThread;
 
   // pthread_t does not have a default initializer, so we have to carry a bool

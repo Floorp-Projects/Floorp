@@ -44,7 +44,7 @@ void CheckThreadLocal::check() const {
   MOZ_ASSERT(cx);
   MOZ_ASSERT_IF(cx->isMainThreadContext(),
                 CurrentThreadCanAccessRuntime(cx->runtime()));
-  MOZ_ASSERT(id == ThisThread::GetId());
+  MOZ_ASSERT(id == ThreadId::ThisThreadId());
 }
 
 void CheckContextLocal::check() const {
