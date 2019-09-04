@@ -3972,21 +3972,6 @@ pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
 pref("webgl.default-low-power", false);
 pref("webgl.default-no-alpha", false);
-pref("webgl.force-layers-readback", false);
-pref("webgl.force-index-validation", 0);
-pref("webgl.lose-context-on-memory-pressure", false);
-pref("webgl.can-lose-context-in-foreground", true);
-#ifdef ANDROID
-  pref("webgl.max-contexts", 16);
-  pref("webgl.max-contexts-per-principal", 8);
-#else
-  pref("webgl.max-contexts", 32);
-  pref("webgl.max-contexts-per-principal", 16);
-#endif
-pref("webgl.max-warnings-per-context", 32);
-pref("webgl.enable-draft-extensions", false);
-pref("webgl.enable-privileged-extensions", false);
-pref("webgl.disable-fail-if-major-performance-caveat", false);
 
 pref("webgl.enable-debug-renderer-info", true);
 pref("webgl.renderer-string-override", "");
