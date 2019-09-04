@@ -787,8 +787,6 @@ pref("toolkit.cosmeticAnimations.enabled", true);
 
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
-pref("toolkit.scrollbox.verticalScrollDistance", 3);
-pref("toolkit.scrollbox.horizontalScrollDistance", 5);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 pref("toolkit.tabbox.switchByScrolling", false);
@@ -1046,11 +1044,6 @@ pref("privacy.restrict3rdpartystorage.url_decorations", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
-// Enable Origin Telemetry by default
-#ifdef NIGHTLY_BUILD
-  pref("privacy.trackingprotection.origin_telemetry.enabled", true);
-#endif
-
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
 
@@ -1200,9 +1193,6 @@ pref("javascript.options.dynamicImport", true);
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
-
-// Same-origin policy for file URIs, "false" is traditional
-pref("security.fileuri.strict_origin_policy", true);
 
 // If this pref is true, prefs in the logging.config branch will be cleared on
 // startup. This is done so that setting a log-file and log-modules at runtime
@@ -4061,8 +4051,6 @@ pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_dmabuf_backend.enabled", false);
 #endif
-
-pref("widget.window-transforms.disabled", false);
 
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
