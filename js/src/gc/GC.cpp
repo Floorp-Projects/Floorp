@@ -2900,27 +2900,20 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  size_t usedBytes =
-      zone->gcHeapSize.bytes();  // This already includes |nbytes|.
-  size_t thresholdBytes = zone->gcHeapThreshold.bytes();
-  if (usedBytes < thresholdBytes) {
+  TriggerResult trigger = checkHeapThreshold(
+      zone->gcHeapSize, zone->gcHeapThreshold, zone->isCollecting());
+
+  if (trigger.kind == TriggerKind::None) {
     return;
   }
 
-  size_t niThreshold = thresholdBytes * tunables.nonIncrementalFactor();
-  if (usedBytes >= niThreshold) {
-    // We have passed the non-incremental threshold: immediately trigger a
-    // non-incremental GC.
-    triggerZoneGC(zone, JS::GCReason::ALLOC_TRIGGER, usedBytes, niThreshold);
+  if (trigger.kind == TriggerKind::NonIncremental) {
+    triggerZoneGC(zone, JS::GCReason::ALLOC_TRIGGER, trigger.usedBytes,
+                  trigger.thresholdBytes);
     return;
   }
 
-  // Use a higher threshold if starting a GC would reset an in-progress
-  // collection.
-  if (isIncrementalGCInProgress() && !zone->isCollecting() &&
-      usedBytes < thresholdBytes * tunables.avoidInterruptFactor()) {
-    return;
-  }
+  MOZ_ASSERT(trigger.kind == TriggerKind::Incremental);
 
   // During an incremental GC, reduce the delay to the start of the next
   // incremental slice.
@@ -2935,13 +2928,12 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
     // to try to avoid performing non-incremental GCs on zones
     // which allocate a lot of data, even when incremental slices
     // can't be triggered via scheduling in the event loop.
-    triggerZoneGC(zone, JS::GCReason::INCREMENTAL_ALLOC_TRIGGER, usedBytes,
-                  thresholdBytes);
+    triggerZoneGC(zone, JS::GCReason::INCREMENTAL_ALLOC_TRIGGER,
+                  trigger.usedBytes, trigger.thresholdBytes);
 
     // Delay the next slice until a certain amount of allocation
     // has been performed.
     zone->gcDelayBytes = tunables.zoneAllocDelayBytes();
-    return;
   }
 }
 
@@ -2978,38 +2970,51 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
     return false;
   }
 
-  size_t usedBytes = heap.bytes();
-  size_t thresholdBytes = threshold.bytes();
-  if (usedBytes < thresholdBytes) {
+  TriggerResult trigger =
+      checkHeapThreshold(heap, threshold, zone->isCollecting());
+  if (trigger.kind == TriggerKind::None) {
     return false;
+  }
+
+  if (trigger.kind == TriggerKind::Incremental && zone->wasGCStarted()) {
+    // Don't start subsequent incremental slices if we're already collecting
+    // this zone. This is different to our behaviour for GC allocation in
+    // maybeAllocTriggerZoneGC.
+    MOZ_ASSERT(isIncrementalGCInProgress());
+    return false;
+  }
+
+  // Trigger a zone GC. budgetIncrementalGC() will work out whether to do an
+  // incremental or non-incremental collection.
+  triggerZoneGC(zone, reason, trigger.usedBytes, trigger.thresholdBytes);
+  return true;
+}
+
+TriggerResult GCRuntime::checkHeapThreshold(const HeapSize& heapSize,
+                                            const HeapThreshold& heapThreshold,
+                                            bool isCollecting) {
+  size_t usedBytes = heapSize.bytes();
+  size_t thresholdBytes = heapThreshold.bytes();
+  if (usedBytes < thresholdBytes) {
+    return TriggerResult{TriggerKind::None, 0, 0};
   }
 
   size_t niThreshold = thresholdBytes * tunables.nonIncrementalFactor();
   if (usedBytes >= thresholdBytes * niThreshold) {
     // We have passed the non-incremental threshold: immediately trigger a
     // non-incremental GC.
-    triggerZoneGC(zone, reason, usedBytes, niThreshold);
-    return true;
+    return TriggerResult{TriggerKind::NonIncremental, usedBytes, niThreshold};
   }
 
   // Use a higher threshold if starting a GC would reset an in-progress
   // collection.
-  if (isIncrementalGCInProgress() && !zone->isCollecting() &&
+  if (isIncrementalGCInProgress() && !isCollecting &&
       usedBytes < thresholdBytes * tunables.avoidInterruptFactor()) {
-    return false;
-  }
-
-  // Don't start subsequent incremental slices if we're already collecting this
-  // zone. This is different to our behaviour for GC allocation in
-  // maybeAllocTriggerZoneGC.
-  if (zone->wasGCStarted()) {
-    MOZ_ASSERT(isIncrementalGCInProgress());
-    return false;
+    return TriggerResult{TriggerKind::None, 0, 0};
   }
 
   // Start or continue an in progress incremental GC.
-  triggerZoneGC(zone, reason, usedBytes, thresholdBytes);
-  return true;
+  return TriggerResult{TriggerKind::Incremental, usedBytes, thresholdBytes};
 }
 
 bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,

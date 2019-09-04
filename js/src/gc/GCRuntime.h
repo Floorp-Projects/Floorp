@@ -520,6 +520,10 @@ class GCRuntime {
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
+  TriggerResult checkHeapThreshold(const HeapSize& heapSize,
+                                   const HeapThreshold& heapThreshold,
+                                   bool isCollecting);
+
   // Delete an empty zone after its contents have been merged.
   void deleteEmptyZone(Zone* zone);
 
