@@ -1135,13 +1135,13 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                              CSSEnabledState::ForAllContent) {
           UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
           if (useCounter != eUseCounter_UNKNOWN) {
-            mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+            mElement->OwnerDoc()->SetUseCounter(useCounter);
           }
         }
       } else {
         UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
         if (useCounter != eUseCounter_UNKNOWN) {
-          mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
+          mElement->OwnerDoc()->SetUseCounter(useCounter);
         }
       }
     }
