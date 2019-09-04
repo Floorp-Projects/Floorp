@@ -50,11 +50,14 @@ internal class EditToolbar(
         imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         gravity = Gravity.CENTER_VERTICAL
         background = null
-        setLines(1)
         textSize = URL_TEXT_SIZE_SP
         inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
+        setSingleLine()
 
-        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_padding))
+        val horizontalPadding = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_horizontal_padding)
+        val verticalPadding = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_vertical_padding)
+
+        setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
 
         setOnCommitListener {
             // We emit the fact before notifying the listener because otherwise the listener may cause a focus
