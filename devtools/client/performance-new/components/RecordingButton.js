@@ -62,6 +62,7 @@ class RecordingButton extends PureComponent {
       additionalMessage,
       isPrimary,
       isPopup,
+      additionalButton,
     } = buttonSettings;
 
     const nbsp = "\u00A0";
@@ -86,7 +87,18 @@ class RecordingButton extends PureComponent {
             onClick,
           },
           label
-        )
+        ),
+        additionalButton
+          ? button(
+              {
+                className: `perf-photon-button perf-photon-button-default perf-button`,
+                "data-standalone": true,
+                onClick: additionalButton.onClick,
+                disabled,
+              },
+              additionalButton.label
+            )
+          : null
       )
     );
   }
@@ -133,23 +145,27 @@ class RecordingButton extends PureComponent {
 
       case REQUEST_TO_STOP_PROFILER:
         return this.renderButton({
-          label: "Stopping the recording",
+          label: "Stopping recording",
           disabled: true,
         });
 
       case REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER:
         return this.renderButton({
-          label: "Stopping the recording, and capturing the profile",
+          label: "Capturing profile",
           disabled: true,
         });
 
       case REQUEST_TO_START_RECORDING:
       case RECORDING:
         return this.renderButton({
-          label: "Stop and grab the recording",
+          label: "Capture recording",
           isPrimary: true,
           onClick: this._getProfileAndStopProfiler,
           disabled: recordingState === REQUEST_TO_START_RECORDING,
+          additionalButton: {
+            label: "Cancel recording",
+            onClick: stopProfilerAndDiscardProfile,
+          },
         });
 
       case OTHER_IS_RECORDING:
