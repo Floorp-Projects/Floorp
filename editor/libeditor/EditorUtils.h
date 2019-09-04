@@ -149,6 +149,7 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   bool Succeeded() const { return NS_SUCCEEDED(mRv); }
   bool Failed() const { return NS_FAILED(mRv); }
   nsresult Rv() const { return mRv; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
   NodeType* GetNewNode() const { return mNode; }
 
   CreateNodeResultBase() = delete;

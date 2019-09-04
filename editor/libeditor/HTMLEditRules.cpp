@@ -2859,9 +2859,10 @@ nsresult HTMLEditRules::WillDeleteSelection(
             NS_WARN_IF(!rightNode) || NS_WARN_IF(!rightNode->IsContent())) {
           return NS_ERROR_FAILURE;
         }
-        EditActionResult ret = TryToJoinBlocksWithTransaction(
-            MOZ_KnownLive(*leftNode->AsContent()),
-            MOZ_KnownLive(*rightNode->AsContent()));
+        EditActionResult ret = MOZ_KnownLive(HTMLEditorRef())
+                                   .TryToJoinBlocksWithTransaction(
+                                       MOZ_KnownLive(*leftNode->AsContent()),
+                                       MOZ_KnownLive(*rightNode->AsContent()));
         *aHandled |= ret.Handled();
         *aCancel |= ret.Canceled();
         if (NS_WARN_IF(ret.Failed())) {
@@ -2940,9 +2941,10 @@ nsresult HTMLEditRules::WillDeleteSelection(
             NS_WARN_IF(!rightNode->IsContent())) {
           return NS_ERROR_FAILURE;
         }
-        EditActionResult ret = TryToJoinBlocksWithTransaction(
-            MOZ_KnownLive(*leftNode->AsContent()),
-            MOZ_KnownLive(*rightNode->AsContent()));
+        EditActionResult ret = MOZ_KnownLive(HTMLEditorRef())
+                                   .TryToJoinBlocksWithTransaction(
+                                       MOZ_KnownLive(*leftNode->AsContent()),
+                                       MOZ_KnownLive(*rightNode->AsContent()));
         // This should claim that trying to join the block means that
         // this handles the action because the caller shouldn't do anything
         // anymore in this case.
@@ -3177,7 +3179,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
 
         if (join) {
           EditActionResult ret =
-              TryToJoinBlocksWithTransaction(*leftParent, *rightParent);
+              MOZ_KnownLive(HTMLEditorRef())
+                  .TryToJoinBlocksWithTransaction(*leftParent, *rightParent);
           MOZ_ASSERT(*aHandled);
           *aCancel |= ret.Canceled();
           if (NS_WARN_IF(ret.Failed())) {
@@ -3366,12 +3369,12 @@ EditorDOMPoint HTMLEditRules::GetGoodSelPointForNode(
   return ret;
 }
 
-EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
-    nsIContent& aLeftNode, nsIContent& aRightNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
+    nsIContent& aLeftContentInBlock, nsIContent& aRightContentInBlock) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  RefPtr<Element> leftBlock = HTMLEditorRef().GetBlock(aLeftNode);
-  RefPtr<Element> rightBlock = HTMLEditorRef().GetBlock(aRightNode);
+  RefPtr<Element> leftBlock = GetBlock(aLeftContentInBlock);
+  RefPtr<Element> rightBlock = GetBlock(aRightContentInBlock);
 
   // Sanity checks
   if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
@@ -3390,13 +3393,13 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
   // Make sure we don't try to move things into HR's, which look like blocks
   // but aren't containers
   if (leftBlock->IsHTMLElement(nsGkAtoms::hr)) {
-    leftBlock = HTMLEditorRef().GetBlockNodeParent(leftBlock);
+    leftBlock = GetBlockNodeParent(leftBlock);
     if (NS_WARN_IF(!leftBlock)) {
       return EditActionIgnored(NS_ERROR_UNEXPECTED);
     }
   }
   if (rightBlock->IsHTMLElement(nsGkAtoms::hr)) {
-    rightBlock = HTMLEditorRef().GetBlockNodeParent(rightBlock);
+    rightBlock = GetBlockNodeParent(rightBlock);
     if (NS_WARN_IF(!rightBlock)) {
       return EditActionIgnored(NS_ERROR_UNEXPECTED);
     }
@@ -3416,99 +3419,89 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
 
   // Special rule here: if we are trying to join list items, and they are in
   // different lists, join the lists instead.
-  bool mergeLists = false;
-  nsAtom* existingList = nsGkAtoms::_empty;
-  EditorDOMPoint atChildInBlock;
-  nsCOMPtr<Element> leftList, rightList;
+  bool mergeListElements = false;
+  nsAtom* leftListElementTagName = nsGkAtoms::_empty;
+  RefPtr<Element> leftListElement, rightListElement;
   if (HTMLEditUtils::IsListItem(leftBlock) &&
       HTMLEditUtils::IsListItem(rightBlock)) {
-    leftList = leftBlock->GetParentElement();
-    rightList = rightBlock->GetParentElement();
-    if (leftList && rightList && leftList != rightList &&
-        !EditorUtils::IsDescendantOf(*leftList, *rightBlock, &atChildInBlock) &&
-        !EditorUtils::IsDescendantOf(*rightList, *leftBlock, &atChildInBlock)) {
+    // XXX leftListElement and/or rightListElement may be not list elements.
+    leftListElement = leftBlock->GetParentElement();
+    rightListElement = rightBlock->GetParentElement();
+    EditorDOMPoint atChildInBlock;
+    if (leftListElement && rightListElement &&
+        leftListElement != rightListElement &&
+        !EditorUtils::IsDescendantOf(*leftListElement, *rightBlock,
+                                     &atChildInBlock) &&
+        !EditorUtils::IsDescendantOf(*rightListElement, *leftBlock,
+                                     &atChildInBlock)) {
       // There are some special complications if the lists are descendants of
       // the other lists' items.  Note that it is okay for them to be
       // descendants of the other lists themselves, which is the usual case for
       // sublists in our implementation.
       MOZ_DIAGNOSTIC_ASSERT(!atChildInBlock.IsSet());
-      leftBlock = leftList;
-      rightBlock = rightList;
-      mergeLists = true;
-      existingList = leftList->NodeInfo()->NameAtom();
+      leftBlock = leftListElement;
+      rightBlock = rightListElement;
+      mergeListElements = true;
+      leftListElementTagName = leftListElement->NodeInfo()->NameAtom();
     }
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-  // offset below is where you find yourself in rightBlock when you traverse
-  // upwards from leftBlock
+  // If the left block element is in the right block element, move the hard
+  // line including the right block element to end of the left block.
+  // However, if we are merging list elements, we don't join them.
   EditorDOMPoint atRightBlockChild;
   if (EditorUtils::IsDescendantOf(*leftBlock, *rightBlock,
                                   &atRightBlockChild)) {
-    // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
-    // just destroys non-visible ws at boundaries we will be joining.
+    MOZ_ASSERT(atRightBlockChild.GetContainer() == rightBlock);
     DebugOnly<bool> advanced = atRightBlockChild.AdvanceOffset();
     NS_WARNING_ASSERTION(
         advanced,
         "Failed to advance offset to after child of rightBlock, "
         "leftBlock is a descendant of the child");
-    nsresult rv = WSRunObject::ScrubBlockBoundary(
-        MOZ_KnownLive(&HTMLEditorRef()), WSRunObject::kBlockEnd, leftBlock);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
+    nsresult rv =
+        WSRunObject::Scrub(*this, EditorDOMPoint::AtEndOf(*leftBlock));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
 
     {
       // We can't just track rightBlock because it's an Element.
-      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
-                                &atRightBlockChild);
-      rv = WSRunObject::ScrubBlockBoundary(
-          MOZ_KnownLive(&HTMLEditorRef()), WSRunObject::kAfterBlock,
-          MOZ_KnownLive(atRightBlockChild.GetContainer()),
-          atRightBlockChild.Offset());
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
+      AutoTrackDOMPoint tracker(RangeUpdaterRef(), &atRightBlockChild);
+      rv = WSRunObject::Scrub(*this, atRightBlockChild);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
 
       // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
       //     Do we really need to do update rightBlock here??
-      MOZ_ASSERT(rightBlock == atRightBlockChild.GetContainer());
       if (atRightBlockChild.GetContainerAsElement()) {
         rightBlock = atRightBlockChild.GetContainerAsElement();
+      } else if (NS_WARN_IF(!atRightBlockChild.GetContainerParentAsElement())) {
+        return EditActionIgnored(NS_ERROR_UNEXPECTED);
       } else {
-        if (NS_WARN_IF(!atRightBlockChild.GetContainer()->GetParentElement())) {
-          return EditActionIgnored(NS_ERROR_UNEXPECTED);
-        }
-        rightBlock = atRightBlockChild.GetContainer()->GetParentElement();
+        rightBlock = atRightBlockChild.GetContainerParentAsElement();
       }
     }
 
     // Do br adjustment.
-    EditorRawDOMPoint endOfLeftBlock;
-    endOfLeftBlock.SetToEndOf(leftBlock);
     RefPtr<Element> invisibleBRElement =
-        HTMLEditorRef().GetInvisibleBRElementAt(endOfLeftBlock);
+        GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(*leftBlock));
     EditActionResult ret(NS_OK);
-    if (NS_WARN_IF(mergeLists)) {
+    if (NS_WARN_IF(mergeListElements)) {
       // Since 2002, here was the following comment:
-      // > The idea here is to take all children in rightList that are past
-      // > offset, and pull them into leftlist.
+      // > The idea here is to take all children in rightListElement that are
+      // > past offset, and pull them into leftlistElement.
       // However, this has never been performed because we are here only when
       // neither left list nor right list is a descendant of the other but
       // in such case, getting a list item in the right list node almost
-      // always failed since a variable for offset of rightList->GetChildAt()
-      // was not initialized.  So, it might be a bug, but we should keep this
-      // traditional behavior for now.  If you find when we get here, please
-      // remove this comment if we don't need to do it.  Otherwise, please
-      // move children of the right list node to the end of the left list node.
-      MOZ_DIAGNOSTIC_ASSERT(!atChildInBlock.IsSet());
+      // always failed since a variable for offset of
+      // rightListElement->GetChildAt() was not initialized.  So, it might be
+      // a bug, but we should keep this traditional behavior for now.  If you
+      // find when we get here, please remove this comment if we don't need to
+      // do it.  Otherwise, please move children of the right list node to the
+      // end of the left list node.
 
       // XXX Although, we don't do nothing here, but for keeping traditional
       //     behavior, we should mark as handled.
@@ -3517,12 +3510,9 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       // XXX Why do we ignore the result of MoveOneHardLineContents()?
       NS_WARNING_ASSERTION(rightBlock == atRightBlockChild.GetContainer(),
                            "The relation is not guaranteed but assumed");
-      MoveNodeResult moveNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MoveOneHardLineContents(
-                  EditorDOMPoint(rightBlock, atRightBlockChild.Offset()),
-                  EditorDOMPoint(leftBlock, 0),
-                  HTMLEditor::MoveToEndOfContainer::Yes);
+      MoveNodeResult moveNodeResult = MoveOneHardLineContents(
+          EditorDOMPoint(rightBlock, atRightBlockChild.Offset()),
+          EditorDOMPoint(leftBlock, 0), MoveToEndOfContainer::Yes);
       if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3535,34 +3525,37 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       // atRightBlockChild is now invalid.
       atRightBlockChild.Clear();
     }
-    if (invisibleBRElement) {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DeleteNodeWithTransaction(*invisibleBRElement);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        ret.MarkAsHandled();
-      } else {
-        NS_WARNING("Failed to remove the <br> element");
-      }
+
+    if (!invisibleBRElement) {
+      return ret;
+    }
+
+    rv = DeleteNodeWithTransaction(*invisibleBRElement);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteNodeWithTransaction() failed removing "
+                         "invisible `<br>`, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      ret.MarkAsHandled();
     }
     return ret;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
 
-  // Offset below is where you find yourself in leftBlock when you traverse
-  // upwards from rightBlock
-  EditorDOMPoint leftBlockChild;
-  if (EditorUtils::IsDescendantOf(*rightBlock, *leftBlock, &leftBlockChild)) {
-    // Tricky case.  Right block is inside left block.  Do ws adjustment.  This
-    // just destroys non-visible ws at boundaries we will be joining.
-    nsresult rv = WSRunObject::ScrubBlockBoundary(
-        MOZ_KnownLive(&HTMLEditorRef()), WSRunObject::kBlockStart, rightBlock);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-    }
+  // If the right block element is in the left block element:
+  // - move list item elements in the right block element to where the left
+  //   list element is
+  // - or first hard line in the right block element to where:
+  //   - the left block element is.
+  //   - or the given left content in the left block is.
+  EditorDOMPoint atLeftBlockChild;
+  if (EditorUtils::IsDescendantOf(*rightBlock, *leftBlock, &atLeftBlockChild)) {
+    MOZ_ASSERT(leftBlock == atLeftBlockChild.GetContainer());
+
+    nsresult rv = WSRunObject::Scrub(*this, EditorDOMPoint(rightBlock, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -3570,44 +3563,37 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
     {
       // We can't just track leftBlock because it's an Element, so track
       // something else.
-      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
-                                &leftBlockChild);
-      rv = WSRunObject::ScrubBlockBoundary(MOZ_KnownLive(&HTMLEditorRef()),
-                                           WSRunObject::kBeforeBlock, leftBlock,
-                                           leftBlockChild.Offset());
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
+      AutoTrackDOMPoint tracker(RangeUpdaterRef(), &atLeftBlockChild);
+      rv = WSRunObject::Scrub(
+          *this, EditorDOMPoint(leftBlock, atLeftBlockChild.Offset()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
       // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
       //     Do we really need to do update rightBlock here??
-      MOZ_DIAGNOSTIC_ASSERT(leftBlock == leftBlockChild.GetContainer());
-      if (leftBlockChild.GetContainerAsElement()) {
-        leftBlock = leftBlockChild.GetContainerAsElement();
+      if (atLeftBlockChild.GetContainerAsElement()) {
+        leftBlock = atLeftBlockChild.GetContainerAsElement();
+      } else if (NS_WARN_IF(!atLeftBlockChild.GetContainerParentAsElement())) {
+        return EditActionIgnored(NS_ERROR_UNEXPECTED);
       } else {
-        if (NS_WARN_IF(!leftBlockChild.GetContainer()->GetParentElement())) {
-          return EditActionIgnored(NS_ERROR_UNEXPECTED);
-        }
-        leftBlock = leftBlockChild.GetContainer()->GetParentElement();
+        leftBlock = atLeftBlockChild.GetContainerParentAsElement();
       }
     }
+
     // Do br adjustment.
     RefPtr<Element> invisibleBRElement =
-        HTMLEditorRef().GetInvisibleBRElementAt(leftBlockChild);
+        GetInvisibleBRElementAt(atLeftBlockChild);
     EditActionResult ret(NS_OK);
-    if (mergeLists) {
+    if (mergeListElements) {
       // XXX Why do we ignore the error from MoveChildren()?
-      // XXX Why is it guaranteed that `leftBlockChild.GetContainer()` is
-      //     `leftList` here?  Looks like that above code may run mutation
-      //     event listeners.
-      NS_WARNING_ASSERTION(leftList == leftBlockChild.GetContainer(),
+      // XXX Why is it guaranteed that `atLeftBlockChild.GetContainer()` is
+      //     `leftListElement` here?  Looks like that above code may run
+      //     mutation event listeners.
+      NS_WARNING_ASSERTION(leftListElement == atLeftBlockChild.GetContainer(),
                            "This is not guaranteed, but assumed");
-      MoveNodeResult moveNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MoveChildren(*rightList,
-                            EditorDOMPoint(leftList, leftBlockChild.Offset()));
+      MoveNodeResult moveNodeResult = MoveChildren(
+          *rightListElement,
+          EditorDOMPoint(leftListElement, atLeftBlockChild.Offset()));
       if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3616,19 +3602,20 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       if (moveNodeResult.Succeeded()) {
         ret |= moveNodeResult;
       }
-      // leftBlockChild was moved to rightList.  So, it's invalid now.
-      leftBlockChild.Clear();
+      // atLeftBlockChild was moved to rightListElement.  So, it's invalid now.
+      atLeftBlockChild.Clear();
     } else {
       // Left block is a parent of right block, and the parent of the previous
       // visible content.  Right block is a child and contains the contents we
       // want to move.
 
-      EditorDOMPoint previousContent;
-      if (&aLeftNode == leftBlock) {
-        // We are working with valid HTML, aLeftNode is a block node, and is
-        // therefore allowed to contain rightBlock.  This is the simple case,
-        // we will simply move the content in rightBlock out of its block.
-        previousContent = leftBlockChild;
+      EditorDOMPoint atPreviousContent;
+      if (&aLeftContentInBlock == leftBlock) {
+        // We are working with valid HTML, aLeftContentInBlock is a block node,
+        // and is therefore allowed to contain rightBlock.  This is the
+        // simple case, we will simply move the content in rightBlock
+        // out of its block.
+        atPreviousContent = atLeftBlockChild;
       } else {
         // We try to work as well as possible with HTML that's already invalid.
         // Although "right block" is a block, and a block must not be contained
@@ -3639,27 +3626,29 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         // However, in some situations this strategy moves the content to an
         // unexpected position.  (see bug 200416) The new idea is to make the
         // moving content a sibling, next to the previous visible content.
-        previousContent.Set(&aLeftNode);
+        atPreviousContent.Set(&aLeftContentInBlock);
 
         // We want to move our content just after the previous visible node.
-        previousContent.AdvanceOffset();
+        atPreviousContent.AdvanceOffset();
       }
+
+      MOZ_ASSERT(atPreviousContent.IsSet());
 
       // Because we don't want the moving content to receive the style of the
       // previous content, we split the previous content's style.
 
-      RefPtr<Element> editorRoot = HTMLEditorRef().GetEditorRoot();
-      if (!editorRoot || &aLeftNode != editorRoot) {
+      RefPtr<Element> editingHost = GetActiveEditingHost();
+      // XXX It's odd to continue handling this edit action if there is no
+      //     editing host.
+      if (!editingHost || &aLeftContentInBlock != editingHost) {
         nsCOMPtr<nsIContent> splittedPreviousContent;
         nsCOMPtr<nsINode> previousContentParent =
-            previousContent.GetContainer();
-        int32_t previousContentOffset = previousContent.Offset();
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .SplitStyleAbovePoint(address_of(previousContentParent),
-                                       &previousContentOffset, nullptr, nullptr,
-                                       nullptr,
-                                       getter_AddRefs(splittedPreviousContent));
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+            atPreviousContent.GetContainer();
+        int32_t previousContentOffset = atPreviousContent.Offset();
+        rv = SplitStyleAbovePoint(
+            address_of(previousContentParent), &previousContentOffset, nullptr,
+            nullptr, nullptr, getter_AddRefs(splittedPreviousContent));
+        if (NS_WARN_IF(Destroyed())) {
           return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3667,40 +3656,44 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         }
 
         if (splittedPreviousContent) {
-          previousContent.Set(splittedPreviousContent);
+          atPreviousContent.Set(splittedPreviousContent);
+          if (NS_WARN_IF(!atPreviousContent.IsSet())) {
+            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+          }
         } else {
-          previousContent.Set(previousContentParent, previousContentOffset);
+          atPreviousContent.Set(previousContentParent, previousContentOffset);
+          if (NS_WARN_IF(!atPreviousContent.IsSet())) {
+            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+          }
         }
       }
 
-      if (NS_WARN_IF(!previousContent.IsSet())) {
-        return EditActionIgnored(NS_ERROR_NULL_POINTER);
-      }
-
-      ret |= MOZ_KnownLive(HTMLEditorRef())
-                 .MoveOneHardLineContents(EditorDOMPoint(rightBlock, 0),
-                                          previousContent);
+      ret |= MoveOneHardLineContents(EditorDOMPoint(rightBlock, 0),
+                                     atPreviousContent);
       if (NS_WARN_IF(ret.Failed())) {
         return ret;
       }
     }
-    if (invisibleBRElement) {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DeleteNodeWithTransaction(*invisibleBRElement);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        ret.MarkAsHandled();
-      } else {
-        NS_WARNING("Failed to remove the <br> element");
-      }
+
+    if (!invisibleBRElement) {
+      return ret;
+    }
+
+    rv = DeleteNodeWithTransaction(*invisibleBRElement);
+    if (NS_WARN_IF(Destroyed())) {
+      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteNodeWithTransaction() failed removing "
+                         "invisible `<br>`, but ignored");
+    if (NS_SUCCEEDED(rv)) {
+      ret.MarkAsHandled();
     }
     return ret;
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!atRightBlockChild.IsSet());
-  MOZ_DIAGNOSTIC_ASSERT(!leftBlockChild.IsSet());
+  MOZ_DIAGNOSTIC_ASSERT(!atLeftBlockChild.IsSet());
 
   // Normal case.  Blocks are siblings, or at least close enough.  An example
   // of the latter is <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The
@@ -3708,65 +3701,62 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
   // if you backspace from li into p.
 
   // Adjust whitespace at block boundaries
-  nsresult rv = WSRunObject::PrepareToJoinBlocks(
-      MOZ_KnownLive(&HTMLEditorRef()), leftBlock, rightBlock);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-  }
+  nsresult rv =
+      WSRunObject::PrepareToJoinBlocks(*this, *leftBlock, *rightBlock);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
   // Do br adjustment.
-  EditorRawDOMPoint endOfLeftBlock;
-  endOfLeftBlock.SetToEndOf(leftBlock);
   RefPtr<Element> invisibleBRElement =
-      HTMLEditorRef().GetInvisibleBRElementAt(endOfLeftBlock);
+      GetInvisibleBRElementAt(EditorDOMPoint::AtEndOf(*leftBlock));
   EditActionResult ret(NS_OK);
-  if (mergeLists ||
+  if (mergeListElements ||
       leftBlock->NodeInfo()->NameAtom() == rightBlock->NodeInfo()->NameAtom()) {
     // Nodes are same type.  merge them.
-    EditorDOMPoint pt;
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .JoinNearestEditableNodesWithTransaction(
-                          *leftBlock, *rightBlock, &pt);
+    EditorDOMPoint atFirstChildOfRightNode;
+    nsresult rv = JoinNearestEditableNodesWithTransaction(
+        *leftBlock, *rightBlock, &atFirstChildOfRightNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (pt.IsSet() && mergeLists) {
-      CreateElementResult convertListTypeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .ChangeListElementType(*rightBlock, MOZ_KnownLive(*existingList),
-                                     *nsGkAtoms::li);
-      if (NS_WARN_IF(convertListTypeResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "JoinNearestEditableNodesWithTransaction() failed, but ignored");
+    if (mergeListElements && atFirstChildOfRightNode.IsSet()) {
+      CreateElementResult convertListTypeResult = ChangeListElementType(
+          *rightBlock, MOZ_KnownLive(*leftListElementTagName), *nsGkAtoms::li);
+      if (NS_WARN_IF(convertListTypeResult.EditorDestroyed())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
+      NS_WARNING_ASSERTION(convertListTypeResult.Succeeded(),
+                           "ChangeListElementType() failed, but ignored");
     }
     ret.MarkAsHandled();
   } else {
     // Nodes are dissimilar types.
-    ret |= MOZ_KnownLive(HTMLEditorRef())
-               .MoveOneHardLineContents(EditorDOMPoint(rightBlock, 0),
-                                        EditorDOMPoint(leftBlock, 0),
-                                        HTMLEditor::MoveToEndOfContainer::Yes);
+    ret |= MoveOneHardLineContents(EditorDOMPoint(rightBlock, 0),
+                                   EditorDOMPoint(leftBlock, 0),
+                                   MoveToEndOfContainer::Yes);
     if (NS_WARN_IF(ret.Failed())) {
       return ret;
     }
   }
-  if (invisibleBRElement) {
-    rv = MOZ_KnownLive(HTMLEditorRef())
-             .DeleteNodeWithTransaction(*invisibleBRElement);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    // XXX In other top level if blocks, the result of
-    //     DeleteNodeWithTransaction() is ignored.  Why does only this result
-    //     is respected?
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return ret.SetResult(rv);
-    }
-    ret.MarkAsHandled();
+
+  if (!invisibleBRElement) {
+    return ret.MarkAsHandled();
   }
-  return ret;
+
+  rv = DeleteNodeWithTransaction(*invisibleBRElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  // XXX In other top level if blocks, the result of
+  //     DeleteNodeWithTransaction() is ignored.  Why does only this result
+  //     is respected?
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return ret.SetResult(rv);
+  }
+  return ret.MarkAsHandled();
 }
 
 MoveNodeResult HTMLEditor::MoveOneHardLineContents(
@@ -3884,8 +3874,8 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildren(
     // removing some previous children while we call
     // `DeleteNodeWithTransaction()` so that we should adjust it here.
     if (!result.NextInsertionPointRef().IsSetAndValid()) {
-      result = MoveNodeHandled(aPointToInsert.GetContainer(),
-                               aPointToInsert.GetContainer()->Length());
+      result = MoveNodeHandled(
+          EditorDOMPoint::AtEndOf(*aPointToInsert.GetContainer()));
     }
   }
   return result;
