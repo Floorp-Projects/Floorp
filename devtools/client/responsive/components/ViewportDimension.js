@@ -98,8 +98,9 @@ class ViewportDimension extends PureComponent {
     }
   }
 
-  onInputFocus() {
+  onInputFocus(e) {
     this.setState({ isEditing: true });
+    e.target.select();
   }
 
   onInputKeyDown(event) {

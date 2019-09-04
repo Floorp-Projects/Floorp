@@ -44,7 +44,6 @@ using namespace mozilla::plugins;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
-using namespace std;
 
 #ifdef MOZ_WIDGET_GTK
 

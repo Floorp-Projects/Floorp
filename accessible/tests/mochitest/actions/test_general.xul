@@ -17,6 +17,10 @@
           src="../events.js" />
   <script type="application/javascript"
           src="../actions.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../states.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -71,6 +75,19 @@
           ID: "labelWithPopup",
           actionName: "click",
           events: CLICK_EVENTS
+        },
+        {
+          ID: "toolbarbutton_label",
+          actionName: "click",
+          targetID: "toolbarbutton",
+          events: XUL_EVENTS,
+          allowBubbling: true
+        },
+        {
+          ID: "menulist_label",
+          actionName: "click",
+          targetID: "menulist",
+          events: FOCUS_EVENT
         }/*, // XXX: bug 490288
         {
           ID: "buttonmenu_item",
@@ -137,6 +154,13 @@
       <hbox>
         <label id="name_entry_label" value="Name" control="name_entry"/>
         <textbox id="name_entry"/>
+      </hbox>
+      <toolbarbutton id="toolbarbutton">
+        <label id="toolbarbutton_label">toolbarbutton</label>
+      </toolbarbutton>
+      <hbox>
+        <label id="menulist_label" control="menulist">menulist</label>
+        <menulist id="menulist"/>
       </hbox>
     </vbox>
   </hbox>

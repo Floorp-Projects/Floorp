@@ -26,8 +26,12 @@
 #include <sstream>
 #include <string.h>
 
-using namespace std;
 using namespace cdm;
+
+using std::function;
+using std::string;
+using std::stringstream;
+using std::vector;
 
 void ClearKeyPersistence::ReadAllRecordsFromIndex(
     function<void()>&& aOnComplete) {

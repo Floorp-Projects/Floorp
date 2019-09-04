@@ -48,8 +48,6 @@
 
 #include "mozilla/IntentionalCrash.h"
 
-using namespace std;
-
 struct _PlatformData {
 #ifdef MOZ_X11
   Display* display;
@@ -591,7 +589,7 @@ int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
 }
 
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData,
-                                      string& error) {}
+                                      std::string& error) {}
 
 string pluginGetClipboardText(InstanceData* instanceData) {
   GtkClipboard* cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);

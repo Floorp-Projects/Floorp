@@ -14,8 +14,8 @@ table {
   padding-bottom: 2em;
 }
 
-.float-right {
-  float: right;
+.float-end {
+  float: inline-end;
 }
 .hidden {
   display: none;
@@ -28,8 +28,7 @@ table {
 .wide-button {
   display: block;
   min-height: 32px;
-  padding-left: 30px;
-  padding-right: 30px;
+  padding-inline: 30px;
 }
 .submitting {
   background-image: url(chrome://global/skin/icons/loading.png);
@@ -64,11 +63,8 @@ h2.lighter-font-weight {
   font-weight: lighter;
 }
 
-html[dir=ltr] th {
-  text-align: left;
-}
-html[dir=rtl] th {
-  text-align: right;
+th {
+  text-align: start;
 }
 
 @media (min-resolution: 1.1dppx) {

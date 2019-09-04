@@ -39,7 +39,11 @@ class BinaryHashSearchArrayComparator {
 
 // Perform a hash of the provided cert, then search in the RootHashes.inc data
 // structure for a matching bin number.
-int32_t RootCABinNumber(const SECItem* cert) {
+// If no matching root is found, this may be a CA from the softoken (cert9.db),
+// it may be a CA from an external PKCS#11 token, or it may be a CA from OS
+// storage (Enterprise Root). The slot argument is used to attempt to determine
+// this. See also the constants in RootCertificateTelemetryUtils.h.
+int32_t RootCABinNumber(const SECItem* cert, PK11SlotInfo* slot) {
   Digest digest;
 
   // Compute SHA256 hash of the certificate
@@ -67,7 +71,41 @@ int32_t RootCABinNumber(const SECItem* cert) {
     return (int32_t)ROOT_TABLE[idx].binNumber;
   }
 
-  // Didn't match.
+  // Didn't match. It may be from the softoken, an external PKCS#11 token, or
+  // imported from the OS as an "Enterprise Root".
+  UniquePK11SlotInfo softokenSlot(PK11_GetInternalKeySlot());
+  if (!softokenSlot) {
+    return ROOT_CERTIFICATE_UNKNOWN;
+  }
+  if (slot == softokenSlot.get()) {
+    return ROOT_CERTIFICATE_SOFTOKEN;
+  }
+  UniquePK11SlotInfo nssInternalSlot(PK11_GetInternalSlot());
+  UniqueSECMODModule rootsModule(SECMOD_FindModule(kRootModuleName));
+  if (!rootsModule || rootsModule->slotCount != 1) {
+    return ROOT_CERTIFICATE_UNKNOWN;
+  }
+  if (slot && slot != nssInternalSlot.get() && slot != rootsModule->slots[0]) {
+    return ROOT_CERTIFICATE_EXTERNAL_TOKEN;
+  }
+  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (!component) {
+    return ROOT_CERTIFICATE_UNKNOWN;
+  }
+  nsTArray<nsTArray<uint8_t>> enterpriseRoots;
+  rv = component->GetEnterpriseRoots(enterpriseRoots);
+  if (NS_FAILED(rv)) {
+    return ROOT_CERTIFICATE_UNKNOWN;
+  }
+  for (const auto& enterpriseRoot : enterpriseRoots) {
+    if (enterpriseRoot.Length() == cert->len &&
+        memcmp(enterpriseRoot.Elements(), cert->data,
+               enterpriseRoot.Length()) == 0) {
+      return ROOT_CERTIFICATE_ENTERPRISE_ROOT;
+    }
+  }
+
+  // We have no idea what this is.
   return ROOT_CERTIFICATE_UNKNOWN;
 }
 
@@ -75,7 +113,7 @@ int32_t RootCABinNumber(const SECItem* cert) {
 // If there was a hash failure, we do nothing.
 void AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe,
                                   const CERTCertificate* cert) {
-  int32_t binId = RootCABinNumber(&cert->derCert);
+  int32_t binId = RootCABinNumber(&cert->derCert, cert->slot);
 
   if (binId != ROOT_CERTIFICATE_HASH_FAILURE) {
     Accumulate(probe, binId);

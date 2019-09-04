@@ -42,8 +42,6 @@
 #include <d3d10_1.h>
 #include <d2d1.h>
 
-using namespace std;
-
 void SetSubclass(HWND hWnd, InstanceData* instanceData);
 void ClearSubclass(HWND hWnd);
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
@@ -759,7 +757,7 @@ void SetSubclass(HWND hWnd, InstanceData* instanceData) {
   SetProp(hWnd, "MozillaWndProc", (HANDLE)origProc);
 }
 
-static void checkEquals(int a, int b, const char* msg, string& error) {
+static void checkEquals(int a, int b, const char* msg, std::string& error) {
   if (a == b) {
     return;
   }
@@ -771,7 +769,7 @@ static void checkEquals(int a, int b, const char* msg, string& error) {
 }
 
 void pluginDoInternalConsistencyCheck(InstanceData* instanceData,
-                                      string& error) {
+                                      std::string& error) {
   if (instanceData->platformData->childWindow) {
     RECT childRect;
     ::GetWindowRect(instanceData->platformData->childWindow, &childRect);

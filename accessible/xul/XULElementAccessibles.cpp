@@ -24,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsTextBoxFrame.h"
+#include "nsXULElement.h"
 
 using namespace mozilla::a11y;
 
@@ -55,6 +56,16 @@ XULLabelAccessible::XULLabelAccessible(nsIContent* aContent,
 void XULLabelAccessible::Shutdown() {
   mValueTextLeaf = nullptr;
   HyperTextAccessibleWrap::Shutdown();
+}
+
+void XULLabelAccessible::DispatchClickEvent(nsIContent* aContent,
+                                            uint32_t aActionIndex) const {
+  // Bug 1578140: For labels inside buttons, The base implementation of
+  // DispatchClickEvent doesn't fire a command event on the button.
+  RefPtr<nsXULElement> el = nsXULElement::FromNodeOrNull(aContent);
+  if (el) {
+    el->Click(mozilla::dom::CallerType::System);
+  }
 }
 
 ENameValueFlag XULLabelAccessible::NativeName(nsString& aName) const {
