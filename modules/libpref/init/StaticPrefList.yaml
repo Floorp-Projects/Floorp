@@ -4915,26 +4915,38 @@
   mirror: always
   rust: true
 
+# Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 - name: layout.css.scroll-behavior.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
+# Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
+# Spring-constant controls the strength of the simulated MSD
+# (Mass-Spring-Damper).
 - name: layout.css.scroll-behavior.spring-constant
   type: AtomicFloat
   value: 250.0f
   mirror: always
 
+# When selecting the snap point for CSS scroll snapping, the velocity of the
+# scroll frame is clamped to this speed, in CSS pixels / s.
 - name: layout.css.scroll-snap.prediction-max-velocity
   type: RelaxedAtomicInt32
   value: 2000
   mirror: always
 
+#  When selecting the snap point for CSS scroll snapping, the velocity of the
+# scroll frame is integrated over this duration, in seconds.  The snap point
+# best suited for this position is selected, enabling the user to perform fling
+# gestures.
 - name: layout.css.scroll-snap.prediction-sensitivity
   type: AtomicFloat
   value: 0.750f
   mirror: always
 
+# Set the threshold distance in CSS pixels below which scrolling will snap to
+# an edge, when scroll snapping is set to "proximity".
 - name: layout.css.scroll-snap.proximity-threshold
   type: RelaxedAtomicInt32
   value: 200
@@ -5092,6 +5104,9 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Pref to control browser frame rate, in Hz. A value <= 0 means choose
+# automatically based on knowledge of the platform (or 60Hz if no platform-
+# specific information is available).
 - name: layout.frame_rate
   type: RelaxedAtomicInt32
   value: -1
@@ -5134,7 +5149,9 @@
   value: true
   mirror: always
 
-# This and code dependent on it should be removed once containerless scrolling looks stable.
+# Default to containerless scrolling.
+# This and code dependent on it should be removed once containerless scrolling
+# looks stable.
 - name: layout.scroll.root-frame-containers
   type: RelaxedAtomicBool
   value: false
