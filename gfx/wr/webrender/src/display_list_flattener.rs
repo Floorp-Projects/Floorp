@@ -12,7 +12,7 @@ use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDispla
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::units::*;
-use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
+use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind, ClipDataHandle, ClipNodeKind};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
@@ -466,6 +466,31 @@ impl<'a> DisplayListFlattener<'a> {
         let mut clip_chain_instances = Vec::new();
         let mut clip_chain_instance_stack = Vec::new();
 
+        // Maintain a list of clip node handles that are shared by every primitive
+        // in this list. These are often root / fixed position clips. We collect these
+        // and handle them when compositing the picture cache tiles. This saves per-item
+        // clip work, but more importantly, it avoids lots of invalidations due to
+        // content being clipped by fixed iframe/scrollframe rects.
+
+        // TODO(gw): The logic to build the shared clips list is quite complicated, because:
+        //           (a) We want to cache result and not do a heap of extra work per primitive,
+        //               since stress tests like dl_mutate have 50000+ primitives. Since each
+        //               primitive often shares the same clip chain as the previous primitive,
+        //               caching the last set of prim clips is generally sufficient.
+        //           (b) The general logic to set up picture caching is still complicated due to
+        //               not caching multiple slices (e.g. scroll bars). Once we enable
+        //               multiple picture cache slices, this logic becomes much simpler.
+
+        // The clips we have found that exist on every primitive we are going to cache.
+        let mut shared_clips = Vec::new();
+        // The clips found the last time we traversed a set of clip chains. Stored and cleared
+        // here to avoid constant allocations.
+        let mut prim_clips = Vec::new();
+        // If true, the cache is out of date and needs to be rebuilt.
+        let mut update_shared_clips = true;
+        // The last prim clip chain we build prim_clips for.
+        let mut last_prim_clip_chain_id = ClipChainId::NONE;
+
         /// Records the indices in the list of a push/pop clip chain instance pair.
         #[derive(Debug)]
         struct ClipChainPairInfo {
@@ -475,11 +500,25 @@ impl<'a> DisplayListFlattener<'a> {
             clip_chain_id: ClipChainId,
         }
 
-        for (i, instance) in primitives.iter().enumerate() {
-            let scroll_root = self.clip_scroll_tree.find_scroll_root(
-                instance.spatial_node_index,
-            );
+        // Helper fn to collect clip handles from a given clip chain.
+        fn add_clips(
+            clip_chain_id: ClipChainId,
+            prim_clips: &mut Vec<ClipDataHandle>,
+            clip_store: &ClipStore,
+        ) {
+            let mut current_clip_chain_id = clip_chain_id;
 
+            while current_clip_chain_id != ClipChainId::NONE {
+                let clip_chain_node = &clip_store
+                    .clip_chain_nodes[current_clip_chain_id.0 as usize];
+
+                prim_clips.push(clip_chain_node.handle);
+
+                current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+            }
+        }
+
+        for (i, instance) in primitives.iter().enumerate() {
             // If we encounter a push/pop clip, record where they occurred in the
             // primitive list for later processing.
             match instance.kind {
@@ -491,6 +530,9 @@ impl<'a> DisplayListFlattener<'a> {
                         spatial_node_index: instance.spatial_node_index,
                         clip_chain_id: instance.clip_chain_id,
                     });
+                    // Invalidate the prim_clips cache - there is a new clip chain.
+                    update_shared_clips = true;
+                    continue;
                 }
                 PrimitiveInstanceKind::PopClipChain => {
                     let index = clip_chain_instance_stack.pop().unwrap();
@@ -505,9 +547,53 @@ impl<'a> DisplayListFlattener<'a> {
                         instance.spatial_node_index,
                     );
                     clip_chain_instance.pop_index = i;
+                    // Invalidate the prim_clips cache - a clip chain was removed.
+                    update_shared_clips = true;
+                    continue;
                 }
                 _ => {}
             }
+
+            // If the primitive clip chain is different, then we need to rebuild prim_clips.
+            update_shared_clips |= last_prim_clip_chain_id != instance.clip_chain_id;
+            last_prim_clip_chain_id = instance.clip_chain_id;
+
+            if update_shared_clips {
+                prim_clips.clear();
+                // Collect any clips from the clip chain stack that will affect this prim.
+                for clip_instance_index in &clip_chain_instance_stack {
+                    let clip_instance = &clip_chain_instances[*clip_instance_index];
+                    add_clips(
+                        clip_instance.clip_chain_id,
+                        &mut prim_clips,
+                        &self.clip_store,
+                    );
+                }
+                // Collect any clips from the primitive's specific clip chain.
+                add_clips(
+                    instance.clip_chain_id,
+                    &mut prim_clips,
+                    &self.clip_store,
+                );
+
+                // We want to only retain clips that are shared across all primitives.
+                // TODO(gw): We could consider using a HashSet here, but:
+                //           (a) The sizes of these arrays are typically very small (<< 10).
+                //           (b) We would have to impl Ord/Eq on interner handles, which we
+                //               otherwise don't need / want.
+                shared_clips.retain(|h1: &ClipDataHandle| {
+                    let uid = h1.uid();
+                    prim_clips.iter().any(|h2| {
+                        uid == h2.uid()
+                    })
+                });
+
+                update_shared_clips = false;
+            }
+
+            let scroll_root = self.clip_scroll_tree.find_scroll_root(
+                instance.spatial_node_index,
+            );
 
             if scroll_root != ROOT_SPATIAL_NODE_INDEX {
                 // If we find multiple scroll roots in this page, then skip
@@ -527,6 +613,9 @@ impl<'a> DisplayListFlattener<'a> {
                 }
 
                 if first_index.is_none() {
+                    // The first time we identify a prim that will be cached, set the prim_clips
+                    // array to this, such that the retain() logic above works.
+                    shared_clips = prim_clips.clone();
                     first_index = Some(i);
                 }
             }
@@ -547,34 +636,20 @@ impl<'a> DisplayListFlattener<'a> {
 
         let mut preceding_prims;
         let mut remaining_prims;
-        let mut trailing_prims;
 
         match first_index {
             Some(first_index) => {
                 // Split off the preceding primtives.
                 remaining_prims = old_prim_list.split_off(first_index);
-
-                // Find the first primitive in reverse order that is not the root scroll node.
-                let last_index = remaining_prims.iter().rposition(|instance| {
-                    let scroll_root = self.clip_scroll_tree.find_scroll_root(
-                        instance.spatial_node_index,
-                    );
-
-                    scroll_root != ROOT_SPATIAL_NODE_INDEX
-                }).unwrap_or(remaining_prims.len() - 1);
-
                 preceding_prims = old_prim_list;
-                trailing_prims = remaining_prims.split_off(last_index + 1);
             }
             None => {
                 preceding_prims = Vec::new();
                 remaining_prims = old_prim_list;
-                trailing_prims = Vec::new();
             }
         }
 
         let mid_index = preceding_prims.len();
-        let post_index = mid_index + remaining_prims.len();
 
         // Step through each clip chain pair, and see if it crosses a slice boundary.
         for clip_chain_instance in clip_chain_instances {
@@ -588,25 +663,6 @@ impl<'a> DisplayListFlattener<'a> {
                 );
 
                 remaining_prims.insert(
-                    0,
-                    create_clip_prim_instance(
-                        clip_chain_instance.spatial_node_index,
-                        clip_chain_instance.clip_chain_id,
-                        PrimitiveInstanceKind::PushClipChain,
-                    )
-                );
-            }
-
-            if clip_chain_instance.push_index < post_index && clip_chain_instance.pop_index >= post_index {
-                remaining_prims.push(
-                    create_clip_prim_instance(
-                        clip_chain_instance.spatial_node_index,
-                        clip_chain_instance.clip_chain_id,
-                        PrimitiveInstanceKind::PopClipChain,
-                    )
-                );
-
-                trailing_prims.insert(
                     0,
                     create_clip_prim_instance(
                         clip_chain_instance.spatial_node_index,
@@ -642,10 +698,25 @@ impl<'a> DisplayListFlattener<'a> {
             }
             );
 
+        // Build a clip-chain for the tile cache, that contains any of the shared clips
+        // we will apply when drawing the tiles. In all cases provided by Gecko, these
+        // are rectangle clips with a scale/offset transform only, and get handled as
+        // a simple local clip rect in the vertex shader. However, this should in theory
+        // also work with any complex clips, such as rounded rects and image masks, by
+        // producing a clip mask that is applied to the picture cache tiles.
+        let mut parent_clip_chain_id = ClipChainId::NONE;
+        for clip_handle in &shared_clips {
+            parent_clip_chain_id = self.clip_store.add_clip_chain_node(
+                *clip_handle,
+                parent_clip_chain_id,
+            );
+        }
+
         let tile_cache = Box::new(TileCacheInstance::new(
             0,
             main_scroll_root,
             self.config.background_color,
+            shared_clips,
         ));
 
         let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
@@ -669,16 +740,15 @@ impl<'a> DisplayListFlattener<'a> {
                 pic_index: PictureIndex(pic_index),
                 segment_instance_index: SegmentInstanceIndex::INVALID,
             },
-            ClipChainId::NONE,
+            parent_clip_chain_id,
             main_scroll_root,
         );
 
         // This contains the tile caching picture, with preceding and
         // trailing primitives outside the main scroll root.
-        primitives.reserve(preceding_prims.len() + trailing_prims.len() + 1);
+        primitives.reserve(preceding_prims.len() + 1);
         primitives.extend(preceding_prims);
         primitives.push(instance);
-        primitives.extend(trailing_prims);
     }
 
     fn flatten_items(
@@ -1297,17 +1367,14 @@ impl<'a> DisplayListFlattener<'a> {
 
                     for _ in 0 .. item_clip_node.count {
                         // Get the id of the clip sources entry for that clip chain node.
-                        let (handle, has_complex_clip) = {
+                        let handle = {
                             let clip_chain = self
                                 .clip_store
                                 .get_clip_chain(clip_node_clip_chain_id);
 
                             clip_node_clip_chain_id = clip_chain.parent_clip_chain_id;
 
-                            (
-                                clip_chain.handle,
-                                clip_chain.has_complex_clip,
-                            )
+                            clip_chain.handle
                         };
 
                         // Add a new clip chain node, which references the same clip sources, and
@@ -1317,7 +1384,6 @@ impl<'a> DisplayListFlattener<'a> {
                             .add_clip_chain_node(
                                 handle,
                                 clip_chain_id,
-                                has_complex_clip,
                             );
                     }
                 }
@@ -1405,15 +1471,13 @@ impl<'a> DisplayListFlattener<'a> {
             for item in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
-                let has_complex_clip = item.kind.has_complex_clip();
                 let handle = self.interners
                     .clip
-                    .intern(&item, || ());
+                    .intern(&item, || item.kind.node_kind());
 
                 clip_chain_id = self.clip_store.add_clip_chain_node(
                     handle,
                     clip_chain_id,
-                    has_complex_clip,
                 );
             }
 
@@ -1709,7 +1773,9 @@ impl<'a> DisplayListFlattener<'a> {
                 .clip_store
                 .clip_chain_nodes[current_clip_chain_id.0 as usize];
 
-            if clip_chain_node.has_complex_clip {
+            let clip_kind = self.interners.clip[clip_chain_node.handle];
+
+            if let ClipNodeKind::Complex = clip_kind {
                 blit_reason = BlitReason::CLIP;
                 break;
             }
@@ -1853,10 +1919,17 @@ impl<'a> DisplayListFlattener<'a> {
                 }
                 );
 
+            // TODO(gw): For now, we don't bother trying to share any clips if we create an
+            //           implicit picture cache. This cache always caches with a fixed position
+            //           root scroll node, so it won't save any invalidations. It might save
+            //           some per-item clipping work though. We should handle this by unifying
+            //           the implicit cache creation code here to work as part of the normal
+            //           setup_picture_caching method.
             let tile_cache = TileCacheInstance::new(
                 0,
                 ROOT_SPATIAL_NODE_INDEX,
                 self.config.background_color,
+                Vec::new(),
             );
 
             let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
@@ -2163,14 +2236,13 @@ impl<'a> DisplayListFlattener<'a> {
         let handle = self
             .interners
             .clip
-            .intern(&item, || ());
+            .intern(&item, || ClipNodeKind::Rectangle);
 
         parent_clip_chain_index = self
             .clip_store
             .add_clip_chain_node(
                 handle,
                 parent_clip_chain_index,
-                false,
             );
         clip_count += 1;
 
@@ -2183,14 +2255,13 @@ impl<'a> DisplayListFlattener<'a> {
             let handle = self
                 .interners
                 .clip
-                .intern(&item, || ());
+                .intern(&item, || ClipNodeKind::Complex);
 
             parent_clip_chain_index = self
                 .clip_store
                 .add_clip_chain_node(
                     handle,
                     parent_clip_chain_index,
-                    true,
                 );
             clip_count += 1;
         }
@@ -2208,14 +2279,13 @@ impl<'a> DisplayListFlattener<'a> {
             let handle = self
                 .interners
                 .clip
-                .intern(&item, || ());
+                .intern(&item, || ClipNodeKind::Complex);
 
             parent_clip_chain_index = self
                 .clip_store
                 .add_clip_chain_node(
                     handle,
                     parent_clip_chain_index,
-                    true,
                 );
             clip_count += 1;
         }
