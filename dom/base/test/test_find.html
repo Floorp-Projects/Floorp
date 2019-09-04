@@ -122,6 +122,14 @@ let runTests = t.step_func_done(function() {
     input.value = "foo";
     document.documentElement.appendChild(input);
   }, "Native anonymous content isn't exposed in window.find");
+
+  testFindable(false, "\0", `
+    &#0;
+  `);
+
+  testFindable(true, "\0", function(document) {
+    document.documentElement.appendChild(document.createTextNode("\0"));
+  }, "Inserted null characters are findable");
 });
 
 window.onload = function() {
