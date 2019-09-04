@@ -9,12 +9,3 @@
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js::jit;
-
-void CodeLocationLabel::repoint(JitCode* code) {
-  MOZ_ASSERT(state_ == Relative);
-  uintptr_t new_off = uintptr_t(raw_);
-  MOZ_ASSERT(new_off < code->instructionsSize());
-
-  raw_ = code->raw() + new_off;
-  setAbsolute();
-}
