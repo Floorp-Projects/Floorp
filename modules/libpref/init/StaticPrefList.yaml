@@ -3924,10 +3924,10 @@
   value: false
   mirror: always
 
-# Streams API
+# Streams API.
 - name: javascript.options.streams
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -4348,9 +4348,10 @@
   value: false
   mirror: always
 
+# Copy-on-write canvas.
 - name: layers.shared-buffer-provider.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: layers.single-tile.enabled
@@ -4404,11 +4405,7 @@
 
 - name: layers.tiles.edge-padding
   type: bool
-#ifdef MOZ_WIDGET_ANDROID
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_ANDROID@
   mirror: once
 
 - name: layers.tiles.fade-in.enabled
