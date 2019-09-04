@@ -52,7 +52,10 @@ open class CustomTabActivity : HomeActivity() {
             // then there's no way to get back to it other than relaunching it.
             val sessionId = getIntentSessionId(SafeIntent(intent))
             components.core.sessionManager.runWithSession(sessionId) { session ->
-                remove(session)
+                // If the custom tag config has been removed we are opening this in normal browsing
+                if (session.customTabConfig != null) {
+                    remove(session)
+                }
                 true
             }
         }
