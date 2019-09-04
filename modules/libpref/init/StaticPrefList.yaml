@@ -6157,12 +6157,16 @@
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
 
-# These affect how line scrolls from wheel events will be accelerated.
+# This affects how line scrolls from wheel events will be accelerated.
+# Factor to be multiplied for constant acceleration.
 - name: mousewheel.acceleration.factor
   type: RelaxedAtomicInt32
-  value: -1
+  value: 10
   mirror: always
 
+# This affects how line scrolls from wheel events will be accelerated.
+# Number of mousewheel clicks when acceleration starts.
+# Acceleration can be turned off if pref is set to -1.
 - name: mousewheel.acceleration.start
   type: RelaxedAtomicInt32
   value: -1
@@ -6171,24 +6175,38 @@
 # This affects whether events will be routed through APZ or not.
 - name: mousewheel.system_scroll_override_on_root_content.enabled
   type: RelaxedAtomicBool
+#ifdef XP_WIN
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
+# Prefs for overriding the system mouse wheel scrolling speed on
+# content of the web pages.  When
+# "mousewheel.system_scroll_override_on_root_content.enabled" is true and the
+# system scrolling speed isn't customized by the user, the content scrolling
+# speed is multiplied by the following factors.  The value will be used as
+# 1/100.  E.g., 200 means 2.00.
+# NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
+# true, when Gecko detects the user customized the system scrolling speed
+# settings, the override isn't executed.
 - name: mousewheel.system_scroll_override_on_root_content.horizontal.factor
   type: RelaxedAtomicInt32
-  value: 0
+  value: 200
   mirror: always
-
 - name: mousewheel.system_scroll_override_on_root_content.vertical.factor
   type: RelaxedAtomicInt32
-  value: 0
+  value: 200
   mirror: always
 
+# Mouse wheel scroll transaction is held even if the mouse cursor is moved.
 - name: mousewheel.transaction.ignoremovedelay
   type: RelaxedAtomicInt32
   value: 100
   mirror: always
 
+# Mouse wheel scroll transaction period of time (in milliseconds).
 - name: mousewheel.transaction.timeout
   type: RelaxedAtomicInt32
   value: 1500
@@ -6388,10 +6406,10 @@
   value: false
   mirror: always
 
-# Telemetry of traffic categories
+# Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
 - name: network.traffic_analyzer.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: network.dns.disablePrefetchFromHTTPS
@@ -6472,6 +6490,8 @@
   value: false
   mirror: always
 
+# Enable/disable widget update area flashing --- only supported with
+# BasicLayers (other layer managers always update the entire widget area).
 - name: nglayout.debug.widget_update_flashing
   type: RelaxedAtomicBool
   value: false
@@ -6543,6 +6563,9 @@
 # Prefs starting with "print."
 #---------------------------------------------------------------------------
 
+# Variation fonts can't always be embedded in certain output formats
+# such as PDF. To work around this, draw the variation fonts using
+# paths instead of using font embedding.
 - name: print.font-variations-as-paths
   type: RelaxedAtomicBool
   value: true
