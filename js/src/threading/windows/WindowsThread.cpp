@@ -66,11 +66,11 @@ void Thread::detach() {
   id_ = Id();
 }
 
-Thread::Id ThisThread::GetId() {
-  Thread::Id id;
+ThreadId ThreadId::ThisThreadId() {
+  ThreadId id;
   id.platformData()->handle = GetCurrentThread();
   id.platformData()->id = GetCurrentThreadId();
-  MOZ_RELEASE_ASSERT(id != Thread::Id());
+  MOZ_RELEASE_ASSERT(id != ThreadId());
   return id;
 }
 

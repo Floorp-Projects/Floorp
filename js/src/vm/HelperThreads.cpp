@@ -2222,7 +2222,7 @@ HelperThread* js::CurrentHelperThread() {
   if (!HelperThreadState().threads) {
     return nullptr;
   }
-  auto threadId = ThisThread::GetId();
+  auto threadId = ThreadId::ThisThreadId();
   for (auto& thisThread : *HelperThreadState().threads) {
     if (thisThread.thread.isSome() && threadId == thisThread.thread->get_id()) {
       return &thisThread;
