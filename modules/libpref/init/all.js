@@ -413,6 +413,9 @@ pref("media.hardware-video-decoding.enabled", true);
 #endif
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
+pref("media.opus.enabled", true);
+pref("media.wave.enabled", true);
+pref("media.webm.enabled", true);
 
 // GMP storage version number. At startup we check the version against
 // media.gmp.storage.version.observed, and if the versions don't match,
@@ -470,6 +473,18 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.navigator.video.h264.level", 31); // 0x42E01f - level 3.1
   pref("media.navigator.video.h264.max_br", 0);
   pref("media.navigator.video.h264.max_mbps", 0);
+  #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+    pref("media.navigator.mediadatadecoder_vpx_enabled", true);
+  #else
+    pref("media.navigator.mediadatadecoder_vpx_enabled", false);
+  #endif
+  #if defined(ANDROID)
+    pref("media.navigator.mediadatadecoder_h264_enabled", false); // bug 1509316
+  #elif defined(_ARM64_) && defined(XP_WIN)
+    pref("media.navigator.mediadatadecoder_h264_enabled", false);
+  #else
+    pref("media.navigator.mediadatadecoder_h264_enabled", true);
+  #endif
   pref("media.peerconnection.video.vp9_enabled", true);
   pref("media.peerconnection.video.vp9_preferred", false);
   pref("media.getusermedia.browser.enabled", false);
@@ -544,6 +559,17 @@ pref("media.webvtt.pseudo.enabled", true);
 // WebVTT debug logging.
 pref("media.webvtt.debug.logging", false);
 
+pref("media.benchmark.vp9.threshold", 150);
+pref("media.benchmark.frames", 300);
+pref("media.benchmark.timeout", 1000);
+
+pref("media.media-capabilities.enabled", true);
+pref("media.media-capabilities.screen.enabled", false);
+
+#ifdef MOZ_WEBM_ENCODER
+  pref("media.encoder.webm.enabled", true);
+#endif
+
 // Whether to allow recording of AudioNodes with MediaRecorder
 pref("media.recorder.audio_node.enabled", false);
 
@@ -560,6 +586,14 @@ pref("media.autoplay.block-webaudio", false);
 
 // By default, don't block the media from extension background script.
 pref("media.autoplay.allow-extension-background-pages", true);
+
+// If "media.autoplay.default" is not ALLOWED, and this pref is true,
+// then audible media would only be allowed to autoplay after website has
+// been activated by specific user gestures, but non-audible
+// media won't be restricted.
+#ifdef NIGHTLY_BUILD
+  pref("media.autoplay.enabled.user-gestures-needed", false);
+#endif
 
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
@@ -586,6 +620,31 @@ pref("media.cubeb.logging_level", "");
 // GraphRunner (fixed MediaStreamGraph thread) control
 pref("media.audiograph.single_thread.enabled", false);
 
+#ifdef MOZ_AV1
+  #if defined(XP_WIN) && !defined(_ARM64_)
+    pref("media.av1.enabled", true);
+    pref("media.av1.use-dav1d", true);
+  #elif defined(XP_MACOSX)
+    pref("media.av1.enabled", true);
+    pref("media.av1.use-dav1d", true);
+  #elif defined(XP_UNIX) && !defined(MOZ_WIDGET_ANDROID)
+    pref("media.av1.enabled", true);
+    pref("media.av1.use-dav1d", true);
+  #else
+    pref("media.av1.enabled", false);
+    pref("media.av1.use-dav1d", false);
+  #endif
+#endif
+
+// Whether to enable arbitrary layer geometry for OpenGL compositor
+pref("layers.geometry.opengl.enabled", true);
+
+// Whether to enable arbitrary layer geometry for Basic compositor
+pref("layers.geometry.basic.enabled", true);
+
+// Whether to enable arbitrary layer geometry for DirectX compositor
+pref("layers.geometry.d3d11.enabled", true);
+
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
@@ -600,6 +659,11 @@ pref("apz.overscroll.stretch_factor", "0.35");
   //          broken).
   pref("gfx.hidpi.enabled", 2);
 #endif
+
+// Default to containerless scrolling
+pref("layout.scroll.root-frame-containers", false);
+
+pref("layout.scrollbars.always-layerize-track", false);
 
 pref("gfx.color_management.display_profile", "");
 
@@ -787,6 +851,8 @@ pref("toolkit.cosmeticAnimations.enabled", true);
 
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
+pref("toolkit.scrollbox.verticalScrollDistance", 3);
+pref("toolkit.scrollbox.horizontalScrollDistance", 5);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 pref("toolkit.tabbox.switchByScrolling", false);
@@ -860,6 +926,10 @@ pref("nglayout.enable_drag_images", true);
 pref("nglayout.debug.paint_flashing", false);
 pref("nglayout.debug.paint_flashing_chrome", false);
 
+// enable/disable widget update area flashing --- only supported with
+// BasicLayers (other layer managers always update the entire widget area)
+pref("nglayout.debug.widget_update_flashing", false);
+
 // Whether frame visibility tracking is enabled globally.
 pref("layout.framevisibility.enabled", true);
 
@@ -924,6 +994,11 @@ pref("print.print_edge_bottom", 0);
 #else
   pref("print.print_via_parent", false);
 #endif
+
+// Variation fonts can't always be embedded in certain output formats
+// such as PDF. To work around this, draw the variation fonts using
+// paths instead of using font embedding.
+pref("print.font-variations-as-paths", true);
 
 // Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
@@ -1043,6 +1118,11 @@ pref("privacy.restrict3rdpartystorage.url_decorations", "");
 // We will invisibly drop any popups from a page that has already
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
+
+// Enable Origin Telemetry by default
+#ifdef NIGHTLY_BUILD
+  pref("privacy.trackingprotection.origin_telemetry.enabled", true);
+#endif
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
@@ -1187,12 +1267,18 @@ pref("javascript.options.dump_stack_on_debuggee_would_run", false);
   pref("javascript.options.spectre.jit_to_C++_calls", true);
 #endif
 
+// Streams API
+pref("javascript.options.streams", true);
+
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
+
+// Same-origin policy for file URIs, "false" is traditional
+pref("security.fileuri.strict_origin_policy", true);
 
 // If this pref is true, prefs in the logging.config branch will be cleared on
 // startup. This is done so that setting a log-file and log-modules at runtime
@@ -2374,6 +2460,30 @@ pref("clipboard.plainTextOnly", false);
   pref("mousebutton.5th.enabled", true);
 #endif
 
+// mouse wheel scroll transaction period of time (in milliseconds)
+pref("mousewheel.transaction.timeout", 1500);
+// mouse wheel scroll transaction is held even if the mouse cursor is moved.
+pref("mousewheel.transaction.ignoremovedelay", 100);
+
+// prefs for app level mouse wheel scrolling acceleration.
+// number of mousewheel clicks when acceleration starts
+// acceleration can be turned off if pref is set to -1
+pref("mousewheel.acceleration.start", -1);
+// factor to be multiplied for constant acceleration
+pref("mousewheel.acceleration.factor", 10);
+
+// Prefs for override the system mouse wheel scrolling speed on
+// content of the web pages.  When
+// "mousewheel.system_scroll_override_on_root_content.enabled" is true and the system
+// scrolling speed isn't customized by the user, the content scrolling
+// speed is multiplied by the following factors.  The value will be used as
+// 1/100.  E.g., 200 means 2.00.
+// NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
+// true, when Gecko detects the user customized the system scrolling speed
+// settings, the override isn't executed.
+pref("mousewheel.system_scroll_override_on_root_content.vertical.factor", 200);
+pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200);
+
 // mousewheel.*.action can specify the action when you use mosue wheel.
 // When no modifier keys are pressed or two or more modifires are pressed,
 // .default is used.
@@ -2531,11 +2641,47 @@ pref("layout.word_select.stop_at_underscore", false);
 // Windows default is 1 for word delete behavior, the rest as for 2.
 pref("layout.selection.caret_style", 0);
 
+// pref to report CSS errors to the error console
+pref("layout.css.report_errors", true);
+
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the
 // interpretation of physical units such as "pt".
 pref("layout.css.dpi", -1);
+
+// Set the threshold distance in CSS pixels below which scrolling will snap to
+// an edge, when scroll snapping is set to "proximity".
+pref("layout.css.scroll-snap.proximity-threshold", 200);
+
+// When selecting the snap point for CSS scroll snapping, the velocity of the
+// scroll frame is clamped to this speed, in CSS pixels / s.
+pref("layout.css.scroll-snap.prediction-max-velocity", 2000);
+
+// When selecting the snap point for CSS scroll snapping, the velocity of the
+// scroll frame is integrated over this duration, in seconds.  The snap point
+// best suited for this position is selected, enabling the user to perform fling
+// gestures.
+pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
+
+// Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
+pref("layout.css.scroll-behavior.enabled", true);
+
+// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
+// Spring-constant controls the strength of the simulated MSD
+// (Mass-Spring-Damper)
+pref("layout.css.scroll-behavior.spring-constant", "250.0");
+
+// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
+// Damping-ratio controls the dampening force of the simulated MSD
+// (Mass-Spring-Damper).
+// When below 1.0, the system is under-damped; it may overshoot the target and
+// oscillate.
+// When greater than 1.0, the system is over-damped; it will reach the target at
+// reduced speed without overshooting.
+// When equal to 1.0, the system is critically-damped; it will reach the target
+// at the greatest speed without overshooting.
+pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -2547,11 +2693,42 @@ pref("layout.scrollbar.side", 0);
 // pref to stop overlay scrollbars from fading out, for testing purposes
 pref("layout.testing.overlay-scrollbars.always-visible", false);
 
+// pref to control browser frame rate, in Hz. A value <= 0 means choose
+// automatically based on knowledge of the platform (or 60Hz if no platform-
+// specific information is available).
+pref("layout.frame_rate", -1);
+
+// pref to dump the display list to the log. Useful for debugging drawing.
+pref("layout.display-list.dump", false);
+pref("layout.display-list.dump-content", false);
+pref("layout.display-list.dump-parent", false);
+
+// Toggle retaining display lists between paints
+#if !defined(ANDROID)
+  pref("layout.display-list.retain", true);
+  pref("layout.display-list.retain.chrome", true);
+#else
+  pref("layout.display-list.retain", true);
+  pref("layout.display-list.retain.chrome", true);
+#endif
+
+// Set the maximum amount of modified frames allowed before doing a full
+// display list rebuild.
+pref("layout.display-list.rebuild-frame-limit", 500);
+
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
+
+// Prefs to control the maximum area to pre-render when animating a large
+// element on the compositor.
+pref("layout.animation.prerender.partial", false);
+pref("layout.animation.prerender.viewport-ratio-limit-x", "1.125");
+pref("layout.animation.prerender.viewport-ratio-limit-y", "1.125");
+pref("layout.animation.prerender.absolute-limit-x", 4096);
+pref("layout.animation.prerender.absolute-limit-y", 4096);
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
@@ -3255,6 +3432,8 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
   pref("ui.panel.default_level_parent", false);
 
+  pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
+
   // Enable system settings cache for mouse wheel message handling.
   // Note that even if this pref is set to true, Gecko may not cache the system
   // settings if Gecko detects that the cache won't be refreshed properly when
@@ -3509,6 +3688,8 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
 
   pref("ui.plugin.cancel_composition_at_input_source_changed", false);
 
+  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
   // Macbook touchpad two finger pixel scrolling
   pref("mousewheel.enable_pixel_scrolling", true);
 
@@ -3550,6 +3731,8 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // A problem with using managed windows is that metacity sometimes deactivates
   // the parent window when the managed popup is shown.
   pref("ui.panel.default_level_parent", true);
+
+  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
   // Forward downloads with known OMA MIME types to Android's download manager
   // instead of downloading them in the browser.
@@ -3749,6 +3932,8 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // So, we have no reasons we should use non-toplevel window for popup.
   pref("ui.panel.default_level_parent", true);
 
+  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
   pref("intl.ime.use_simple_context_on_password_field", false);
 
   // uim may use key snooper to listen to key events.  Unfortunately, we cannot
@@ -3947,19 +4132,144 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 // Image-related prefs
 //
 
+// The maximum size (in kB) that the aggregate frames of an animation can use
+// before it starts to discard already displayed frames and redecode them as
+// necessary.
+pref("image.animated.decode-on-demand.threshold-kb", 20480);
+
+// The minimum number of frames we want to have buffered ahead of an
+// animation's currently displayed frame.
+pref("image.animated.decode-on-demand.batch-size", 6);
+
+// Resume an animated image from the last displayed frame rather than
+// advancing when out of view.
+pref("image.animated.resume-from-last-displayed", true);
+
+// Maximum number of surfaces for an image before entering "factor of 2" mode.
+// This in addition to the number of "native" sizes of an image. A native size
+// is a size for which we can decode a frame without up or downscaling. Most
+// images only have 1, but some (i.e. ICOs) may have multiple frames for the
+// same data at different sizes.
+pref("image.cache.factor2.threshold-surfaces", 4);
+
+// Maximum size of a surface in KB we are willing to produce when rasterizing
+// an SVG.
+pref("image.cache.max-rasterized-svg-threshold-kb", 204800);
+
+// Decode all images automatically on load, ignoring our normal heuristics.
+pref("image.decode-immediately.enabled", false);
+
+// Whether we attempt to downscale images during decoding.
+pref("image.downscale-during-decode.enabled", true);
+
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/webp,*/*");
+
+// The threshold for inferring that changes to an <img> element's |src|
+// attribute by JavaScript represent an animation, in milliseconds. If the |src|
+// attribute is changing more frequently than this value, then we enter a
+// special "animation mode" which is designed to eliminate flicker. Set to 0 to
+// disable.
+pref("image.infer-src-animation.threshold-ms", 2000);
+
+// Whether the network request priority should be adjusted according
+// the layout and view frame position of each particular image.
+pref("image.layout_network_priority", true);
 
 //
 // Image memory management prefs
 //
 
+// Discards inactive image frames and re-decodes them on demand from
+// compressed data.
+pref("image.mem.discardable", true);
+
+// Whether the heap should be used for frames from animated images. On Android,
+// volatile memory keeps file handles open for each buffer.
+#if defined(ANDROID)
+  pref("image.mem.animated.use_heap", true);
+#else
+  pref("image.mem.animated.use_heap", false);
+#endif
+
+// Enable extra information for debugging in the image memory reports.
+pref("image.mem.debug-reporting", false);
+
+// Decodes images into shared memory to allow direct use in separate
+// rendering processes. Only applicable with WebRender.
+pref("image.mem.shared", true);
+
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
+
+// What is the minimum buffer size in KB before using volatile memory over the
+// heap. On Android, volatile memory keeps file handles open for each buffer.
+#if defined(ANDROID)
+  pref("image.mem.volatile.min_threshold_kb", 100);
+#else
+  pref("image.mem.volatile.min_threshold_kb", -1);
+#endif
+
+// Whether we attempt to decode WebP images or not.
+pref("image.webp.enabled", true);
+
+// WebGL prefs
+pref("gl.require-hardware", false);
+#ifdef XP_MACOSX
+  pref("gl.multithreaded", true);
+#endif
+pref("gl.ignore-dx-interop2-blacklist", false);
+pref("gl.use-tls-is-current", 0);
+pref("gl.allow-high-power", true);
+
+#ifdef XP_MACOSX
+  pref("webgl.1.allow-core-profiles", true);
+#else
+  pref("webgl.1.allow-core-profiles", false);
+#endif
+pref("webgl.force-enabled", false);
+pref("webgl.disabled", false);
+pref("webgl.disable-angle", false);
+pref("webgl.disable-wgl", false);
+pref("webgl.min_capability_mode", false);
+pref("webgl.disable-extensions", false);
+pref("webgl.msaa-force", false);
+pref("webgl.prefer-16bpp", false);
+pref("webgl.default-low-power", false);
+pref("webgl.default-no-alpha", false);
+pref("webgl.force-layers-readback", false);
+pref("webgl.force-index-validation", 0);
+pref("webgl.lose-context-on-memory-pressure", false);
+pref("webgl.can-lose-context-in-foreground", true);
+#ifdef ANDROID
+  pref("webgl.max-contexts", 16);
+  pref("webgl.max-contexts-per-principal", 8);
+#else
+  pref("webgl.max-contexts", 32);
+  pref("webgl.max-contexts-per-principal", 16);
+#endif
+pref("webgl.max-warnings-per-context", 32);
+pref("webgl.enable-draft-extensions", false);
+pref("webgl.enable-privileged-extensions", false);
+pref("webgl.disable-fail-if-major-performance-caveat", false);
+pref("webgl.disable-DOM-blit-uploads", false);
+pref("webgl.allow-fb-invalidation", false);
+
+pref("webgl.perf.max-warnings", 0);
+pref("webgl.perf.max-acceptable-fb-status-invals", 0);
+pref("webgl.perf.spew-frame-allocs", true);
 
 pref("webgl.enable-debug-renderer-info", true);
 pref("webgl.renderer-string-override", "");
 pref("webgl.vendor-string-override", "");
+
+#ifdef XP_WIN
+  pref("webgl.angle.try-d3d11", true);
+  pref("webgl.angle.force-d3d11", false);
+  pref("webgl.angle.force-warp", false);
+  pref("webgl.dxgl.enabled", true);
+  pref("webgl.dxgl.needs-finish", false);
+#endif
 
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
@@ -3997,6 +4307,60 @@ pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
 pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
 pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 
+// Preference that when switched at runtime will run a series of benchmarks
+// and output the result to stderr.
+pref("layers.bench.enabled", false);
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  #ifdef NIGHTLY_BUILD
+    pref("layers.gpu-process.max_restarts", 3);
+  #endif
+#endif
+
+pref("layers.acceleration.draw-fps", false);
+
+// Enable DEAA antialiasing for transformed layers in the compositor
+#if !defined(MOZ_WIDGET_ANDROID)
+  // Desktop prefs
+  pref("layers.deaa.enabled", true);
+#else
+  // Mobile prefs
+  pref("layers.deaa.enabled", false);
+#endif
+
+pref("layers.dump", false);
+#ifdef MOZ_DUMP_PAINTING
+  // If we're dumping layers, also dump the texture data
+  pref("layers.dump-texture", false);
+  pref("layers.dump-decision", false);
+  pref("layers.dump-client-layers", false);
+  pref("layers.dump-host-layers", false);
+#endif
+pref("layers.draw-borders", false);
+pref("layers.draw-tile-borders", false);
+pref("layers.draw-bigimage-borders", false);
+pref("layers.child-process-shutdown", true);
+// Max number of layers per container. See Overwrite in mobile prefs.
+pref("layers.max-active", -1);
+
+// Compositor target frame rate. NOTE: If vsync is enabled the compositor
+// frame rate will still be capped.
+// -1 -> default (match layout.frame_rate or 60 FPS)
+// 0  -> full-tilt mode: Recomposite even if not transaction occured.
+pref("layers.offmainthreadcomposition.frame-rate", -1);
+
+pref("layers.single-tile.enabled", true);
+pref("layers.low-precision-buffer", false);
+pref("layers.progressive-paint", false);
+pref("layers.tiles.retain-back-buffer", true);
+#ifdef MOZ_WIDGET_ANDROID
+  pref("layers.tiles.edge-padding", true);
+#else
+  pref("layers.tiles.edge-padding", false);
+#endif
+
+pref("layers.draw-mask-debug", false);
+
 #ifdef MOZ_X11
   #ifdef MOZ_WIDGET_GTK
     pref("gfx.xrender.enabled",false);
@@ -4006,6 +4370,11 @@ pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_dmabuf_backend.enabled", false);
 #endif
+
+pref("widget.window-transforms.disabled", false);
+
+// Copy-on-write canvas
+pref("layers.shared-buffer-provider.enabled", true);
 
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
@@ -4279,6 +4648,9 @@ pref("network.trr.disable-ECS", true);
 pref("network.trr.max-fails", 5);
 // Comma separated list of domains that we should not use TRR for
 pref("network.trr.excluded-domains", "localhost,local");
+
+// enable HttpTrafficAnalyzer
+pref("network.traffic_analyzer.enabled", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
@@ -4635,6 +5007,12 @@ pref("dom.payments.request.supportedRegions", "US,CA");
   pref("toolkit.telemetry.overrideUpdateChannel", "nightly-asan");
 #endif
 
+#if defined(XP_WIN)
+  // Both this and the master "enabled" pref must be on to use Advanced Layers
+  // on Windows 7.
+  pref("layers.mlgpu.enable-on-windows7", true);
+#endif
+
 // Control whether clients.openWindow() opens windows in the same process
 // that called the API vs following our normal multi-process selection
 // algorithm.  Restricting openWindow to same process improves service worker
@@ -4664,6 +5042,8 @@ pref("dom.noopener.newprocess.enabled", true);
 #else
   pref("layers.omtp.enabled", false);
 #endif
+pref("layers.omtp.release-capture-on-main-thread", false);
+pref("layers.omtp.dump-capture", false);
 
 // Limits the depth of recursive conversion of data when opening
 // a content to view.  This is mostly intended to prevent infinite
