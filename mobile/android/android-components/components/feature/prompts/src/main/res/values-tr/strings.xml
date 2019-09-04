@@ -16,6 +16,9 @@
     <string name="mozac_feature_prompt_username_hint">Kullanıcı adı</string>
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">Parola</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Metin giriş alanı etiketi</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Bir renk seçin</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
