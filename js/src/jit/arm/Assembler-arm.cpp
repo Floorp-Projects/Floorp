@@ -492,27 +492,6 @@ Imm16::Imm16(uint32_t imm)
 
 Imm16::Imm16() : invalid_(0xfff) {}
 
-void jit::PatchJump(CodeLocationJump& jump_, CodeLocationLabel label) {
-  // We need to determine if this jump can fit into the standard 24+2 bit
-  // address or if we need a larger branch (or just need to use our pool
-  // entry).
-  Instruction* jump = (Instruction*)jump_.raw();
-  // jumpWithPatch() returns the offset of the jump and never a pool or nop.
-  Assembler::Condition c = jump->extractCond();
-  MOZ_ASSERT(jump->is<InstBranchImm>() || jump->is<InstLDR>());
-
-  int jumpOffset = label.raw() - jump_.raw();
-  if (BOffImm::IsInRange(jumpOffset)) {
-    // This instruction started off as a branch, and will remain one.
-    Assembler::RetargetNearBranch(jump, jumpOffset, c);
-  } else {
-    // This instruction started off as a branch, but now needs to be demoted
-    // to an ldr.
-    uint8_t** slot = reinterpret_cast<uint8_t**>(jump_.jumpTableEntry());
-    Assembler::RetargetFarBranch(jump, slot, label.raw(), c);
-  }
-}
-
 void Assembler::finish() {
   flush();
   MOZ_ASSERT(!isFinished);
@@ -548,15 +527,6 @@ void Assembler::executableCopy(uint8_t* buffer, bool flushICache) {
   if (flushICache) {
     AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
   }
-}
-
-uint32_t Assembler::actualIndex(uint32_t idx_) const {
-  ARMBuffer::PoolEntry pe(idx_);
-  return m_buffer.poolEntryOffset(pe);
-}
-
-uint8_t* Assembler::PatchableJumpAddress(JitCode* code, uint32_t pe_) {
-  return code->raw() + pe_;
 }
 
 class RelocationIterator {
@@ -1615,31 +1585,6 @@ void Assembler::WritePoolEntry(Instruction* addr, Condition c, uint32_t data) {
   MOZ_ASSERT(addr->extractCond() == c);
 }
 
-BufferOffset Assembler::as_BranchPool(uint32_t value, RepatchLabel* label,
-                                      const LabelDoc& documentation,
-                                      ARMBuffer::PoolEntry* pe, Condition c) {
-  PoolHintPun php;
-  php.phd.init(0, c, PoolHintData::PoolBranch, pc);
-  BufferOffset ret =
-      allocLiteralLoadEntry(1, 1, php, (uint8_t*)&value, LiteralDoc(), pe,
-                            /* loadToPC = */ true);
-  // If this label is already bound, then immediately replace the stub load
-  // with a correct branch.
-  if (label->bound()) {
-    BufferOffset dest(label);
-    BOffImm offset = dest.diffB<BOffImm>(ret);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
-    as_b(offset, c, ret);
-  } else if (!oom()) {
-    label->use(ret.getOffset());
-  }
-#ifdef JS_DISASM_ARM
-  spew_.spewRef(documentation);
-#endif
-  return ret;
-}
-
 BufferOffset Assembler::as_FImm64Pool(VFPRegister dest, double d, Condition c) {
   MOZ_ASSERT(dest.isDouble());
   PoolHintPun php;
@@ -2244,35 +2189,6 @@ void Assembler::bind(Label* label, BufferOffset boff) {
   MOZ_ASSERT(!oom());
 }
 
-void Assembler::bind(RepatchLabel* label) {
-  // It does not seem to be useful to record this label for
-  // disassembly, as the value that is bound to the label is often
-  // effectively garbage and is replaced by something else later.
-  BufferOffset dest = nextOffset();
-  if (label->used() && !oom()) {
-    // If the label has a use, then change this use to refer to the bound
-    // label.
-    BufferOffset branchOff(label->offset());
-    // Since this was created with a RepatchLabel, the value written in the
-    // instruction stream is not branch shaped, it is PoolHintData shaped.
-    Instruction* branch = editSrc(branchOff);
-    PoolHintPun p;
-    p.raw = branch->encode();
-    Condition cond;
-    if (p.phd.isValidPoolHint()) {
-      cond = p.phd.getCond();
-    } else {
-      cond = branch->extractCond();
-    }
-
-    BOffImm offset = dest.diffB<BOffImm>(branchOff);
-    MOZ_RELEASE_ASSERT(!offset.isInvalid(),
-                       "Buffer size limit should prevent this");
-    as_b(offset, cond, branchOff);
-  }
-  label->bind(dest.getOffset());
-}
-
 void Assembler::retarget(Label* label, Label* target) {
 #ifdef JS_DISASM_ARM
   spew_.spewRetarget(label, target);
@@ -2354,47 +2270,6 @@ void Assembler::leaveNoPool() { m_buffer.leaveNoPool(); }
 void Assembler::enterNoNops() { m_buffer.enterNoNops(); }
 
 void Assembler::leaveNoNops() { m_buffer.leaveNoNops(); }
-
-ptrdiff_t Assembler::GetBranchOffset(const Instruction* i_) {
-  MOZ_ASSERT(i_->is<InstBranchImm>());
-  InstBranchImm* i = i_->as<InstBranchImm>();
-  BOffImm dest;
-  i->extractImm(&dest);
-  return dest.decode();
-}
-
-void Assembler::RetargetNearBranch(Instruction* i, int offset, bool final) {
-  Assembler::Condition c = i->extractCond();
-  RetargetNearBranch(i, offset, c, final);
-}
-
-void Assembler::RetargetNearBranch(Instruction* i, int offset, Condition cond,
-                                   bool final) {
-  // Retargeting calls is totally unsupported!
-  MOZ_ASSERT_IF(i->is<InstBranchImm>(),
-                i->is<InstBImm>() || i->is<InstBLImm>());
-  if (i->is<InstBLImm>()) {
-    new (i) InstBLImm(BOffImm(offset), cond);
-  } else {
-    new (i) InstBImm(BOffImm(offset), cond);
-  }
-
-  // Flush the cache, since an instruction was overwritten.
-  if (final) {
-    AutoFlushICache::flush(uintptr_t(i), 4);
-  }
-}
-
-void Assembler::RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest,
-                                  Condition cond) {
-  int32_t offset =
-      reinterpret_cast<uint8_t*>(slot) - reinterpret_cast<uint8_t*>(i);
-  if (!i->is<InstLDR>()) {
-    new (i) InstLDR(Offset, pc, DTRAddr(pc, DtrOffImm(offset - 8)), cond);
-    AutoFlushICache::flush(uintptr_t(i), 4);
-  }
-  *slot = dest;
-}
 
 struct PoolHeader : Instruction {
   struct Header {

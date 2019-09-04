@@ -479,8 +479,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   // higher level tag testing code
   Address ToPayload(Address value) { return value; }
 
-  CodeOffsetJump jumpWithPatch(RepatchLabel* label);
-
   template <typename T>
   void loadUnboxedValue(const T& address, MIRType type, AnyRegister dest) {
     if (dest.isFloat()) {
@@ -726,8 +724,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
                         Register tmp);
 
  public:
-  CodeOffset labelForPatch() { return CodeOffset(nextOffset().getOffset()); }
-
   void lea(Operand addr, Register dest) {
     ma_daddu(dest, addr.baseReg(), Imm32(addr.disp()));
   }
