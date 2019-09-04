@@ -34,6 +34,10 @@ uint64_t DrawTargetD2D1::mVRAMUsageDT;
 uint64_t DrawTargetD2D1::mVRAMUsageSS;
 StaticRefPtr<ID2D1Factory1> DrawTargetD2D1::mFactory;
 
+const D2D1_MATRIX_5X4_F kLuminanceMatrix =
+    D2D1::Matrix5x4F(0, 0, 0, 0.2125f, 0, 0, 0, 0.7154f, 0, 0, 0, 0.0721f, 0, 0,
+                     0, 0, 0, 0, 0, 0);
+
 RefPtr<ID2D1Factory1> D2DFactory() { return DrawTargetD2D1::factory(); }
 
 DrawTargetD2D1::DrawTargetD2D1()
@@ -127,10 +131,7 @@ bool DrawTargetD2D1::EnsureLuminanceEffect() {
     return false;
   }
 
-  D2D1_MATRIX_5X4_F matrix =
-      D2D1::Matrix5x4F(0, 0, 0, 0.2125f, 0, 0, 0, 0.7154f, 0, 0, 0, 0.0721f, 0,
-                       0, 0, 0, 0, 0, 0, 0);
-  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, matrix);
+  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, kLuminanceMatrix);
   mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_ALPHA_MODE,
                              D2D1_COLORMATRIX_ALPHA_MODE_STRAIGHT);
   return true;
@@ -154,6 +155,15 @@ already_AddRefed<SourceSurface> DrawTargetD2D1::IntoLuminanceSource(
   }
 
   Flush();
+
+  {
+    D2D1_MATRIX_5X4_F matrix = kLuminanceMatrix;
+    matrix._14 *= aOpacity;
+    matrix._24 *= aOpacity;
+    matrix._34 *= aOpacity;
+
+    mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, matrix);
+  }
 
   mLuminanceEffect->SetInput(0, mBitmap);
 
