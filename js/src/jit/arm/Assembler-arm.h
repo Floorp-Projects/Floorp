@@ -1041,8 +1041,6 @@ inline Imm32 Imm64::firstHalf() const { return low(); }
 
 inline Imm32 Imm64::secondHalf() const { return hi(); }
 
-void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
-
 class InstructionIterator {
  private:
   Instruction* inst_;
@@ -1195,8 +1193,6 @@ class Assembler : public AssemblerShared {
 
  public:
   void resetCounter();
-  uint32_t actualIndex(uint32_t) const;
-  static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index);
   static uint32_t NopFill;
   static uint32_t GetNopFill();
   static uint32_t AsmPoolMaxOffset;
@@ -1475,11 +1471,6 @@ class Assembler : public AssemblerShared {
   // Load a 32 bit immediate from a pool into a register.
   BufferOffset as_Imm32Pool(Register dest, uint32_t value,
                             Condition c = Always);
-  // Make a patchable jump that can target the entire 32 bit address space.
-  BufferOffset as_BranchPool(uint32_t value, RepatchLabel* label,
-                             const LabelDoc& documentation,
-                             ARMBuffer::PoolEntry* pe = nullptr,
-                             Condition c = Always);
 
   // Load a 64 bit floating point immediate from a pool into a register.
   BufferOffset as_FImm64Pool(VFPRegister dest, double value,
@@ -1650,7 +1641,6 @@ class Assembler : public AssemblerShared {
   // Label operations.
   bool nextLink(BufferOffset b, BufferOffset* next);
   void bind(Label* label, BufferOffset boff = BufferOffset());
-  void bind(RepatchLabel* label);
   uint32_t currentOffset() { return nextOffset().getOffset(); }
   void retarget(Label* label, Label* target);
   // I'm going to pretend this doesn't exist for now.
@@ -1845,14 +1835,6 @@ class Assembler : public AssemblerShared {
   void leaveNoPool();
   void enterNoNops();
   void leaveNoNops();
-  // This should return a BOffImm, but we didn't want to require everyplace
-  // that used the AssemblerBuffer to make that class.
-  static ptrdiff_t GetBranchOffset(const Instruction* i);
-  static void RetargetNearBranch(Instruction* i, int offset, Condition cond,
-                                 bool final = true);
-  static void RetargetNearBranch(Instruction* i, int offset, bool final = true);
-  static void RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest,
-                                Condition cond);
 
   static void WritePoolHeader(uint8_t* start, Pool* p, bool isNatural);
   static void WritePoolGuard(BufferOffset branch, Instruction* inst,

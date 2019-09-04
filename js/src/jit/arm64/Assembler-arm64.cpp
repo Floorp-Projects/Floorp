@@ -206,11 +206,6 @@ BufferOffset Assembler::immPool64(ARMRegister dest, uint64_t value,
                  pe);
 }
 
-BufferOffset Assembler::immPool64Branch(RepatchLabel* label,
-                                        ARMBuffer::PoolEntry* pe, Condition c) {
-  MOZ_CRASH("immPool64Branch");
-}
-
 BufferOffset Assembler::fImmPool(ARMFPRegister dest, uint8_t* value,
                                  vixl::LoadLiteralOp op,
                                  const LiteralDoc& doc) {
@@ -292,28 +287,6 @@ void Assembler::bind(Label* label, BufferOffset targetOffset) {
   label->bind(targetOffset.getOffset());
 }
 
-void Assembler::bind(RepatchLabel* label) {
-  BufferOffset next = nextOffset();
-
-  // Nothing has seen the label yet: just mark the location.
-  // If we've run out of memory, don't attempt to modify the buffer which may
-  // not be there. Just mark the label as bound to nextOffset().
-  if (!label->used() || oom()) {
-    label->bind(next.getOffset());
-    return;
-  }
-  int branchOffset = label->offset();
-  Instruction* branch = getInstructionAt(BufferOffset(branchOffset));
-  MOZ_ASSERT(branch->IsUncondB());
-
-  // The branch must be able to reach the label.
-  ptrdiff_t relativeByteOffset = next.getOffset() - branchOffset;
-  MOZ_ASSERT(branch->IsTargetReachable(branch + relativeByteOffset));
-  branch->SetImmPCOffsetTarget(branch + relativeByteOffset);
-
-  label->bind(next.getOffset());
-}
-
 void Assembler::addJumpRelocation(BufferOffset src, RelocationKind reloc) {
   // Only JITCODE relocations are patchable at runtime.
   MOZ_ASSERT(reloc == RelocationKind::JITCODE);
@@ -355,35 +328,6 @@ size_t Assembler::addPatchableJump(BufferOffset src, RelocationKind reloc) {
   size_t extendedTableIndex = pendingJumps_.length();
   enoughMemory_ &= pendingJumps_.append(RelativePatch(src, nullptr, reloc));
   return extendedTableIndex;
-}
-
-// PatchJump() is only used by the IonCacheIRCompiler and patches code generated
-// by jumpWithPatch.
-//
-// The CodeLocationJump is the jump to be patched.
-// The code for the jump is emitted by jumpWithPatch().
-void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label) {
-  MOZ_ASSERT(label.isSet());
-
-  Instruction* load = (Instruction*)jump_.raw();
-  MOZ_ASSERT(load->IsLDR());
-
-  Instruction* branch = (Instruction*)load->NextInstruction()->skipPool();
-  MOZ_ASSERT(branch->IsUncondB());
-
-  if (branch->IsTargetReachable((Instruction*)label.raw())) {
-    branch->SetImmPCOffsetTarget((Instruction*)label.raw());
-  } else {
-    // Set the literal read by the load instruction to the target.
-    load->SetLiteral64(uint64_t(label.raw()));
-    // Get the scratch register set by the load instruction.
-    vixl::Register loadTarget = vixl::Register(load->Rt(), 64);
-    // Overwrite the branch instruction to branch on the same register as the
-    // load instruction.
-    Assembler::br(branch, loadTarget);
-    MOZ_ASSERT(branch->IsBR());
-    MOZ_ASSERT(load->Rt() == branch->Rn());
-  }
 }
 
 void Assembler::PatchWrite_NearCall(CodeLocationLabel start,

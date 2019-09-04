@@ -25,13 +25,6 @@
 #  define JS_USE_LINK_REGISTER
 #endif
 
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_ARM64)
-// JS_SMALL_BRANCH means the range on a branch instruction
-// is smaller than the whole address space
-#  define JS_SMALL_BRANCH
-#endif
-
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
     defined(JS_CODEGEN_ARM64)
 // JS_CODELABEL_LINKMODE gives labels additional metadata
@@ -382,39 +375,6 @@ enum class RelocationKind {
   JITCODE
 };
 
-class RepatchLabel {
-  static const int32_t INVALID_OFFSET = 0xC0000000;
-  int32_t offset_ : 31;
-  uint32_t bound_ : 1;
-
- public:
-  RepatchLabel() : offset_(INVALID_OFFSET), bound_(0) {}
-
-  void use(uint32_t newOffset) {
-    MOZ_ASSERT(offset_ == INVALID_OFFSET);
-    MOZ_ASSERT(newOffset != (uint32_t)INVALID_OFFSET);
-    offset_ = newOffset;
-  }
-  bool bound() const { return bound_; }
-  void bind(int32_t dest) {
-    MOZ_ASSERT(!bound_);
-    MOZ_ASSERT(dest != INVALID_OFFSET);
-    offset_ = dest;
-    bound_ = true;
-  }
-  int32_t target() {
-    MOZ_ASSERT(bound());
-    int32_t ret = offset_;
-    offset_ = INVALID_OFFSET;
-    return ret;
-  }
-  int32_t offset() {
-    MOZ_ASSERT(!bound());
-    return offset_;
-  }
-  bool used() const { return !bound() && offset_ != (INVALID_OFFSET); }
-};
-
 class CodeOffset {
   size_t offset_;
 
@@ -482,94 +442,6 @@ class CodeLabel {
 };
 
 typedef Vector<CodeLabel, 0, SystemAllocPolicy> CodeLabelVector;
-
-// Location of a jump or label in a generated JitCode block, relative to the
-// start of the block.
-
-class CodeOffsetJump {
-  size_t offset_ = 0;
-
-#ifdef JS_SMALL_BRANCH
-  size_t jumpTableIndex_ = 0;
-#endif
-
- public:
-#ifdef JS_SMALL_BRANCH
-  CodeOffsetJump(size_t offset, size_t jumpTableIndex)
-      : offset_(offset), jumpTableIndex_(jumpTableIndex) {}
-  size_t jumpTableIndex() const { return jumpTableIndex_; }
-#else
-  explicit CodeOffsetJump(size_t offset) : offset_(offset) {}
-#endif
-
-  CodeOffsetJump() = default;
-
-  size_t offset() const { return offset_; }
-  void fixup(MacroAssembler* masm);
-};
-
-// Absolute location of a jump or a label in some generated JitCode block.
-// Can also encode a CodeOffset{Jump,Label}, such that the offset is initially
-// set and the absolute location later filled in after the final JitCode is
-// allocated.
-
-class CodeLocationJump {
-  uint8_t* raw_;
-#ifdef DEBUG
-  enum State { Uninitialized, Absolute, Relative };
-  State state_;
-  void setUninitialized() { state_ = Uninitialized; }
-  void setAbsolute() { state_ = Absolute; }
-  void setRelative() { state_ = Relative; }
-#else
-  void setUninitialized() const {}
-  void setAbsolute() const {}
-  void setRelative() const {}
-#endif
-
-#ifdef JS_SMALL_BRANCH
-  uint8_t* jumpTableEntry_;
-#endif
-
- public:
-  CodeLocationJump() {
-    raw_ = nullptr;
-    setUninitialized();
-#ifdef JS_SMALL_BRANCH
-    jumpTableEntry_ = (uint8_t*)uintptr_t(0xdeadab1e);
-#endif
-  }
-  CodeLocationJump(JitCode* code, CodeOffsetJump base) {
-    *this = base;
-    repoint(code);
-  }
-
-  void operator=(CodeOffsetJump base) {
-    raw_ = (uint8_t*)base.offset();
-    setRelative();
-#ifdef JS_SMALL_BRANCH
-    jumpTableEntry_ = (uint8_t*)base.jumpTableIndex();
-#endif
-  }
-
-  void repoint(JitCode* code, MacroAssembler* masm = nullptr);
-
-  uint8_t* raw() const {
-    MOZ_ASSERT(state_ == Absolute);
-    return raw_;
-  }
-  uint8_t* offset() const {
-    MOZ_ASSERT(state_ == Relative);
-    return raw_;
-  }
-
-#ifdef JS_SMALL_BRANCH
-  uint8_t* jumpTableEntry() const {
-    MOZ_ASSERT(state_ == Absolute);
-    return jumpTableEntry_;
-  }
-#endif
-};
 
 class CodeLocationLabel {
   uint8_t* raw_;

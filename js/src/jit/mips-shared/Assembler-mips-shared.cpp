@@ -98,13 +98,6 @@ bool AssemblerMIPSShared::swapBuffer(wasm::Bytes& bytes) {
   return true;
 }
 
-uint32_t AssemblerMIPSShared::actualIndex(uint32_t idx_) const { return idx_; }
-
-uint8_t* AssemblerMIPSShared::PatchableJumpAddress(JitCode* code,
-                                                   uint32_t pe_) {
-  return code->raw() + pe_;
-}
-
 void AssemblerMIPSShared::copyJumpRelocationTable(uint8_t* dest) {
   if (jumpRelocations_.length()) {
     memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());

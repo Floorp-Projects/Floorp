@@ -32,10 +32,6 @@ class BufferOffset {
     MOZ_ASSERT(offset >= 0);
   }
 
-  explicit BufferOffset(RepatchLabel* l) : offset(l->offset()) {
-    MOZ_ASSERT(offset >= 0);
-  }
-
   int getOffset() const { return offset; }
   bool assigned() const { return offset != INT_MIN; }
 

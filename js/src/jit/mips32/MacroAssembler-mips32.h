@@ -430,8 +430,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
  public:
   void moveValue(const Value& val, Register type, Register data);
 
-  CodeOffsetJump jumpWithPatch(RepatchLabel* label);
-
   void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
     if (dest.isFloat()) {
       loadInt32OrDouble(address, dest.fpu());
@@ -710,8 +708,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   Condition ma_cmp64(Condition cond, Register64 lhs, Imm64 val, Register dest);
 
  public:
-  CodeOffset labelForPatch() { return CodeOffset(nextOffset().getOffset()); }
-
   void lea(Operand addr, Register dest) {
     ma_addu(dest, addr.baseReg(), Imm32(addr.disp()));
   }

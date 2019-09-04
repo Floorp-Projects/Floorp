@@ -212,8 +212,6 @@ class Assembler : public vixl::Assembler {
                        ARMBuffer::PoolEntry* pe = nullptr);
   BufferOffset immPool64(ARMRegister dest, uint64_t value,
                          ARMBuffer::PoolEntry* pe = nullptr);
-  BufferOffset immPool64Branch(RepatchLabel* label, ARMBuffer::PoolEntry* pe,
-                               vixl::Condition c);
   BufferOffset fImmPool(ARMFPRegister dest, uint8_t* value,
                         vixl::LoadLiteralOp op, const LiteralDoc& doc);
   BufferOffset fImmPool64(ARMFPRegister dest, double value);
@@ -223,7 +221,6 @@ class Assembler : public vixl::Assembler {
 
   void bind(Label* label) { bind(label, nextOffset()); }
   void bind(Label* label, BufferOffset boff);
-  void bind(RepatchLabel* label);
   void bind(CodeLabel* label) { label->target()->bind(currentOffset()); }
 
   void setUnlimitedBuffer() { armbuffer_.setUnlimited(); }
@@ -282,14 +279,6 @@ class Assembler : public vixl::Assembler {
 #ifdef JS_DISASM_ARM64
     spew_.spew("; %s", msg);
 #endif
-  }
-
-  int actualIndex(int curOffset) {
-    ARMBuffer::PoolEntry pe(curOffset);
-    return armbuffer_.poolEntryOffset(pe);
-  }
-  static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
-    return code->raw() + index;
   }
 
   void setPrinter(Sprinter* sp) {
@@ -523,8 +512,6 @@ static inline bool GetTempRegForIntArg(uint32_t usedIntArgs,
 inline Imm32 Imm64::firstHalf() const { return low(); }
 
 inline Imm32 Imm64::secondHalf() const { return hi(); }
-
-void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
 
 // Forbids nop filling for testing purposes. Not nestable.
 class AutoForbidNops {

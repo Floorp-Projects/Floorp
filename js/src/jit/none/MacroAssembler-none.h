@@ -257,7 +257,6 @@ class MacroAssemblerNone : public Assembler {
   void nopAlign(size_t) { MOZ_CRASH(); }
   void checkStackAlignment() { MOZ_CRASH(); }
   uint32_t currentOffset() { MOZ_CRASH(); }
-  CodeOffset labelForPatch() { MOZ_CRASH(); }
 
   void nop() { MOZ_CRASH(); }
   void breakpoint() { MOZ_CRASH(); }
@@ -325,8 +324,6 @@ class MacroAssemblerNone : public Assembler {
   CodeOffset pushWithPatch(T) {
     MOZ_CRASH();
   }
-
-  CodeOffsetJump jumpWithPatch(RepatchLabel*) { MOZ_CRASH(); }
 
   void testNullSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
   void testObjectSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
@@ -586,10 +583,6 @@ class ABIArgGenerator {
   ABIArg& current() { MOZ_CRASH(); }
   uint32_t stackBytesConsumedSoFar() const { MOZ_CRASH(); }
 };
-
-static inline void PatchJump(CodeLocationJump&, CodeLocationLabel) {
-  MOZ_CRASH();
-}
 
 static inline bool GetTempRegForIntArg(uint32_t, uint32_t, Register*) {
   MOZ_CRASH();

@@ -570,23 +570,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   // Common interface.
   /////////////////////////////////////////////////////////////////
 
-  template <typename T, typename S>
-  void branchPtr(Condition cond, T lhs, S ptr, RepatchLabel* label) {
-    cmpPtr(Operand(lhs), ptr);
-    j(cond, label);
-  }
-
-  CodeOffsetJump jumpWithPatch(RepatchLabel* label) {
-    jump(label);
-    return CodeOffsetJump(size());
-  }
-
-  void branchPtr(Condition cond, Register lhs, Register rhs,
-                 RepatchLabel* label) {
-    cmpPtr(lhs, rhs);
-    j(cond, label);
-  }
-
   void movePtr(ImmWord imm, Register dest) { movl(Imm32(imm.value), dest); }
   void movePtr(ImmPtr imm, Register dest) { movl(imm, dest); }
   void movePtr(wasm::SymbolicAddress imm, Register dest) { mov(imm, dest); }

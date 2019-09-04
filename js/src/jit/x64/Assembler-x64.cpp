@@ -155,23 +155,6 @@ size_t Assembler::addPatchableJump(JmpSrc src, RelocationKind reloc) {
   return index;
 }
 
-/* static */
-uint8_t* Assembler::PatchableJumpAddress(JitCode* code, size_t index) {
-  // The assembler stashed the offset into the code of the fragments used
-  // for far jumps at the start of the relocation table.
-  uint32_t jumpOffset = *(uint32_t*)code->jumpRelocTable();
-  jumpOffset += index * SizeOfJumpTableEntry;
-
-  MOZ_ASSERT(jumpOffset + SizeOfExtendedJump <= code->instructionsSize());
-  return code->raw() + jumpOffset;
-}
-
-/* static */
-void Assembler::PatchJumpEntry(uint8_t* entry, uint8_t* target) {
-  uint8_t** index = (uint8_t**)(entry + SizeOfExtendedJump - sizeof(void*));
-  *index = target;
-}
-
 void Assembler::finish() {
   if (oom()) {
     return;

@@ -924,8 +924,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
   void loadConstantFloat32(float f, FloatRegister dest);
 
-  CodeOffsetJump jumpWithPatch(RepatchLabel* label);
-
   void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
     if (dest.isFloat()) {
       loadInt32OrDouble(address, dest.fpu());
@@ -1260,8 +1258,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
  public:
-  CodeOffset labelForPatch() { return CodeOffset(nextOffset().getOffset()); }
-
   void computeEffectiveAddress(const Address& address, Register dest) {
     ScratchRegisterScope scratch(asMasm());
     ma_add(address.base, Imm32(address.offset), dest, scratch, LeaveCC);

@@ -10,29 +10,6 @@
 
 using namespace js::jit;
 
-void CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm) {
-  MOZ_ASSERT(state_ == Relative);
-  size_t new_off = (size_t)raw_;
-#ifdef JS_SMALL_BRANCH
-  size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
-#endif
-  if (masm != nullptr) {
-#ifdef JS_CODEGEN_X64
-    MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
-#endif
-    new_off = (uintptr_t)raw_;
-#ifdef JS_SMALL_BRANCH
-    jumpTableEntryOffset = masm->actualIndex(jumpTableEntryOffset);
-#endif
-  }
-  raw_ = code->raw() + new_off;
-#ifdef JS_SMALL_BRANCH
-  jumpTableEntry_ =
-      Assembler::PatchableJumpAddress(code, (size_t)jumpTableEntryOffset);
-#endif
-  setAbsolute();
-}
-
 void CodeLocationLabel::repoint(JitCode* code) {
   MOZ_ASSERT(state_ == Relative);
   uintptr_t new_off = uintptr_t(raw_);
@@ -40,10 +17,4 @@ void CodeLocationLabel::repoint(JitCode* code) {
 
   raw_ = code->raw() + new_off;
   setAbsolute();
-}
-
-void CodeOffsetJump::fixup(MacroAssembler* masm) {
-#ifdef JS_SMALL_BRANCH
-  jumpTableIndex_ = masm->actualIndex(jumpTableIndex_);
-#endif
 }

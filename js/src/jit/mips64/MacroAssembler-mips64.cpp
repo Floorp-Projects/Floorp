@@ -1422,18 +1422,6 @@ Register MacroAssemblerMIPS64Compat::extractTag(const BaseIndex& address,
   return extractTag(Address(scratch, address.offset), scratch);
 }
 
-CodeOffsetJump MacroAssemblerMIPS64Compat::jumpWithPatch(RepatchLabel* label) {
-  // Only one branch per label.
-  MOZ_ASSERT(!label->used());
-
-  BufferOffset bo = nextOffset();
-  label->use(bo.getOffset());
-  ma_liPatchable(ScratchRegister, ImmWord(LabelBase::INVALID_OFFSET));
-  as_jr(ScratchRegister);
-  as_nop();
-  return CodeOffsetJump(bo.getOffset());
-}
-
 /////////////////////////////////////////////////////////////////
 // X86/X64-common/ARM/MIPS interface.
 /////////////////////////////////////////////////////////////////

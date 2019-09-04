@@ -202,7 +202,6 @@ class Assembler : public AssemblerMIPSShared {
 
   using AssemblerMIPSShared::bind;
 
-  void bind(RepatchLabel* label);
   static void Bind(uint8_t* rawCode, const CodeLabel& label);
 
   void processCodeLabels(uint8_t* rawCode);

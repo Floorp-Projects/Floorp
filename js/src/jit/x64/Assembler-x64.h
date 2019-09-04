@@ -329,9 +329,6 @@ class Assembler : public AssemblerX86Shared {
   using AssemblerX86Shared::push;
   using AssemblerX86Shared::vmovq;
 
-  static uint8_t* PatchableJumpAddress(JitCode* code, size_t index);
-  static void PatchJumpEntry(uint8_t* entry, uint8_t* target);
-
   Assembler() : extendedJumpTable_(0) {}
 
   static void TraceJumpRelocations(JSTracer* trc, JitCode* code,
@@ -1139,15 +1136,6 @@ class Assembler : public AssemblerX86Shared {
     masm.vcvtsq2ss_rr(src1.encoding(), src0.encoding(), dest.encoding());
   }
 };
-
-static inline void PatchJump(CodeLocationJump jump, CodeLocationLabel label) {
-  if (X86Encoding::CanRelinkJump(jump.raw(), label.raw())) {
-    X86Encoding::SetRel32(jump.raw(), label.raw());
-  } else {
-    X86Encoding::SetRel32(jump.raw(), jump.jumpTableEntry());
-    Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw());
-  }
-}
 
 static inline bool GetIntArgReg(uint32_t intArg, uint32_t floatArg,
                                 Register* out) {
