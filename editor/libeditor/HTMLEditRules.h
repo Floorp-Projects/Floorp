@@ -153,28 +153,6 @@ class HTMLEditRules : public TextEditRules {
                                         nsIEditor::EDirection aAction);
 
   /**
-   * TryToJoinBlocksWithTransaction() tries to join two block elements.  The
-   * right element is always joined to the left element.  If the elements are
-   * the same type and not nested within each other,
-   * JoinEditableNodesWithTransaction() is called (example, joining two list
-   * items together into one).  If the elements are not the same type, or one
-   * is a descendant of the other, we instead destroy the right block placing
-   * its children into leftblock.  DTD containment rules are followed
-   * throughout.
-   *
-   * @return            Sets canceled to true if the operation should do
-   *                    nothing anymore even if this doesn't join the blocks.
-   *                    Sets handled to true if this actually handles the
-   *                    request.  Note that this may set it to true even if this
-   *                    does not join the block.  E.g., if the blocks shouldn't
-   *                    be joined or it's impossible to join them but it's not
-   *                    unexpected case, this returns true with this.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult
-  TryToJoinBlocksWithTransaction(nsIContent& aLeftNode, nsIContent& aRightNode);
-
-  /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
    * table related elements (except <table> itself) and their contents
    * from the DOM tree.
