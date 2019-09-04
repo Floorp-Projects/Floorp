@@ -10,6 +10,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
 const Services = require("Services");
 const { L10N } = require("../utils/l10n");
 const {
@@ -20,6 +23,9 @@ const {
   isJSON,
 } = require("../utils/request-utils");
 const { Filters } = require("../utils/filter-predicates");
+const {
+  setTargetSearchResult,
+} = require("devtools/client/netmonitor/src/actions/search");
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
@@ -46,6 +52,8 @@ class ResponsePanel extends Component {
     return {
       request: PropTypes.object.isRequired,
       openLink: PropTypes.func,
+      targetSearchResult: PropTypes.object,
+      resetTargetSearchResult: PropTypes.func,
       connector: PropTypes.object.isRequired,
     };
   }
@@ -75,6 +83,21 @@ class ResponsePanel extends Component {
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "responseContent",
     ]);
+  }
+
+  /**
+   * Update only if:
+   * 1) The rendered object has changed
+   * 2) The user selected another search result target.
+   * 3) Internal state changes
+   */
+  shouldComponentUpdate(nextProps, nextState) {
+    return (
+      this.state !== nextState ||
+      this.props.request !== nextProps.request ||
+      (this.props.targetSearchResult !== nextProps.targetSearchResult &&
+        nextProps.targetSearchResult !== null)
+    );
   }
 
   updateImageDimensions({ target }) {
@@ -150,7 +173,7 @@ class ResponsePanel extends Component {
   }
 
   render() {
-    const { openLink, request } = this.props;
+    const { openLink, request, targetSearchResult } = this.props;
     const { responseContent, url } = request;
 
     if (
@@ -218,11 +241,20 @@ class ResponsePanel extends Component {
       };
     }
 
+    let scrollToLine;
+    let expandedNodes;
+
+    if (targetSearchResult && targetSearchResult.line) {
+      scrollToLine = targetSearchResult.line;
+      expandedNodes = new Set(["/" + RESPONSE_PAYLOAD]);
+    }
+
     // Others like text/html, text/plain, application/javascript
     object[RESPONSE_PAYLOAD] = {
       EDITOR_CONFIG: {
         text,
         mode: json ? "application/json" : mimeType.replace(/;.+/, ""),
+        scrollToLine,
       },
     };
 
@@ -236,12 +268,19 @@ class ResponsePanel extends Component {
       error && div({ className: "response-error-header", title: error }, error),
       PropertiesView({
         object,
+        expandedNodes,
         filterPlaceHolder: JSON_FILTER_TEXT,
         sectionNames: Object.keys(object),
         openLink,
+        targetSearchResult,
       })
     );
   }
 }
 
-module.exports = ResponsePanel;
+module.exports = connect(
+  null,
+  dispatch => ({
+    resetTargetSearchResult: () => dispatch(setTargetSearchResult(null)),
+  })
+)(ResponsePanel);

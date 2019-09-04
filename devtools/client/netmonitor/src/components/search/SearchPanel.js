@@ -45,6 +45,7 @@ class SearchPanel extends Component {
       addSearchQuery: PropTypes.func.isRequired,
       query: PropTypes.string.isRequired,
       results: PropTypes.array,
+      navigate: PropTypes.func.isRequired,
     };
   }
 
@@ -54,13 +55,19 @@ class SearchPanel extends Component {
     this.searchboxRef = createRef();
     this.renderValue = this.renderValue.bind(this);
     this.renderLabel = this.renderLabel.bind(this);
-
+    this.onClickTreeRow = this.onClickTreeRow.bind(this);
     this.provider = SearchProvider;
   }
 
   componentDidMount() {
     if (this.searchboxRef) {
       this.searchboxRef.current.focus();
+    }
+  }
+
+  onClickTreeRow(path, event, member) {
+    if (member.object.parentResource) {
+      this.props.navigate(member.object);
     }
   }
 
@@ -103,6 +110,7 @@ class SearchPanel extends Component {
       expandableStrings: false,
       renderLabelCell: this.renderLabel,
       columns: [],
+      onClickRow: this.onClickTreeRow,
     });
   }
 
@@ -218,5 +226,6 @@ module.exports = connect(
     search: () => dispatch(Actions.search()),
     clearSearchResults: () => dispatch(Actions.clearSearchResults()),
     addSearchQuery: query => dispatch(Actions.addSearchQuery(query)),
+    navigate: searchResult => dispatch(Actions.navigate(searchResult)),
   })
 )(SearchPanel);

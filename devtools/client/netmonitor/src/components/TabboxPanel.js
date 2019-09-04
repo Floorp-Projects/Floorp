@@ -59,6 +59,7 @@ class TabboxPanel extends Component {
       toggleNetworkDetails: PropTypes.func,
       openNetworkDetails: PropTypes.func.isRequired,
       showWebSocketsTab: PropTypes.bool,
+      targetSearchResult: PropTypes.object,
     };
   }
 
@@ -90,6 +91,7 @@ class TabboxPanel extends Component {
       sourceMapService,
       toggleNetworkDetails,
       showWebSocketsTab,
+      targetSearchResult,
     } = this.props;
 
     if (!request) {
@@ -130,6 +132,7 @@ class TabboxPanel extends Component {
           connector,
           openLink,
           request,
+          targetSearchResult,
         })
       ),
       showWebSocketsPanel &&
@@ -153,6 +156,7 @@ class TabboxPanel extends Component {
           connector,
           openLink,
           request,
+          targetSearchResult,
         })
       ),
       TabPanel(
@@ -161,7 +165,12 @@ class TabboxPanel extends Component {
           title: PARAMS_TITLE,
           className: "panel-with-code",
         },
-        ParamsPanel({ connector, openLink, request })
+        ParamsPanel({
+          connector,
+          openLink,
+          request,
+          targetSearchResult,
+        })
       ),
       TabPanel(
         {
@@ -169,7 +178,12 @@ class TabboxPanel extends Component {
           title: RESPONSE_TITLE,
           className: "panel-with-code",
         },
-        ResponsePanel({ request, openLink, connector })
+        ResponsePanel({
+          request,
+          openLink,
+          connector,
+          targetSearchResult,
+        })
       ),
       (request.fromCache || request.status == "304") &&
         TabPanel(
