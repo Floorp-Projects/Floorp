@@ -13,6 +13,7 @@ const {
   CLOSE_SEARCH,
   SEARCH_STATUS,
   UPDATE_SEARCH_STATUS,
+  SET_TARGET_SEARCH_RESULT,
 } = require("../constants");
 
 /**
@@ -30,6 +31,7 @@ function Search(overrideParams = {}) {
       ongoingSearch: null,
       status: SEARCH_STATUS.INITIAL,
       panelOpen: false,
+      targetSearchResult: null,
     },
     overrideParams
   );
@@ -51,6 +53,8 @@ function search(state = new Search(), action) {
       return onOpenSearch(state);
     case UPDATE_SEARCH_STATUS:
       return onUpdateSearchStatus(state, action);
+    case SET_TARGET_SEARCH_RESULT:
+      return onSetTargetSearchResult(state, action);
   }
   return state;
 }
@@ -108,6 +112,13 @@ function onUpdateSearchStatus(state, action) {
   return {
     ...state,
     status: action.status,
+  };
+}
+
+function onSetTargetSearchResult(state, action) {
+  return {
+    ...state,
+    targetSearchResult: action.searchResult,
   };
 }
 

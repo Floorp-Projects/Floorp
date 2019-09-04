@@ -213,6 +213,8 @@ class AccessibilityTree extends Component {
           this.rows.find(row => row.props.member.path === nodePath),
           { preventAutoScroll: true }
         );
+
+        return true;
       },
       onContextMenuTree:
         hasContextMenu &&
