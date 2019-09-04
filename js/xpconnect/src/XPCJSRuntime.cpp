@@ -2780,10 +2780,10 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
 static void SetUseCounterCallback(JSObject* obj, JSUseCounter counter) {
   switch (counter) {
     case JSUseCounter::ASMJS:
-      SetDocumentAndPageUseCounter(obj, eUseCounter_custom_JS_asmjs);
+      SetUseCounter(obj, eUseCounter_custom_JS_asmjs);
       break;
     case JSUseCounter::WASM:
-      SetDocumentAndPageUseCounter(obj, eUseCounter_custom_JS_wasm);
+      SetUseCounter(obj, eUseCounter_custom_JS_wasm);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected JSUseCounter id");
