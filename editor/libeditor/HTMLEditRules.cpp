@@ -3593,18 +3593,23 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         HTMLEditorRef().GetInvisibleBRElementAt(leftBlockChild);
     EditActionResult ret(NS_OK);
     if (mergeLists) {
-      // XXX Why do we ignore the result of MoveContents()?
-      int32_t offset = leftBlockChild.Offset();
-      EditActionResult retMoveContents =
-          MoveContents(*rightList, *leftList, &offset);
-      if (NS_WARN_IF(retMoveContents.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
-        return ret;
+      // XXX Why do we ignore the error from MoveChildren()?
+      // XXX Why is it guaranteed that `leftBlockChild.GetContainer()` is
+      //     `leftList` here?  Looks like that above code may run mutation
+      //     event listeners.
+      NS_WARNING_ASSERTION(leftList == leftBlockChild.GetContainer(),
+                           "This is not guaranteed, but assumed");
+      MoveNodeResult moveNodeResult =
+          MOZ_KnownLive(HTMLEditorRef())
+              .MoveChildren(*rightList,
+                            EditorDOMPoint(leftList, leftBlockChild.Offset()));
+      if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
+        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          retMoveContents.Succeeded(),
-          "Failed to move contents from the right list to the left list");
-      if (retMoveContents.Handled()) {
-        ret.MarkAsHandled();
+      NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
+                           "MoveChildren() failed, but ignored");
+      if (moveNodeResult.Succeeded()) {
+        ret |= moveNodeResult;
       }
       // leftBlockChild was moved to rightList.  So, it's invalid now.
       leftBlockChild.Clear();
@@ -3771,32 +3776,56 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
     return EditActionIgnored(rv);
   }
 
+  uint32_t offset = static_cast<uint32_t>(aLeftOffset);
   EditActionResult ret(NS_OK);
-  for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
+  for (auto& node : arrayOfNodes) {
+    if (aLeftOffset == -1) {
+      // For backward compatibility, we should move contents to end of the
+      // container if this is called with -1 for aLeftOffset.
+      offset = aLeftBlock.Length();
+    }
     // get the node to act on
-    if (HTMLEditor::NodeIsBlockStatic(arrayOfNodes[i])) {
+    if (HTMLEditor::NodeIsBlockStatic(node)) {
       // For block nodes, move their contents only, then delete block.
-      ret |= MoveContents(MOZ_KnownLive(*arrayOfNodes[i]->AsElement()),
-                          aLeftBlock, &aLeftOffset);
-      if (NS_WARN_IF(ret.Failed())) {
-        return ret;
+      MoveNodeResult moveNodeResult =
+          MOZ_KnownLive(HTMLEditorRef())
+              .MoveChildren(MOZ_KnownLive(*node->AsElement()),
+                            EditorDOMPoint(&aLeftBlock, offset));
+      if (NS_WARN_IF(moveNodeResult.Failed())) {
+        return ret.SetResult(moveNodeResult.Rv());
       }
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .DeleteNodeWithTransaction(MOZ_KnownLive(*arrayOfNodes[i]));
+      offset = moveNodeResult.NextInsertionPointRef().Offset();
+      ret |= moveNodeResult;
+
+      DebugOnly<nsresult> rvIgnored =
+          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*node);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove a block node");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "DeleteNodeWithTransaction() failed, but ignored");
       ret.MarkAsHandled();
+      if (HTMLEditorRef().HasMutationEventListeners()) {
+        // Mutation event listener may make `offset` value invalid with
+        // removing some previous children while we call
+        // `DeleteNodeWithTransaction()` so that we should adjust it here.
+        offset = std::min(offset, aLeftBlock.Length());
+      }
     } else {
       // Otherwise move the content as is, checking against the DTD.
-      ret |= MoveNodeSmart(MOZ_KnownLive(*arrayOfNodes[i]->AsContent()),
-                           aLeftBlock, &aLeftOffset);
-      if (NS_WARN_IF(ret.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
-        return ret;
+      MoveNodeResult moveNodeResult =
+          MOZ_KnownLive(HTMLEditorRef())
+              .MoveNodeOrChildren(MOZ_KnownLive(*node->AsContent()),
+                                  EditorDOMPoint(&aLeftBlock, offset));
+      if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
+        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "Failed to move current node to the left block");
+      NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
+                           "MoveNodeOrChildren() failed, but ignored");
+      if (moveNodeResult.Succeeded()) {
+        offset = moveNodeResult.NextInsertionPointRef().Offset();
+        ret |= moveNodeResult;
+      }
     }
   }
 
@@ -3808,80 +3837,75 @@ EditActionResult HTMLEditRules::MoveBlock(Element& aLeftBlock,
   return ret;
 }
 
-EditActionResult HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
-                                              Element& aDestElement,
-                                              int32_t* aInOutDestOffset) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aInOutDestOffset);
+MoveNodeResult HTMLEditor::MoveNodeOrChildren(
+    nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToInsert.IsSet());
 
   // Check if this node can go into the destination node
-  if (HTMLEditorRef().CanContain(aDestElement, aNode)) {
+  if (CanContain(*aPointToInsert.GetContainer(), aContent)) {
     // If it can, move it there.
-    if (*aInOutDestOffset == -1) {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeToEndWithTransaction(aNode, aDestElement);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionIgnored(rv);
-      }
-    } else {
-      EditorDOMPoint pointToInsert(&aDestElement, *aInOutDestOffset);
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeWithTransaction(aNode, pointToInsert);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionIgnored(rv);
-      }
+    uint32_t offsetAtInserting = aPointToInsert.Offset();
+    nsresult rv = MoveNodeWithTransaction(aContent, aPointToInsert);
+    if (NS_WARN_IF(Destroyed())) {
+      return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (*aInOutDestOffset != -1) {
-      (*aInOutDestOffset)++;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return MoveNodeResult(rv);
     }
-    // XXX Should we check if the node is actually moved in this case?
-    return EditActionHandled();
+    // Advance DOM point with offset for keeping backward compatibility.
+    // XXX Where should we insert next content if a mutation event listener
+    //     break the relation of offset and moved node?
+    return MoveNodeHandled(aPointToInsert.GetContainer(), ++offsetAtInserting);
   }
 
   // If it can't, move its children (if any), and then delete it.
-  EditActionResult ret(NS_OK);
-  if (aNode.IsElement()) {
-    ret = MoveContents(MOZ_KnownLive(*aNode.AsElement()), aDestElement,
-                       aInOutDestOffset);
-    if (NS_WARN_IF(ret.Failed())) {
-      return ret;
+  MoveNodeResult result;
+  if (aContent.IsElement()) {
+    result = MoveChildren(MOZ_KnownLive(*aContent.AsElement()), aPointToInsert);
+    if (NS_WARN_IF(result.Failed())) {
+      return result;
     }
+  } else {
+    result = MoveNodeHandled(aPointToInsert);
   }
 
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(aNode);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+  nsresult rv = DeleteNodeWithTransaction(aContent);
+  if (NS_WARN_IF(Destroyed())) {
+    return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ret.SetResult(rv);
+    return MoveNodeResult(rv);
   }
-  return ret.MarkAsHandled();
-}
-
-EditActionResult HTMLEditRules::MoveContents(Element& aElement,
-                                             Element& aDestElement,
-                                             int32_t* aInOutDestOffset) {
-  MOZ_ASSERT(aInOutDestOffset);
-
-  if (NS_WARN_IF(&aElement == &aDestElement)) {
-    return EditActionIgnored(NS_ERROR_ILLEGAL_VALUE);
-  }
-
-  EditActionResult ret(NS_OK);
-  while (aElement.GetFirstChild()) {
-    ret |= MoveNodeSmart(MOZ_KnownLive(*aElement.GetFirstChild()), aDestElement,
-                         aInOutDestOffset);
-    if (NS_WARN_IF(ret.Failed())) {
-      return ret;
+  if (HasMutationEventListeners()) {
+    // Mutation event listener may make `offset` value invalid with
+    // removing some previous children while we call
+    // `DeleteNodeWithTransaction()` so that we should adjust it here.
+    if (!result.NextInsertionPointRef().IsSetAndValid()) {
+      result = MoveNodeHandled(aPointToInsert.GetContainer(),
+                               aPointToInsert.GetContainer()->Length());
     }
   }
-  return ret;
+  return result;
+}
+
+MoveNodeResult HTMLEditor::MoveChildren(Element& aElement,
+                                        const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(aPointToInsert.IsSet());
+
+  if (NS_WARN_IF(&aElement == aPointToInsert.GetContainer())) {
+    return MoveNodeResult(NS_ERROR_INVALID_ARG);
+  }
+
+  MoveNodeResult result = MoveNodeIgnored(aPointToInsert);
+  while (aElement.GetFirstChild()) {
+    result |= MoveNodeOrChildren(MOZ_KnownLive(*aElement.GetFirstChild()),
+                                 result.NextInsertionPoint());
+    if (NS_WARN_IF(result.Failed())) {
+      return result;
+    }
+  }
+  return result;
 }
 
 nsresult HTMLEditRules::DeleteElementsExceptTableRelatedElements(

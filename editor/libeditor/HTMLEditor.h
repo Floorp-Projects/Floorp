@@ -44,6 +44,7 @@ class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EmptyEditableFunctor;
+class MoveNodeResult;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
 enum class EditSubAction : int32_t;
@@ -1987,6 +1988,31 @@ class HTMLEditor final : public TextEditor,
   JoinNearestEditableNodesWithTransaction(
       nsIContent& aLeftNode, nsIContent& aRightNode,
       EditorDOMPoint* aNewFirstChildOfRightNode);
+
+  /**
+   * MoveNodeOrChildren() moves aContent to aPointToInsert.  If cannot insert
+   * aContent due to invalid relation, moves only its children recursively
+   * and removes aContent from the DOM tree.
+   *
+   * @param aContent            Content which should be moved.
+   * @param aPointToInsert      The point to be inserted aContent or its
+   *                            descendants.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE MoveNodeResult
+  MoveNodeOrChildren(nsIContent& aNode, const EditorDOMPoint& aPointToInsert);
+
+  /**
+   * MoveContents() moves the children of aElement to aPointToInsert.  If
+   * cannot insert some children due to invalid relation, calls
+   * MoveNodeOrChildren() to remove the children but keep moving its children.
+   *
+   * @param aElement            Container element whose children should be
+   *                            moved.
+   * @param aPointToInsert      The point to be inserted children of aElement
+   *                            or its descendants.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE MoveNodeResult
+  MoveChildren(Element& aElement, const EditorDOMPoint& aPointToInsert);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
