@@ -3242,6 +3242,8 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   //
   // We instead notify gtk_window_state_event() of the maximized state change
   // once the window is shown.
+  //
+  // See https://gitlab.gnome.org/GNOME/gtk/issues/1044
   if (!mIsShown) {
     aEvent->changed_mask = static_cast<GdkWindowState>(
         aEvent->changed_mask & ~GDK_WINDOW_STATE_MAXIMIZED);
