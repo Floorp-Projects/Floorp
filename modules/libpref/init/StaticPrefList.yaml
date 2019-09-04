@@ -6653,12 +6653,12 @@
   value: true
   mirror: always
 
-# Whether origin telemetry should be enabled.
+# Whether Origin Telemetry should be enabled.
 # NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
 #       won't have any effect.
 - name: privacy.trackingprotection.origin_telemetry.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to spoof user locale to English (used as part of Resist
@@ -6850,7 +6850,7 @@
   value: true
   mirror: always
 
-# Whether strict file origin policy is in effect.
+# Whether strict file origin policy is in effect. "False" is traditional.
 - name: security.fileuri.strict_origin_policy
   type: RelaxedAtomicBool
   value: true
