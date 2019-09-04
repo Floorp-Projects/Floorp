@@ -3980,15 +3980,6 @@ void MacroAssemblerARMCompat::truncf(FloatRegister input, Register output,
   bind(&fin);
 }
 
-CodeOffsetJump MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label) {
-  ARMBuffer::PoolEntry pe;
-  BufferOffset bo = as_BranchPool(0xdeadbeef, label, LabelDoc(), &pe);
-  // Fill in a new CodeOffset with both the load and the pool entry that the
-  // instruction loads from.
-  CodeOffsetJump ret(bo.getOffset(), pe.index());
-  return ret;
-}
-
 void MacroAssemblerARMCompat::profilerEnterFrame(Register framePtr,
                                                  Register scratch) {
   asMasm().loadJSContext(scratch);

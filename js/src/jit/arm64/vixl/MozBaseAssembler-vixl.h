@@ -305,11 +305,6 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   static void WritePoolFooter(uint8_t* start, js::jit::Pool* p, bool isNatural);
   static void WritePoolGuard(BufferOffset branch, Instruction* inst, BufferOffset dest);
 
-  static ptrdiff_t GetBranchOffset(const Instruction* i);
-  static void RetargetNearBranch(Instruction* i, int offset, Condition cond, bool final = true);
-  static void RetargetNearBranch(Instruction* i, int offset, bool final = true);
-  static void RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest, Condition cond);
-
  protected:
   // Functions for managing Labels and linked lists of Label uses.
 

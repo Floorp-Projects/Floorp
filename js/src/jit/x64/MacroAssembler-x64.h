@@ -546,12 +546,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   // Common interface.
   /////////////////////////////////////////////////////////////////
 
-  CodeOffsetJump jumpWithPatch(RepatchLabel* label) {
-    JmpSrc src = jmpSrc(label);
-    return CodeOffsetJump(size(),
-                          addPatchableJump(src, RelocationKind::HARDCODED));
-  }
-
   void movePtr(Register src, Register dest) { movq(src, dest); }
   void movePtr(Register src, const Operand& dest) { movq(src, dest); }
   void movePtr(ImmWord imm, Register dest) { mov(imm, dest); }
