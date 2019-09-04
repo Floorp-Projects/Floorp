@@ -90,7 +90,6 @@ UNIFIED_SOURCES += [
     'RematerializedFrame.cpp',
     'Safepoints.cpp',
     'ScalarReplacement.cpp',
-    'shared/Assembler-shared.cpp',
     'shared/CodeGenerator-shared.cpp',
     'shared/Disassembler-shared.cpp',
     'shared/Lowering-shared.cpp',
