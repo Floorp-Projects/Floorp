@@ -168,6 +168,11 @@ class GeckoEngine(
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
                 value?.let { policy ->
+                    val activateStrictSocialTracking =
+                        policy.trackingCategories.contains(TrackingProtectionPolicy.TrackingCategory.STRICT)
+                    runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
+                        activateStrictSocialTracking
+                    )
                     runtime.settings.contentBlocking.setAntiTracking(policy.trackingCategories.sumBy { it.id })
                     runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id
                     defaultSettings?.trackingProtectionPolicy = value
