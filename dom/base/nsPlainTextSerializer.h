@@ -241,10 +241,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
      */
     OutputManager(int32_t aFlags, nsAString& aOutput);
 
-    /**
-     * @param aString Last character is expected to not be a line break.
-     */
-    void Append(const nsAString& aString);
+    enum class StripTrailingWhitespaces { kMaybe, kNo };
+
+    void Append(const CurrentLine& aCurrentLine,
+                StripTrailingWhitespaces aStripTrailingWhitespaces);
 
     void AppendLineBreak();
 
@@ -253,6 +253,11 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     uint32_t GetOutputLength() const;
 
    private:
+    /**
+     * @param aString Last character is expected to not be a line break.
+     */
+    void Append(const nsAString& aString);
+
     nsAString& mOutput;
 
     bool mAtFirstColumn;
