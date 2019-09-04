@@ -131,8 +131,11 @@ exports.startRecording = () => {
   return (dispatch, getState) => {
     const recordingSettings = selectors.getRecordingSettings(getState());
     const perfFront = selectors.getPerfFront(getState());
-    perfFront.startProfiler(recordingSettings);
+    // In the case of the profiler popup, the startProfiler can be synchronous.
+    // In order to properly allow the React components to handle the state changes
+    // make sure and change the recording state first, then start the profiler.
     dispatch(changeRecordingState(REQUEST_TO_START_RECORDING));
+    perfFront.startProfiler(recordingSettings);
   };
 };
 
@@ -259,12 +262,18 @@ async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
 
 /**
  * Stops the profiler, and opens the profile in a new window.
+ * @param {object} window - The current window for the page.
  */
-exports.getProfileAndStopProfiler = () => {
+exports.getProfileAndStopProfiler = window => {
   return async (dispatch, getState) => {
     const perfFront = selectors.getPerfFront(getState());
     dispatch(changeRecordingState(REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER));
     const profile = await perfFront.getProfileAndStopProfiler();
+
+    if (window.gClosePopup) {
+      // The close popup function only exists when we are in the popup.
+      window.gClosePopup();
+    }
 
     const libraryGetter = createLibraryMap(profile);
     async function getSymbolTable(debugName, breakpadId) {
