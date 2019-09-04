@@ -41,7 +41,7 @@ input[type="url"][readOnly] {
   background-color: transparent !important; /* override common.inc.css */
   text-overflow: ellipsis;
   overflow: hidden;
-  text-align: match-parent !important;
+  text-align: match-parent;
 }
 
 .detail-cell input:not([type="checkbox"]),
