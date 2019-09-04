@@ -1325,7 +1325,6 @@ Document::Document(const char* aContentType)
       mBlockDOMContentLoaded(0),
       mUseCounters(0),
       mChildDocumentUseCounters(0),
-      mNotifiedPageForUseCounter(0),
       mUserHasInteracted(false),
       mHasUserInteractionTimerScheduled(false),
       mStackRefCnt(0),
@@ -6146,8 +6145,7 @@ nsresult Document::SetSubDocumentFor(Element* aElement, Document* aSubDoc) {
     // aSubDoc is nullptr, remove the mapping
 
     if (mSubDocuments) {
-      Document* subDoc = GetSubDocumentFor(aElement);
-      if (subDoc) {
+      if (Document* subDoc = GetSubDocumentFor(aElement)) {
         subDoc->SetAllowPaymentRequest(false);
       }
       mSubDocuments->Remove(aElement);
@@ -8738,7 +8736,7 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
 
   // At this point we know this is a valid-enough document.open() call
   // and not a no-op.  Increment our use counter.
-  SetDocumentAndPageUseCounter(eUseCounter_custom_DocumentOpen);
+  SetUseCounter(eUseCounter_custom_DocumentOpen);
 
   // Step 7 -- stop existing navigation of our browsing context (and all other
   // loads it's doing) if we're the active document of our browsing context.
@@ -10482,6 +10480,7 @@ void Document::Destroy() {
     MOZ_ASSERT(child->GetParentNode() == this);
   }
   MOZ_ASSERT(oldChildCount == GetChildCount());
+  MOZ_ASSERT(!mSubDocuments || mSubDocuments->EntryCount() == 0);
 
   mInUnlinkOrDeletion = oldVal;
 
@@ -12131,7 +12130,7 @@ void Document::WarnOnceAbout(DeprecatedOperations aOperation,
   // are almost in our control, and we always need to remove uses there
   // before we remove the operation itself anyway.
   if (!IsAboutPage()) {
-    const_cast<Document*>(this)->SetDocumentAndPageUseCounter(
+    const_cast<Document*>(this)->SetUseCounter(
         OperationToUseCounter(aOperation));
   }
   uint32_t flags =
@@ -14327,54 +14326,12 @@ void Document::PropagateUseCounters(Document* aParentDocument) {
   // document, and propagate our use counters into its
   // mChildDocumentUseCounters.
   Document* contentParent = aParentDocument->GetTopLevelContentDocument();
-
   if (!contentParent) {
     return;
   }
 
   contentParent->mChildDocumentUseCounters |= mUseCounters;
   contentParent->mChildDocumentUseCounters |= mChildDocumentUseCounters;
-}
-
-void Document::SetPageUseCounter(UseCounter aUseCounter) {
-  // We want to set the use counter on the "page" that owns us; the definition
-  // of "page" depends on what kind of document we are.  See the comments below
-  // for details.  In any event, checking all the conditions below is
-  // reasonably expensive, so we cache whether we've notified our owning page.
-  if (mNotifiedPageForUseCounter[aUseCounter]) {
-    return;
-  }
-  mNotifiedPageForUseCounter[aUseCounter] = true;
-
-  if (mDisplayDocument) {
-    // If we are a resource document, we won't have a docshell and so we won't
-    // record any page use counters on this document.  Instead, we should
-    // forward it up to the document that loaded us.
-    MOZ_ASSERT(!mDocumentContainer);
-    mDisplayDocument->SetChildDocumentUseCounter(aUseCounter);
-    return;
-  }
-
-  if (IsBeingUsedAsImage()) {
-    // If this is an SVG image document, we also won't have a docshell.
-    MOZ_ASSERT(!mDocumentContainer);
-    return;
-  }
-
-  // We only care about use counters in content.  If we're already a toplevel
-  // content document, then we should have already set the use counter on
-  // ourselves, and we are done.
-  Document* contentParent = GetTopLevelContentDocument();
-  if (!contentParent) {
-    return;
-  }
-
-  if (this == contentParent) {
-    MOZ_ASSERT(GetUseCounter(aUseCounter));
-    return;
-  }
-
-  contentParent->SetChildDocumentUseCounter(aUseCounter);
 }
 
 bool Document::HasScriptsBlockedBySandbox() {
@@ -14401,6 +14358,35 @@ bool Document::InlineScriptAllowedByCSP() {
   return allowsInlineScript;
 }
 
+void Document::PropagateUseCountersToPage() {
+  if (mDisplayDocument) {
+    // If we are a resource document, we won't have a docshell and so we won't
+    // record any page use counters on this document.  Instead, we should
+    // forward it up to the document that loaded us.
+    MOZ_ASSERT(!mDocumentContainer);
+    return PropagateUseCounters(mDisplayDocument);
+  }
+
+  if (IsBeingUsedAsImage()) {
+    // If this is an SVG image document, we also won't have a docshell.
+    //
+    // But we do report the use counters via PropagateUseCounters() from the
+    // image code.
+    MOZ_ASSERT(!mDocumentContainer);
+    return;
+  }
+
+  // We only care about use counters in content.  If we're already a toplevel
+  // content document, then we should have already set the use counter on
+  // ourselves, and we are done.
+  Document* contentParent = GetTopLevelContentDocument();
+  if (!contentParent || this == contentParent) {
+    return;
+  }
+
+  PropagateUseCounters(contentParent);
+}
+
 void Document::ReportUseCounters() {
   static const bool kDebugUseCounters = false;
 
@@ -14409,6 +14395,43 @@ void Document::ReportUseCounters() {
   }
 
   mReportedUseCounters = true;
+
+  // Call ReportUseCounters in all our outstanding subdocuments and resources
+  // and such. This needs to be here so that all our sub documents propagate our
+  // counters to us if needed.
+  //
+  // We need to do this explicitly (rather than, e.g., moving the
+  // ReportUseCounters() call after DestroyContent(), which destroys the frame
+  // loaders) because subdocument destruction may be (and is generally) async
+  // (why?), and thus we have no guarantee of Document::Destroy being called on
+  // children before us. Children will just early-return above.
+  //
+  // This is a bit racy in the sense that we may miss some of the children use
+  // counters that happen in between, but that isn't probably a huge deal at
+  // this point where we're destroying the parent document already.
+  //
+  // An alternative would be to move the ReportUseCounters() call to a script
+  // runner or something after calling DestroyContent(), but that looks a bit
+  // fishy as well.
+  {
+    if (mSubDocuments) {
+      for (auto iter = mSubDocuments->ConstIter(); !iter.Done(); iter.Next()) {
+        auto* entry = static_cast<SubDocMapEntry*>(iter.Get());
+        entry->mSubDocument->ReportUseCounters();
+      }
+    }
+    if (Document* doc = GetLatestStaticClone()) {
+      doc->ReportUseCounters();
+    }
+    EnumerateExternalResources(
+        [](Document* aDoc, void*) -> bool {
+          aDoc->ReportUseCounters();
+          return true;
+        },
+        nullptr);
+  }
+
+  PropagateUseCountersToPage();
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
       (IsContentDocument() || IsResourceDoc())) {

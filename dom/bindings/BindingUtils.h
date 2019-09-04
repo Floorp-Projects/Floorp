@@ -3069,7 +3069,7 @@ already_AddRefed<Element> CreateXULOrHTMLElement(
     const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
     JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv);
 
-void SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter);
+void SetUseCounter(JSObject* aObject, UseCounter aUseCounter);
 
 // Warnings
 void DeprecationWarning(JSContext* aCx, JSObject* aObject,

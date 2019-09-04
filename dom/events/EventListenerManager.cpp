@@ -367,23 +367,20 @@ void EventListenerManager::AddEventListenerInternal(
     }
   } else if (aTypeAtom == nsGkAtoms::onstart) {
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-      nsCOMPtr<Document> doc = window->GetExtantDoc();
-      if (doc) {
-        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onstart);
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onstart);
       }
     }
   } else if (aTypeAtom == nsGkAtoms::onbounce) {
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-      nsCOMPtr<Document> doc = window->GetExtantDoc();
-      if (doc) {
-        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onbounce);
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onbounce);
       }
     }
   } else if (aTypeAtom == nsGkAtoms::onfinish) {
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-      nsCOMPtr<Document> doc = window->GetExtantDoc();
-      if (doc) {
-        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_onfinish);
+      if (Document* doc = window->GetExtantDoc()) {
+        doc->SetUseCounter(eUseCounter_custom_onfinish);
       }
     }
   } else if (aTypeAtom == nsGkAtoms::ontext) {
