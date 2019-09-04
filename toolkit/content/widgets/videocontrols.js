@@ -835,9 +835,6 @@ this.VideoControlsImplWidget = class {
                 // Prevent any click event within media controls from dispatching through to video.
                 aEvent.stopPropagation();
                 break;
-              case this.pictureInPictureToggleButton:
-                this.video.togglePictureInPicture();
-                break;
             }
             break;
           case "dblclick":
@@ -2372,8 +2369,6 @@ this.VideoControlsImplWidget = class {
           { el: this.video.textTracks, type: "change" },
 
           { el: this.video, type: "media-videoCasting", touchOnly: true },
-
-          { el: this.pictureInPictureToggleButton, type: "click" },
         ];
 
         for (let {
