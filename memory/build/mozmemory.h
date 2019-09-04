@@ -50,6 +50,8 @@ static inline size_t _malloc_good_size(size_t size) {
 
 #endif
 
+#define NOTHROW_MALLOC_DECL(name, return_type, ...) \
+  MOZ_JEMALLOC_API return_type name(__VA_ARGS__) noexcept(true);
 #define MALLOC_DECL(name, return_type, ...) \
   MOZ_JEMALLOC_API return_type name(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA
