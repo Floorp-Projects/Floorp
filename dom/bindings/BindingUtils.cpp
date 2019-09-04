@@ -3866,11 +3866,11 @@ void AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
 }  // namespace binding_detail
 #endif  // DEBUG
 
-void SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter) {
+void SetUseCounter(JSObject* aObject, UseCounter aUseCounter) {
   nsGlobalWindowInner* win =
       xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
   if (win && win->GetDocument()) {
-    win->GetDocument()->SetDocumentAndPageUseCounter(aUseCounter);
+    win->GetDocument()->SetUseCounter(aUseCounter);
   }
 }
 

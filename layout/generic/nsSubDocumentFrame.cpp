@@ -385,8 +385,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     Document* innerDoc = presShell->GetDocument();
     if (outerDoc && innerDoc) {
       if (!outerDoc->NodePrincipal()->Equals(innerDoc->NodePrincipal())) {
-        outerDoc->SetDocumentAndPageUseCounter(
-            eUseCounter_custom_FilteredCrossOriginIFrame);
+        outerDoc->SetUseCounter(eUseCounter_custom_FilteredCrossOriginIFrame);
       }
     }
   }
