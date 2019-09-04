@@ -58,6 +58,8 @@ class Job:
     video_url = attr.ib(type=str)
 
 
+# NB: Keep in sync with try_task_config_schema in
+#     taskcluster/taskgraph.decision.py
 #: The schema for validating jobs.
 JOB_SCHEMA = Schema(
     {
