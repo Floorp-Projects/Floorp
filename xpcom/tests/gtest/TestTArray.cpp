@@ -409,4 +409,12 @@ TEST(TArray, RemoveFromEnd)
   }
 }
 
+TEST(TArray, ConvertIteratorToConstIterator)
+{
+  nsTArray<int> array{1, 2, 3, 4};
+
+  nsTArray<int>::const_iterator it = array.begin();
+  ASSERT_EQ(array.cbegin(), it);
+}
+
 }  // namespace TestTArray
