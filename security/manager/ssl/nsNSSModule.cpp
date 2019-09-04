@@ -19,6 +19,7 @@
 #include "TransportSecurityInfo.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsCURILoader.h"
 #include "nsCertOverrideService.h"
 #include "nsCryptoHash.h"
