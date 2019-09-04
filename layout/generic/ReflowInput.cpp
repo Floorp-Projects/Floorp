@@ -208,6 +208,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mIsColumnBalancing = false;
   mFlags.mColumnSetWrapperHasNoBSizeLeft = false;
   mFlags.mIsFlexContainerMeasuringBSize = false;
+  mFlags.mTreatBSizeAsIndefinite = false;
   mFlags.mDummyParentReflowInput = false;
   mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
   mFlags.mUseAutoBSize = !!(aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE);
@@ -2090,6 +2091,10 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
   LogicalSize cbSize = aContainingBlockRI->ComputedSize();
 
   WritingMode wm = aContainingBlockRI->GetWritingMode();
+
+  if (aContainingBlockRI->mFlags.mTreatBSizeAsIndefinite) {
+    cbSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+  }
 
   // mFrameType for abs-pos tables is NS_CSS_FRAME_TYPE_BLOCK, so we need to
   // special case them here.
