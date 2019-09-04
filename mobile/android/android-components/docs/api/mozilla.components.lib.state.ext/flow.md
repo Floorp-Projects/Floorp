@@ -2,7 +2,7 @@
 
 # flow
 
-`@ExperimentalCoroutinesApi @MainThread fun <S : `[`State`](../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../mozilla.components.lib.state/-action.md)`> `[`Store`](../mozilla.components.lib.state/-store/index.md)`<`[`S`](flow.md#S)`, `[`A`](flow.md#A)`>.flow(owner: LifecycleOwner = ProcessLifecycleOwner.get()): Flow<`[`S`](flow.md#S)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/StoreExtensions.kt#L144)
+`@ExperimentalCoroutinesApi @MainThread fun <S : `[`State`](../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../mozilla.components.lib.state/-action.md)`> `[`Store`](../mozilla.components.lib.state/-store/index.md)`<`[`S`](flow.md#S)`, `[`A`](flow.md#A)`>.flow(owner: LifecycleOwner? = null): Flow<`[`S`](flow.md#S)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/StoreExtensions.kt#L144)
 
 Creates a [Flow](#) for observing [State](../mozilla.components.lib.state/-state.md) changes in the [Store](../mozilla.components.lib.state/-store/index.md).
 

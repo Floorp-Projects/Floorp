@@ -4,7 +4,7 @@
 
 `suspend fun process(intent: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/intent/WebAppIntentProcessor.kt#L41)
 
-Overrides [IntentProcessor.process](../../mozilla.components.browser.session.intent/-intent-processor/process.md)
+Overrides [IntentProcessor.process](../../mozilla.components.feature.intent.processing/-intent-processor/process.md)
 
 Processes the given [Intent](#) by creating a [Session](../../mozilla.components.browser.session/-session/index.md) with a corresponding web app manifest.
 

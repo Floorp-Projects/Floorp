@@ -45,4 +45,4 @@ for more.
 
 | Name | Summary |
 |---|---|
-| [getSessionId](../../mozilla.components.browser.session.intent/get-session-id.md) | `fun `[`SafeIntent`](./index.md)`.getSessionId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Retrieves [mozilla.components.browser.session.Session](../../mozilla.components.browser.session/-session/index.md) ID from the intent. |
+| [getSessionId](../../mozilla.components.feature.intent.ext/get-session-id.md) | `fun `[`SafeIntent`](./index.md)`.getSessionId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Retrieves [mozilla.components.browser.session.Session](../../mozilla.components.browser.session/-session/index.md) ID from the intent. |

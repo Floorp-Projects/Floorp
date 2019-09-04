@@ -2,7 +2,7 @@
 
 # UpdateSecurityInfo
 
-`data class UpdateSecurityInfo : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L158)
+`data class UpdateSecurityInfo : `[`ContentAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L159)
 
 Updates the [SecurityInfoState](../../../mozilla.components.browser.state.state/-security-info-state/index.md) of the [ContentState](../../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](session-id.md).
 
