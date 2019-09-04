@@ -280,3 +280,16 @@ TEST(COMArray, Destructor)
   }
   ASSERT_EQ(Bar::sReleaseCalled, base + 20);
 }
+
+TEST(COMArray, ConvertIteratorToConstIterator)
+{
+  nsCOMArray<IFoo> array;
+
+  for (int32_t i = 0; i < 20; ++i) {
+    nsCOMPtr<IFoo> foo = new Foo(i);
+    array.AppendObject(foo);
+  }
+
+  nsCOMArray<IFoo>::const_iterator it = array.begin();
+  ASSERT_EQ(array.cbegin(), it);
+}
