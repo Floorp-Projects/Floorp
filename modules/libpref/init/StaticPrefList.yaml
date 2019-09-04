@@ -3568,7 +3568,7 @@
 #if defined(XP_MACOSX)
 -   name: gl.multithreaded
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 #endif
 
@@ -3608,7 +3608,7 @@
   mirror: always
 
 #---------------------------------------------------------------------------
-# Prefs starting with "image."
+# Prefs starting with "idle_period."
 #---------------------------------------------------------------------------
 
 - name: idle_period.min
@@ -3714,11 +3714,14 @@
   value: false
   mirror: always
 
+# Enable extra information for debugging in the image memory reports.
 - name: image.mem.debug-reporting
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# Decodes images into shared memory to allow direct use in separate
+# rendering processes. Only applicable with WebRender.
 - name: image.mem.shared
   type: RelaxedAtomicBool
   value: true
@@ -3757,9 +3760,15 @@
   value: 4
   mirror: once
 
+# Minimum buffer size in KB before using volatile memory over the heap.
 - name: image.mem.volatile.min_threshold_kb
   type: RelaxedAtomicInt32
+#if defined(ANDROID)
+  # On Android, volatile memory keeps file handles open for each buffer.
+  value: 100
+#else
   value: -1
+#endif
   mirror: always
 
 # How long in ms before we should start shutting down idle decoder threads.
@@ -3775,9 +3784,10 @@
   value: -1
   mirror: once
 
+# Whether we attempt to decode WebP images or not.
 - name: image.webp.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
