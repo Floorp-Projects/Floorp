@@ -155,6 +155,10 @@ class ArrayIterator {
   Element operator[](difference_type aIndex) const {
     return *this->operator+(aIndex);
   }
+
+  constexpr const array_type* GetArray() const { return mArray; }
+
+  constexpr index_type GetIndex() const { return mIndex; }
 };
 
 }  // namespace mozilla

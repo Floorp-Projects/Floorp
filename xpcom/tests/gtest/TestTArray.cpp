@@ -417,4 +417,32 @@ TEST(TArray, ConvertIteratorToConstIterator)
   ASSERT_EQ(array.cbegin(), it);
 }
 
+TEST(TArray, RemoveElementAt_ByIterator)
+{
+  nsTArray<int> array{1, 2, 3, 4};
+  const auto it = std::find(array.begin(), array.end(), 3);
+  const auto itAfter = array.RemoveElementAt(it);
+
+  // Based on the implementation of the iterator, we could compare it and
+  // itAfter, but we should not rely on such implementation details.
+
+  ASSERT_EQ(2, std::distance(array.cbegin(), itAfter));
+  const nsTArray<int> expected{1, 2, 4};
+  ASSERT_EQ(expected, array);
+}
+
+TEST(TArray, RemoveElementsAt_ByIterator)
+{
+  nsTArray<int> array{1, 2, 3, 4};
+  const auto it = std::find(array.begin(), array.end(), 3);
+  const auto itAfter = array.RemoveElementsAt(it, array.end());
+
+  // Based on the implementation of the iterator, we could compare it and
+  // itAfter, but we should not rely on such implementation details.
+
+  ASSERT_EQ(2, std::distance(array.cbegin(), itAfter));
+  const nsTArray<int> expected{1, 2};
+  ASSERT_EQ(expected, array);
+}
+
 }  // namespace TestTArray
