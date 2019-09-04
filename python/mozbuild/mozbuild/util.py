@@ -1387,13 +1387,29 @@ def patch_main():
         forking.get_command_line = my_get_command_line
 
 
-def ensure_bytes(value):
+def ensure_bytes(value, encoding='utf-8'):
     if isinstance(value, six.text_type):
-        return value.encode('utf8')
+        return value.encode(encoding)
     return value
 
 
-def ensure_unicode(value):
-    if isinstance(value, type(b'')):
-        return value.decode('utf8')
+def ensure_unicode(value, encoding='utf-8'):
+    if isinstance(value, six.binary_type):
+        return value.decode(encoding)
     return value
+
+
+def ensure_subprocess_env(env, encoding='utf-8'):
+    """Ensure the environment is in the correct format for the `subprocess`
+    module.
+
+    This will convert all keys and values to bytes on Python 2, and text on
+    Python 3.
+
+    Args:
+        env (dict): Environment to ensure.
+        encoding (str): Encoding to use when converting to/from bytes/text
+                        (default: utf-8).
+    """
+    ensure = ensure_bytes if sys.version_info[0] < 3 else ensure_unicode
+    return {ensure(k, encoding): ensure(v, encoding) for k, v in six.iteritems(env)}
