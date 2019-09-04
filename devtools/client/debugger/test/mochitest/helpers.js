@@ -1215,6 +1215,8 @@ const selectors = {
     disableOthers: "#node-menu-disable-others",
     enableSelf: "#node-menu-enable-self",
     enableOthers: "#node-menu-enable-others",
+    disableDbgStatement: "#node-menu-disable-dbgStatement",
+    enableDbgStatement: "#node-menu-enable-dbgStatement",
     remove: "#node-menu-delete-self",
     removeOthers: "#node-menu-delete-other",
     removeCondition: "#node-menu-remove-condition",

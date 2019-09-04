@@ -104,9 +104,10 @@ input:-moz-focusring {
 }
 
 #toolbar-center-controls {
+  grid-gap: 2px;
   grid-template-columns:
     [device-selector]
-    minmax(auto, 90px)
+    minmax(auto, 120px)
     [separator]
     max-content
     [size-selector]
@@ -120,7 +121,7 @@ input:-moz-focusring {
     [separator]
     max-content
     [throttling]
-    minmax(auto, 90px)
+    auto
     [separator]
     max-content
     [touch-simulation]
@@ -130,7 +131,7 @@ input:-moz-focusring {
 #toolbar.user-agent #toolbar-center-controls {
   grid-template-columns:
     [device-selector]
-    minmax(auto, 90px)
+    minmax(auto, 120px)
     [separator]
     max-content
     [size-selector]
@@ -144,7 +145,7 @@ input:-moz-focusring {
     [separator]
     max-content
     [throttling]
-    minmax(auto, 90px)
+    auto
     [separator]
     max-content
     [ua]
@@ -264,6 +265,8 @@ input:-moz-focusring {
 }
 
 #device-selector {
+  justify-self: end;
+  max-width: 100%;
   margin-inline-start: 4px;
 }
 

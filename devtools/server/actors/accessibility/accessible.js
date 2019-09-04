@@ -471,6 +471,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     const contrastRatio = await getContrastRatioFor(rawNode.parentNode, {
       bounds: getBounds(win, bounds),
       win,
+      appliedColorMatrix: this.walker.colorMatrix,
     });
 
     walker.restoreStyles(win);

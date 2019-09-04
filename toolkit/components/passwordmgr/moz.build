@@ -61,7 +61,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'OSCrypto_win.js',
     ]
 
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
+if CONFIG['MOZ_BUILD_APP'] == 'browser' or CONFIG['MOZ_SUITE']:
     EXTRA_JS_MODULES += [
         'LoginManagerContextMenu.jsm',
     ]

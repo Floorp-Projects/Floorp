@@ -18,7 +18,8 @@
 
 #include <algorithm>
 
-using namespace std;
+using std::string;
+using std::vector;
 
 /**
  * Take a base64-encoded string, convert (in-place) each character to its

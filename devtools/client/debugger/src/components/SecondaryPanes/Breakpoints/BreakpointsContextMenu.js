@@ -63,6 +63,12 @@ export default function showContextMenu(props: Props) {
   const disableOthersLabel = L10N.getStr(
     "breakpointMenuItem.disableOthers2.label"
   );
+  const enableDbgStatementLabel = L10N.getStr(
+    "breakpointMenuItem.enabledbg.label"
+  );
+  const disableDbgStatementLabel = L10N.getStr(
+    "breakpointMenuItem.disabledbg.label"
+  );
   const removeConditionLabel = L10N.getStr(
     "breakpointMenuItem.removeCondition2.label"
   );
@@ -188,6 +194,28 @@ export default function showContextMenu(props: Props) {
     click: () => toggleBreakpoints(cx, true, otherEnabledBreakpoints),
   };
 
+  const enableDbgStatementItem = {
+    id: "node-menu-enable-dbgStatement",
+    label: enableDbgStatementLabel,
+    disabled: false,
+    click: () =>
+      setBreakpointOptions(cx, selectedLocation, {
+        ...breakpoint.options,
+        condition: null,
+      }),
+  };
+
+  const disableDbgStatementItem = {
+    id: "node-menu-disable-dbgStatement",
+    label: disableDbgStatementLabel,
+    disabled: false,
+    click: () =>
+      setBreakpointOptions(cx, selectedLocation, {
+        ...breakpoint.options,
+        condition: "false",
+      }),
+  };
+
   const removeConditionItem = {
     id: "node-menu-remove-condition",
     label: removeConditionLabel,
@@ -262,7 +290,14 @@ export default function showContextMenu(props: Props) {
   const hideDisableAllItem = enabledBreakpoints.length === 0;
   const hideDisableOthersItem = otherEnabledBreakpoints.length === 0;
   const hideDisableSelfItem = breakpoint.disabled;
-
+  const hideEnableDbgStatementItem =
+    !breakpoint.originalText.startsWith("debugger") ||
+    (breakpoint.originalText.startsWith("debugger") &&
+      breakpoint.options.condition !== "false");
+  const hideDisableDbgStatementItem =
+    !breakpoint.originalText.startsWith("debugger") ||
+    (breakpoint.originalText.startsWith("debugger") &&
+      breakpoint.options.condition === "false");
   const items = [
     { item: enableSelfItem, hidden: () => hideEnableSelfItem },
     { item: enableAllItem, hidden: () => hideEnableAllItem },
@@ -286,6 +321,18 @@ export default function showContextMenu(props: Props) {
     { item: disableOthersItem, hidden: () => hideDisableOthersItem },
     {
       item: { type: "separator" },
+    },
+    {
+      item: enableDbgStatementItem,
+      hidden: () => hideEnableDbgStatementItem,
+    },
+    {
+      item: disableDbgStatementItem,
+      hidden: () => hideDisableDbgStatementItem,
+    },
+    {
+      item: { type: "separator" },
+      hidden: () => hideDisableDbgStatementItem && hideEnableDbgStatementItem,
     },
     {
       item: addConditionItem,

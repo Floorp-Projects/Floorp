@@ -130,6 +130,36 @@ export const toggleDisabledBreakpointItem = (
   };
 };
 
+export const toggleDbgStatementItem = (
+  cx: Context,
+  breakpoint: Breakpoint,
+  location: SourceLocation,
+  breakpointActions: BreakpointItemActions
+) => {
+  return {
+    disabled: false,
+    ...(breakpoint.options.condition === "false"
+      ? {
+          id: "node-menu-enable-dbgStatement",
+          label: L10N.getStr("breakpointMenuItem.enabledbg.label"),
+          click: () =>
+            breakpointActions.setBreakpointOptions(cx, location, {
+              ...breakpoint.options,
+              condition: null,
+            }),
+        }
+      : {
+          id: "node-menu-disable-dbgStatement",
+          label: L10N.getStr("breakpointMenuItem.disabledbg.label"),
+          click: () =>
+            breakpointActions.setBreakpointOptions(cx, location, {
+              ...breakpoint.options,
+              condition: "false",
+            }),
+        }),
+  };
+};
+
 export function breakpointItems(
   cx: Context,
   breakpoint: Breakpoint,
@@ -140,6 +170,18 @@ export function breakpointItems(
     removeBreakpointItem(cx, breakpoint, breakpointActions),
     toggleDisabledBreakpointItem(cx, breakpoint, breakpointActions),
   ];
+
+  if (breakpoint.originalText.startsWith("debugger")) {
+    items.push(
+      { type: "separator" },
+      toggleDbgStatementItem(
+        cx,
+        breakpoint,
+        selectedLocation,
+        breakpointActions
+      )
+    );
+  }
 
   items.push(
     { type: "separator" },
@@ -234,6 +276,7 @@ export type BreakpointItemActions = {
   disableBreakpointsAtLine: typeof actions.disableBreakpointsAtLine,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
   toggleBreakpointsAtLine: typeof actions.toggleBreakpointsAtLine,
+  setBreakpointOptions: typeof actions.setBreakpointOptions,
   openConditionalPanel: typeof actions.openConditionalPanel,
 };
 
@@ -248,6 +291,7 @@ export function breakpointItemActions(dispatch: Function) {
       disableBreakpoint: actions.disableBreakpoint,
       toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
       toggleBreakpointsAtLine: actions.toggleBreakpointsAtLine,
+      setBreakpointOptions: actions.setBreakpointOptions,
       openConditionalPanel: actions.openConditionalPanel,
     },
     dispatch

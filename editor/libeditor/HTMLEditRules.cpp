@@ -1968,7 +1968,9 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
        blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result = ReturnInParagraph(*blockParent);
+    EditActionResult result =
+        MOZ_KnownLive(HTMLEditorRef())
+            .HandleInsertParagraphInParagraph(*blockParent);
     if (NS_WARN_IF(result.Failed())) {
       return result;
     }
@@ -1979,9 +1981,9 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
       lockOffset.Cancel();
       return result;
     }
-    // Fall through, if ReturnInParagraph() didn't handle it.
+    // Fall through, if HandleInsertParagraphInParagraph() didn't handle it.
     MOZ_ASSERT(!result.Canceled(),
-               "ReturnInParagraph canceled this edit action, "
+               "HandleInsertParagraphInParagraph canceled this edit action, "
                "WillInsertBreak() needs to handle such case");
   }
 
@@ -8100,8 +8102,9 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
   return NS_OK;
 }
 
-EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
+    Element& aParentDivOrP) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
@@ -8180,9 +8183,7 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     }
   }
 
-  bool doesCRCreateNewP =
-      HTMLEditorRef().GetReturnInParagraphCreatesNewParagraph();
-
+  bool doesCRCreateNewP = GetReturnInParagraphCreatesNewParagraph();
   bool splitAfterNewBR = false;
   nsCOMPtr<nsIContent> brContent;
 
@@ -8196,9 +8197,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     // at beginning of text node?
     if (atStartOfSelection.IsStartOfContainer()) {
       // is there a BR prior to it?
-      brContent = HTMLEditorRef().GetPriorHTMLSibling(
-          atStartOfSelection.GetContainer());
-      if (!brContent || !HTMLEditorRef().IsVisibleBRElement(brContent) ||
+      brContent = GetPriorHTMLSibling(atStartOfSelection.GetContainer());
+      if (!brContent || !IsVisibleBRElement(brContent) ||
           EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         brContent = nullptr;
@@ -8206,9 +8206,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     } else if (atStartOfSelection.IsEndOfContainer()) {
       // we're at the end of text node...
       // is there a BR after to it?
-      brContent =
-          HTMLEditorRef().GetNextHTMLSibling(atStartOfSelection.GetContainer());
-      if (!brContent || !HTMLEditorRef().IsVisibleBRElement(brContent) ||
+      brContent = GetNextHTMLSibling(atStartOfSelection.GetContainer());
+      if (!brContent || !IsVisibleBRElement(brContent) ||
           EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
@@ -8221,9 +8220,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       if (doesCRCreateNewP) {
         ErrorResult error;
         nsCOMPtr<nsIContent> newLeftDivOrP =
-            MOZ_KnownLive(HTMLEditorRef())
-                .SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+            SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
+        if (NS_WARN_IF(Destroyed())) {
           error.SuppressException();
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -8244,13 +8242,13 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
   } else {
     // not in a text node.
     // is there a BR prior to it?
-    nsCOMPtr<nsIContent> nearNode;
-    nearNode = HTMLEditorRef().GetPreviousEditableHTMLNode(atStartOfSelection);
-    if (!nearNode || !HTMLEditorRef().IsVisibleBRElement(nearNode) ||
+    nsCOMPtr<nsIContent> nearNode =
+        GetPreviousEditableHTMLNode(atStartOfSelection);
+    if (!nearNode || !IsVisibleBRElement(nearNode) ||
         EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
       // is there a BR after it?
-      nearNode = HTMLEditorRef().GetNextEditableHTMLNode(atStartOfSelection);
-      if (!nearNode || !HTMLEditorRef().IsVisibleBRElement(nearNode) ||
+      nearNode = GetNextEditableHTMLNode(atStartOfSelection);
+      if (!nearNode || !IsVisibleBRElement(nearNode) ||
           EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
         pointToInsertBR = atStartOfSelection;
         splitAfterNewBR = true;
@@ -8266,9 +8264,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       return EditActionResult(NS_OK);
     }
 
-    brContent = MOZ_KnownLive(HTMLEditorRef())
-                    .InsertBRElementWithTransaction(pointToInsertBR);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    brContent = InsertBRElementWithTransaction(pointToInsertBR);
+    if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(brContent, "Failed to create a <br> element");
@@ -8281,8 +8278,7 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     }
   }
   EditActionResult result(
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
+      SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;

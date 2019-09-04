@@ -856,13 +856,36 @@ class Dumper_Mac(Dumper):
             print("No symbols found in file: %s" % (file,), file=sys.stderr)
             return False
 
-        # llvm-dsymutil will produce a .dSYM for files without debug
-        # symbols, but only warns you in the output and doesn't actually
-        # fail.  We don't want to run dump_syms on such bundles, because
-        # asserts will fire in debug mode and who knows what will happen
-        # in release.
+        # llvm-dsymutil will produce a .dSYM for files without symbols or
+        # debug information, but only sometimes will it warn you about this.
+        # We don't want to run dump_syms on such bundles, because asserts
+        # will fire in debug mode and who knows what will happen in release.
+        #
+        # So we check for the error message and bail if it appears.  If it
+        # doesn't, we carefully check the bundled DWARF to see if dump_syms
+        # will be OK with it.
         if 'warning: no debug symbols in' in dsymerr:
             print(dsymerr, file=sys.stderr)
+            return False
+
+        contents_dir = os.path.join(dsymbundle, 'Contents', 'Resources', 'DWARF')
+        if not os.path.exists(contents_dir):
+            print("No DWARF information in .dSYM bundle %s" % (dsymbundle,),
+                  file=sys.stderr)
+            return False
+
+        files = os.listdir(contents_dir)
+        if len(files) != 1:
+            print("Unexpected files in .dSYM bundle %s" % (files,),
+                  file=sys.stderr)
+            return False
+
+        otool_out = subprocess.check_output([buildconfig.substs['OTOOL'],
+                                             '-l',
+                                             os.path.join(contents_dir, files[0])])
+        if 'sectname __debug_info' not in otool_out:
+            print("No symbols in .dSYM bundle %s" % (dsymbundle,),
+                  file=sys.stderr)
             return False
 
         elapsed = time.time() - t_start
