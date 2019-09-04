@@ -450,6 +450,8 @@ dependencies {
 
     androidTestImplementation Deps.androidx_test_core
     androidTestImplementation Deps.espresso_idling_resources
+    debugImplementation Deps.androidx_fragment_testing
+
 
     androidTestImplementation Deps.tools_test_runner
     androidTestImplementation Deps.tools_test_rules
