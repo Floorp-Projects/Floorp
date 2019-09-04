@@ -388,22 +388,24 @@ define(function(require, exports, module) {
 
     onClickRow(nodePath, event) {
       const onClickRow = this.props.onClickRow;
+      const row = this.visibleRows.find(r => r.props.member.path === nodePath);
 
-      if (onClickRow) {
-        onClickRow.call(this, nodePath, event);
+      // Call custom click handler and bail out if it returns true.
+      if (
+        onClickRow &&
+        onClickRow.call(this, nodePath, event, row.props.member)
+      ) {
         return;
       }
 
       event.stopPropagation();
+
       const cell = event.target.closest("td");
       if (cell && cell.classList.contains("treeLabelCell")) {
         this.toggle(nodePath);
       }
 
-      this.selectRow(
-        this.visibleRows.find(row => row.props.member.path === nodePath),
-        { preventAutoScroll: true }
-      );
+      this.selectRow(row, { preventAutoScroll: true });
     }
 
     onContextMenu(member, event) {
