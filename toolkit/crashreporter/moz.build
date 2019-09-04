@@ -62,7 +62,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
             'google-breakpad/src/processor',
             'rust',
         ]
-        if CONFIG['HOST_OS_ARCH'] != 'Darwin':
+        if CONFIG['HOST_OS_ARCH'] == 'Linux':
             DIRS += ['google-breakpad/src/tools/linux/dump_syms']
 
 
