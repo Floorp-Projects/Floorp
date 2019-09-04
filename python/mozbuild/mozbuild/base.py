@@ -610,7 +610,7 @@ class MozbuildObject(ProcessExecutionMixin):
                                   'Mozilla Build System', msg], ensure_exit_code=False)
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed',
-                     {'error': e}, 'Notification center failed: {error}')
+                     {'error': str(e)}, 'Notification center failed: {error}')
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
@@ -913,7 +913,7 @@ class MachCommandBase(MozbuildObject):
                 fd = open(logfile, "wb")
                 self.log_manager.add_json_handler(fd)
             except Exception as e:
-                self.log(logging.WARNING, 'mach', {'error': e},
+                self.log(logging.WARNING, 'mach', {'error': str(e)},
                          'Log will not be kept for this command: {error}.')
 
 
