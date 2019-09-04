@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="256" height="256">
+  <circle id="outter" cx="128" cy="128" r="128" fill-opacity="0.33"></circle>
+</svg>
