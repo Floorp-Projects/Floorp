@@ -598,8 +598,3 @@ test archive into it's own archive.
 geckodriver-signing
 -------------------
 Signing for geckodriver binary.
-
-visual-metrics
---------------
-Tasks that compute visual performance metrics from videos and images captured
-by other tasks.

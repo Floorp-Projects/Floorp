@@ -130,7 +130,6 @@ class FuzzyParser(BaseTryParser):
         'gecko-profile',
         'path',
         'rebuild',
-        'visual-metrics-jobs',
     ]
 
 
