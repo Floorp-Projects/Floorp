@@ -203,6 +203,13 @@ static const double MAX_TIMEOUT_SECONDS = 1800.0;
 // Not necessarily in sync with the browser
 #define SHARED_MEMORY_DEFAULT 1
 
+// Fuzzing support for JS runtime fuzzing
+#ifdef FUZZING_INTERFACES
+#  include "shell/jsrtfuzzing/jsrtfuzzing.h"
+static bool fuzzDoDebug = !!getenv("MOZ_FUZZ_DEBUG");
+static bool fuzzHaveModule = !!getenv("FUZZER");
+#endif  // FUZZING_INTERFACES
+
 // Code to support GCOV code coverage measurements on standalone shell
 #ifdef MOZ_CODE_COVERAGE
 #  if defined(__GNUC__) && !defined(__clang__)
@@ -2694,6 +2701,15 @@ static bool PrintInternal(JSContext* cx, const CallArgs& args, RCFile* file) {
 
 static bool Print(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef FUZZING_INTERFACES
+  if (fuzzHaveModule && !fuzzDoDebug) {
+    // When fuzzing and not debugging, suppress any print() output,
+    // as it slows down fuzzing and makes libFuzzer's output hard
+    // to read.
+    args.rval().setUndefined();
+    return true;
+  }
+#endif  // FUZZING_INTERFACES
   return PrintInternal(cx, args, gOutFile);
 }
 
@@ -10731,6 +10747,12 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   }
 
   JSAutoRealm ar(cx, glob);
+
+#ifdef FUZZING_INTERFACES
+  if (fuzzHaveModule) {
+    return FuzzJSRuntimeStart(cx, &sArgc, &sArgv);
+  }
+#endif
 
   ShellContext* sc = GetShellContext(cx);
   int result = EXIT_SUCCESS;
