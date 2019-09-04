@@ -775,10 +775,6 @@
     <string name="preference_enhanced_tracking_protection_strict">Strict</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Protection renforcée, mais certains sites ou contenus peuvent être endommagés.</string>
-    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocking">Bloqués</string>
-    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_not_blocking">Non bloqués</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Traqueurs de réseaux sociaux</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
@@ -814,4 +810,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Bibliothèques open source</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 onglet</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d onglets</string>
 </resources>

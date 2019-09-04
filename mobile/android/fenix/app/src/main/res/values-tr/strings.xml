@@ -214,6 +214,8 @@
     <string name="preferences_usage_data_description">%1$s tarayıcınızı iyileştirmemize yardımcı olmak için tarayıcınızla ilgili performans, kullanım, donanım ve özelleştirme verilerini Mozilla ile paylaşır</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Deneyler</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Mozilla\'nın deneysel özellikler için veri yüklemesine ve toplamasına izin verir</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Çökme habercisi</string>
     <!-- Preference switch for Mozilla location service -->
@@ -771,12 +773,18 @@
     <string name="etp_social_media_trackers_title">Sosyal medya takipçileri</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Siteler arası takip çerezleri</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Reklam ağlarının ve analitik şirketlerinin farklı siteler arasındaki gezintilerinizi izlemek için kullandığı çerezleri engeller.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kripto madencileri</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Kötü amaçlı betiklerin kripto para üretmek amacıyla cihazınıza erişmesini önler.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Parmak izi toplayıcılar</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Takip amaçlı içerikler</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Takip kodu içeren reklamların, videoların ve diğer içeriklerin yüklenmesini engeller. Bazı sitelerin işlevlerini etkileyebilir.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message">Kalkan renk değiştirdiğinde %s bir sitedeki takipçileri engelliyor demektir. Neyin engellendiğini görmek için kalkana dokunun.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -792,4 +800,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS Kitaplıkları</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 sekme</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d sekme</string>
 </resources>

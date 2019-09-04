@@ -15,7 +15,7 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header">Keine Tabs geöffnet</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Ihre offenen Tabs werden hier angezeigt.</string>
+    <string name="no_open_tabs_description">Offene Tabs werden hier angezeigt.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -42,7 +42,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Einstellungen</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Ihre Bibliothek</string>
+    <string name="browser_menu_your_library">Bibliothek</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop-Website</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -70,7 +70,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scannen</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Shortcuts</string>
+    <string name="search_shortcuts_button">Suchmaschinen</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Suchmaschinen-Einstellungen</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -138,9 +138,9 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Datenübermittlung</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Datensammlung</string>
+    <string name="preferences_data_collection">Datenerhebung</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Datenschutzerklärung</string>
+    <string name="preferences_privacy_link">Datenschutzhinweis</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Entwicklerwerkzeuge</string>
     <!-- Preference for developers -->
@@ -211,7 +211,7 @@
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Für alle Websites aktivieren</string>
 
     <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Mit Ausnahmen können Sie den Tracking-Schutz für ausgewählte Websites deaktivieren. \n\nWeitere Informationen</string>
+    <string name="exceptions_empty_message">Mit Ausnahmen können Sie den Schutz vor Aktivitätenverfolgung für ausgewählte Websites deaktivieren. \n\nWeitere Informationen</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Global ausgeschaltet. Öffnen Sie die Einstellungen, um diesen einzuschalten.</string>
 
@@ -243,7 +243,7 @@
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Melden Sie sich an, um die Verbindung wiederherzustellen</string>
     <!-- Preference for removing FxA account -->
-    <string name="preferences_sync_remove_account">Konto löschen</string>
+    <string name="preferences_sync_remove_account">Konto entfernen</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -411,9 +411,9 @@
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ordner hinzufügen</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Lesezeichen erstellt.</string>
+    <string name="bookmark_created_snackbar">Lesezeichen erstellt</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_saved_snackbar">Lesezeichen gespeichert!</string>
+    <string name="bookmark_saved_snackbar">Lesezeichen gespeichert</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">BEARBEITEN</string>
 
@@ -549,10 +549,10 @@
     <string name="create_collection_save_to_collection_tab_selected">%d Tab ausgewählt</string>
 
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-    <string name="create_collection_tabs_saved">Tabs gespeichert!</string>
+    <string name="create_collection_tabs_saved">Tabs gespeichert</string>
 
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">Tab gespeichert!</string>
+    <string name="create_collection_tab_saved">Tab gespeichert</string>
 
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Schließen</string>
@@ -678,7 +678,7 @@
     <string name="delete_browsing_data_on_quit_action">Beenden</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Dadurch werden alle Ihre Browserdaten gelöscht.</string>
+    <string name="delete_browsing_data_prompt_message">Dadurch werden alle Ihre Browser-Daten gelöscht.</string>
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message_2">Sollen die ausgewählten Browser-Daten wirklich gelöscht werden?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
@@ -726,7 +726,7 @@
     <string name="onboarding_tracking_protection_header">Schützen Sie sich</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s blockiert Werbe-Tracker, die Sie im Internet verfolgen.
+    <string name="onboarding_tracking_protection_description">%s blockiert Werbeskripte zur Aktivitätenverfolgung, die Sie im Internet verfolgen.
     </string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Privat surfen</string>
@@ -758,9 +758,9 @@
     <string name="onboarding_theme_light_title">Helles Theme</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">Tabs gesendet!</string>
+    <string name="sync_sent_tabs_snackbar">Tabs gesendet</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">Tab gesendet!</string>
+    <string name="sync_sent_tab_snackbar">Tab gesendet</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Code scannen</string>
     <!-- Instructions on how to access pairing -->
@@ -784,11 +784,11 @@
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Schutzeinstellungen</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Verbesserter Tracking-Schutz</string>
+    <string name="preference_enhanced_tracking_protection">Verbesserter Schutz vor Aktivitätenverfolgung</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Surfen Sie, ohne verfolgt zu werden</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Behalten Sie Ihre Daten für sich. %s schützt Sie vor vielen der gängigsten Tracker, die Ihre Online-Aktivitäten verfolgen.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Behalten Sie Ihre Daten für sich. %s schützt Sie vor vielen der gängigsten Skripte, die Ihre Online-Aktivitäten verfolgen.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Weitere Informationen</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -810,7 +810,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Seitenübergreifende Tracking-Cookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Blockiert Cookies, die von Werbenetzwerken und Analyseunternehmen verwendet werden, um Ihre Browserdaten auf vielen Websites zusammenzustellen.</string>
+    <string name="etp_cookies_description">Blockiert Cookies, die von Werbenetzwerken und Analyseunternehmen verwendet werden, um Ihre Browser-Daten auf vielen Websites zusammenzustellen.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Heimliche Digitalwährungsberechner (Krypto-Miner)</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -818,17 +818,17 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Identifizierer (Fingerprinter)</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Verhindert, dass eindeutig identifizierbare Daten über Ihr Gerät erfasst werden, die für Tracking-Zwecke verwendet werden können.</string>
+    <string name="etp_fingerprinters_description">Verhindert, dass eindeutig identifizierbare Daten über Ihr Gerät erfasst werden, die zur Aktivitätenverfolgung verwendet werden können.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Tracking-Inhalt</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Verhindert das Laden von Werbung, Videos und anderem Content, der Tracking-Code enthält. Kann einige Funktionen der Website beeinträchtigen.</string>
+    <string name="etp_tracking_content_description">Verhindert das Laden von Werbung, Videos und anderen Inhalten, die Skripte zur Aktivitätenverfolgung enthalten. Kann einige Funktionen der Website beeinträchtigen.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Wenn der Schild die Farbe ändert, blockiert %s die Tracker auf einer Website. Tippen Sie darauf, um zu sehen, was blockiert wird.</string>
+    <string name="etp_onboarding_message">Wenn der Schild die Farbe ändert, blockiert %s die Skripte zur Aktivitätenverfolgung auf einer Website. Tippen Sie darauf, um zu sehen, was blockiert wird.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">Der Schutz für diese Site ist aktiviert</string>
+    <string name="etp_panel_on">Der Schutz für diese Website ist aktiviert</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">Der Schutz für diese Site ist deaktiviert</string>
+    <string name="etp_panel_off">Der Schutz für diese Website ist deaktiviert</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Verbesserter Schutz vor Aktivitätenverfolgung ist für diese Websites deaktiviert</string>
     <!-- About page Your rights link text -->
@@ -838,4 +838,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS-Bibliotheken</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 Tab</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d Tabs</string>
 </resources>

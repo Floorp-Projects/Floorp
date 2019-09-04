@@ -80,6 +80,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Prilepiť odkaz zo schránky</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Hľadať</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Hľadať na webe</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Nastavenia</string>
@@ -216,6 +222,10 @@
     <string name="preference_usage_data">Údaje o používaní a technické údaje</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Zdieľa údaje o výkonnosti, využívaní funkcií, hardvérovej konfigurácii a prispôsobení prehliadača s Mozillou s cieľom urobiť %1$s lepším</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experimenty</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Umožňuje Mozille inštalovať a zbierať údaje o experimentálnych funkciách</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Hlásenie pádov</string>
     <!-- Preference switch for Mozilla location service -->
@@ -362,6 +372,12 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Počet položiek na odstránenie: %1$d</string>
 
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Posledných 24 hodín</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Posledných 7 dní</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Posledných 30 dní</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Staršia</string>
     <!-- Text shown when no history exists -->
@@ -489,6 +505,9 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnutá</string>
 
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Ukladajte si stránky a karty, na ktorých vám záleží, do kolekcií.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -564,6 +583,8 @@
     <string name="snackbar_tab_deleted">Karta bola odstránená</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Karty boli odstránené</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Súkromné karty boli odstránené</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">SPÄŤ</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -607,16 +628,42 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Počet adries: %d</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">História</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Počet stránok:</string>
     <!-- Title for the collections item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_collections_title">Kolekcie</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">Počet kolekcií: %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Príde k vášmu odhláseniu z väčšiny webových stránok</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Obrázky a súbory v medzipamäti</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Uvolní priestor v zariadení</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Povolenia stránok</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
 
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Odstrániť údaje o prehliadaní pri ukončení aplikácie</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Automaticky odstráni údaje o prehliadaní po stlačení tlačidla „Ukončiť“ v hlavnej ponuke</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Ukončiť</string>
+
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Vaše údaje o prehliadaní budú odstránené.</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message_2">Naozaj chcete odstrániť tieto údaje o prehliadaní?</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s odstráni vybrané údaje.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Zrušiť</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -720,8 +767,18 @@
     <string name="etp_settings">Nastavenia ochrany</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Rozšírená ochrana pred sledovaním</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nenechajte sa pri prehliadaní sledovať</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">%s vás chráni pred mnohými sledovacími prvkami, ktoré zbierajú informácie o tom, čo robíte na internete.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ďalšie informácie</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Vyvážená ochrana a výkon.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Viac blokovaného obsahu zvyšuje pravdepodobnosť, že niektoré stránky nebudú správne fungovať.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Odtlačok prehliadača</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Vaše práva</string>
     <!-- About page link text to open open source licenses screen -->
@@ -729,4 +786,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS knižnice</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 karta</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">Počet kariet: %d</string>
 </resources>
