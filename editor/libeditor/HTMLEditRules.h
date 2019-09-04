@@ -525,32 +525,6 @@ class HTMLEditRules : public TextEditRules {
                           nsTArray<bool>& aTransitionArray);
 
   /**
-   * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
-   * are themselves or the nearest editable node of aLeftNode and aRightNode.
-   * XXX This method's behavior is odd.  For example, if user types Backspace
-   *     key at the second editable paragraph in this case:
-   *     <div contenteditable>
-   *       <p>first editable paragraph</p>
-   *       <p contenteditable="false">non-editable paragraph</p>
-   *       <p>second editable paragraph</p>
-   *     </div>
-   *     The first editable paragraph's content will be moved into the second
-   *     editable paragraph and the non-editable paragraph becomes the first
-   *     paragraph of the editor.  I don't think that it's expected behavior of
-   *     any users...
-   *
-   * @param aLeftNode   The node which will be removed.
-   * @param aRightNode  The node which will be inserted the content of
-   *                    aLeftNode.
-   * @param aNewFirstChildOfRightNode
-   *                    The point at the first child of aRightNode.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult JoinNearestEditableNodesWithTransaction(
-      nsIContent& aLeftNode, nsIContent& aRightNode,
-      EditorDOMPoint* aNewFirstChildOfRightNode);
-
-  /**
    * PopListItem() tries to move aListItem outside its parent.  If it's
    * in a middle of a list element, the parent list element is split before
    * aListItem.  Then, moves aListItem to before its parent list element.
