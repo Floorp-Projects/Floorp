@@ -20,7 +20,9 @@
 #include "nsNSSCertificate.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "prerror.h"
+#include "prnetdb.h"
 #include "secder.h"
 
 using namespace mozilla;
