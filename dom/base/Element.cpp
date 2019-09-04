@@ -1728,7 +1728,8 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     // XXXbz if we already have a style attr parsed, this won't do
     // anything... need to fix that.
     // If MayHaveStyle() is true, we must be an nsStyledElement
-    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false, false);
+    static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(
+        /* aForceInDataDoc = */ false);
   }
 
   // FIXME(emilio): Why is this needed? The element shouldn't even be styled in
