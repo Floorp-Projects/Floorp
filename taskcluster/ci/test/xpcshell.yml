@@ -19,9 +19,6 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-4.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
                 android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0-old.py
@@ -49,26 +46,18 @@ xpcshell:
         by-test-platform:
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
             default: built-projects
     chunks:
         by-test-platform:
             .*-ccov/debug: 6
-            android-em-4.*: 8
-            android-em-4.3-arm7-api-16/debug: 12
             android-em-7.*: 3
             macosx.*(?!-ccov)...../.*: 2
             linux64(-qr)?/debug: 6
             windows(7-32|10-64)(-shippable|-devedition|-asan|.*-qr)?/.*: 2
             windows10-aarch64/opt: 3
             default: 5
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
-            default: default
     max-run-time:
         by-test-platform:
-            android-em-4.*: 7200
             macosx.*(?!-ccov)...../.*: 3600
             windows10-aarch64/.*: 3600
             .*-ccov/debug: 5400
@@ -77,6 +66,5 @@ xpcshell:
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
-            android-em-4.*: 2
             windows10-aarch64.*: 2
             default: default

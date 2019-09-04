@@ -16,7 +16,6 @@ job-defaults:
             default: ['fission']
     run-on-projects:
         by-test-platform:
-            android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
@@ -30,9 +29,6 @@ job-defaults:
                 android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em-4.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
                 android-hw.*:
                     - android/android_common.py
                     - android/android_hw.py
@@ -54,14 +50,8 @@ mochitest:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
-            default: default
     chunks:
         by-test-platform:
-            android-em-4.*\/debug: 60
-            android-em-4.*\/(?:opt|pgo)?: 24
             android-em-7.*: 3
             linux.*/debug: 16
             linux64-asan/opt: 10
@@ -177,16 +167,9 @@ mochitest-chrome:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
-            android-em-4.*/.*: 2  # bug 1548659
-            default: default
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
             default: default
     chunks:
         by-test-platform:
-            android-em-4.*\/debug: 8
-            android-em.4.*\/(?:opt|pgo)?: 4
             android-em-7.*: 1
             .*-ccov/.*: 3
             .*-qr/.*: 3
@@ -270,18 +253,9 @@ mochitest-gpu:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
-            android-em-4.*/.*: 2  # bug 1548659
-            default: default
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
             default: default
     virtualization: virtual-with-gpu
     e10s: true
-    run-on-projects:
-        by-test-platform:
-            android-em-4.*/.*: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -304,7 +278,6 @@ mochitest-media:
         by-test-platform:
             android-hw-.*-api-16/opt: ['try']
             android-hw-.*-api-16/(?:debug|pgo)?: ['try', 'trunk', 'mozilla-beta', 'mozilla-release']
-            android-em-4.*/.*: ['try']  # bug 1553955
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     variants:
@@ -313,10 +286,7 @@ mochitest-media:
             linux64/debug: ['fission', 'serviceworker', 'socketprocess']
             default: ['fission', 'socketprocess']
     loopback-video: true
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
-            default: large
+    instance-size: large
     chunks:
         by-test-platform:
             android-em-7.*: 1
