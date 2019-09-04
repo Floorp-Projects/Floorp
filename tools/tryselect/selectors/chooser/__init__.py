@@ -28,7 +28,6 @@ class ChooserParser(BaseTryParser):
         'gecko-profile',
         'path',
         'rebuild',
-        'visual-metrics-jobs',
     ]
 
 
