@@ -17,6 +17,7 @@ import sys
 import shutil
 import tempfile
 from distutils.version import LooseVersion, StrictVersion
+from mozbuild.util import ensure_subprocess_env
 from mozbuild.nodeutil import (find_node_executable, find_npm_executable,
                                NPM_MIN_VERSION, NODE_MIN_VERSION)
 sys.path.append(os.path.join(
@@ -163,7 +164,7 @@ def package_setup(package_root, package_name, should_clobber=False, no_optional=
 
 def call_process(name, cmd, cwd=None, append_env={}):
     env = dict(os.environ)
-    env.update(append_env)
+    env.update(ensure_subprocess_env(append_env))
 
     try:
         with open(os.devnull, "w") as fnull:
