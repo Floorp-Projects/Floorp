@@ -765,13 +765,6 @@ def set_treeherder_machine_platform(config, tests):
         'win64-aarch64/opt': 'windows10-aarch64/opt',
         'win32-pgo/opt': 'windows7-32/pgo',
         'win64-pgo/opt': 'windows10-64/pgo',
-        # The build names for Android platforms have partially evolved over the
-        # years and need to be translated.
-        'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
-        'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
-        'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
-        'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
-        'android-x86/opt': 'android-em-4-2-x86/opt',
     }
     for test in tests:
         # For most desktop platforms, the above table is not used for "regular"
@@ -852,10 +845,6 @@ def set_tier(config, tests):
                                          'macosx1014-64-qr/opt',
                                          'macosx1014-64-shippable-qr/opt',
                                          'macosx1014-64-qr/debug',
-                                         'android-em-4.3-arm7-api-16/opt',
-                                         'android-em-4.3-arm7-api-16/debug',
-                                         'android-em-4.3-arm7-api-16/pgo',
-                                         'android-em-4.2-x86/opt',
                                          'android-em-7.0-x86_64/opt',
                                          'android-em-7.0-x86_64/debug',
                                          'android-em-7.0-x86/opt']:
