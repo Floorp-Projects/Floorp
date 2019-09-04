@@ -30,6 +30,7 @@
         app:layout_constraintBottom_toBottomOf="@id/radio_button" />
     <TextView
         android:id="@+id/engine_text"
+        android:textColor="?primaryText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/radio_button_padding_horizontal"
