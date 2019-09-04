@@ -38,8 +38,10 @@ login-list {
   grid-area: logins;
 }
 
-:root:not(.no-logins) login-intro,
+:root:not(.no-logins):not(.empty-search):not(.login-selected) login-intro,
 login-item[data-editing="true"] + login-intro,
+.login-selected login-intro,
+.empty-search:not(.login-selected) login-item:not([data-editing="true"]),
 .no-logins login-item:not([data-editing="true"]) {
   display: none;
 }

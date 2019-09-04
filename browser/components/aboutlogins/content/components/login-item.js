@@ -479,6 +479,7 @@ export default class LoginItem extends HTMLElement {
     } else {
       this.dataset.isNewLogin = true;
     }
+    document.documentElement.classList.toggle("login-selected", login.guid);
     this._toggleEditing(!login.guid);
 
     this._revealCheckbox.checked = false;
