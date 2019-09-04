@@ -329,6 +329,7 @@ dependencies {
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
+    testImplementation Deps.kotlin_coroutines_test
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout
     implementation Deps.androidx_coordinatorlayout

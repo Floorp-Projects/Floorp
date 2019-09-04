@@ -15,16 +15,17 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.PagedList
+import androidx.paging.toLiveData
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -34,6 +35,7 @@ import org.mozilla.fenix.ext.requireComponents
 class DeleteBrowsingDataFragment : Fragment() {
     private lateinit var sessionObserver: SessionManager.Observer
     private var tabCollections: List<TabCollection> = listOf()
+    private lateinit var controller: DeleteBrowsingDataController
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,6 +46,8 @@ class DeleteBrowsingDataFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        controller = DefaultDeleteBrowsingDataController(context!!)
 
         sessionObserver = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) = updateTabCount()
@@ -60,9 +64,9 @@ class DeleteBrowsingDataFragment : Fragment() {
             })
         }
 
-        view.open_tabs_item?.onCheckListener = { _ -> updateDeleteButton() }
-        view.browsing_data_item?.onCheckListener = { _ -> updateDeleteButton() }
-        view.collections_item?.onCheckListener = { _ -> updateDeleteButton() }
+        getCheckboxes().forEach {
+            it.onCheckListener = { _ -> updateDeleteButton() }
+        }
         view.delete_data?.setOnClickListener {
             askToDelete()
         }
@@ -75,10 +79,11 @@ class DeleteBrowsingDataFragment : Fragment() {
             supportActionBar?.show()
         }
 
-        updateTabCount()
-        updateHistoryCount()
-        updateCollectionsCount()
-        updateDeleteButton()
+        getCheckboxes().forEach {
+            it.visibility = View.VISIBLE
+        }
+
+        updateItemCounts()
     }
 
     private fun askToDelete() {
@@ -100,15 +105,20 @@ class DeleteBrowsingDataFragment : Fragment() {
     }
 
     private fun deleteSelected() {
-        val openTabsChecked = view!!.open_tabs_item!!.isChecked
-        val browsingDataChecked = view!!.browsing_data_item!!.isChecked
-        val collectionsChecked = view!!.collections_item!!.isChecked
-
         startDeletion()
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            if (openTabsChecked) deleteTabs()
-            if (browsingDataChecked) deleteBrowsingData()
-            if (collectionsChecked) deleteCollections()
+            getCheckboxes().mapIndexed { i, v ->
+                if (v.isChecked) {
+                    when (i) {
+                        OPEN_TABS_INDEX -> controller.deleteTabs()
+                        HISTORY_INDEX -> controller.deleteBrowsingData()
+                        COLLECTIONS_INDEX -> controller.deleteCollections(tabCollections)
+                        COOKIES_INDEX -> controller.deleteCookies()
+                        CACHED_INDEX -> controller.deleteCachedFiles()
+                        PERMS_INDEX -> controller.deleteSitePermissions()
+                    }
+                }
+            }
 
             launch(Dispatchers.Main) {
                 finishDeletion()
@@ -131,28 +141,34 @@ class DeleteBrowsingDataFragment : Fragment() {
         delete_browsing_data_wrapper.isClickable = true
         delete_browsing_data_wrapper.alpha = ENABLED_ALPHA
 
-        listOf(open_tabs_item, browsing_data_item, collections_item).forEach {
+        getCheckboxes().forEach {
             it.isChecked = false
         }
 
-        updateTabCount()
-        updateHistoryCount()
-        updateCollectionsCount()
+        updateItemCounts()
 
         FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()
 
-        if (popAfter) viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+        if (popAfter || FeatureFlags.granularDataDeletion) viewLifecycleOwner.lifecycleScope.launch(
+            Dispatchers.Main
+        ) {
             findNavController().popBackStack(R.id.homeFragment, false)
         }
     }
 
+    private fun updateItemCounts() {
+        updateTabCount()
+        updateHistoryCount()
+        updateCollectionsCount()
+        updateCookies()
+        updateCachedImagesAndFiles()
+        updateSitePermissions()
+    }
+
     private fun updateDeleteButton() {
-        val openTabs = view!!.open_tabs_item!!.isChecked
-        val browsingData = view!!.browsing_data_item!!.isChecked
-        val collections = view!!.collections_item!!.isChecked
-        val enabled = openTabs || browsingData || collections
+        val enabled = getCheckboxes().any { it.isChecked }
 
         view?.delete_data?.isEnabled = enabled
         view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
@@ -206,30 +222,52 @@ class DeleteBrowsingDataFragment : Fragment() {
         }
     }
 
-    private suspend fun deleteTabs() {
-        withContext(Dispatchers.Main) {
-            requireComponents.useCases.tabsUseCases.removeAllTabs.invoke()
-        }
+    private fun updateCookies() {
+        // NO OP until we have GeckoView methods to count cookies
     }
 
-    private suspend fun deleteBrowsingData() {
-        withContext(Dispatchers.Main) {
-            requireComponents.core.engine.clearData(Engine.BrowsingData.all())
-        }
-        requireComponents.core.historyStorage.deleteEverything()
+    private fun updateCachedImagesAndFiles() {
+        // NO OP until we have GeckoView methods to count cached images and files
     }
 
-    private suspend fun deleteCollections() {
-        while (requireComponents.core.tabCollectionStorage.getTabCollectionsCount() != tabCollections.size) {
-            delay(DELAY_IN_MILLIS)
-        }
+    private fun updateSitePermissions() {
+        val liveData =
+            requireComponents.core.permissionStorage.getSitePermissionsPaged().toLiveData(1)
+        liveData.observe(
+            this,
+            object : Observer<PagedList<SitePermissions>> {
+                override fun onChanged(list: PagedList<SitePermissions>?) {
+                    view?.site_permissions_item?.isEnabled = !list.isNullOrEmpty()
+                    liveData.removeObserver(this)
+                }
+            })
+    }
 
-        tabCollections.forEach { requireComponents.core.tabCollectionStorage.removeCollection(it) }
+    private fun getCheckboxes(): List<DeleteBrowsingDataItem> {
+        val fragmentView = view!!
+        val originalList = listOf(
+            fragmentView.open_tabs_item,
+            fragmentView.browsing_data_item,
+            fragmentView.collections_item
+        )
+        @Suppress("ConstantConditionIf")
+        val granularList = if (FeatureFlags.granularDataDeletion) listOf(
+            fragmentView.cookies_item,
+            fragmentView.cached_files_item,
+            fragmentView.site_permissions_item
+        ) else emptyList()
+        return originalList + granularList
     }
 
     companion object {
         private const val ENABLED_ALPHA = 1f
         private const val DISABLED_ALPHA = 0.6f
-        private const val DELAY_IN_MILLIS = 500L
+
+        private const val OPEN_TABS_INDEX = 0
+        private const val HISTORY_INDEX = 1
+        private const val COLLECTIONS_INDEX = 2
+        private const val COOKIES_INDEX = 3
+        private const val CACHED_INDEX = 4
+        private const val PERMS_INDEX = 5
     }
 }

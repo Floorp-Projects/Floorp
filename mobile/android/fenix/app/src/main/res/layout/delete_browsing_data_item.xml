@@ -9,17 +9,12 @@
     android:layout_height="@dimen/library_item_height"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-    <ImageView
-        android:id="@+id/icon"
-        android:layout_width="@dimen/library_item_icon_height"
-        android:layout_height="@dimen/library_item_icon_height"
-        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
-        android:layout_marginTop="@dimen/library_item_icon_margin_vertical"
-        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
-        android:layout_marginBottom="@dimen/library_item_icon_margin_vertical"
-        android:background="@drawable/library_icon_reading_list_circle_background"
+    <CheckBox
+        android:id="@+id/checkbox"
         android:clickable="false"
-        android:importantForAccessibility="no"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -32,9 +27,9 @@
         android:textAppearance="@style/ListItemTextStyle"
         android:clickable="false"
         android:layout_marginTop="16dp"
-        app:layout_constraintStart_toEndOf="@id/icon"
-        app:layout_constraintEnd_toStartOf="@id/checkbox"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/checkbox"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Open Tabs" />
 
     <TextView
         android:id="@+id/subtitle"
@@ -43,17 +38,7 @@
         android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
         android:textAppearance="@style/SubtitleTextStyle"
         android:clickable="false"
-        app:layout_constraintStart_toEndOf="@id/icon"
-        app:layout_constraintEnd_toStartOf="@id/checkbox"
-        app:layout_constraintTop_toBottomOf="@id/title" />
-
-    <CheckBox
-        android:id="@+id/checkbox"
-        android:clickable="false"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/checkbox"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="2 Open Tabs" />
 </merge>
