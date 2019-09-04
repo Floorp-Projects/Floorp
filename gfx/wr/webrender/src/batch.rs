@@ -1179,13 +1179,13 @@ impl BatchBuilder {
                             PictureCompositeMode::TileCache { .. } => {
                                 let tile_cache = picture.tile_cache.as_ref().unwrap();
 
-                                let tile_clip_rect = match tile_cache.local_rect.intersection(&tile_cache.local_clip_rect) {
+                                let local_tile_clip_rect = LayoutRect::from_untyped(&tile_cache.local_rect.to_untyped());
+                                let local_tile_clip_rect = match local_tile_clip_rect.intersection(&prim_info.combined_local_clip_rect) {
                                     Some(rect) => rect,
                                     None => {
                                         return;
                                     }
                                 };
-                                let local_tile_clip_rect = LayoutRect::from_untyped(&tile_clip_rect.to_untyped());
 
                                 for key in &tile_cache.tiles_to_draw {
                                     let tile = &tile_cache.tiles[key];
