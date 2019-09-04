@@ -183,7 +183,7 @@ async function testClickInInnerIframe(doc) {
 
   const target = iframe.contentWindow.document.getElementById("test");
   const onTooltipClick = once(target, "click");
-  EventUtils.synthesizeMouseAtCenter(target, {}, target.ownerGlobal);
+  target.click();
   await onTooltipClick;
 
   is(tooltip.isVisible(), true, "Tooltip is still visible");
