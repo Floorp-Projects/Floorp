@@ -28,7 +28,7 @@ android {
         }
     }
 
-    flavorDimensions "engine", "abi"
+    flavorDimensions "engine"
 
     productFlavors {
         // GeckoView release channels
@@ -46,20 +46,6 @@ android {
         system {
             dimension "engine"
         }
-
-        // Processor architecture
-        arm {
-            dimension "abi"
-        }
-        x86 {
-            dimension "abi"
-        }
-        aarch64 {
-            dimension "abi"
-        }
-        universal {
-            dimension "abi"
-        }
     }
 
     variantFilter { variant ->
@@ -68,33 +54,7 @@ android {
             // release versions.
             setIgnore(true)
         }
-
-        def flavors = variant.flavors*.name.toString().toLowerCase()
-        if (flavors.contains("system") && !flavors.contains("universal")) {
-            setIgnore(true)
-        }
-
-        // Only allow "universal" flavors of "system", "geckoviewNightly" and "geckoBeta" engines
-        if (flavors.contains("universal") && !(flavors.contains("system") || flavors.contains("geckonightly") || flavors.contains("geckobeta"))) {
-            setIgnore(true)
-        }
-
-        // Ignore all non-universal GeckoView Nightly builds
-        if (!flavors.contains("universal") && flavors.contains("geckonightly")) {
-            setIgnore(true)
-        }
-
-        // Ignore all non-universal GeckoView Beta builds
-        if (!flavors.contains("universal") && flavors.contains("geckobeta")) {
-            setIgnore(true)
-        }
     }
-}
-
-configurations {
-    geckoReleaseArmImplementation {}
-    geckoReleaseX86Implementation {}
-    geckoReleaseAarch64Implementation {}
 }
 
 dependencies {
@@ -142,13 +102,8 @@ dependencies {
     implementation project(':support-ktx')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
-
     geckoBetaImplementation project(':browser-engine-gecko-beta')
-
     geckoReleaseImplementation project(':browser-engine-gecko')
-    geckoReleaseArmImplementation Gecko.geckoview_release_arm
-    geckoReleaseX86Implementation Gecko.geckoview_release_x86
-    geckoReleaseAarch64Implementation Gecko.geckoview_release_aarch64
 
     implementation Dependencies.google_material
 
