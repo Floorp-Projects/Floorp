@@ -263,18 +263,22 @@ async function prepareForToggleClick(browser, videoID) {
  * video and then clicking in the toggle region should open a
  * Picture-in-Picture window. If canToggle is false, we expect that a click
  * in this region will not result in the window opening.
+ * @param {async Function} prepFn An optional asynchronous function to run
+ * before running the toggle test. The function is passed the opened
+ * <xul:browser> as its only argument once the testURL has finished loading.
  *
  * @return Promise
  * @resolves When the test is complete and the tab with the loaded page is
  * removed.
  */
-async function testToggle(testURL, expectations) {
+async function testToggle(testURL, expectations, prepFn = async () => {}) {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: testURL,
     },
     async browser => {
+      await prepFn(browser);
       await ensureVideosReady(browser);
 
       for (let [videoID, canToggle] of Object.entries(expectations)) {
