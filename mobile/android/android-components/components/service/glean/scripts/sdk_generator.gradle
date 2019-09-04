@@ -21,7 +21,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 // so that it will be shared between all libraries that use Glean.  This is
 // important because it is approximately 300MB in installed size.
 
-String GLEAN_PARSER_VERSION = "1.4.0"
+String GLEAN_PARSER_VERSION = "1.4.2"
 // The version of Miniconda is explicitly specified.
 // Miniconda3-4.5.12 is known to not work on Windows.
 String MINICONDA_VERSION = "4.5.11"
@@ -285,7 +285,12 @@ if (project.ext.has("gleanGenerateMarkdownDocs")) {
     task gleanGenerateMetricsDocs(type: Exec) {
         description = "Generate the Markdown docs for the collected metrics"
 
-        outputs.dir "$projectDir/docs"
+        def gleanDocsDirectory = "$projectDir/docs"
+        if (project.ext.has("gleanDocsDirectory")) {
+            gleanDocsDirectory = project.ext.get("gleanDocsDirectory")
+        }
+
+        outputs.dir gleanDocsDirectory
         workingDir rootDir
         commandLine gleanGetPythonCommand()
 
@@ -297,13 +302,13 @@ if (project.ext.has("gleanGenerateMarkdownDocs")) {
         args "-f"
         args "markdown"
         args "-o"
-        args "$projectDir/docs"
+        args gleanDocsDirectory
         args "$projectDir/metrics.yaml"
         args "$projectDir/pings.yaml"
 
         doFirst {
             inputs.files.forEach{ file ->
-                project.logger.lifecycle("Glean SDK - generating docs for ${file.path} in $projectDir/docs")
+                project.logger.lifecycle("Glean SDK - generating docs for ${file.path} in $gleanDocsDirectory")
             }
         }
 
