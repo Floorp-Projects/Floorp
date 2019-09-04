@@ -41,6 +41,9 @@ permalink: /changelog/
 * **browser-engine-gecko**
   * Like with the nightly and beta flavor previously this component now has a hard dependency on the new [universal GeckoView build](https://bugzilla.mozilla.org/show_bug.cgi?id=1508976) that is no longer architecture specific (ARM, x86, ..). With that apps no longer need to specify the GeckoView dependency themselves and synchronize the used version with Android Components. Additionally apps can now make use of [APK splits](https://developer.android.com/studio/build/configure-apk-splits) or [Android App Bundles (AAB)](https://developer.android.com/guide/app-bundle).
 
+  * **browser-engine-servo**
+    * ❌ We removed the `browser-engine-servo` component since it was not being maintained, updated and used.
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
