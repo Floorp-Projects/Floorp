@@ -7,7 +7,7 @@ use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF};
 use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
-use crate::clip::{ClipStore, ClipDataStore, ClipChainInstance};
+use crate::clip::{ClipStore, ClipDataStore, ClipChainInstance, ClipDataHandle};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
 };
@@ -34,7 +34,6 @@ use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache, ClearMod
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use crate::scene_builder::Interners;
-use crate::spatial_node::SpatialNodeType;
 use smallvec::SmallVec;
 use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1082,14 +1081,8 @@ pub struct TileCacheInstance {
     tile_bounds_p1: TileOffset,
     /// Local rect (unclipped) of the picture this cache covers.
     pub local_rect: PictureRect,
-    /// Local clip rect for this tile cache.
-    pub local_clip_rect: PictureRect,
     /// A list of tiles that are valid and visible, which should be drawn to the main scene.
     pub tiles_to_draw: Vec<TileOffset>,
-    /// The world space viewport that this tile cache draws into.
-    /// Any clips outside this viewport can be ignored (and must be removed so that
-    /// we can draw outside the bounds of the viewport).
-    pub world_viewport_rect: WorldRect,
     /// The surface index that this tile cache will be drawn into.
     surface_index: SurfaceIndex,
     /// The background color from the renderer. If this is set opaque, we know it's
@@ -1104,6 +1097,11 @@ pub struct TileCacheInstance {
     /// all tiles need to be invalidated and redrawn, since snapping differences are
     /// likely to occur.
     fract_offset: PictureVector2D,
+    /// A list of clip handles that exist on every (top-level) primitive in this picture.
+    /// It's often the case that these are root / fixed position clips. By handling them
+    /// here, we can avoid applying them to the items, which reduces work, but more importantly
+    /// reduces invalidations.
+    pub shared_clips: Vec<ClipDataHandle>,
 }
 
 impl TileCacheInstance {
@@ -1111,6 +1109,7 @@ impl TileCacheInstance {
         slice: usize,
         spatial_node_index: SpatialNodeIndex,
         background_color: Option<ColorF>,
+        shared_clips: Vec<ClipDataHandle>,
     ) -> Self {
         TileCacheInstance {
             slice,
@@ -1129,14 +1128,13 @@ impl TileCacheInstance {
             tile_bounds_p0: TileOffset::zero(),
             tile_bounds_p1: TileOffset::zero(),
             local_rect: PictureRect::zero(),
-            local_clip_rect: PictureRect::zero(),
             tiles_to_draw: Vec::new(),
-            world_viewport_rect: WorldRect::zero(),
             surface_index: SurfaceIndex(0),
             background_color,
             backdrop: BackdropInfo::empty(),
             subpixel_mode: SubpixelMode::Allow,
             fract_offset: PictureVector2D::zero(),
+            shared_clips,
         }
     }
 
@@ -1253,49 +1251,7 @@ impl TileCacheInstance {
             self.fract_offset = fract_offset;
         }
 
-        let spatial_node = &frame_context
-            .clip_scroll_tree
-            .spatial_nodes[self.spatial_node_index.0 as usize];
-        let (viewport_rect, viewport_spatial_node_index) = match spatial_node.node_type {
-            SpatialNodeType::ScrollFrame(ref info) => {
-                (info.viewport_rect, spatial_node.parent.unwrap())
-            }
-            SpatialNodeType::StickyFrame(..) => {
-                unreachable!();
-            }
-            SpatialNodeType::ReferenceFrame(..) => {
-                assert_eq!(self.spatial_node_index, ROOT_SPATIAL_NODE_INDEX);
-                (LayoutRect::max_rect(), ROOT_SPATIAL_NODE_INDEX)
-            }
-        };
-
-        let viewport_to_world_mapper = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
-            viewport_spatial_node_index,
-            frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
-        );
-        self.world_viewport_rect = viewport_to_world_mapper
-            .map(&viewport_rect)
-            .expect("bug: unable to map viewport to world space");
-
-        // TODO(gw): This is a reverse mapping. It should always work since we know
-        //           that this path only runs for slices in the root coordinate system.
-        //           But perhaps we should assert that?
-        // TODO(gw): We could change to directly use the ScaleOffset in content_transform
-        //           which would make this clearer that we know the coordinate systems are the
-        //           same and that it's a safe / exact conversion.
-        self.map_local_to_surface.set_target_spatial_node(
-            viewport_spatial_node_index,
-            frame_context.clip_scroll_tree,
-        );
-        let local_viewport_rect = self
-            .map_local_to_surface
-            .map(&viewport_rect)
-            .expect("bug: unable to map to local viewport rect");
-
         self.local_rect = pic_rect;
-        self.local_clip_rect = local_viewport_rect;
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -1330,15 +1286,11 @@ impl TileCacheInstance {
             .unmap(&frame_context.global_screen_world_rect)
             .expect("unable to unmap screen rect");
 
-        let visible_rect_in_pic_space = screen_rect_in_pic_space
-            .intersection(&self.local_clip_rect)
-            .unwrap_or(PictureRect::zero());
-
         // Inflate the needed rect a bit, so that we retain tiles that we have drawn
         // but have just recently gone off-screen. This means that we avoid re-drawing
         // tiles if the user is scrolling up and down small amounts, at the cost of
         // a bit of extra texture memory.
-        let desired_rect_in_pic_space = visible_rect_in_pic_space
+        let desired_rect_in_pic_space = screen_rect_in_pic_space
             .inflate(0.0, 3.0 * self.tile_size.height);
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space

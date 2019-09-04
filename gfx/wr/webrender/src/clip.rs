@@ -15,11 +15,10 @@ use crate::image::{self, Repetition};
 use crate::intern;
 use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
-use crate::render_backend::DataStores;
 use crate::render_task::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, ops, u32};
-use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset, MaxRect};
+use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 
 /*
 
@@ -103,7 +102,19 @@ use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset, MaxRect};
 // Type definitions for interning clip nodes.
 
 pub type ClipDataStore = intern::DataStore<ClipIntern>;
-type ClipDataHandle = intern::Handle<ClipIntern>;
+pub type ClipDataHandle = intern::Handle<ClipIntern>;
+
+/// Helper to identify simple clips (normal rects) from other kinds of clips,
+/// which can often be handled via fast code paths.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone, MallocSizeOf)]
+pub enum ClipNodeKind {
+    /// A normal clip rectangle, with Clip mode.
+    Rectangle,
+    /// A rectangle with ClipOut, or any other kind of clip.
+    Complex,
+}
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -209,7 +220,6 @@ impl ClipChainId {
 pub struct ClipChainNode {
     pub handle: ClipDataHandle,
     pub parent_clip_chain_id: ClipChainId,
-    pub has_complex_clip: bool,
 }
 
 // When a clip node is found to be valid for a
@@ -545,22 +555,25 @@ impl ClipChainInstance {
 }
 
 /// Maintains a (flattened) list of clips for a given level in the surface level stack.
+#[derive(Debug)]
 pub struct ClipChainLevel {
     clips: Vec<ClipChainId>,
     clip_counts: Vec<usize>,
-    viewport: WorldRect,
+    /// These clips will be handled when compositing this surface into the parent,
+    /// and can thus be ignored on the primitives that are drawn as part of this surface.
+    shared_clips: Vec<ClipDataHandle>,
 }
 
 impl ClipChainLevel {
     /// Construct a new level in the active clip chain stack. The viewport
     /// is used to filter out irrelevant clips.
     fn new(
-        viewport: WorldRect,
+        shared_clips: Vec<ClipDataHandle>,
     ) -> Self {
         ClipChainLevel {
             clips: Vec::new(),
             clip_counts: Vec::new(),
-            viewport,
+            shared_clips,
         }
     }
 }
@@ -580,7 +593,7 @@ pub struct ClipChainStack {
 impl ClipChainStack {
     pub fn new() -> Self {
         ClipChainStack {
-            stack: vec![ClipChainLevel::new(WorldRect::max_rect())],
+            stack: vec![ClipChainLevel::new(Vec::new())],
         }
     }
 
@@ -589,72 +602,37 @@ impl ClipChainStack {
         &mut self,
         clip_chain_id: ClipChainId,
         clip_store: &ClipStore,
-        data_stores: &DataStores,
-        clip_scroll_tree: &ClipScrollTree,
-        global_screen_world_rect: WorldRect,
     ) {
-        let level = self.stack.last_mut().unwrap();
         let mut clip_count = 0;
 
         let mut current_clip_chain_id = clip_chain_id;
         while current_clip_chain_id != ClipChainId::NONE {
             let clip_chain_node = &clip_store.clip_chain_nodes[current_clip_chain_id.0 as usize];
+            let clip_uid = clip_chain_node.handle.uid();
 
-            let clip_node = &data_stores.clip[clip_chain_node.handle];
-
-            // Filter out irrelevant rectangle clips. If a clip rect is in world space
-            // and completely contains the viewport to be rendered, then the clip itself
-            // is redundant. This is particularly important for picture caching, to avoid
-            // extra invalidations. By skipping these global clip rects (such as the iframe rect)
-            // we can (a) avoid invalidations due to introducing clip dependencies where the
-            // relative transform changes during scrolling, and (b) allow correct rendering
-            // of tiles that exceed these clip rects, so that we can draw them once and
-            // cache them, to be used during scrolling.
-            let valid_clip = match clip_node.item.kind {
-                ClipItemKind::Rectangle { rect, mode: ClipMode::Clip } => {
-                    let scroll_root = clip_scroll_tree.find_scroll_root(
-                        clip_node.item.spatial_node_index,
-                    );
-
-                    let mut is_required = true;
-
-                    if scroll_root == ROOT_SPATIAL_NODE_INDEX {
-                        let map_local_to_world = SpaceMapper::new_with_target(
-                            ROOT_SPATIAL_NODE_INDEX,
-                            clip_node.item.spatial_node_index,
-                            global_screen_world_rect,
-                            clip_scroll_tree,
-                        );
-
-                        // TODO(gw): This map method can produce a conservative bounding rect
-                        //           which is not what we require here. In this case, we know
-                        //           that the conversion is exect, due to checking that the
-                        //           scroll root is the root spatial node. However, we should
-                        //           change this to directly use the content_transform, to make
-                        //           the intent clearer here.
-                        if let Some(clip_world_rect) = map_local_to_world.map(&rect) {
-                            if clip_world_rect.contains_rect(&level.viewport) {
-                                is_required = false;
-                            }
-                        }
-                    }
-
-                    is_required
+            // The clip is required, so long as it doesn't exist in any of the shared_clips
+            // array from this or any parent surfaces.
+            // TODO(gw): We could consider making this a HashSet if it ever shows up in
+            //           profiles, but the typical array length is 2-3 elements.
+            let mut valid_clip = true;
+            for level in &self.stack {
+                if level.shared_clips.iter().any(|handle| {
+                    handle.uid() == clip_uid
+                }) {
+                    valid_clip = false;
+                    break;
                 }
-                _ => {
-                    true
-                }
-            };
+            }
 
             if valid_clip {
-                level.clips.push(current_clip_chain_id);
+                self.stack.last_mut().unwrap().clips.push(current_clip_chain_id);
                 clip_count += 1;
             }
 
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        level.clip_counts.push(clip_count);
+        self.stack.last_mut().unwrap().clip_counts.push(clip_count);
     }
 
     /// Pop a clip chain root from the currently active list.
@@ -670,24 +648,9 @@ impl ClipChainStack {
     /// stack of clips to be propagated.
     pub fn push_surface(
         &mut self,
-        viewport: WorldRect,
+        shared_clips: &[ClipDataHandle],
     ) {
-        // Ensure that sub-surfaces (e.g. filters) of a tile
-        // cache intersect with any parent viewport. This ensures
-        // that we correctly filter out redundant clips on these
-        // child surfaces.
-        let viewport = match self.stack.last() {
-            Some(parent_level) => {
-                parent_level.viewport
-                    .intersection(&viewport)
-                    .unwrap_or(WorldRect::zero())
-            }
-            None => {
-                viewport
-            }
-        };
-
-        let level = ClipChainLevel::new(viewport);
+        let level = ClipChainLevel::new(shared_clips.to_vec());
         self.stack.push(level);
     }
 
@@ -722,13 +685,11 @@ impl ClipStore {
         &mut self,
         handle: ClipDataHandle,
         parent_clip_chain_id: ClipChainId,
-        has_complex_clip: bool,
     ) -> ClipChainId {
         let id = ClipChainId(self.clip_chain_nodes.len() as u32);
         self.clip_chain_nodes.push(ClipChainNode {
             handle,
             parent_clip_chain_id,
-            has_complex_clip,
         });
         id
     }
@@ -1072,14 +1033,14 @@ impl ClipItemKeyKind {
         )
     }
 
-    pub fn has_complex_clip(&self) -> bool {
+    pub fn node_kind(&self) -> ClipNodeKind {
         match *self {
-            ClipItemKeyKind::Rectangle(_, ClipMode::Clip) => false,
+            ClipItemKeyKind::Rectangle(_, ClipMode::Clip) => ClipNodeKind::Rectangle,
 
             ClipItemKeyKind::Rectangle(_, ClipMode::ClipOut) |
             ClipItemKeyKind::RoundedRectangle(..) |
             ClipItemKeyKind::ImageMask(..) |
-            ClipItemKeyKind::BoxShadow(..) => true,
+            ClipItemKeyKind::BoxShadow(..) => ClipNodeKind::Complex,
         }
     }
 }
@@ -1097,7 +1058,7 @@ impl intern::InternDebug for ClipItemKey {}
 impl intern::Internable for ClipIntern {
     type Key = ClipItemKey;
     type StoreData = ClipNode;
-    type InternData = ();
+    type InternData = ClipNodeKind;
 }
 
 #[derive(Debug, MallocSizeOf)]

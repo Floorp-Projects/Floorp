@@ -1804,7 +1804,7 @@ impl PrimitiveStore {
                 None => (parent_surface_index, false)
             };
 
-            let viewport = match pic.raster_config {
+            match pic.raster_config {
                 Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
                     let mut tile_cache = pic.tile_cache.take().unwrap();
                     debug_assert!(frame_state.tile_cache.is_none());
@@ -1819,20 +1819,17 @@ impl PrimitiveStore {
                         frame_state,
                     );
 
-                    let viewport = tile_cache.world_viewport_rect;
-
+                    // Push a new surface, supplying the list of clips that should be
+                    // ignored, since they are handled by clipping when drawing this surface.
+                    frame_state.clip_chain_stack.push_surface(&tile_cache.shared_clips);
                     frame_state.tile_cache = Some(tile_cache);
-
-                    viewport
                 }
                 _ => {
-                    WorldRect::max_rect()
+                    if is_composite {
+                        frame_state.clip_chain_stack.push_surface(&[]);
+                    }
                 }
-            };
-
-            if is_composite {
-                frame_state.clip_chain_stack.push_surface(viewport);
-            };
+            }
 
             (prim_list, surface_index, pic.apply_local_clip_rect, world_culling_rect, is_composite)
         };
@@ -1888,9 +1885,6 @@ impl PrimitiveStore {
                     frame_state.clip_chain_stack.push_clip(
                         prim_instance.clip_chain_id,
                         frame_state.clip_store,
-                        frame_state.data_stores,
-                        frame_context.clip_scroll_tree,
-                        frame_context.global_screen_world_rect,
                     );
                     continue;
                 }
@@ -1906,9 +1900,6 @@ impl PrimitiveStore {
                     frame_state.clip_chain_stack.push_clip(
                         prim_instance.clip_chain_id,
                         frame_state.clip_store,
-                        frame_state.data_stores,
-                        frame_context.clip_scroll_tree,
-                        frame_context.global_screen_world_rect,
                     );
 
                     let pic_surface_rect = self.update_visibility(
@@ -2061,9 +2052,6 @@ impl PrimitiveStore {
                 frame_state.clip_chain_stack.push_clip(
                     prim_instance.clip_chain_id,
                     frame_state.clip_store,
-                    frame_state.data_stores,
-                    frame_context.clip_scroll_tree,
-                    frame_context.global_screen_world_rect,
                 );
 
                 frame_state.clip_store.set_active_clips(
