@@ -35,7 +35,3 @@ user_pref("extensions.formautofill.available", "on");
 user_pref("layout.css.clip-path-path.enabled", true);
 // Enable visualviewport for testing
 user_pref("dom.visualviewport.enabled", true);
-
-// For Firefox 52 only, ESR will support non-Flash plugins while release will
-// not, so we keep testing the non-Flash pathways
-user_pref("plugin.load_flash_only", false);
