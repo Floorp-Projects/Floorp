@@ -126,6 +126,26 @@ nsPlainTextSerializer::OutputManager::OutputManager(const int32_t aFlags,
   DetermineLineBreak(aFlags, mLineBreak);
 }
 
+void nsPlainTextSerializer::OutputManager::Append(
+    const CurrentLine& aCurrentLine,
+    const StripTrailingWhitespaces aStripTrailingWhitespaces) {
+  if (IsAtFirstColumn()) {
+    nsAutoString quotesAndIndent;
+    aCurrentLine.CreateQuotesAndIndent(quotesAndIndent);
+
+    if ((aStripTrailingWhitespaces == StripTrailingWhitespaces::kMaybe)) {
+      const bool stripTrailingSpaces = aCurrentLine.mContent.mValue.IsEmpty();
+      if (stripTrailingSpaces) {
+        quotesAndIndent.Trim(" ", false, true, false);
+      }
+    }
+
+    Append(quotesAndIndent);
+  }
+
+  Append(aCurrentLine.mContent.mValue);
+}
+
 void nsPlainTextSerializer::OutputManager::Append(const nsAString& aString) {
   if (!aString.IsEmpty()) {
     mOutput.Append(aString);
@@ -1139,15 +1159,11 @@ void nsPlainTextSerializer::FlushLine() {
   if (!mCurrentLine.mContent.mValue.IsEmpty()) {
     MOZ_ASSERT(mOutputManager);
 
-    if (mOutputManager->IsAtFirstColumn()) {
-      nsAutoString quotesAndIndent;
-      mCurrentLine.CreateQuotesAndIndent(
-          quotesAndIndent);  // XXX: Should we always do this? Bug?
-      mOutputManager->Append(quotesAndIndent);
-    }
-
     mCurrentLine.mContent.MaybeReplaceNbsps(mSettings.GetFlags());
-    mOutputManager->Append(mCurrentLine.mContent.mValue);
+
+    mOutputManager->Append(mCurrentLine,
+                           OutputManager::StripTrailingWhitespaces::kNo);
+
     mCurrentLine.ResetContentAndIndentationHeader();
   }
 }
@@ -1403,23 +1419,13 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
 
   MOZ_ASSERT(mOutputManager);
 
-  if (mOutputManager->IsAtFirstColumn()) {
-    // If we don't have anything "real" to output we have to
-    // make sure the indent doesn't end in a space since that
-    // would trick a format=flowed-aware receiver.
-    const bool stripTrailingSpaces = mCurrentLine.mContent.mValue.IsEmpty();
-    nsAutoString quotesAndIndent;
-    mCurrentLine.CreateQuotesAndIndent(quotesAndIndent);
-
-    if (stripTrailingSpaces) {
-      quotesAndIndent.Trim(" ", false, true, false);
-    }
-
-    mOutputManager->Append(quotesAndIndent);
-  }
-
   mCurrentLine.mContent.MaybeReplaceNbsps(mSettings.GetFlags());
-  mOutputManager->Append(mCurrentLine.mContent.mValue);
+
+  // If we don't have anything "real" to output we have to
+  // make sure the indent doesn't end in a space since that
+  // would trick a format=flowed-aware receiver.
+  mOutputManager->Append(mCurrentLine,
+                         OutputManager::StripTrailingWhitespaces::kMaybe);
   mOutputManager->AppendLineBreak();
   mCurrentLine.ResetContentAndIndentationHeader();
   mInWhitespace = true;
@@ -1596,17 +1602,10 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
       mCurrentLine.mContent.mValue.Append(stringpart);
 
-      if (mOutputManager->IsAtFirstColumn()) {
-        nsAutoString quotesAndIndent;
-        mCurrentLine.CreateQuotesAndIndent(quotesAndIndent);
-        mOutputManager->Append(quotesAndIndent);
-      }
-
       mCurrentLine.mContent.MaybeReplaceNbsps(mSettings.GetFlags());
 
-      MOZ_ASSERT(mOutputManager);
-
-      mOutputManager->Append(mCurrentLine.mContent.mValue);
+      mOutputManager->Append(mCurrentLine,
+                             OutputManager::StripTrailingWhitespaces::kNo);
       if (outputLineBreak) {
         mOutputManager->AppendLineBreak();
       }
