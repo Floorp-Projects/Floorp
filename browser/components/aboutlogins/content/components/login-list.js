@@ -434,15 +434,7 @@ export default class LoginList extends HTMLElement {
       let loginItem = document.querySelector("login-item");
       if (loginItem) {
         event.preventDefault();
-        let editButton = loginItem.shadowRoot.querySelector(".edit-button");
-        if (editButton && !editButton.disabled) {
-          editButton.focus();
-          return;
-        }
-        let deleteButton = loginItem.shadowRoot.querySelector(
-          "button.delete-button"
-        );
-        deleteButton.focus();
+        loginItem.focus();
       }
       return;
     } else if (this._list != this.shadowRoot.activeElement) {

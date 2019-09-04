@@ -92,6 +92,21 @@ export default class LoginItem extends HTMLElement {
     window.addEventListener("AboutLoginsShowBlankLogin", this);
   }
 
+  focus() {
+    if (!this._breachAlert.hidden) {
+      const breachAlertLink = this._breachAlert.querySelector(
+        ".breach-alert-link"
+      );
+      breachAlertLink.focus();
+      return;
+    }
+    if (!this._editButton.disabled) {
+      this._editButton.focus();
+      return;
+    }
+    this._deleteButton.focus();
+  }
+
   async render() {
     [this._errorMessage, this._breachAlert].forEach(el => {
       el.hidden = true;
