@@ -1141,7 +1141,7 @@ void nsPlainTextSerializer::FlushLine() {
 
     if (mOutputManager->IsAtFirstColumn()) {
       nsAutoString quotesAndIndent;
-      CreateQuotesAndIndent(
+      mCurrentLine.CreateQuotesAndIndent(
           quotesAndIndent);  // XXX: Should we always do this? Bug?
       mOutputManager->Append(quotesAndIndent);
     }
@@ -1409,7 +1409,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     // would trick a format=flowed-aware receiver.
     const bool stripTrailingSpaces = mCurrentLine.mContent.mValue.IsEmpty();
     nsAutoString quotesAndIndent;
-    CreateQuotesAndIndent(quotesAndIndent);
+    mCurrentLine.CreateQuotesAndIndent(quotesAndIndent);
 
     if (stripTrailingSpaces) {
       quotesAndIndent.Trim(" ", false, true, false);
@@ -1431,14 +1431,15 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
  * Creates the calculated and stored indent and text in the indentation. That is
  * quote chars and numbers for numbered lists and such.
  */
-void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) const {
+void nsPlainTextSerializer::CurrentLine::CreateQuotesAndIndent(
+    nsAString& aResult) const {
   // Put the mail quote "> " chars in, if appropriate:
-  if (mCurrentLine.mCiteQuoteLevel > 0) {
+  if (mCiteQuoteLevel > 0) {
     nsAutoString quotes;
-    for (int i = 0; i < mCurrentLine.mCiteQuoteLevel; i++) {
+    for (int i = 0; i < mCiteQuoteLevel; i++) {
       quotes.Append(char16_t('>'));
     }
-    if (!mCurrentLine.mContent.mValue.IsEmpty()) {
+    if (!mContent.mValue.IsEmpty()) {
       /* Better don't output a space here, if the line is empty,
          in case a receiving f=f-aware UA thinks, this were a flowed line,
          which it isn't - it's just empty.
@@ -1450,10 +1451,9 @@ void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) const {
   }
 
   // Indent if necessary
-  int32_t indentwidth = mCurrentLine.mIndentation.mWidth -
-                        mCurrentLine.mIndentation.mHeader.Length();
-  if (indentwidth > 0 && (!mCurrentLine.mContent.mValue.IsEmpty() ||
-                          !mCurrentLine.mIndentation.mHeader.IsEmpty())
+  int32_t indentwidth = mIndentation.mWidth - mIndentation.mHeader.Length();
+  if (indentwidth > 0 &&
+      (!mContent.mValue.IsEmpty() || !mIndentation.mHeader.IsEmpty())
       // Don't make empty lines look flowed
   ) {
     nsAutoString spaces;
@@ -1461,8 +1461,8 @@ void nsPlainTextSerializer::CreateQuotesAndIndent(nsAString& aResult) const {
     aResult += spaces;
   }
 
-  if (!mCurrentLine.mIndentation.mHeader.IsEmpty()) {
-    aResult += mCurrentLine.mIndentation.mHeader;
+  if (!mIndentation.mHeader.IsEmpty()) {
+    aResult += mIndentation.mHeader;
   }
 }
 
@@ -1598,7 +1598,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
       if (mOutputManager->IsAtFirstColumn()) {
         nsAutoString quotesAndIndent;
-        CreateQuotesAndIndent(quotesAndIndent);
+        mCurrentLine.CreateQuotesAndIndent(quotesAndIndent);
         mOutputManager->Append(quotesAndIndent);
       }
 
