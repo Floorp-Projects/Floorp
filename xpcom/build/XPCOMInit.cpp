@@ -349,8 +349,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
     rv = aBinDirectory->IsDirectory(&value);
 
     if (NS_SUCCEEDED(rv) && value) {
-      nsDirectoryService::gService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR,
-                                        aBinDirectory);
+      nsDirectoryService::gService->SetCurrentProcessDirectory(aBinDirectory);
     }
   }
 
