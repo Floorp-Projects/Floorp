@@ -3568,7 +3568,7 @@
 #if defined(XP_MACOSX)
 -   name: gl.multithreaded
     type: RelaxedAtomicBool
-    value: true
+    value: false
     mirror: always
 #endif
 
@@ -3608,7 +3608,7 @@
   mirror: always
 
 #---------------------------------------------------------------------------
-# Prefs starting with "idle_period."
+# Prefs starting with "image."
 #---------------------------------------------------------------------------
 
 - name: idle_period.min
@@ -3625,16 +3625,11 @@
 # Prefs starting with "image."
 #---------------------------------------------------------------------------
 
-# The maximum size (in kB) that the aggregate frames of an animation can use
-# before it starts to discard already displayed frames and redecode them as
-# necessary.
 - name: image.animated.decode-on-demand.threshold-kb
   type: RelaxedAtomicUint32
-  value: 20*1024
+  value: 20480
   mirror: always
 
-# The minimum number of frames we want to have buffered ahead of an
-# animation's currently displayed frame.
 - name: image.animated.decode-on-demand.batch-size
   type: RelaxedAtomicUint32
   value: 6
@@ -3648,28 +3643,19 @@
   value: true
   mirror: once
 
-# Resume an animated image from the last displayed frame rather than
-# advancing when out of view.
 - name: image.animated.resume-from-last-displayed
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
-# Maximum number of surfaces for an image before entering "factor of 2" mode.
-# This in addition to the number of "native" sizes of an image. A native size
-# is a size for which we can decode a frame without up or downscaling. Most
-# images only have 1, but some (i.e. ICOs) may have multiple frames for the
-# same data at different sizes.
 - name: image.cache.factor2.threshold-surfaces
   type: RelaxedAtomicInt32
-  value: 4
+  value: -1
   mirror: always
 
-# Maximum size of a surface in KB we are willing to produce when rasterizing
-# an SVG.
 - name: image.cache.max-rasterized-svg-threshold-kb
   type: RelaxedAtomicInt32
-  value: 200*1024
+  value: 90*1024
   mirror: always
 
 # The maximum size, in bytes, of the decoded images we cache.
@@ -3685,30 +3671,21 @@
   value: 500
   mirror: once
 
-# Decode all images automatically on load, ignoring our normal heuristics.
 - name: image.decode-immediately.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-# Whether we attempt to downscale images during decoding.
 - name: image.downscale-during-decode.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-# The threshold for inferring that changes to an <img> element's |src|
-# attribute by JavaScript represent an animation, in milliseconds. If the |src|
-# attribute is changing more frequently than this value, then we enter a
-# special "animation mode" which is designed to eliminate flicker. Set to 0 to
-# disable.
 - name: image.infer-src-animation.threshold-ms
   type: RelaxedAtomicUint32
   value: 2000
   mirror: always
 
-# Whether the network request priority should be adjusted according
-# the layout and view frame position of each particular image.
 - name: image.layout_network_priority
   type: RelaxedAtomicBool
   value: true
@@ -3720,11 +3697,9 @@
   value: 16384
   mirror: once
 
-# Discards inactive image frames and re-decodes them on demand from
-# compressed data.
 - name: image.mem.discardable
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Discards inactive image frames of _animated_ images and re-decodes them on
@@ -3734,21 +3709,16 @@
   value: true
   mirror: once
 
-# Whether the heap should be used for frames from animated images. On Android,
-# volatile memory keeps file handles open for each buffer.
 - name: image.mem.animated.use_heap
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
-# Enable extra information for debugging in the image memory reports.
 - name: image.mem.debug-reporting
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-# Decodes images into shared memory to allow direct use in separate
-# rendering processes. Only applicable with WebRender.
 - name: image.mem.shared
   type: RelaxedAtomicBool
   value: true
@@ -3787,15 +3757,9 @@
   value: 4
   mirror: once
 
-# Minimum buffer size in KB before using volatile memory over the heap.
 - name: image.mem.volatile.min_threshold_kb
   type: RelaxedAtomicInt32
-#if defined(ANDROID)
-  # On Android, volatile memory keeps file handles open for each buffer.
-  value: 100
-#else
   value: -1
-#endif
   mirror: always
 
 # How long in ms before we should start shutting down idle decoder threads.
@@ -3811,10 +3775,9 @@
   value: -1
   mirror: once
 
-# Whether we attempt to decode WebP images or not.
 - name: image.webp.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -3924,10 +3887,10 @@
   value: false
   mirror: always
 
-# Streams API.
+# Streams API
 - name: javascript.options.streams
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -3997,8 +3960,6 @@
   mirror: once
   do_not_use_directly: true
 
-# Preference that when switched at runtime will run a series of benchmarks
-# and output the result to stderr.
 - name: layers.bench.enabled
   type: RelaxedAtomicBool
   value: false
@@ -4038,14 +3999,9 @@
   value: true
   mirror: once
 
-# Enable DEAA antialiasing for transformed layers in the compositor.
 - name: layers.deaa.enabled
   type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID)
   value: false
-#else
-  value: true
-#endif
   mirror: always
 
 - name: layers.draw-bigimage-borders
@@ -4073,7 +4029,6 @@
   value: false
   mirror: always
 
-# If we're dumping layers, also dump the texture data
 - name: layers.dump-texture
   type: RelaxedAtomicBool
   value: false
@@ -4167,22 +4122,19 @@
   value: true
   mirror: always
 
-# Whether to enable arbitrary layer geometry for OpenGL compositor.
 - name: layers.geometry.opengl.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
-# Whether to enable arbitrary layer geometry for Basic compositor.
 - name: layers.geometry.basic.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
- # Whether to enable arbitrary layer geometry for DirectX compositor.
 - name: layers.geometry.d3d11.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: layers.gpu-process.allow-software
@@ -4215,11 +4167,7 @@
 
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32
-#if (defined(XP_WIN) || defined(MOZ_WIDGET_GTK)) && defined(NIGHTLY_BUILD)
-  value: 3
-#else
   value: 1
-#endif
   mirror: always
 
 # Note: This pref will only be used if it is less than layers.gpu-process.max_restarts.
@@ -4248,7 +4196,6 @@
   value: 0.25f
   mirror: always
 
-# Max number of layers per container. See Overwrite in mobile prefs.
 - name: layers.max-active
   type: RelaxedAtomicInt32
   value: -1
@@ -4322,10 +4269,6 @@
   value: false
   mirror: once
 
-# Compositor target frame rate. NOTE: If vsync is enabled the compositor
-# frame rate will still be capped.
-# -1 -> default (match layout.frame_rate or 60 FPS)
-# 0  -> full-tilt mode: Recomposite even if not transaction occured.
 - name: layers.offmainthreadcomposition.frame-rate
   type: RelaxedAtomicInt32
   value: -1
@@ -4368,10 +4311,9 @@
   value: false
   mirror: always
 
-# Copy-on-write canvas.
 - name: layers.shared-buffer-provider.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: layers.single-tile.enabled
@@ -4425,7 +4367,11 @@
 
 - name: layers.tiles.edge-padding
   type: bool
-  value: @IS_ANDROID@
+#ifdef MOZ_WIDGET_ANDROID
+  value: true
+#else
+  value: false
+#endif
   mirror: once
 
 - name: layers.tiles.fade-in.enabled
@@ -4559,36 +4505,26 @@
   value: false
   mirror: always
 
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
 - name: layout.animation.prerender.viewport-ratio-limit-x
   type: AtomicFloat
   value: 1.125f
   mirror: always
 
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
 - name: layout.animation.prerender.viewport-ratio-limit-y
   type: AtomicFloat
   value: 1.125f
   mirror: always
 
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
 - name: layout.animation.prerender.absolute-limit-x
   type: RelaxedAtomicUint32
   value: 4096
   mirror: always
 
-# One of several prefs affecting the maximum area to pre-render when animating
-# a large element on the compositor.
 - name: layout.animation.prerender.absolute-limit-y
   type: RelaxedAtomicUint32
   value: 4096
@@ -4911,38 +4847,26 @@
   mirror: always
   rust: true
 
-# Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 - name: layout.css.scroll-behavior.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-# Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
-# Spring-constant controls the strength of the simulated MSD
-# (Mass-Spring-Damper).
 - name: layout.css.scroll-behavior.spring-constant
   type: AtomicFloat
   value: 250.0f
   mirror: always
 
-# When selecting the snap point for CSS scroll snapping, the velocity of the
-# scroll frame is clamped to this speed, in CSS pixels / s.
 - name: layout.css.scroll-snap.prediction-max-velocity
   type: RelaxedAtomicInt32
   value: 2000
   mirror: always
 
-#  When selecting the snap point for CSS scroll snapping, the velocity of the
-# scroll frame is integrated over this duration, in seconds.  The snap point
-# best suited for this position is selected, enabling the user to perform fling
-# gestures.
 - name: layout.css.scroll-snap.prediction-sensitivity
   type: AtomicFloat
   value: 0.750f
   mirror: always
 
-# Set the threshold distance in CSS pixels below which scrolling will snap to
-# an edge, when scroll snapping is set to "proximity".
 - name: layout.css.scroll-snap.proximity-threshold
   type: RelaxedAtomicInt32
   value: 200
@@ -5037,16 +4961,14 @@
   value: false
   mirror: always
 
-# Toggle retaining display lists between paints.
 - name: layout.display-list.retain
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
-# Toggle retaining display lists between paints.
 - name: layout.display-list.retain.chrome
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: layout.display-list.retain.verify
@@ -5059,26 +4981,21 @@
   value: false
   mirror: always
 
-# Set the maximum number of modified frames allowed before doing a full
-# display list rebuild.
 - name: layout.display-list.rebuild-frame-limit
   type: RelaxedAtomicUint32
   value: 500
   mirror: always
 
-# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump-content
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-# Pref to dump the display list to the log. Useful for debugging drawing.
 - name: layout.display-list.dump-parent
   type: RelaxedAtomicBool
   value: false
@@ -5100,9 +5017,6 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-# Pref to control browser frame rate, in Hz. A value <= 0 means choose
-# automatically based on knowledge of the platform (or 60Hz if no platform-
-# specific information is available).
 - name: layout.frame_rate
   type: RelaxedAtomicInt32
   value: -1
@@ -5145,9 +5059,7 @@
   value: true
   mirror: always
 
-# Default to containerless scrolling.
-# This and code dependent on it should be removed once containerless scrolling
-# looks stable.
+# This and code dependent on it should be removed once containerless scrolling looks stable.
 - name: layout.scroll.root-frame-containers
   type: RelaxedAtomicBool
   value: false
@@ -5325,10 +5237,6 @@
 # These prefs use camel case instead of snake case for the getter because one
 # reviewer had an unshakeable preference for that. Who could that be?
 
-# If "media.autoplay.default" is not ALLOWED, and this pref is true,
-# then audible media would only be allowed to autoplay after website has
-# been activated by specific user gestures, but non-audible
-# media won't be restricted.
 - name: media.autoplay.enabled.user-gestures-needed
   type: bool
   value: false
@@ -5897,14 +5805,17 @@
   mirror: always
 
 - name: media.av1.use-dav1d
-  type: RelaxedAtomicBool
 #if defined(XP_WIN) && !defined(_ARM64_)
+  type: RelaxedAtomicBool
   value: true
 #elif defined(XP_MACOSX)
+  type: RelaxedAtomicBool
   value: true
 #elif defined(XP_UNIX) && !defined(ANDROID)
+  type: RelaxedAtomicBool
   value: true
 #else
+  type: RelaxedAtomicBool
   value: false
 #endif
   mirror: always
@@ -6093,8 +6004,6 @@
     type: RelaxedAtomicBool
   #if defined(ANDROID)
     value: false
-  #elif defined(_ARM64_) && defined(XP_WIN)
-    value: false
   #else
     value: true
   #endif
@@ -6153,16 +6062,12 @@
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
 
-# This affects how line scrolls from wheel events will be accelerated.
-# Factor to be multiplied for constant acceleration.
+# These affect how line scrolls from wheel events will be accelerated.
 - name: mousewheel.acceleration.factor
   type: RelaxedAtomicInt32
-  value: 10
+  value: -1
   mirror: always
 
-# This affects how line scrolls from wheel events will be accelerated.
-# Number of mousewheel clicks when acceleration starts.
-# Acceleration can be turned off if pref is set to -1.
 - name: mousewheel.acceleration.start
   type: RelaxedAtomicInt32
   value: -1
@@ -6171,38 +6076,24 @@
 # This affects whether events will be routed through APZ or not.
 - name: mousewheel.system_scroll_override_on_root_content.enabled
   type: RelaxedAtomicBool
-#ifdef XP_WIN
-  value: true
-#else
   value: false
-#endif
   mirror: always
 
-# Prefs for overriding the system mouse wheel scrolling speed on
-# content of the web pages.  When
-# "mousewheel.system_scroll_override_on_root_content.enabled" is true and the
-# system scrolling speed isn't customized by the user, the content scrolling
-# speed is multiplied by the following factors.  The value will be used as
-# 1/100.  E.g., 200 means 2.00.
-# NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
-# true, when Gecko detects the user customized the system scrolling speed
-# settings, the override isn't executed.
 - name: mousewheel.system_scroll_override_on_root_content.horizontal.factor
   type: RelaxedAtomicInt32
-  value: 200
-  mirror: always
-- name: mousewheel.system_scroll_override_on_root_content.vertical.factor
-  type: RelaxedAtomicInt32
-  value: 200
+  value: 0
   mirror: always
 
-# Mouse wheel scroll transaction is held even if the mouse cursor is moved.
+- name: mousewheel.system_scroll_override_on_root_content.vertical.factor
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
 - name: mousewheel.transaction.ignoremovedelay
   type: RelaxedAtomicInt32
   value: 100
   mirror: always
 
-# Mouse wheel scroll transaction period of time (in milliseconds).
 - name: mousewheel.transaction.timeout
   type: RelaxedAtomicInt32
   value: 1500
@@ -6402,10 +6293,10 @@
   value: false
   mirror: always
 
-# Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
+# Telemetry of traffic categories
 - name: network.traffic_analyzer.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: network.dns.disablePrefetchFromHTTPS
@@ -6486,8 +6377,6 @@
   value: false
   mirror: always
 
-# Enable/disable widget update area flashing --- only supported with
-# BasicLayers (other layer managers always update the entire widget area).
 - name: nglayout.debug.widget_update_flashing
   type: RelaxedAtomicBool
   value: false
@@ -6559,9 +6448,6 @@
 # Prefs starting with "print."
 #---------------------------------------------------------------------------
 
-# Variation fonts can't always be embedded in certain output formats
-# such as PDF. To work around this, draw the variation fonts using
-# paths instead of using font embedding.
 - name: print.font-variations-as-paths
   type: RelaxedAtomicBool
   value: true
@@ -6649,12 +6535,12 @@
   value: true
   mirror: always
 
-# Whether Origin Telemetry should be enabled.
+# Whether origin telemetry should be enabled.
 # NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
 #       won't have any effect.
 - name: privacy.trackingprotection.origin_telemetry.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Whether to spoof user locale to English (used as part of Resist
@@ -6846,7 +6732,7 @@
   value: true
   mirror: always
 
-# Whether strict file origin policy is in effect. "False" is traditional.
+# Whether strict file origin policy is in effect.
 - name: security.fileuri.strict_origin_policy
   type: RelaxedAtomicBool
   value: true
@@ -7141,11 +7027,7 @@
 
 - name: webgl.1.allow-core-profiles
   type: RelaxedAtomicBool
-#ifdef XP_MACOSX
-  value: true
-#else
   value: false
-#endif
   mirror: always
 
 
@@ -7161,11 +7043,7 @@
 
 - name: webgl.angle.try-d3d11
   type: RelaxedAtomicBool
-#ifdef XP_WIN
-  value: true
-#else
   value: false
-#endif
   mirror: always
 
 - name: webgl.angle.force-warp
@@ -7280,20 +7158,12 @@
 
 - name: webgl.max-contexts
   type: RelaxedAtomicUint32
-#ifdef ANDROID
-  value: 16
-#else
   value: 32
-#endif
   mirror: always
 
 - name: webgl.max-contexts-per-principal
   type: RelaxedAtomicUint32
-#ifdef ANDROID
-  value: 8
-#else
   value: 16
-#endif
   mirror: always
 
 - name: webgl.max-warnings-per-context
