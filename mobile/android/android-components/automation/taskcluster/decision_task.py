@@ -90,14 +90,14 @@ def create_module_tasks(module):
     module_overrides = {
         ":samples-browser": {
             "assembleOnly/Test": (
-                ["ServoArm", "ServoX86", "SystemUniversal"],
+                ["System"],
                 [
-                    "GeckoBetaUniversal",
-                    "GeckoNightlyUniversal",
-                    "GeckoReleaseAarch64", "GeckoReleaseArm", "GeckoReleaseX86"
+                    "GeckoBeta",
+                    "GeckoNightly",
+                    "GeckoRelease"
                 ]
             ),
-            "lintTask": "lintGeckoNightlyUniversal"
+            "lintTask": "lintGeckoNightly"
         },
         ":support-test": {
             "lintTask": "lint"

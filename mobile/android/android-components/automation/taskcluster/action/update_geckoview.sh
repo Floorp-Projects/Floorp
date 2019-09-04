@@ -50,19 +50,19 @@ then
     COMPONENT_NAME="engine-gecko-nightly"
     ./gradlew browser-engine-gecko-nightly:assemble \
           browser-engine-gecko-nightly:test \
-          sample-browser:assembleGeckoNightlyUniversal
+          sample-browser:assembleGeckoNightly
 elif [ "$CHANNEL" = "beta" ]
 then
     COMPONENT_NAME="engine-gecko-beta"
     ./gradlew browser-engine-gecko-beta:assemble \
           browser-engine-gecko-beta:test \
-          sample-browser:assembleGeckoBetaUniversal
+          sample-browser:assembleGeckoBeta
 elif [ "$CHANNEL" = "release" ]
 then
     COMPONENT_NAME="engine-gecko"
     ./gradlew browser-engine-gecko:assemble \
           browser-engine-gecko:test \
-          sample-browser:assembleGeckoReleaseArm
+          sample-browser:assembleGeckoRelease
 else
     echo "Unknown channel: $CHANNEL"
     exit 1
