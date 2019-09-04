@@ -169,10 +169,32 @@ class WorkletJSContext final : public CycleCollectedJSContext {
   }
 
   void ReportError(JSErrorReport* aReport,
-                   JS::ConstUTF8CharsZ aToStringResult) override {
-    // TODO: bug 1558128;
+                   JS::ConstUTF8CharsZ aToStringResult) override;
+
+  uint64_t GetCurrentWorkletWindowID() {
+    JSObject* global = JS::CurrentGlobalOrNull(Context());
+    if (NS_WARN_IF(!global)) {
+      return 0;
+    }
+    nsIGlobalObject* nativeGlobal = xpc::NativeGlobal(global);
+    nsCOMPtr<WorkletGlobalScope> workletGlobal =
+        do_QueryInterface(nativeGlobal);
+    if (NS_WARN_IF(!workletGlobal)) {
+      return 0;
+    }
+    return workletGlobal->Impl()->LoadInfo().InnerWindowID();
   }
 };
+
+void WorkletJSContext::ReportError(JSErrorReport* aReport,
+                                   JS::ConstUTF8CharsZ aToStringResult) {
+  RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  xpcReport->Init(aReport, aToStringResult.c_str(), IsSystemCaller(),
+                  GetCurrentWorkletWindowID());
+
+  RefPtr<AsyncErrorReporter> reporter = new AsyncErrorReporter(xpcReport);
+  NS_DispatchToMainThread(reporter);
+}
 
 // This is the first runnable to be dispatched. It calls the RunEventLoop() so
 // basically everything happens into this runnable. The reason behind this
