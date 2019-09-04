@@ -1976,8 +1976,8 @@ already_AddRefed<IAPZCTreeManager> CompositorBridgeParent::GetAPZCTreeManager(
 static void InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (profiler_thread_is_being_profiled()) {
-    profiler_add_marker("VsyncTimestamp", JS::ProfilingCategoryPair::GRAPHICS,
-                        MakeUnique<VsyncMarkerPayload>(aVsyncTimestamp));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncTimestamp", GRAPHICS,
+                                     VsyncMarkerPayload, (aVsyncTimestamp));
   }
 }
 #endif

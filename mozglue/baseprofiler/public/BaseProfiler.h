@@ -65,6 +65,8 @@
                                                 categoryPair, ctx, flags)
 
 #  define BASE_PROFILER_ADD_MARKER(markerName, categoryPair)
+#  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD( \
+      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)
 
 #  define MOZDECLARE_DOCSHELL_AND_HISTORY_ID(docShell)
 #  define BASE_PROFILER_TRACING(categoryString, markerName, categoryPair, kind)
@@ -695,6 +697,18 @@ class MOZ_RAII AutoProfilerStats {
 
 MFBT_API void profiler_add_marker(const char* aMarkerName,
                                   ProfilingCategoryPair aCategoryPair);
+
+// `PayloadType` is a sub-class of BaseMarkerPayload, `parenthesizedPayloadArgs`
+// is the argument list used to construct that `PayloadType`. E.g.:
+// `BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD("Load", DOM, TextMarkerPayload,
+//                                        ("text", start, end, ds, dsh))`
+#  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(                       \
+      markerName, categoryPair, PayloadType, parenthesizedPayloadArgs) \
+    ::mozilla::baseprofiler::profiler_add_marker(                      \
+        markerName,                                                    \
+        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,  \
+        ::mozilla::MakeUnique<PayloadType> parenthesizedPayloadArgs)
+
 MFBT_API void profiler_add_marker(const char* aMarkerName,
                                   ProfilingCategoryPair aCategoryPair,
                                   UniquePtr<ProfilerMarkerPayload> aPayload);

@@ -530,18 +530,17 @@ TEST(GeckoProfiler, Markers)
 
   { AUTO_PROFILER_TRACING("C", "A", OTHER); }
 
-  profiler_add_marker("M1", JS::ProfilingCategoryPair::OTHER);
-  profiler_add_marker("M2", JS::ProfilingCategoryPair::OTHER,
-                      MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT));
+  PROFILER_ADD_MARKER("M1", OTHER);
+  PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, TracingMarkerPayload,
+                                   ("C", TRACING_EVENT));
   PROFILER_ADD_MARKER("M3", OTHER);
-  profiler_add_marker("M4", JS::ProfilingCategoryPair::OTHER,
-                      MakeUnique<TracingMarkerPayload>(
-                          "C", TRACING_EVENT, mozilla::Nothing(),
-                          mozilla::Nothing(), profiler_get_backtrace()));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "M4", OTHER, TracingMarkerPayload,
+      ("C", TRACING_EVENT, mozilla::Nothing(), mozilla::Nothing(),
+       profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
-    profiler_add_marker("M5", JS::ProfilingCategoryPair::OTHER,
-                        MakeUnique<GTestMarkerPayload>(i));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
   }
 
   // Create two strings: one that is the maximum allowed length, and one that
@@ -628,8 +627,7 @@ TEST(GeckoProfiler, Markers)
   ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 10);
 
   for (int i = 0; i < 10; i++) {
-    profiler_add_marker("M5", JS::ProfilingCategoryPair::OTHER,
-                        MakeUnique<GTestMarkerPayload>(i));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
   }
 
   // Warning: this could be racy
@@ -659,11 +657,9 @@ TEST(GeckoProfiler, DurationLimit)
   GTestMarkerPayload::sNumStreamed = 0;
   GTestMarkerPayload::sNumDestroyed = 0;
 
-  profiler_add_marker("M1", JS::ProfilingCategoryPair::OTHER,
-                      MakeUnique<GTestMarkerPayload>(1));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD("M1", OTHER, GTestMarkerPayload, (1));
   PR_Sleep(PR_MillisecondsToInterval(1100));
-  profiler_add_marker("M2", JS::ProfilingCategoryPair::OTHER,
-                      MakeUnique<GTestMarkerPayload>(2));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, GTestMarkerPayload, (2));
   PR_Sleep(PR_MillisecondsToInterval(500));
 
   SpliceableChunkedJSONWriter w;

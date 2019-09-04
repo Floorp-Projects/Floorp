@@ -173,7 +173,7 @@ nsProfiler::ResumeSampling() {
 
 NS_IMETHODIMP
 nsProfiler::AddMarker(const char* aMarker) {
-  profiler_add_marker(aMarker, JS::ProfilingCategoryPair::OTHER);
+  PROFILER_ADD_MARKER(aMarker, OTHER);
   return NS_OK;
 }
 

@@ -102,9 +102,9 @@ static void PrintUniformityInfo(Layer* aLayer) {
   }
 
   Point translation = transform.As2D().GetTranslation();
-  profiler_add_marker("LayerTranslation", JS::ProfilingCategoryPair::GRAPHICS,
-                      MakeUnique<LayerTranslationMarkerPayload>(
-                          aLayer, translation, TimeStamp::Now()));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD("LayerTranslation", GRAPHICS,
+                                   LayerTranslationMarkerPayload,
+                                   (aLayer, translation, TimeStamp::Now()));
 #endif
 }
 
