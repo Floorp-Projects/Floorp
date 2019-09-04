@@ -1030,7 +1030,6 @@ LoginManagerPrompter.prototype = {
     );
 
     let chromeDoc = browser.ownerDocument;
-
     let currentNotification;
 
     let updateButtonStatus = element => {
@@ -1124,6 +1123,12 @@ LoginManagerPrompter.prototype = {
     let onInput = () => {
       readDataFromUI();
       updateButtonLabel();
+    };
+
+    let onKeyUp = e => {
+      if (e.key == "Enter") {
+        e.target.closest("popupnotification").button.doCommand();
+      }
     };
 
     let onVisibilityToggle = commandEvent => {
@@ -1314,6 +1319,12 @@ LoginManagerPrompter.prototype = {
                   .getElementById("password-notification-username")
                   .addEventListener("input", onInput);
                 chromeDoc
+                  .getElementById("password-notification-username")
+                  .addEventListener("keyup", onKeyUp);
+                chromeDoc
+                  .getElementById("password-notification-password")
+                  .addEventListener("keyup", onKeyUp);
+                chromeDoc
                   .getElementById("password-notification-password")
                   .addEventListener("input", onInput);
                 let toggleBtn = chromeDoc.getElementById(
@@ -1361,8 +1372,14 @@ LoginManagerPrompter.prototype = {
                   .getElementById("password-notification-username")
                   .removeEventListener("input", onInput);
                 chromeDoc
+                  .getElementById("password-notification-username")
+                  .removeEventListener("keyup", onKeyUp);
+                chromeDoc
                   .getElementById("password-notification-password")
                   .removeEventListener("input", onInput);
+                chromeDoc
+                  .getElementById("password-notification-password")
+                  .removeEventListener("keyup", onKeyUp);
                 chromeDoc
                   .getElementById("password-notification-visibilityToggle")
                   .removeEventListener("command", onVisibilityToggle);
