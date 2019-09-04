@@ -3987,24 +3987,10 @@ pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);
 pref("webgl.disable-fail-if-major-performance-caveat", false);
-pref("webgl.disable-DOM-blit-uploads", false);
-pref("webgl.allow-fb-invalidation", false);
-
-pref("webgl.perf.max-warnings", 0);
-pref("webgl.perf.max-acceptable-fb-status-invals", 0);
-pref("webgl.perf.spew-frame-allocs", true);
 
 pref("webgl.enable-debug-renderer-info", true);
 pref("webgl.renderer-string-override", "");
 pref("webgl.vendor-string-override", "");
-
-#ifdef XP_WIN
-  pref("webgl.angle.try-d3d11", true);
-  pref("webgl.angle.force-d3d11", false);
-  pref("webgl.angle.force-warp", false);
-  pref("webgl.dxgl.enabled", true);
-  pref("webgl.dxgl.needs-finish", false);
-#endif
 
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
