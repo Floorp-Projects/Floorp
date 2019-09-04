@@ -2453,7 +2453,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
   if (tmp->mSheets) {
     for (auto iter = tmp->mSheets->mCompleteSheets.Iter(); !iter.Done();
          iter.Next()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Sheet cache nsCSSLoader");
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "OOL sheet cache in Loader");
+      cb.NoteXPCOMChild(iter.UserData());
+    }
+    for (auto iter = tmp->mSheets->mInlineSheets.Iter(); !iter.Done();
+         iter.Next()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Inline sheet cache in Loader");
       cb.NoteXPCOMChild(iter.UserData());
     }
   }
