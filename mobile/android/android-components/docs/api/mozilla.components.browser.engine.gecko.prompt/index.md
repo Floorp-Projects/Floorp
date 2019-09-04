@@ -15,4 +15,4 @@
 | [GECKO_PROMPT_FILE_CAPTURE](-g-e-c-k-o_-p-r-o-m-p-t_-f-i-l-e_-c-a-p-t-u-r-e.md) | `typealias GECKO_PROMPT_FILE_CAPTURE = <ERROR CLASS>` |
 | [GECKO_PROMPT_FILE_TYPE](-g-e-c-k-o_-p-r-o-m-p-t_-f-i-l-e_-t-y-p-e.md) | `typealias GECKO_PROMPT_FILE_TYPE = <ERROR CLASS>` |
 | [GeckoAuthOptions](-gecko-auth-options.md) | `typealias GeckoAuthOptions = <ERROR CLASS>` |
-| [GeckoChoice](-gecko-choice.md) | `typealias GeckoChoice = `[`Choice`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession/PromptDelegate/Choice.html) |
+| [GeckoChoice](-gecko-choice.md) | `typealias GeckoChoice = <ERROR CLASS>` |

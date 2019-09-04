@@ -2,4 +2,4 @@
 
 # GECKO_PROMPT_CHOICE_TYPE
 
-`typealias GECKO_PROMPT_CHOICE_TYPE = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L42)
+`typealias GECKO_PROMPT_CHOICE_TYPE = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L42)

@@ -95,12 +95,12 @@ mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
 mozilla.components.browser.session.engine.request
 mozilla.components.browser.session.ext
-mozilla.components.browser.session.intent
 mozilla.components.browser.session.storage
 mozilla.components.browser.session.utils
 mozilla.components.browser.state.action
 mozilla.components.browser.state.selector
 mozilla.components.browser.state.state
+mozilla.components.browser.state.state.content
 mozilla.components.browser.state.store
 mozilla.components.browser.storage.memory
 mozilla.components.browser.storage.sync
@@ -143,7 +143,8 @@ mozilla.components.feature.downloads.ext
 mozilla.components.feature.downloads.manager
 mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
-mozilla.components.feature.intent
+mozilla.components.feature.intent.ext
+mozilla.components.feature.intent.processing
 mozilla.components.feature.media
 mozilla.components.feature.media.state
 mozilla.components.feature.prompts

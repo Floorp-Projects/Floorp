@@ -2,7 +2,7 @@
 
 # GeckoWindowRequest
 
-`class GeckoWindowRequest : `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/window/GeckoWindowRequest.kt#L14)
+`class GeckoWindowRequest : `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/window/GeckoWindowRequest.kt#L14)
 
 Gecko-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md).
 

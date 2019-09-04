@@ -2,4 +2,4 @@
 
 # GECKO_PROMPT_FILE_CAPTURE
 
-`typealias GECKO_PROMPT_FILE_CAPTURE = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L43)
+`typealias GECKO_PROMPT_FILE_CAPTURE = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L43)
