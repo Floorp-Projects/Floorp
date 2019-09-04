@@ -1365,8 +1365,8 @@ set_config('COLOR_CFLAGS', color_cflags)
 # Note that we don't need to do this with gcc, as libc++ detects gcc and
 # effectively does the same thing we are doing here.
 #
-# _LIBCPP_ALWAYS_INLINE needs similar workarounds, since it too declares
-# hidden visibility.
+# _LIBCPP_ALWAYS_INLINE and _LIBCPP_HIDE_FROM_ABI need similar workarounds,
+# since they too declare hidden visibility.
 
 
 @depends(c_compiler, target)
@@ -1381,6 +1381,7 @@ set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49',
 set_define('_LIBCPP_ALWAYS_INLINE', libcxx_override_visibility)
 set_define('_LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49', libcxx_override_visibility)
 
+set_define('_LIBCPP_HIDE_FROM_ABI', libcxx_override_visibility)
 
 @depends(target, check_build_environment)
 def visibility_flags(target, env):
