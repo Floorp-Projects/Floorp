@@ -34,7 +34,7 @@ class SentryServiceTest {
         var usedDsn: Dsn? = null
 
         val client: SentryClient = mock()
-
+        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
         val factory = object : SentryClientFactory() {
             override fun createSentryClient(dsn: Dsn?): SentryClient {
                 usedDsn = dsn
@@ -49,7 +49,7 @@ class SentryServiceTest {
             tags = mapOf(
                 "test" to "world",
                 "house" to "boat"
-            ))
+            )).report(uncaughtExceptionCrash)
 
         assertNotNull(usedDsn)
 
@@ -117,13 +117,13 @@ class SentryServiceTest {
     @Test
     fun `SentryService adds default tags`() {
         val client: SentryClient = mock()
-
+        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
         SentryService(
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
             clientFactory = object : SentryClientFactory() {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
-            })
+            }).report(uncaughtExceptionCrash)
 
         verify(client).addTag(eq("ac.version"), any())
         verify(client).addTag(eq("ac.git"), any())
@@ -134,20 +134,20 @@ class SentryServiceTest {
     fun `SentryService passes an environment or null`() {
         val client: SentryClient = mock()
         val environmentString = "production"
-
+        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
         SentryService(testContext,
                 "https://fake:notreal@sentry.prod.example.net/405",
                 clientFactory = object : SentryClientFactory() {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
                 },
-                environment = environmentString)
+                environment = environmentString).report(uncaughtExceptionCrash)
         verify(client).environment = eq(environmentString)
 
         SentryService(testContext,
                 "https://fake:notreal@sentry.prod.example.net/405",
                 clientFactory = object : SentryClientFactory() {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
-                })
+                }).report(uncaughtExceptionCrash)
         verify(client).environment = null
     }
 
