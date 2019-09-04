@@ -891,7 +891,7 @@ void IonScript::trace(JSTracer* trc) {
 
   // Trace caches so that the JSScript pointer can be updated if moved.
   for (size_t i = 0; i < numICs(); i++) {
-    getICFromIndex(i).trace(trc);
+    getICFromIndex(i).trace(trc, this);
   }
 }
 
@@ -951,11 +951,9 @@ void IonScript::copyRuntimeData(const uint8_t* data) {
 void IonScript::copyICEntries(const uint32_t* icEntries) {
   memcpy(icIndex(), icEntries, numICs() * sizeof(uint32_t));
 
-  // Jumps in the caches reflect the offset of those jumps in the compiled
-  // code, not the absolute positions of the jumps. Update according to the
-  // final code address now.
+  // Update the codeRaw_ field in the ICs now that we know the code address.
   for (size_t i = 0; i < numICs(); i++) {
-    getICFromIndex(i).updateBaseAddress(method_);
+    getICFromIndex(i).resetCodeRaw(this);
   }
 }
 
@@ -1041,7 +1039,7 @@ void JS::DeletePolicy<js::jit::IonScript>::operator()(
 
 void IonScript::purgeICs(Zone* zone) {
   for (size_t i = 0; i < numICs(); i++) {
-    getICFromIndex(i).reset(zone);
+    getICFromIndex(i).reset(zone, this);
   }
 }
 

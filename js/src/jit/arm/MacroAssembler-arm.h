@@ -728,11 +728,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
 
   void jump(Label* label) { as_b(label); }
   void jump(JitCode* code) { branch(code); }
-  void jump(TrampolinePtr code) {
+  void jump(ImmPtr ptr) {
     ScratchRegisterScope scratch(asMasm());
-    movePtr(ImmPtr(code.value), scratch);
+    movePtr(ptr, scratch);
     ma_bx(scratch);
   }
+  void jump(TrampolinePtr code) { jump(ImmPtr(code.value)); }
   void jump(Register reg) { ma_bx(reg); }
   void jump(const Address& addr) {
     ScratchRegisterScope scratch(asMasm());

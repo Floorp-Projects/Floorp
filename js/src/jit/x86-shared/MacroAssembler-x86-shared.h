@@ -170,6 +170,7 @@ class MacroAssemblerX86Shared : public Assembler {
   void jump(Label* label) { jmp(label); }
   void jump(JitCode* code) { jmp(code); }
   void jump(TrampolinePtr code) { jmp(ImmPtr(code.value)); }
+  void jump(ImmPtr ptr) { jmp(ptr); }
   void jump(RepatchLabel* label) { jmp(label); }
   void jump(Register reg) { jmp(Operand(reg)); }
   void jump(const Address& addr) { jmp(Operand(addr)); }
