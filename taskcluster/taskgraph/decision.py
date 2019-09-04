@@ -27,7 +27,7 @@ from .util.schema import validate_schema, Schema
 from .util.taskcluster import get_artifact
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 from .util.yaml import load_yaml
-from voluptuous import Required, Optional
+from voluptuous import Required, Optional, Url
 
 
 logger = logging.getLogger(__name__)
@@ -117,11 +117,22 @@ PER_PROJECT_PARAMETERS = {
     }
 }
 
+visual_metrics_jobs_schema = Schema({
+        Required('jobs'): [
+            {
+                Required('browsertime_json_url'): Url(),
+                Required('video_url'): Url(),
+            }
+        ]
+})
+
 try_task_config_schema = Schema({
     Required('tasks'): [basestring],
     Optional('templates'): {basestring: object},
     Optional('disable-pgo'): bool,
     Optional('browsertime'): bool,
+    # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
+    Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
 })
 
 
