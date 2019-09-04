@@ -28,6 +28,9 @@ class ThreadId {
 
   inline PlatformData* platformData();
   inline const PlatformData* platformData() const;
+
+  // Return the thread id of the calling thread.
+  static ThreadId ThisThreadId();
 };
 
 } // namespace js
