@@ -91,8 +91,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
 
-  void ResetCurrentLineContentAndIndentationHeader();
-
   void FlushLine();
   void CreateQuotesAndIndent(nsAString& aResult) const;
 
@@ -220,7 +218,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     uint32_t mWidth = 0;
   };
 
-  struct CurrentLine {
+  class CurrentLine {
+   public:
+    void ResetContentAndIndentationHeader();
+
     Indentation mIndentation;
 
     // The number of '>' characters.
