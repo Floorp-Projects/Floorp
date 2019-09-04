@@ -333,30 +333,6 @@ macosx1014-64-ccov/debug:
 #
 # android-em test platforms execute on android emulators.
 
-android-em-4.3-arm7-api-16/debug:
-    build-platform: android-api-16/debug
-    test-sets:
-        - android-common-tests
-
-# Disable ccov testing on Android due to issues with
-# Java 8 features. Bug 1498721.
-# android-em-4.3-arm7-api-16-ccov/debug:
-#     build-platform: android-api-16-ccov/debug
-#     test-sets:
-#         - android-ccov-tests
-
-android-em-4.3-arm7-api-16/opt:
-    build-platform: android-api-16/opt
-    test-sets:
-        - android-common-tests
-        - android-opt-tests
-
-android-em-4.3-arm7-api-16/pgo:
-    build-platform: android-api-16-pgo/opt
-    test-sets:
-        - android-common-tests
-        - android-opt-tests
-
 android-em-7.0-x86_64/opt:
     build-platform: android-x86_64/opt
     test-sets:
