@@ -389,7 +389,6 @@ void ExecutionRunnable::RunOnWorkletThread() {
   // without /rethrow errors/ and so unhandled exceptions do not cause the
   // promise to be rejected.
   JS::ModuleEvaluate(cx, module);
-  JS::Rooted<JS::Value> unused(cx);
 
   // All done.
   mResult = NS_OK;
