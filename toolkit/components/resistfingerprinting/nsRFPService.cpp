@@ -674,7 +674,7 @@ static uint32_t GetSpoofedVersion() {
   // If we are running in Firefox ESR, determine whether the formula of ESR
   // version has changed.  Once changed, we must update the formula in this
   // function.
-  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "esr")) {
+  if (!strcmp(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL), "esr")) {
     MOZ_ASSERT(((firefoxVersion % 8) == 4),
                "Please update ESR version formula in nsRFPService.cpp");
   }
