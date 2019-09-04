@@ -1536,7 +1536,6 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
     while (bol < totLen) {
       MOZ_ASSERT(mOutputManager);
 
-      const bool outputQuotes = mOutputManager->IsAtFirstColumn();
       bool outputLineBreak = false;
       bool spacesOnly = true;
 
@@ -1597,7 +1596,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       }
       mCurrentLineContent.mValue.Append(stringpart);
 
-      if (outputQuotes) {
+      if (mOutputManager->IsAtFirstColumn()) {
         nsAutoString quotesAndIndent;
         CreateQuotesAndIndent(quotesAndIndent);
         mOutputManager->Append(quotesAndIndent);
