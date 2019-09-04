@@ -78,7 +78,7 @@ WINDOWS_WORKER_TYPES = {
     },
     'windows10-64': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-aarch64': {
@@ -88,42 +88,42 @@ WINDOWS_WORKER_TYPES = {
     },
     'windows10-64-ccov': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-devedition': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-asan': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-qr': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable-qr': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-mingwclang': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-ref-hw-2017': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-ref-hw',
     },
 }
