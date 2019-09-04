@@ -134,7 +134,7 @@ class PictureInPictureToggleChild extends ActorChild {
     }
 
     switch (event.type) {
-      case "canplay": {
+      case "UAWidgetSetupOrChange": {
         if (
           this.toggleEnabled &&
           event.target instanceof this.content.HTMLVideoElement &&
