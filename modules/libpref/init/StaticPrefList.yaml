@@ -3625,11 +3625,16 @@
 # Prefs starting with "image."
 #---------------------------------------------------------------------------
 
+# The maximum size (in kB) that the aggregate frames of an animation can use
+# before it starts to discard already displayed frames and redecode them as
+# necessary.
 - name: image.animated.decode-on-demand.threshold-kb
   type: RelaxedAtomicUint32
-  value: 20480
+  value: 20*1024
   mirror: always
 
+# The minimum number of frames we want to have buffered ahead of an
+# animation's currently displayed frame.
 - name: image.animated.decode-on-demand.batch-size
   type: RelaxedAtomicUint32
   value: 6
@@ -3643,19 +3648,28 @@
   value: true
   mirror: once
 
+# Resume an animated image from the last displayed frame rather than
+# advancing when out of view.
 - name: image.animated.resume-from-last-displayed
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
+# Maximum number of surfaces for an image before entering "factor of 2" mode.
+# This in addition to the number of "native" sizes of an image. A native size
+# is a size for which we can decode a frame without up or downscaling. Most
+# images only have 1, but some (i.e. ICOs) may have multiple frames for the
+# same data at different sizes.
 - name: image.cache.factor2.threshold-surfaces
   type: RelaxedAtomicInt32
-  value: -1
+  value: 4
   mirror: always
 
+# Maximum size of a surface in KB we are willing to produce when rasterizing
+# an SVG.
 - name: image.cache.max-rasterized-svg-threshold-kb
   type: RelaxedAtomicInt32
-  value: 90*1024
+  value: 200*1024
   mirror: always
 
 # The maximum size, in bytes, of the decoded images we cache.
@@ -3671,21 +3685,30 @@
   value: 500
   mirror: once
 
+# Decode all images automatically on load, ignoring our normal heuristics.
 - name: image.decode-immediately.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+# Whether we attempt to downscale images during decoding.
 - name: image.downscale-during-decode.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
+# The threshold for inferring that changes to an <img> element's |src|
+# attribute by JavaScript represent an animation, in milliseconds. If the |src|
+# attribute is changing more frequently than this value, then we enter a
+# special "animation mode" which is designed to eliminate flicker. Set to 0 to
+# disable.
 - name: image.infer-src-animation.threshold-ms
   type: RelaxedAtomicUint32
   value: 2000
   mirror: always
 
+# Whether the network request priority should be adjusted according
+# the layout and view frame position of each particular image.
 - name: image.layout_network_priority
   type: RelaxedAtomicBool
   value: true
@@ -3697,9 +3720,11 @@
   value: 16384
   mirror: once
 
+# Discards inactive image frames and re-decodes them on demand from
+# compressed data.
 - name: image.mem.discardable
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Discards inactive image frames of _animated_ images and re-decodes them on
@@ -3709,9 +3734,11 @@
   value: true
   mirror: once
 
+# Whether the heap should be used for frames from animated images. On Android,
+# volatile memory keeps file handles open for each buffer.
 - name: image.mem.animated.use_heap
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_ANDROID@
   mirror: always
 
 # Enable extra information for debugging in the image memory reports.
