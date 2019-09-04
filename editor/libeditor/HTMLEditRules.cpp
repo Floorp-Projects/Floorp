@@ -2741,8 +2741,11 @@ nsresult HTMLEditRules::WillDeleteSelection(
       if (startPoint.GetContainer() == stepbrother &&
           startPoint.GetContainerAsText() && sibling->GetAsText()) {
         EditorDOMPoint pt;
-        nsresult rv = JoinNearestEditableNodesWithTransaction(
-            *sibling, MOZ_KnownLive(*startPoint.GetContainerAsContent()), &pt);
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef())
+                .JoinNearestEditableNodesWithTransaction(
+                    *sibling,
+                    MOZ_KnownLive(*startPoint.GetContainerAsContent()), &pt);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -3712,8 +3715,9 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
       leftBlock->NodeInfo()->NameAtom() == rightBlock->NodeInfo()->NameAtom()) {
     // Nodes are same type.  merge them.
     EditorDOMPoint pt;
-    nsresult rv =
-        JoinNearestEditableNodesWithTransaction(*leftBlock, *rightBlock, &pt);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .JoinNearestEditableNodesWithTransaction(
+                          *leftBlock, *rightBlock, &pt);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -9149,27 +9153,22 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
   return splitNodeResult;
 }
 
-nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
+nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
     nsIContent& aNodeLeft, nsIContent& aNodeRight,
     EditorDOMPoint* aNewFirstChildOfRightNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aNewFirstChildOfRightNode);
 
   // Caller responsible for left and right node being the same type
-  nsCOMPtr<nsINode> parent = aNodeLeft.GetParentNode();
-  if (NS_WARN_IF(!parent)) {
+  if (NS_WARN_IF(!aNodeLeft.GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsINode> rightParent = aNodeRight.GetParentNode();
-
   // If they don't have the same parent, first move the right node to after
   // the left one
-  if (parent != rightParent) {
-    int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MoveNodeWithTransaction(
-                          aNodeRight, EditorDOMPoint(parent, parOffset));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (aNodeLeft.GetParentNode() != aNodeRight.GetParentNode()) {
+    nsresult rv =
+        MoveNodeWithTransaction(aNodeRight, EditorDOMPoint(&aNodeLeft));
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9180,56 +9179,59 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
 
   // Separate join rules for differing blocks
-  if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.GetAsText()) {
+  if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.IsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "JoinNodesWithTransaction failed");
+    if (NS_SUCCEEDED(rv)) {
+      // XXX `ret` may point invalid point if mutation event listener changed
+      //     the previous siblings...
+      *aNewFirstChildOfRightNode = std::move(ret);
     }
-    *aNewFirstChildOfRightNode = std::move(ret);
-    return NS_OK;
+    return rv;
   }
 
   // Remember the last left child, and first right child
-  nsCOMPtr<nsIContent> lastLeft =
-      HTMLEditorRef().GetLastEditableChild(aNodeLeft);
+  nsCOMPtr<nsIContent> lastLeft = GetLastEditableChild(aNodeLeft);
   if (NS_WARN_IF(!lastLeft)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> firstRight =
-      HTMLEditorRef().GetFirstEditableChild(aNodeRight);
+  nsCOMPtr<nsIContent> firstRight = GetFirstEditableChild(aNodeRight);
   if (NS_WARN_IF(!firstRight)) {
     return NS_ERROR_FAILURE;
   }
 
   // For list items, divs, etc., merge smart
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (lastLeft && firstRight &&
-      HTMLEditorRef().AreNodesSameType(*lastLeft, *firstRight) &&
-      (lastLeft->GetAsText() ||
+  // XXX This condition is odd.  Despite of the name, `AreNodesSameType()`
+  //     compairs its style with `CSSEditUtils::ElementsSameStyle()` only
+  //     when `IsCSSEnabled()` returns true and `lastLeft` is a `<span>`
+  //     element.  However, calling `CSSEditUtils::ElementsSameStyle()`
+  //     without those checking again.
+  if (HTMLEditor::AreNodesSameType(*lastLeft, *firstRight) &&
+      (lastLeft->IsText() ||
        (lastLeft->IsElement() && firstRight->IsElement() &&
         CSSEditUtils::ElementsSameStyle(lastLeft->AsElement(),
                                         firstRight->AsElement())))) {
     nsresult rv = JoinNearestEditableNodesWithTransaction(
         *lastLeft, *firstRight, aNewFirstChildOfRightNode);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "JoinNearestEditableNodesWithTransaction() failed");
+    return rv;
   }
+  // XXX `ret` may point invalid point if mutation event listener changed
+  //     the previous siblings...
   *aNewFirstChildOfRightNode = std::move(ret);
   return NS_OK;
 }
