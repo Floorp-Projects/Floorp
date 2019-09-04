@@ -1277,14 +1277,12 @@ void Navigator::MozGetUserMediaDevices(
   }
   if (Document* doc = mWindow->GetExtantDoc()) {
     if (!mWindow->IsSecureContext()) {
-      doc->SetDocumentAndPageUseCounter(
-          eUseCounter_custom_MozGetUserMediaInsec);
+      doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
     }
     nsINode* node = doc;
     while ((node = nsContentUtils::GetCrossDocParentNode(node))) {
       if (NS_FAILED(nsContentUtils::CheckSameOrigin(doc, node))) {
-        doc->SetDocumentAndPageUseCounter(
-            eUseCounter_custom_MozGetUserMediaXOrigin);
+        doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaXOrigin);
         break;
       }
     }
