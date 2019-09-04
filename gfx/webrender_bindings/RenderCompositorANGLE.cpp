@@ -317,9 +317,7 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
   // DXGI_SCALING_NONE caused swap chain creation failure.
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-  desc.AlphaMode = gfx::gfxVars::WorkaroundWebRenderIntelBug1556634()
-                       ? DXGI_ALPHA_MODE_PREMULTIPLIED
-                       : DXGI_ALPHA_MODE_IGNORE;
+  desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
   desc.Flags = 0;
 
   hr = aDXGIFactory2->CreateSwapChainForComposition(mDevice, &desc, nullptr,
