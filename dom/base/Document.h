@@ -3787,9 +3787,7 @@ class Document : public nsINode,
   void ReportUseCounters();
 
   void SetDocumentUseCounter(UseCounter aUseCounter) {
-    if (!mUseCounters[aUseCounter]) {
-      mUseCounters[aUseCounter] = true;
-    }
+    mUseCounters[aUseCounter] = true;
   }
 
   const StyleUseCounters* GetStyleUseCounters() {
