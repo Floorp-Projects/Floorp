@@ -444,59 +444,24 @@ class CodeLabel {
 typedef Vector<CodeLabel, 0, SystemAllocPolicy> CodeLabelVector;
 
 class CodeLocationLabel {
-  uint8_t* raw_;
-#ifdef DEBUG
-  enum State { Uninitialized, Absolute, Relative };
-  State state_;
-  void setUninitialized() { state_ = Uninitialized; }
-  void setAbsolute() { state_ = Absolute; }
-  void setRelative() { state_ = Relative; }
-#else
-  void setUninitialized() const {}
-  void setAbsolute() const {}
-  void setRelative() const {}
-#endif
+  uint8_t* raw_ = nullptr;
 
  public:
-  CodeLocationLabel() {
-    raw_ = nullptr;
-    setUninitialized();
-  }
   CodeLocationLabel(JitCode* code, CodeOffset base) {
-    *this = base;
-    repoint(code);
+    MOZ_ASSERT(base.offset() < code->instructionsSize());
+    raw_ = code->raw() + base.offset();
   }
-  explicit CodeLocationLabel(JitCode* code) {
-    raw_ = code->raw();
-    setAbsolute();
-  }
+  explicit CodeLocationLabel(JitCode* code) { raw_ = code->raw(); }
   explicit CodeLocationLabel(uint8_t* raw) {
+    MOZ_ASSERT(raw);
     raw_ = raw;
-    setAbsolute();
   }
 
-  void operator=(CodeOffset base) {
-    raw_ = (uint8_t*)base.offset();
-    setRelative();
-  }
   ptrdiff_t operator-(const CodeLocationLabel& other) {
     return raw_ - other.raw_;
   }
 
-  void repoint(JitCode* code);
-
-#ifdef DEBUG
-  bool isSet() const { return state_ != Uninitialized; }
-#endif
-
-  uint8_t* raw() const {
-    MOZ_ASSERT(state_ == Absolute);
-    return raw_;
-  }
-  uint8_t* offset() const {
-    MOZ_ASSERT(state_ == Relative);
-    return raw_;
-  }
+  uint8_t* raw() const { return raw_; }
 };
 
 }  // namespace jit
