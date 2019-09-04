@@ -862,10 +862,6 @@ pref("nglayout.enable_drag_images", true);
 pref("nglayout.debug.paint_flashing", false);
 pref("nglayout.debug.paint_flashing_chrome", false);
 
-// enable/disable widget update area flashing --- only supported with
-// BasicLayers (other layer managers always update the entire widget area)
-pref("nglayout.debug.widget_update_flashing", false);
-
 // Whether frame visibility tracking is enabled globally.
 pref("layout.framevisibility.enabled", true);
 
@@ -930,11 +926,6 @@ pref("print.print_edge_bottom", 0);
 #else
   pref("print.print_via_parent", false);
 #endif
-
-// Variation fonts can't always be embedded in certain output formats
-// such as PDF. To work around this, draw the variation fonts using
-// paths instead of using font embedding.
-pref("print.font-variations-as-paths", true);
 
 // Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
@@ -2393,30 +2384,6 @@ pref("clipboard.plainTextOnly", false);
   pref("mousebutton.5th.enabled", true);
 #endif
 
-// mouse wheel scroll transaction period of time (in milliseconds)
-pref("mousewheel.transaction.timeout", 1500);
-// mouse wheel scroll transaction is held even if the mouse cursor is moved.
-pref("mousewheel.transaction.ignoremovedelay", 100);
-
-// prefs for app level mouse wheel scrolling acceleration.
-// number of mousewheel clicks when acceleration starts
-// acceleration can be turned off if pref is set to -1
-pref("mousewheel.acceleration.start", -1);
-// factor to be multiplied for constant acceleration
-pref("mousewheel.acceleration.factor", 10);
-
-// Prefs for override the system mouse wheel scrolling speed on
-// content of the web pages.  When
-// "mousewheel.system_scroll_override_on_root_content.enabled" is true and the system
-// scrolling speed isn't customized by the user, the content scrolling
-// speed is multiplied by the following factors.  The value will be used as
-// 1/100.  E.g., 200 means 2.00.
-// NOTE: Even if "mousewheel.system_scroll_override_on_root_content.enabled" is
-// true, when Gecko detects the user customized the system scrolling speed
-// settings, the override isn't executed.
-pref("mousewheel.system_scroll_override_on_root_content.vertical.factor", 200);
-pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200);
-
 // mousewheel.*.action can specify the action when you use mosue wheel.
 // When no modifier keys are pressed or two or more modifires are pressed,
 // .default is used.
@@ -3298,8 +3265,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
   pref("ui.panel.default_level_parent", false);
 
-  pref("mousewheel.system_scroll_override_on_root_content.enabled", true);
-
   // Enable system settings cache for mouse wheel message handling.
   // Note that even if this pref is set to true, Gecko may not cache the system
   // settings if Gecko detects that the cache won't be refreshed properly when
@@ -3554,8 +3519,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
 
   pref("ui.plugin.cancel_composition_at_input_source_changed", false);
 
-  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-
   // Macbook touchpad two finger pixel scrolling
   pref("mousewheel.enable_pixel_scrolling", true);
 
@@ -3597,8 +3560,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // A problem with using managed windows is that metacity sometimes deactivates
   // the parent window when the managed popup is shown.
   pref("ui.panel.default_level_parent", true);
-
-  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
   // Forward downloads with known OMA MIME types to Android's download manager
   // instead of downloading them in the browser.
@@ -3797,8 +3758,6 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
   // 2. The parent of non-topmost panel is not activated when the panel is hidden.
   // So, we have no reasons we should use non-toplevel window for popup.
   pref("ui.panel.default_level_parent", true);
-
-  pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
   pref("intl.ime.use_simple_context_on_password_field", false);
 
@@ -4377,9 +4336,6 @@ pref("network.trr.disable-ECS", true);
 pref("network.trr.max-fails", 5);
 // Comma separated list of domains that we should not use TRR for
 pref("network.trr.excluded-domains", "localhost,local");
-
-// enable HttpTrafficAnalyzer
-pref("network.traffic_analyzer.enabled", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
