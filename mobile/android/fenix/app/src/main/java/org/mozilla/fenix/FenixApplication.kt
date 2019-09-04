@@ -192,6 +192,8 @@ open class FenixApplication : Application() {
         // We need the push feature setup here to deliver messages in the case where the service
         // starts up the app first.
         if (components.backgroundServices.pushConfig != null) {
+            Logger.info("Push configuration found; initializing autopush..")
+
             val push = components.backgroundServices.push
 
             // Install the AutoPush singleton to receive messages.

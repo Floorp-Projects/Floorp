@@ -83,11 +83,15 @@ class BackgroundServices(
     }
 
     val pushConfig by lazy {
+        val logger = Logger("PushConfig")
         val projectIdKey = context.getString(R.string.pref_key_push_project_id)
         val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
         if (resId == 0) {
+            logger.warn("No firebase configuration found; cannot support push service.")
             return@lazy null
         }
+
+        logger.debug("Creating push configuration for autopush.")
         val projectId = context.resources.getString(resId)
         PushConfig(projectId)
     }
