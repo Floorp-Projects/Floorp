@@ -133,7 +133,7 @@ nsICSSDeclaration* nsStyledElement::Style() {
 
   if (!slots->mStyle) {
     // Just in case...
-    ReparseStyleAttribute(true, false);
+    ReparseStyleAttribute(/* aForceInDataDoc */ true);
 
     slots->mStyle = new nsDOMCSSAttributeDeclaration(this, false);
     SetMayHaveStyle();
@@ -142,14 +142,12 @@ nsICSSDeclaration* nsStyledElement::Style() {
   return slots->mStyle;
 }
 
-nsresult nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc,
-                                                bool aForceIfAlreadyParsed) {
+nsresult nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc) {
   if (!MayHaveStyle()) {
     return NS_OK;
   }
   const nsAttrValue* oldVal = mAttrs.GetAttr(nsGkAtoms::style);
-  if (oldVal && (aForceIfAlreadyParsed ||
-                 oldVal->Type() != nsAttrValue::eCSSDeclaration)) {
+  if (oldVal && oldVal->Type() != nsAttrValue::eCSSDeclaration) {
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
@@ -163,10 +161,6 @@ nsresult nsStyledElement::ReparseStyleAttribute(bool aForceInDataDoc,
   }
 
   return NS_OK;
-}
-
-void nsStyledElement::NodeInfoChanged(Document* aOldDoc) {
-  nsStyledElementBase::NodeInfoChanged(aOldDoc);
 }
 
 nsICSSDeclaration* nsStyledElement::GetExistingStyle() {

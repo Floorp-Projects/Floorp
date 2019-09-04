@@ -5211,6 +5211,23 @@ NS_IMETHODIMP EditorBase::GetPasswordMask(nsAString& aPasswordMask) {
   return NS_OK;
 }
 
+void EditorBase::UndefineCaretBidiLevel() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  /**
+   * After inserting text the caret Bidi level must be set to the level of the
+   * inserted text.This is difficult, because we cannot know what the level is
+   * until after the Bidi algorithm is applied to the whole paragraph.
+   *
+   * So we set the caret Bidi level to UNDEFINED here, and the caret code will
+   * set it correctly later
+   */
+  nsFrameSelection* frameSelection = SelectionRefPtr()->GetFrameSelection();
+  if (frameSelection) {
+    frameSelection->UndefineCaretBidiLevel();
+  }
+}
+
 /******************************************************************************
  * EditorBase::AutoSelectionRestorer
  *****************************************************************************/

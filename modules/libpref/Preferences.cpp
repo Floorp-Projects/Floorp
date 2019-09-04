@@ -4360,11 +4360,10 @@ struct Internals {
 
 #ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-        profiler_add_marker("PreferenceRead",
-                            JS::ProfilingCategoryPair::OTHER_PreferenceRead,
-                            MakeUnique<PrefMarkerPayload>(
-                                aPrefName, Some(aKind), Some(pref->Type()),
-                                PrefValueToString(aResult), TimeStamp::Now()));
+        PROFILER_ADD_MARKER_WITH_PAYLOAD(
+            "PreferenceRead", OTHER_PreferenceRead, PrefMarkerPayload,
+            (aPrefName, Some(aKind), Some(pref->Type()),
+             PrefValueToString(aResult), TimeStamp::Now()));
       }
 #endif
     }
@@ -4381,11 +4380,10 @@ struct Internals {
 
 #ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
-        profiler_add_marker(
-            "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
-            MakeUnique<PrefMarkerPayload>(
-                aName, Nothing() /* indicates Shared */, Some(pref->Type()),
-                PrefValueToString(aResult), TimeStamp::Now()));
+        PROFILER_ADD_MARKER_WITH_PAYLOAD(
+            "PreferenceRead", OTHER_PreferenceRead, PrefMarkerPayload,
+            (aName, Nothing() /* indicates Shared */, Some(pref->Type()),
+             PrefValueToString(aResult), TimeStamp::Now()));
       }
 #endif
     }

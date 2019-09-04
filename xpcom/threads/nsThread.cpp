@@ -1237,11 +1237,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
           mLastLongTaskEnd = now;
 #ifdef MOZ_GECKO_PROFILER
           if (profiler_thread_is_being_profiled()) {
-            profiler_add_marker(
+            PROFILER_ADD_MARKER_WITH_PAYLOAD(
                 (priority != EventQueuePriority::Idle) ? "LongTask"
                                                        : "LongIdleTask",
-                JS::ProfilingCategoryPair::OTHER,
-                MakeUnique<LongTaskMarkerPayload>(mCurrentEventStart, now));
+                OTHER, LongTaskMarkerPayload, (mCurrentEventStart, now));
           }
 #endif
         }

@@ -2324,7 +2324,7 @@ void RecordCompositionPayloadsPresented(
             "Payload Presented, type: %d latency: %dms\n",
             int32_t(payload.mType),
             int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
-        profiler_add_marker(marker.get(), JS::ProfilingCategoryPair::GRAPHICS);
+        PROFILER_ADD_MARKER(marker.get(), GRAPHICS);
       }
 #endif
 

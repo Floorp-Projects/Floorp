@@ -100,12 +100,12 @@ function searchInResource(resource, query) {
       findMatches(resource, query, {
         key: "requestPostData.postData.text",
         type: "requestPostData",
-        panel: "headers",
+        panel: "params",
       })
     );
   }
 
-  return getResults(results);
+  return getResults(results, resource);
 }
 
 /**
@@ -113,12 +113,13 @@ function searchInResource(resource, query) {
  * @param results
  * @returns {*[]}
  */
-function getResults(results) {
+function getResults(results, resource) {
   const tempResults = [].concat.apply([], results);
 
   // Generate unique result keys
   tempResults.forEach((result, index) => {
     result.key = index;
+    result.parentResource = resource;
   });
 
   return tempResults;
@@ -218,10 +219,10 @@ function searchInText(query, text, data) {
     }
 
     if (lineMatches.length !== 0) {
-      const line = i + 1 + "";
+      const line = i + 1;
       const match = {
         ...data,
-        label: type !== "url" ? line : "Url",
+        label: type !== "url" ? line + "" : "Url",
         line,
         startIndex: lineMatches,
       };

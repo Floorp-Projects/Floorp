@@ -58,7 +58,6 @@ function DebuggerClient(transport) {
   this.traits = {};
 
   this.request = this.request.bind(this);
-  this.localTransport = this._transport.onOutputStreamReady === undefined;
 
   /*
    * As the first thing on the connection, expect a greeting packet from

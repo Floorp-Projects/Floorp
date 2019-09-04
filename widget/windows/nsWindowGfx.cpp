@@ -439,7 +439,8 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer* aContainer, bool aIsCursor,
 
   // Get the image data
   RefPtr<SourceSurface> surface = aContainer->GetFrame(
-      imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
+      imgIContainer::FRAME_CURRENT,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
 
   IntSize frameSize = surface->GetSize();
