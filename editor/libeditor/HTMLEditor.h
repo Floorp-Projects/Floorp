@@ -2014,6 +2014,30 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE MoveNodeResult
   MoveChildren(Element& aElement, const EditorDOMPoint& aPointToInsert);
 
+  /**
+   * MoveOneHardLineContents() moves the content in a hard line which contains
+   * aPointInHardLine to aPointToInsert or end of aPointToInsert's container.
+   *
+   * @param aPointInHardLine            A point in a hard line.  All nodes in
+   *                                    same hard line will be moved.
+   * @param aPointToInsert              Point to insert contents of the hard
+   *                                    line.
+   * @param aMoveToEndOfContainer       If `Yes`, aPointToInsert.Offset() will
+   *                                    be ignored and instead, all contents
+   *                                    will be appended to the container of
+   *                                    aPointToInsert.  The result may be
+   *                                    different from setting this to `No`
+   *                                    and aPointToInsert points end of the
+   *                                    container because mutation event
+   *                                    listeners may modify children of the
+   *                                    container while we're moving nodes.
+   */
+  enum class MoveToEndOfContainer { Yes, No };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE MoveNodeResult MoveOneHardLineContents(
+      const EditorDOMPoint& aPointInHardLine,
+      const EditorDOMPoint& aPointToInsert,
+      MoveToEndOfContainer aMoveToEndOfContainer = MoveToEndOfContainer::No);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
