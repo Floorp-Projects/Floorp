@@ -577,7 +577,7 @@ void CodeGeneratorShared::addIC(LInstruction* lir, size_t cacheIndex) {
   addOutOfLineCode(ool, mir);
 
   masm.bind(ool->rejoin());
-  cache->setRejoinLabel(CodeOffset(ool->rejoin()->offset()));
+  cache->setRejoinOffset(CodeOffset(ool->rejoin()->offset()));
 }
 
 void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
@@ -588,7 +588,7 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
   DataPtr<IonIC> ic(this, cacheIndex);
 
   // Register the location of the OOL path in the IC.
-  ic->setFallbackLabel(masm.labelForPatch());
+  ic->setFallbackOffset(CodeOffset(masm.currentOffset()));
 
   switch (ic->kind()) {
     case CacheKind::GetProp:

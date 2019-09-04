@@ -709,13 +709,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void jump(Label* label) { B(label); }
   void jump(JitCode* code) { branch(code); }
-  void jump(TrampolinePtr code) {
+  void jump(ImmPtr ptr) {
     syncStackPtr();
     BufferOffset loc =
         b(-1,
           LabelDoc());  // The jump target will be patched by executableCopy().
-    addPendingJump(loc, ImmPtr(code.value), RelocationKind::HARDCODED);
+    addPendingJump(loc, ptr, RelocationKind::HARDCODED);
   }
+  void jump(TrampolinePtr code) { jump(ImmPtr(code.value)); }
   void jump(RepatchLabel* label) { MOZ_CRASH("jump (repatchlabel)"); }
   void jump(Register reg) { Br(ARMRegister(reg, 64)); }
   void jump(const Address& addr) {
