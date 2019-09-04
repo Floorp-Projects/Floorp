@@ -374,6 +374,7 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
                           aUniqueStacks);
       }
     };
+    AUTO_PROFILER_STATS(add_marker_with_ContentBuildPayload);
     profiler_add_marker_for_thread(
         profiler_current_thread_id(), JS::ProfilingCategoryPair::GRAPHICS,
         "CONTENT_FULL_PAINT_TIME",
