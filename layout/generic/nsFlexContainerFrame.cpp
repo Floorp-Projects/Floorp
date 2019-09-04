@@ -623,6 +623,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
     return mFlexShrink * mFlexBaseSize;
   }
 
+  bool TreatBSizeAsIndefinite() const { return mTreatBSizeAsIndefinite; }
+
   const AspectRatio& IntrinsicRatio() const { return mIntrinsicRatio; }
   bool HasIntrinsicRatio() const { return !!mIntrinsicRatio; }
 
@@ -890,6 +892,9 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution;
+
+  // Should we take care to treat this item's resolved BSize as indefinite?
+  bool mTreatBSizeAsIndefinite;
 
   // Does this item have an auto margin in either main or cross axis?
   bool mHasAnyAutoMargin;
@@ -1942,6 +1947,57 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
   }
 
+  // Our main-size is considered definite if any of these are true:
+  // (a) main axis is the item's inline axis.
+  // (b) flex container has definite main size.
+  // (c) flex item has a definite flex basis and is fully inflexible
+  //     (NOTE: We don't actually check "fully inflexible" because webcompat
+  //     may not agree with that restriction...)
+  //
+  // Hence, we need to take care to treat the final main-size as *indefinite*
+  // if none of these conditions are satisfied.
+  if (mIsInlineAxisMainAxis) {
+    // The item's block-axis is the flex container's cross axis. We don't need
+    // any special handling to treat cross sizes as indefinite, because the
+    // cases where we stomp on the cross size with a definite value are all...
+    // - situations where the spec requires us to treat the cross size as
+    // definite; specifically, `align-self:stretch` whose cross size is
+    // definite.
+    // - situations where definiteness doesn't matter (e.g. for an element with
+    // an intrinsic aspect ratio, which for now are all leaf nodes and hence
+    // can't have any percent-height descendants that would care about the
+    // definiteness of its size. (Once bug 1528375 is fixed, we might need to
+    // be more careful about definite vs. indefinite sizing on flex items with
+    // aspect ratios.)
+    mTreatBSizeAsIndefinite = false;
+  } else {
+    // The item's block-axis is the flex container's main axis. So, the flex
+    // item's main size is its BSize, and is considered definite under certain
+    // conditions laid out for definite flex-item main-sizes in the spec.
+    if (aAxisTracker.IsRowOriented() ||
+        (containerRS->ComputedBSize() != NS_UNCONSTRAINEDSIZE &&
+         !containerRS->mFlags.mTreatBSizeAsIndefinite)) {
+      // The flex *container* has a definite main-size (either by being
+      // row-oriented [and using its own inline size which is by definition
+      // definite, or by being column-oriented and having a definite
+      // block-size).  The spec says this means all of the flex items'
+      // post-flexing main sizes should *also* be treated as definite.
+      mTreatBSizeAsIndefinite = false;
+    } else if (aFlexBaseSize != NS_UNCONSTRAINEDSIZE) {
+      // The flex item has a definite flex basis, which we'll treat as making
+      // its main-size definite.
+      // XXXdholbert Technically the spec requires the flex item to *also* be
+      // fully inflexible in order to have its size treated as definite in this
+      // scenario, but no browser implements that additional restriction, so
+      // it's not clear that this additional requirement would be
+      // web-compatible...
+      mTreatBSizeAsIndefinite = false;
+    } else {
+      // Otherwise, we have to treat the item's BSize as indefinite.
+      mTreatBSizeAsIndefinite = true;
+    }
+  }
+
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
   CheckForMinSizeAuto(aFlexItemReflowInput, aAxisTracker);
 
@@ -2010,6 +2066,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
       mIsStrut(true),  // (this is the constructor for making struts, after all)
       mIsInlineAxisMainAxis(true),  // (doesn't matter, we're not doing layout)
       mNeedsMinSizeAutoResolution(false),
+      mTreatBSizeAsIndefinite(false),
       mHasAnyAutoMargin(false),
       mAlignSelf(NS_STYLE_ALIGN_FLEX_START),
       mAlignSelfFlags(0) {
@@ -4738,6 +4795,9 @@ void nsFlexContainerFrame::DoFlexLayout(
             childReflowInput.SetComputedISize(item->GetMainSize());
           } else {
             childReflowInput.SetComputedBSize(item->GetMainSize());
+            if (item->TreatBSizeAsIndefinite()) {
+              childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
+            }
           }
         }
 
@@ -5145,6 +5205,9 @@ void nsFlexContainerFrame::ReflowFlexItem(
   } else {
     childReflowInput.SetComputedBSize(aItem.GetMainSize());
     didOverrideComputedBSize = true;
+    if (aItem.TreatBSizeAsIndefinite()) {
+      childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
+    }
   }
 
   // Override reflow input's computed cross-size if either:
@@ -5161,6 +5224,10 @@ void nsFlexContainerFrame::ReflowFlexItem(
       childReflowInput.SetComputedISize(aItem.GetCrossSize());
       didOverrideComputedISize = true;
     } else {
+      // Note that in the above cases we don't need to worry about the BSize
+      // needing to be treated as indefinite, because this is for cases where
+      // the block size would always be considered definite (or where its
+      // definiteness would be irrelevant).
       childReflowInput.SetComputedBSize(aItem.GetCrossSize());
       didOverrideComputedBSize = true;
     }
