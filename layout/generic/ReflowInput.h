@@ -248,6 +248,15 @@ struct SizeComputationInput {
     // BSize.
     bool mIsFlexContainerMeasuringBSize : 1;
 
+    // If this flag is set, the BSize of this frame should be considered
+    // indefinite for the purposes of percent resolution on child frames (we
+    // should behave as if ComputedBSize() were NS_INTRINSIC_ISIZE when doing
+    // percent resolution against this.ComputedBSize()).  For example: flex
+    // items may have their ComputedBSize() resolved ahead-of-time by their
+    // flex container, and yet their BSize might have to be considered
+    // indefinite per https://drafts.csswg.org/css-flexbox/#definite-sizes
+    bool mTreatBSizeAsIndefinite : 1;
+
     // a "fake" reflow input made in order to be the parent of a real one
     bool mDummyParentReflowInput : 1;
 
