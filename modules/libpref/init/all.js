@@ -413,9 +413,6 @@ pref("media.hardware-video-decoding.enabled", true);
 #endif
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
-pref("media.opus.enabled", true);
-pref("media.wave.enabled", true);
-pref("media.webm.enabled", true);
 
 // GMP storage version number. At startup we check the version against
 // media.gmp.storage.version.observed, and if the versions don't match,
@@ -473,18 +470,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.navigator.video.h264.level", 31); // 0x42E01f - level 3.1
   pref("media.navigator.video.h264.max_br", 0);
   pref("media.navigator.video.h264.max_mbps", 0);
-  #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
-    pref("media.navigator.mediadatadecoder_vpx_enabled", true);
-  #else
-    pref("media.navigator.mediadatadecoder_vpx_enabled", false);
-  #endif
-  #if defined(ANDROID)
-    pref("media.navigator.mediadatadecoder_h264_enabled", false); // bug 1509316
-  #elif defined(_ARM64_) && defined(XP_WIN)
-    pref("media.navigator.mediadatadecoder_h264_enabled", false);
-  #else
-    pref("media.navigator.mediadatadecoder_h264_enabled", true);
-  #endif
   pref("media.peerconnection.video.vp9_enabled", true);
   pref("media.peerconnection.video.vp9_preferred", false);
   pref("media.getusermedia.browser.enabled", false);
@@ -559,17 +544,6 @@ pref("media.webvtt.pseudo.enabled", true);
 // WebVTT debug logging.
 pref("media.webvtt.debug.logging", false);
 
-pref("media.benchmark.vp9.threshold", 150);
-pref("media.benchmark.frames", 300);
-pref("media.benchmark.timeout", 1000);
-
-pref("media.media-capabilities.enabled", true);
-pref("media.media-capabilities.screen.enabled", false);
-
-#ifdef MOZ_WEBM_ENCODER
-  pref("media.encoder.webm.enabled", true);
-#endif
-
 // Whether to allow recording of AudioNodes with MediaRecorder
 pref("media.recorder.audio_node.enabled", false);
 
@@ -586,14 +560,6 @@ pref("media.autoplay.block-webaudio", false);
 
 // By default, don't block the media from extension background script.
 pref("media.autoplay.allow-extension-background-pages", true);
-
-// If "media.autoplay.default" is not ALLOWED, and this pref is true,
-// then audible media would only be allowed to autoplay after website has
-// been activated by specific user gestures, but non-audible
-// media won't be restricted.
-#ifdef NIGHTLY_BUILD
-  pref("media.autoplay.enabled.user-gestures-needed", false);
-#endif
 
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
@@ -619,22 +585,6 @@ pref("media.cubeb.logging_level", "");
 
 // GraphRunner (fixed MediaStreamGraph thread) control
 pref("media.audiograph.single_thread.enabled", false);
-
-#ifdef MOZ_AV1
-  #if defined(XP_WIN) && !defined(_ARM64_)
-    pref("media.av1.enabled", true);
-    pref("media.av1.use-dav1d", true);
-  #elif defined(XP_MACOSX)
-    pref("media.av1.enabled", true);
-    pref("media.av1.use-dav1d", true);
-  #elif defined(XP_UNIX) && !defined(MOZ_WIDGET_ANDROID)
-    pref("media.av1.enabled", true);
-    pref("media.av1.use-dav1d", true);
-  #else
-    pref("media.av1.enabled", false);
-    pref("media.av1.use-dav1d", false);
-  #endif
-#endif
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
