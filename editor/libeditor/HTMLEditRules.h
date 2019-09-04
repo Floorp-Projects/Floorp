@@ -190,34 +190,6 @@ class HTMLEditRules : public TextEditRules {
                                           int32_t aRightOffset);
 
   /**
-   * MoveNodeSmart() moves aNode to (aDestElement, aInOutDestOffset).
-   * DTD containment rules are followed throughout.
-   *
-   * @param aOffset                 returns the point after inserted content.
-   * @return                        Sets true to handled if this actually moves
-   *                                the nodes.
-   *                                canceled is always false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult MoveNodeSmart(nsIContent& aNode,
-                                              Element& aDestElement,
-                                              int32_t* aInOutDestOffset);
-
-  /**
-   * MoveContents() moves the contents of aElement to (aDestElement,
-   * aInOutDestOffset).  DTD containment rules are followed throughout.
-   *
-   * @param aInOutDestOffset        updated to point after inserted content.
-   * @return                        Sets true to handled if this actually moves
-   *                                the nodes.
-   *                                canceled is always false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult MoveContents(Element& aElement,
-                                             Element& aDestElement,
-                                             int32_t* aInOutDestOffset);
-
-  /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
    * table related elements (except <table> itself) and their contents
    * from the DOM tree.

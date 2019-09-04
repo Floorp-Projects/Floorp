@@ -24,6 +24,7 @@ class nsITransferable;
 class nsRange;
 
 namespace mozilla {
+class MoveNodeResult;
 template <class T>
 class OwningNonNull;
 
@@ -88,6 +89,8 @@ class MOZ_STACK_CLASS EditActionResult final {
     }
     return *this;
   }
+
+  EditActionResult& operator|=(const MoveNodeResult& aMoveNodeResult);
 
  private:
   nsresult mRv;
@@ -174,6 +177,144 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   RefPtr<NodeType> mNode;
   nsresult mRv;
 };
+
+/***************************************************************************
+ * MoveNodeResult is a simple class for MoveSomething() methods.
+ * This holds error code and next insertion point if moving contents succeeded.
+ */
+class MOZ_STACK_CLASS MoveNodeResult final {
+ public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  bool Handled() const { return mHandled; }
+  bool Ignored() const { return !mHandled; }
+  nsresult Rv() const { return mRv; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+  const EditorDOMPoint& NextInsertionPointRef() const {
+    return mNextInsertionPoint;
+  }
+  EditorDOMPoint NextInsertionPoint() const { return mNextInsertionPoint; }
+
+  MoveNodeResult() : mRv(NS_ERROR_NOT_INITIALIZED), mHandled(false) {}
+
+  explicit MoveNodeResult(nsresult aRv) : mRv(aRv), mHandled(false) {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  MoveNodeResult(const MoveNodeResult& aOther) = delete;
+  MoveNodeResult& operator=(const MoveNodeResult& aOther) = delete;
+  MoveNodeResult(MoveNodeResult&& aOther) = default;
+  MoveNodeResult& operator=(MoveNodeResult&& aOther) = default;
+
+  MoveNodeResult& operator|=(const MoveNodeResult& aOther) {
+    mHandled |= aOther.mHandled;
+    // When both result are same, keep the result but use newer point.
+    if (mRv == aOther.mRv) {
+      mNextInsertionPoint = aOther.mNextInsertionPoint;
+      return *this;
+    }
+    // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
+    // the most important error code for editor.
+    if (EditorDestroyed() || aOther.EditorDestroyed()) {
+      mRv = NS_ERROR_EDITOR_DESTROYED;
+      mNextInsertionPoint.Clear();
+      return *this;
+    }
+    // If the other one has not been set explicit nsresult, keep current
+    // value.
+    if (aOther.mRv == NS_ERROR_NOT_INITIALIZED) {
+      return *this;
+    }
+    // If this one has not been set explicit nsresult, copy the other one's.
+    if (mRv == NS_ERROR_NOT_INITIALIZED) {
+      mRv = aOther.mRv;
+      mNextInsertionPoint = aOther.mNextInsertionPoint;
+      return *this;
+    }
+    // If one of the results is error, use NS_ERROR_FAILURE.
+    if (Failed() || aOther.Failed()) {
+      mRv = NS_ERROR_FAILURE;
+      mNextInsertionPoint.Clear();
+      return *this;
+    }
+    // Otherwise, use generic success code, NS_OK, and use newer point.
+    mRv = NS_OK;
+    mNextInsertionPoint = aOther.mNextInsertionPoint;
+    return *this;
+  }
+
+ private:
+  template <typename PT, typename CT>
+  explicit MoveNodeResult(const EditorDOMPointBase<PT, CT>& aNextInsertionPoint,
+                          bool aHandled)
+      : mNextInsertionPoint(aNextInsertionPoint),
+        mRv(aNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE),
+        mHandled(aHandled && aNextInsertionPoint.IsSet()) {
+    if (mNextInsertionPoint.IsSet()) {
+      AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
+          mNextInsertionPoint);
+    }
+  }
+
+  MoveNodeResult(nsINode* aParentNode, uint32_t aOffsetOfNextInsertionPoint,
+                 bool aHandled) {
+    if (!aParentNode) {
+      mRv = NS_ERROR_FAILURE;
+      mHandled = false;
+      return;
+    }
+    aOffsetOfNextInsertionPoint =
+        std::min(aOffsetOfNextInsertionPoint, aParentNode->Length());
+    mNextInsertionPoint.Set(aParentNode, aOffsetOfNextInsertionPoint);
+    mRv = mNextInsertionPoint.IsSet() ? NS_OK : NS_ERROR_FAILURE;
+    mHandled = aHandled && mNextInsertionPoint.IsSet();
+  }
+
+  EditorDOMPoint mNextInsertionPoint;
+  nsresult mRv;
+  bool mHandled;
+
+  friend MoveNodeResult MoveNodeIgnored(nsINode* aParentNode,
+                                        uint32_t aOffsetOfNextInsertionPoint);
+  friend MoveNodeResult MoveNodeHandled(nsINode* aParentNode,
+                                        uint32_t aOffsetOfNextInsertionPoint);
+  template <typename PT, typename CT>
+  friend MoveNodeResult MoveNodeIgnored(
+      const EditorDOMPointBase<PT, CT>& aNextInsertionPoint);
+  template <typename PT, typename CT>
+  friend MoveNodeResult MoveNodeHandled(
+      const EditorDOMPointBase<PT, CT>& aNextInsertionPoint);
+};
+
+/***************************************************************************
+ * When a move node handler (or its helper) does nothing,
+ * MoveNodeIgnored should be returned.
+ */
+inline MoveNodeResult MoveNodeIgnored(nsINode* aParentNode,
+                                      uint32_t aOffsetOfNextInsertionPoint) {
+  return MoveNodeResult(aParentNode, aOffsetOfNextInsertionPoint, false);
+}
+
+template <typename PT, typename CT>
+inline MoveNodeResult MoveNodeIgnored(
+    const EditorDOMPointBase<PT, CT>& aNextInsertionPoint) {
+  return MoveNodeResult(aNextInsertionPoint, false);
+}
+
+/***************************************************************************
+ * When a move node handler (or its helper) handled and not canceled,
+ * MoveNodeHandled should be returned.
+ */
+inline MoveNodeResult MoveNodeHandled(nsINode* aParentNode,
+                                      uint32_t aOffsetOfNextInsertionPoint) {
+  return MoveNodeResult(aParentNode, aOffsetOfNextInsertionPoint, true);
+}
+
+template <typename PT, typename CT>
+inline MoveNodeResult MoveNodeHandled(
+    const EditorDOMPointBase<PT, CT>& aNextInsertionPoint) {
+  return MoveNodeResult(aNextInsertionPoint, true);
+}
 
 /***************************************************************************
  * SplitNodeResult is a simple class for

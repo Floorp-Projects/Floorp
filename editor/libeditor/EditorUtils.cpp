@@ -28,6 +28,38 @@ namespace mozilla {
 using namespace dom;
 
 /******************************************************************************
+ * mozilla::EditActionResult
+ *****************************************************************************/
+
+EditActionResult& EditActionResult::operator|=(
+    const MoveNodeResult& aMoveNodeResult) {
+  mHandled |= aMoveNodeResult.Handled();
+  // When both result are same, keep the result.
+  if (mRv == aMoveNodeResult.Rv()) {
+    return *this;
+  }
+  // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
+  // the most important error code for editor.
+  if (EditorDestroyed() || aMoveNodeResult.EditorDestroyed()) {
+    mRv = NS_ERROR_EDITOR_DESTROYED;
+    return *this;
+  }
+  // If aMoveNodeResult hasn't been set explicit nsresult value, keep current
+  // result.
+  if (aMoveNodeResult.Rv() == NS_ERROR_NOT_INITIALIZED) {
+    return *this;
+  }
+  // If one of the results is error, use NS_ERROR_FAILURE.
+  if (Failed() || aMoveNodeResult.Failed()) {
+    mRv = NS_ERROR_FAILURE;
+    return *this;
+  }
+  // Otherwise, use generic success code, NS_OK.
+  mRv = NS_OK;
+  return *this;
+}
+
+/******************************************************************************
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
