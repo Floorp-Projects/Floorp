@@ -159,29 +159,11 @@ nsresult nsConsoleService::Init() {
   return NS_OK;
 }
 
-namespace {
-
-class LogMessageRunnable : public Runnable {
- public:
-  LogMessageRunnable(nsIConsoleMessage* aMessage, nsConsoleService* aService)
-      : mozilla::Runnable("LogMessageRunnable"),
-        mMessage(aMessage),
-        mService(aService) {}
-
-  NS_DECL_NSIRUNNABLE
-
- private:
-  nsCOMPtr<nsIConsoleMessage> mMessage;
-  RefPtr<nsConsoleService> mService;
-
-  NS_IMETHODIMP maybeForwardScriptError(bool* sent);
-};
-
-NS_IMETHODIMP
-LogMessageRunnable::maybeForwardScriptError(bool* sent) {
+nsresult nsConsoleService::MaybeForwardScriptError(nsIConsoleMessage* aMessage,
+                                                   bool* sent) {
   *sent = false;
 
-  nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(mMessage);
+  nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(aMessage);
   if (!scriptError) {
     // Not an nsIScriptError
     return NS_OK;
@@ -248,22 +230,24 @@ LogMessageRunnable::maybeForwardScriptError(bool* sent) {
   return NS_OK;
 }
 
+namespace {
+
+class LogMessageRunnable : public Runnable {
+ public:
+  LogMessageRunnable(nsIConsoleMessage* aMessage, nsConsoleService* aService)
+      : mozilla::Runnable("LogMessageRunnable"),
+        mMessage(aMessage),
+        mService(aService) {}
+
+  NS_DECL_NSIRUNNABLE
+
+ private:
+  nsCOMPtr<nsIConsoleMessage> mMessage;
+  RefPtr<nsConsoleService> mService;
+};
+
 NS_IMETHODIMP
 LogMessageRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (XRE_IsParentProcess()) {
-    // If mMessage is a scriptError with an innerWindowId set,
-    // forward it to the matching ContentParent
-    // This enables logging from parent to content process
-    bool sent;
-    nsresult rv = LogMessageRunnable::maybeForwardScriptError(&sent);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (sent) {
-      return NS_OK;
-    }
-  }
-
   // Snapshot of listeners so that we don't reenter this hash during
   // enumeration.
   nsCOMArray<nsIConsoleListener> listeners;
@@ -310,6 +294,18 @@ nsresult nsConsoleService::LogMessageWithMode(
             msg.get())
             .get());
     return NS_ERROR_FAILURE;
+  }
+
+  if (XRE_IsParentProcess() && NS_IsMainThread()) {
+    // If mMessage is a scriptError with an innerWindowId set,
+    // forward it to the matching ContentParent
+    // This enables logging from parent to content process
+    bool sent;
+    nsresult rv = MaybeForwardScriptError(aMessage, &sent);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (sent) {
+      return NS_OK;
+    }
   }
 
   RefPtr<LogMessageRunnable> r;
