@@ -46,6 +46,7 @@ EXPORTS.mozilla = [
     'GuardObjects.h',
     'HashFunctions.h',
     'HashTable.h',
+    'HelperMacros.h',
     'IntegerPrintfMacros.h',
     'IntegerRange.h',
     'IntegerTypeTraits.h',
