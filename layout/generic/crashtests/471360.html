@@ -32,7 +32,7 @@ function boom2()
 {
   var w = document.createElement("style");
   w.setAttribute("type", "text/css");
-  w.appendChild(document.createTextNode("body { -moz-column-gap: 1px; -moz-column-width: 1px; }"));
+  w.appendChild(document.createTextNode("body { column-gap: 1px; column-width: 1px; }"));
   document.body.appendChild(w);
 
   setTimeout(boom3, 10);
