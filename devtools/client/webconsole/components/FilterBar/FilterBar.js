@@ -346,10 +346,11 @@ class FilterBar extends Component {
             className: "devtools-separator",
           }),
         isWide && this.renderFiltersConfigBar(),
-        !hidePersistLogsCheckbox &&
-          dom.div({
-            className: "devtools-separator",
-          }),
+        !(hidePersistLogsCheckbox && hideShowContentMessagesCheckbox)
+          ? dom.div({
+              className: "devtools-separator",
+            })
+          : null,
         !hidePersistLogsCheckbox &&
           FilterCheckbox({
             label: l10n.getStr("webconsole.enablePersistentLogs.label"),
