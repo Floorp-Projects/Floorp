@@ -1352,6 +1352,18 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
   }
 }
 
+// The signature separator (RFC 2646).
+const char kSignatureSeparator[] = "-- ";
+
+// The OpenPGP dash-escaped signature separator in inline
+// signed messages according to the OpenPGP standard (RFC 2440).
+const char kDashEscapedSignatureSeparator[] = "- -- ";
+
+static bool IsSignatureSeparator(const nsAString& aString) {
+  return aString.EqualsLiteral(kSignatureSeparator) ||
+         aString.EqualsLiteral(kDashEscapedSignatureSeparator);
+}
+
 /**
  * Outputs the contents of mCurrentLine.mContent.mValue, and resets line
  * specific variables. Also adds an indentation and prefix if there is one
@@ -1372,9 +1384,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
    * signed messages according to the OpenPGP standard (RFC 2440).
    */
   if (!mSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted) &&
-      (aSoftlinebreak ||
-       !(mCurrentLine.mContent.mValue.EqualsLiteral("-- ") ||
-         mCurrentLine.mContent.mValue.EqualsLiteral("- -- ")))) {
+      (aSoftlinebreak || !IsSignatureSeparator(mCurrentLine.mContent.mValue))) {
     mCurrentLine.mContent.mValue.Trim(" ", false, true, false);
   }
 
@@ -1583,11 +1593,12 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 
       if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
         if ((outputLineBreak || !spacesOnly) &&  // bugs 261467,125928
-            !IsQuotedLine(stringpart) && !stringpart.EqualsLiteral("-- ") &&
-            !stringpart.EqualsLiteral("- -- "))
+            !IsQuotedLine(stringpart) && !IsSignatureSeparator(stringpart)) {
           stringpart.Trim(" ", false, true, true);
-        if (IsSpaceStuffable(stringpart.get()) && !IsQuotedLine(stringpart))
+        }
+        if (IsSpaceStuffable(stringpart.get()) && !IsQuotedLine(stringpart)) {
           mCurrentLine.mContent.mValue.Append(char16_t(' '));
+        }
       }
       mCurrentLine.mContent.mValue.Append(stringpart);
 
