@@ -522,8 +522,10 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   nsresult rv = frameAtOffset->PeekOffset(&pos);
 
   // PeekOffset fails on last/first lines of the text in certain cases.
+  bool fallBackToSelectEndLine = false;
   if (NS_FAILED(rv) && aAmount == eSelectLine) {
-    pos.mAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
+    fallBackToSelectEndLine = aDirection == eDirNext;
+    pos.mAmount = fallBackToSelectEndLine ? eSelectEndLine : eSelectBeginLine;
     frameAtOffset->PeekOffset(&pos);
   }
   if (!pos.mResultContent) {
@@ -534,6 +536,14 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   // Turn the resulting DOM point into an offset.
   uint32_t hyperTextOffset = DOMPointToOffset(
       pos.mResultContent, pos.mContentOffset, aDirection == eDirNext);
+
+  if (fallBackToSelectEndLine && IsLineEndCharAt(hyperTextOffset)) {
+    // We used eSelectEndLine, but the caller requested eSelectLine.
+    // If there's a '\n' at the end of the line, eSelectEndLine will stop
+    // on it rather than after it. This is not what we want, since the caller
+    // wants the next line, not the same line.
+    ++hyperTextOffset;
+  }
 
   if (aDirection == eDirPrevious) {
     // If we reached the end during search, this means we didn't find the DOM

@@ -190,7 +190,10 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        children: [ { role: ROLE_WHITESPACE } ],
+        children: [
+          { role: ROLE_WHITESPACE },
+          { role: ROLE_WHITESPACE } 
+        ]
       };
       testElm("br_container", obj);
 
@@ -1454,7 +1457,7 @@
     <p>This is a quotation taken from the Mozilla Developer Center.</p>
   </blockquote>
 
-  <!--  two BRs, one will be eaten -->
+  <!--  two BRs, both will be present -->
   <p id="br_container"><br><br></p>
 
   <button id="button">button</button>

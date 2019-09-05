@@ -199,7 +199,11 @@ function doTest() {
             { TEXT_LEAF: [] }, // text
           ], // end children first line
         }, // end first line
-        { SECTION: [] }, // second, blank, line
+        { role: ROLE_SECTION, // Second line
+          children: [
+            { WHITESPACE: [] }, // whitespace
+          ], // end children second line
+        }, // end second line
         { role: ROLE_SECTION, // Third line
           children: [
             { TEXT_LEAF: [] }, // text

@@ -106,10 +106,10 @@
 
       testTextAtOffset([ getAccessible("ht_2").firstChild.firstChild ],
                        BOUNDARY_LINE_START,
-                       [ [ 0, 3, "foo", 0, 3 ] ]);
+                       [ [ 0, 3, "foo\n", 0, 4 ] ]);
       testTextAtOffset([ getAccessible("ht_3").firstChild.firstChild ],
                        BOUNDARY_LINE_START,
-                       [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "", 4, 4 ] ]);
+                       [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "\n", 4, 5 ] ]);
 
       // ////////////////////////////////////////////////////////////////////////
       // 'Hello world ' (\n is rendered as space)
@@ -211,12 +211,12 @@
 
 two words
 </div>
-  <div id="ml_divbr" style="border-style:outset;">oneword<br/><br/>two words<br/><br/></div>
+  <div id="ml_divbr" style="border-style:outset;">oneword<br/><br/>two words<br/></div>
   <div id="ml_editable" style="border-style:outset;" contenteditable="true">oneword
 
 two words
 </div>
-  <div id="ml_editablebr" contenteditable="true" style="border-style:outset;">oneword<br/><br/>two words<br/><br/></div>
+  <div id="ml_editablebr" contenteditable="true" style="border-style:outset;">oneword<br/><br/>two words<br/></div>
   <textarea id="ml_textarea" cols="300">oneword
 
 two words
