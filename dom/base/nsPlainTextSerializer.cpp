@@ -1413,8 +1413,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     mEmptyLines = 0;
   } else {
     // Hard break
-    if (!mCurrentLine.mContent.mValue.IsEmpty() ||
-        !mCurrentLine.mIndentation.mHeader.IsEmpty()) {
+    if (mCurrentLine.HasContentOrIndentationHeader()) {
       mEmptyLines = -1;
     }
 
@@ -1462,8 +1461,7 @@ void nsPlainTextSerializer::CurrentLine::CreateQuotesAndIndent(
 
   // Indent if necessary
   int32_t indentwidth = mIndentation.mWidth - mIndentation.mHeader.Length();
-  if (indentwidth > 0 &&
-      (!mContent.mValue.IsEmpty() || !mIndentation.mHeader.IsEmpty())
+  if (indentwidth > 0 && HasContentOrIndentationHeader()
       // Don't make empty lines look flowed
   ) {
     nsAutoString spaces;
