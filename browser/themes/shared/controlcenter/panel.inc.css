@@ -300,6 +300,7 @@
   border-radius: 0;
   outline: 3px solid transparent;
   -moz-outline-radius: var(--toolbarbutton-border-radius);
+  -moz-appearance: none;
 }
 
 #protections-popup-info-button > image {
