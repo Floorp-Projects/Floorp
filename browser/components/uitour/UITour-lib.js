@@ -372,14 +372,6 @@ if (typeof Mozilla == "undefined") {
   };
 
   /**
-   * Loads about:protections in the tour tab.
-   * @since 70
-   */
-  Mozilla.UITour.showProtectionReport = function() {
-    _sendEvent("showProtectionReport");
-  };
-
-  /**
    * @typedef Mozilla.UITour.ConfigurationName
    * @description Valid values:<ul>
    * <li>{@link Mozilla.UITour.Configuration.AppInfo|appinfo}</li>
