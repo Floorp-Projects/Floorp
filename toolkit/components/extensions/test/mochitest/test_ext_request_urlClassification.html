@@ -26,11 +26,11 @@ add_task(async function setup() {
   chromeScript.destroy();
 });
 
-add_task(async function test_webrequest_tracking() {
+add_task(async function test_urlClassification() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {gecko: {id: "classification@mochi.test"}},
-      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+      permissions: ["webRequest", "webRequestBlocking", "proxy", "<all_urls>"],
     },
     isPrivileged: true,
     background() {
@@ -39,8 +39,7 @@ add_task(async function test_webrequest_tracking() {
         "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html": {},
         "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png": {third: "tracking"},
       };
-      browser.webRequest.onBeforeRequest.addListener(async (details) => {
-        browser.test.log(`request ${JSON.stringify(details)}`);
+      function testRequest(details) {
         let expect = expected[details.url];
         if (expect) {
           if (expect.first) {
@@ -53,9 +52,25 @@ add_task(async function test_webrequest_tracking() {
           } else {
             browser.test.assertEq(details.urlClassification.thirdParty.length, 0, "not tracking thirdParty");
           }
+          return true;
+        }
+        return false;
+      }
+
+      browser.proxy.onRequest.addListener(details => {
+        browser.test.log(`proxy.onRequest ${JSON.stringify(details)}`);
+        testRequest(details);
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]});
+      browser.webRequest.onBeforeRequest.addListener(async (details) => {
+        browser.test.log(`webRequest.onBeforeRequest ${JSON.stringify(details)}`);
+        testRequest(details);
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]}, ["blocking"]);
+      browser.webRequest.onCompleted.addListener(async (details) => {
+        browser.test.log(`webRequest.onCompleted ${JSON.stringify(details)}`);
+        if (testRequest(details)) {
           browser.test.sendMessage("classification", details.url);
         }
-      }, {urls: ["<all_urls>"]}, ["blocking"]);
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]});
     },
   });
   await extension.startup();
@@ -63,13 +78,15 @@ add_task(async function test_webrequest_tracking() {
   // Test first party tracking classification.
   let url = "http://tracking.example.org/";
   let win = window.open(url);
-  is(await extension.awaitMessage("classification"), url);
+  is(await extension.awaitMessage("classification"), url, "request completed");
   win.close();
   // Test third party tracking classification, expecting two results.
   url = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html";
   win = window.open(url);
   is(await extension.awaitMessage("classification"), url);
-  is(await extension.awaitMessage("classification"), "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png");
+  is(await extension.awaitMessage("classification"),
+     "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png",
+     "request completed");
   win.close();
 
   await extension.unload();
