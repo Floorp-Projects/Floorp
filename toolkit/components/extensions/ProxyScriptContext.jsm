@@ -418,6 +418,16 @@ class ProxyChannelFilter {
     if (this.extraInfoSpec.includes("requestHeaders")) {
       data.requestHeaders = channel.getRequestHeaders();
     }
+    if (this.extension.isPrivileged) {
+      data.urlClassification = {
+        firstParty: channel.urlClassification.firstParty.filter(
+          c => !c.startsWith("socialtracking")
+        ),
+        thirdParty: channel.urlClassification.thirdParty.filter(
+          c => !c.startsWith("socialtracking")
+        ),
+      };
+    }
     return data;
   }
 

@@ -158,7 +158,8 @@
               "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
               "ip": {"type": "string", "optional": true, "description": "The server IP address that the request was actually sent to. Note that it may be a literal IPv6 address."},
               "fromCache": {"type": "boolean", "description": "Indicates if this response was fetched from disk cache."},
-              "requestHeaders": {"$ref": "webRequest.HttpHeaders", "optional": true, "description": "The HTTP request headers that are going to be sent out with this request."}
+              "requestHeaders": {"$ref": "webRequest.HttpHeaders", "optional": true, "description": "The HTTP request headers that are going to be sent out with this request."},
+              "urlClassification": {"$ref": "webRequest.UrlClassification", "description": "Url classification if the request has been classified."}
             }
           }
         ],
