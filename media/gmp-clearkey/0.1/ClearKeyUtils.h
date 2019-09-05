@@ -64,7 +64,7 @@ struct KeyIdPair {
 
 class ClearKeyUtils {
  public:
-  static void DecryptAES(const std::vector<uint8_t>& aKey,
+  static bool DecryptAES(const std::vector<uint8_t>& aKey,
                          std::vector<uint8_t>& aData,
                          std::vector<uint8_t>& aIV);
 

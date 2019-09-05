@@ -90,7 +90,7 @@ nsresult GMPParent::CloneFrom(const GMPParent* aOther) {
   mVersion = aOther->mVersion;
   mDescription = aOther->mDescription;
   mDisplayName = aOther->mDisplayName;
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_LINUX)
   mLibs = aOther->mLibs;
 #endif
   for (const GMPCapability& cap : aOther->mCapabilities) {
@@ -183,7 +183,7 @@ nsresult GMPParent::LoadProcess() {
     }
     LOGD("%s: Sent storage id to child process", __FUNCTION__);
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_LINUX)
     if (!mLibs.IsEmpty()) {
       bool ok = SendPreloadLibs(mLibs);
       if (!ok) {
@@ -590,7 +590,7 @@ RefPtr<GenericPromise> GMPParent::ReadGMPInfoFile(nsIFile* aFile) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_LINUX)
   // "Libraries" field is optional.
   ReadInfoField(parser, NS_LITERAL_CSTRING("libraries"), mLibs);
 #endif
@@ -700,7 +700,10 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     kEMEKeySystem.AssignLiteral(EME_KEY_SYSTEM_CLEARKEY);
 #if XP_WIN
     mLibs = NS_LITERAL_CSTRING(
-        "dxva2.dll, msmpeg2vdec.dll, evr.dll, mfh264dec.dll, mfplat.dll");
+        "dxva2.dll, evr.dll, freebl3.dll, mfh264dec.dll, mfplat.dll, "
+        "msmpeg2vdec.dll, nss3.dll, softokn3.dll");
+#elif XP_LINUX
+    mLibs = NS_LITERAL_CSTRING("libfreeblpriv3.so, libsoftokn3.so");
 #endif
   } else if (mDisplayName.EqualsASCII("WidevineCdm")) {
     kEMEKeySystem.AssignLiteral(EME_KEY_SYSTEM_WIDEVINE);
