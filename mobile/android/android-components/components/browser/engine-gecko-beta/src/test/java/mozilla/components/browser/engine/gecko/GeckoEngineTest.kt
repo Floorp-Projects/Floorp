@@ -188,6 +188,36 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `WHEN strict social tracking protection is set to true THEN the strict social list must be activated`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            strictSocialTrackingProtection = true
+        )
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(true)
+    }
+
+    @Test
+    fun `WHEN strict social tracking protection is set to false THEN the strict social list must be disabled`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            strictSocialTrackingProtection = false
+        )
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
+    }
+
+    @Test
     fun defaultSettings() {
         val runtime = mock<GeckoRuntime>()
         val runtimeSettings = mock<GeckoRuntimeSettings>()

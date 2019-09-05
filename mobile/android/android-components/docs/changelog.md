@@ -12,9 +12,17 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko-nightly** and **browser-engine-gecko-beta**
+  * The `TrackingProtectionPolicy.select` function now allows you to indicate if `strictSocialTrackingProtection` should be activated or not. When it is active blocks trackers from the social-tracking-protection-digest256 list, for more details take a look at the [issue #4320](https://github.com/mozilla-mobile/android-components/issues/4320)
+  ```kotlin
+  val policy = TrackingProtectionPolicy.select(
+    strictSocialTrackingProtection = true
+  )
+  ```
+  
 * **context-menu**
   * Exposed title tag from GV in HitResult. Fixes [#1444]. If title is null or blank the src value is returned for title.
-  
+
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
     * `browser-engine-gecko-release`: GeckoView 69.0
