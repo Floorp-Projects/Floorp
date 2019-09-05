@@ -2972,9 +2972,27 @@ nsresult HTMLEditRules::WillDeleteSelection(
   }
 
   // Else we have a non-collapsed selection.  First adjust the selection.
-  rv = ExpandSelectionForDeletion();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  // XXX Why do we extend selection only when there is only one range?
+  if (SelectionRefPtr()->RangeCount() == 1) {
+    if (nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0)) {
+      RefPtr<StaticRange> extendedRange =
+          MOZ_KnownLive(HTMLEditorRef())
+              .GetExtendedRangeToIncludeInvisibleNodes(*firstRange);
+      if (NS_WARN_IF(!extendedRange)) {
+        return NS_ERROR_FAILURE;
+      }
+      ErrorResult error;
+      MOZ_KnownLive(SelectionRefPtr())
+          ->SetStartAndEndInLimiter(extendedRange->StartRef().AsRaw(),
+                                    extendedRange->EndRef().AsRaw(), error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+    }
   }
 
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
@@ -6793,143 +6811,120 @@ size_t HTMLEditor::CollectChildren(
   return numberOfFoundChildren;
 }
 
-nsresult HTMLEditRules::ExpandSelectionForDeletion() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+already_AddRefed<StaticRange>
+HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
+    const AbstractRange& aAbstractRange) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aAbstractRange.Collapsed());
+  MOZ_ASSERT(aAbstractRange.IsPositioned());
 
-  // Don't need to touch collapsed selections
-  if (SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
-  }
-
-  // We don't need to mess with cell selections, and we assume multirange
-  // selections are those.
-  if (SelectionRefPtr()->RangeCount() != 1) {
-    return NS_OK;
-  }
-
-  // Find current sel start and end
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsINode> selStartNode = firstRange->GetStartContainer();
-  int32_t selStartOffset = firstRange->StartOffset();
-  nsCOMPtr<nsINode> selEndNode = firstRange->GetEndContainer();
-  int32_t selEndOffset = firstRange->EndOffset();
+  EditorRawDOMPoint atStart(aAbstractRange.StartRef());
+  EditorRawDOMPoint atEnd(aAbstractRange.EndRef());
 
   // Find current selection common block parent
-  RefPtr<Element> selCommon =
-      HTMLEditor::GetBlock(*firstRange->GetCommonAncestor());
-  if (NS_WARN_IF(!selCommon)) {
-    return NS_ERROR_FAILURE;
+  Element* commonAncestorBlock =
+      HTMLEditor::GetBlock(*aAbstractRange.GetCommonAncestor());
+  if (NS_WARN_IF(!commonAncestorBlock)) {
+    return nullptr;
   }
 
   // Set up for loops and cache our root element
-  nsCOMPtr<nsINode> firstBRParent;
-  int32_t firstBROffset = 0;
-  WSType wsType;
-  RefPtr<Element> root = HTMLEditorRef().GetActiveEditingHost();
-  if (NS_WARN_IF(!root)) {
-    return NS_ERROR_FAILURE;
+  Element* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return nullptr;
   }
 
   // Find previous visible things before start of selection
-  if (selStartNode != selCommon && selStartNode != root) {
-    while (true) {
-      WSRunObject wsObj(&HTMLEditorRef(), selStartNode, selStartOffset);
-      wsObj.PriorVisibleNode(EditorRawDOMPoint(selStartNode, selStartOffset),
-                             &wsType);
+  if (atStart.GetContainer() != commonAncestorBlock &&
+      atStart.GetContainer() != editingHost) {
+    for (;;) {
+      WSRunObject wsObj(this, atStart);
+      WSType wsType;
+      wsObj.PriorVisibleNode(atStart, &wsType);
       if (wsType != WSType::thisBlock) {
         break;
       }
       // We want to keep looking up.  But stop if we are crossing table
       // element boundaries, or if we hit the root.
       if (HTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
-          selCommon == wsObj.mStartReasonNode ||
-          root == wsObj.mStartReasonNode) {
+          wsObj.mStartReasonNode == commonAncestorBlock ||
+          wsObj.mStartReasonNode == editingHost) {
         break;
       }
-      selStartNode = wsObj.mStartReasonNode->GetParentNode();
-      selStartOffset =
-          selStartNode ? selStartNode->ComputeIndexOf(wsObj.mStartReasonNode)
-                       : -1;
+      atStart.Set(wsObj.mStartReasonNode);
     }
   }
 
+  // Expand selection endpoint only if we don't pass an invisible `<br>`, or if
+  // we really needed to pass that `<br>` (i.e., its block is now totally
+  // selected).
+
   // Find next visible things after end of selection
-  if (selEndNode != selCommon && selEndNode != root) {
+  if (atEnd.GetContainer() != commonAncestorBlock &&
+      atEnd.GetContainer() != editingHost) {
+    EditorDOMPoint atFirstInvisibleBRElement;
     for (;;) {
-      WSRunObject wsObj(&HTMLEditorRef(), selEndNode, selEndOffset);
-      wsObj.NextVisibleNode(EditorRawDOMPoint(selEndNode, selEndOffset),
-                            &wsType);
+      WSRunObject wsObj(this, atEnd);
+      WSType wsType;
+      wsObj.NextVisibleNode(atEnd, &wsType);
       if (wsType == WSType::br) {
-        if (HTMLEditorRef().IsVisibleBRElement(wsObj.mEndReasonNode)) {
+        if (IsVisibleBRElement(wsObj.mEndReasonNode)) {
           break;
         }
-        if (!firstBRParent) {
-          firstBRParent = selEndNode;
-          firstBROffset = selEndOffset;
+        if (!atFirstInvisibleBRElement.IsSet()) {
+          atFirstInvisibleBRElement = atEnd;
         }
-        selEndNode = wsObj.mEndReasonNode->GetParentNode();
-        selEndOffset =
-            selEndNode ? selEndNode->ComputeIndexOf(wsObj.mEndReasonNode) + 1
-                       : 0;
-      } else if (wsType == WSType::thisBlock) {
+        atEnd.Set(wsObj.mEndReasonNode);
+        atEnd.AdvanceOffset();
+        continue;
+      }
+
+      if (wsType == WSType::thisBlock) {
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
         if (HTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
-            selCommon == wsObj.mEndReasonNode || root == wsObj.mEndReasonNode) {
+            wsObj.mEndReasonNode == commonAncestorBlock ||
+            wsObj.mEndReasonNode == editingHost) {
           break;
         }
-        selEndNode = wsObj.mEndReasonNode->GetParentNode();
-        selEndOffset = 1 + selEndNode->ComputeIndexOf(wsObj.mEndReasonNode);
-      } else {
-        break;
+        atEnd.Set(wsObj.mEndReasonNode);
+        atEnd.AdvanceOffset();
+        continue;
+      }
+
+      break;
+    }
+
+    if (atFirstInvisibleBRElement.IsSet()) {
+      // Find block node containing invisible `<br>` element.
+      if (RefPtr<Element> brElementParent =
+              HTMLEditor::GetBlock(*atFirstInvisibleBRElement.GetContainer())) {
+        // Create a range that represents extended selection.
+        RefPtr<StaticRange> staticRange =
+            StaticRange::Create(atStart.ToRawRangeBoundary(),
+                                atEnd.ToRawRangeBoundary(), IgnoreErrors());
+        if (NS_WARN_IF(!staticRange)) {
+          return nullptr;
+        }
+
+        // Check if block is entirely inside range
+        bool nodeBefore = false, nodeAfter = false;
+        RangeUtils::CompareNodeToRange(brElementParent, staticRange,
+                                       &nodeBefore, &nodeAfter);
+        // If block is contained in the range, include the invisible `<br>`.
+        if (!nodeBefore && !nodeAfter) {
+          return staticRange.forget();
+        }
+        // Otherwise, the new range should end at the invisible `<br>`.
+        atEnd = atFirstInvisibleBRElement;
       }
     }
   }
 
-  // Expand selection endpoint only if we didn't pass a <br>, or if we really
-  // needed to pass that <br> (i.e., its block is now totally selected).
-  bool doEndExpansion = true;
-  if (firstBRParent) {
-    // Find block node containing <br>.
-    nsCOMPtr<Element> brBlock = HTMLEditor::GetBlock(*firstBRParent);
-    bool nodeBefore = false, nodeAfter = false;
-
-    // Create a range that represents expanded selection
-    RefPtr<StaticRange> staticRange = StaticRange::Create(
-        selStartNode, selStartOffset, selEndNode, selEndOffset, IgnoreErrors());
-    if (NS_WARN_IF(!staticRange)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Check if block is entirely inside range
-    if (brBlock) {
-      RangeUtils::CompareNodeToRange(brBlock, staticRange, &nodeBefore,
-                                     &nodeAfter);
-    }
-
-    // If block isn't contained, forgo grabbing the <br> in expanded selection.
-    if (nodeBefore || nodeAfter) {
-      doEndExpansion = false;
-    }
-  }
-
-  EditorRawDOMPoint newSelectionStart(selStartNode, selStartOffset);
-  EditorRawDOMPoint newSelectionEnd(
-      doEndExpansion ? selEndNode : firstBRParent,
-      doEndExpansion ? selEndOffset : firstBROffset);
-  ErrorResult error;
-  MOZ_KnownLive(SelectionRefPtr())
-      ->SetStartAndEndInLimiter(newSelectionStart, newSelectionEnd, error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    error.SuppressException();
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(!error.Failed(), "Failed to set selection for deletion");
-  return error.StealNSResult();
+  // XXX This is unnecessary creation cost for us since we just want to return
+  //     the start point and the end point.
+  return StaticRange::Create(atStart.ToRawRangeBoundary(),
+                             atEnd.ToRawRangeBoundary(), IgnoreErrors());
 }
 
 nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
