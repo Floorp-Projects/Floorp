@@ -37,5 +37,4 @@ Entry point for interacting with the engine implementation.
 | Name | Summary |
 |---|---|
 | [GeckoEngine](../../mozilla.components.browser.engine.gecko/-gecko-engine/index.md) | `class GeckoEngine : `[`Engine`](./index.md)<br>Gecko-based implementation of Engine interface. |
-| [ServoEngine](../../mozilla.components.browser.engine.servo/-servo-engine/index.md) | `class ServoEngine : `[`Engine`](./index.md)<br>Servo-based implementation of the Engine interface. |
 | [SystemEngine](../../mozilla.components.browser.engine.system/-system-engine/index.md) | `class SystemEngine : `[`Engine`](./index.md)<br>WebView-based implementation of the Engine interface. |

@@ -58,5 +58,4 @@ In browsers usually a session corresponds to a tab.
 | Name | Summary |
 |---|---|
 | [GeckoEngineSession](../../mozilla.components.browser.engine.gecko/-gecko-engine-session/index.md) | `class GeckoEngineSession : CoroutineScope, `[`EngineSession`](./index.md)<br>Gecko-based EngineSession implementation. |
-| [ServoEngineSession](../../mozilla.components.browser.engine.servo/-servo-engine-session/index.md) | `class ServoEngineSession : `[`EngineSession`](./index.md)<br>Servo-based EngineSession implementation. |
 | [SystemEngineSession](../../mozilla.components.browser.engine.system/-system-engine-session/index.md) | `class SystemEngineSession : `[`EngineSession`](./index.md)<br>WebView-based EngineSession implementation. |

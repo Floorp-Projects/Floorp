@@ -29,5 +29,4 @@ View component that renders web content.
 | Name | Summary |
 |---|---|
 | [GeckoEngineView](../../mozilla.components.browser.engine.gecko/-gecko-engine-view/index.md) | `class GeckoEngineView : `[`EngineView`](./index.md)<br>Gecko-based EngineView implementation. |
-| [ServoEngineView](../../mozilla.components.browser.engine.servo/-servo-engine-view/index.md) | `class ServoEngineView : `[`EngineView`](./index.md)<br>Servo-based implementation of EngineView. |
 | [SystemEngineView](../../mozilla.components.browser.engine.system/-system-engine-view/index.md) | `class SystemEngineView : `[`EngineView`](./index.md)<br>WebView-based implementation of EngineView. |

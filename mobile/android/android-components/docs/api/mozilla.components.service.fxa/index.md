@@ -9,10 +9,12 @@
 | [AccountStorage](-account-storage/index.md) | `interface AccountStorage` |
 | [DeviceConfig](-device-config/index.md) | `data class DeviceConfig`<br>Configuration for the current device. |
 | [FirefoxAccount](-firefox-account/index.md) | `class FirefoxAccount : `[`OAuthAccount`](../mozilla.components.concept.sync/-o-auth-account/index.md)<br>FirefoxAccount represents the authentication state of a client. |
+| [FxaAuthData](-fxa-auth-data/index.md) | `data class FxaAuthData`<br>Captures basic OAuth authentication data (code, state) and any additional data FxA passes along. |
 | [FxaDeviceConstellation](-fxa-device-constellation/index.md) | `class FxaDeviceConstellation : `[`DeviceConstellation`](../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../mozilla.components.concept.sync/-device-events-observer/index.md)`>`<br>Provides an implementation of [DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
 | [SharedPrefAccountStorage](-shared-pref-account-storage/index.md) | `class SharedPrefAccountStorage : `[`AccountStorage`](-account-storage/index.md) |
 | [SyncAuthInfoCache](-sync-auth-info-cache/index.md) | `class SyncAuthInfoCache`<br>A thin wrapper around [SharedPreferences](#) which knows how to serialize/deserialize [SyncAuthInfo](../mozilla.components.concept.sync/-sync-auth-info/index.md). |
 | [SyncConfig](-sync-config/index.md) | `data class SyncConfig`<br>Configuration for sync. |
+| [SyncEngine](-sync-engine/index.md) | `enum class SyncEngine`<br>Describes possible sync engines that device can support. |
 
 ### Type Aliases
 
@@ -30,6 +32,7 @@
 
 | Name | Summary |
 |---|---|
+| [kotlin.String](kotlin.-string/index.md) |  |
 | [mozilla.appservices.fxaclient.AccessTokenInfo](mozilla.appservices.fxaclient.-access-token-info/index.md) |  |
 | [mozilla.appservices.fxaclient.AccountEvent](mozilla.appservices.fxaclient.-account-event/index.md) |  |
 | [mozilla.appservices.fxaclient.AccountEvent.TabReceived](mozilla.appservices.fxaclient.-account-event.-tab-received/index.md) |  |
