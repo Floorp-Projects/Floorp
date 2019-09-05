@@ -10,9 +10,11 @@ package mozilla.components.browser.state.state
  * @property id the unique id of the session.
  * @property content the [ContentState] of this session.
  * @property trackingProtection the [TrackingProtectionState] of this session.
+ * @property engineState the [EngineState] of this session.
  */
 interface SessionState {
     val id: String
     val content: ContentState
     val trackingProtection: TrackingProtectionState
+    val engineState: EngineState
 }

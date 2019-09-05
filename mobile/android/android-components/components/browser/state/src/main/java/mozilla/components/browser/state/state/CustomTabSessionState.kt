@@ -18,7 +18,8 @@ data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
-    val config: CustomTabConfig
+    val config: CustomTabConfig,
+    override val engineState: EngineState = EngineState()
 ) : SessionState
 
 fun createCustomTab(

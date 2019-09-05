@@ -8,11 +8,14 @@ import android.graphics.Bitmap
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.state.Action
@@ -214,4 +217,29 @@ sealed class TrackingProtectionAction : BrowserAction() {
      * Clears the [TrackingProtectionState.blockedTrackers] and [TrackingProtectionState.blockedTrackers] lists.
      */
     data class ClearTrackersAction(val tabId: String) : TrackingProtectionAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [EngineState] of a single [SessionState] inside
+ * [BrowserState].
+ */
+sealed class EngineAction : BrowserAction() {
+
+    /**
+     * Attaches the provided [EngineSession] to the session with the provided [sessionId].
+     */
+    data class LinkEngineSessionAction(val sessionId: String, val engineSession: EngineSession) : EngineAction()
+
+    /**
+     * Detaches the current [EngineSession] from the session with the provided [sessionId].
+     */
+    data class UnlinkEngineSessionAction(val sessionId: String) : EngineAction()
+
+    /**
+     * Updates the [EngineSessionState] of the session with the provided [sessionId].
+     */
+    data class UpdateEngineSessionStateAction(
+        val sessionId: String,
+        val engineSessionState: EngineSessionState
+    ) : EngineAction()
 }

@@ -21,6 +21,7 @@ data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
+    override val engineState: EngineState = EngineState(),
     val parentId: String? = null
 ) : SessionState
 
