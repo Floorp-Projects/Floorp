@@ -253,6 +253,7 @@ UNKNOWN_GROUP_NAME = "Treeherder group {} (from {}) has no name; " \
 V2_ROUTE_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.latest.{product}.{job-name}",
     "index.{trust-domain}.v2.{project}.pushdate.{build_date_long}.{product}.{job-name}",
+    "index.{trust-domain}.v2.{project}.pushdate.{build_date}.latest.{product}.{job-name}",
     "index.{trust-domain}.v2.{project}.pushlog-id.{pushlog_id}.{product}.{job-name}",
     "index.{trust-domain}.v2.{project}.revision.{branch_rev}.{product}.{job-name}",
 ]
@@ -1463,6 +1464,8 @@ def add_generic_index_routes(config, task):
     subs['job-name'] = index['job-name']
     subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
                                             time.gmtime(config.params['build_date']))
+    subs['build_date'] = time.strftime("%Y.%m.%d",
+                                       time.gmtime(config.params['build_date']))
     subs['product'] = index['product']
     subs['trust-domain'] = config.graph_config['trust-domain']
     subs['branch_rev'] = get_branch_rev(config)
