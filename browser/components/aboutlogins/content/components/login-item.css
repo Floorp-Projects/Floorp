@@ -31,6 +31,12 @@ form {
   display: none;
 }
 
+input[type="password"],
+input[type="text"],
+input[type="url"] {
+  text-align: match-parent !important; /* override `all: unset` in the rule below */
+}
+
 input[type="password"][readOnly],
 input[type="text"][readOnly],
 input[type="url"][readOnly] {
@@ -41,12 +47,21 @@ input[type="url"][readOnly] {
   background-color: transparent !important; /* override common.inc.css */
   text-overflow: ellipsis;
   overflow: hidden;
-  text-align: match-parent;
 }
 
-.detail-cell input:not([type="checkbox"]),
+/* We can't use `margin-inline-start` here because we force
+ * the input to have dir="ltr", so we set the margin manually
+ * using the parent element's directionality. */
+.detail-cell:dir(ltr) input:not([type="checkbox"]) {
+  margin-left: 0;
+}
+
+.detail-cell:dir(rtl) input:not([type="checkbox"]) {
+  margin-right: 0;
+}
+
 .save-changes-button {
-  margin-inline-start: 0; /* align all elements on the start side */
+  margin-inline-start: 0; /* Align the button on the start side */
 }
 
 .header {
@@ -186,8 +201,8 @@ input[type="url"][readOnly]:hover:active {
   width: 40px;
 }
 
-:host(:not([editing])) input[name='password'] {
-  font-family: monospace;
+input[name="password"] {
+  font-family: monospace !important; /* override `all: unset` in the rule above */
 }
 
 .reveal-password-checkbox {

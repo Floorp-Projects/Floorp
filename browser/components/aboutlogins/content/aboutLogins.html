@@ -112,8 +112,8 @@
           <img class="favicon" src="" alt=""/>
         </div>
         <div class="labels">
-          <span class="title"></span>
-          <span class="username"></span>
+          <span class="title" dir="auto"></span>
+          <span class="username" dir="ltr"></span>
         </div>
       </li>
     </template>
@@ -182,6 +182,7 @@
               <input type="text"
                      name="username"
                      data-l10n-id="login-item-username"
+                     dir="ltr"
                      readonly/>
             </label>
             <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
@@ -197,6 +198,7 @@
               <div class="reveal-password-wrapper">
                 <input type="password"
                        name="password"
+                       dir="ltr"
                        required
                        readonly/>
                 <input type="checkbox"
