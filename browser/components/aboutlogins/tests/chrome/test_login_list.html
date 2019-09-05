@@ -438,6 +438,122 @@ add_task(async function test_sorted_list() {
   is(title1.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
 });
 
+add_task(async function test_login_list_item_removed_next_selected() {
+  let logins = [];
+  for (let i = 0; i < 12; i++) {
+    let group = i % 2 ? "BB" : "AA";
+    // Create logins of the form `jared0AAa@example.com`,
+    // `jared1BBb@example.com`, `jared2AAc@example.com`, etc.
+    logins.push({
+      guid: `${i}`,
+      username: `jared${i}${group}${String.fromCharCode(97 + i)}@example.com`,
+      origin: "https://www.example.com",
+    });
+  }
+
+  gLoginList.setLogins(logins);
+  let visibleLogins = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]:not([hidden])");
+  await SimpleTest.promiseWaitForCondition(() => {
+    return visibleLogins.length == 12;
+  }, "Waiting for all logins to be visible");
+  is(gLoginList._selectedGuid, logins[0].guid, "login0 should be selected by default");
+
+  window.dispatchEvent(
+    new CustomEvent("AboutLoginsFilterLogins", {
+      bubbles: true,
+      detail: "BB",
+    })
+  );
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    visibleLogins = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]:not([hidden])");
+    return visibleLogins.length == 6;
+  }, "Only logins with BB in the username should be visible, visible count: " + visibleLogins.length);
+
+  is(gLoginList._selectedGuid, logins[0].guid, "login0 should still be selected after filtering");
+
+  gLoginList.loginRemoved({guid: logins[0].guid});
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    return gLoginList._loginGuidsSortedOrder.length == 11;
+  }, "Waiting for login to get removed");
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    visibleLogins = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]:not([hidden])");
+    return visibleLogins.length == 6;
+  }, "the number of visible logins should not change, got " + visibleLogins.length);
+  is(gLoginList._selectedGuid, logins[1].guid,
+     "login1 should be selected after delete since the deleted login was not visible and login1 was the first in the list");
+
+  let loginToSwitchTo = gLoginList._logins[visibleLogins[1].dataset.guid].login;
+  window.dispatchEvent(
+    new CustomEvent("AboutLoginsLoginSelected", {
+      bubbles: true,
+      detail: loginToSwitchTo,
+    })
+  );
+  is(gLoginList._selectedGuid, loginToSwitchTo.guid, "login3 should be selected");
+
+  gLoginList.loginRemoved({guid: logins[3].guid});
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    return gLoginList._loginGuidsSortedOrder.length == 10;
+  }, "Waiting for login to get removed");
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    visibleLogins = gLoginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]:not([hidden])"
+    );
+    return visibleLogins.length == 5;
+  }, "the number of filtered logins should decrease by 1");
+  is(gLoginList._selectedGuid, visibleLogins[0].dataset.guid, "the first login should now be selected");
+
+  gLoginList.loginRemoved({guid: logins[1].guid});
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    return gLoginList._loginGuidsSortedOrder.length == 9;
+  }, "Waiting for login to get removed");
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    visibleLogins = gLoginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]:not([hidden])"
+    );
+    return visibleLogins.length == 4;
+  }, "the number of filtered logins should decrease by 1");
+  is(gLoginList._selectedGuid, visibleLogins[0].dataset.guid, "the first login should now still be selected");
+
+  loginToSwitchTo = gLoginList._logins[visibleLogins[3].dataset.guid].login;
+  window.dispatchEvent(
+    new CustomEvent("AboutLoginsLoginSelected", {
+      bubbles: true,
+      detail: loginToSwitchTo,
+    })
+  );
+  is(gLoginList._selectedGuid, visibleLogins[3].dataset.guid, "the last login should now still be selected");
+
+  gLoginList.loginRemoved({guid: logins[10].guid});
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    return gLoginList._loginGuidsSortedOrder.length == 8;
+  }, "Waiting for login to get removed");
+
+  await SimpleTest.promiseWaitForCondition(() => {
+    visibleLogins = gLoginList.shadowRoot.querySelectorAll(
+      ".login-list-item[data-guid]:not([hidden])"
+    );
+    return visibleLogins.length == 4;
+  }, "the number of filtered logins should decrease by 1");
+  is(gLoginList._selectedGuid, visibleLogins[3].dataset.guid, "the last login should now be selected");
+
+  loginToSwitchTo = gLoginList._logins[visibleLogins[2].dataset.guid].login;
+  window.dispatchEvent(
+    new CustomEvent("AboutLoginsLoginSelected", {
+      bubbles: true,
+      detail: loginToSwitchTo,
+    })
+  );
+  is(gLoginList._selectedGuid, visibleLogins[2].dataset.guid, "the last login should now still be selected");
+});
 </script>
 
 </body>
