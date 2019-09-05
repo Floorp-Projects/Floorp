@@ -574,6 +574,9 @@ pwmgr:
     description: >
       These events record interactions on the about:logins page. Sort methods have an accompanying
       value that specifies what order the list of logins is sorted with: {last_changed, last_used, title}.
+    extra_keys:
+      breached: >
+        Whether the login is marked as breached or not.
     objects: [
       "existing_login",
       "list",
@@ -585,9 +588,11 @@ pwmgr:
       "cancel",
       "copy",
       "delete",
+      "dismiss_breach_alert",
       "edit",
       "filter",
       "hide",
+      "learn_more_breach",
       "new",
       "open_site",
       "save",
