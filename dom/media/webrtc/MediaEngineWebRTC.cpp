@@ -206,7 +206,9 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   mEnumerator->EnumerateAudioOutputDevices(devices);
 
+#ifndef XP_WIN
   DebugOnly<bool> preferredDeviceFound = false;
+#endif
   for (auto& device : devices) {
     if (device->State() == CUBEB_DEVICE_STATE_ENABLED) {
       MOZ_ASSERT(device->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
@@ -217,8 +219,9 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
       uuid.Append(NS_LITERAL_STRING("_Speaker"));
       nsString groupId(device->GroupID());
       if (device->Preferred()) {
-#ifdef DEBUG
-        MOZ_ASSERT(!preferredDeviceFound);
+        // In windows is possible to have more than one preferred device
+#if defined(DEBUG) && !defined(XP_WIN)
+        MOZ_ASSERT(!preferredDeviceFound, "More than one preferred device");
         preferredDeviceFound = true;
 #endif
         aDevices->InsertElementAt(
