@@ -2238,7 +2238,7 @@ set_config('ASOUTOPTION', as_outoption)
 # ==============================================================
 
 js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
-          help="Enable building with the mozilla clang plugin")
+          help="Enable building with the Clang plugin (gecko specific static analyzers)")
 
 add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
                              depends_if('--enable-clang-plugin')(lambda _: True))
