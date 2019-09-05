@@ -88,7 +88,7 @@ While the async tab switcher exists, it maps each ``<xul:tab>`` in the window to
 
    If a tab is in this state, it must have either initialized there, or transitioned from ``STATE_UNLOADING``.
 
-   When logging states, this state is indicated by the ``-`` character.
+   When logging states, this state is indicated by the ``unloaded`` string.
 
 ``STATE_LOADING``
    Layers for this ``<xul:tab>`` have not yet been reported as "received" by the compositor, but we've asked the tab to start rendering. This usually means that we want to switch to the tab, or at least to warm it up.
@@ -97,7 +97,7 @@ While the async tab switcher exists, it maps each ``<xul:tab>`` in the window to
 
    If a tab is in this state, it must have either initialized there, or transitioned from ``STATE_UNLOADED``.
 
-   When logging states, this state is indicated by the ``+?`` characters.
+   When logging states, this state is indicated by the ``loading`` string.
 
 ``STATE_LOADED``
    Layers for this ``<xul:tab>`` are available on the compositor and can be displayed. This means that the tab is either being shown to the user, or could be very quickly shown to the user.
@@ -106,7 +106,7 @@ While the async tab switcher exists, it maps each ``<xul:tab>`` in the window to
 
    When a tab is in ``STATE_LOADED``, this means that the associated ``<xul:browser>`` will have its ``renderLayers`` and ``hasLayers`` properties both return ``true``.
 
-   When logging states, this state is indicated by the ``+`` character.
+   When logging states, this state is indicated by the ``loaded`` string.
 
 ``STATE_UNLOADING``
    Layers for this ``<xul:tab>`` were at one time available on the compositor, but we've asked the tab to unload them to preserve memory. This usually means that we've switched away from this tab, or have stopped warming it up.
@@ -115,7 +115,7 @@ While the async tab switcher exists, it maps each ``<xul:tab>`` in the window to
 
    If a tab is in this state, it must have either initialized there, or transitioned from ``STATE_LOADED``.
 
-   When logging states, this state is indicated by the ``-?`` characters.
+   When logging states, this state is indicated by the ``unloading`` string.
 
 Having a tab render its layers is done by settings its state to ``STATE_LOADING``. Once the layers have been received, the switcher will automatically set the state to ``STATE_LOADED``. Similarly, telling a tab to stop rendering is done by settings its state to ``STATE_UNLOADING``. The switcher will automatically set the state to ``STATE_UNLOADED`` once the layers have fully unloaded.
 
@@ -131,7 +131,7 @@ The switcher then creates an internal mapping from ``<xul:tab>>``'s to states. T
 .. code-block:: none
 
   // This is using the logging syntax laid out in the `Tab states` section.
-  0:(+) 1:(-)
+  0:(loaded) 1:(unloaded)
 
 Be sure to refer to :ref:`async-tab-switcher.states` for an explanation of the terminology and :ref:`async-tab-switcher.logging` syntax for states.
 
@@ -143,7 +143,7 @@ Now that initialization done, the switcher is asked to request **1**. It does th
 
 .. code-block:: none
 
-  0:(+) 1:(+?)
+  0:(loaded) 1:(loading)
 
 At this point, the user is still looking at tab **0**, and none of the UI is showing any visible indication of tab change.
 
@@ -153,7 +153,7 @@ Eventually, the layers for **1** are uploaded to the compositor, and the ``<xul:
 
 .. code-block:: none
 
-  0:(+) 1:(+)
+  0:(loaded) 1:(loaded)
 
 So now layers for both **0** and **1** are uploading and available on the compositor. At this point, the switcher updates the visual state of the browser, and flips the ``<xul:deck>`` to display **1**, and the user experiences the tab switch.
 
@@ -161,7 +161,7 @@ The switcher isn't done, however. After a predefined amount of time (dictated by
 
 .. code-block:: none
 
-  0:(-?) 1:(+)
+  0:(unloading) 1:(loaded)
 
 Having requested that **0** go into ``STATE_UNLOADING``, the switcher returns back to the event loop. The user, meanwhile, continues to use ``1``.
 
@@ -169,7 +169,7 @@ Eventually, the layers for **0** are cleared from the compositor, and the ``<xul
 
 .. code-block:: none
 
-  0:(-) 1:(+)
+  0:(unloaded) 1:(loaded)
 
 The tab at **0** is now in ``STATE_UNLOADED``. Since the last requested tab **1** is in ``STATE_LOADED`` and all other background tabs are in ``STATE_UNLOADED``, the switcher decides its work is done. It deregisters its event handlers, and then destroys itself.
 
