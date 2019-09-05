@@ -341,7 +341,9 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
 
   static already_AddRefed<nsOfflineCacheUpdateService> GetInstance();
 
-  static nsresult OfflineAppPinnedForURI(nsIURI* aDocumentURI, bool* aPinned);
+  static nsresult OfflineAppPinnedForURI(nsIURI* aDocumentURI,
+                                         nsIPrefBranch* aPrefBranch,
+                                         bool* aPinned);
 
   static nsTHashtable<nsCStringHashKey>* AllowedDomains();
 

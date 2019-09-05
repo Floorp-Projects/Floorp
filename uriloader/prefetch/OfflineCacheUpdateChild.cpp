@@ -252,14 +252,6 @@ OfflineCacheUpdateChild::GetPartial(bool* aPartial) {
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateChild::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal) {
-  NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
-
-  NS_IF_ADDREF(*aLoadingPrincipal = mLoadingPrincipal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 OfflineCacheUpdateChild::GetManifestURI(nsIURI** aManifestURI) {
   NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 

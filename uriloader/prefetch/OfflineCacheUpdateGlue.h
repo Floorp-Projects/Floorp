@@ -39,10 +39,6 @@ namespace docshell {
   NS_IMETHOD GetUpdateDomain(nsACString& aUpdateDomain) override {             \
     return !_to ? NS_ERROR_NULL_POINTER : _to->GetUpdateDomain(aUpdateDomain); \
   }                                                                            \
-  NS_IMETHOD GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal) override {  \
-    return !_to ? NS_ERROR_NULL_POINTER                                        \
-                : _to->GetLoadingPrincipal(aLoadingPrincipal);                 \
-  }                                                                            \
   NS_IMETHOD GetManifestURI(nsIURI** aManifestURI) override {                  \
     return !_to ? NS_ERROR_NULL_POINTER : _to->GetManifestURI(aManifestURI);   \
   }                                                                            \

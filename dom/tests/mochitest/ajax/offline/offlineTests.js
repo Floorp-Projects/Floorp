@@ -59,6 +59,8 @@ fetch: function(callback)
 
 var OfflineTest = {
 
+_allowedByDefault: false,
+
 _hasSlave: false,
 
 // The window where test results should be sent.
@@ -72,7 +74,17 @@ _SJSsStated: [],
 
 setupChild: function()
 {
-  this._masterWindow = window;
+  if (this._allowedByDefault) {
+    this._masterWindow = window;
+    return true;
+  }
+
+  if (window.parent.OfflineTest._hasSlave) {
+    return false;
+  }
+
+  this._masterWindow = window.top;
+
   return true;
 },
 
@@ -85,8 +97,41 @@ setupChild: function()
  */
 setup: function()
 {
+  try {
+    this._allowedByDefault = SpecialPowers.getBoolPref("offline-apps.allow_by_default");
+  } catch (e) {}
+
+  if (this._allowedByDefault) {
     this._masterWindow = window;
+
     return true;
+  }
+
+  if (!window.opener || !window.opener.OfflineTest ||
+      !window.opener.OfflineTest._hasSlave) {
+    // Offline applications must be toplevel windows and have the
+    // offline-app permission.  Because we were loaded without the
+    // offline-app permission and (probably) in an iframe, we need to
+    // enable the pref and spawn a new window to perform the actual
+    // tests.  It will use this window to report successes and
+    // failures.
+
+    if (SpecialPowers.testPermission("offline-app", Ci.nsIPermissionManager.ALLOW_ACTION, document)) {
+      ok(false, "Previous test failed to clear offline-app permission!  Expect failures.");
+    }
+    SpecialPowers.addPermission("offline-app", Ci.nsIPermissionManager.ALLOW_ACTION, document);
+
+    // Tests must run as toplevel windows.  Open a slave window to run
+    // the test.
+    this._hasSlave = true;
+    window.open(window.location, "offlinetest");
+
+    return false;
+  }
+
+  this._masterWindow = window.opener;
+
+  return true;
 },
 
 teardownAndFinish: function()
@@ -115,7 +160,16 @@ teardown: function(callback)
 
 finish: function()
 {
-  SimpleTest.executeSoon(SimpleTest.finish);
+  if (this._allowedByDefault) {
+    SimpleTest.executeSoon(SimpleTest.finish);
+  } else if (this._masterWindow) {
+    // Slave window: pass control back to master window, close itself.
+    this._masterWindow.SimpleTest.executeSoon(this._masterWindow.OfflineTest.finish);
+    window.close();
+  } else {
+    // Master window: finish test.
+    SimpleTest.finish();
+  }
 },
 
 //
