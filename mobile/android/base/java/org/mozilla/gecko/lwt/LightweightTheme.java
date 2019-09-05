@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -233,7 +235,7 @@ public class LightweightTheme implements BundleEventListener {
         final int bitmapHeight = bitmap.getHeight();
 
         try {
-            mColor = Color.parseColor(color);
+            mColor = parseCSSColor(color);
         } catch (Exception e) {
             // Malformed or missing color.
             // We attempt calculating an accent colour ourselves, falling back to TRANSPARENT.
@@ -278,6 +280,50 @@ public class LightweightTheme implements BundleEventListener {
         for (OnChangeListener listener : mListeners) {
             listener.onLightweightThemeChanged();
         }
+    }
+
+    private static @ColorInt int parseCSSColor(final String color) {
+        // Hexadecimal notation: For now, we only support #RRGGBB because that is the syntax that is
+        // directly compatible with Android's color parsing. I.e. currently we don't allow #RGB[A],
+        // and unfortunately neither #RRGGBBAA because in the latter case Android expects #AARRGGBB.
+        if (color.startsWith("#") && color.length() == 7) {
+            return Color.parseColor(color);
+        }
+
+
+        // Functional notation: rgb[a](R, G, B, A)
+        // - the "a" in rgba is optional
+        // - there can be any number of spaces (or not) between the "rgba", the enclosing brackets
+        //   and the numbers
+        // - the commas are optional and can be replaced by spaces
+        // - R, G and B are integers, whereas A is a float percentage value
+        Pattern rgbaPattern = Pattern.compile(
+                "rgba? *\\( *(\\d+)(?: *, *| +)(\\d+)(?: *, *| +)(\\d+)(?: *, *| +)(\\d+(?:\\.\\d+)?) *\\)");
+        Matcher rgba = rgbaPattern.matcher(color);
+        if (rgba.matches()) {
+            return Color.argb(
+                    Math.round(255 * Math.max(Math.min(Float.parseFloat(rgba.group(4)), 1), 0)),
+                    stringToColorChannel(rgba.group(1)),
+                    stringToColorChannel(rgba.group(2)),
+                    stringToColorChannel(rgba.group(3)));
+        }
+
+        // Functional notation: rgb(R, G, B) (see above for precise syntax details)
+        Pattern rgbPattern = Pattern.compile(
+                "rgb *\\( *(\\d+)(?: *, *| +)(\\d+)(?: *, *| +)(\\d+) *\\)");
+        Matcher rgb = rgbPattern.matcher(color);
+        if (rgb.matches()) {
+            return Color.rgb(
+                    stringToColorChannel(rgb.group(1)),
+                    stringToColorChannel(rgb.group(2)),
+                    stringToColorChannel(rgb.group(3)));
+        }
+
+        throw new IllegalArgumentException("Unsupported color format");
+    }
+
+    private static int stringToColorChannel(String color) {
+        return Math.max(Math.min(Integer.parseInt(color), 255), 0);
     }
 
     /**
