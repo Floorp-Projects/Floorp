@@ -55,7 +55,7 @@ void MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
   *aStream = nullptr;
 
   uint32_t length = mBlobImpls.Length();
-  if (length == 0) {
+  if (length == 0 || mLength == 0) {
     aRv = NS_NewCStringInputStream(aStream, EmptyCString());
     return;
   }
@@ -77,6 +77,17 @@ void MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
   for (i = 0; i < length; i++) {
     nsCOMPtr<nsIInputStream> scratchStream;
     BlobImpl* blobImpl = mBlobImpls.ElementAt(i).get();
+
+    // nsIMultiplexInputStream doesn't work well with empty sub streams. Let's
+    // skip the empty blobs.
+    uint32_t size = blobImpl->GetSize(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    if (size == 0) {
+      continue;
+    }
 
     blobImpl->CreateInputStream(getter_AddRefs(scratchStream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
