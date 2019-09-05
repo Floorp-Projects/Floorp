@@ -49,11 +49,13 @@ internal object ContentStateReducer {
                 it.copy(download = action.download)
             }
             is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
-                if (action.download == it.download) {
-                    it.copy(download = null)
-                } else {
-                    it
-                }
+                it.copy(download = null)
+            }
+            is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = action.hitResult)
+            }
+            is ContentAction.ConsumeHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = null)
             }
         }
     }

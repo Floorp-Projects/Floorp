@@ -450,6 +450,25 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when hit result changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.hitResult = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumeHitResultAction(session.id))
+
+        val hitResult = HitResult.UNKNOWN("test")
+        session.hitResult = Consumable.from(hitResult)
+        verify(store).dispatch(ContentAction.UpdateHitResultAction(session.id, hitResult))
+
+        session.hitResult.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumeHitResultAction(session.id))
+    }
+
+    @Test
     fun `All observers will not be notified about a download`() {
         var firstCallbackExecuted = false
         var secondCallbackExecuted = false
@@ -527,6 +546,28 @@ class SessionTest {
 
         assertTrue(consumerExecuted)
         assertTrue(session.download.isConsumed())
+    }
+
+    @Test
+    fun `action is dispatched when download changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.download = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumeDownloadAction(session.id))
+
+        val download: Download = mock()
+        `when`(download.id).thenReturn("1")
+        `when`(download.url).thenReturn("https://www.mozilla.org")
+        `when`(download.destinationDirectory).thenReturn("test")
+        session.download = Consumable.from(download)
+        verify(store).dispatch(ContentAction.UpdateDownloadAction(session.id, download.toDownloadState()))
+
+        session.download.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumeDownloadAction(session.id))
     }
 
     @Test

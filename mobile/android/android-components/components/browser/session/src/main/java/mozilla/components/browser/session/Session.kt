@@ -10,8 +10,12 @@ import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
+import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
+import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
+import mozilla.components.browser.state.action.ContentAction.UpdateDownloadAction
+import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
@@ -274,6 +278,16 @@ class Session(
      * Last download request if it wasn't consumed by at least one observer.
      */
     var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
+        store?.let {
+            val actualDownload = download.peek()
+            if (actualDownload == null) {
+                it.syncDispatch(ConsumeDownloadAction(id))
+            } else {
+                it.syncDispatch(UpdateDownloadAction(id, actualDownload.toDownloadState()))
+                download.onConsume { it.syncDispatch(ConsumeDownloadAction(id)) }
+            }
+        }
+
         val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
         !download.consumeBy(consumers)
     }
@@ -363,6 +377,16 @@ class Session(
      * The target of the latest long click operation.
      */
     var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
+        store?.let {
+            val hitResult = result.peek()
+            if (hitResult == null) {
+                it.syncDispatch(ConsumeHitResultAction(id))
+            } else {
+                it.syncDispatch(UpdateHitResultAction(id, hitResult))
+                result.onConsume { it.syncDispatch(ConsumeHitResultAction(id)) }
+            }
+        }
+
         val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
         !result.consumeBy(consumers)
     }

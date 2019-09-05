@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.state.content
 
 import android.os.Environment
+import java.util.UUID
 
 /**
  * Value type that represents a download request.
@@ -24,5 +25,6 @@ data class DownloadState(
     val contentLength: Long? = null,
     val userAgent: String? = null,
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
-    val referrerUrl: String? = null
+    val referrerUrl: String? = null,
+    val id: String = UUID.randomUUID().toString()
 )

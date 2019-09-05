@@ -16,9 +16,10 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.feature.downloads.ext.putDownloadExtra
 import mozilla.components.support.test.any
-import mozilla.components.support.test.eq
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,7 +57,7 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(eq(download), any())
+        doNothing().`when`(service).useFileStream(any(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putExtra(EXTRA_DOWNLOAD_ID, 1L)
@@ -65,7 +66,11 @@ class AbstractFetchDownloadServiceTest {
 
         service.onStartCommand(downloadIntent, 0)
 
-        verify(service).useFileStream(eq(download), any())
+        val providedDownload = argumentCaptor<Download>()
+        verify(service).useFileStream(providedDownload.capture(), any())
+        assertEquals(download.url, providedDownload.value.url)
+        assertEquals(download.fileName, providedDownload.value.fileName)
+
         verify(broadcastManager).sendBroadcast(any())
         Unit
     }
