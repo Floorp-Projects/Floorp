@@ -36,12 +36,6 @@ template <typename CharT>
 extern const CharT* js_strchr_limit(const CharT* s, char16_t c,
                                     const CharT* limit);
 
-template <typename CharT>
-static MOZ_ALWAYS_INLINE size_t js_strnlen(const CharT* s, size_t maxlen) {
-  const CharT* end = std::char_traits<CharT>::find(s, maxlen, CharT());
-  return end ? (end - s) : maxlen;
-}
-
 extern int32_t js_fputs(const char16_t* s, FILE* f);
 
 namespace js {
