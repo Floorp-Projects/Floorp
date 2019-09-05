@@ -23,11 +23,11 @@
   /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
      ::-moz-scrolled-content in ua.css and ::-moz-button-content below. */
   /* Multicol container */
-  -moz-column-count: inherit;
-  -moz-column-width: inherit;
-  -moz-column-gap: inherit;
-  -moz-column-rule: inherit;
-  -moz-column-fill: inherit;
+  column-count: inherit;
+  column-width: inherit;
+  column-gap: inherit;
+  column-rule: inherit;
+  column-fill: inherit;
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
@@ -642,11 +642,11 @@ button {
   /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
      ::-moz-scrolled-content in ua.css and ::-moz-fieldset-content above. */
   /* Multicol container */
-  -moz-column-count: inherit;
-  -moz-column-width: inherit;
-  -moz-column-gap: inherit;
-  -moz-column-rule: inherit;
-  -moz-column-fill: inherit;
+  column-count: inherit;
+  column-width: inherit;
+  column-gap: inherit;
+  column-rule: inherit;
+  column-fill: inherit;
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;

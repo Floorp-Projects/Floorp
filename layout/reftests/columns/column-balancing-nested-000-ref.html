@@ -13,9 +13,9 @@
         }
 
   .colset {
-    -moz-column-count: 2;
-    -moz-column-gap: 1px;
-    -moz-column-rule: 1px solid black;
+    column-count: 2;
+    column-gap: 1px;
+    column-rule: 1px solid black;
     border: solid silver;
     width:30ch;
   }
@@ -24,7 +24,7 @@
   /* balancing column sets deeper than level 2 should only use 1 column */
   .colset .colset .colset,
   .colset .colset .colset .colset {
-    -moz-column-count: 1;
+    column-count: 1;
   }
 </style>
 </head>

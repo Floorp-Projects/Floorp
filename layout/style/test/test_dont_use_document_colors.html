@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style type="text/css">
 
-  #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; text-shadow: 2px 2px green; box-shadow: 3px 7px blue; }
+  #one, #three { background: blue; color: yellow; border: thin solid red; column-rule: 2px solid green; text-shadow: 2px 2px green; box-shadow: 3px 7px blue; }
   #two { background: transparent; border: thin solid; }
   #five, #six {border: thick solid red; border-inline-start-color:green; border-inline-end-color:blue}
   #seven {
@@ -89,7 +89,7 @@ function part1()
     isnot(cs1.borderBottomColor, cs2.borderBottomColor,
           "border-top-color applies");
     isnot(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
-          "-moz-column-rule-color applies");
+          "column-rule-color applies");
     isnot(cs1.textShadow, cs2.textShadow,
           "text-shadow applies");
     isnot(cs1.boxShadow, cs2.boxShadow,
@@ -102,7 +102,7 @@ function part1()
     is(cs1.borderBottomColor, cs3.borderBottomColor, 
        "border-top-color applies");
     is(cs1.MozColumnRuleColor, cs3.MozColumnRuleColor,
-       "-moz-column-rule-color applies");
+       "column-rule-color applies");
     is(cs1.textShadow, cs3.textShadow,
        "text-shadow applies");
     is(cs1.boxShadow, cs3.boxShadow,
@@ -158,7 +158,7 @@ function part2()
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
     is(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
-       "-moz-column-rule-color is blocked");
+       "column-rule-color is blocked");
     is(cs1.textShadow, cs2.textShadow,
        "text-shadow is blocked");
     is(cs1.boxShadow, cs2.boxShadow,

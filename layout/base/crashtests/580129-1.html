@@ -6,7 +6,7 @@ function boom()
 {
   var a = document.documentElement;
   var b = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
-  b.setAttributeNS(null, "style", "-moz-column-width: 20em;");
+  b.setAttributeNS(null, "style", "column-width: 20em;");
   a.innerHTML = "<frameset>";
   b.innerHTML = "<dd><marquee>x";
   document.removeChild(a);

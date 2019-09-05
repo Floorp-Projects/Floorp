@@ -9,7 +9,7 @@
     try { document.documentElement.appendChild(o2) } catch(e) { }
     try { o1.appendChild(o3) } catch(e) { }
     try { o3.style.writingMode = 'sideways-lr' } catch(e) { }
-    try { document.styleSheets[0].insertRule('* { -moz-column-width: calc(15px); display: flow-root}', 0); } catch(e) { }
+    try { document.styleSheets[0].insertRule('* { column-width: calc(15px); display: flow-root}', 0); } catch(e) { }
     </script>
   </head>
 </html>
