@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ShortcutKeys.h"
-#include "../nsXBLPrototypeHandler.h"
+#include "ShortcutKeys.h"
+#include "mozilla/KeyEventHandler.h"
 #include "nsContentUtils.h"
 #include "nsAtom.h"
 #include "mozilla/TextEvents.h"
@@ -40,7 +40,7 @@ nsresult ShortcutKeys::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 /* static */
-nsXBLPrototypeHandler* ShortcutKeys::GetHandlers(HandlerType aType) {
+KeyEventHandler* ShortcutKeys::GetHandlers(HandlerType aType) {
   if (!sInstance) {
     sInstance = new ShortcutKeys();
   }
@@ -71,9 +71,9 @@ nsAtom* ShortcutKeys::ConvertEventToDOMEventType(
   return nullptr;
 }
 
-nsXBLPrototypeHandler* ShortcutKeys::EnsureHandlers(HandlerType aType) {
+KeyEventHandler* ShortcutKeys::EnsureHandlers(HandlerType aType) {
   ShortcutKeyData* keyData;
-  nsXBLPrototypeHandler** cache;
+  KeyEventHandler** cache;
 
   switch (aType) {
     case HandlerType::eBrowser:
@@ -100,9 +100,9 @@ nsXBLPrototypeHandler* ShortcutKeys::EnsureHandlers(HandlerType aType) {
     return *cache;
   }
 
-  nsXBLPrototypeHandler* lastHandler = nullptr;
+  KeyEventHandler* lastHandler = nullptr;
   while (keyData->event) {
-    nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(keyData);
+    KeyEventHandler* handler = new KeyEventHandler(keyData);
     if (lastHandler) {
       lastHandler->SetNextHandler(handler);
     } else {
