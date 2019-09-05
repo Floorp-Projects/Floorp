@@ -19,6 +19,9 @@ permalink: /changelog/
     strictSocialTrackingProtection = true
   )
   ```
+  
+* **context-menu**
+  * Exposed title tag from GV in HitResult. Fixes [#1444]. If title is null or blank the src value is returned for title.
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
@@ -58,7 +61,10 @@ permalink: /changelog/
   * `begin*` OAuthAccount methods now return an `AuthFlowUrl`, which encapsulates an OAuth state identifier.
   * `AccountObserver:onAuthenticated` method now has `authType` parameter (instead of `newAccount`), which describes in detail what caused an authentication.
   * `GlobalSyncableStoreProvider.configureStore` now takes a pair of `Pair<SyncEngine, SyncableStore>`, instead of allowing arbitrary string names for engines.
-  * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.  
+  * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.
+
+* **feature-push**
+  * Added more logging into `AutoPushFeature` to aid in debugging in release builds.
 
 # 11.0.0
 

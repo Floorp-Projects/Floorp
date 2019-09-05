@@ -92,6 +92,8 @@ class AutoPushFeature(
         // If we have a token, initialize the rust component first.
         prefToken?.let { token ->
             scope.launch {
+                logger.debug("Initializing native component with the cached token.")
+
                 connection.updateToken(token)
             }
         }
@@ -126,6 +128,8 @@ class AutoPushFeature(
      */
     override fun onNewToken(newToken: String) {
         scope.launchAndTry {
+            logger.info("Received a new registration token from push service.")
+
             connection.updateToken(newToken)
 
             // Subscribe all only if this is the first time.
@@ -144,6 +148,7 @@ class AutoPushFeature(
         scope.launchAndTry {
             val type = DeliveryManager.serviceForChannelId(message.channelId)
             DeliveryManager.with(connection) {
+                logger.info("New push message decrypted.")
                 val decrypted = decrypt(
                     channelId = message.channelId,
                     body = message.body,
@@ -243,6 +248,8 @@ class AutoPushFeature(
      * [0]: https://github.com/mozilla-mobile/android-components/issues/3173
      */
     fun forceRegistrationRenewal() {
+        logger.warn("Forcing registration renewal by deleting our (cached) token.")
+
         // Remove the cached token we have.
         deleteToken(context)
 
