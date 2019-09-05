@@ -46,7 +46,8 @@
 }
 
 .why-paused .message.warning {
-  color: var(--theme-graphs-red);
-  font-weight: bold;
-  font-style: italic;
+  color: var(--theme-graphs-full-red);
+  font-family: var(--monospace-font-family);
+  font-size: 12px;
+  font-style: normal;
 }
