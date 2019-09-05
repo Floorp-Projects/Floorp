@@ -29,3 +29,4 @@ infer_checkers:
     publish: !!bool no
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt
+generated: tools/rewriting/Generated.txt

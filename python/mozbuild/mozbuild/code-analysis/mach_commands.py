@@ -692,10 +692,11 @@ class StaticAnalysis(MachCommandBase):
                      'This command is only available for linux64!')
             return rc
         # which checkers to use, and which folders to exclude
-        all_checkers, third_party_path = self._get_infer_config()
+        all_checkers, third_party_path, generated_path = self._get_infer_config()
         checkers, excludes = self._get_infer_args(
             checks=checks or all_checkers,
-            third_party_path=third_party_path
+            third_party_path=third_party_path,
+            generated_path=generated_path
         )
         rc = rc or self._gradle(['clean'])  # clean so that we can recompile
         # infer capture command
@@ -756,23 +757,25 @@ class StaticAnalysis(MachCommandBase):
                     if item['publish']:
                         checkers.append(item['name'])
                 tp_path = mozpath.join(self.topsrcdir, config['third_party'])
+                generated_path = mozpath.join(self.topsrcdir, config['generated'])
             except Exception:
                 print('Looks like config.yaml is not valid, so we are unable '
                       'to determine default checkers, and which folder to '
                       'exclude, using defaults provided by infer')
-        return checkers, tp_path
+        return checkers, tp_path, generated_path
 
-    def _get_infer_args(self, checks, third_party_path):
+    def _get_infer_args(self, checks, *input_paths):
         '''Return the arguments which include the checkers <checks>, and
         excludes all folder in <third_party_path>.'''
         checkers = ['-a', 'checkers']
         excludes = []
         for checker in checks:
             checkers.append('--' + checker)
-        with open(third_party_path) as f:
-            for line in f:
-                excludes.append('--skip-analysis-in-path')
-                excludes.append(line.strip('\n'))
+        for path in input_paths:
+            with open(path) as f:
+                for line in f:
+                    excludes.append('--skip-analysis-in-path')
+                    excludes.append(line.strip('\n'))
         return checkers, excludes
 
     def _get_clang_tidy_config(self):

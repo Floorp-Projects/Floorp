@@ -1228,10 +1228,16 @@ class BuildDriver(MozbuildObject):
                                             "rewriting",
                                             "ThirdPartyPaths.txt")
 
+            pathToGenerated = os.path.join(self.topsrcdir,
+                                           "tools",
+                                           "rewriting",
+                                           "Generated.txt")
+
             if os.path.exists(pathToThirdparty):
-                with open(pathToThirdparty) as f:
+                with open(pathToThirdparty) as f, open(pathToGenerated) as g:
                     # Normalize the path (no trailing /)
-                    LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+                    suppress = f.readlines() + g.readlines()
+                    LOCAL_SUPPRESS_DIRS = tuple(s.strip('/') for s in suppress)
             else:
                 # For application based on gecko like thunderbird
                 LOCAL_SUPPRESS_DIRS = ()
