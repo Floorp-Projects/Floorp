@@ -29,11 +29,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "SettingOnboardingTooltip",
-  "devtools/client/responsive/setting-onboarding-tooltip"
-);
-loader.lazyRequireGetter(
-  this,
   "swapToInnerBrowser",
   "devtools/client/responsive/browser/swap",
   true
@@ -82,7 +77,6 @@ const TOOL_URL = "chrome://devtools/content/responsive/index.xhtml";
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF =
   "devtools.responsive.reloadNotification.enabled";
-const SHOW_SETTING_TOOLTIP_PREF = "devtools.responsive.show-setting-tooltip";
 
 function debug(msg) {
   // console.log(`RDM manager: ${msg}`);
@@ -443,13 +437,6 @@ ResponsiveUI.prototype = {
     // Restore the previous state of RDM.
     await this.restoreState();
 
-    // Show the settings onboarding tooltip
-    if (Services.prefs.getBoolPref(SHOW_SETTING_TOOLTIP_PREF)) {
-      this.settingOnboardingTooltip = new SettingOnboardingTooltip(
-        rdmViewport.document
-      );
-    }
-
     // Re-apply our cached zoom levels. Other Zoom UI update events have finished
     // by now.
     rdmContent.fullZoom = fullZoom;
@@ -518,11 +505,6 @@ ResponsiveUI.prototype = {
       if (reloadNeeded) {
         this.getViewportBrowser().reload();
       }
-    }
-
-    if (this.settingOnboardingTooltip) {
-      this.settingOnboardingTooltip.destroy();
-      this.settingOnboardingTooltip = null;
     }
 
     // Destroy local state
