@@ -249,16 +249,10 @@ nsIFrame::FrameSearchResult BRFrame::PeekOffsetWord(
 #ifdef ACCESSIBILITY
 a11y::AccType BRFrame::AccessibleType() {
   dom::HTMLBRElement* brElement = dom::HTMLBRElement::FromNode(mContent);
-  if (brElement->IsPaddingForEmptyEditor()) {
-    // This <br> is a "padding <br> element" used when there is no text in the
-    // editor.
-    return a11y::eNoType;
-  }
-
-  // Trailing HTML br element don't play any difference. We don't need to expose
-  // it to AT (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=899433#c16
-  // for details).
-  if (!mContent->GetNextSibling() && !GetNextSibling()) {
+  if (brElement->IsPaddingForEmptyEditor() ||
+      brElement->IsPaddingForEmptyLastLine()) {
+    // This <br> is a "padding <br> element" used when there is no text or an
+    // empty last line in an editor.
     return a11y::eNoType;
   }
 
