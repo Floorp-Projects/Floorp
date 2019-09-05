@@ -95,6 +95,33 @@ add_task(async function test_enter_key_to_confirm() {
     ok(false, "The dialog Promise should not reject after hitting Return with the confirm button focused");
   }
 });
+
+add_task(async function test_dialog_focus_trap() {
+  let displayEl = document.getElementById("display");
+  let displayElChildSpan = document.createElement("span");
+  displayElChildSpan.tabIndex = 0;
+  displayElChildSpan.id = "display-child";
+  displayEl.appendChild(displayElChildSpan);
+
+  gConfirmationDialog.show(options);
+
+  ok(!gConfirmationDialog.hidden, "The dialog should be visible");
+  ok(displayElChildSpan.tabIndex === -1, "The tabIndex value for elements with a hardcoded tabIndex attribute should be reset to '-1'.")
+  ok(displayElChildSpan.dataset.oldTabIndex === "0", "Existing tabIndex values should be stored in `dataset.oldTabIndex`.")
+
+  const isActiveElemDialogOrHTML = (elemTagName) => {
+    return (["HTML", "CONFIRMATION-DIALOG"].includes(elemTagName));
+  }
+
+  let iterator = 0;
+  while(iterator < 20) {
+    sendKey("TAB");
+    isnot(document.activeElement.id, "display-child", "The display-child element should not gain focus when the dialog is showing");
+    is(isActiveElemDialogOrHTML(document.activeElement.tagName), true, "The confirmation-dialog should always have focus when the dialog is showing");
+    iterator++;
+  }
+});
+
 </script>
 </body>
 </html>
