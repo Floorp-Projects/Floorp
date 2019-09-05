@@ -86,8 +86,11 @@
         {
           ID: "menulist_label",
           actionName: "click",
-          targetID: "menulist",
-          events: FOCUS_EVENT
+          // focusChecker expects a unique focus event. However, there might
+          // still be pending focus events not caught by previous tests.
+          eventSeq: [
+            new invokerChecker(EVENT_FOCUS, getNode("menulist"))
+          ]
         }/*, // XXX: bug 490288
         {
           ID: "buttonmenu_item",
