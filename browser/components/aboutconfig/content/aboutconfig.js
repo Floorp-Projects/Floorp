@@ -253,12 +253,11 @@ class PrefRow {
           radio.type = "radio";
           radio.name = "type";
           radio.value = type;
-          radio.id = `add-type-${type}`;
           radio.checked = this.type == type;
-          form.appendChild(radio);
+          let radioSpan = document.createElement("span");
+          document.l10n.setAttributes(radioSpan, STRINGS_ADD_BY_TYPE[type]);
           let radioLabel = document.createElement("label");
-          radioLabel.setAttribute("for", radio.id);
-          document.l10n.setAttributes(radioLabel, STRINGS_ADD_BY_TYPE[type]);
+          radioLabel.append(radio, radioSpan);
           form.appendChild(radioLabel);
         }
         form.addEventListener("click", event => {
