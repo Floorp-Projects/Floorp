@@ -39,6 +39,8 @@ class WebNotificationTest : BaseSessionTest() {
         val notificationResult = GeckoResult<Void>()
         val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
         val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
+        val requireInteraction =
+                sessionRule.getPrefs("dom.webnotifications.requireinteraction.enabled")[0] as Boolean
 
         sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
             unregister, object : WebNotificationDelegate {
@@ -50,7 +52,8 @@ class WebNotificationTest : BaseSessionTest() {
                     assertThat("ImageUrl should match", notification.imageUrl, endsWith("icon.png"))
                     assertThat("Language should match", notification.lang, equalTo("en-US"))
                     assertThat("Direction should match", notification.textDirection, equalTo("ltr"))
-                    assertThat("Require Interaction should match", notification.requireInteraction, equalTo(true))
+                    assertThat("Require Interaction should match", notification.requireInteraction,
+                            equalTo(requireInteraction))
                     notificationResult.complete(null)
                 }
         })
