@@ -436,7 +436,8 @@ class AsyncTabSwitcher {
     let needSpinner =
       this.getTabState(showTab) != this.STATE_LOADED &&
       !this.minimizedOrFullyOccluded &&
-      !shouldBeBlank;
+      !shouldBeBlank &&
+      !this.loadTimer;
 
     if (!needSpinner && this.spinnerTab) {
       this.spinnerHidden();
