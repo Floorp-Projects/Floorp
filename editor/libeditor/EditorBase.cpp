@@ -43,9 +43,9 @@
 #include "mozilla/Preferences.h"            // for Preferences
 #include "mozilla/PresShell.h"              // for PresShell
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
-#include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/ServoCSSParser.h"     // for ServoCSSParser
+#include "mozilla/StaticPrefs_bidi.h"   // for StaticPrefs::bidi_*
 #include "mozilla/TextComposition.h"    // for TextComposition
 #include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
@@ -58,6 +58,7 @@
 #include "mozilla/dom/EventTarget.h"     // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/Selection.h"  // for Selection, etc.
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "nsAString.h"                // for nsAString::Length, etc.
@@ -123,6 +124,12 @@ using namespace widget;
 /*****************************************************************************
  * mozilla::EditorBase
  *****************************************************************************/
+template EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
+    const EditorDOMPoint& aPointAtCaret,
+    nsIEditor::EDirection aDirectionAndAmount) const;
+template EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
+    const EditorRawDOMPoint& aPointAtCaret,
+    nsIEditor::EDirection aDirectionAndAmount) const;
 
 EditorBase::EditorBase()
     : mEditActionData(nullptr),
@@ -5209,6 +5216,62 @@ NS_IMETHODIMP EditorBase::GetAutoMaskingEnabled(bool* aResult) {
 NS_IMETHODIMP EditorBase::GetPasswordMask(nsAString& aPasswordMask) {
   aPasswordMask.Assign(TextEditor::PasswordMask());
   return NS_OK;
+}
+
+template <typename PT, typename CT>
+EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
+    const EditorDOMPointBase<PT, CT>& aPointAtCaret,
+    nsIEditor::EDirection aDirectionAndAmount) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  nsPresContext* presContext = GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+
+  if (!presContext->BidiEnabled()) {
+    return EditActionIgnored();  // Perform the deletion
+  }
+
+  if (!aPointAtCaret.GetContainerAsContent()) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+
+  // XXX Not sure whether this requires strong reference here.
+  RefPtr<nsFrameSelection> frameSelection =
+      SelectionRefPtr()->GetFrameSelection();
+  if (NS_WARN_IF(!frameSelection)) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+
+  nsPrevNextBidiLevels levels = frameSelection->GetPrevNextBidiLevels(
+      aPointAtCaret.GetContainerAsContent(), aPointAtCaret.Offset(), true);
+
+  nsBidiLevel levelBefore = levels.mLevelBefore;
+  nsBidiLevel levelAfter = levels.mLevelAfter;
+
+  nsBidiLevel currentCaretLevel = frameSelection->GetCaretBidiLevel();
+
+  nsBidiLevel levelOfDeletion;
+  levelOfDeletion = (nsIEditor::eNext == aDirectionAndAmount ||
+                     nsIEditor::eNextWord == aDirectionAndAmount)
+                        ? levelAfter
+                        : levelBefore;
+
+  if (currentCaretLevel == levelOfDeletion) {
+    return EditActionIgnored();  // Perform the deletion
+  }
+
+  // Set the bidi level of the caret to that of the
+  // character that will be (or would have been) deleted
+  frameSelection->SetCaretBidiLevel(levelOfDeletion);
+
+  if (!StaticPrefs::bidi_edit_delete_immediately() &&
+      levelBefore != levelAfter) {
+    return EditActionCanceled();  // Cancel deletion due to the bidi boundary
+  }
+
+  return EditActionIgnored();  // Perform the deletion
 }
 
 void EditorBase::UndefineCaretBidiLevel() const {
