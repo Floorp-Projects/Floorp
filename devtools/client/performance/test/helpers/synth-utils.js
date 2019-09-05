@@ -21,12 +21,12 @@ exports.synthesizeProfile = () => {
             frames: [
               { category: CATEGORY_INDEX("other"), location: "(root)" },
               {
-                category: CATEGORY_INDEX("other"),
-                location: "A (http://foo/bar/baz:12)",
+                category: CATEGORY_INDEX("js"),
+                location: "A (http://foo/bar/baz:12:9)",
               },
               {
                 category: CATEGORY_INDEX("layout"),
-                location: "B (http://foo/bar/baz:34)",
+                location: "B InterruptibleLayout",
               },
               {
                 category: CATEGORY_INDEX("js"),
@@ -39,16 +39,16 @@ exports.synthesizeProfile = () => {
             frames: [
               { category: CATEGORY_INDEX("other"), location: "(root)" },
               {
-                category: CATEGORY_INDEX("other"),
-                location: "A (http://foo/bar/baz:12)",
+                category: CATEGORY_INDEX("js"),
+                location: "A (http://foo/bar/baz:12:9)",
               },
               {
                 category: CATEGORY_INDEX("layout"),
-                location: "B (http://foo/bar/baz:34)",
+                location: "B InterruptibleLayout",
               },
               {
                 category: CATEGORY_INDEX("gc"),
-                location: "D (http://foo/bar/baz:78:9)",
+                location: "D INTER_SLICE_GC",
               },
             ],
           },
@@ -57,16 +57,16 @@ exports.synthesizeProfile = () => {
             frames: [
               { category: CATEGORY_INDEX("other"), location: "(root)" },
               {
-                category: CATEGORY_INDEX("other"),
-                location: "A (http://foo/bar/baz:12)",
+                category: CATEGORY_INDEX("js"),
+                location: "A (http://foo/bar/baz:12:9)",
               },
               {
                 category: CATEGORY_INDEX("layout"),
-                location: "B (http://foo/bar/baz:34)",
+                location: "B InterruptibleLayout",
               },
               {
                 category: CATEGORY_INDEX("gc"),
-                location: "D (http://foo/bar/baz:78:9)",
+                location: "D INTER_SLICE_GC",
               },
             ],
           },
@@ -75,16 +75,16 @@ exports.synthesizeProfile = () => {
             frames: [
               { category: CATEGORY_INDEX("other"), location: "(root)" },
               {
-                category: CATEGORY_INDEX("other"),
-                location: "A (http://foo/bar/baz:12)",
+                category: CATEGORY_INDEX("js"),
+                location: "A (http://foo/bar/baz:12:9)",
               },
               {
                 category: CATEGORY_INDEX("gc"),
-                location: "E (http://foo/bar/baz:90)",
+                location: "E",
               },
               {
                 category: CATEGORY_INDEX("network"),
-                location: "F (http://foo/bar/baz:99)",
+                location: "F",
               },
             ],
           },
