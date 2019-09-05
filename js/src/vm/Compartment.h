@@ -412,8 +412,11 @@ class JS::Compartment {
    * dangling (full GCs naturally follow pointers across compartments) and
    * when compacting to update cross-compartment pointers.
    */
-  void traceWrapperTargetsInCollectedZones(JSTracer* trc);
-  static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
+  enum EdgeSelector { AllEdges, NonGrayEdges, GrayEdges };
+  void traceWrapperTargetsInCollectedZones(JSTracer* trc,
+                                           EdgeSelector whichEdges);
+  static void traceIncomingCrossCompartmentEdgesForZoneGC(
+      JSTracer* trc, EdgeSelector whichEdges);
 
   void sweepRealms(JSFreeOp* fop, bool keepAtleastOne, bool destroyingRuntime);
   void sweepAfterMinorGC(JSTracer* trc);

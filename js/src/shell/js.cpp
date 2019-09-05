@@ -6323,6 +6323,44 @@ static bool RecomputeWrappers(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool DumpObjectWrappers(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  bool printedHeader = false;
+  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    bool printedZoneInfo = false;
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+      bool printedCompartmentInfo = false;
+      for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
+        JSObject* wrapper = e.front().value().unbarrieredGet();
+        JSObject* wrapped = e.front().key();
+        if (!printedHeader) {
+          fprintf(stderr, "Cross-compartment object wrappers:\n");
+          printedHeader = true;
+        }
+        if (!printedZoneInfo) {
+          fprintf(stderr, "  Zone %p:\n", zone.get());
+          printedZoneInfo = true;
+        }
+        if (!printedCompartmentInfo) {
+          fprintf(stderr, "    Compartment %p:\n", comp.get());
+          printedCompartmentInfo = true;
+        }
+        fprintf(stderr,
+                "      Object wrapper %p -> %p in zone %p compartment %p\n",
+                wrapper, wrapped, wrapped->zone(), wrapped->compartment());
+      }
+    }
+  }
+
+  if (!printedHeader) {
+    fprintf(stderr, "No cross-compartment object wrappers.\n");
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GetMaxArgs(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setInt32(ARGS_LENGTH_MAX);
@@ -8835,6 +8873,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "  Recompute all cross-compartment wrappers. src and target are both optional\n"
 "  and can be used to filter source or target compartments: the unwrapped\n"
 "  object's compartment is used as CompartmentFilter.\n"),
+
+    JS_FN_HELP("dumpObjectWrappers", DumpObjectWrappers, 2, 0,
+"dumpObjectWrappers()",
+"  Print information about cross-compartment object wrappers.\n"),
 
     JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
 "wrapWithProto(obj)",

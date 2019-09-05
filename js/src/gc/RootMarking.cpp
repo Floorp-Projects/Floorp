@@ -276,7 +276,15 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
     traceRuntimeAtoms(trc, session.checkAtomsAccess());
   }
   traceKeptAtoms(trc);
-  Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(trc);
+
+  {
+    // Trace incoming cross compartment edges from uncollected compartments,
+    // skipping gray edges which are traced later.
+    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_CCWS);
+    Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+        trc, Compartment::NonGrayEdges);
+  }
+
   traceRuntimeCommon(trc, MarkRuntime);
 }
 
@@ -524,9 +532,9 @@ void js::gc::GCRuntime::bufferGrayRoots() {
   }
 
   BufferGrayRootsTracer grayBufferer(rt);
-  if (JSTraceDataOp op = grayRootTracer.op) {
-    (*op)(&grayBufferer, grayRootTracer.data);
-  }
+  traceEmbeddingGrayRoots(&grayBufferer);
+  Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+      &grayBufferer, Compartment::GrayEdges);
 
   // Propagate the failure flag from the marker to the runtime.
   if (grayBufferer.failed()) {
