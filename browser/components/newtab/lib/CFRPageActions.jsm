@@ -698,7 +698,12 @@ const CFRPageActions = {
     }
     if (RecommendationMap.has(browser)) {
       const recommendation = RecommendationMap.get(browser);
-      if (isHostMatch(browser, recommendation.host)) {
+      if (
+        isHostMatch(browser, recommendation.host) ||
+        // If there is no host associated we assume we're back on a tab
+        // that had a CFR message so we should show it again
+        !recommendation.host
+      ) {
         // The browser has a recommendation specified with this host, so show
         // the page action
         pageAction.showAddressBarNotifier(recommendation);
