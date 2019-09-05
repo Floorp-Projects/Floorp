@@ -9,8 +9,6 @@ package org.mozilla.geckoview;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 
-import java.util.Arrays;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,8 +64,10 @@ public final class RuntimeTelemetry {
 
     /**
      * The runtime telemetry metric object.
+     *
+     * @param <T> type of the underlying metric sample
      */
-    public static class Metric {
+    public static class Metric<T> {
         /**
          * The runtime metric name.
          */
@@ -76,21 +76,22 @@ public final class RuntimeTelemetry {
         /**
          * The metric values.
          */
-        public final @NonNull long[] values;
+        public final @NonNull T value;
 
-        /* package */  Metric(final String name, final long[] values) {
+        /* package */  Metric(final String name, final T value) {
             this.name = name;
-            this.values = values;
+            this.value = value;
         }
 
         @Override
         public String toString() {
-            return "name: " + name + ", values: " + Arrays.toString(values);
+            return "name: " + name + ", value: " + value;
         }
 
+        // For testing
         protected Metric() {
-            this.name = null;
-            this.values = null;
+            name = null;
+            value = null;
         }
     }
 
@@ -101,12 +102,36 @@ public final class RuntimeTelemetry {
      */
     public interface Delegate {
         /**
-         * A runtime telemetry metric has been received.
+         * A runtime telemetry histogram metric has been received.
          *
          * @param metric The runtime metric details.
          */
         @AnyThread
-        default void onTelemetryReceived(final @NonNull Metric metric) {}
+        default void onHistogram(final @NonNull Metric<long[]> metric) {}
+
+        /**
+         * A runtime telemetry boolean scalar has been received.
+         *
+         * @param metric The runtime metric details.
+         */
+        @AnyThread
+        default void onBooleanScalar(final @NonNull Metric<Boolean> metric) {}
+
+        /**
+         * A runtime telemetry long scalar has been received.
+         *
+         * @param metric The runtime metric details.
+         */
+        @AnyThread
+        default void onLongScalar(final @NonNull Metric<Long> metric) {}
+
+        /**
+         * A runtime telemetry string scalar has been received.
+         *
+         * @param metric The runtime metric details.
+         */
+        @AnyThread
+        default void onStringScalar(final @NonNull Metric<String> metric) {}
     }
 
     // The proxy connects to telemetry core and forwards telemetry events
@@ -142,13 +167,40 @@ public final class RuntimeTelemetry {
         private static native void registerDelegateProxy(Proxy proxy);
 
         @WrapForJNI(calledFrom = "gecko")
-        /* package */ void dispatchTelemetry(
+        /* package */ void dispatchHistogram(
                 final String name, final long[] values) {
             if (mDelegate == null) {
                 // TODO throw?
                 return;
             }
-            mDelegate.onTelemetryReceived(new Metric(name, values));
+            mDelegate.onHistogram(new Metric<>(name, values));
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+            /* package */ void dispatchStringScalar(
+                final String name, final String value) {
+            if (mDelegate == null) {
+                return;
+            }
+            mDelegate.onStringScalar(new Metric<>(name, value));
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+            /* package */ void dispatchBooleanScalar(
+                final String name, final boolean value) {
+            if (mDelegate == null) {
+                return;
+            }
+            mDelegate.onBooleanScalar(new Metric<>(name, value));
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+            /* package */ void dispatchLongScalar(
+                final String name, final long value) {
+            if (mDelegate == null) {
+                return;
+            }
+            mDelegate.onLongScalar(new Metric<>(name, value));
         }
 
         @Override // JNIObject

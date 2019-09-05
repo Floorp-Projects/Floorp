@@ -8,6 +8,9 @@ const APIS = {
   AddHistogram: function({ id, value }) {
     browser.test.addHistogram(id, value);
   },
+  SetScalar: function({ id, value }) {
+    browser.test.setScalar(id, value);
+  },
   GetRequestedLocales: function() {
     return browser.test.getRequestedLocales();
   },

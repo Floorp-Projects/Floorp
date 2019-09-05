@@ -44,6 +44,7 @@ import java.lang.Class;
 import java.lang.Exception;
 import java.lang.Float;
 import java.lang.Integer;
+import java.lang.Long;
 import java.lang.Object;
 import java.lang.Runnable;
 import java.lang.RuntimeException;
@@ -1110,13 +1111,16 @@ package org.mozilla.geckoview {
   }
 
   public static interface RuntimeTelemetry.Delegate {
-    method @AnyThread default public void onTelemetryReceived(@NonNull RuntimeTelemetry.Metric);
+    method @AnyThread default public void onBooleanScalar(@NonNull RuntimeTelemetry.Metric<Boolean>);
+    method @AnyThread default public void onHistogram(@NonNull RuntimeTelemetry.Metric<long[]>);
+    method @AnyThread default public void onLongScalar(@NonNull RuntimeTelemetry.Metric<Long>);
+    method @AnyThread default public void onStringScalar(@NonNull RuntimeTelemetry.Metric<String>);
   }
 
-  public static class RuntimeTelemetry.Metric {
+  public static class RuntimeTelemetry.Metric<T> {
     ctor protected Metric();
     field @NonNull public final String name;
-    field @NonNull public final long[] values;
+    field @NonNull public final T value;
   }
 
   public class ScreenLength {
