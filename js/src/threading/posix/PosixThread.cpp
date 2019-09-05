@@ -49,7 +49,7 @@ bool Thread::create(void* (*aMain)(void*), void* aArg) {
   if (r) {
     // On either Windows or POSIX we can't be sure if id_ was initialised. So
     // reset it manually.
-    id_ = Id();
+    id_ = ThreadId();
     return false;
   }
   id_.platformData()->hasThread = true;
@@ -60,14 +60,14 @@ void Thread::join() {
   MOZ_RELEASE_ASSERT(joinable());
   int r = pthread_join(id_.platformData()->ptThread, nullptr);
   MOZ_RELEASE_ASSERT(!r);
-  id_ = Id();
+  id_ = ThreadId();
 }
 
 void Thread::detach() {
   MOZ_RELEASE_ASSERT(joinable());
   int r = pthread_detach(id_.platformData()->ptThread);
   MOZ_RELEASE_ASSERT(!r);
-  id_ = Id();
+  id_ = ThreadId();
 }
 
 ThreadId ThreadId::ThisThreadId() {

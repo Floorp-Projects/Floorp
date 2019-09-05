@@ -43,7 +43,7 @@ bool Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   if (!handle) {
     // On either Windows or POSIX we can't be sure if id_ was initalisad. So
     // reset it manually.
-    id_ = Id();
+    id_ = ThreadId();
     return false;
   }
   id_.platformData()->handle = reinterpret_cast<HANDLE>(handle);
@@ -56,14 +56,14 @@ void Thread::join() {
   MOZ_RELEASE_ASSERT(r == WAIT_OBJECT_0);
   BOOL success = CloseHandle(id_.platformData()->handle);
   MOZ_RELEASE_ASSERT(success);
-  id_ = Id();
+  id_ = ThreadId();
 }
 
 void Thread::detach() {
   MOZ_RELEASE_ASSERT(joinable());
   BOOL success = CloseHandle(id_.platformData()->handle);
   MOZ_RELEASE_ASSERT(success);
-  id_ = Id();
+  id_ = ThreadId();
 }
 
 ThreadId ThreadId::ThisThreadId() {
