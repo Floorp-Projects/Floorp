@@ -177,7 +177,7 @@ struct JSContext : public JS::RootingContext,
   js::ContextData<JSFreeOp> defaultFreeOp_;
 
   // Thread that the JSContext is currently running on, if in use.
-  js::Thread::Id currentThread_;
+  js::ThreadId currentThread_;
 
   js::ParseTask* parseTask_;
 
@@ -197,7 +197,7 @@ struct JSContext : public JS::RootingContext,
 
   bool contextAvailable(js::AutoLockHelperThreadState& locked) {
     MOZ_ASSERT(kind_ == js::ContextKind::HelperThread);
-    return currentThread_ == js::Thread::Id();
+    return currentThread_ == js::ThreadId();
   }
 
   void setFreeUnusedMemory(bool shouldFree) { freeUnusedMemory = shouldFree; }
