@@ -194,7 +194,7 @@ BoxModel.prototype = {
         isPositionEditable,
       });
 
-      const actorCanGetOffSetParent = await this.inspector.target.actorHasMethod(
+      const actorCanGetOffSetParent = await this.inspector.currentTarget.actorHasMethod(
         "domwalker",
         "getOffsetParent"
       );

@@ -166,7 +166,7 @@ class AnimationInspector {
       return this.animationsFrontPromise;
     }
     this.animationsFrontPromise = new Promise(async resolve => {
-      const target = this.inspector.target;
+      const target = this.inspector.currentTarget;
       const front = await target.getFront("animations");
       front.setWalkerActor(this.inspector.walker);
       resolve(front);
@@ -525,7 +525,7 @@ class AnimationInspector {
 
   async setAnimationsPlayState(doPlay) {
     if (typeof this.hasPausePlaySome === "undefined") {
-      this.hasPausePlaySome = await this.inspector.target.actorHasMethod(
+      this.hasPausePlaySome = await this.inspector.currentTarget.actorHasMethod(
         "animations",
         "pauseSome"
       );

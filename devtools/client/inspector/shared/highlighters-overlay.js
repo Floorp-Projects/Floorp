@@ -34,7 +34,7 @@ class HighlightersOverlay {
     this.inspector = inspector;
     this.inspectorFront = this.inspector.inspectorFront;
     this.store = this.inspector.store;
-    this.target = this.inspector.target;
+    this.target = this.inspector.currentTarget;
     this.telemetry = this.inspector.telemetry;
     this.walker = this.inspector.walker;
     this.maxGridHighlighters = Services.prefs.getIntPref(

@@ -326,7 +326,7 @@ class GridInspector {
       }
     }
 
-    const currentUrl = this.inspector.target.url;
+    const currentUrl = this.inspector.currentTarget.url;
 
     // Log how many CSS Grid elements DevTools sees.
     if (currentUrl != this.inspector.previousURL) {
@@ -399,7 +399,7 @@ class GridInspector {
 
       if (
         isSubgrid &&
-        (await this.inspector.target.actorHasMethod(
+        (await this.inspector.currentTarget.actorHasMethod(
           "domwalker",
           "getParentGridNode"
         ))
@@ -575,7 +575,7 @@ class GridInspector {
     this.store.dispatch(updateGridColor(node, color));
 
     const { grids } = this.store.getState();
-    const currentUrl = this.inspector.target.url;
+    const currentUrl = this.inspector.currentTarget.url;
     // Get the hostname, if there is no hostname, fall back on protocol
     // ex: `data:` uri, and `about:` pages
     const hostname =
