@@ -856,27 +856,25 @@ class nsWindow::LayerViewSupport final
         return;
       }
 
-      if (LockedWindowPtr window{mWindow}) {
-        uiThread->Dispatch(NS_NewRunnableFunction(
-            "LayerViewSupport::OnDetach",
-            [compositor, disposer = RefPtr<Runnable>(aDisposer),
-             results = &mCapturePixelsResults, lock = &window] {
-              if (lock) {
-                while (!results->empty()) {
-                  auto aResult = java::GeckoResult::LocalRef(results->front());
-                  if (aResult) {
-                    aResult->CompleteExceptionally(
-                        java::sdk::IllegalStateException::New(
-                            "The compositor has detached from the session")
-                            .Cast<jni::Throwable>());
-                    results->pop();
-                  }
+      uiThread->Dispatch(NS_NewRunnableFunction(
+          "LayerViewSupport::OnDetach",
+          [compositor, disposer = RefPtr<Runnable>(aDisposer),
+           results = &mCapturePixelsResults, window = &mWindow] {
+            if (LockedWindowPtr lock{*window}) {
+              while (!results->empty()) {
+                auto aResult = java::GeckoResult::LocalRef(results->front());
+                if (aResult) {
+                  aResult->CompleteExceptionally(
+                      java::sdk::IllegalStateException::New(
+                          "The compositor has detached from the session")
+                          .Cast<jni::Throwable>());
+                  results->pop();
                 }
-                compositor->OnCompositorDetached();
-                disposer->Run();
               }
-            }));
-      }
+              compositor->OnCompositorDetached();
+              disposer->Run();
+            }
+          }));
     }
   }
 
@@ -1147,6 +1145,9 @@ class nsWindow::LayerViewSupport final
     java::GeckoResult::LocalRef aResult = nullptr;
     if (LockedWindowPtr window{mWindow}) {
       aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+      if (aResult) {
+        mCapturePixelsResults.pop();
+      }
     }
     if (aResult) {
       auto pixels = mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize),
@@ -1155,10 +1156,6 @@ class nsWindow::LayerViewSupport final
           aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
       bitmap->CopyPixelsFromBuffer(pixels);
       aResult->Complete(bitmap);
-
-      if (LockedWindowPtr window{mWindow}) {
-        mCapturePixelsResults.pop();
-      }
     }
 
     // Pixels have been copied, so Dealloc Shmem
