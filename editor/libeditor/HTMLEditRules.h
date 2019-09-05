@@ -130,6 +130,39 @@ class HTMLEditRules : public TextEditRules {
                       nsIEditor::EStripWrappers aStripWrappers);
 
   /**
+   * HandleDeleteAroundCollapsedSelection() handles deletion with collapsed
+   * `Selection`.  Callers must guarantee that this is called only when
+   * `Selection` is collapsed.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteAroundCollapsedSelection(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers);
+
+  /**
+   * HandleDeleteNonCollapsedSelection() handles deletion with non-collapsed
+   * `Selection`.  Callers must guarantee that this is called only when
+   * `Selection` is NOT collapsed.
+   *
+   * @param aDirectionAndAmount         Direction of the deletion.
+   * @param aStripWrappers              Must be eStrip or eNoStrip.
+   * @param aSelectionWasCollpased      If the caller extended `Selection`
+   *                                    from collapsed, set this to `Yes`.
+   *                                    Otherwise, i.e., `Selection` is not
+   *                                    collapsed from the beginning, set
+   *                                    this to `No`.
+   */
+  enum class SelectionWasCollapsed { Yes, No };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteNonCollapsedSelection(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers,
+      SelectionWasCollapsed aSelectionWasCollapsed);
+
+  /**
    * Called after deleting selected content.
    * This method removes unnecessary empty nodes and/or inserts <br> if
    * necessary.
