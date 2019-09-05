@@ -75,21 +75,26 @@ class NewRenderer : public RendererEvent {
     bool supportLowPriorityTransactions = isMainWindow;
     bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
-    if (!wr_window_new(
-            aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions, allow_texture_swizzling,
-            StaticPrefs::gfx_webrender_picture_caching() &&
-                supportPictureCaching,
-            StaticPrefs::gfx_webrender_start_debug_server(), compositor->gl(),
-            aRenderThread.GetProgramCache()
-                ? aRenderThread.GetProgramCache()->Raw()
-                : nullptr,
-            aRenderThread.GetShaders()
-                ? aRenderThread.GetShaders()->RawShaders()
-                : nullptr,
-            aRenderThread.ThreadPool().Raw(), &WebRenderMallocSizeOf,
-            &WebRenderMallocEnclosingSizeOf, (uint32_t)wr::RenderRoot::Default,
-            mDocHandle, &wrRenderer, mMaxTextureSize)) {
+    if (!wr_window_new(aWindowId, mSize.width, mSize.height,
+                       supportLowPriorityTransactions, allow_texture_swizzling,
+                       StaticPrefs::gfx_webrender_picture_caching() &&
+                           supportPictureCaching,
+#ifdef NIGHTLY_BUILD
+                       StaticPrefs::gfx_webrender_start_debug_server(),
+#else
+                       false,
+#endif
+                       compositor->gl(),
+                       aRenderThread.GetProgramCache()
+                           ? aRenderThread.GetProgramCache()->Raw()
+                           : nullptr,
+                       aRenderThread.GetShaders()
+                           ? aRenderThread.GetShaders()->RawShaders()
+                           : nullptr,
+                       aRenderThread.ThreadPool().Raw(), &WebRenderMallocSizeOf,
+                       &WebRenderMallocEnclosingSizeOf,
+                       (uint32_t)wr::RenderRoot::Default, mDocHandle,
+                       &wrRenderer, mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
