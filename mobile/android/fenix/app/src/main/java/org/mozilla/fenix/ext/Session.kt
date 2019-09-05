@@ -14,7 +14,5 @@ fun Session.toTab(context: Context, selected: Boolean? = null): Tab {
         this.url,
         this.url.urlToTrimmedHost(context),
         this.title,
-        selected,
-        this.thumbnail
-    )
+        selected)
 }

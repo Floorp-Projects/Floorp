@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.os.Parcelable
 import android.view.View
 import android.view.ViewGroup
@@ -53,8 +52,7 @@ data class Tab(
     val url: String,
     val hostname: String,
     val title: String,
-    val selected: Boolean? = null,
-    val thumbnail: Bitmap? = null
+    val selected: Boolean? = null
 ) : Parcelable
 
 fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {

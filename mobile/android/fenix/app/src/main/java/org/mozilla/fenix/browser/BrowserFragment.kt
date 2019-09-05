@@ -27,7 +27,6 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.readerview.ReaderViewFeature
-import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
@@ -62,7 +61,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private var quickActionSheetSessionObserver: QuickActionSheetSessionObserver? = null
 
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
-    private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,16 +89,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         val sessionManager = requireComponents.core.sessionManager
 
         return super.initializeUI(view)?.also {
-
-            thumbnailsFeature.set(
-                feature = ThumbnailsFeature(
-                    requireContext(),
-                    view.engineView,
-                    requireComponents.core.sessionManager
-                ),
-                owner = this,
-                view = view
-            )
 
             readerViewFeature.set(
                 feature = ReaderViewFeature(
