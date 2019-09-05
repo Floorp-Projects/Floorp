@@ -212,7 +212,9 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
   std::vector<uint8_t> iv(aMetadata.mIV);
   iv.insert(iv.end(), CENC_KEY_LEN - aMetadata.mIV.size(), 0);
 
-  ClearKeyUtils::DecryptAES(mKey, tmp, iv);
+  if (!ClearKeyUtils::DecryptAES(mKey, tmp, iv)) {
+    return Status::kDecryptError;
+  }
 
   if (aMetadata.NumSubsamples()) {
     // Take the decrypted buffer, split up into subsamples, and insert those

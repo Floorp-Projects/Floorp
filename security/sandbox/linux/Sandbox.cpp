@@ -640,9 +640,11 @@ void SetMediaPluginSandbox(const char* aFilePath) {
   auto files = new SandboxOpenedFiles();
   files->Add(std::move(plugin));
   files->Add("/dev/urandom", true);
+  files->Add("/etc/ld.so.cache");  // Needed for NSS in clearkey.
   files->Add("/sys/devices/system/cpu/cpu0/tsc_freq_khz");
   files->Add("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
   files->Add("/proc/cpuinfo");  // Info also available via CPUID instruction.
+  files->Add("/proc/sys/crypto/fips_enabled");  // Needed for NSS in clearkey.
 #ifdef __i386__
   files->Add("/proc/self/auxv");  // Info also in process's address space.
 #endif
