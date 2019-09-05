@@ -90,7 +90,8 @@ nsresult OfflineCacheUpdateParent::Schedule(
 
   bool offlinePermissionAllowed = false;
 
-  rv = service->OfflineAppAllowed(mLoadingPrincipal, &offlinePermissionAllowed);
+  rv = service->OfflineAppAllowed(mLoadingPrincipal, nullptr,
+                                  &offlinePermissionAllowed);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!offlinePermissionAllowed) return NS_ERROR_DOM_SECURITY_ERR;

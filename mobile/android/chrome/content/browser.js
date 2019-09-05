@@ -4479,6 +4479,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.addEventListener("pagehide", this, true);
     this.browser.addEventListener("pageshow", this, true);
+    this.browser.addEventListener("MozApplicationManifest", this, true);
     this.browser.addEventListener("TabPreZombify", this, true);
     this.browser.addEventListener("framefocusrequested", this, true);
     this.browser.addEventListener("focusin", this, true);
@@ -4641,6 +4642,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("pagehide", this, true);
     this.browser.removeEventListener("pageshow", this, true);
+    this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
     this.browser.removeEventListener("framefocusrequested", this, true);
     this.browser.removeEventListener("focusin", this, true);
@@ -5233,6 +5235,11 @@ Tab.prototype = {
 
       case "VideoBindingCast": {
         CastingApps.handleVideoBindingCast(this, aEvent);
+        break;
+      }
+
+      case "MozApplicationManifest": {
+        OfflineApps.offlineAppRequested(aEvent.originalTarget.defaultView);
         break;
       }
 
