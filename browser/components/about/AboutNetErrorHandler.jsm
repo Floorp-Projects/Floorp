@@ -10,6 +10,13 @@ const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+const { SessionStore } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
+const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserUtils",
@@ -19,10 +26,11 @@ ChromeUtils.defineModuleGetter(
 var AboutNetErrorHandler = {
   _inited: false,
   _topics: [
+    "Browser:EnableOnlineMode",
     "Browser:OpenCaptivePortalPage",
     "Browser:PrimeMitm",
     "Browser:ResetEnterpriseRootsPref",
-    "RecordCertErrorLoad",
+    "Browser:SSLErrorGoBack",
   ],
 
   init() {
@@ -64,6 +72,11 @@ var AboutNetErrorHandler = {
 
   receiveMessage(msg) {
     switch (msg.name) {
+      case "Browser:EnableOnlineMode":
+        // Reset network state and refresh the page.
+        Services.io.offline = false;
+        msg.target.browser.reload();
+        break;
       case "Browser:OpenCaptivePortalPage":
         Services.obs.notifyObservers(null, "ensure-captive-portal-tab");
         break;
@@ -74,19 +87,48 @@ var AboutNetErrorHandler = {
         Services.prefs.clearUserPref("security.enterprise_roots.enabled");
         Services.prefs.clearUserPref("security.enterprise_roots.auto-enabled");
         break;
-      case "RecordCertErrorLoad":
-        Services.telemetry.recordEvent(
-          "security.ui.certerror",
-          "load",
-          "aboutcerterror",
-          msg.data.errorCode,
-          {
-            has_sts: msg.data.has_sts.toString(),
-            is_frame: msg.data.is_frame.toString(),
-          }
-        );
+      case "Browser:SSLErrorGoBack":
+        this.goBackFromErrorPage(msg.target.browser.ownerGlobal);
         break;
     }
+  },
+
+  /**
+   * Re-direct the browser to the previous page or a known-safe page if no
+   * previous page is found in history.  This function is used when the user
+   * browses to a secure page with certificate issues and is presented with
+   * about:certerror.  The "Go Back" button should take the user to the previous
+   * or a default start page so that even when their own homepage is on a server
+   * that has certificate errors, we can get them somewhere safe.
+   */
+  goBackFromErrorPage(win) {
+    let state = JSON.parse(SessionStore.getTabState(win.gBrowser.selectedTab));
+    if (state.index == 1) {
+      // If the unsafe page is the first or the only one in history, go to the
+      // start page.
+      win.gBrowser.loadURI(this.getDefaultHomePage(win), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    } else {
+      win.gBrowser.goBack();
+    }
+  },
+
+  /**
+   * Return the default start page for the cases when the user's own homepage is
+   * infected, so we can get them somewhere safe.
+   */
+  getDefaultHomePage(win) {
+    let url = win.BROWSER_NEW_TAB_URL;
+    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+      return url;
+    }
+    url = HomePage.getDefault();
+    // If url is a pipe-delimited set of pages, just take the first one.
+    if (url.includes("|")) {
+      url = url.split("|")[0];
+    }
+    return url;
   },
 
   /**
