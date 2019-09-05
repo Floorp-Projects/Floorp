@@ -869,7 +869,7 @@ class UrlbarInput {
 
   startLayoutBreakout() {
     if (
-      this._layoutBreakoutPlaceholder ||
+      this.hasAttribute("breakout") ||
       !this.megabar ||
       !(
         (this.focused && !this.textbox.classList.contains("hidden-focus")) ||
@@ -894,23 +894,16 @@ class UrlbarInput {
     this.textbox.style.setProperty("--urlbar-width", px(inputRect.width));
     this.textbox.style.setProperty("--urlbar-height", px(inputRect.height));
 
-    let toolbarHeight = getBoundsWithoutFlushing(
-      this.textbox.closest("toolbar")
-    ).height;
+    let toolbarRect = getBoundsWithoutFlushing(this.textbox.closest("toolbar"));
     this.textbox.style.setProperty(
       "--urlbar-toolbar-height",
-      px(toolbarHeight)
+      px(toolbarRect.height)
     );
 
-    this._layoutBreakoutPlaceholder = this.document.createXULElement(
-      this.textbox.nodeName
-    );
-    this._layoutBreakoutPlaceholder.setAttribute(
-      "flex",
-      this.textbox.getAttribute("flex")
-    );
-    this._layoutBreakoutPlaceholder.style.height = px(inputRect.height);
-    this.textbox.before(this._layoutBreakoutPlaceholder);
+    // Ensure urlbar-container's height doesn't change.
+    let parentRect = getBoundsWithoutFlushing(this.textbox.parentNode);
+    this.textbox.parentNode.style.height = px(parentRect.height);
+
     this.setAttribute("breakout", "true");
   }
 
@@ -923,10 +916,7 @@ class UrlbarInput {
       return;
     }
     this.removeAttribute("breakout");
-    if (this._layoutBreakoutPlaceholder) {
-      this._layoutBreakoutPlaceholder.remove();
-      this._layoutBreakoutPlaceholder = null;
-    }
+    this.textbox.parentNode.style.height = "";
   }
 
   setPageProxyState(state) {
@@ -1705,7 +1695,7 @@ class UrlbarInput {
   }
 
   async _on_resize(event) {
-    if (!(this.megabar && this._layoutBreakoutPlaceholder)) {
+    if (!this.megabar || !this.hasAttribute("breakout")) {
       return;
     }
 
@@ -1713,7 +1703,7 @@ class UrlbarInput {
     let width = await this.window.promiseDocumentFlushed(() => {
       // We use the container because it remains flexible unlike the broken-out
       // Urlbar.
-      return this.textbox.closest("#urlbar-container").clientWidth;
+      return this.textbox.parentNode.clientWidth;
     });
     this.window.requestAnimationFrame(() => {
       this.textbox.style.setProperty("--urlbar-width", px(width));
