@@ -45,7 +45,28 @@ export default class ConfirmationDialog extends HTMLElement {
     }
   }
 
+  setKeyboardAccessForElementsExternalToDialog(enableTabbingOutsideDialog) {
+    const pageElements = document.querySelectorAll(
+      "login-item, login-list, menu-button, login-filter, fxaccounts-button, [tabindex]"
+    );
+
+    pageElements.forEach(el => {
+      if (!enableTabbingOutsideDialog) {
+        if (el.tabIndex > -1) {
+          el.dataset.oldTabIndex = el.tabIndex;
+        }
+        el.tabIndex = "-1";
+      } else if (el.dataset.oldTabIndex) {
+        el.tabIndex = el.dataset.oldTabIndex;
+        delete el.dataset.oldTabIndex;
+      } else {
+        el.removeAttribute("tabindex");
+      }
+    });
+  }
+
   hide() {
+    this.setKeyboardAccessForElementsExternalToDialog(true);
     this._cancelButton.removeEventListener("click", this);
     this._confirmButton.removeEventListener("click", this);
     this._dismissButton.removeEventListener("click", this);
@@ -56,6 +77,7 @@ export default class ConfirmationDialog extends HTMLElement {
   }
 
   show({ title, message, confirmButtonLabel }) {
+    this.setKeyboardAccessForElementsExternalToDialog(false);
     this.hidden = false;
 
     document.l10n.setAttributes(this._title, title);
