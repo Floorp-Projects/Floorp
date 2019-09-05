@@ -4615,6 +4615,7 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
@@ -4631,6 +4632,7 @@ telemetry.test:
     kind: string
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
@@ -4647,6 +4649,7 @@ telemetry.test:
     kind: boolean
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'

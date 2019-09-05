@@ -1308,8 +1308,20 @@ public class GeckoViewActivity extends AppCompatActivity {
     private final class ExampleTelemetryDelegate
             implements RuntimeTelemetry.Delegate {
         @Override
-        public void onTelemetryReceived(final @NonNull RuntimeTelemetry.Metric metric) {
-            Log.d(LOGTAG, "onTelemetryReceived " + metric);
+        public void onHistogram(final @NonNull RuntimeTelemetry.Metric<long[]> histogram) {
+            Log.d(LOGTAG, "onHistogram " + histogram);
+        }
+        @Override
+        public void onBooleanScalar(final @NonNull RuntimeTelemetry.Metric<Boolean> scalar) {
+            Log.d(LOGTAG, "onBooleanScalar " + scalar);
+        }
+        @Override
+        public void onLongScalar(final @NonNull RuntimeTelemetry.Metric<Long> scalar) {
+            Log.d(LOGTAG, "onLongScalar " + scalar);
+        }
+        @Override
+        public void onStringScalar(final @NonNull RuntimeTelemetry.Metric<String> scalar) {
+            Log.d(LOGTAG, "onStringScalar " + scalar);
         }
     }
 }
