@@ -1025,13 +1025,11 @@ class HuffmanPreludeReader {
 
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseDuplicateTableError(
       const NormalizedInterfaceAndField identity) {
-    MOZ_CRASH("Duplicate table.");
     return reader.raiseError("Duplicate table.");
   }
 
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidTableData(
       const NormalizedInterfaceAndField identity) {
-    MOZ_CRASH("Invalid data while reading table.");
     return reader.raiseError("Invalid data while reading table.");
   }
 };
