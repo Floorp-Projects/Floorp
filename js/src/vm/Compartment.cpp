@@ -419,7 +419,19 @@ bool Compartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec) {
   return true;
 }
 
-void Compartment::traceWrapperTargetsInCollectedZones(JSTracer* trc) {
+static inline bool ShouldTraceWrapper(JSObject* wrapper,
+                                      Compartment::EdgeSelector whichEdges) {
+  if (whichEdges == Compartment::AllEdges) {
+    return true;
+  }
+
+  bool isGray = wrapper->isMarkedGray();
+  return (whichEdges == Compartment::NonGrayEdges && !isGray) ||
+         (whichEdges == Compartment::GrayEdges && isGray);
+}
+
+void Compartment::traceWrapperTargetsInCollectedZones(JSTracer* trc,
+                                                      EdgeSelector whichEdges) {
   // Trace cross compartment wrapper private pointers into collected zones to
   // either mark or update them. Wrapped object pointers are updated by
   // sweepCrossCompartmentObjectWrappers().
@@ -430,33 +442,39 @@ void Compartment::traceWrapperTargetsInCollectedZones(JSTracer* trc) {
 
   for (WrappedObjectCompartmentEnum c(this); !c.empty(); c.popFront()) {
     Zone* zone = c.front()->zone();
-    if (!zone->isCollecting()) {
+    if (!zone->isCollectingFromAnyThread()) {
       continue;
     }
 
     for (ObjectWrapperEnum e(this, c); !e.empty(); e.popFront()) {
       JSObject* obj = e.front().value().unbarrieredGet();
       ProxyObject* wrapper = &obj->as<ProxyObject>();
-      ProxyObject::traceEdgeToTarget(trc, wrapper);
+      if (ShouldTraceWrapper(wrapper, whichEdges)) {
+        ProxyObject::traceEdgeToTarget(trc, wrapper);
+      }
     }
   }
 }
 
 /* static */
-void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
-  gcstats::AutoPhase ap(trc->runtime()->gc.stats(),
-                        gcstats::PhaseKind::MARK_CCWS);
+void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+    JSTracer* trc, EdgeSelector whichEdges) {
   MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
+
   for (ZonesIter zone(trc->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-    if (zone->isCollecting()) {
+    if (zone->isCollectingFromAnyThread()) {
       continue;
     }
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-      c->traceWrapperTargetsInCollectedZones(trc);
+      c->traceWrapperTargetsInCollectedZones(trc, whichEdges);
     }
   }
-  DebugAPI::traceCrossCompartmentEdges(trc);
+
+  // Currently we trace all debugger edges as black.
+  if (whichEdges != GrayEdges) {
+    DebugAPI::traceCrossCompartmentEdges(trc);
+  }
 }
 
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {
@@ -482,7 +500,7 @@ void Compartment::fixupCrossCompartmentObjectWrappersAfterMovingGC(
 
   // Trace the wrappers in the map to update their cross-compartment edges
   // to wrapped values in other compartments that may have been moved.
-  traceWrapperTargetsInCollectedZones(trc);
+  traceWrapperTargetsInCollectedZones(trc, AllEdges);
 }
 
 void Compartment::fixupAfterMovingGC(JSTracer* trc) {

@@ -3631,16 +3631,16 @@ bool UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
 
   TenuredCell& tenured = cell->asTenured();
 
-  // If the cell is in a zone that we're currently marking gray, then it's
-  // possible that it is currently white but will end up gray. To handle this
-  // case, push any cells in zones that are currently being marked onto the
-  // mark stack and they will eventually get marked black.
+  // If the cell is in a zone that we're currently marking, then it's possible
+  // that it is currently white but will end up gray. To handle this case, push
+  // any cells in zones that are currently being marked onto the mark stack and
+  // they will eventually get marked black.
   Zone* zone = tenured.zone();
-  if (zone->isGCMarkingBlackAndGray()) {
+  if (zone->isGCMarking()) {
     if (!cell->isMarkedBlack()) {
       Cell* tmp = cell;
-      TraceManuallyBarrieredGenericPointerEdge(zone->barrierTracer(), &tmp,
-                                               "read barrier");
+      JSTracer* trc = &runtime()->gc.marker;
+      TraceManuallyBarrieredGenericPointerEdge(trc, &tmp, "read barrier");
       MOZ_ASSERT(tmp == cell);
       unmarkedAny = true;
     }
