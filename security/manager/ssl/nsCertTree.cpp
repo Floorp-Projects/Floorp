@@ -276,7 +276,7 @@ nsCertTree::nsCertCompareFunc nsCertTree::GetCompareFuncFromCertType(
 
 struct nsCertAndArrayAndPositionAndCounterAndTracker {
   RefPtr<nsCertAddonInfo> certai;
-  nsTArray<RefPtr<nsCertTreeDispInfo> >* array;
+  nsTArray<RefPtr<nsCertTreeDispInfo>>* array;
   int position;
   int counter;
   nsTHashtable<nsCStringHashKey>* tracker;
@@ -333,7 +333,7 @@ static void CollectAllHostPortOverridesCallback(const nsCertOverride& aSettings,
 }
 
 struct nsArrayAndPositionAndCounterAndTracker {
-  nsTArray<RefPtr<nsCertTreeDispInfo> >* array;
+  nsTArray<RefPtr<nsCertTreeDispInfo>>* array;
   int position;
   int counter;
   nsTHashtable<nsCStringHashKey>* tracker;
@@ -370,12 +370,10 @@ static void AddRemaningHostPortOverridesCallback(
   }
 }
 
-nsresult nsCertTree::GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
-                                                uint32_t aWantedType,
-                                                nsCertCompareFunc aCertCmpFn,
-                                                void* aCertCmpFnArg) {
+nsresult nsCertTree::GetCertsByTypeFromCertList(
+    const nsTArray<RefPtr<nsIX509Cert>>& aCertList, uint32_t aWantedType,
+    nsCertCompareFunc aCertCmpFn, void* aCertCmpFnArg) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("GetCertsByTypeFromCertList"));
-  if (!aCertList) return NS_ERROR_FAILURE;
 
   if (!mOriginalOverrideService) return NS_ERROR_FAILURE;
 
@@ -387,27 +385,7 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
   }
 
   int count = 0;
-  nsCOMPtr<nsISimpleEnumerator> certListEnumerator;
-  nsresult rv = aCertList->GetEnumerator(getter_AddRefs(certListEnumerator));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  bool hasMore = false;
-  rv = certListEnumerator->HasMoreElements(&hasMore);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  while (hasMore) {
-    nsCOMPtr<nsISupports> certSupports;
-    rv = certListEnumerator->GetNext(getter_AddRefs(certSupports));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports);
-    if (!cert) {
-      return NS_ERROR_FAILURE;
-    }
-
+  for (const auto& cert : aCertList) {
     bool wantThisCert = (aWantedType == nsIX509Cert::ANY_CERT);
     bool wantThisCertIfNoOverrides = false;
     bool wantThisCertIfHaveOverrides = false;
@@ -415,7 +393,7 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
 
     if (!wantThisCert) {
       uint32_t thisCertType;
-      rv = cert->GetCertType(&thisCertType);
+      nsresult rv = cert->GetCertType(&thisCertType);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -531,11 +509,6 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
         count += cap.counter;
       }
     }
-
-    rv = certListEnumerator->HasMoreElements(&hasMore);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
   }
 
   if (aWantedType == nsIX509Cert::SERVER_CERT) {
@@ -556,7 +529,8 @@ nsresult nsCertTree::GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
 // Load all of the certificates in the DB for this type.  Sort them
 // by token, organization, then common name.
 NS_IMETHODIMP
-nsCertTree::LoadCertsFromCache(nsIX509CertList* aCache, uint32_t aType) {
+nsCertTree::LoadCertsFromCache(const nsTArray<RefPtr<nsIX509Cert>>& aCache,
+                               uint32_t aType) {
   if (mTreeArray) {
     FreeCertArray();
     delete[] mTreeArray;
@@ -584,8 +558,8 @@ nsCertTree::LoadCerts(uint32_t aType) {
   ClearCompareHash();
 
   nsCOMPtr<nsIX509CertDB> certdb(do_GetService(NS_X509CERTDB_CONTRACTID));
-  nsCOMPtr<nsIX509CertList> certList;
-  nsresult rv = certdb->GetCerts(getter_AddRefs(certList));
+  nsTArray<RefPtr<nsIX509Cert>> certList;
+  nsresult rv = certdb->GetCerts(certList);
   if (NS_FAILED(rv)) {
     return rv;
   }

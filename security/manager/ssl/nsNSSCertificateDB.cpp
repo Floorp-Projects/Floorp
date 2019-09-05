@@ -397,6 +397,24 @@ nsresult nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
   return ImportCertsIntoPermanentStorage(certList);
 }
 
+nsresult nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
+    const UniqueCERTCertList& aCertListIn,
+    nsTArray<RefPtr<nsIX509Cert>>& aCertListOut) {
+  if (!aCertListIn.get()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  for (CERTCertListNode* node = CERT_LIST_HEAD(aCertListIn.get());
+       !CERT_LIST_END(node, aCertListIn.get()); node = CERT_LIST_NEXT(node)) {
+    RefPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
+    if (!cert) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aCertListOut.AppendElement(cert);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
                                        uint32_t type,
@@ -1090,7 +1108,7 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::GetCerts(nsIX509CertList** _retval) {
+nsNSSCertificateDB::GetCerts(nsTArray<RefPtr<nsIX509Cert>>& _retval) {
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1102,15 +1120,12 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList** _retval) {
   }
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  nsCOMPtr<nsIX509CertList> nssCertList;
   UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
-
-  // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
-  // (returns an empty list)
-  nssCertList = new nsNSSCertList(std::move(certList));
-
-  nssCertList.forget(_retval);
-  return NS_OK;
+  if (!certList) {
+    return NS_ERROR_FAILURE;
+  }
+  return nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(certList,
+                                                                  _retval);
 }
 
 nsresult VerifyCertAtTime(nsIX509Cert* aCert,

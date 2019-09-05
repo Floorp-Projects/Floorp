@@ -28,6 +28,10 @@ class nsNSSCertificateDB final : public nsIX509CertDB
   static nsresult FindCertByDBKey(const nsACString& aDBKey,
                                   mozilla::UniqueCERTCertificate& cert);
 
+  static nsresult ConstructCertArrayFromUniqueCertList(
+      const mozilla::UniqueCERTCertList& aCertListIn,
+      nsTArray<RefPtr<nsIX509Cert>>& aCertListOut);
+
  protected:
   virtual ~nsNSSCertificateDB() {}
 

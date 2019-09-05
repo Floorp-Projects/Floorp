@@ -191,7 +191,7 @@ function insertTrustAnchorsFromDatabase() {
   const TRUST_TYPE = Ci.nsIX509CertDB.TRUSTED_SSL;
 
   // Iterate through the whole Cert DB
-  for (let cert of CertDb.getCerts().getEnumerator()) {
+  for (let cert of CertDb.getCerts()) {
     // Find the certificate in our existing list. Do it here because we need to check if
     // it's untrusted too.
 

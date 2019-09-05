@@ -9,7 +9,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
-#include "nsIX509CertList.h"
 #include "nsServiceManagerUtils.h"
 
 TEST(psm_CertDB, Test)
@@ -29,30 +28,17 @@ TEST(psm_CertDB, Test)
     ASSERT_TRUE(certdb)
     << "couldn't get certdb";
 
-    nsCOMPtr<nsIX509CertList> certList;
-    rv = certdb->GetCerts(getter_AddRefs(certList));
+    nsTArray<RefPtr<nsIX509Cert>> certList;
+    rv = certdb->GetCerts(certList);
     ASSERT_TRUE(NS_SUCCEEDED(rv))
     << "couldn't get list of certificates";
 
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = certList->GetEnumerator(getter_AddRefs(enumerator));
-    ASSERT_TRUE(NS_SUCCEEDED(rv))
-    << "couldn't enumerate certificate list";
-
     bool foundBuiltIn = false;
-    bool hasMore = false;
-    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
-      nsCOMPtr<nsISupports> supports;
-      ASSERT_TRUE(NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(supports))))
-      << "couldn't get next certificate";
-
-      nsCOMPtr<nsIX509Cert> cert(do_QueryInterface(supports));
+    for (const auto& cert : certList) {
       ASSERT_TRUE(cert)
-      << "couldn't QI to nsIX509Cert";
-
+      << "certlist shouldn't have null certificate";
       ASSERT_TRUE(NS_SUCCEEDED(cert->GetIsBuiltInRoot(&foundBuiltIn)))
       << "GetIsBuiltInRoot failed";
-
       if (foundBuiltIn) {
         break;
       }

@@ -75,7 +75,7 @@ let gTestcases = [
 
 function doesCertExist(commonName) {
   let allCerts = gCertDB.getCerts();
-  for (let cert of allCerts.getEnumerator()) {
+  for (let cert of allCerts) {
     if (cert.isBuiltInRoot) {
       continue;
     }

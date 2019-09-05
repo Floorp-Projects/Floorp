@@ -8,7 +8,6 @@
 #include "nsITreeView.idl"
 
 interface nsIX509Cert;
-interface nsIX509CertList;
 
 [scriptable, uuid(d0180863-606e-49e6-8324-cf45ed4dd891)]
 interface nsICertTreeItem : nsISupports {
@@ -23,7 +22,7 @@ interface nsICertTree : nsITreeView {
   [must_use]
   void loadCerts(in unsigned long type);
   [must_use]
-  void loadCertsFromCache(in nsIX509CertList cache, in unsigned long type);
+  void loadCertsFromCache(in Array<nsIX509Cert> cache, in unsigned long type);
 
   [must_use]
   nsIX509Cert getCert(in unsigned long index);
