@@ -12,8 +12,12 @@
   }, 'NDEFRecord constructor without init dict');
 
   test(() => {
-    assert_throws(new TypeError, () => new NDEFRecord(null),
-        "The record has neither type nor data.");
+    const record = new NDEFRecord(null);
+    assert_equals(record.recordType.length, 0, 'empty recordType');
+    assert_equals(record.mediaType.length, 0, 'empty mediaType');
+    assert_equals(record.toText(), null, 'toText() returns null');
+    assert_equals(record.toArrayBuffer(), null, 'toArrayBuffer() returns null');
+    assert_equals(record.toJSON(), null, 'toJSON() returns null');
   }, 'NDEFRecord constructor with null init dict');
 
   test(() => {
