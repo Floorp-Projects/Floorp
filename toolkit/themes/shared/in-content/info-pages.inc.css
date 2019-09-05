@@ -116,7 +116,7 @@ button {
 /* Trees */
 .tree-container {
   margin-top: 1.2em;
-  flex-grow: 1;
+  flex: 1 0px;
   min-height: 12em;
 }
 
