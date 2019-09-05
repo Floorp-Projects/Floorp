@@ -6,8 +6,8 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    addressable (2.6.0)
-      public_suffix (>= 2.0.2, < 4.0)
+    addressable (2.7.0)
+      public_suffix (>= 2.0.2, < 5.0)
     coffee-script (2.4.1)
       coffee-script-source
       execjs
@@ -219,7 +219,7 @@ GEM
     ruby-enum (0.7.2)
       i18n
     ruby_dep (1.5.0)
-    rubyzip (1.2.2)
+    rubyzip (1.2.3)
     safe_yaml (1.0.5)
     sass (3.7.4)
       sass-listen (~> 4.0.0)
@@ -246,8 +246,6 @@ DEPENDENCIES
   jekyll (~> 3.8.5)
   jekyll-feed (~> 0.11.0)
   minima (~> 2.5.0)
-  rubyzip (>= 1.2.2)
-  tzinfo-data
 
 BUNDLED WITH
-   1.16.1
+   2.0.2
