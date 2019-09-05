@@ -7,9 +7,16 @@
 var EXPORTED_SYMBOLS = ["OfflineAppsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { ActorChild } = ChromeUtils.import(
   "resource://gre/modules/ActorChild.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+});
 
 class OfflineAppsChild extends ActorChild {
   constructor(dispatcher) {
@@ -34,7 +41,7 @@ class OfflineAppsChild extends ActorChild {
 
   handleEvent(event) {
     if (event.type == "MozApplicationManifest") {
-      this.offlineAppRequested(event.originalTarget.defaultView);
+      this.registerWindow(event.originalTarget.defaultView);
     }
   }
 
@@ -57,37 +64,6 @@ class OfflineAppsChild extends ActorChild {
     } catch (e) {
       return null;
     }
-  }
-
-  offlineAppRequested(aContentWindow) {
-    this.registerWindow(aContentWindow);
-    if (!Services.prefs.getBoolPref("browser.offline-apps.notify")) {
-      return;
-    }
-
-    let currentURI = aContentWindow.document.documentURIObject;
-    // don't bother showing UI if the user has already made a decision
-    if (
-      Services.perms.testExactPermission(currentURI, "offline-app") !=
-      Services.perms.UNKNOWN_ACTION
-    ) {
-      return;
-    }
-
-    try {
-      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
-        // all pages can use offline capabilities, no need to ask the user
-        return;
-      }
-    } catch (e) {
-      // this pref isn't set by default, ignore failures
-    }
-    let docId = ++this._docId;
-    this._docIdMap.set(docId, Cu.getWeakReference(aContentWindow.document));
-    this.mm.sendAsyncMessage("OfflineApps:RequestPermission", {
-      uri: currentURI.spec,
-      docId,
-    });
   }
 
   _startFetching(aDocument) {
@@ -127,7 +103,10 @@ class OfflineAppsChild extends ActorChild {
       let cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
       let uri = cacheUpdate.manifestURI;
       if (uri && this._docManifestSet.has(uri.spec)) {
-        this.mm.sendAsyncMessage("OfflineApps:CheckUsage", { uri: uri.spec });
+        this.mm.sendAsyncMessage("OfflineApps:CheckUsage", {
+          uri: uri.spec,
+          principal: E10SUtils.serializePrincipal(cacheUpdate.loadingPrincipal),
+        });
       }
     }
   }
