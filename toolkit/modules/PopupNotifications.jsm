@@ -1028,12 +1028,16 @@ PopupNotifications.prototype = {
         popupnotification.removeAttribute("menucommand");
       }
 
+      let classes = "popup-notification-icon";
       if (n.options.popupIconClass) {
-        let classes = "popup-notification-icon " + n.options.popupIconClass;
-        popupnotification.setAttribute("iconclass", classes);
+        classes += " " + n.options.popupIconClass;
       }
+      popupnotification.setAttribute("iconclass", classes);
+
       if (n.options.popupIconURL) {
         popupnotification.setAttribute("icon", n.options.popupIconURL);
+      } else {
+        popupnotification.removeAttribute("icon");
       }
 
       if (n.options.learnMoreURL) {
@@ -1104,14 +1108,13 @@ PopupNotifications.prototype = {
             telemetryStatId++;
           }
         }
-
-        if (n.secondaryActions.length < 2) {
-          popupnotification.setAttribute("dropmarkerhidden", "true");
-        }
       } else {
         popupnotification.setAttribute("secondarybuttonhidden", "true");
-        popupnotification.setAttribute("dropmarkerhidden", "true");
       }
+      popupnotification.setAttribute(
+        "dropmarkerhidden",
+        n.secondaryActions.length < 2 ? "true" : "false"
+      );
 
       let checkbox = n.options.checkbox;
       if (checkbox && checkbox.label) {
