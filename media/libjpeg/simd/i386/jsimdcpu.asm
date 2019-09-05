@@ -51,35 +51,14 @@ EXTN(jpeg_simd_cpu_support):
     xor         eax, edx
     jz          near .return            ; CPUID is not supported
 
-    ; Check for MMX instruction support
+    ; Check whether CPUID leaf 07H is supported
+    ; (leaf 07H is used to check for AVX2 instruction support)
     xor         eax, eax
     cpuid
     test        eax, eax
     jz          near .return
-
-    xor         eax, eax
-    inc         eax
-    cpuid
-    mov         eax, edx                ; eax = Standard feature flags
-
-    test        eax, 1<<23              ; bit23:MMX
-    jz          short .no_mmx
-    or          edi, byte JSIMD_MMX
-.no_mmx:
-    test        eax, 1<<25              ; bit25:SSE
-    jz          short .no_sse
-    or          edi, byte JSIMD_SSE
-.no_sse:
-    test        eax, 1<<26              ; bit26:SSE2
-    jz          short .no_sse2
-    or          edi, byte JSIMD_SSE2
-.no_sse2:
-
-    ; Check for level 7 support
-    xor         eax, eax
-    cpuid
     cmp         eax, 7
-    jl          short .no_avx2
+    jl          short .no_avx2          ; Maximum leaf < 07H
 
     ; Check for AVX2 instruction support
     mov         eax, 7
@@ -93,10 +72,8 @@ EXTN(jpeg_simd_cpu_support):
     mov         eax, 1
     xor         ecx, ecx
     cpuid
-    test        ecx, 1<<26
-    jz          short .no_avx2          ; O/S does not support XSAVE
     test        ecx, 1<<27
-    jz          short .no_avx2          ; O/S does not support OSXSAVE
+    jz          short .no_avx2          ; O/S does not support XSAVE
     test        ecx, 1<<28
     jz          short .no_avx2          ; CPU does not support AVX2
 
@@ -109,6 +86,26 @@ EXTN(jpeg_simd_cpu_support):
 
     or          edi, JSIMD_AVX2
 .no_avx2:
+
+    ; Check CPUID leaf 01H for MMX, SSE, and SSE2 support
+    xor         eax, eax
+    inc         eax
+    cpuid
+    mov         eax, edx                ; eax = Standard feature flags
+
+    ; Check for MMX instruction support
+    test        eax, 1<<23              ; bit23:MMX
+    jz          short .no_mmx
+    or          edi, byte JSIMD_MMX
+.no_mmx:
+    test        eax, 1<<25              ; bit25:SSE
+    jz          short .no_sse
+    or          edi, byte JSIMD_SSE
+.no_sse:
+    test        eax, 1<<26              ; bit26:SSE2
+    jz          short .no_sse2
+    or          edi, byte JSIMD_SSE2
+.no_sse2:
 
     ; Check for 3DNow! instruction support
     mov         eax, 0x80000000

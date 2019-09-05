@@ -2,12 +2,13 @@
  * Loongson MMI optimizations for libjpeg-turbo
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2014-2015, D. R. Commander.  All Rights Reserved.
- * Copyright (C) 2016-2017, Loongson Technology Corporation Limited, BeiJing.
+ * Copyright (C) 2014-2015, 2019, D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2016-2018, Loongson Technology Corporation Limited, BeiJing.
  *                          All Rights Reserved.
  * Authors:  ZhuChen     <zhuchen@loongson.cn>
  *           SunZhangzhi <sunzhangzhi-cq@loongson.cn>
  *           CaiWanwei   <caiwanwei@loongson.cn>
+ *           ZhangLixia  <zhanglixia-hf@loongson.cn>
  *
  * Based on the x86 SIMD extension for IJG JPEG library
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -184,9 +185,15 @@ void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
               "$14", "memory"
            );
       } else {
-        mmA = _mm_load_si64((__m64 *)&inptr[0]);
-        mmG = _mm_load_si64((__m64 *)&inptr[8]);
-        mmF = _mm_load_si64((__m64 *)&inptr[16]);
+        if (!(((long)inptr) & 7)) {
+          mmA = _mm_load_si64((__m64 *)&inptr[0]);
+          mmG = _mm_load_si64((__m64 *)&inptr[8]);
+          mmF = _mm_load_si64((__m64 *)&inptr[16]);
+        } else {
+          mmA = _mm_loadu_si64((__m64 *)&inptr[0]);
+          mmG = _mm_loadu_si64((__m64 *)&inptr[8]);
+          mmF = _mm_loadu_si64((__m64 *)&inptr[16]);
+        }
         inptr += RGB_PIXELSIZE * 8;
       }
       mmD = mmA;
@@ -268,10 +275,17 @@ void jsimd_rgb_ycc_convert_mmi(JDIMENSION image_width, JSAMPARRAY input_buf,
             : "$f0", "$f2", "$8", "$9", "$10", "$11", "$13", "memory"
            );
       } else {
-        mmA = _mm_load_si64((__m64 *)&inptr[0]);
-        mmF = _mm_load_si64((__m64 *)&inptr[8]);
-        mmD = _mm_load_si64((__m64 *)&inptr[16]);
-        mmC = _mm_load_si64((__m64 *)&inptr[24]);
+        if (!(((long)inptr) & 7)) {
+          mmA = _mm_load_si64((__m64 *)&inptr[0]);
+          mmF = _mm_load_si64((__m64 *)&inptr[8]);
+          mmD = _mm_load_si64((__m64 *)&inptr[16]);
+          mmC = _mm_load_si64((__m64 *)&inptr[24]);
+        } else {
+          mmA = _mm_loadu_si64((__m64 *)&inptr[0]);
+          mmF = _mm_loadu_si64((__m64 *)&inptr[8]);
+          mmD = _mm_loadu_si64((__m64 *)&inptr[16]);
+          mmC = _mm_loadu_si64((__m64 *)&inptr[24]);
+        }
         inptr += RGB_PIXELSIZE * 8;
       }
       mmB = mmA;

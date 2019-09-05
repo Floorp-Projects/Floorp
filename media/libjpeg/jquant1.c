@@ -154,7 +154,7 @@ typedef struct {
    */
   boolean is_padded;            /* is the colorindex padded for odither? */
 
-  int Ncolors[MAX_Q_COMPS];     /* # of values alloced to each component */
+  int Ncolors[MAX_Q_COMPS];     /* # of values allocated to each component */
 
   /* Variables for ordered dithering */
   int row_index;                /* cur row's vertical index in dither matrix */
