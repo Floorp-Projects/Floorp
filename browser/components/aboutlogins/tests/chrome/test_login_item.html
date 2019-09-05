@@ -124,8 +124,14 @@ add_task(async function test_set_login() {
   let copyUsernameButton = gLoginItem.shadowRoot.querySelector(".copy-username-button");
   ok(copyUsernameButton.disabled, "The copy-username-button should be disabled if there is no username");
 
+  usernameInput.placeholder = "dummy placeholder";
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
-  is(document.l10n.getAttributes(usernameInput).id, null, "username field should have no placeholder when editing");
+  is(
+    document.l10n.getAttributes(usernameInput).id,
+    null,
+    "there should be no placeholder id on the username input in edit mode"
+  );
+  is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
 });
 
 add_task(async function test_update_breaches() {
@@ -150,6 +156,8 @@ add_task(async function test_breach_alert_is_correctly_hidden() {
 
 add_task(async function test_edit_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
+  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
+  usernameInput.placeholder = "dummy placeholder";
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
   await asyncElementRendered();
 
@@ -159,9 +167,13 @@ add_task(async function test_edit_login() {
   let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
   ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be populated");
-  let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
-  is(document.l10n.getAttributes(usernameInput).id, null, "username field should have no placeholder in edit mode");
+  is(
+    document.l10n.getAttributes(usernameInput).id,
+    null,
+    "there should be no placeholder id on the username input in edit mode"
+  );
+  is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
