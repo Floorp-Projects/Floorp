@@ -27,6 +27,7 @@
 #include "stddef.h"
 #include "content_decryption_module.h"
 #include "content_decryption_module_ext.h"
+#include "nss.h"
 
 #ifndef XP_WIN
 #  include <sys/types.h>
@@ -64,6 +65,11 @@ void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
     return nullptr;
   }
 #endif
+
+  if (NSS_NoDB_Init(nullptr) == SECFailure) {
+    CK_LOGE("Unable to initialize NSS");
+    return nullptr;
+  }
 
 #ifdef MOZILLA_OFFICIAL
   // Test that we're able to read the host files.

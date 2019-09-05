@@ -1372,7 +1372,13 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
         return Trap(OpenTrap, mFiles);
 
       case __NR_brk:
+      // Because Firefox on glibc resorts to the fallback implementation
+      // mentioned in bug 1576006, we must explicitly allow the get*id()
+      // functions in order to use NSS in the clearkey CDM.
+      CASES_FOR_getuid:
+      CASES_FOR_getgid:
       CASES_FOR_geteuid:
+      CASES_FOR_getegid:
         return Allow();
       case __NR_sched_get_priority_min:
       case __NR_sched_get_priority_max:

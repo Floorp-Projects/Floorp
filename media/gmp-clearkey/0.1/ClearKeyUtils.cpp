@@ -35,8 +35,10 @@
 // on Unix systems.
 #include "stddef.h"
 #include "content_decryption_module.h"
-#include "openaes/oaes_lib.h"
+#include "pk11pub.h"
+#include "prerror.h"
 #include "psshparser/PsshParser.h"
+#include "secmodt.h"
 
 using namespace cdm;
 
@@ -82,39 +84,46 @@ void CK_LogArray(const char* prepend, const uint8_t* aData,
   CK_LOGD("%s%s", prepend, data.c_str());
 }
 
-static void IncrementIV(vector<uint8_t>& aIV) {
-  using mozilla::BigEndian;
-
-  assert(aIV.size() == 16);
-  BigEndian::writeUint64(&aIV[8], BigEndian::readUint64(&aIV[8]) + 1);
-}
-
 /* static */
-void ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
+bool ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
                                vector<uint8_t>& aData, vector<uint8_t>& aIV) {
   assert(aIV.size() == CENC_KEY_LEN);
   assert(aKey.size() == CENC_KEY_LEN);
 
-  OAES_CTX* aes = oaes_alloc();
-  oaes_key_import_data(aes, &aKey[0], aKey.size());
-  oaes_set_option(aes, OAES_OPTION_ECB, nullptr);
-
-  for (size_t i = 0; i < aData.size(); i += CENC_KEY_LEN) {
-    size_t encLen;
-    oaes_encrypt(aes, &aIV[0], CENC_KEY_LEN, nullptr, &encLen);
-
-    vector<uint8_t> enc(encLen);
-    oaes_encrypt(aes, &aIV[0], CENC_KEY_LEN, &enc[0], &encLen);
-
-    assert(encLen >= 2 * OAES_BLOCK_SIZE + CENC_KEY_LEN);
-    size_t blockLen = std::min(aData.size() - i, CENC_KEY_LEN);
-    for (size_t j = 0; j < blockLen; j++) {
-      aData[i + j] ^= enc[2 * OAES_BLOCK_SIZE + j];
-    }
-    IncrementIV(aIV);
+  PK11SlotInfo* slot = PK11_GetInternalKeySlot();
+  if (!slot) {
+    CK_LOGE("Failed to get internal PK11 slot");
+    return false;
   }
 
-  oaes_free(&aes);
+  SECItem keyItem = {siBuffer, (unsigned char*)&aKey[0], CENC_KEY_LEN};
+  PK11SymKey* key = PK11_ImportSymKey(slot, CKM_AES_CTR, PK11_OriginUnwrap,
+                                      CKA_ENCRYPT, &keyItem, nullptr);
+  PK11_FreeSlot(slot);
+  if (!key) {
+    CK_LOGE("Failed to import sym key");
+    return false;
+  }
+
+  CK_AES_CTR_PARAMS params;
+  params.ulCounterBits = 32;
+  memcpy(&params.cb, &aIV[0], CENC_KEY_LEN);
+  SECItem paramItem = {siBuffer, (unsigned char*)&params,
+                       sizeof(CK_AES_CTR_PARAMS)};
+
+  unsigned int outLen = 0;
+  auto rv = PK11_Decrypt(key, CKM_AES_CTR, &paramItem, &aData[0], &outLen,
+                         aData.size(), &aData[0], aData.size());
+
+  aData.resize(outLen);
+  PK11_FreeSymKey(key);
+
+  if (rv != SECSuccess) {
+    CK_LOGE("PK11_Decrypt() failed");
+    return false;
+  }
+
+  return true;
 }
 
 /**

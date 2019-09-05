@@ -79,6 +79,9 @@ class GMPChild : public PGMPChild {
   nsString mPluginPath;
   nsCString mStorageId;
   UniquePtr<GMPLoader> mGMPLoader;
+#ifdef XP_LINUX
+  nsTArray<void*> mLibHandles;
+#endif
 };
 
 }  // namespace gmp
