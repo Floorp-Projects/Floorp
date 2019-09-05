@@ -834,6 +834,10 @@ class PictureInPictureChild extends ActorChild {
         this.pause();
         break;
       }
+      case "PictureInPicture:KeyToggle": {
+        this.keyToggle();
+        break;
+      }
     }
   }
 
@@ -956,6 +960,25 @@ class PictureInPictureChild extends ActorChild {
     let video = this.weakVideo;
     if (video) {
       video.pause();
+    }
+  }
+
+  /**
+   * The keyboard was used to attempt to open Picture-in-Picture. In this case,
+   * find the focused window, and open Picture-in-Picture for the first
+   * available video. We suspect this heuristic will handle most cases, though
+   * we might refine this later on.
+   */
+  keyToggle() {
+    let focusedWindow = Services.focus.focusedWindow;
+    if (focusedWindow) {
+      let doc = focusedWindow.document;
+      if (doc) {
+        let video = doc.querySelector("video");
+        if (video) {
+          this.togglePictureInPicture(video);
+        }
+      }
     }
   }
 }

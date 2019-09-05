@@ -44,6 +44,7 @@
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="ReaderParent.toggleReaderMode(event);"/>
+    <command id="View:PictureInPicture" oncommand="PictureInPicture.onCommand(event);"/>
     <command id="cmd_find" oncommand="gLazyFindCommand('onFindCommand')"/>
     <command id="cmd_findAgain" oncommand="gLazyFindCommand('onFindAgainCommand', false)"/>
     <command id="cmd_findPrevious" oncommand="gLazyFindCommand('onFindAgainCommand', true)"/>
@@ -210,6 +211,12 @@
 #else
     <key id="key_toggleReaderMode" keycode="&toggleReaderMode.win.keycode;" command="View:ReaderView" disabled="true"/>
 #endif
+
+#ifdef XP_WIN
+    <key id="key_togglePictureInPicture" key="&togglePictureInPicture.key;" command="View:PictureInPicture" modifiers="accel,shift"/>
+    <key                                 key="&togglePictureInPicture.key2;" command="View:PictureInPicture" modifiers="accel,shift"/>
+#endif
+
     <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
     <key key="&reloadCmd.commandkey;" command="Browser:ReloadSkipCache" modifiers="accel,shift" id="key_reload_skip_cache"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
