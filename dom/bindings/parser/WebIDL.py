@@ -6729,7 +6729,9 @@ class Parser(Tokenizer):
         """
         t = p[2]
         assert isinstance(t, IDLType)
-        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 3), p[3])
+        # Arg names can be reserved identifiers
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 3), p[3],
+                                             allowForbidden=True)
 
         defaultValue = p[4]
 
@@ -6746,7 +6748,9 @@ class Parser(Tokenizer):
         """
         t = p[1]
         assert isinstance(t, IDLType)
-        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 3), p[3])
+        # Arg names can be reserved identifiers
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 3), p[3],
+                                             allowForbidden=True)
 
         variadic = p[2]
 

@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - fetch
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.visual_metrics:transforms
+
+jobs:
+    visual-metrics:
+        label: visual-metrics
+        description: "Run visual metrics calculations"
+        run-on-projects: ['try']
+        worker-type: t-linux-xlarge
+
+        treeherder:
+            symbol: vismet(visual-metrics)
+            platform: visualmetrics/opt
+            tier: 2
+            kind: other
+
+        worker:
+            docker-image: {in-tree: visual-metrics}
+            max-run-time: 9000
+            artifacts:
+                - type: file
+                  name: public/visual-metrics.tar.xz
+                  path: /builds/worker/visual-metrics.tar.xz
+
+        fetches:
+            fetch:
+                - visual-metrics
+
+        run:
+            using: run-task
+            command: /builds/worker/bin/run-visual-metrics.py -- --orange --perceptual --contentful --force --renderignore 5 --json --viewport
+            checkout: false

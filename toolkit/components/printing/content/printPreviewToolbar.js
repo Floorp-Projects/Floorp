@@ -70,7 +70,7 @@ customElements.define(
       <checkbox id="print-preview-simplify" checked="false" disabled="true" oncommand="this.parentNode.simplify();" data-l10n-id="printpreview-simplify-page-checkbox"/>
       <toolbarseparator class="toolbarseparator-primary"/>
       <button id="print-preview-toolbar-close-button" oncommand="PrintUtils.exitPrintPreview();" data-l10n-id="printpreview-close"/>
-      <data id="print-preview-prompt-title" data-l10n-id="printpreview-custom-prompt"/>
+      <data id="print-preview-custom-scale-prompt-title" data-l10n-id="printpreview-custom-scale-prompt-title"/>
         `)
       );
 
@@ -283,7 +283,9 @@ customElements.define(
       var value = Math.round(aValue);
       var promptStr = document.getElementById("print-preview-scale-label")
         .value;
-      var renameTitle = document.getElementById("print-preview-prompt-title");
+      var renameTitle = document.getElementById(
+        "print-preview-custom-scale-prompt-title"
+      ).textContent;
       var result = { value };
       let { Services } = ChromeUtils.import(
         "resource://gre/modules/Services.jsm"

@@ -25,10 +25,16 @@ add_task(async function test_vertical_text() {
       }
 
       let targets = [
+        // Full matches use one path in our find code.
         "vertical-rl",
         "vertical-lr",
         "sideways-rl",
         "sideways-lr",
+        // Partial matches use a second path in our find code.
+        "l-r",
+        "l-l",
+        "s-r",
+        "s-l",
       ];
 
       for (let i = 0; i < targets.length; ++i) {
@@ -37,9 +43,12 @@ add_task(async function test_vertical_text() {
         let promiseFind = waitForFind();
         finder.fastFind(target, false, false);
         let findResult = await promiseFind;
-        is(
+
+        // We check the logical inversion of not not found, because found and wrapped are
+        // two different correct results, but not found is the only incorrect result.
+        isnot(
           findResult.result,
-          Ci.nsITypeAheadFind.FIND_FOUND,
+          Ci.nsITypeAheadFind.FIND_NOTFOUND,
           "Found target text '" + target + "'."
         );
       }

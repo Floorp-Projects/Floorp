@@ -7,6 +7,7 @@
 #include "mozilla/mscom/EnsureMTA.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticLocalPtr.h"
 #include "mozilla/SystemGroup.h"
 #include "nsThreadUtils.h"
@@ -58,6 +59,67 @@ namespace mozilla {
 namespace mscom {
 
 /* static */
+RefPtr<EnsureMTA::CreateInstanceAgileRefPromise>
+EnsureMTA::CreateInstanceInternal(REFCLSID aClsid, REFIID aIid) {
+  MOZ_ASSERT(IsCurrentThreadExplicitMTA());
+
+  RefPtr<IUnknown> iface;
+  HRESULT hr = ::CoCreateInstance(aClsid, nullptr, CLSCTX_INPROC_SERVER, aIid,
+                                  getter_AddRefs(iface));
+  if (FAILED(hr)) {
+    return CreateInstanceAgileRefPromise::CreateAndReject(hr, __func__);
+  }
+
+  // We need to use the two argument constructor for AgileReference because our
+  // RefPtr is not parameterized on the specific interface being requested.
+  AgileReference agileRef(aIid, iface);
+  if (!agileRef) {
+    return CreateInstanceAgileRefPromise::CreateAndReject(agileRef.GetHResult(),
+                                                          __func__);
+  }
+
+  return CreateInstanceAgileRefPromise::CreateAndResolve(std::move(agileRef),
+                                                         __func__);
+}
+
+/* static */
+RefPtr<EnsureMTA::CreateInstanceAgileRefPromise> EnsureMTA::CreateInstance(
+    REFCLSID aClsid, REFIID aIid) {
+  MOZ_ASSERT(IsCOMInitializedOnCurrentThread());
+
+  const bool isClassOk = IsClassThreadAwareInprocServer(aClsid);
+  MOZ_ASSERT(isClassOk,
+             "mozilla::mscom::EnsureMTA::CreateInstance is not "
+             "safe/performant/necessary to use with this CLSID. This CLSID "
+             "either does not support creation from within a multithreaded "
+             "apartment, or it is not an in-process server.");
+  if (!isClassOk) {
+    return CreateInstanceAgileRefPromise::CreateAndReject(CO_E_NOT_SUPPORTED,
+                                                          __func__);
+  }
+
+  if (IsCurrentThreadExplicitMTA()) {
+    // It's safe to immediately call CreateInstanceInternal
+    return CreateInstanceInternal(aClsid, aIid);
+  }
+
+  // aClsid and aIid are references. Make local copies that we can put into the
+  // lambda in case the sources of aClsid or aIid are not static data
+  CLSID localClsid = aClsid;
+  IID localIid = aIid;
+
+  auto invoker = [localClsid,
+                  localIid]() -> RefPtr<CreateInstanceAgileRefPromise> {
+    return CreateInstanceInternal(localClsid, localIid);
+  };
+
+  nsCOMPtr<nsIThread> mtaThread(GetMTAThread());
+
+  return InvokeAsync(mtaThread->SerialEventTarget(), __func__,
+                     std::move(invoker));
+}
+
+/* static */
 nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
   static StaticLocalAutoPtr<BackgroundMTAData> sMTAData(
       []() -> BackgroundMTAData* {
@@ -75,7 +137,7 @@ nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
         SystemGroup::Dispatch(
             TaskCategory::Other,
             NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
-                                   setClearOnShutdown));
+                                   std::move(setClearOnShutdown)));
 
         return bgData;
       }());

@@ -392,10 +392,7 @@ nsToolkitProfileService::nsToolkitProfileService()
       mUpdateChannel(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)),
       mProfileDBExists(false),
       mProfileDBFileSize(0),
-      mProfileDBModifiedTime(0),
-      mInstallDBExists(false),
-      mInstallDBFileSize(0),
-      mInstallDBModifiedTime(0) {
+      mProfileDBModifiedTime(0) {
 #ifdef MOZ_DEV_EDITION
   mUseDevEditionProfile = true;
 #endif
@@ -653,12 +650,6 @@ nsToolkitProfileService::GetIsListOutdated(bool* aResult) {
     return NS_OK;
   }
 
-  if (IsFileOutdated(mInstallDBFile, mInstallDBExists, mInstallDBModifiedTime,
-                     mInstallDBFileSize)) {
-    *aResult = true;
-    return NS_OK;
-  }
-
   *aResult = false;
   return NS_OK;
 }
@@ -712,10 +703,6 @@ nsresult nsToolkitProfileService::Init() {
   rv = mInstallDBFile->AppendNative(NS_LITERAL_CSTRING("installs.ini"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = UpdateFileStats(mInstallDBFile, &mInstallDBExists,
-                       &mInstallDBModifiedTime, &mInstallDBFileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoCString buffer;
 
   rv = UpdateFileStats(mProfileDBFile, &mProfileDBExists,
@@ -742,7 +729,7 @@ nsresult nsToolkitProfileService::Init() {
       // any install data from the backup.
       nsINIParser installDB;
 
-      if (mInstallDBExists && NS_SUCCEEDED(installDB.Init(mInstallDBFile))) {
+      if (NS_SUCCEEDED(installDB.Init(mInstallDBFile))) {
         // There is install data to import.
         ImportInstallsClosure closure = {&installDB, &mProfileDB};
         installDB.GetSections(&ImportInstalls, &closure);
@@ -1934,17 +1921,12 @@ nsToolkitProfileService::Flush() {
       }
 
       fclose(writeFile);
-
-      rv = UpdateFileStats(mInstallDBFile, &mInstallDBExists,
-                           &mInstallDBModifiedTime, &mInstallDBFileSize);
-      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       rv = mInstallDBFile->Remove(false);
       if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
           rv != NS_ERROR_FILE_NOT_FOUND) {
         return rv;
       }
-      mInstallDBExists = false;
     }
   }
 

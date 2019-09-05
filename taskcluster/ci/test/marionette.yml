@@ -5,15 +5,9 @@
 job-defaults:
     suite: marionette
     mozharness:
-        script:
-            by-test-platform:
-                android-em.*: android_emulator_unittest.py
-                default: marionette.py
+        script: marionette.py
         config:
             by-test-platform:
-                android-em.*:
-                    - android/android_common.py
-                    - android/androidx86_7_0-old.py
                 macosx.*:
                     - marionette/prod_config.py
                     - marionette/mac_taskcluster_config.py

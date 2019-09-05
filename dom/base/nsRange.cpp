@@ -2561,16 +2561,19 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
       f->EnsureTextRun(nsTextFrame::eInflated);
       NS_ENSURE_TRUE(f->GetTextRun(nsTextFrame::eInflated),
                      NS_ERROR_OUT_OF_MEMORY);
-      bool rtl = f->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft();
+      bool topLeftToBottomRight =
+          !f->GetTextRun(nsTextFrame::eInflated)->IsInlineReversed();
       nsRect r = f->GetRectRelativeToSelf();
       if (fstart < aStartOffset) {
         // aStartOffset is within this frame
-        ExtractRectFromOffset(f, aStartOffset, &r, rtl, aClampToEdge);
+        ExtractRectFromOffset(f, aStartOffset, &r, !topLeftToBottomRight,
+                              aClampToEdge);
         textContentStart = aStartOffset;
       }
       if (fend > aEndOffset) {
         // aEndOffset is in the middle of this frame
-        ExtractRectFromOffset(f, aEndOffset, &r, !rtl, aClampToEdge);
+        ExtractRectFromOffset(f, aEndOffset, &r, topLeftToBottomRight,
+                              aClampToEdge);
         textContentEnd = aEndOffset;
       }
       r = nsLayoutUtils::TransformFrameRectToAncestor(f, r, relativeTo);

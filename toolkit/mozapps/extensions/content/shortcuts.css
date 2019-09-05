@@ -1,8 +1,3 @@
-.body {
-  margin-inline-start: 28px;
-  width: 664px;
-}
-
 .shortcut.card {
   margin-bottom: 16px;
 }
@@ -15,7 +10,7 @@
   box-shadow: var(--card-shadow);
 }
 
-.card-heading-icon {
+.shortcut.card .card-heading-icon {
   width: 24px;
   height: 24px;
   margin-inline-end: 16px;
@@ -39,7 +34,7 @@
   margin-top: 10px;
 }
 
-.card.shortcut:not([expanded]) > .shortcut-row[hide-before-expand] {
+.shortcut.card:not([expanded]) > .shortcut-row[hide-before-expand] {
   display: none;
 }
 

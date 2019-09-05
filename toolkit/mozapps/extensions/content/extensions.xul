@@ -249,9 +249,6 @@
           </hbox>
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">
-            <!-- extension shortcuts view -->
-            <browser id="shortcuts-view" type="content" flex="1" disablehistory="true"/>
-
             <vbox id="html-view" flex="1">
               <vbox class="alert-container html-alert-container" align="start">
                 <hbox class="global-warning-safemode message-bar"

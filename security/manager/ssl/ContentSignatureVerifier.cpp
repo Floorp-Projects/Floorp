@@ -8,6 +8,7 @@
 
 #include "BRNameMatchingPolicy.h"
 #include "CryptoTask.h"
+#include "CSTrustDomain.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "cryptohi.h"
@@ -23,6 +24,7 @@
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixtypes.h"
 #include "secerr.h"
+#include "ssl.h"
 
 NS_IMPL_ISUPPORTS(ContentSignatureVerifier, nsIContentSignatureVerifier)
 

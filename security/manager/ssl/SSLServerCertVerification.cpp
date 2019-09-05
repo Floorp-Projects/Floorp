@@ -1136,10 +1136,6 @@ void GatherRootCATelemetry(const UniqueCERTCertList& certList) {
                                rootCert);
 }
 
-// These time are appoximate, i.e., doesn't account for leap seconds, etc
-const uint64_t ONE_WEEK_IN_SECONDS = (7 * (24 * 60 * 60));
-const uint64_t ONE_YEAR_IN_WEEKS = 52;
-
 // There are various things that we want to measure about certificate
 // chains that we accept.  This is a single entry point for all of them.
 void GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList) {

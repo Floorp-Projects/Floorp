@@ -663,6 +663,14 @@ class GCSchedulingState {
   }
 };
 
+enum class TriggerKind { None, Incremental, NonIncremental };
+
+struct TriggerResult {
+  TriggerKind kind;
+  size_t usedBytes;
+  size_t thresholdBytes;
+};
+
 using AtomicByteCount =
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
                     mozilla::recordreplay::Behavior::DontPreserve>;

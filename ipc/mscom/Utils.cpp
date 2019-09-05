@@ -414,5 +414,43 @@ bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
 
 #endif  // defined(ACCESSIBILITY)
 
+#if defined(MOZILLA_INTERNAL_API)
+bool IsClassThreadAwareInprocServer(REFCLSID aClsid) {
+  nsAutoString strClsid;
+  GUIDToString(aClsid, strClsid);
+
+  nsAutoString inprocServerSubkey(NS_LITERAL_STRING("CLSID\\"));
+  inprocServerSubkey.Append(strClsid);
+  inprocServerSubkey.Append(NS_LITERAL_STRING("\\InprocServer32"));
+
+  // Of the possible values, "Apartment" is the longest, so we'll make this
+  // buffer large enough to hold that one.
+  wchar_t threadingModelBuf[ArrayLength(L"Apartment")] = {};
+
+  DWORD numBytes = sizeof(threadingModelBuf);
+  LONG result = ::RegGetValueW(HKEY_CLASSES_ROOT, inprocServerSubkey.get(),
+                               L"ThreadingModel", RRF_RT_REG_SZ, nullptr,
+                               threadingModelBuf, &numBytes);
+  if (result != ERROR_SUCCESS) {
+    // This will also handle the case where the CLSID is not an inproc server.
+    return false;
+  }
+
+  DWORD numChars = numBytes / sizeof(wchar_t);
+  // numChars includes the null terminator
+  if (numChars <= 1) {
+    return false;
+  }
+
+  nsDependentString threadingModel(threadingModelBuf, numChars - 1);
+
+  // Ensure that the threading model is one of the known values that indicates
+  // that the class can operate natively (ie, no proxying) inside a MTA.
+  return threadingModel.EqualsLiteral("Both") ||
+         threadingModel.EqualsLiteral("Free") ||
+         threadingModel.EqualsLiteral("Neutral");
+}
+#endif  // defined(MOZILLA_INTERNAL_API)
+
 }  // namespace mscom
 }  // namespace mozilla

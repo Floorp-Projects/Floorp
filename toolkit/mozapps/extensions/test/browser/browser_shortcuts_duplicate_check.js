@@ -5,26 +5,20 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-let gManagerWindow;
-
 async function loadShortcutsView() {
-  gManagerWindow = await open_manager(null);
-  let categoryUtilities = new CategoryUtilities(gManagerWindow);
-  await categoryUtilities.openType("extension");
+  let win = await loadInitialView("extension");
 
   // There should be a manage shortcuts link.
-  let doc = gManagerWindow.document;
-  let shortcutsLink = doc.getElementById("manage-shortcuts");
+  let shortcutsLink = win.managerWindow.document.getElementById(
+    "manage-shortcuts"
+  );
 
   // Open the shortcuts view.
+  let loaded = waitForViewLoad(win);
   shortcutsLink.click();
-  await wait_for_view_load(gManagerWindow);
+  await loaded;
 
-  return doc.getElementById("shortcuts-view").contentDocument;
-}
-
-function closeView() {
-  return close_manager(gManagerWindow);
+  return win;
 }
 
 add_task(async function testDuplicateShortcutsWarnings() {
@@ -71,7 +65,8 @@ add_task(async function testDuplicateShortcutsWarnings() {
   await extension2.startup();
   await extension2.awaitMessage("ready");
 
-  let doc = await loadShortcutsView();
+  let win = await loadShortcutsView();
+  let doc = win.document;
 
   let warningBars = doc.querySelectorAll("message-bar");
   // Ensure warning messages are shown for each duplicate shorctut.
@@ -150,7 +145,7 @@ add_task(async function testDuplicateShortcutsWarnings() {
     }
   });
 
-  await closeView();
+  await closeView(win);
   await extension.unload();
   await extension2.unload();
 });

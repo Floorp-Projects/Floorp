@@ -5,183 +5,54 @@
 
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
+const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { perfSpec } = require("devtools/shared/specs/perf");
-const { Ci } = require("chrome");
-const Services = require("Services");
+const {
+  ActorReadyGeckoProfilerInterface,
+} = require("devtools/server/performance-new/gecko-profiler-interface");
 
-loader.lazyImporter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-
-// Some platforms are built without the Gecko Profiler.
-const IS_SUPPORTED_PLATFORM = "nsIProfiler" in Ci;
+/**
+ * Pass on the events from the bridge to the actor.
+ * @param {Object} actor The perf actor
+ * @param {Array<string>} names The event names
+ */
+function _bridgeEvents(actor, names) {
+  for (const name of names) {
+    actor.bridge.on(name, (...args) => actor.emit(name, ...args));
+  }
+}
 
 /**
  * The PerfActor wraps the Gecko Profiler interface
  */
 exports.PerfActor = ActorClassWithSpec(perfSpec, {
-  initialize(conn) {
+  initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
+    // The "bridge" is the actual implementation of the actor. It is abstracted
+    // out into its own class so that it can be re-used with the profiler popup.
+    this.bridge = new ActorReadyGeckoProfilerInterface();
 
-    // Only setup the observers on a supported platform.
-    if (IS_SUPPORTED_PLATFORM) {
-      this._observer = {
-        observe: this._observe.bind(this),
-      };
-      Services.obs.addObserver(this._observer, "profiler-started");
-      Services.obs.addObserver(this._observer, "profiler-stopped");
-      Services.obs.addObserver(
-        this._observer,
-        "chrome-document-global-created"
-      );
-      Services.obs.addObserver(this._observer, "last-pb-context-exited");
-    }
+    _bridgeEvents(this, [
+      "profile-locked-by-private-browsing",
+      "profile-unlocked-from-private-browsing",
+      "profiler-started",
+      "profiler-stopped",
+    ]);
   },
 
-  destroy() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return;
-    }
-    Services.obs.removeObserver(this._observer, "profiler-started");
-    Services.obs.removeObserver(this._observer, "profiler-stopped");
-    Services.obs.removeObserver(
-      this._observer,
-      "chrome-document-global-created"
-    );
-    Services.obs.removeObserver(this._observer, "last-pb-context-exited");
-    Actor.prototype.destroy.call(this);
+  destroy: function(conn) {
+    Actor.prototype.destroy.call(this, conn);
+    this.bridge.destroy();
   },
 
-  startProfiler(options) {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return false;
-    }
-
-    // For a quick implementation, decide on some default values. These may need
-    // to be tweaked or made configurable as needed.
-    const settings = {
-      entries: options.entries || 1000000,
-      // Window length should be Infinite if nothing's been passed.
-      // options.duration is supported for `perfActorVersion > 0`.
-      duration: options.duration || 0,
-      interval: options.interval || 1,
-      features: options.features || [
-        "js",
-        "stackwalk",
-        "responsiveness",
-        "threads",
-        "leaf",
-      ],
-      threads: options.threads || ["GeckoMain", "Compositor"],
-    };
-
-    try {
-      // This can throw an error if the profiler is in the wrong state.
-      Services.profiler.StartProfiler(
-        settings.entries,
-        settings.interval,
-        settings.features,
-        settings.threads,
-        settings.duration
-      );
-    } catch (e) {
-      // In case any errors get triggered, bailout with a false.
-      return false;
-    }
-
-    return true;
-  },
-
-  stopProfilerAndDiscardProfile() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return;
-    }
-    Services.profiler.StopProfiler();
-  },
-
-  async getSymbolTable(debugPath, breakpadId) {
-    const [addr, index, buffer] = await Services.profiler.getSymbolTable(
-      debugPath,
-      breakpadId
-    );
-    // The protocol does not support the transfer of typed arrays, so we convert
-    // these typed arrays to plain JS arrays of numbers now.
-    // Our return value type is declared as "array:array:number".
-    return [Array.from(addr), Array.from(index), Array.from(buffer)];
-  },
-
-  async getProfileAndStopProfiler() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return null;
-    }
-
-    let profile;
-    try {
-      // Attempt to pull out the data.
-      profile = await Services.profiler.getProfileDataAsync();
-
-      // Stop and discard the buffers.
-      Services.profiler.StopProfiler();
-    } catch (e) {
-      // If there was any kind of error, bailout with no profile.
-      return null;
-    }
-
-    // Gecko Profiler errors can return an empty object, return null for this case
-    // as well.
-    if (Object.keys(profile).length === 0) {
-      return null;
-    }
-    return profile;
-  },
-
-  isActive() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return false;
-    }
-    return Services.profiler.IsActive();
-  },
-
-  isSupportedPlatform() {
-    return IS_SUPPORTED_PLATFORM;
-  },
-
-  isLockedForPrivateBrowsing() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return false;
-    }
-    return !Services.profiler.CanProfile();
-  },
-
-  /**
-   * Watch for events that happen within the browser. These can affect the current
-   * availability and state of the Gecko Profiler.
-   */
-  _observe(subject, topic, _data) {
-    switch (topic) {
-      case "chrome-document-global-created":
-        if (PrivateBrowsingUtils.isWindowPrivate(subject)) {
-          this.emit("profile-locked-by-private-browsing");
-        }
-        break;
-      case "last-pb-context-exited":
-        this.emit("profile-unlocked-from-private-browsing");
-        break;
-      case "profiler-started":
-        const param = subject.QueryInterface(Ci.nsIProfilerStartParams);
-        this.emit(
-          topic,
-          param.entries,
-          param.interval,
-          param.features,
-          param.duration
-        );
-        break;
-      case "profiler-stopped":
-        this.emit(topic);
-        break;
-    }
-  },
+  // Connect the rest of the ActorReadyGeckoProfilerInterface's methods to the PerfActor.
+  startProfiler: actorBridgeWithSpec("startProfiler"),
+  stopProfilerAndDiscardProfile: actorBridgeWithSpec(
+    "stopProfilerAndDiscardProfile"
+  ),
+  getSymbolTable: actorBridgeWithSpec("getSymbolTable"),
+  getProfileAndStopProfiler: actorBridgeWithSpec("getProfileAndStopProfiler"),
+  isActive: actorBridgeWithSpec("isActive"),
+  isSupportedPlatform: actorBridgeWithSpec("isSupportedPlatform"),
+  isLockedForPrivateBrowsing: actorBridgeWithSpec("isLockedForPrivateBrowsing"),
 });
