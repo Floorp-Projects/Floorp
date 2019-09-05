@@ -62,6 +62,7 @@ third_party_paths = GENERATED_FILES['ThirdPartyPaths.cpp']
 third_party_paths.script = "ThirdPartyPaths.py:generate"
 third_party_paths.inputs = [
     '/tools/rewriting/ThirdPartyPaths.txt',
+    '/tools/rewriting/Generated.txt',
 ]
 
 HOST_COMPILE_FLAGS['STL'] = []

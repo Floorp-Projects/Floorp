@@ -3,20 +3,24 @@
 import json
 
 
-def generate(output, tpp_txt):
+def generate(output, *input_paths):
     """
     This file generates a ThirdPartyPaths.cpp file from the ThirdPartyPaths.txt
     file in /tools/rewriting, which is used by the Clang Plugin to help identify
     sources which should be ignored.
     """
-
     tpp_list = []
-    with open(tpp_txt) as f:
-        for line in f.readlines():
-            line = line.strip()
-            if line.endswith('/'):
-                line = line[:-1]
-            tpp_list.append(line)
+    lines = set()
+
+    for path in input_paths:
+        with open(path) as f:
+            lines.update(f.readlines())
+
+    for line in lines:
+        line = line.strip()
+        if line.endswith('/'):
+            line = line[:-1]
+        tpp_list.append(line)
     tpp_strings = ',\n  '.join([json.dumps(tpp) for tpp in tpp_list])
 
     output.write("""\

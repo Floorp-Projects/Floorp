@@ -22,7 +22,10 @@ from mach.decorators import (
 
 
 here = os.path.abspath(os.path.dirname(__file__))
-THIRD_PARTY_PATHS = os.path.join('tools', 'rewriting', 'ThirdPartyPaths.txt')
+EXCLUSION_FILES = [
+    os.path.join('tools', 'rewriting', 'Generated.txt'),
+    os.path.join('tools', 'rewriting', 'ThirdPartyPaths.txt'),
+]
 GLOBAL_EXCLUDES = [
     'node_modules',
     'tools/lint/test/files',
@@ -42,9 +45,10 @@ def get_global_excludes(topsrcdir):
     excludes.extend([name for name in os.listdir(topsrcdir)
                      if name.startswith('obj') and os.path.isdir(name)])
 
-    # exclude third party paths
-    with open(os.path.join(topsrcdir, THIRD_PARTY_PATHS), 'r') as fh:
-        excludes.extend([f.strip() for f in fh.readlines()])
+    for path in EXCLUSION_FILES:
+        # exclude third party paths
+        with open(os.path.join(topsrcdir, path), 'r') as fh:
+            excludes.extend([f.strip() for f in fh.readlines()])
 
     return excludes
 
@@ -73,7 +77,8 @@ class MachCommands(MachCommandBase):
         lintargs.setdefault('root', self.topsrcdir)
         lintargs['exclude'] = get_global_excludes(lintargs['root'])
         cli.SEARCH_PATHS.append(here)
-        parser.GLOBAL_SUPPORT_FILES.append(os.path.join(self.topsrcdir, THIRD_PARTY_PATHS))
+        for path in EXCLUSION_FILES:
+            parser.GLOBAL_SUPPORT_FILES.append(os.path.join(self.topsrcdir, path))
         return cli.run(*runargs, **lintargs)
 
     @Command('eslint', category='devenv',
