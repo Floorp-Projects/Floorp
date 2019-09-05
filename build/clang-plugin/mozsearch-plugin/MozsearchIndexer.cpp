@@ -744,10 +744,16 @@ public:
   // ignores all source locations except for the ones where we found dependent
   // scoped member expressions before. For these locations, we generate a
   // separate JSON result for each instantiation.
+  //
+  // We inherit our parent's mode if it is exists.  This is because if our
+  // parent is in analyze mode, it means we've already lived a full life in
+  // gather mode and we must not restart in gather mode or we'll cause the
+  // indexer to visit EVERY identifier, which is way too much data.
   struct AutoTemplateContext {
     AutoTemplateContext(IndexConsumer *Self)
-        : Self(Self), CurMode(Mode::GatherDependent),
-          Parent(Self->TemplateStack) {
+        : Self(Self)
+        , CurMode(Self->TemplateStack ? Self->TemplateStack->CurMode : Mode::GatherDependent)
+        , Parent(Self->TemplateStack) {
       Self->TemplateStack = this;
     }
 
@@ -776,6 +782,10 @@ public:
       if (Parent) {
         Parent->visitDependent(Loc);
       }
+    }
+
+    bool inGatherMode() {
+      return CurMode == Mode::GatherDependent;
     }
 
     // Do we need to perform the extra AnalyzeDependent passes (one per
@@ -867,7 +877,9 @@ public:
 
   bool TraverseFunctionTemplateDecl(FunctionTemplateDecl *D) {
     AutoTemplateContext Atc(this);
-    Super::TraverseFunctionTemplateDecl(D);
+    if (Atc.inGatherMode()) {
+      Super::TraverseFunctionTemplateDecl(D);
+    }
 
     if (!Atc.needsAnalysis()) {
       return true;
