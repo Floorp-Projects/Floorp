@@ -299,7 +299,7 @@ CssRuleView.prototype = {
     return this._elementStyle ? this._elementStyle.rules : [];
   },
 
-  get target() {
+  get currentTarget() {
     return this.inspector.toolbox.target;
   },
 
@@ -388,17 +388,17 @@ CssRuleView.prototype = {
     // In order to query if the emulation actor's print simulation methods are supported,
     // we have to call the emulation front so that the actor is lazily loaded. This allows
     // us to use `actorHasMethod`. Please see `getActorDescription` for more information.
-    this._emulationFront = await this.target.getFront("emulation");
+    this._emulationFront = await this.currentTarget.getFront("emulation");
 
     // Show the toggle button if:
     // - Print simulation is supported for the current target.
     // - Not debugging content document.
     if (
-      (await this.target.actorHasMethod(
+      (await this.currentTarget.actorHasMethod(
         "emulation",
         "getIsPrintSimulationEnabled"
       )) &&
-      !this.target.chrome
+      !this.currentTarget.chrome
     ) {
       this.printSimulationButton.removeAttribute("hidden");
 
