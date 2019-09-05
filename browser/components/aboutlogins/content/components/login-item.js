@@ -65,6 +65,9 @@ export default class LoginItem extends HTMLElement {
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
     this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
+    this._breachAlertLink = this._breachAlert.querySelector(
+      ".breach-alert-link"
+    );
     this._dismissBreachAlert = this.shadowRoot.querySelector(
       ".dismiss-breach-alert"
     );
@@ -82,6 +85,7 @@ export default class LoginItem extends HTMLElement {
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
     this._originInput.addEventListener("auxclick", this);
+    this._breachAlertLink.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -94,10 +98,7 @@ export default class LoginItem extends HTMLElement {
     });
     if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
       const breachDetails = this._breachesMap.get(this._login.guid);
-      const breachAlertLink = this._breachAlert.querySelector(
-        ".breach-alert-link"
-      );
-      breachAlertLink.href = breachDetails.breachAlertURL;
+      this._breachAlertLink.href = breachDetails.breachAlertURL;
       document.l10n.setAttributes(
         this._dismissBreachAlert,
         "breach-alert-dismiss"
@@ -161,6 +162,10 @@ export default class LoginItem extends HTMLElement {
         detail: this._login,
       })
     );
+    this._recordTelemetryEvent({
+      object: "existing_login",
+      method: "dismiss_breach_alert",
+    });
   }
 
   showLoginItemError(error) {
@@ -237,7 +242,7 @@ export default class LoginItem extends HTMLElement {
           this._updatePasswordRevealState();
 
           let method = this._revealCheckbox.checked ? "show" : "hide";
-          recordTelemetryEvent({ object: "password", method });
+          this._recordTelemetryEvent({ object: "password", method });
           return;
         }
 
@@ -253,7 +258,7 @@ export default class LoginItem extends HTMLElement {
             }
           } else if (!this.hasPendingChanges()) {
             window.dispatchEvent(new CustomEvent("AboutLoginsClearSelection"));
-            recordTelemetryEvent({
+            this._recordTelemetryEvent({
               object: "new_login",
               method: "cancel",
             });
@@ -301,7 +306,7 @@ export default class LoginItem extends HTMLElement {
             this._copyUsernameTimeoutId = timeoutId;
           }
 
-          recordTelemetryEvent({
+          this._recordTelemetryEvent({
             object: copyButton.dataset.telemetryObject,
             method: "copy",
           });
@@ -326,11 +331,20 @@ export default class LoginItem extends HTMLElement {
           this._toggleEditing();
           this.render();
 
-          recordTelemetryEvent({ object: "existing_login", method: "edit" });
+          this._recordTelemetryEvent({
+            object: "existing_login",
+            method: "edit",
+          });
           return;
         }
         if (classList.contains("origin-input")) {
           this._handleOriginClick();
+        }
+        if (classList.contains("breach-alert-link")) {
+          this._recordTelemetryEvent({
+            object: "existing_login",
+            method: "learn_more_breach",
+          });
         }
         break;
       }
@@ -350,7 +364,10 @@ export default class LoginItem extends HTMLElement {
             })
           );
 
-          recordTelemetryEvent({ object: "existing_login", method: "save" });
+          this._recordTelemetryEvent({
+            object: "existing_login",
+            method: "save",
+          });
         } else {
           document.dispatchEvent(
             new CustomEvent("AboutLoginsCreateLogin", {
@@ -359,7 +376,7 @@ export default class LoginItem extends HTMLElement {
             })
           );
 
-          recordTelemetryEvent({ object: "new_login", method: "save" });
+          this._recordTelemetryEvent({ object: "new_login", method: "save" });
         }
       }
     }
@@ -424,7 +441,7 @@ export default class LoginItem extends HTMLElement {
         try {
           onConfirm();
         } catch (ex) {}
-        recordTelemetryEvent({
+        this._recordTelemetryEvent({
           object: wasExistingLogin ? "existing_login" : "new_login",
           method,
         });
@@ -548,7 +565,10 @@ export default class LoginItem extends HTMLElement {
       })
     );
 
-    recordTelemetryEvent({ object: "existing_login", method: "open_site" });
+    this._recordTelemetryEvent({
+      object: "existing_login",
+      method: "open_site",
+    });
   }
 
   /**
@@ -583,6 +603,15 @@ export default class LoginItem extends HTMLElement {
       origin:
         window.AboutLoginsUtils.getLoginOrigin(this._originInput.value) || "",
     };
+  }
+
+  _recordTelemetryEvent(eventObject) {
+    const extra = eventObject.hasOwnProperty("extra") ? eventObject.extra : {};
+    if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
+      Object.assign(extra, { breached: "true" });
+      eventObject.extra = extra;
+    }
+    recordTelemetryEvent(eventObject);
   }
 
   /**
