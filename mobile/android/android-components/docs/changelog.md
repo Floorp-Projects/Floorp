@@ -55,6 +55,11 @@ permalink: /changelog/
   * `GlobalSyncableStoreProvider.configureStore` now takes a pair of `Pair<SyncEngine, SyncableStore>`, instead of allowing arbitrary string names for engines.
   * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.  
 
+* **support-utils**
+  * `Intent.asPendingIntentForLaunchService(Context)` extension method
+  to create pending intent for service that will play nicely with
+  background execution limitations introduced in Android O.
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)

@@ -17,6 +17,7 @@ import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.prompt.CrashPrompt
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.support.base.ids.notify
+import mozilla.components.support.utils.asPendingIntentForLaunchService
 
 private const val NOTIFICATION_SDK_LEVEL = 29 // On Android Q+ we show a notification instead of a prompt
 
@@ -33,15 +34,9 @@ internal class CrashNotification(
                 context, 0, CrashPrompt.createIntent(context, crash), 0
         )
 
-        val reportPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PendingIntent.getForegroundService(
-                    context, 0, SendCrashReportService.createReportIntent(context, crash), 0
-            )
-        } else {
-            PendingIntent.getService(
-                    context, 0, SendCrashReportService.createReportIntent(context, crash), 0
-            )
-        }
+        val reportPendingIntent = SendCrashReportService
+            .createReportIntent(context, crash)
+            .asPendingIntentForLaunchService(context)
 
         val channel = ensureChannelExists(context)
 
