@@ -15,15 +15,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.paging.PagedList
-import androidx.paging.toLiveData
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
@@ -64,9 +61,17 @@ class DeleteBrowsingDataFragment : Fragment() {
             })
         }
 
-        getCheckboxes().forEach {
-            it.onCheckListener = { _ -> updateDeleteButton() }
+        if (!FeatureFlags.granularDataDeletion) {
+            // Disabling the disabled state until we have APIs to decide
+            // if there is data to delete for all categories
+            getCheckboxes().forEach {
+                it.onCheckListener = { _ -> updateCheckboxState() }
+            }
+        } else {
+            // Otherwise, all checkboxes should default to checked state
+            getCheckboxes().forEach { it.isChecked = true }
         }
+
         view.delete_data?.setOnClickListener {
             askToDelete()
         }
@@ -167,7 +172,7 @@ class DeleteBrowsingDataFragment : Fragment() {
         updateSitePermissions()
     }
 
-    private fun updateDeleteButton() {
+    private fun updateCheckboxState() {
         val enabled = getCheckboxes().any { it.isChecked }
 
         view?.delete_data?.isEnabled = enabled
@@ -181,7 +186,7 @@ class DeleteBrowsingDataFragment : Fragment() {
                 R.string.preferences_delete_browsing_data_tabs_subtitle,
                 openTabs
             )
-            isEnabled = openTabs > 0
+            if (!FeatureFlags.granularDataDeletion) isEnabled = openTabs > 0
         }
     }
 
@@ -197,7 +202,7 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_browsing_data_subtitle,
                             historyCount
                         )
-                    isEnabled = historyCount > 0
+                    if (!FeatureFlags.granularDataDeletion) isEnabled = historyCount > 0
                 }
             }
         }
@@ -216,7 +221,7 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_collections_subtitle,
                             collectionsCount
                         )
-                    isEnabled = collectionsCount > 0
+                    if (!FeatureFlags.granularDataDeletion) isEnabled = collectionsCount > 0
                 }
             }
         }
@@ -231,16 +236,7 @@ class DeleteBrowsingDataFragment : Fragment() {
     }
 
     private fun updateSitePermissions() {
-        val liveData =
-            requireComponents.core.permissionStorage.getSitePermissionsPaged().toLiveData(1)
-        liveData.observe(
-            this,
-            object : Observer<PagedList<SitePermissions>> {
-                override fun onChanged(list: PagedList<SitePermissions>?) {
-                    view?.site_permissions_item?.isEnabled = !list.isNullOrEmpty()
-                    liveData.removeObserver(this)
-                }
-            })
+        // NO OP until we have GeckoView methods for cookies and cached files, for consistency
     }
 
     private fun getCheckboxes(): List<DeleteBrowsingDataItem> {

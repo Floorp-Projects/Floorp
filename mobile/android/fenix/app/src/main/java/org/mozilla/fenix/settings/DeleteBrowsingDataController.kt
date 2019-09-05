@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 
@@ -34,7 +35,11 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteBrowsingData() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(Engine.BrowsingData.all())
+            if (FeatureFlags.granularDataDeletion) {
+                context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
+            } else {
+                context.components.core.engine.clearData(Engine.BrowsingData.all())
+            }
         }
         context.components.core.historyStorage.deleteEverything()
     }

@@ -74,7 +74,7 @@ class DefaultDeleteBrowsingDataControllerTest {
         controller.deleteBrowsingData()
 
         verify {
-            context.components.core.engine.clearData(Engine.BrowsingData.all())
+            context.components.core.engine.clearData(any())
             context.components.core.historyStorage
         }
     }
