@@ -396,7 +396,7 @@ function loadNSSCertinfo(extraCertificates) {
   let allCerts = gCertDB.getCerts();
   let certNameToSKD = {};
   let certSKDToName = {};
-  for (let cert of allCerts.getEnumerator()) {
+  for (let cert of allCerts) {
     if (!cert.isBuiltInRoot) {
       continue;
     }

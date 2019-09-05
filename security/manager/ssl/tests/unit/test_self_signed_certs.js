@@ -33,7 +33,7 @@ add_task(async function run_test_no_overlong_path_building() {
     Ci.nsIX509CertDB
   );
   let certToVerify = null;
-  for (let cert of certDB.getCerts().getEnumerator()) {
+  for (let cert of certDB.getCerts()) {
     if (cert.subjectName == "CN=self-signed cert") {
       certToVerify = cert;
       break;

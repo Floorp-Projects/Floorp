@@ -89,7 +89,7 @@ function getCertAsByteArray(certPath) {
 }
 
 function findCertByCommonName(commonName) {
-  for (let cert of gCertDB.getCerts().getEnumerator()) {
+  for (let cert of gCertDB.getCerts()) {
     if (cert.commonName == commonName) {
       return cert;
     }
