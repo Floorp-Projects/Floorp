@@ -44,6 +44,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/ViewportFrame.h"
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
@@ -2088,6 +2089,13 @@ nscoord nsComputedDOMStyle::GetUsedAbsoluteOffset(mozilla::Side aSide) {
     if (scrollFrame) {
       scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
     }
+
+    // The viewport size might have been expanded by the visual viewport or
+    // the minimum-scale size.
+    const ViewportFrame* viewportFrame = do_QueryFrame(container);
+    MOZ_ASSERT(viewportFrame);
+    containerRect.SizeTo(
+        viewportFrame->AdjustViewportSizeForFixedPosition(containerRect));
   } else if (container->IsGridContainerFrame() &&
              (mOuterFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
     containerRect = nsGridContainerFrame::GridItemCB(mOuterFrame);
