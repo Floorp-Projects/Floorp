@@ -51,6 +51,7 @@ let RPMAccessManager = {
         "services.settings.last_update_seconds",
       ],
       getAppBuildID: ["yes"],
+      recordTelemetryEvent: ["yes"],
     },
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
