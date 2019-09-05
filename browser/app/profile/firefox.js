@@ -2108,8 +2108,12 @@ pref("devtools.serviceWorkers.testing.enabled", false);
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);
 
-// Enable Network Search
-pref("devtools.netmonitor.features.search", false);
+// Enable Network Search in Nightly builds.
+#if defined(NIGHTLY_BUILD)
+  pref("devtools.netmonitor.features.search", true);
+#else
+  pref("devtools.netmonitor.features.search", false);
+#endif
 
 // Enable the Application panel
 pref("devtools.application.enabled", false);
