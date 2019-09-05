@@ -101,7 +101,7 @@ Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button</td></
         <td>
             <table>
                 <tr><td>preference_key</td><td>The preference key for the switch preference the user toggled. We currently track: leakcanary,
-make_default_browser, show_search_suggestions, show_visited_sites_bookmarks, remote_debugging, telemetry,
+make_default_browser, show_search_suggestions, remote_debugging, telemetry,
 tracking_protection</td>
                 </tr>
                 <tr><td>enabled</td><td>Whether or not the preference is <b>now</b> enabled</td></tr>

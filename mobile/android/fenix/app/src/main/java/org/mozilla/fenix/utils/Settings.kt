@@ -117,8 +117,18 @@ class Settings private constructor(
             .putFloat(appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale), value)
             .apply()
 
-    val shouldShowVisitedSitesBookmarks by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_visited_sites_bookmarks),
+    val shouldShowHistorySuggestions by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_browsing_history),
+        default = true
+    )
+
+    val shouldShowBookmarkSuggestions by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_bookmarks),
+        default = true
+    )
+
+    val shouldShowClipboardSuggestions by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_clipboard_suggestions),
         default = true
     )
 
@@ -162,7 +172,7 @@ class Settings private constructor(
         ).apply()
     }
 
-    val showSearchSuggestions by booleanPreference(
+    val shouldShowSearchSuggestions by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
         default = true
     )

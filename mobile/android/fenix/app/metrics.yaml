@@ -106,7 +106,7 @@ events:
     extra_keys:
       preference_key:
         description: "The preference key for the switch preference the user toggled. We currently track:
-          show_search_suggestions, show_visited_sites_bookmarks, remote_debugging, telemetry, tracking_protection"
+          show_search_suggestions, remote_debugging, telemetry, tracking_protection"
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:

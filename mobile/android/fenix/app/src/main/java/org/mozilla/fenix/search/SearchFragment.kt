@@ -91,8 +91,10 @@ class SearchFragment : Fragment(), BackHandler {
                     showShortcutEnginePicker = displayShortcutEnginePicker,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
-                    showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
-                    showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
+                    showSearchSuggestions = Settings.getInstance(requireContext()).shouldShowSearchSuggestions,
+                    showClipboardSuggestions = Settings.getInstance(requireContext()).shouldShowClipboardSuggestions,
+                    showHistorySuggestions = Settings.getInstance(requireContext()).shouldShowHistorySuggestions,
+                    showBookmarkSuggestions = Settings.getInstance(requireContext()).shouldShowBookmarkSuggestions,
                     session = session
                 )
             )
@@ -290,7 +292,7 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     private fun historyStorageProvider(): HistoryStorage? {
-        return if (Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks) {
+        return if (Settings.getInstance(requireContext()).shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
         } else null
     }

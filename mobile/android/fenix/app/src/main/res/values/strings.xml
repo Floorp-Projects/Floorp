@@ -117,8 +117,6 @@
     <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Search engine</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Show visited sites and bookmarks</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -172,6 +170,12 @@
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Show clipboard suggestions</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Search browsing history</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Search bookmarks</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Account settings</string>
 

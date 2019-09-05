@@ -171,26 +171,35 @@ class AwesomeBarView(
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun update(state: SearchFragmentState) {
         view.removeAllProviders()
 
         if (state.showShortcutEnginePicker) {
             view.addProviders(shortcutsEnginePickerProvider)
         } else {
-            if (state.showSuggestions) {
-                view.addProviders(when (state.searchEngineSource) {
-                    is SearchEngineSource.Default -> defaultSearchSuggestionProvider
-                    is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
-                        state.searchEngineSource.searchEngine
-                    )
-                })
+            if (state.showSearchSuggestions) {
+                view.addProviders(
+                    when (state.searchEngineSource) {
+                        is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+                        is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
+                            state.searchEngineSource.searchEngine
+                        )
+                    }
+                )
             }
 
-            if (state.showVisitedSitesBookmarks) {
-                view.addProviders(bookmarksStorageSuggestionProvider, historyStorageProvider)
+            if (state.showClipboardSuggestions) {
+                view.addProviders(clipboardSuggestionProvider)
             }
 
-            view.addProviders(clipboardSuggestionProvider)
+            if (state.showHistorySuggestions) {
+                view.addProviders(historyStorageProvider)
+            }
+
+            if (state.showBookmarkSuggestions) {
+                view.addProviders(bookmarksStorageSuggestionProvider)
+            }
 
             if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
                 view.addProviders(sessionProvider)

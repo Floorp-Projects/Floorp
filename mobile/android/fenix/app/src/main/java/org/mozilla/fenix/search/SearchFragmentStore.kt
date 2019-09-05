@@ -36,8 +36,10 @@ sealed class SearchEngineSource {
  * @property showShortcutEnginePicker Whether or not to show the available search engine view
  * @property searchEngineSource The current selected search engine with the context of how it was selected
  * @property defaultEngineSource The current default search engine source
- * @property showSuggestions Whether or not to show search suggestions for the selected search engine in the AwesomeBar
- * @property showVisitedSitesBookmarks Whether or not to show history and bookmark suggestions in the AwesomeBar
+ * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
+ * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
+ * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
+ * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
  * @property session The current session if available
  */
 data class SearchFragmentState(
@@ -45,8 +47,10 @@ data class SearchFragmentState(
     val showShortcutEnginePicker: Boolean,
     val searchEngineSource: SearchEngineSource,
     val defaultEngineSource: SearchEngineSource.Default,
-    val showSuggestions: Boolean,
-    val showVisitedSitesBookmarks: Boolean,
+    val showSearchSuggestions: Boolean,
+    val showClipboardSuggestions: Boolean,
+    val showHistorySuggestions: Boolean,
+    val showBookmarkSuggestions: Boolean,
     val session: Session?
 ) : State
 

@@ -107,7 +107,6 @@ sealed class Event {
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(
             context.getString(R.string.pref_key_show_search_suggestions),
-            context.getString(R.string.pref_key_show_visited_sites_bookmarks),
             context.getString(R.string.pref_key_remote_debugging),
             context.getString(R.string.pref_key_telemetry),
             context.getString(R.string.pref_key_tracking_protection)

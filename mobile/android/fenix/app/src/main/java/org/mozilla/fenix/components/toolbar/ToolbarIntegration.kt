@@ -21,9 +21,9 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
 class ToolbarIntegration(
@@ -90,7 +90,7 @@ class ToolbarIntegration(
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)
-            if (Settings.getInstance(context).shouldShowVisitedSitesBookmarks) {
+            if (Settings.getInstance(context).shouldShowHistorySuggestions) {
                 addHistoryStorageProvider(historyStorage)
             }
         }
