@@ -560,3 +560,18 @@ var ExtensionSettingsStore = {
     return reloadFile(saveChanges);
   },
 };
+
+// eslint-disable-next-line mozilla/balanced-listeners
+ExtensionParent.apiManager.on("uninstall-complete", async (type, { id }) => {
+  // Catch any settings that were not properly removed during "uninstall".
+  await ExtensionSettingsStore.initialize();
+  for (let type in _store.data) {
+    let items = ExtensionSettingsStore.getAllForExtension(id, type);
+    for (let key of items) {
+      ExtensionSettingsStore.removeSetting(id, type, key);
+      Services.console.logStringMessage(
+        `Post-Uninstall removal of addon settings for ${id}, type: ${type} key: ${key}`
+      );
+    }
+  }
+});
