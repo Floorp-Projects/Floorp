@@ -147,7 +147,14 @@ export default class LoginList extends HTMLElement {
           })
         );
 
-        recordTelemetryEvent({ object: "existing_login", method: "select" });
+        const extra = listItem.classList.contains("breached")
+          ? { breached: "true" }
+          : {};
+        recordTelemetryEvent({
+          object: "existing_login",
+          method: "select",
+          extra,
+        });
         break;
       }
       case "change": {
