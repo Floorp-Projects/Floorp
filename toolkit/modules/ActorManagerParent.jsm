@@ -298,6 +298,7 @@ let LEGACY_ACTORS = {
         "PictureInPicture:SetupPlayer",
         "PictureInPicture:Play",
         "PictureInPicture:Pause",
+        "PictureInPicture:KeyToggle",
       ],
     },
   },
