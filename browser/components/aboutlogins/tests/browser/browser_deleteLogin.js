@@ -16,25 +16,31 @@ add_task(async function setup() {
 add_task(async function test_show_logins() {
   let browser = gBrowser.selectedBrowser;
 
-  await ContentTask.spawn(browser, [TEST_LOGIN1, TEST_LOGIN2], async logins => {
-    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
-    let loginFound = await ContentTaskUtils.waitForCondition(() => {
-      return (
-        loginList._loginGuidsSortedOrder.length == 2 &&
-        loginList._loginGuidsSortedOrder.includes(logins[0].guid) &&
-        loginList._loginGuidsSortedOrder.includes(logins[1].guid)
+  await ContentTask.spawn(
+    browser,
+    [TEST_LOGIN1.guid, TEST_LOGIN2.guid],
+    async loginGuids => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
       );
-    }, "Waiting for logins to be displayed");
-    ok(
-      !content.document.documentElement.classList.contains("no-logins"),
-      "Should no longer be in no logins view"
-    );
-    ok(
-      !loginList.classList.contains("no-logins"),
-      "login-list should no longer be in no logins view"
-    );
-    ok(loginFound, "Newly added logins should be added to the page");
-  });
+      let loginFound = await ContentTaskUtils.waitForCondition(() => {
+        return (
+          loginList._loginGuidsSortedOrder.length == 2 &&
+          loginList._loginGuidsSortedOrder.includes(loginGuids[0]) &&
+          loginList._loginGuidsSortedOrder.includes(loginGuids[1])
+        );
+      }, "Waiting for logins to be displayed");
+      ok(
+        !content.document.documentElement.classList.contains("no-logins"),
+        "Should no longer be in no logins view"
+      );
+      ok(
+        !loginList.classList.contains("no-logins"),
+        "login-list should no longer be in no logins view"
+      );
+      ok(loginFound, "Newly added logins should be added to the page");
+    }
+  );
 });
 
 add_task(async function test_login_item() {
