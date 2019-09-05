@@ -12,8 +12,12 @@ static void TestHasPrefix(const nsCString& aURL, bool aExpectedHas,
                         CreatePrefixFromURL("gound.com/", 5),
                         CreatePrefixFromURL("small.com/", 4)};
 
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  file->AppendNative(GTEST_SAFEBROWSING_DIR);
+
   RunTestInNewThread([&]() -> void {
-    RefPtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
+    RefPtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array, file);
 
     Completion lookupHash;
     lookupHash.FromPlaintext(aURL);

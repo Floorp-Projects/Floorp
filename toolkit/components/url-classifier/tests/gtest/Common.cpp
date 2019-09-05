@@ -213,6 +213,20 @@ static nsresult BuildCache(LookupCacheV4* cache,
 }
 
 template <typename T>
+RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray,
+                           nsCOMPtr<nsIFile>& aFile) {
+  RefPtr<T> cache = new T(GTEST_TABLE_V4, EmptyCString(), aFile);
+
+  nsresult rv = cache->Init();
+  EXPECT_EQ(rv, NS_OK);
+
+  rv = BuildCache(cache, aPrefixArray);
+  EXPECT_EQ(rv, NS_OK);
+
+  return cache;
+}
+
+template <typename T>
 RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray) {
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));

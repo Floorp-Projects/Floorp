@@ -62,10 +62,10 @@ static void VerifyPrivateStorePath(T* target, const nsCString& aTableName,
 
 TEST(UrlClassifierPerProviderDirectory, LookupCache)
 {
-  RunTestInNewThread([]() -> void {
-    nsCOMPtr<nsIFile> rootDir;
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(rootDir));
+  nsCOMPtr<nsIFile> rootDir;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(rootDir));
 
+  RunTestInNewThread([&]() -> void {
     // For V2 tables (NOT ending with '-proto'), root directory should be
     // used as the private store.
     {
@@ -96,10 +96,10 @@ TEST(UrlClassifierPerProviderDirectory, LookupCache)
 
 TEST(UrlClassifierPerProviderDirectory, HashStore)
 {
-  RunTestInNewThread([]() -> void {
-    nsCOMPtr<nsIFile> rootDir;
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(rootDir));
+  nsCOMPtr<nsIFile> rootDir;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(rootDir));
 
+  RunTestInNewThread([&]() -> void {
     // For V2 tables (NOT ending with '-proto'), root directory should be
     // used as the private store.
     {
