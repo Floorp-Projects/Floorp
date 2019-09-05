@@ -515,6 +515,9 @@ class UrlbarController {
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         telemetryType = "remotetab";
         break;
+      case UrlbarUtils.RESULT_TYPE.TIP:
+        telemetryType = "tip";
+        return;
       default:
         Cu.reportError(`Unknown Result Type ${result.type}`);
         return;
@@ -797,6 +800,8 @@ class TelemetryEvent {
           return "extension";
         case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
           return "remotetab";
+        case UrlbarUtils.RESULT_TYPE.TIP:
+          return "tip";
       }
     }
     return "none";

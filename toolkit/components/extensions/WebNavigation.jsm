@@ -208,8 +208,12 @@ var Manager = {
         // it is not related to a navigation.
         // Fall through.
         case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-          // "Omnibox" should be ignored as the add-on may or may not initiate
-          // a navigation on the item being selected.
+        // "Omnibox" should be ignored as the add-on may or may not initiate
+        // a navigation on the item being selected.
+        // Fall through.
+        case UrlbarUtils.RESULT_TYPE.TIP:
+          // "Tip" should be ignored since the tip will only initiate navigation
+          // if there is a valid buttonUrl property, which is optional.
           throw new Error(
             `Unexpectedly received notification for ${acData.result.type}`
           );
