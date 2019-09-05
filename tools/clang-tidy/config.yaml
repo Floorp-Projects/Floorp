@@ -288,6 +288,3 @@ clang_checkers:
   - name: google-runtime-references
     reliability: low
     publish: !!bool no
-
-# Third party files from mozilla-central
-third_party: tools/rewriting/ThirdPartyPaths.txt
