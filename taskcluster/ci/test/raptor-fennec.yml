@@ -7,11 +7,12 @@ job-defaults:
     suite: raptor
     workdir: /builds/worker
     run-on-projects:
-        # When run-on-projects is [], the task is not run by default
-        # on any branches. To run the tasks on try through mach try fuzzy
-        # --full needs to be supplied.
-        android-hw-.*/opt: []
-        android-hw-.*/pgo: ['trunk', 'mozilla-beta']
+        by-test-platform:
+            # When run-on-projects is [], the task is not run by default
+            # on any branches. To run the tasks on try through mach try fuzzy
+            # --full needs to be supplied.
+            android-hw-.*/opt: []
+            android-hw-.*/pgo: ['trunk', 'mozilla-beta']
     tier:
         android-hw-g5.*: 2
         default: 1
