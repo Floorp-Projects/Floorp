@@ -68,3 +68,15 @@ xpcshell:
             windows10-64-asan.*: 3
             windows10-aarch64.*: 2
             default: default
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*:
+                    - linux64-node
+                macosx.*:
+                    - macosx64-node
+                win.*64.*:
+                    - win64-node
+                win.*32.*:
+                    - win32-node
+                default: []
