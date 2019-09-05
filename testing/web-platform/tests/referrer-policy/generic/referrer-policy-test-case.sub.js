@@ -191,6 +191,13 @@ function ReferrerPolicyTestCase(scenario, testDescription, sanityChecker) {
       return;
     }
 
+    // We skip <srcdoc> tests for attr-referrer, because delivering referrer
+    // policy via DOM attributes inside <srcdoc> is quite similar to doing
+    // so in the top-level Document.
+    if (scenario.delivery_method === "attr-referrer") {
+      return;
+    }
+
     // Request in a `srcdoc` frame to ensure that it uses the referrer
     // policy of its parent,
     promise_test(_ => {
@@ -200,6 +207,23 @@ function ReferrerPolicyTestCase(scenario, testDescription, sanityChecker) {
         return invokeScenario(scenario, sourceContextList)
           .then(result => checkResult(scenario.referrer_url, result));
       }, testDescription + " (srcdoc iframe inherits parent)");
+
+    // We skip (top Document w/ referrer policy by HTTP headers)->
+    // (<iframe srcdoc> w/ overriding referrer policy) tests, because we
+    // already have similar (top Document w/ referrer policy by <meta>)->
+    // (<iframe srcdoc> w/ overriding referrer policy) tests.
+    if (scenario.delivery_method === "http-rp") {
+      return;
+    }
+
+    // We skip (top Document w/o referrer policy)->
+    // (<iframe srcdoc> w/ overriding referrer policy) tests, to simplify the
+    // generator. We already have (top Document w/ referrer policy)->
+    // (<iframe srcdoc> w/ overriding referrer policy) tests, which verify the
+    // <iframe srcdoc>'s referrer policy behavior.
+    if (scenario.referrer_policy === null) {
+      return;
+    }
 
     // Request in a `srcdoc` frame with its own referrer policy to
     // override its parent.
