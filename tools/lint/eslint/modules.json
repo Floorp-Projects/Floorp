@@ -27,7 +27,7 @@
   "browser.js": ["browser", "Context", "WindowState"],
   "browserid_identity.js": ["BrowserIDManager", "AuthenticationError"],
   "capabilities.js": ["Capabilities", "PageLoadStrategy", "Proxy", "Timeouts", "UnhandledPromptBehavior"],
-  "cert.js": ["CertificateOverrideManager", "InsecureSweepingOverride"],
+  "cert.js": ["allowAllCerts"],
   "clients.js": ["ClientEngine", "ClientsRec"],
   "collection_repair.js": ["getRepairRequestor", "getAllRepairRequestors", "CollectionRepairRequestor", "getRepairResponder", "CollectionRepairResponder"],
   "collection_validator.js": ["CollectionValidator", "CollectionProblemData"],

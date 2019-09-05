@@ -11,6 +11,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
 #include "nsISupports.h"
+#include "nsNSSCertHelper.h"
 #include "nsNSSComponent.h"
 #include "nsPromiseFlatString.h"
 #include "nsReadableUtils.h"
@@ -29,7 +30,7 @@ nsPK11Token::nsPK11Token(PK11SlotInfo* slot) : mUIContext(new PipUIContext()) {
       PK11_IsInternal(mSlot.get()) && !PK11_IsInternalKeySlot(mSlot.get());
   mIsInternalKeyToken = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
-  Unused << refreshTokenInfo();
+  mozilla::Unused << refreshTokenInfo();
 }
 
 nsresult nsPK11Token::refreshTokenInfo() {
@@ -53,7 +54,7 @@ nsresult nsPK11Token::refreshTokenInfo() {
   }
 
   CK_TOKEN_INFO tokInfo;
-  nsresult rv = MapSECStatus(PK11_GetTokenInfo(mSlot.get(), &tokInfo));
+  nsresult rv = mozilla::MapSECStatus(PK11_GetTokenInfo(mSlot.get(), &tokInfo));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -160,14 +161,15 @@ nsPK11Token::Login(bool force) {
   rv = setPassword(mSlot.get(), mUIContext);
   if (NS_FAILED(rv)) return rv;
 
-  return MapSECStatus(PK11_Authenticate(mSlot.get(), true, mUIContext));
+  return mozilla::MapSECStatus(
+      PK11_Authenticate(mSlot.get(), true, mUIContext));
 }
 
 NS_IMETHODIMP
 nsPK11Token::LogoutSimple() {
   // PK11_Logout() can fail if the user wasn't logged in beforehand. We want
   // this method to succeed even in this case, so we ignore the return value.
-  Unused << PK11_Logout(mSlot.get());
+  mozilla::Unused << PK11_Logout(mSlot.get());
   return NS_OK;
 }
 
@@ -187,7 +189,7 @@ nsPK11Token::LogoutAndDropAuthenticatedResources() {
 
 NS_IMETHODIMP
 nsPK11Token::Reset() {
-  return MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
+  return mozilla::MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
 }
 
 NS_IMETHODIMP
@@ -228,9 +230,11 @@ nsPK11Token::InitPassword(const nsACString& initialPassword) {
     return rv;
   }
   if (!PK11_NeedUserInit(mSlot.get()) && !hasPassword) {
-    return MapSECStatus(PK11_ChangePW(mSlot.get(), "", passwordCStr.get()));
+    return mozilla::MapSECStatus(
+        PK11_ChangePW(mSlot.get(), "", passwordCStr.get()));
   }
-  return MapSECStatus(PK11_InitPin(mSlot.get(), "", passwordCStr.get()));
+  return mozilla::MapSECStatus(
+      PK11_InitPin(mSlot.get(), "", passwordCStr.get()));
 }
 
 NS_IMETHODIMP
@@ -240,7 +244,7 @@ nsPK11Token::ChangePassword(const nsACString& oldPassword,
   // nullptr. In order to support this difference, we need to check IsVoid() to
   // find out if our caller supplied null/undefined args or just empty strings.
   // See Bug 447589.
-  return MapSECStatus(PK11_ChangePW(
+  return mozilla::MapSECStatus(PK11_ChangePW(
       mSlot.get(),
       oldPassword.IsVoid() ? nullptr : PromiseFlatCString(oldPassword).get(),
       newPassword.IsVoid() ? nullptr : PromiseFlatCString(newPassword).get()));
@@ -270,7 +274,7 @@ NS_IMPL_ISUPPORTS(nsPK11TokenDB, nsIPK11TokenDB)
 NS_IMETHODIMP
 nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
-  UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
+  mozilla::UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return NS_ERROR_FAILURE;
   }

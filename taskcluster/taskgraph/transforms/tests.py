@@ -61,16 +61,6 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 't-win7-32-gpu',
       'hardware': 't-win10-64-hw',
     },
-    'windows7-32-pgo': {
-      'virtual': 't-win7-32',
-      'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows7-32-nightly': {
-      'virtual': 't-win7-32',
-      'virtual-with-gpu': 't-win7-32-gpu',
-      'hardware': 't-win10-64-hw',
-    },
     'windows7-32-shippable': {
       'virtual': 't-win7-32',
       'virtual-with-gpu': 't-win7-32-gpu',
@@ -88,7 +78,7 @@ WINDOWS_WORKER_TYPES = {
     },
     'windows10-64': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-aarch64': {
@@ -98,57 +88,42 @@ WINDOWS_WORKER_TYPES = {
     },
     'windows10-64-ccov': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows10-64-pgo': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-devedition': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows10-64-nightly': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-asan': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-qr': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
-      'hardware': 't-win10-64-hw',
-    },
-    'windows10-64-pgo-qr': {
-      'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable-qr': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-mingwclang': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-hw',
     },
     'windows10-64-ref-hw-2017': {
       'virtual': 't-win10-64',
-      'virtual-with-gpu': 't-win10-64-gpu',
+      'virtual-with-gpu': 't-win10-64-gpu-s',
       'hardware': 't-win10-64-ref-hw',
     },
 }
@@ -790,13 +765,6 @@ def set_treeherder_machine_platform(config, tests):
         'win64-aarch64/opt': 'windows10-aarch64/opt',
         'win32-pgo/opt': 'windows7-32/pgo',
         'win64-pgo/opt': 'windows10-64/pgo',
-        # The build names for Android platforms have partially evolved over the
-        # years and need to be translated.
-        'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
-        'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
-        'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
-        'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
-        'android-x86/opt': 'android-em-4-2-x86/opt',
     }
     for test in tests:
         # For most desktop platforms, the above table is not used for "regular"
@@ -877,10 +845,6 @@ def set_tier(config, tests):
                                          'macosx1014-64-qr/opt',
                                          'macosx1014-64-shippable-qr/opt',
                                          'macosx1014-64-qr/debug',
-                                         'android-em-4.3-arm7-api-16/opt',
-                                         'android-em-4.3-arm7-api-16/debug',
-                                         'android-em-4.3-arm7-api-16/pgo',
-                                         'android-em-4.2-x86/opt',
                                          'android-em-7.0-x86_64/opt',
                                          'android-em-7.0-x86_64/debug',
                                          'android-em-7.0-x86/opt']:

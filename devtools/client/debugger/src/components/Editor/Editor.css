@@ -29,6 +29,12 @@
   overflow-anchor: none;
 }
 
+/* Prevents inline preview from shifting source height (#1576163) */
+.CodeMirror-linewidget {
+  padding: 0;
+  display: flow-root;
+}
+
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
  * BUG https://github.com/firefox-devtools/debugger/issues/63

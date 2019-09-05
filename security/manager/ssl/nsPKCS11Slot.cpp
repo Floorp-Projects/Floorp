@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
+#include "nsNSSCertHelper.h"
 #include "nsNSSComponent.h"
 #include "nsPK11TokenDB.h"
 #include "nsPromiseFlatString.h"
@@ -30,12 +31,12 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo* slot) {
       PK11_IsInternal(mSlot.get()) && !PK11_IsInternalKeySlot(mSlot.get());
   mIsInternalKeySlot = PK11_IsInternalKeySlot(mSlot.get());
   mSeries = PK11_GetSlotSeries(slot);
-  Unused << refreshSlotInfo();
+  mozilla::Unused << refreshSlotInfo();
 }
 
 nsresult nsPKCS11Slot::refreshSlotInfo() {
   CK_SLOT_INFO slotInfo;
-  nsresult rv = MapSECStatus(PK11_GetSlotInfo(mSlot.get(), &slotInfo));
+  nsresult rv = mozilla::MapSECStatus(PK11_GetSlotInfo(mSlot.get(), &slotInfo));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -260,7 +261,7 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval) {
    * since it uses the WaitForSlotEvent call) need to hold the
    * ModuleList Read lock to prevent the slot array from changing out
    * from under it. */
-  AutoSECMODListReadLock lock;
+  mozilla::AutoSECMODListReadLock lock;
   for (int i = 0; i < mModule->slotCount; i++) {
     if (mModule->slots[i]) {
       nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(mModule->slots[i]);

@@ -48,7 +48,6 @@ OPT_TASK_PATTERNS = [
     'macosx64/opt',
     'windows10-64/opt',
     'windows7-32/opt',
-    'android-em-4.3-arm7-api-16/opt',
     'linux64/opt',
 ]
 

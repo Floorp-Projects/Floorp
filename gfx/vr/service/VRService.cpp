@@ -28,7 +28,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace std;
 
 namespace {
 

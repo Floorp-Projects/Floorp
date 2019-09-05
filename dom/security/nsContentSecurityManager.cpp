@@ -373,12 +373,6 @@ void nsContentSecurityManager::AssertEvalNotRestricted(
 
       // The Browser Toolbox/Console
       NS_LITERAL_CSTRING("debugger"),
-
-      // The following files are NOT supposed to stay on this whitelist.
-      // Bug numbers indicate planned removal of each file.
-
-      // Bug 1498560
-      NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
   };
 
   // We also permit two specific idioms in eval()-like contexts. We'd like to

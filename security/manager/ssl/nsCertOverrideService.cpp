@@ -82,7 +82,7 @@ NS_IMPL_ISUPPORTS(nsCertOverrideService, nsICertOverrideService, nsIObserver,
                   nsISupportsWeakReference)
 
 nsCertOverrideService::nsCertOverrideService()
-    : mMutex("nsCertOverrideService.mutex") {}
+    : mDisableAllSecurityCheck(false), mMutex("nsCertOverrideService.mutex") {}
 
 nsCertOverrideService::~nsCertOverrideService() {}
 
@@ -412,6 +412,21 @@ nsCertOverrideService::HasMatchingOverride(const nsACString& aHostName,
                                            int32_t aPort, nsIX509Cert* aCert,
                                            uint32_t* aOverrideBits,
                                            bool* aIsTemporary, bool* _retval) {
+  bool disableAllSecurityCheck = false;
+  {
+    MutexAutoLock lock(mMutex);
+    disableAllSecurityCheck = mDisableAllSecurityCheck;
+  }
+  if (disableAllSecurityCheck) {
+    nsCertOverride::OverrideBits all = nsCertOverride::OverrideBits::Untrusted |
+                                       nsCertOverride::OverrideBits::Mismatch |
+                                       nsCertOverride::OverrideBits::Time;
+    *aOverrideBits = static_cast<uint32_t>(all);
+    *aIsTemporary = false;
+    *_retval = true;
+    return NS_OK;
+  }
+
   if (aHostName.IsEmpty() || !IsASCII(aHostName)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -589,6 +604,19 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
     }
   }
   *_retval = counter;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCertOverrideService::
+    SetDisableAllSecurityChecksAndLetAttackersInterceptMyData(bool aDisable) {
+  if (!(PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR") ||
+        PR_GetEnv("MOZ_MARIONETTE"))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  MutexAutoLock lock(mMutex);
+  mDisableAllSecurityCheck = aDisable;
   return NS_OK;
 }
 
