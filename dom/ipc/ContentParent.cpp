@@ -1808,40 +1808,31 @@ bool ContentParent::ShouldKeepProcessAlive() {
   return numberOfAliveProcesses <= processesToKeepAlive;
 }
 
-void ContentParent::NotifyTabDestroying(const TabId& aTabId,
-                                        const ContentParentId& aCpId) {
-  if (XRE_IsParentProcess()) {
-    // There can be more than one PBrowser for a given app process
-    // because of popup windows.  PBrowsers can also destroy
-    // concurrently.  When all the PBrowsers are destroying, kick off
-    // another task to ensure the child process *really* shuts down,
-    // even if the PBrowsers themselves never finish destroying.
-    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-    ContentParent* cp = cpm->GetContentProcessById(aCpId);
-    if (!cp) {
-      return;
-    }
-    ++cp->mNumDestroyingTabs;
-    uint32_t tabCount = cpm->GetBrowserParentCountByProcessId(aCpId);
-    if (uint32_t(cp->mNumDestroyingTabs) != tabCount) {
-      return;
-    }
+void ContentParent::NotifyTabDestroying() {
+  // There can be more than one PBrowser for a given app process
+  // because of popup windows.  PBrowsers can also destroy
+  // concurrently.  When all the PBrowsers are destroying, kick off
+  // another task to ensure the child process *really* shuts down,
+  // even if the PBrowsers themselves never finish destroying.
+  ++mNumDestroyingTabs;
 
-    if (cp->ShouldKeepProcessAlive()) {
-      return;
-    }
-
-    if (cp->TryToRecycle()) {
-      return;
-    }
-
-    // We're dying now, so prevent this content process from being
-    // recycled during its shutdown procedure.
-    cp->MarkAsDead();
-    cp->StartForceKillTimer();
-  } else {
-    ContentChild::GetSingleton()->SendNotifyTabDestroying(aTabId, aCpId);
+  uint32_t tabCount = ManagedPBrowserParent().Count();
+  if (uint32_t(mNumDestroyingTabs) != tabCount) {
+    return;
   }
+
+  if (ShouldKeepProcessAlive()) {
+    return;
+  }
+
+  if (TryToRecycle()) {
+    return;
+  }
+
+  // We're dying now, so prevent this content process from being
+  // recycled during its shutdown procedure.
+  MarkAsDead();
+  StartForceKillTimer();
 }
 
 void ContentParent::StartForceKillTimer() {
@@ -4530,12 +4521,6 @@ void ContentParent::NotifyRebuildFontList() {
   for (auto* cp : AllProcesses(eLive)) {
     Unused << cp->SendRebuildFontList();
   }
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvNotifyTabDestroying(
-    const TabId& aTabId, const ContentParentId& aCpId) {
-  NotifyTabDestroying(aTabId, aCpId);
-  return IPC_OK();
 }
 
 already_AddRefed<mozilla::docshell::POfflineCacheUpdateParent>
