@@ -68,6 +68,14 @@ add_task(async function test_create_login() {
           "Create button should not be disabled initially"
         );
 
+        let loginItem = Cu.waiveXrays(
+          content.document.querySelector("login-item")
+        );
+        let usernameInput = loginItem.shadowRoot.querySelector(
+          "input[name='username']"
+        );
+        usernameInput.placeholder = "dummy placeholder";
+
         createButton.click();
 
         ok(
@@ -77,10 +85,6 @@ add_task(async function test_create_login() {
         ok(
           createButton.disabled,
           "Create button should be disabled after being clicked"
-        );
-
-        let loginItem = Cu.waiveXrays(
-          content.document.querySelector("login-item")
         );
 
         let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
@@ -93,13 +97,20 @@ add_task(async function test_create_login() {
         let originInput = loginItem.shadowRoot.querySelector(
           "input[name='origin']"
         );
-        let usernameInput = loginItem.shadowRoot.querySelector(
-          "input[name='username']"
-        );
         let passwordInput = loginItem.shadowRoot.querySelector(
           "input[name='password']"
         );
 
+        is(
+          content.document.l10n.getAttributes(usernameInput).id,
+          null,
+          "there should be no placeholder id on the username input in edit mode"
+        );
+        is(
+          usernameInput.placeholder,
+          "",
+          "there should be no placeholder on the username input in edit mode"
+        );
         originInput.value = aOriginTuple[0];
         usernameInput.value = "testuser1";
         passwordInput.value = "testpass1";
@@ -173,12 +184,17 @@ add_task(async function test_create_login() {
         "Stored login should have password provided during creation"
       );
 
-      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
-      editButton.click();
-
       let usernameInput = loginItem.shadowRoot.querySelector(
         "input[name='username']"
       );
+      ok(
+        usernameInput.placeholder,
+        "there should be a placeholder on the username input when not in edit mode"
+      );
+
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      editButton.click();
+
       let passwordInput = loginItem.shadowRoot.querySelector(
         "input[name='password']"
       );
