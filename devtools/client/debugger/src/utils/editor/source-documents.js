@@ -7,6 +7,7 @@
 import { getMode } from "../source";
 
 import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
+import { isMinified } from "../isMinified";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
 import SourceEditor from "./source-editor";
 
@@ -14,6 +15,7 @@ import type {
   SourceId,
   Source,
   SourceContent,
+  SourceWithContent,
   SourceDocuments,
 } from "../../types";
 import type { SymbolDeclarations } from "../../workers/parser";
@@ -121,7 +123,21 @@ function setEditorText(
   }
 }
 
-function setMode(editor, source: Source, content: SourceContent, symbols) {
+function setMode(
+  editor,
+  source: SourceWithContent,
+  content: SourceContent,
+  symbols
+) {
+  // Disable modes for minified files with 1+ million characters Bug 1569829
+  if (
+    content.type === "text" &&
+    isMinified(source) &&
+    content.value.length > 1000000
+  ) {
+    return;
+  }
+
   const mode = getMode(source, content, symbols);
   const currentMode = editor.codeMirror.getOption("mode");
   if (!currentMode || currentMode.name != mode.name) {
@@ -135,7 +151,7 @@ function setMode(editor, source: Source, content: SourceContent, symbols) {
  */
 export function showSourceText(
   editor: Object,
-  source: Source,
+  source: SourceWithContent,
   content: SourceContent,
   symbols?: SymbolDeclarations
 ) {
