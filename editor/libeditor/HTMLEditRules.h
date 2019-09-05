@@ -122,11 +122,12 @@ class HTMLEditRules : public TextEditRules {
    * Called before deleting selected contents.  This method actually removes
    * selected contents.
    *
-   * @param aAction             Direction of the deletion.
+   * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult WillDeleteSelection(
-      nsIEditor::EDirection aAction, nsIEditor::EStripWrappers aStripWrappers);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  WillDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
+                      nsIEditor::EStripWrappers aStripWrappers);
 
   /**
    * Called after deleting selected content.
