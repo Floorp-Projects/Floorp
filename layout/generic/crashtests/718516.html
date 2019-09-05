@@ -6,7 +6,7 @@
           {
             firstDirElement = document.createElement('dir');
             firstDirElement.style.cssText = '-moz-stack-sizing: ignore;' +
-              ' -moz-column-width: 16385px;';
+              ' column-width: 16385px;';
             textPathElement = document
               .createElementNS('http://www.w3.org/2000/svg', 'textPath');
             firstDirElement.appendChild(textPathElement);
@@ -30,7 +30,7 @@
               .contentDocument.getElementById('element2');
             secondDirElement = document.createElement('dir');
             secondDirElement.style.cssText =
-              'visibility: inherit;-moz-column-count: 32771;';
+              'visibility: inherit;column-count: 32771;';
             feOffsetElement = document
               .createElementNS('http://www.w3.org/2000/svg', 'feOffset');
             centerElement.style.position = 'absolute';
