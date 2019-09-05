@@ -140,19 +140,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
-   * GetGoodSelPointForNode() finds where at a node you would want to set the
-   * selection if you were trying to have a caret next to it.  Always returns a
-   * valid value (unless mHTMLEditor has gone away).
-   *
-   * @param aNode         The node
-   * @param aAction       Which edge to find:
-   *                        eNext/eNextWord/eToEndOfLine indicates beginning,
-   *                        ePrevious/PreviousWord/eToBeginningOfLine ending.
-   */
-  EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
-                                        nsIEditor::EDirection aAction);
-
-  /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
    * table related elements (except <table> itself) and their contents
    * from the DOM tree.
