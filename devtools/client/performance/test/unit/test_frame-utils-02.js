@@ -73,15 +73,15 @@ add_task(function() {
   );
 
   ok(
-    !isContent({ category: 1, location: "file://foo -> http://bar" }),
+    isContent({ category: 1, location: "file://foo -> http://bar" }),
     "Verifying content/chrome frames is working properly."
   );
   ok(
-    !isContent({ category: 1, location: "file://foo -> https://bar" }),
+    isContent({ category: 1, location: "file://foo -> https://bar" }),
     "Verifying content/chrome frames is working properly."
   );
   ok(
-    !isContent({ category: 1, location: "file://foo -> file://bar" }),
+    isContent({ category: 1, location: "file://foo -> file://bar" }),
     "Verifying content/chrome frames is working properly."
   );
 });

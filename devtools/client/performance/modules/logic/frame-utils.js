@@ -206,11 +206,6 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
  * @param {InflatedFrame} frame
  */
 function computeIsContentAndCategory(frame) {
-  // Only C++ stack frames have associated category information.
-  if (frame.category !== null && frame.category !== undefined) {
-    return;
-  }
-
   const location = frame.location;
 
   // There are 3 variants of location strings in the profiler (with optional
@@ -244,6 +239,10 @@ function computeIsContentAndCategory(frame) {
   // them all as content.
   if (isContentScheme(location, schemeStartIndex) || isWASM(location)) {
     frame.isContent = true;
+    return;
+  }
+
+  if (frame.category !== null && frame.category !== undefined) {
     return;
   }
 

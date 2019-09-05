@@ -36,8 +36,6 @@ add_task(async function() {
   treeRoot.attachTo(container);
 
   const A = treeRoot.getChild();
-  const B = A.getChild();
-  const D = B.getChild();
 
   let linkEvent = null;
   const handler = e => {
@@ -47,18 +45,18 @@ add_task(async function() {
   treeRoot.on("link", handler);
 
   // Fire right click.
-  rightMousedown(D.target.querySelector(".call-tree-url"));
+  rightMousedown(A.target.querySelector(".call-tree-url"));
 
   // Ensure link was not called for right click.
   await idleWait(100);
   ok(!linkEvent, "The `link` event not fired for right click.");
 
   // Fire left click.
-  mousedown(D.target.querySelector(".call-tree-url"));
+  mousedown(A.target.querySelector(".call-tree-url"));
 
   // Ensure link was called for left click.
   await waitUntil(() => linkEvent);
-  is(linkEvent, D, "The `link` event target is correct.");
+  is(linkEvent, A, "The `link` event target is correct.");
 
   treeRoot.off("link", handler);
 });
