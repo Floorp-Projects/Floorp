@@ -905,6 +905,40 @@ add_task(async function test_settings_store_add_disabled() {
   await promiseShutdownManager();
 });
 
+add_task(async function test_settings_uninstall_remove() {
+  await promiseStartupManager();
+
+  let id = "@add-on-uninstall";
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: { gecko: { id } },
+    },
+  });
+
+  await extension.startup();
+  await ExtensionSettingsStore.initialize();
+
+  await ExtensionSettingsStore.addSetting(
+    id,
+    "foo",
+    "bar",
+    "set",
+    () => "not set"
+  );
+
+  let item = ExtensionSettingsStore.getSetting("foo", "bar");
+  equal(item.id, id, "The add-on is in control");
+  equal(item.value, "set", "The value is set");
+
+  await extension.unload();
+
+  await promiseShutdownManager();
+
+  item = ExtensionSettingsStore.getSetting("foo", "bar");
+  equal(item, null, "The add-on setting was removed");
+});
+
 add_task(async function test_exceptions() {
   await ExtensionSettingsStore.initialize();
 
