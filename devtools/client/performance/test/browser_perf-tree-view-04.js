@@ -57,6 +57,11 @@ add_task(function() {
   const D = B.getChild();
 
   is(
+    A.target.getAttribute("tooltiptext"),
+    "A (http://foo/bar/baz:12:9)",
+    "The .A node's 'tooltiptext' attribute is correct"
+  );
+  is(
     D.target.getAttribute("origin"),
     "chrome",
     "The .A.B.D node's 'origin' attribute is correct."
@@ -68,7 +73,7 @@ add_task(function() {
   );
   is(
     D.target.getAttribute("tooltiptext"),
-    "D (http://foo/bar/baz:78:9)",
+    "D INTER_SLICE_GC",
     "The .A.B.D node's 'tooltiptext' attribute is correct."
   );
 
@@ -108,7 +113,7 @@ add_task(function() {
     "The sixth column displayed for tree items is correct."
   );
 
-  const functionCell = D.target.childNodes[5];
+  const functionCell = A.target.childNodes[5];
 
   is(
     functionCell.childNodes.length,
