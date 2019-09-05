@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import androidx.test.uiautomator.UiDevice
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Ignore
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -93,6 +94,8 @@ class HomeScreenTest {
     }
 
     @Test
+    @Ignore("Temp disable broken test - see:  https://github.com/mozilla-mobile/fenix/issues/5050")
+
     fun privateModeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
