@@ -2348,9 +2348,8 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
 
   // First check for table selection mode.  If so, hand off to table editor.
   ErrorResult error;
-  RefPtr<Element> cellElement =
-      HTMLEditorRef().GetFirstSelectedTableCellElement(error);
-  if (cellElement) {
+  if (RefPtr<Element> cellElement =
+          HTMLEditorRef().GetFirstSelectedTableCellElement(error)) {
     error.SuppressException();
     nsresult rv =
         MOZ_KnownLive(HTMLEditorRef()).DeleteTableCellContentsWithTransaction();
@@ -2361,18 +2360,26 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
                          "DeleteTableCellContentsWithTransaction() failed");
     return EditActionHandled(rv);
   }
-  nsresult rv = error.StealNSResult();
-  cellElement = nullptr;
 
-  // origCollapsed is used later to determine whether we should join blocks. We
-  // don't really care about bCollapsed because it will be modified by
-  // ExtendSelectionForDelete later. TryToJoinBlocksWithTransaction() should
-  // happen if the original selection is collapsed and the cursor is at the end
-  // of a block element, in which case ExtendSelectionForDelete would always
-  // make the selection not collapsed.
-  bool origCollapsed = SelectionRefPtr()->IsCollapsed();
+  // Only when there is no selection range, GetFirstSelectedTableCellElement()
+  // returns error and in this case, anyway we cannot handle delete selection.
+  // So, let's return error here even though we haven't handled this.
+  if (NS_WARN_IF(error.Failed())) {
+    return EditActionResult(error.StealNSResult());
+  }
 
-  if (origCollapsed) {
+  // selectionWasCollapsed is used later to determine whether we should join
+  // blocks in HandleDeleteNonCollapasedSelection(). We don't really care
+  // about collapsed because it will be modified by ExtendSelectionForDelete()
+  // later. TryToJoinBlocksWithTransaction() should happen if the original
+  // selection is collapsed and the cursor is at the end of a block element,
+  // in which case ExtendSelectionForDelete() would always make the selection
+  // not collapsed.
+  SelectionWasCollapsed selectionWasCollapsed = SelectionRefPtr()->IsCollapsed()
+                                                    ? SelectionWasCollapsed::Yes
+                                                    : SelectionWasCollapsed::No;
+
+  if (selectionWasCollapsed == SelectionWasCollapsed::Yes) {
     EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
     if (NS_WARN_IF(!startPoint.IsSet())) {
       return EditActionResult(NS_ERROR_FAILURE);
@@ -2411,7 +2418,8 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
     AutoSetTemporaryAncestorLimiter autoSetter(
         HTMLEditorRef(), *SelectionRefPtr(), *startPoint.GetContainer());
 
-    rv = HTMLEditorRef().ExtendSelectionForDelete(&aDirectionAndAmount);
+    nsresult rv =
+        HTMLEditorRef().ExtendSelectionForDelete(&aDirectionAndAmount);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionResult(rv);
     }
@@ -2420,540 +2428,563 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
     if (aDirectionAndAmount == nsIEditor::eNone) {
       return EditActionIgnored();
     }
+
+    if (SelectionRefPtr()->IsCollapsed()) {
+      EditActionResult result = HandleDeleteAroundCollapsedSelection(
+          aDirectionAndAmount, aStripWrappers);
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "HandleDeleteAroundCollapsedSelection() failed");
+      return result;
+    }
   }
 
-  if (SelectionRefPtr()->IsCollapsed()) {
-    // ExtendSelectionForDelete() won't change the selection.
+  EditActionResult result = HandleDeleteNonCollapsedSelection(
+      aDirectionAndAmount, aStripWrappers, selectionWasCollapsed);
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "HandleDeleteNonCollapasedSelection() failed");
+  return result;
+}
 
-    EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
-    if (NS_WARN_IF(!startPoint.IsSet())) {
-      return EditActionResult(NS_ERROR_FAILURE);
-    }
+EditActionResult HTMLEditRules::HandleDeleteAroundCollapsedSelection(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers) {
+  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(HTMLEditorRef().IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
+  MOZ_ASSERT(aDirectionAndAmount != nsIEditor::eNone);
 
-    // What's in the direction we are deleting?
-    WSRunObject wsObj(&HTMLEditorRef(), startPoint);
-    nsCOMPtr<nsINode> visibleNode;
-    int32_t visibleNodeOffset;
-    WSType wsType;
+  EditorDOMPoint startPoint(EditorBase::GetStartPoint(*SelectionRefPtr()));
+  if (NS_WARN_IF(!startPoint.IsSet())) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
 
-    // Find next visible node
+  // What's in the direction we are deleting?
+  WSRunObject wsObj(&HTMLEditorRef(), startPoint);
+  nsCOMPtr<nsINode> visibleNode;
+  int32_t visibleNodeOffset;
+  WSType wsType;
+
+  // Find next visible node
+  if (aDirectionAndAmount == nsIEditor::eNext) {
+    wsObj.NextVisibleNode(startPoint, address_of(visibleNode),
+                          &visibleNodeOffset, &wsType);
+  } else {
+    wsObj.PriorVisibleNode(startPoint, address_of(visibleNode),
+                           &visibleNodeOffset, &wsType);
+  }
+
+  if (!visibleNode) {
+    return EditActionCanceled();
+  }
+
+  if (wsType == WSType::normalWS) {
+    // We found some visible ws to delete.  Let ws code handle it.
     if (aDirectionAndAmount == nsIEditor::eNext) {
-      wsObj.NextVisibleNode(startPoint, address_of(visibleNode),
-                            &visibleNodeOffset, &wsType);
+      nsresult rv = wsObj.DeleteWSForward();
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionHandled(rv);
+      }
     } else {
-      wsObj.PriorVisibleNode(startPoint, address_of(visibleNode),
-                             &visibleNodeOffset, &wsType);
+      nsresult rv = wsObj.DeleteWSBackward();
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionHandled(rv);
+      }
     }
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                          EditorBase::GetStartPoint(*SelectionRefPtr()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
+    return EditActionHandled(rv);
+  }
 
-    if (!visibleNode) {
-      // XXX This is the result of GetFirstSelectedTableCellElement().
-      //     This must be a bug.
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "GetFirstSelectedTableCellElement() failed");
-      return EditActionCanceled(rv);
-    }
-
-    if (wsType == WSType::normalWS) {
-      // We found some visible ws to delete.  Let ws code handle it.
-      if (aDirectionAndAmount == nsIEditor::eNext) {
-        nsresult rv = wsObj.DeleteWSForward();
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionHandled(rv);
-        }
-      } else {
-        nsresult rv = wsObj.DeleteWSBackward();
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionHandled(rv);
+  if (wsType == WSType::text) {
+    // Found normal text to delete.
+    OwningNonNull<Text> visibleTextNode = *visibleNode->GetAsText();
+    int32_t startOffset = visibleNodeOffset;
+    int32_t endOffset = visibleNodeOffset + 1;
+    if (aDirectionAndAmount == nsIEditor::ePrevious) {
+      if (!startOffset) {
+        return EditActionResult(NS_ERROR_UNEXPECTED);
+      }
+      startOffset--;
+      endOffset--;
+      // Bug 1068979: delete both codepoints if surrogate pair
+      if (startOffset > 0) {
+        const nsTextFragment* text = &visibleTextNode->TextFragment();
+        if (text->IsLowSurrogateFollowingHighSurrogateAt(startOffset)) {
+          startOffset--;
         }
       }
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-                  EditorBase::GetStartPoint(*SelectionRefPtr()));
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
+    } else {
+      RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+      if (NS_WARN_IF(!range)) {
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
+
+      NS_ASSERTION(range->GetStartContainer() == visibleNode,
+                   "selection start not in visibleNode");
+      NS_ASSERTION(range->GetEndContainer() == visibleNode,
+                   "selection end not in visibleNode");
+
+      startOffset = range->StartOffset();
+      endOffset = range->EndOffset();
+    }
+    nsresult rv = WSRunObject::PrepareToDeleteRange(
+        MOZ_KnownLive(&HTMLEditorRef()), address_of(visibleNode), &startOffset,
+        address_of(visibleNode), &endOffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionResult(rv);
+    }
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .DeleteTextWithTransaction(visibleTextNode,
+                                        std::min(startOffset, endOffset),
+                                        DeprecatedAbs(endOffset - startOffset));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionHandled(rv);
     }
 
-    if (wsType == WSType::text) {
-      // Found normal text to delete.
-      OwningNonNull<Text> visibleTextNode = *visibleNode->GetAsText();
-      int32_t startOffset = visibleNodeOffset;
-      int32_t endOffset = visibleNodeOffset + 1;
-      if (aDirectionAndAmount == nsIEditor::ePrevious) {
-        if (!startOffset) {
-          return EditActionResult(NS_ERROR_UNEXPECTED);
-        }
-        startOffset--;
-        endOffset--;
-        // Bug 1068979: delete both codepoints if surrogate pair
-        if (startOffset > 0) {
-          const nsTextFragment* text = &visibleTextNode->TextFragment();
-          if (text->IsLowSurrogateFollowingHighSurrogateAt(startOffset)) {
-            startOffset--;
-          }
-        }
-      } else {
-        RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
-        if (NS_WARN_IF(!range)) {
-          return EditActionResult(NS_ERROR_FAILURE);
-        }
+    // XXX When Backspace key is pressed, Chromium removes following empty
+    //     text nodes when removing the last character of the non-empty text
+    //     node.  However, Edge never removes empty text nodes even if
+    //     selection is in the following empty text node(s).  For now, we
+    //     should keep our traditional behavior same as Edge for backward
+    //     compatibility.
+    // XXX When Delete key is pressed, Edge removes all preceding empty
+    //     text nodes when removing the first character of the non-empty
+    //     text node.  Chromium removes only selected empty text node and
+    //     following empty text nodes and the first character of the
+    //     non-empty text node.  For now, we should keep our traditional
+    //     behavior same as Chromium for backward compatibility.
 
-        NS_ASSERTION(range->GetStartContainer() == visibleNode,
-                     "selection start not in visibleNode");
-        NS_ASSERTION(range->GetEndContainer() == visibleNode,
-                     "selection end not in visibleNode");
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .DeleteNodeIfInvisibleAndEditableTextNode(visibleTextNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "DeleteNodeIfInvisibleAndEditableTextNode() failed, but ignored");
 
-        startOffset = range->StartOffset();
-        endOffset = range->EndOffset();
-      }
-      nsresult rv = WSRunObject::PrepareToDeleteRange(
-          MOZ_KnownLive(&HTMLEditorRef()), address_of(visibleNode),
-          &startOffset, address_of(visibleNode), &endOffset);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionResult(rv);
-      }
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .DeleteTextWithTransaction(
-                   visibleTextNode, std::min(startOffset, endOffset),
-                   DeprecatedAbs(endOffset - startOffset));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionHandled(rv);
-      }
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                 EditorBase::GetStartPoint(*SelectionRefPtr()));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionHandled(rv);
+    }
 
-      // XXX When Backspace key is pressed, Chromium removes following empty
-      //     text nodes when removing the last character of the non-empty text
-      //     node.  However, Edge never removes empty text nodes even if
-      //     selection is in the following empty text node(s).  For now, we
-      //     should keep our traditional behavior same as Edge for backward
-      //     compatibility.
-      // XXX When Delete key is pressed, Edge removes all preceding empty
-      //     text nodes when removing the first character of the non-empty
-      //     text node.  Chromium removes only selected empty text node and
-      //     following empty text nodes and the first character of the
-      //     non-empty text node.  For now, we should keep our traditional
-      //     behavior same as Chromium for backward compatibility.
+    // Remember that we did a ranged delete for the benefit of
+    // AfterEditInner().
+    HTMLEditorRef().TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange =
+        true;
 
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .DeleteNodeIfInvisibleAndEditableTextNode(visibleTextNode);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "DeleteNodeIfInvisibleAndEditableTextNode() failed, but ignored");
+    return EditActionHandled();
+  }
 
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-                   EditorBase::GetStartPoint(*SelectionRefPtr()));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionHandled(rv);
-      }
-
-      // Remember that we did a ranged delete for the benefit of
-      // AfterEditInner().
-      HTMLEditorRef()
-          .TopLevelEditSubActionDataRef()
-          .mDidDeleteNonCollapsedRange = true;
-
+  if (wsType == WSType::special || wsType == WSType::br ||
+      visibleNode->IsHTMLElement(nsGkAtoms::hr)) {
+    // If the void element is editing host, we should do nothing.
+    if (visibleNode == wsObj.GetEditingHost()) {
       return EditActionHandled();
     }
 
-    if (wsType == WSType::special || wsType == WSType::br ||
+    // Short circuit for invisible breaks.  delete them and recurse.
+    if (visibleNode->IsHTMLElement(nsGkAtoms::br) &&
+        !HTMLEditorRef().IsVisibleBRElement(visibleNode)) {
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .DeleteNodeWithTransaction(*visibleNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionResult(rv);
+      }
+      EditActionResult result =
+          WillDeleteSelection(aDirectionAndAmount, aStripWrappers);
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "Nested WillDeleteSelection() failed");
+      return result;
+    }
+
+    // Special handling for backspace when positioned after <hr>
+    if (aDirectionAndAmount == nsIEditor::ePrevious &&
         visibleNode->IsHTMLElement(nsGkAtoms::hr)) {
-      // If the void element is editing host, we should do nothing.
-      if (visibleNode == wsObj.GetEditingHost()) {
-        return EditActionHandled();
+      // Only if the caret is positioned at the end-of-hr-line position, we
+      // want to delete the <hr>.
+      //
+      // In other words, we only want to delete, if our selection position
+      // (indicated by startPoint) is the position directly
+      // after the <hr>, on the same line as the <hr>.
+      //
+      // To detect this case we check:
+      // startPoint's container == parentOfVisNode
+      // and
+      // startPoint's offset -1 == visibleNodeOffsetToVisNodeParent
+      // and
+      // interline position is false (left)
+      //
+      // In any other case we set the position to startPoint's container -1
+      // and interlineposition to false, only moving the caret to the
+      // end-of-hr-line position.
+      bool moveOnly = true;
+
+      EditorRawDOMPoint atHRElement(visibleNode);
+
+      ErrorResult err;
+      bool interLineIsRight = SelectionRefPtr()->GetInterlinePosition(err);
+      if (NS_WARN_IF(err.Failed())) {
+        return EditActionResult(err.StealNSResult());
       }
 
-      // Short circuit for invisible breaks.  delete them and recurse.
-      if (visibleNode->IsHTMLElement(nsGkAtoms::br) &&
-          !HTMLEditorRef().IsVisibleBRElement(visibleNode)) {
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .DeleteNodeWithTransaction(*visibleNode);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionResult(rv);
-        }
-        EditActionResult result =
-            WillDeleteSelection(aDirectionAndAmount, aStripWrappers);
-        NS_WARNING_ASSERTION(result.Succeeded(),
-                             "Nested WillDeleteSelection() failed");
-        return result;
+      if (startPoint.GetContainer() == atHRElement.GetContainer() &&
+          startPoint.Offset() - 1 == atHRElement.Offset() &&
+          !interLineIsRight) {
+        moveOnly = false;
       }
 
-      // Special handling for backspace when positioned after <hr>
-      if (aDirectionAndAmount == nsIEditor::ePrevious &&
-          visibleNode->IsHTMLElement(nsGkAtoms::hr)) {
-        // Only if the caret is positioned at the end-of-hr-line position, we
-        // want to delete the <hr>.
-        //
-        // In other words, we only want to delete, if our selection position
-        // (indicated by startPoint) is the position directly
-        // after the <hr>, on the same line as the <hr>.
-        //
-        // To detect this case we check:
-        // startPoint's container == parentOfVisNode
-        // and
-        // startPoint's offset -1 == visibleNodeOffsetToVisNodeParent
-        // and
-        // interline position is false (left)
-        //
-        // In any other case we set the position to startPoint's container -1
-        // and interlineposition to false, only moving the caret to the
-        // end-of-hr-line position.
-        bool moveOnly = true;
+      if (moveOnly) {
+        // Go to the position after the <hr>, but to the end of the <hr> line
+        // by setting the interline position to left.
+        EditorDOMPoint atNextOfHRElement(visibleNode);
+        DebugOnly<bool> advanced = atNextOfHRElement.AdvanceOffset();
+        NS_WARNING_ASSERTION(advanced,
+                             "Failed to advance offset after <hr> element");
 
-        EditorRawDOMPoint atHRElement(visibleNode);
-
-        ErrorResult err;
-        bool interLineIsRight = SelectionRefPtr()->GetInterlinePosition(err);
-        if (NS_WARN_IF(err.Failed())) {
-          return EditActionResult(err.StealNSResult());
-        }
-
-        if (startPoint.GetContainer() == atHRElement.GetContainer() &&
-            startPoint.Offset() - 1 == atHRElement.Offset() &&
-            !interLineIsRight) {
-          moveOnly = false;
-        }
-
-        if (moveOnly) {
-          // Go to the position after the <hr>, but to the end of the <hr> line
-          // by setting the interline position to left.
-          EditorDOMPoint atNextOfHRElement(visibleNode);
-          DebugOnly<bool> advanced = atNextOfHRElement.AdvanceOffset();
-          NS_WARNING_ASSERTION(advanced,
-                               "Failed to advance offset after <hr> element");
-
-          {
-            AutoEditorDOMPointChildInvalidator lockOffset(atNextOfHRElement);
-
-            IgnoredErrorResult ignoredError;
-            SelectionRefPtr()->Collapse(atNextOfHRElement, ignoredError);
-            if (NS_WARN_IF(!CanHandleEditAction())) {
-              return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-            }
-            NS_WARNING_ASSERTION(
-                !ignoredError.Failed(),
-                "Failed to collapse selection at after the <hr>");
-          }
+        {
+          AutoEditorDOMPointChildInvalidator lockOffset(atNextOfHRElement);
 
           IgnoredErrorResult ignoredError;
-          SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
-          NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                               "Failed to unset interline position");
-          HTMLEditorRef()
-              .TopLevelEditSubActionDataRef()
-              .mDidExplicitlySetInterLine = true;
-
-          // There is one exception to the move only case.  If the <hr> is
-          // followed by a <br> we want to delete the <br>.
-
-          WSType otherWSType;
-          nsCOMPtr<nsINode> otherNode;
-
-          wsObj.NextVisibleNode(startPoint, address_of(otherNode), nullptr,
-                                &otherWSType);
-
-          if (otherWSType != WSType::br) {
-            return EditActionHandled();
-          }
-
-          // Delete the <br>
-          if (NS_WARN_IF(!otherNode->IsContent())) {
-            return EditActionHandled(NS_ERROR_FAILURE);
-          }
-          nsIContent* otherContent = otherNode->AsContent();
-          nsresult rv = WSRunObject::PrepareToDeleteNode(
-              MOZ_KnownLive(&HTMLEditorRef()), MOZ_KnownLive(otherContent));
+          SelectionRefPtr()->Collapse(atNextOfHRElement, ignoredError);
           if (NS_WARN_IF(!CanHandleEditAction())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return EditActionHandled(rv);
-          }
-          rv = MOZ_KnownLive(HTMLEditorRef())
-                   .DeleteNodeWithTransaction(MOZ_KnownLive(*otherContent));
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-          }
-          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                               "DeleteNodeWithTransaction() failed");
-          return EditActionHandled(rv);
+          NS_WARNING_ASSERTION(
+              !ignoredError.Failed(),
+              "Failed to collapse selection at after the <hr>");
         }
-        // Else continue with normal delete code
-      }
 
-      if (NS_WARN_IF(!visibleNode->IsContent())) {
-        return EditActionResult(NS_ERROR_FAILURE);
-      }
-      // Found break or image, or hr.
-      nsresult rv = WSRunObject::PrepareToDeleteNode(
-          MOZ_KnownLive(&HTMLEditorRef()),
-          MOZ_KnownLive(visibleNode->AsContent()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionResult(rv);
-      }
-      // Remember sibling to visnode, if any
-      nsCOMPtr<nsIContent> previousEditableSibling =
-          HTMLEditorRef().GetPriorHTMLSibling(visibleNode);
-      // Delete the node, and join like nodes if appropriate
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .DeleteNodeWithTransaction(*visibleNode);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return EditActionResult(rv);
-      }
-      // Is there a prior node and are they siblings?
-      nsCOMPtr<nsINode> nextEditableSibling;
-      if (previousEditableSibling) {
-        nextEditableSibling =
-            HTMLEditorRef().GetNextHTMLSibling(previousEditableSibling);
-      }
-      // Are they both text nodes?  If so, join them!
-      if (startPoint.GetContainer() == nextEditableSibling &&
-          startPoint.GetContainerAsText() &&
-          previousEditableSibling->GetAsText()) {
-        EditorDOMPoint atFirstChildOfRightNode;
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .JoinNearestEditableNodesWithTransaction(
-                    *previousEditableSibling,
-                    MOZ_KnownLive(*startPoint.GetContainerAsContent()),
-                    &atFirstChildOfRightNode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionHandled(rv);
-        }
-        if (NS_WARN_IF(!atFirstChildOfRightNode.IsSet())) {
-          return EditActionHandled(NS_ERROR_FAILURE);
-        }
-        // Fix up selection
-        ErrorResult error;
-        SelectionRefPtr()->Collapse(atFirstChildOfRightNode, error);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          error.SuppressException();
-          return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_WARN_IF(error.Failed())) {
-          return EditActionHandled(error.StealNSResult());
-        }
-      }
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-                   EditorBase::GetStartPoint(*SelectionRefPtr()));
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
-      return EditActionHandled(rv);
-    }
+        IgnoredErrorResult ignoredError;
+        SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
+        NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                             "Failed to unset interline position");
+        HTMLEditorRef()
+            .TopLevelEditSubActionDataRef()
+            .mDidExplicitlySetInterLine = true;
 
-    if (wsType == WSType::otherBlock) {
-      // Make sure it's not a table element.  If so, cancel the operation
-      // (translation: users cannot backspace or delete across table cells)
-      if (HTMLEditUtils::IsTableElement(visibleNode)) {
-        return EditActionCanceled();
-      }
+        // There is one exception to the move only case.  If the <hr> is
+        // followed by a <br> we want to delete the <br>.
 
-      // Next to a block.  See if we are between a block and a br.  If so, we
-      // really want to delete the br.  Else join content at selection to the
-      // block.
-      WSType otherWSType;
-      nsCOMPtr<nsINode> otherNode;
+        WSType otherWSType;
+        nsCOMPtr<nsINode> otherNode;
 
-      // Find node in other direction
-      if (aDirectionAndAmount == nsIEditor::eNext) {
-        wsObj.PriorVisibleNode(startPoint, address_of(otherNode), nullptr,
-                               &otherWSType);
-      } else {
         wsObj.NextVisibleNode(startPoint, address_of(otherNode), nullptr,
                               &otherWSType);
-      }
 
-      // First find the adjacent node in the block
-      nsCOMPtr<nsIContent> leafNode;
-      nsCOMPtr<nsINode> leftNode, rightNode;
-      if (aDirectionAndAmount == nsIEditor::ePrevious) {
-        leafNode = HTMLEditorRef().GetLastEditableLeaf(*visibleNode);
-        leftNode = leafNode;
-        rightNode = startPoint.GetContainer();
-      } else {
-        leafNode = HTMLEditorRef().GetFirstEditableLeaf(*visibleNode);
-        leftNode = startPoint.GetContainer();
-        rightNode = leafNode;
-      }
-
-      bool didBRElementDeleted = false;
-      if (otherNode->IsHTMLElement(nsGkAtoms::br)) {
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .DeleteNodeWithTransaction(*otherNode);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+        if (otherWSType != WSType::br) {
+          return EditActionHandled();
         }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionResult(rv);
-        }
-        didBRElementDeleted = true;
-      }
 
-      // Don't cross table boundaries
-      if (leftNode && rightNode &&
-          HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
-        return didBRElementDeleted ? EditActionHandled() : EditActionIgnored();
-      }
-
-      if (didBRElementDeleted) {
-        // Put selection at edge of block and we are done.
-        if (NS_WARN_IF(!leafNode)) {
+        // Delete the <br>
+        if (NS_WARN_IF(!otherNode->IsContent())) {
           return EditActionHandled(NS_ERROR_FAILURE);
         }
-        EditorDOMPoint newSel = HTMLEditorRef().GetGoodCaretPointFor(
-            *leafNode, aDirectionAndAmount);
-        if (NS_WARN_IF(!newSel.IsSet())) {
-          return EditActionHandled(NS_ERROR_FAILURE);
-        }
-        IgnoredErrorResult error;
-        SelectionRefPtr()->Collapse(newSel, error);
+        nsIContent* otherContent = otherNode->AsContent();
+        nsresult rv = WSRunObject::PrepareToDeleteNode(
+            MOZ_KnownLive(&HTMLEditorRef()), MOZ_KnownLive(otherContent));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
         }
-        NS_WARNING_ASSERTION(!error.Failed(),
-                             "Selection::Collapse() failed, but ignored");
-        return EditActionHandled();
-      }
-
-      // Else we are joining content to block
-      EditActionResult result(NS_OK);
-      EditorDOMPoint pointToPutCaret(startPoint);
-      {
-        AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
-                                  &pointToPutCaret);
-        if (NS_WARN_IF(!leftNode) || NS_WARN_IF(!leftNode->IsContent()) ||
-            NS_WARN_IF(!rightNode) || NS_WARN_IF(!rightNode->IsContent())) {
-          return EditActionResult(NS_ERROR_FAILURE);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return EditActionHandled(rv);
         }
-        result |= MOZ_KnownLive(HTMLEditorRef())
-                      .TryToJoinBlocksWithTransaction(
-                          MOZ_KnownLive(*leftNode->AsContent()),
-                          MOZ_KnownLive(*rightNode->AsContent()));
-        if (NS_WARN_IF(result.Failed())) {
-          return result;
-        }
-      }
-
-      // If TryToJoinBlocksWithTransaction() didn't handle it  and it's not
-      // canceled, user may want to modify the start leaf node or the last leaf
-      // node of the block.
-      if (!result.Handled() && !result.Canceled() &&
-          leafNode != startPoint.GetContainer()) {
-        int32_t offset = aDirectionAndAmount == nsIEditor::ePrevious
-                             ? static_cast<int32_t>(leafNode->Length())
-                             : 0;
-        DebugOnly<nsresult> rv = SelectionRefPtr()->Collapse(leafNode, offset);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .DeleteNodeWithTransaction(MOZ_KnownLive(*otherContent));
         if (NS_WARN_IF(!CanHandleEditAction())) {
-          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+          return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "Selection::Collapse() failed, but ignored");
-        EditActionResult result =
-            WillDeleteSelection(aDirectionAndAmount, aStripWrappers);
-        NS_WARNING_ASSERTION(result.Succeeded(),
-                             "Nested WillDeleteSelection() failed");
+                             "DeleteNodeWithTransaction() failed");
+        return EditActionHandled(rv);
+      }
+      // Else continue with normal delete code
+    }
+
+    if (NS_WARN_IF(!visibleNode->IsContent())) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
+    // Found break or image, or hr.
+    nsresult rv = WSRunObject::PrepareToDeleteNode(
+        MOZ_KnownLive(&HTMLEditorRef()),
+        MOZ_KnownLive(visibleNode->AsContent()));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionResult(rv);
+    }
+    // Remember sibling to visnode, if any
+    nsCOMPtr<nsIContent> previousEditableSibling =
+        HTMLEditorRef().GetPriorHTMLSibling(visibleNode);
+    // Delete the node, and join like nodes if appropriate
+    rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*visibleNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionResult(rv);
+    }
+    // Is there a prior node and are they siblings?
+    nsCOMPtr<nsINode> nextEditableSibling;
+    if (previousEditableSibling) {
+      nextEditableSibling =
+          HTMLEditorRef().GetNextHTMLSibling(previousEditableSibling);
+    }
+    // Are they both text nodes?  If so, join them!
+    if (startPoint.GetContainer() == nextEditableSibling &&
+        startPoint.GetContainerAsText() &&
+        previousEditableSibling->GetAsText()) {
+      EditorDOMPoint atFirstChildOfRightNode;
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .JoinNearestEditableNodesWithTransaction(
+                            *previousEditableSibling,
+                            MOZ_KnownLive(*startPoint.GetContainerAsContent()),
+                            &atFirstChildOfRightNode);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionHandled(rv);
+      }
+      if (NS_WARN_IF(!atFirstChildOfRightNode.IsSet())) {
+        return EditActionHandled(NS_ERROR_FAILURE);
+      }
+      // Fix up selection
+      ErrorResult error;
+      SelectionRefPtr()->Collapse(atFirstChildOfRightNode, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(error.Failed())) {
+        return EditActionHandled(error.StealNSResult());
+      }
+    }
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+                 EditorBase::GetStartPoint(*SelectionRefPtr()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
+    return EditActionHandled(rv);
+  }
+
+  if (wsType == WSType::otherBlock) {
+    // Make sure it's not a table element.  If so, cancel the operation
+    // (translation: users cannot backspace or delete across table cells)
+    if (HTMLEditUtils::IsTableElement(visibleNode)) {
+      return EditActionCanceled();
+    }
+
+    // Next to a block.  See if we are between a block and a br.  If so, we
+    // really want to delete the br.  Else join content at selection to the
+    // block.
+    WSType otherWSType;
+    nsCOMPtr<nsINode> otherNode;
+
+    // Find node in other direction
+    if (aDirectionAndAmount == nsIEditor::eNext) {
+      wsObj.PriorVisibleNode(startPoint, address_of(otherNode), nullptr,
+                             &otherWSType);
+    } else {
+      wsObj.NextVisibleNode(startPoint, address_of(otherNode), nullptr,
+                            &otherWSType);
+    }
+
+    // First find the adjacent node in the block
+    nsCOMPtr<nsIContent> leafNode;
+    nsCOMPtr<nsINode> leftNode, rightNode;
+    if (aDirectionAndAmount == nsIEditor::ePrevious) {
+      leafNode = HTMLEditorRef().GetLastEditableLeaf(*visibleNode);
+      leftNode = leafNode;
+      rightNode = startPoint.GetContainer();
+    } else {
+      leafNode = HTMLEditorRef().GetFirstEditableLeaf(*visibleNode);
+      leftNode = startPoint.GetContainer();
+      rightNode = leafNode;
+    }
+
+    bool didBRElementDeleted = false;
+    if (otherNode->IsHTMLElement(nsGkAtoms::br)) {
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*otherNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionResult(rv);
+      }
+      didBRElementDeleted = true;
+    }
+
+    // Don't cross table boundaries
+    if (leftNode && rightNode &&
+        HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
+      return didBRElementDeleted ? EditActionHandled() : EditActionIgnored();
+    }
+
+    if (didBRElementDeleted) {
+      // Put selection at edge of block and we are done.
+      if (NS_WARN_IF(!leafNode)) {
+        return EditActionHandled(NS_ERROR_FAILURE);
+      }
+      EditorDOMPoint newSel =
+          HTMLEditorRef().GetGoodCaretPointFor(*leafNode, aDirectionAndAmount);
+      if (NS_WARN_IF(!newSel.IsSet())) {
+        return EditActionHandled(NS_ERROR_FAILURE);
+      }
+      IgnoredErrorResult error;
+      SelectionRefPtr()->Collapse(newSel, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING_ASSERTION(!error.Failed(),
+                           "Selection::Collapse() failed, but ignored");
+      return EditActionHandled();
+    }
+
+    // Else we are joining content to block
+    EditActionResult result(NS_OK);
+    EditorDOMPoint pointToPutCaret(startPoint);
+    {
+      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
+                                &pointToPutCaret);
+      if (NS_WARN_IF(!leftNode) || NS_WARN_IF(!leftNode->IsContent()) ||
+          NS_WARN_IF(!rightNode) || NS_WARN_IF(!rightNode->IsContent())) {
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
+      result |= MOZ_KnownLive(HTMLEditorRef())
+                    .TryToJoinBlocksWithTransaction(
+                        MOZ_KnownLive(*leftNode->AsContent()),
+                        MOZ_KnownLive(*rightNode->AsContent()));
+      if (NS_WARN_IF(result.Failed())) {
         return result;
       }
+    }
 
-      // Otherwise, we must have deleted the selection as user expected.
-      IgnoredErrorResult ignoredError;
-      SelectionRefPtr()->Collapse(pointToPutCaret, ignoredError);
+    // If TryToJoinBlocksWithTransaction() didn't handle it  and it's not
+    // canceled, user may want to modify the start leaf node or the last leaf
+    // node of the block.
+    if (!result.Handled() && !result.Canceled() &&
+        leafNode != startPoint.GetContainer()) {
+      int32_t offset = aDirectionAndAmount == nsIEditor::ePrevious
+                           ? static_cast<int32_t>(leafNode->Length())
+                           : 0;
+      DebugOnly<nsresult> rv = SelectionRefPtr()->Collapse(leafNode, offset);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                           "Failed to selection at deleted point");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Selection::Collapse() failed, but ignored");
+      EditActionResult result =
+          WillDeleteSelection(aDirectionAndAmount, aStripWrappers);
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "Nested WillDeleteSelection() failed");
       return result;
     }
 
-    if (wsType == WSType::thisBlock) {
-      // At edge of our block.  Look beside it and see if we can join to an
-      // adjacent block
-
-      // Make sure it's not a table element.  If so, cancel the operation
-      // (translation: users cannot backspace or delete across table cells)
-      if (HTMLEditUtils::IsTableElement(visibleNode)) {
-        return EditActionCanceled();
-      }
-
-      // First find the relevant nodes
-      nsCOMPtr<nsINode> leftNode, rightNode;
-      if (aDirectionAndAmount == nsIEditor::ePrevious) {
-        leftNode = HTMLEditorRef().GetPreviousEditableHTMLNode(*visibleNode);
-        rightNode = startPoint.GetContainer();
-      } else {
-        rightNode = HTMLEditorRef().GetNextEditableHTMLNode(*visibleNode);
-        leftNode = startPoint.GetContainer();
-      }
-
-      // Nothing to join
-      if (!leftNode || !rightNode) {
-        return EditActionCanceled();
-      }
-
-      // Don't cross table boundaries -- cancel it
-      if (HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
-        return EditActionCanceled();
-      }
-
-      EditActionResult result(NS_OK);
-      EditorDOMPoint pointToPutCaret(startPoint);
-      {
-        AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
-                                  &pointToPutCaret);
-        if (NS_WARN_IF(!leftNode->IsContent()) ||
-            NS_WARN_IF(!rightNode->IsContent())) {
-          return EditActionResult(NS_ERROR_FAILURE);
-        }
-        result |= MOZ_KnownLive(HTMLEditorRef())
-                      .TryToJoinBlocksWithTransaction(
-                          MOZ_KnownLive(*leftNode->AsContent()),
-                          MOZ_KnownLive(*rightNode->AsContent()));
-        // This should claim that trying to join the block means that
-        // this handles the action because the caller shouldn't do anything
-        // anymore in this case.
-        result.MarkAsHandled();
-        if (NS_WARN_IF(result.Failed())) {
-          return result;
-        }
-      }
-      IgnoredErrorResult ignoredError;
-      SelectionRefPtr()->Collapse(pointToPutCaret, ignoredError);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                           "Failed to collapse selection");
-      return result;
+    // Otherwise, we must have deleted the selection as user expected.
+    IgnoredErrorResult ignoredError;
+    SelectionRefPtr()->Collapse(pointToPutCaret, ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "Failed to selection at deleted point");
+    return result;
   }
+
+  if (wsType == WSType::thisBlock) {
+    // At edge of our block.  Look beside it and see if we can join to an
+    // adjacent block
+
+    // Make sure it's not a table element.  If so, cancel the operation
+    // (translation: users cannot backspace or delete across table cells)
+    if (HTMLEditUtils::IsTableElement(visibleNode)) {
+      return EditActionCanceled();
+    }
+
+    // First find the relevant nodes
+    nsCOMPtr<nsINode> leftNode, rightNode;
+    if (aDirectionAndAmount == nsIEditor::ePrevious) {
+      leftNode = HTMLEditorRef().GetPreviousEditableHTMLNode(*visibleNode);
+      rightNode = startPoint.GetContainer();
+    } else {
+      rightNode = HTMLEditorRef().GetNextEditableHTMLNode(*visibleNode);
+      leftNode = startPoint.GetContainer();
+    }
+
+    // Nothing to join
+    if (!leftNode || !rightNode) {
+      return EditActionCanceled();
+    }
+
+    // Don't cross table boundaries -- cancel it
+    if (HTMLEditor::NodesInDifferentTableElements(*leftNode, *rightNode)) {
+      return EditActionCanceled();
+    }
+
+    EditActionResult result(NS_OK);
+    EditorDOMPoint pointToPutCaret(startPoint);
+    {
+      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
+                                &pointToPutCaret);
+      if (NS_WARN_IF(!leftNode->IsContent()) ||
+          NS_WARN_IF(!rightNode->IsContent())) {
+        return EditActionResult(NS_ERROR_FAILURE);
+      }
+      result |= MOZ_KnownLive(HTMLEditorRef())
+                    .TryToJoinBlocksWithTransaction(
+                        MOZ_KnownLive(*leftNode->AsContent()),
+                        MOZ_KnownLive(*rightNode->AsContent()));
+      // This should claim that trying to join the block means that
+      // this handles the action because the caller shouldn't do anything
+      // anymore in this case.
+      result.MarkAsHandled();
+      if (NS_WARN_IF(result.Failed())) {
+        return result;
+      }
+    }
+    IgnoredErrorResult ignoredError;
+    SelectionRefPtr()->Collapse(pointToPutCaret, ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "Failed to collapse selection");
+    return result;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("New WSType value hasn't been handled yet");
+  return EditActionIgnored();
+}
+
+EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers,
+    SelectionWasCollapsed aSelectionWasCollapsed) {
+  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(HTMLEditorRef().IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
 
   // Else we have a non-collapsed selection.  First adjust the selection.
   // XXX Why do we extend selection only when there is only one range?
@@ -3141,7 +3172,7 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
             arrayOfNodes.RemoveElementAt(0);
             // If something visible is deleted, no need to join.  Visible means
             // all nodes except non-visible textnodes and breaks.
-            if (join && origCollapsed) {
+            if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
               if (!node->IsContent()) {
                 join = false;
                 continue;
@@ -3278,7 +3309,7 @@ EditActionResult HTMLEditRules::WillDeleteSelection(
     return result.SetResult(rv);
   }
 
-  rv = SelectionRefPtr()->Collapse(startNode, startOffset);
+  nsresult rv = SelectionRefPtr()->Collapse(startNode, startOffset);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
