@@ -91,8 +91,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
 
-  void FlushLine();
-
   void Output(nsString& aString);
   void Write(const nsAString& aString);
 
@@ -248,6 +246,16 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
     void AppendLineBreak();
 
+    /**
+     * This empties the current line cache without adding a NEWLINE.
+     * Should not be used if line wrapping is of importance since
+     * this function destroys the cache information.
+     *
+     * It will also write indentation and quotes if we believe us to be
+     * at the start of the line.
+     */
+    void Flush(CurrentLine& aCurrentLine);
+
     bool IsAtFirstColumn() const { return mAtFirstColumn; }
 
     uint32_t GetOutputLength() const;
@@ -257,6 +265,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
      * @param aString Last character is expected to not be a line break.
      */
     void Append(const nsAString& aString);
+
+    // As defined in nsIDocumentEncoder.idl.
+    const int32_t mFlags;
 
     nsAString& mOutput;
 
