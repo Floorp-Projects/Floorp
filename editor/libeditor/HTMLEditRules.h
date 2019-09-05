@@ -395,15 +395,6 @@ class HTMLEditRules : public TextEditRules {
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
 
-  /**
-   * ExpandSelectionForDeletion() may expand Selection range if it's not
-   * collapsed and there is only one range.  This may expand to include
-   * invisible <br> element for preventing delete action handler to keep
-   * unexpected nodes.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult ExpandSelectionForDeletion();
-
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
                                   bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT
