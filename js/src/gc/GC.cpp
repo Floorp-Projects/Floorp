@@ -2474,19 +2474,19 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   rt->geckoProfiler().fixupStringsMapAfterMovingGC();
 
+  // Mark roots to update them.
+
   traceRuntimeForMajorGC(&trc, session);
 
-  // Mark roots to update them.
   {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_ROOTS);
     DebugAPI::traceAllForMovingGC(&trc);
     DebugAPI::traceCrossCompartmentEdges(&trc);
 
-    // Mark all gray roots, making sure we call the trace callback to get the
-    // current set.
-    if (JSTraceDataOp op = grayRootTracer.op) {
-      (*op)(&trc, grayRootTracer.data);
-    }
+    // Mark all gray roots. We call the trace callback to get the current set.
+    traceEmbeddingGrayRoots(&trc);
+    Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+        &trc, Compartment::GrayEdges);
   }
 
   // Sweep everything to fix up weak pointers.
@@ -4172,9 +4172,9 @@ void GCRuntime::markGrayRoots(gcstats::PhaseKind phase) {
     }
   } else {
     MOZ_ASSERT(!isIncremental);
-    if (JSTraceDataOp op = grayRootTracer.op) {
-      (*op)(&marker, grayRootTracer.data);
-    }
+    traceEmbeddingGrayRoots(&marker);
+    Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
+        &marker, Compartment::GrayEdges);
   }
 }
 
