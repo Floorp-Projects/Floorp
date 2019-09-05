@@ -88,6 +88,22 @@
             "name": "value"
           }
         ]
+      },
+      {
+        "name": "setScalar",
+        "type": "function",
+        "async": true,
+        "description": "Set the given value to the scalar with the given id.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id"
+          },
+          {
+            "type": "any",
+            "name": "value"
+          }
+        ]
       }
     ]
   }

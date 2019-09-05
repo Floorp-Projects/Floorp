@@ -35,22 +35,46 @@ class TelemetryTest : BaseSessionTest() {
         sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 1)
         sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 109)
 
+        sessionRule.setScalar("telemetry.test.boolean_kind", true)
+        sessionRule.setScalar("telemetry.test.unsigned_int_kind", 1234)
+        sessionRule.setScalar("telemetry.test.string_kind", "test scalar")
+
         // Forces flushing telemetry data at next histogram
         sessionRule.setPrefsUntilTestEnd(mapOf("toolkit.telemetry.geckoview.batchDurationMS" to 0))
+        sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 2000)
 
-        val telemetryReceived = GeckoResult<Void>()
-        sessionRule.delegateDuringNextWait(object : RuntimeTelemetry.Delegate {
+        sessionRule.waitUntilCalled(object : RuntimeTelemetry.Delegate {
             @AssertCalled
-            override fun onTelemetryReceived(metric: RuntimeTelemetry.Metric) {
+            override fun onHistogram(metric: RuntimeTelemetry.Metric<LongArray>) {
                 assertThat("Metric name should be correct", metric.name,
                         equalTo("TELEMETRY_TEST_STREAMING"))
-                assertThat("Metric name should be correct", metric.values,
+                assertThat("Metric name should be correct", metric.value,
                         equalTo(longArrayOf(401, 12, 1, 109, 2000)))
-                telemetryReceived.complete(null)
+            }
+
+            @AssertCalled
+            override fun onStringScalar(metric: RuntimeTelemetry.Metric<String>) {
+                assertThat("Metric name should be correct", metric.name,
+                        equalTo("telemetry.test.string_kind"))
+                assertThat("Metric name should be correct", metric.value,
+                        equalTo("test scalar"))
+            }
+
+            @AssertCalled
+            override fun onBooleanScalar(metric: RuntimeTelemetry.Metric<Boolean>) {
+                assertThat("Metric name should be correct", metric.name,
+                        equalTo("telemetry.test.boolean_kind"))
+                assertThat("Metric name should be correct", metric.value,
+                        equalTo(true))
+            }
+
+            @AssertCalled
+            override fun onLongScalar(metric: RuntimeTelemetry.Metric<Long>) {
+                assertThat("Metric name should be correct", metric.name,
+                        equalTo("telemetry.test.unsigned_int_kind"))
+                assertThat("Metric name should be correct", metric.value,
+                        equalTo(1234L))
             }
         })
-
-        sessionRule.addHistogram("TELEMETRY_TEST_STREAMING", 2000)
-        sessionRule.waitForResult(telemetryReceived)
     }
 }
