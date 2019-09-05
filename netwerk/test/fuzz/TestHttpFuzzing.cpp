@@ -1,3 +1,4 @@
+#include "mozilla/LoadInfo.h"
 #include "mozilla/Preferences.h"
 
 #include "nsCOMPtr.h"
@@ -5,7 +6,11 @@
 #include "nsString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
+#include "nsIProxiedProtocolHandler.h"
+#include "nsIOService.h"
+#include "nsProtocolProxyService.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
@@ -18,8 +23,10 @@
 namespace mozilla {
 namespace net {
 
-// Used to determine if the fuzzing target should use https:// in spec.
-static bool fuzzHttps = false;
+// Target spec and optional proxy type to use, set by the respective
+// initialization function so we can cover all combinations.
+nsAutoCString spec;
+nsAutoCString proxyType;
 
 class FuzzingStreamListener final : public nsIStreamListener {
  public:
@@ -84,13 +91,47 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
   Preferences::SetBool("fuzzing.necko.enabled", true);
   Preferences::SetInt("network.http.speculative-parallel-limit", 0);
+  Preferences::SetInt("network.http.spdy.default-concurrent", 1);
+
+  if (spec.IsEmpty()) {
+    spec = "http://127.0.0.1/";
+  }
+
   return 0;
 }
 
 static int FuzzingInitNetworkHttp2(int* argc, char*** argv) {
-  fuzzHttps = true;
-  Preferences::SetInt("network.http.spdy.default-concurrent", 1);
+  spec = "https://127.0.0.1/";
   return FuzzingInitNetworkHttp(argc, argv);
+}
+
+static int FuzzingInitNetworkHttpProxyHttp2(int* argc, char*** argv) {
+  // This is http over an https proxy
+  proxyType = "https";
+
+
+  return FuzzingInitNetworkHttp(argc, argv);
+}
+
+static int FuzzingInitNetworkHttp2ProxyHttp2(int* argc, char*** argv) {
+  // This is https over an https proxy
+  proxyType = "https";
+
+  return FuzzingInitNetworkHttp2(argc, argv);
+}
+
+static int FuzzingInitNetworkHttpProxyPlain(int* argc, char*** argv) {
+  // This is http over an http proxy
+  proxyType = "http";
+
+  return FuzzingInitNetworkHttp(argc, argv);
+}
+
+static int FuzzingInitNetworkHttp2ProxyPlain(int* argc, char*** argv) {
+  // This is https over an http proxy
+  proxyType = "http";
+
+  return FuzzingInitNetworkHttp2(argc, argv);
 }
 
 static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
@@ -101,14 +142,7 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
 
   {
     nsCOMPtr<nsIURI> url;
-    nsAutoCString spec;
     nsresult rv;
-
-    if (fuzzHttps) {
-      spec = "https://127.0.0.1/";
-    } else {
-      spec = "http://127.0.0.1/";
-    }
 
     if (NS_NewURI(getter_AddRefs(url), spec) != NS_OK) {
       MOZ_CRASH("Call to NS_NewURI failed.");
@@ -122,20 +156,86 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     nsSecurityFlags secFlags;
     secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
                nsILoadInfo::SEC_SANDBOXED;
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), url,
-                       nsContentUtils::GetSystemPrincipal(), secFlags,
-                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       nullptr,    // aCookieSettings
-                       nullptr,    // aPerformanceStorage
-                       nullptr,    // loadGroup
-                       nullptr,    // aCallbacks
-                       loadFlags,  // aLoadFlags
-                       nullptr     // aIoService
-    );
 
-    if (rv != NS_OK) {
-      MOZ_CRASH("Call to NS_NewChannel failed.");
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsILoadInfo> loadInfo;
+
+    if (!proxyType.IsEmpty()) {
+      nsAutoCString proxyHost("127.0.0.2");
+
+      nsCOMPtr<nsIProtocolProxyService2> ps =
+          do_GetService(NS_PROTOCOLPROXYSERVICE_CID);
+      if (!ps) {
+        MOZ_CRASH("Failed to create nsIProtocolProxyService2");
+      }
+
+      mozilla::net::nsProtocolProxyService* pps =
+          static_cast<mozilla::net::nsProtocolProxyService*>(ps.get());
+
+      nsCOMPtr<nsIProxyInfo> proxyInfo;
+      rv = pps->NewProxyInfo(proxyType, proxyHost, 443,
+                             EmptyCString(),  // aProxyAuthorizationHeader
+                             EmptyCString(),  // aConnectionIsolationKey
+                             0,               // aFlags
+                             UINT32_MAX,      // aFailoverTimeout
+                             nullptr,         // aFailoverProxy
+                             getter_AddRefs(proxyInfo));
+
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("Call to NewProxyInfo failed.");
+      }
+
+      nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("do_GetIOService failed.");
+      }
+
+      nsCOMPtr<nsIProtocolHandler> handler;
+      rv = ioService->GetProtocolHandler("http", getter_AddRefs(handler));
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("GetProtocolHandler failed.");
+      }
+
+      nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler, &rv);
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("do_QueryInterface failed.");
+      }
+
+      loadInfo = new LoadInfo(
+          nsContentUtils::GetSystemPrincipal(),  // loading principal
+          nsContentUtils::GetSystemPrincipal(),  // triggering principal
+          nullptr,                               // Context
+          secFlags, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST);
+
+      rv = pph->NewProxiedChannel(url, proxyInfo,
+                                  0,        // aProxyResolveFlags
+                                  nullptr,  // aProxyURI
+                                  loadInfo, getter_AddRefs(channel));
+
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("Call to newProxiedChannel failed.");
+      }
+    } else {
+      rv = NS_NewChannel(getter_AddRefs(channel), url,
+                         nsContentUtils::GetSystemPrincipal(), secFlags,
+                         nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+                         nullptr,    // aCookieSettings
+                         nullptr,    // aPerformanceStorage
+                         nullptr,    // loadGroup
+                         nullptr,    // aCallbacks
+                         loadFlags,  // aLoadFlags
+                         nullptr     // aIoService
+      );
+
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH("Call to NS_NewChannel failed.");
+      }
+
+      loadInfo = channel->LoadInfo();
+    }
+
+    if (NS_FAILED(loadInfo->SetSkipContentSniffing(true))) {
+      MOZ_CRASH("Failed to call SetSkipContentSniffing");
     }
 
     RefPtr<FuzzingStreamListener> gStreamListener;
@@ -143,7 +243,7 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
 
     gHttpChannel = do_QueryInterface(channel);
     rv = gHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
-    if (rv != NS_OK) {
+    if (NS_FAILED(rv)) {
       MOZ_CRASH("SetRequestMethod on gHttpChannel failed.");
     }
 
@@ -151,13 +251,21 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
         mozilla::net::RequestContextService::GetOrCreate();
     nsCOMPtr<nsIRequestContext> rc;
     rv = rcsvc->NewRequestContext(getter_AddRefs(rc));
-    if (rv != NS_OK) {
+    if (NS_FAILED(rv)) {
       MOZ_CRASH("NewRequestContext failed.");
     }
 
     rv = gHttpChannel->SetRequestContextID(rc->GetID());
-    if (rv != NS_OK) {
+    if (NS_FAILED(rv)) {
       MOZ_CRASH("SetRequestContextID on gHttpChannel failed.");
+    }
+
+    if (!proxyType.IsEmpty()) {
+      // NewProxiedChannel doesn't allow us to pass loadFlags directly
+      rv = gHttpChannel->SetLoadFlags(loadFlags);
+      if (rv != NS_OK) {
+        MOZ_CRASH("SetRequestMethod on gHttpChannel failed.");
+      }
     }
 
     gStreamListener = new FuzzingStreamListener();
@@ -187,6 +295,18 @@ MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp, FuzzingRunNetworkHttp,
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2, FuzzingRunNetworkHttp,
                           NetworkHttp2);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyHttp2, FuzzingRunNetworkHttp,
+                          NetworkHttp2ProxyHttp2);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyHttp2, FuzzingRunNetworkHttp,
+                          NetworkHttpProxyHttp2);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyPlain, FuzzingRunNetworkHttp,
+                          NetworkHttpProxyPlain);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyPlain, FuzzingRunNetworkHttp,
+                          NetworkHttp2ProxyPlain);
 
 }  // namespace net
 }  // namespace mozilla
