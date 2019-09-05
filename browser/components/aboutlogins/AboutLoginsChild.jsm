@@ -131,12 +131,14 @@ class AboutLoginsChild extends ActorChild {
         break;
       }
       case "AboutLoginsRecordTelemetryEvent": {
-        let { method, object } = event.detail;
+        let { method, object, extra = {} } = event.detail;
         try {
           Services.telemetry.recordEvent(
             TELEMETRY_EVENT_CATEGORY,
             method,
-            object
+            object,
+            null,
+            extra
           );
         } catch (ex) {
           Cu.reportError(

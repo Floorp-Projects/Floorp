@@ -120,6 +120,10 @@ this.LoginBreaches = {
         breachesByLoginGUID.set(login.guid, breach);
       }
     }
+    Services.telemetry.scalarSet(
+      "pwmgr.potentially_breached_passwords",
+      breachesByLoginGUID.size
+    );
     return breachesByLoginGUID;
   },
 
