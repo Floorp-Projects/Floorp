@@ -275,7 +275,7 @@ class FirefoxConnector {
       this.actions.addTimingMarker(event);
     }
 
-    this.emitForTests(EVENTS.TIMELINE_EVENT, event);
+    this.emit(EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
@@ -466,16 +466,15 @@ class FirefoxConnector {
       });
     }
 
-    this.emitForTests(EVENTS.THROTTLING_CHANGED, { profile });
+    this.emit(EVENTS.THROTTLING_CHANGED, { profile });
   }
 
   /**
-   * Fire events for the owner object. These events are only
-   * used in tests so, don't fire them in production release.
+   * Fire events for the owner object.
    */
-  emitForTests(type, data) {
+  emit(type, data) {
     if (this.owner) {
-      this.owner.emitForTests(type, data);
+      this.owner.emit(type, data);
     }
   }
 }
