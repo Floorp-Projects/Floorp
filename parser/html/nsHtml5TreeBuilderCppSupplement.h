@@ -905,18 +905,7 @@ void nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsAtom* aName,
     treeOp->Init(mozilla::AsVariant(opStartLayout()));
     return;
   }
-  if (aName == nsGkAtoms::input || aName == nsGkAtoms::button) {
-    if (mBuilder) {
-      nsHtml5TreeOperation::DoneCreatingElement(
-          static_cast<nsIContent*>(aElement));
-    } else {
-      opDoneCreatingElement operation(aElement);
-      mOpQueue.AppendElement()->Init(mozilla::AsVariant(operation));
-    }
-    return;
-  }
-  if (aName == nsGkAtoms::audio || aName == nsGkAtoms::video ||
-      aName == nsGkAtoms::menuitem) {
+  if (nsIContent::RequiresDoneCreatingElement(kNameSpaceID_XHTML, aName)) {
     if (mBuilder) {
       nsHtml5TreeOperation::DoneCreatingElement(
           static_cast<nsIContent*>(aElement));
@@ -984,7 +973,9 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
     treeOp->Init(mozilla::AsVariant(operation));
     return;
   }
-  if (aName == nsGkAtoms::title) {
+  // Some nodes need DoneAddingChildren() called to initialize
+  // properly (e.g. form state restoration).
+  if (nsIContent::RequiresDoneAddingChildren(aNamespace, aName)) {
     if (mBuilder) {
       nsHtml5TreeOperation::DoneAddingChildren(
           static_cast<nsIContent*>(aElement));
@@ -1033,26 +1024,6 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
     return;
   }
   // we now have only HTML
-  // Some HTML nodes need DoneAddingChildren() called to initialize
-  // properly (e.g. form state restoration).
-  // XXX expose ElementName group here and do switch
-  if (aName == nsGkAtoms::object || aName == nsGkAtoms::select ||
-      aName == nsGkAtoms::textarea || aName == nsGkAtoms::output ||
-      aName == nsGkAtoms::head) {
-    if (mBuilder) {
-      nsHtml5TreeOperation::DoneAddingChildren(
-          static_cast<nsIContent*>(aElement));
-      return;
-    }
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
-    if (MOZ_UNLIKELY(!treeOp)) {
-      MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
-    opDoneAddingChildren operation(aElement);
-    treeOp->Init(mozilla::AsVariant(operation));
-    return;
-  }
   if (aName == nsGkAtoms::meta && !fragment && !mBuilder) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
     if (MOZ_UNLIKELY(!treeOp)) {
