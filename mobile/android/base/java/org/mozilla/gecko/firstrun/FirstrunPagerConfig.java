@@ -33,19 +33,6 @@ class FirstrunPagerConfig {
         return panels;
     }
 
-    static List<FirstrunPanelConfig> forFxAUser(Context context, final boolean useLocalValues) {
-        final List<FirstrunPanelConfig> panels = new LinkedList<>();
-        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.WELCOME, useLocalValues));
-        if (OnboardingResources.getInstance(context).useNewOnboarding()) {
-            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_PRIVACY, useLocalValues));
-        } else {
-            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
-            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_CUSTOMIZE, useLocalValues));
-        }
-
-        return panels;
-    }
-
     static List<FirstrunPanelConfig> getRestricted(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
         panels.add(new FirstrunPanelConfig(RestrictedWelcomePanel.class.getName(),
