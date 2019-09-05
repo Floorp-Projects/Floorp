@@ -124,13 +124,9 @@ class HTMLEditRules : public TextEditRules {
    *
    * @param aAction             Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillDeleteSelection(
-      nsIEditor::EDirection aAction, nsIEditor::EStripWrappers aStripWrappers,
-      bool* aCancel, bool* aHandled);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult WillDeleteSelection(
+      nsIEditor::EDirection aAction, nsIEditor::EStripWrappers aStripWrappers);
 
   /**
    * Called after deleting selected content.
