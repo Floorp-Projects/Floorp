@@ -34,6 +34,7 @@
 #ifdef FUZZING
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsContentUtils.h"
@@ -1148,14 +1149,13 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   // on 32-bit platforms and 1MB on 64-bit platforms.
   const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
 
-  // Set stack sizes for different configurations. It's probably not great for
-  // the web to base this decision primarily on the default stack size that the
-  // underlying platform makes available, but that seems to be what we do. :-(
+  // Set maximum stack size for different configurations. This value is then
+  // capped below because huge stacks are not web-compatible.
 
 #if defined(XP_MACOSX) || defined(DARWIN)
   // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB,
   // and give trusted script 180k extra. The stack is huge on mac anyway.
-  const size_t kStackQuota = 7 * 1024 * 1024;
+  const size_t kUncappedStackQuota = 7 * 1024 * 1024;
   const size_t kTrustedScriptBuffer = 180 * 1024;
 #elif defined(XP_LINUX) && !defined(ANDROID)
   // Most Linux distributions set default stack size to 8MB.  Use it as the
@@ -1174,7 +1174,7 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   const size_t kStackSafeMargin = 128 * 1024;
 
   struct rlimit rlim;
-  const size_t kStackQuota =
+  const size_t kUncappedStackQuota =
       getrlimit(RLIMIT_STACK, &rlim) == 0
           ? std::max(std::min(size_t(rlim.rlim_cur - kStackSafeMargin),
                               kStackQuotaMax - kStackSafeMargin),
@@ -1189,16 +1189,12 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
 #elif defined(XP_WIN)
   // 1MB is the default stack size on Windows. We use the -STACK linker flag
   // (see WIN32_EXE_LDFLAGS in config/config.mk) to request a larger stack, so
-  // we determine the stack size at runtime. But 8MB is more than the Web can
-  // handle (bug 1537609), so clamp to something remotely reasonable.
+  // we determine the stack size at runtime.
+  const size_t kUncappedStackQuota = GetWindowsStackSize();
 #  if defined(MOZ_ASAN)
   // See the standalone MOZ_ASAN branch below for the ASan case.
-  const size_t kStackQuota =
-      std::min(GetWindowsStackSize(), size_t(6 * 1024 * 1024));
   const size_t kTrustedScriptBuffer = 450 * 1024;
 #  else
-  const size_t kStackQuota =
-      std::min(GetWindowsStackSize(), size_t(2 * 1024 * 1024));
   const size_t kTrustedScriptBuffer = (sizeof(size_t) == 8)
                                           ? 180 * 1024   // win64
                                           : 120 * 1024;  // win32
@@ -1213,20 +1209,21 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   //
   // FIXME: Does this branch make sense for Windows and Android?
   // (See bug 1415195)
-  const size_t kStackQuota = 2 * kDefaultStackQuota;
+  const size_t kUncappedStackQuota = 2 * kDefaultStackQuota;
   const size_t kTrustedScriptBuffer = 450 * 1024;
 #elif defined(ANDROID)
   // Android appears to have 1MB stacks. Allow the use of 3/4 of that size
   // (768KB on 32-bit), since otherwise we can crash with a stack overflow
   // when nearing the 1MB limit.
-  const size_t kStackQuota = kDefaultStackQuota + kDefaultStackQuota / 2;
+  const size_t kUncappedStackQuota =
+      kDefaultStackQuota + kDefaultStackQuota / 2;
   const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
   // Catch-all configuration for other environments.
 #  if defined(DEBUG)
-  const size_t kStackQuota = 2 * kDefaultStackQuota;
+  const size_t kUncappedStackQuota = 2 * kDefaultStackQuota;
 #  else
-  const size_t kStackQuota = kDefaultStackQuota;
+  const size_t kUncappedStackQuota = kDefaultStackQuota;
 #  endif
   // Given the numbers above, we use 50k and 100k trusted buffers on 32-bit
   // and 64-bit respectively.
@@ -1236,6 +1233,12 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
   // Avoid an unused variable warning on platforms where we don't use the
   // default.
   (void)kDefaultStackQuota;
+
+  // Large stacks are not web-compatible so cap to a smaller value.
+  // See bug 1537609 and bug 1562700.
+  const size_t kStackQuotaCap =
+      StaticPrefs::javascript_options_main_thread_stack_quota_cap();
+  const size_t kStackQuota = std::min(kUncappedStackQuota, kStackQuotaCap);
 
   JS_SetNativeStackQuota(
       cx, kStackQuota, kStackQuota - kSystemCodeBuffer,

@@ -3930,6 +3930,15 @@
   value: true
   mirror: always
 
+- name: javascript.options.main_thread_stack_quota_cap
+  type: uint32_t
+#if defined(MOZ_ASAN)
+  value: 6 * 1024 * 1024
+#else
+  value: 2 * 1024 * 1024
+#endif
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "keyword."
 #---------------------------------------------------------------------------
