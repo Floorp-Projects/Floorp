@@ -69,6 +69,10 @@ void CheckContent(LookupCacheV4* aCache, PrefixStringMap& aExpected);
 template <typename T>
 RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray);
 
+template <typename T>
+RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray,
+                           nsCOMPtr<nsIFile>& aFile);
+
 /**
  * Retrieve Classifer class
  */
