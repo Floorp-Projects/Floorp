@@ -345,6 +345,22 @@ WebrtcProxyChannel::OnTransportAvailable(nsISocketTransport* aTransport,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebrtcProxyChannel::OnUpgradeFailed(nsresult aErrorCode) {
+  LOG(("WebrtcProxyChannel::OnUpgradeFailed %p\n", this));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(!mTransport, "already called transport available on webrtc proxy");
+
+  if (mClosed) {
+    LOG(("WebrtcProxyChannel::OnUpgradeFailed %p closed\n", this));
+    return NS_OK;
+  }
+
+  CloseWithReason(aErrorCode);
+
+  return NS_OK;
+}
+
 // nsIRequestObserver (from nsIStreamListener)
 NS_IMETHODIMP
 WebrtcProxyChannel::OnStartRequest(nsIRequest* aRequest) {
