@@ -2211,8 +2211,6 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   aImageRect = dtRect / layerScale;
 
-  auto offset = aImageRect.TopLeft();
-
   nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
 
   bool needPaint = true;
@@ -2362,7 +2360,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 new BasicLayerManager(mManager->GetWidget());
           }
           isInvalidated = PaintItemByDrawTarget(
-              aItem, dt, offset, aDisplayListBuilder,
+              aItem, dt, aImageRect.TopLeft(), aDisplayListBuilder,
               fallbackData->mBasicLayerManager, scale, highlight);
         }
 
