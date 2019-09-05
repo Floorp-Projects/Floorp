@@ -37,6 +37,8 @@ class AccountDevicesShareAdapter(
 }
 
 sealed class SyncShareOption {
+    object Reconnect : SyncShareOption()
+    object Offline : SyncShareOption()
     object SignIn : SyncShareOption()
     object AddNewDevice : SyncShareOption()
     data class SendAll(val devices: List<Device>) : SyncShareOption()

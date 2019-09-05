@@ -29,6 +29,13 @@ class ShareInteractorTest {
     }
 
     @Test
+    fun onReauth() {
+        interactor.onReauth()
+
+        verify { controller.handleReauth() }
+    }
+
+    @Test
     fun onAddNewDevice() {
         interactor.onAddNewDevice()
 

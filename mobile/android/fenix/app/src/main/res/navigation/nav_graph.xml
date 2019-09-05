@@ -490,6 +490,9 @@
             app:destination="@+id/turnOnSyncFragment"
             app:popUpTo="@id/shareFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_shareFragment_to_accountProblemFragment"
+            app:destination="@id/accountProblemFragment" />
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"

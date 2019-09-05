@@ -37,6 +37,10 @@ class AccountDeviceViewHolder(
                 is SyncShareOption.SendAll -> interactor.onShareToAllDevices(option.devices)
                 is SyncShareOption.Mobile -> interactor.onShareToDevice(option.device)
                 is SyncShareOption.Desktop -> interactor.onShareToDevice(option.device)
+                SyncShareOption.Reconnect -> interactor.onReauth()
+                SyncShareOption.Offline -> {
+                    // nothing we are offline
+                }
             }
         }
     }
@@ -46,6 +50,16 @@ class AccountDeviceViewHolder(
             SyncShareOption.SignIn -> Triple(
                 context.getText(R.string.sync_sign_in),
                 R.drawable.mozac_ic_sync,
+                R.color.default_share_background
+            )
+            SyncShareOption.Reconnect -> Triple(
+                context.getText(R.string.sync_reconnect),
+                R.drawable.mozac_ic_warning,
+                R.color.default_share_background
+            )
+            SyncShareOption.Offline -> Triple(
+                context.getText(R.string.sync_offline),
+                R.drawable.mozac_ic_warning,
                 R.color.default_share_background
             )
             SyncShareOption.AddNewDevice -> Triple(
@@ -75,6 +89,7 @@ class AccountDeviceViewHolder(
             background.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.SRC_IN)
             drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
         }
+        itemView.isClickable = option != SyncShareOption.Offline
         itemView.deviceName.text = name
     }
 

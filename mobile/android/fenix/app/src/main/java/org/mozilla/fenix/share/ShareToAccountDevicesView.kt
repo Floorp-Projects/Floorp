@@ -18,6 +18,7 @@ import org.mozilla.fenix.share.listadapters.SyncShareOption
  */
 interface ShareToAccountDevicesInteractor {
     fun onSignIn()
+    fun onReauth()
     fun onAddNewDevice()
     fun onShareToDevice(device: Device)
     fun onShareToAllDevices(devices: List<Device>)

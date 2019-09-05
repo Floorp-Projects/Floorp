@@ -176,6 +176,19 @@ class ShareControllerTest {
     }
 
     @Test
+    fun `handleReauth should navigate to the Account Problem Fragment and dismiss this one`() {
+        controller.handleReauth()
+
+        verifyOrder {
+            navController.nav(
+                R.id.shareFragment,
+                ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
+            )
+            dismiss()
+        }
+    }
+
+    @Test
     fun `getShareText should respect concatenate shared tabs urls`() {
         assertThat(controller.getShareText()).isEqualTo(textToShare)
     }

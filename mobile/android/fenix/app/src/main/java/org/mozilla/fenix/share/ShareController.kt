@@ -28,6 +28,7 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
  * Delegated by View Interactors, handles container business logic and operates changes on it.
  */
 interface ShareController {
+    fun handleReauth()
     fun handleShareClosed()
     fun handleShareToApp(app: AppShareOption)
     fun handleAddNewDevice()
@@ -53,6 +54,12 @@ class DefaultShareController(
     private val navController: NavController,
     private val dismiss: () -> Unit
 ) : ShareController {
+    override fun handleReauth() {
+        val directions = ShareFragmentDirections.actionShareFragmentToAccountProblemFragment()
+        navController.nav(R.id.shareFragment, directions)
+        dismiss()
+    }
+
     override fun handleShareClosed() {
         dismiss()
     }
