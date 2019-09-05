@@ -29,6 +29,11 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
 
+#if defined(FUZZING)
+#  include "FuzzySecurityInfo.h"
+#  include "mozilla/StaticPrefs_fuzzing.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -84,11 +89,25 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction* aWrapped,
 
   mFD = PR_CreateIOLayerStub(sLayerIdentity, &sLayerMethods);
 
+  bool addTLSLayer = true;
+#ifdef FUZZING
+  addTLSLayer = !StaticPrefs::fuzzing_necko_enabled();
+  if (!addTLSLayer) {
+    SOCKET_LOG(("Skipping TLS layer in TLSFilterTransaction for fuzzing.\n"));
+
+    mSecInfo = static_cast<nsISupports*>(
+        static_cast<nsISSLSocketControl*>(new FuzzySecurityInfo()));
+  }
+#endif
+
   if (provider && mFD) {
     mFD->secret = reinterpret_cast<PRFilePrivate*>(this);
-    provider->AddToSocket(PR_AF_INET, aTLSHost, aTLSPort, nullptr,
-                          OriginAttributes(), 0, 0, mFD,
-                          getter_AddRefs(mSecInfo));
+
+    if (addTLSLayer) {
+      provider->AddToSocket(PR_AF_INET, aTLSHost, aTLSPort, nullptr,
+                            OriginAttributes(), 0, 0, mFD,
+                            getter_AddRefs(mSecInfo));
+    }
   }
 
   if (mTransaction) {
