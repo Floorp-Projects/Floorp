@@ -1,34 +1,35 @@
+<!DOCTYPE html>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body {
-      background-color: chocolate;
-    }
-    div {
-      border: 2px solid gray;
-      font-family: sans-serif;
-      font-size: xx-large;
-      width: 800px;
-      height: 400px;
-    }
 
-    div:hover {
-      background-color: dodgerblue;
-    }
-  </style>
-  <script>
-    function clickedcheck() {
-      document.getElementById('clicked').textContent = "Clicked on " + new Date();
-    }
-  </script>
+<!--
+  This file contains the HTML UI for the 2D window of Firefox Reality on Desktop
+-->
+
+<html width="1600" height="800">
+<head>
+  <title>Firefox Reality</title>
+  <link rel="stylesheet" href="fxrui.css" />
+  <script src="fxrui.js"></script>
 </head>
 
-<body onclick="clickedcheck()">
-  <div>Hello World!</div>
-  <div id="clicked"></div>
+<body>
+  <div class="navbar_container">
+    <div class="fxr_logo_container">
+      <img class="fxr_logo" src="assets/Logo-256px.png" role="presentation" />
+    </div>
+
+    <button id="eBack"    class="icon_container icon_backward"></button>
+    <button id="eForward" class="icon_container icon_forward"></button>
+    <button id="eRefresh" class="icon_container icon_refresh icon_disabled_hide"></button>
+    <button id="eStop"    class="icon_container icon_stop icon_disabled_hide" disabled></button>
+    <button id="eHome"    class="icon_container icon_home" ></button>
+    
+    <div class="urlbar_container urlbar_container_normal" id="eUrlBarContainer">
+      <img class="urlbar_secure_icon" id="eUrlSecure" src="assets/icon-secure.svg" alt="Secure"/>
+      <input class="urlbar_input" id="eUrlInput" type="text" value="" />
+    </div>
+  </div>
 </body>
 </html>

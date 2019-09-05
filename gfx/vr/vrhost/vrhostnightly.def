@@ -12,6 +12,7 @@ EXPORTS
 ;+= Public Export APIs for vrhost
                CreateVRWindow       PRIVATE
                CloseVRWindow        PRIVATE
+               SendUIMessageToVRWindow  PRIVATE
 
 ;+= Exports only available in Nightlies for testing
                SampleExport         PRIVATE
