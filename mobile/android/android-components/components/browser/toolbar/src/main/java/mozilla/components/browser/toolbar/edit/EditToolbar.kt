@@ -26,6 +26,7 @@ import mozilla.components.browser.toolbar.internal.measureActions
 import mozilla.components.browser.toolbar.internal.wrapAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.components.support.ktx.android.widget.adjustMaxTextSize
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
@@ -50,7 +51,7 @@ internal class EditToolbar(
         imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         gravity = Gravity.CENTER_VERTICAL
         background = null
-        textSize = URL_TEXT_SIZE_SP
+        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
         inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
         setSingleLine()
 
@@ -164,6 +165,7 @@ internal class EditToolbar(
             MeasureSpec.EXACTLY)
 
         urlView.measure(urlWidthSpec, heightMeasureSpec)
+        urlView.adjustMaxTextSize(heightMeasureSpec)
     }
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
@@ -183,9 +185,5 @@ internal class EditToolbar(
 
                 usedWidth + view.measuredWidth
             }
-    }
-
-    companion object {
-        private const val URL_TEXT_SIZE_SP = 15f
     }
 }

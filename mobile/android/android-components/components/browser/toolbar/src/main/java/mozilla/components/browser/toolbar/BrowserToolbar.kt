@@ -808,6 +808,7 @@ class BrowserToolbar @JvmOverloads constructor(
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
             Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
+        internal const val URL_TEXT_SIZE_SP = 15f
     }
 }
 
