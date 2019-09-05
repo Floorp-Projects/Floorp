@@ -1381,12 +1381,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
       (aSoftlinebreak ||
        !(mCurrentLine.mContent.mValue.EqualsLiteral("-- ") ||
          mCurrentLine.mContent.mValue.EqualsLiteral("- -- ")))) {
-    // Remove spaces from the end of the line.
-    while (currentlinelength > 0 &&
-           mCurrentLine.mContent.mValue[currentlinelength - 1] == ' ') {
-      --currentlinelength;
-    }
-    mCurrentLine.mContent.mValue.SetLength(currentlinelength);
+    mCurrentLine.mContent.mValue.Trim(" ", false, true, false);
   }
 
   if (aSoftlinebreak &&
