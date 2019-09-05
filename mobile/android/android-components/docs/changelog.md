@@ -52,6 +52,9 @@ permalink: /changelog/
   * `GlobalSyncableStoreProvider.configureStore` now takes a pair of `Pair<SyncEngine, SyncableStore>`, instead of allowing arbitrary string names for engines.
   * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.  
 
+* **support-ktx**
+  * Added variant of `Flow.ifChanged()` that takes a mapping function in order to filter items where the mapped value has not changed.
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
