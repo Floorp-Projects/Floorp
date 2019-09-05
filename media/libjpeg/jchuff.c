@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2009-2011, 2014-2016, 2018, D. R. Commander.
+ * Copyright (C) 2009-2011, 2014-2016, 2018-2019, D. R. Commander.
  * Copyright (C) 2015, Matthieu Darbois.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
@@ -356,12 +356,16 @@ dump_buffer(working_state *state)
   put_buffer = (put_buffer << size) | code; \
 }
 
+#if SIZEOF_SIZE_T != 8 && !defined(_WIN64)
+
 #define CHECKBUF15() { \
   if (put_bits > 15) { \
     EMIT_BYTE() \
     EMIT_BYTE() \
   } \
 }
+
+#endif
 
 #define CHECKBUF31() { \
   if (put_bits > 31) { \

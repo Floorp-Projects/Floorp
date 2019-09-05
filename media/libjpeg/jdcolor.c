@@ -592,7 +592,7 @@ ycck_cmyk_convert(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
 /* Declarations for ordered dithering
  *
  * We use a 4x4 ordered dither array packed into 32 bits.  This array is
- * sufficent for dithering RGB888 to RGB565.
+ * sufficient for dithering RGB888 to RGB565.
  */
 
 #define DITHER_MASK       0x3

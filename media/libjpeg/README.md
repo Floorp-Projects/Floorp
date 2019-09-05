@@ -135,12 +135,11 @@ without recompiling.  libjpeg-turbo does not claim to support all of the
 libjpeg v7+ features, nor to produce identical output to libjpeg v7+ in all
 cases (see below.)
 
-By passing an argument of `--with-jpeg7` or `--with-jpeg8` to `configure`, or
-an argument of `-DWITH_JPEG7=1` or `-DWITH_JPEG8=1` to `cmake`, you can build a
-version of libjpeg-turbo that emulates the libjpeg v7 or v8 ABI, so that
-programs that are built against libjpeg v7 or v8 can be run with libjpeg-turbo.
-The following section describes which libjpeg v7+ features are supported and
-which aren't.
+By passing an argument of `-DWITH_JPEG7=1` or `-DWITH_JPEG8=1` to `cmake`, you
+can build a version of libjpeg-turbo that emulates the libjpeg v7 or v8 ABI, so
+that programs that are built against libjpeg v7 or v8 can be run with
+libjpeg-turbo.  The following section describes which libjpeg v7+ features are
+supported and which aren't.
 
 ### Support for libjpeg v7 and v8 Features
 
@@ -247,9 +246,8 @@ don't, and it allows those functions to be provided in the "official"
 libjpeg-turbo binaries.
 
 Those who are concerned about maintaining strict conformance with the libjpeg
-v6b or v7 API can pass an argument of `--without-mem-srcdst` to `configure` or
-an argument of `-DWITH_MEM_SRCDST=0` to `cmake` prior to building
-libjpeg-turbo.  This will restore the pre-1.3 behavior, in which
+v6b or v7 API can pass an argument of `-DWITH_MEM_SRCDST=0` to `cmake` prior to
+building libjpeg-turbo.  This will restore the pre-1.3 behavior, in which
 `jpeg_mem_src()` and `jpeg_mem_dest()` are only included when emulating the
 libjpeg v8 API/ABI.
 
@@ -344,3 +342,15 @@ quality of 98-100.  Thus, libjpeg-turbo must use the non-SIMD quantization
 function in those cases.  This causes performance to drop by as much as 40%.
 It is therefore strongly advised that you use the slow integer forward DCT
 whenever encoding images with a JPEG quality of 98 or higher.
+
+
+Memory Debugger Pitfalls
+========================
+
+Valgrind and Memory Sanitizer (MSan) can generate false positives
+(specifically, incorrect reports of uninitialized memory accesses) when used
+with libjpeg-turbo's SIMD extensions.  It is generally recommended that the
+SIMD extensions be disabled, either by passing an argument of `-DWITH_SIMD=0`
+to `cmake` when configuring the build or by setting the environment variable
+`JSIMD_FORCENONE` to `1` at run time, when testing libjpeg-turbo with Valgrind,
+MSan, or other memory debuggers.

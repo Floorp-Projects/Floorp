@@ -1,8 +1,9 @@
 /*
  * Loongson MMI optimizations for libjpeg-turbo
  *
- * Copyright (C) 2016-2017, Loongson Technology Corporation Limited, BeiJing.
+ * Copyright (C) 2016-2018, Loongson Technology Corporation Limited, BeiJing.
  *                          All Rights Reserved.
+ * Copyright (C) 2019, D. R. Commander.  All Rights Reserved.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -41,7 +42,7 @@ typedef float __m32;
 
 /********** Set Operations **********/
 
-extern __inline __m64
+extern __inline __m64 FUNCTION_ATTRIBS
 _mm_setzero_si64(void)
 {
   return 0.0;
@@ -1245,6 +1246,22 @@ _mm_load_si64(const __m64 *src)
   asm("ldc1 %0, %1\n\t"
       : "=f" (ret)
       : "m" (*src)
+      : "memory"
+     );
+
+  return ret;
+}
+
+extern __inline __m64 FUNCTION_ATTRIBS
+_mm_loadu_si64(const __m64 *src)
+{
+  __m64 ret;
+
+  asm("gsldlc1 %0,  7(%1)\n\t"
+      "gsldrc1 %0,  0(%1)\n\t"
+      : "=f" (ret)
+      : "r" (src)
+      : "memory"
      );
 
   return ret;
