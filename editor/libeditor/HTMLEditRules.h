@@ -28,6 +28,7 @@ class EditActionResult;
 class HTMLEditor;
 class SplitNodeResult;
 class TextEditor;
+class WSRunObject;
 enum class EditSubAction : int32_t;
 
 namespace dom {
@@ -128,6 +129,89 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   WillDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                       nsIEditor::EStripWrappers aStripWrappers);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
+   * collapsed selection at whitespaces in a text node.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
+   *                            the caret point.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteCollapsedSelectionAtWhiteSpaces(
+      nsIEditor::EDirection aDirectionAndAmount,
+      WSRunObject& aWSRunObjectAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtTextNode() handles deletion of
+   * collapsed selection in a text node.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aPointToDelete      The point in a text node to delete character(s).
+   *                            Caller must guarantee that this is in a text
+   *                            node.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteCollapsedSelectionAtTextNode(
+      nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aPointToDelete);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtAtomicContent() handles deletion of
+   * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
+   * data nodes except text node (e.g., comment node).
+   * If aAtomicContent is a invisible `<br>` element, this will call
+   * `WillDeleteSelection()` recursively after deleting it.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aAtomicContent      The atomic content to be deleted.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
+   *                            the caret point.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteCollapsedSelectionAtAtomicContent(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
+      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
+   * other block boundary (i.e., immediately before or after a block).
+   * If this does not join blocks, `WillDeleteSelection()` may be called
+   * recursively.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aOtherBlockElement  The block element which follows the caret or
+   *                            is followed by caret.
+   * @param aCaretPoint         The caret point (i.e., selection start or
+   *                            end).
+   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
+   *                            the caret point.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
+      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
+
+  /**
+   * HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() handles deletion
+   * at current block boundary (i.e., at start or end of current block).
+   *
+   * @param aDirectionAndAmount         Direction of the deletion.
+   * @param aCurrentBlockElement        The current block element.
+   * @param aCaretPoint                 The caret point (i.e., selection start
+   *                                    or end).
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
+      nsIEditor::EDirection aDirectionAndAmount, Element& aCurrentBlockElement,
+      const EditorDOMPoint& aCaretPoint);
 
   /**
    * HandleDeleteAroundCollapsedSelection() handles deletion with collapsed
