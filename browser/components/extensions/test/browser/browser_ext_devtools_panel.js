@@ -284,15 +284,15 @@ add_task(async function test_devtools_page_panels_create() {
     "The 'enabled' bool preference for the extension should be initially true"
   );
 
-  // Get the devtools panel id from the first item in the toolbox additional tools array.
-  const getPanelId = toolbox => {
+  // Get the devtools panel info for the first item in the toolbox additional tools array.
+  const getPanelInfo = toolbox => {
     let toolboxAdditionalTools = toolbox.getAdditionalTools();
     is(
       toolboxAdditionalTools.length,
       1,
       "Got the expected number of toolbox specific panel registered."
     );
-    return toolboxAdditionalTools[0].id;
+    return toolboxAdditionalTools[0];
   };
 
   // Test the devtools panel shown and hide events.
@@ -390,7 +390,7 @@ add_task(async function test_devtools_page_panels_create() {
         "Got one extension devtools panel registered"
       );
 
-      let newPanelId = getPanelId(toolbox);
+      let newPanelId = getPanelInfo(toolbox).id;
       is(
         toolbox.visibleAdditionalTools.filter(toolId => toolId == newPanelId)
           .length,
@@ -404,7 +404,7 @@ add_task(async function test_devtools_page_panels_create() {
   // panel id.
   let { toolbox, target } = await openToolboxForTab(tab);
   await extension.awaitMessage("devtools_panel_created");
-  let panelId = getPanelId(toolbox);
+  let panelId = getPanelInfo(toolbox).id;
 
   info("Test panel show and hide - first cycle");
   await testPanelShowAndHide({
@@ -433,6 +433,21 @@ add_task(async function test_devtools_page_panels_create() {
   // Go back to the extension devtools panel.
   await gDevTools.showToolbox(target, panelId);
   await extension.awaitMessage("devtools_panel_shown");
+
+  // Check that the aria-label has been set on the devtools panel.
+  const panelFrame = toolbox.doc.getElementById(
+    `toolbox-panel-iframe-${panelId}`
+  );
+  const panelInfo = getPanelInfo(toolbox);
+  ok(
+    panelInfo.panelLabel && panelInfo.panelLabel.length > 0,
+    "Expect the registered panel to include a non empty panelLabel property"
+  );
+  is(
+    panelFrame && panelFrame.getAttribute("aria-label"),
+    panelInfo.panelLabel,
+    "Got the expected aria-label on the extension panel frame"
+  );
 
   // Turn off the extension devtools page using the preference that enable/disable the
   // devtools page for a given installed WebExtension.
@@ -470,7 +485,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   // Test devtools panel is loaded correctly after being toggled and
   // devtools panel events has been fired as expected.
-  panelId = getPanelId(toolbox);
+  panelId = getPanelInfo(toolbox).id;
 
   info("Test panel show and hide - after disabling/enabling devtools_page");
   await testPanelShowAndHide({

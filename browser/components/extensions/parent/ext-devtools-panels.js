@@ -142,6 +142,8 @@ class ParentDevToolsPanel extends BaseDevToolsPanel {
       url: WEBEXT_PANELS_URL,
       icon: icon,
       label: title,
+      // panelLabel is used to set the aria-label attribute (See Bug 1570645).
+      panelLabel: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
       isTargetSupported: target => target.isLocalTab,
       build: (window, toolbox) => {
