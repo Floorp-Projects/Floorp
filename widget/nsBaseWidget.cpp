@@ -37,6 +37,7 @@
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsXULPopupManager.h"
+#include "nsXBLWindowKeyHandler.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
@@ -50,7 +51,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
-#include "mozilla/GlobalKeyListener.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -867,7 +867,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
                                &IAPZCTreeManager::SetDPI, dpi));
 
   if (StaticPrefs::apz_keyboard_enabled_AtStartup()) {
-    KeyboardMap map = RootWindowGlobalKeyListener::CollectKeyboardShortcuts();
+    KeyboardMap map = nsXBLWindowKeyHandler::CollectKeyboardShortcuts();
     // On Android the main thread is not the controller thread
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
         "layers::IAPZCTreeManager::SetKeyboardMap", mAPZC,
