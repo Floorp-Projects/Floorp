@@ -48,6 +48,9 @@ TransportProviderParent::OnTransportAvailable(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TransportProviderParent::OnUpgradeFailed(nsresult aErrorCode) { return NS_OK; }
+
 void TransportProviderParent::MaybeNotify() {
   if (!mListener || !mTransport) {
     return;

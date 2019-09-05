@@ -8071,7 +8071,12 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     nsresult rv = gHttpHandler->ConnMgr()->CompleteUpgrade(
         aTransWithStickyConn, mUpgradeProtocolCallback);
     if (NS_FAILED(rv)) {
-      LOG(("  CompleteUpgrade failed with %08x", static_cast<uint32_t>(rv)));
+      LOG(("  CompleteUpgrade failed with %" PRIx32,
+           static_cast<uint32_t>(rv)));
+
+      // This ensures that WebSocketChannel::OnStopRequest will be
+      // called with an error so the session is properly aborted.
+      aStatus = rv;
     }
   }
 

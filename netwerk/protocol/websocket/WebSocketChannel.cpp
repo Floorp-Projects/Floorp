@@ -3658,6 +3658,24 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebSocketChannel::OnUpgradeFailed(nsresult aErrorCode) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  LOG(("WebSocketChannel::OnUpgradeFailed() %p [aErrorCode %" PRIx32 "]", this,
+       static_cast<uint32_t>(aErrorCode)));
+
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnUpgradeFailed: Already stopped"));
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!mRecvdHttpUpgradeTransport, "OTA already called");
+
+  AbortSession(aErrorCode);
+  return NS_OK;
+}
+
 // nsIRequestObserver (from nsIStreamListener)
 
 NS_IMETHODIMP
