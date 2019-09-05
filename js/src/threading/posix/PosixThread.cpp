@@ -12,21 +12,21 @@
 
 namespace js {
 
-inline Thread::Id::PlatformData* Thread::Id::platformData() {
+inline ThreadId::PlatformData* ThreadId::platformData() {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<PlatformData*>(platformData_);
 }
 
-inline const Thread::Id::PlatformData* Thread::Id::platformData() const {
+inline const ThreadId::PlatformData* ThreadId::platformData() const {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<const PlatformData*>(platformData_);
 }
 
-Thread::Id::Id() { platformData()->hasThread = false; }
+ThreadId::ThreadId() { platformData()->hasThread = false; }
 
-bool Thread::Id::operator==(const Id& aOther) const {
+bool ThreadId::operator==(const ThreadId& aOther) const {
   const PlatformData& self = *platformData();
   const PlatformData& other = *aOther.platformData();
   return (!self.hasThread && !other.hasThread) ||

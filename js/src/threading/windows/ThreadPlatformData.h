@@ -17,9 +17,10 @@
 
 namespace js {
 
-class Thread::Id::PlatformData {
+class ThreadId::PlatformData {
   friend class Thread;
-  friend Thread::Id ThisThread::GetId();
+  friend class ThreadId;
+  friend ThreadId ThisThread::GetId();
 
   HANDLE handle;
   unsigned id;
