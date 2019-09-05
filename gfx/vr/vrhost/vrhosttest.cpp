@@ -231,6 +231,7 @@ void TestCreateVRWindow() {
       (PFN_CREATEVRWINDOW)::GetProcAddress(hVRHost, "CreateVRWindow");
   PFN_CLOSEVRWINDOW fnClose =
       (PFN_CLOSEVRWINDOW)::GetProcAddress(hVRHost, "CloseVRWindow");
+
   PFN_SENDUIMSG fnSendMsg =
       (PFN_SENDUIMSG)::GetProcAddress(hVRHost, "SendUIMessageToVRWindow");
 
@@ -257,26 +258,22 @@ void TestCreateVRWindow() {
     ::Sleep(5000);
 
     printf(
-        "Now, simulating a click on the Home button, which should look "
-        "pressed\n");
-    POINT pt;
-    pt.x = 450;
-    pt.y = 50;
-    fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
-    ::Sleep(3000);
-    fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
+        "Now, should see window contents turn from orange to blue with onclick "
+        "event output...\n");
 
-    printf(
-        "Next, simulating hovering across the URL bar, which should turn "
-        "blue\n");
-    pt.x = 600;
+    // Simulate a click, then moving the mouse across the screen
+    POINT pt;
+    pt.x = 200;
+    pt.y = 200;
+    fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
+    fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
     for (int i = 0; i < 100; ++i) {
       pt.x++;
       fnSendMsg(windowId, WM_MOUSEMOVE, 0, POINTTOPOINTS(pt));
       ::Sleep(5);
     }
 
-    ::Sleep(5000);
+    ::Sleep(2000);
 
     // Close the Firefox VR Window
     fnClose(windowId, true);
