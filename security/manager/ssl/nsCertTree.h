@@ -132,7 +132,7 @@ class nsCertTree : public nsICertTree {
  private:
   static const uint32_t kInitialCacheLength = 64;
 
-  nsTArray<RefPtr<nsCertTreeDispInfo> > mDispInfo;
+  nsTArray<RefPtr<nsCertTreeDispInfo>> mDispInfo;
   RefPtr<mozilla::dom::XULTreeElement> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
   treeArrayEl* mTreeArray;
@@ -150,10 +150,9 @@ class nsCertTree : public nsICertTree {
   void FreeCertArray();
   nsresult UpdateUIContents();
 
-  nsresult GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
-                                      uint32_t aType,
-                                      nsCertCompareFunc aCertCmpFn,
-                                      void* aCertCmpFnArg);
+  nsresult GetCertsByTypeFromCertList(
+      const nsTArray<RefPtr<nsIX509Cert>>& aCertList, uint32_t aWantedType,
+      nsCertCompareFunc aCertCmpFn, void* aCertCmpFnArg);
 
   nsCOMPtr<nsIMutableArray> mCellText;
 
