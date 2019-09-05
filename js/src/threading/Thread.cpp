@@ -13,20 +13,20 @@ Thread::~Thread() { MOZ_RELEASE_ASSERT(!joinable()); }
 
 Thread::Thread(Thread&& aOther) {
   id_ = aOther.id_;
-  aOther.id_ = Id();
+  aOther.id_ = ThreadId();
   options_ = aOther.options_;
 }
 
 Thread& Thread::operator=(Thread&& aOther) {
   MOZ_RELEASE_ASSERT(!joinable());
   id_ = aOther.id_;
-  aOther.id_ = Id();
+  aOther.id_ = ThreadId();
   options_ = aOther.options_;
   return *this;
 }
 
-Thread::Id Thread::get_id() { return id_; }
+ThreadId Thread::get_id() { return id_; }
 
-bool Thread::joinable() { return id_ != Id(); }
+bool Thread::joinable() { return id_ != ThreadId(); }
 
 }  // namespace js

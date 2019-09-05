@@ -55,12 +55,12 @@ BEGIN_TEST(testThreadingThreadSetName) {
 END_TEST(testThreadingThreadSetName)
 
 BEGIN_TEST(testThreadingThreadId) {
-  CHECK(js::Thread::Id() == js::Thread::Id());
-  js::Thread::Id fromOther;
+  CHECK(js::ThreadId() == js::ThreadId());
+  js::ThreadId fromOther;
   js::Thread thread;
   CHECK(thread.init([](js::ThreadId* idp) { *idp = js::ThreadId::ThisThreadId(); },
                     &fromOther));
-  js::Thread::Id fromMain = thread.get_id();
+  js::ThreadId fromMain = thread.get_id();
   thread.join();
   CHECK(fromOther == fromMain);
   return true;

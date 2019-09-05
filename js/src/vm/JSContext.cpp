@@ -1341,7 +1341,7 @@ void JSContext::setHelperThread(AutoLockHelperThreadState& locked) {
 }
 
 void JSContext::clearHelperThread(AutoLockHelperThreadState& locked) {
-  currentThread_ = Thread::Id();
+  currentThread_ = ThreadId();
   TlsContext.set(nullptr);
 }
 

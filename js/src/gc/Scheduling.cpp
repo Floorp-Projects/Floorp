@@ -11,6 +11,7 @@
 
 #include "gc/RelocationOverlay.h"
 #include "gc/ZoneAllocator.h"
+#include "vm/MutexIDs.h"
 
 using namespace js;
 using namespace js::gc;

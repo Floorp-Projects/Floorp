@@ -7,7 +7,10 @@
 #ifndef threading_ProtectedData_h
 #define threading_ProtectedData_h
 
-#include "threading/Thread.h"
+#include "jsutil.h"
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
+#include "threading/ThreadId.h"
 
 namespace JS {
 class Zone;
@@ -216,7 +219,7 @@ using UnprotectedData = ProtectedDataNoCheckArgs<CheckUnprotected, T>;
 
 class CheckThreadLocal {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-  Thread::Id id;
+  ThreadId id;
 
  public:
   CheckThreadLocal() : id(ThreadId::ThisThreadId()) {}
