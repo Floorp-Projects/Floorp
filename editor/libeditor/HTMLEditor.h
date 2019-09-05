@@ -57,6 +57,7 @@ class Blob;
 class DocumentFragment;
 class Event;
 class MouseEvent;
+class StaticRange;
 }  // namespace dom
 namespace widget {
 struct IMEState;
@@ -2097,6 +2098,18 @@ class HTMLEditor final : public TextEditor,
   MaybeDeleteTopMostEmptyAncestor(nsIContent& aStartContent,
                                   Element& aEditingHostElement,
                                   nsIEditor::EDirection aDirectionAndAmount);
+
+  /**
+   * GetExtendedRangeToIncludeInvisibleNodes() returns extended range.
+   * If there are some invisible nodes around aAbstractRange, they may
+   * be included.
+   *
+   * @param aAbstractRange      Original range.  This must not be collapsed
+   *                            and must be positioned.
+   * @return                    Extended range.
+   */
+  already_AddRefed<dom::StaticRange> GetExtendedRangeToIncludeInvisibleNodes(
+      const dom::AbstractRange& aAbstractRange);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
