@@ -72,6 +72,8 @@ function URLFetcher(url, timeout) {
         // For some redirects we don't get a status, so we need to check it
         // this way. This only works because we set the redirectionLimit to 0.
         self.onredirectorerror(300);
+        // No need to invoke the onerror callback, we handled it here.
+        xhr.onerror = null;
       }
     }
   };
