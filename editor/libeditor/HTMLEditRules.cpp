@@ -2835,7 +2835,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
         if (NS_WARN_IF(!leafNode)) {
           return NS_ERROR_FAILURE;
         }
-        EditorDOMPoint newSel = GetGoodSelPointForNode(*leafNode, aAction);
+        EditorDOMPoint newSel =
+            HTMLEditorRef().GetGoodCaretPointFor(*leafNode, aAction);
         if (NS_WARN_IF(!newSel.IsSet())) {
           return NS_ERROR_FAILURE;
         }
@@ -3338,35 +3339,47 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   return brElement ? NS_OK : NS_ERROR_FAILURE;
 }
 
-EditorDOMPoint HTMLEditRules::GetGoodSelPointForNode(
-    nsINode& aNode, nsIEditor::EDirection aAction) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aAction == nsIEditor::eNext || aAction == nsIEditor::eNextWord ||
-             aAction == nsIEditor::ePrevious ||
-             aAction == nsIEditor::ePreviousWord ||
-             aAction == nsIEditor::eToBeginningOfLine ||
-             aAction == nsIEditor::eToEndOfLine);
+EditorDOMPoint HTMLEditor::GetGoodCaretPointFor(
+    nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
+             aDirectionAndAmount == nsIEditor::eNextWord ||
+             aDirectionAndAmount == nsIEditor::ePrevious ||
+             aDirectionAndAmount == nsIEditor::ePreviousWord ||
+             aDirectionAndAmount == nsIEditor::eToBeginningOfLine ||
+             aDirectionAndAmount == nsIEditor::eToEndOfLine);
 
-  bool isPreviousAction =
-      (aAction == nsIEditor::ePrevious || aAction == nsIEditor::ePreviousWord ||
-       aAction == nsIEditor::eToBeginningOfLine);
+  bool goingForward = (aDirectionAndAmount == nsIEditor::eNext ||
+                       aDirectionAndAmount == nsIEditor::eNextWord ||
+                       aDirectionAndAmount == nsIEditor::eToEndOfLine);
 
-  if (aNode.GetAsText() || HTMLEditorRef().IsContainer(&aNode) ||
-      NS_WARN_IF(!aNode.GetParentNode())) {
-    return EditorDOMPoint(&aNode, isPreviousAction ? aNode.Length() : 0);
+  // XXX Why don't we check whether the candidate position is enable or not?
+  //     When the result is not editable point, caret will be enclosed in
+  //     the non-editable content.
+
+  // If we can put caret in aContent, return start or end in it.
+  if (aContent.IsText() || IsContainer(&aContent) ||
+      NS_WARN_IF(!aContent.GetParentNode())) {
+    return EditorDOMPoint(&aContent, goingForward ? 0 : aContent.Length());
   }
 
-  if (NS_WARN_IF(!aNode.IsContent())) {
-    return EditorDOMPoint();
+  // If we are going forward, put caret at aContent itself.
+  if (goingForward) {
+    return EditorDOMPoint(&aContent);
   }
 
-  EditorDOMPoint ret(&aNode);
-  if ((!aNode.IsHTMLElement(nsGkAtoms::br) ||
-       HTMLEditorRef().IsVisibleBRElement(&aNode)) &&
-      isPreviousAction) {
-    ret.AdvanceOffset();
+  // If we are going backward, put caret to next node unless aContent is an
+  // invisible `<br>` element.
+  // XXX Shouldn't we put caret to first leaf of the next node?
+  if (!aContent.IsHTMLElement(nsGkAtoms::br) || IsVisibleBRElement(&aContent)) {
+    EditorDOMPoint ret(&aContent);
+    DebugOnly<bool> advanced = ret.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced, "Failed to advance offset");
+    return ret;
   }
-  return ret;
+
+  // Otherwise, we should put caret at the invisible `<br>` element.
+  return EditorDOMPoint(&aContent);
 }
 
 EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
@@ -6640,7 +6653,8 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
         nsCOMPtr<nsIContent> nextNode =
             HTMLEditorRef().GetNextNode(afterEmptyBlock);
         if (nextNode) {
-          EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
+          EditorDOMPoint pt =
+              HTMLEditorRef().GetGoodCaretPointFor(*nextNode, aAction);
           ErrorResult error;
           SelectionRefPtr()->Collapse(pt, error);
           if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -6675,7 +6689,8 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
         nsCOMPtr<nsIContent> priorNode =
             HTMLEditorRef().GetPreviousEditableNode(atEmptyBlock);
         if (priorNode) {
-          EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
+          EditorDOMPoint pt =
+              HTMLEditorRef().GetGoodCaretPointFor(*priorNode, aAction);
           ErrorResult error;
           SelectionRefPtr()->Collapse(pt, error);
           if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -9727,7 +9742,7 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
     return NS_OK;
   }
 
-  EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
+  EditorDOMPoint pt = HTMLEditorRef().GetGoodCaretPointFor(*nearNode, aAction);
   ErrorResult error;
   SelectionRefPtr()->Collapse(pt, error);
   if (NS_WARN_IF(!CanHandleEditAction())) {

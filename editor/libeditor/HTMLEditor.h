@@ -2059,6 +2059,19 @@ class HTMLEditor final : public TextEditor,
   TryToJoinBlocksWithTransaction(nsIContent& aLeftContentInBlock,
                                  nsIContent& aRightContentInBlock);
 
+  /**
+   * GetGoodCaretPointFor() returns a good point to collapse `Selection`
+   * after handling edit action with aDirectionAndAmount.
+   *
+   * @param aContent            The content where you want to put caret
+   *                            around.
+   * @param aDirectionAndAmount Muse be one of eNext, eNextWord, eToEndOfLine,
+   *                            ePrevious, ePreviousWord and eToBeggingOfLine.
+   *                            Set the direction of handled edit action.
+   */
+  EditorDOMPoint GetGoodCaretPointFor(
+      nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
