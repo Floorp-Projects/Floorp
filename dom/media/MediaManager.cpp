@@ -3161,8 +3161,10 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
         __func__);
   }
   uint64_t windowId = aWindow->WindowID();
+  Document* doc = aWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
 
-  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
+  nsIPrincipal* principal = doc->NodePrincipal();
 
   RefPtr<GetUserMediaWindowListener> windowListener =
       GetWindowListener(windowId);
@@ -3183,8 +3185,30 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
 
   DeviceEnumerationType videoEnumerationType = DeviceEnumerationType::Normal;
   DeviceEnumerationType audioEnumerationType = DeviceEnumerationType::Normal;
-  bool resistFingerprinting = nsContentUtils::ResistFingerprinting(aCallerType);
 
+  // Only expose devices which are allowed to use:
+  // https://w3c.github.io/mediacapture-main/#dom-mediadevices-enumeratedevices
+  MediaSourceEnum videoType = dom::FeaturePolicyUtils::IsFeatureAllowed(
+                                  doc, NS_LITERAL_STRING("camera"))
+                                  ? MediaSourceEnum::Camera
+                                  : MediaSourceEnum::Other;
+  MediaSourceEnum audioType = dom::FeaturePolicyUtils::IsFeatureAllowed(
+                                  doc, NS_LITERAL_STRING("microphone"))
+                                  ? MediaSourceEnum::Microphone
+                                  : MediaSourceEnum::Other;
+
+  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
+  MediaSinkEnum audioOutputType = MediaSinkEnum::Other;
+  // TODO bug Bug 1577199 we don't seem to support the "speaker" feature policy
+  // yet.
+  if (Preferences::GetBool("media.setsinkid.enabled")) {
+    audioOutputType = MediaSinkEnum::Speaker;
+  } else if (audioType == MediaSourceEnum::Other &&
+             videoType == MediaSourceEnum::Other) {
+    return DevicesPromise::CreateAndResolve(devices, __func__);
+  }
+
+  bool resistFingerprinting = nsContentUtils::ResistFingerprinting(aCallerType);
   // In order of precedence: resist fingerprinting > loopback > fake pref
   if (resistFingerprinting) {
     videoEnumerationType = DeviceEnumerationType::Fake;
@@ -3194,30 +3218,29 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
     nsAutoCString videoLoopDev, audioLoopDev;
     bool wantFakes = Preferences::GetBool("media.navigator.streams.fake");
     // Video
-    Preferences::GetCString("media.video_loopback_dev", videoLoopDev);
-    // Loopback prefs take precedence over fake prefs
-    if (!videoLoopDev.IsEmpty()) {
-      videoEnumerationType = DeviceEnumerationType::Loopback;
-    } else if (wantFakes) {
-      videoEnumerationType = DeviceEnumerationType::Fake;
+    if (videoType == MediaSourceEnum::Camera) {
+      Preferences::GetCString("media.video_loopback_dev", videoLoopDev);
+      // Loopback prefs take precedence over fake prefs
+      if (!videoLoopDev.IsEmpty()) {
+        videoEnumerationType = DeviceEnumerationType::Loopback;
+      } else if (wantFakes) {
+        videoEnumerationType = DeviceEnumerationType::Fake;
+      }
     }
+
     // Audio
-    Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
-    // Loopback prefs take precedence over fake prefs
-    if (!audioLoopDev.IsEmpty()) {
-      audioEnumerationType = DeviceEnumerationType::Loopback;
-    } else if (wantFakes) {
-      audioEnumerationType = DeviceEnumerationType::Fake;
+    if (audioType == MediaSourceEnum::Microphone) {
+      Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
+      // Loopback prefs take precedence over fake prefs
+      if (!audioLoopDev.IsEmpty()) {
+        audioEnumerationType = DeviceEnumerationType::Loopback;
+      } else if (wantFakes) {
+        audioEnumerationType = DeviceEnumerationType::Fake;
+      }
     }
   }
 
-  MediaSinkEnum audioOutputType = MediaSinkEnum::Other;
-  if (Preferences::GetBool("media.setsinkid.enabled")) {
-    audioOutputType = MediaSinkEnum::Speaker;
-  }
-  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
-  return EnumerateDevicesImpl(windowId, MediaSourceEnum::Camera,
-                              MediaSourceEnum::Microphone, audioOutputType,
+  return EnumerateDevicesImpl(windowId, videoType, audioType, audioOutputType,
                               videoEnumerationType, audioEnumerationType, false,
                               devices)
       ->Then(

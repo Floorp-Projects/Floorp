@@ -106,7 +106,9 @@ runTest(async () => {
   let [sameOriginDevices, differentOriginDevices] = origins.map(o => devicesMap.get(o));
 
   is(sameOriginDevices.length, devices.length);
-  is(differentOriginDevices.length, devices.length);
+  // Camera and microphone are allowed for documents that are same-origin by
+  // default.
+  is(differentOriginDevices.length, 0);
   [...sameOriginDevices, ...differentOriginDevices].forEach(d => validateDevice(d));
 
   for (let device of sameOriginDevices) {
