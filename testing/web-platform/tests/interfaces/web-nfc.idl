@@ -24,6 +24,7 @@ interface NDEFRecord {
   USVString? toText();
   [NewObject] ArrayBuffer? toArrayBuffer();
   [NewObject] any toJSON();
+  sequence<NDEFRecord> toRecords();
 };
 
 dictionary NDEFRecordInit {
