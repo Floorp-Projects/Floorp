@@ -128,9 +128,20 @@ class nsFrameLoader final : public nsStubMutationObserver,
   GetBrowserChildMessageManager() const {
     return mChildMessageManager;
   }
-  nsresult CreateStaticClone(nsFrameLoader* aDest);
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
   void SendIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
+  // When creating a nsFrameLoader which is a static clone, two methods are
+  // called at different stages. The `CreateStaticClone` method is first called
+  // on the source nsFrameLoader, passing in the destination frameLoader as the
+  // `aDest` argument. This is done during the static clone operation on the
+  // original document.
+  //
+  // After the original document's clone is complete, the `FinishStaticClone`
+  // method is called on the target nsFrameLoader, which clones the inner
+  // document of the source nsFrameLoader.
+  nsresult CreateStaticClone(nsFrameLoader* aDest);
+  nsresult FinishStaticClone();
 
   // WebIDL methods
 
@@ -485,6 +496,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   RefPtr<Document> mContainerDocWhileDetached;
+
+  // When performing a static clone, this holds the other nsFrameLoader which
+  // this object is a static clone of.
+  RefPtr<nsFrameLoader> mStaticCloneOf;
 
   // When performing a process switch, this value is used rather than mURIToLoad
   // to identify the process-switching load which should be resumed in the
