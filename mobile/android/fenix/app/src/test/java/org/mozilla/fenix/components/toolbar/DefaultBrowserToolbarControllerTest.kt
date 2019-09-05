@@ -13,6 +13,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
@@ -85,6 +86,35 @@ class DefaultBrowserToolbarControllerTest {
         every { analytics.metrics } returns metrics
         every { context.components.useCases.sessionUseCases } returns sessionUseCases
         every { context.components.core.sessionManager.selectedSession } returns currentSession
+    }
+
+    @Test
+    fun handleBrowserToolbarPaste() {
+        every { currentSession.id } returns "1"
+
+        val pastedText = "Mozilla"
+        controller.handleToolbarPaste(pastedText)
+
+        verify {
+            navController.nav(
+                R.id.browserFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                    sessionId = currentSession.id,
+                    pastedText = pastedText
+                )
+            )
+        }
+    }
+
+    @Test
+    fun handleBrowserToolbarPasteAndGo() {
+        val pastedText = "Mozilla"
+
+        controller.handleToolbarPasteAndGo(pastedText)
+        verifyOrder {
+            currentSession.searchTerms = ""
+            sessionUseCases.loadUrl(pastedText)
+        }
     }
 
     @Test

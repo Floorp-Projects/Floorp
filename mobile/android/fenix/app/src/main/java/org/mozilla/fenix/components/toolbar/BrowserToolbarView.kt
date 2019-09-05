@@ -46,7 +46,6 @@ class BrowserToolbarView(
     val toolbarIntegration: ToolbarIntegration
 
     init {
-
         view.setOnUrlLongClickListener {
             val popup = PopupMenu(view.context, view)
             popup.menuInflater.inflate(R.menu.browser_toolbar_popup_menu, popup.menu)

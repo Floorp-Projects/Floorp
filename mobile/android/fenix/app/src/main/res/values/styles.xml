@@ -15,6 +15,7 @@
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_normal_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
 
@@ -98,6 +99,7 @@
         <item name="android:colorControlActivated">@color/accent_high_contrast_private_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_private_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
+        <item name="android:popupMenuStyle">@style/PopupMenu</item>
         <item name="alertDialogStyle">@style/DialogStyleDark</item>
         <item name="alertDialogTheme">@style/DialogStyleDark</item>
 
@@ -136,7 +138,6 @@
         <item name="privateBrowsingButtonBackground">@color/primary_text_private_theme</item>
         <item name="privateBrowsingButtonAccent">@color/above_private_theme</item>
         <item name="shieldLottieFile">@raw/shield_json_dark</item>
-
     </style>
 
     <style name="Mozac.Browser.Menu" parent="" tools:ignore="UnusedResources">
@@ -298,6 +299,11 @@
 
     <style name="OnboardingCardDark" parent="OnboardingCardLight">
         <item name="android:background">@drawable/onboarding_card_background_dark</item>
+    </style>
+
+    <style name="PopupMenu" parent="@android:style/Widget.PopupMenu">
+        <item name="android:dropDownHorizontalOffset">16dp</item>
+        <item name="android:popupBackground">@drawable/rounded_all_corners</item>
     </style>
 
     <style name="CreateCollectionDialogStyle" parent="DialogStyleBase"/>

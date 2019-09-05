@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.session.Session
+import org.junit.Before
 import org.junit.Test
 
 import org.mozilla.fenix.browser.readermode.ReaderModeController
@@ -18,20 +19,46 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetController
 
 class BrowserInteractorTest {
 
+    val metrics: MetricController = mockk()
+    val context: Context = mockk()
+    val browserStore: BrowserFragmentStore = mockk(relaxed = true)
+    val browserToolbarController: BrowserToolbarController = mockk(relaxed = true)
+    val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
+    val readerModeController: ReaderModeController = mockk(relaxed = true)
+    val session: Session = mockk()
+
+    val interactor = BrowserInteractor(
+        context,
+        browserStore,
+        browserToolbarController,
+        quickActionSheetController,
+        readerModeController,
+        session
+    )
+
+    @Before
+    fun setup() {
+        every { context.metrics } returns metrics
+        every { context.components.core.sessionManager.selectedSession } returns session
+    }
+
+    @Test
+    fun onBrowserToolbarPaste() {
+        val pastedText = "Mozilla"
+        interactor.onBrowserToolbarPaste(pastedText)
+        verify { browserToolbarController.handleToolbarPaste(pastedText) }
+    }
+
+    @Test
+    fun onBrowserToolbarPasteAndGo() {
+        val pastedText = "Mozilla"
+
+        interactor.onBrowserToolbarPasteAndGo(pastedText)
+        verify { browserToolbarController.handleToolbarPasteAndGo(pastedText) }
+    }
+
     @Test
     fun onBrowserToolbarClicked() {
-        val context: Context = mockk()
-        val browserToolbarController: BrowserToolbarController = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            browserToolbarController,
-            mockk(),
-            mockk(),
-            mockk()
-        )
-
         interactor.onBrowserToolbarClicked()
 
         verify { browserToolbarController.handleToolbarClick() }
@@ -39,18 +66,7 @@ class BrowserInteractorTest {
 
     @Test
     fun onBrowserToolbarMenuItemTapped() {
-        val context: Context = mockk()
-        val browserToolbarController: BrowserToolbarController = mockk(relaxed = true)
         val item: ToolbarMenu.Item = mockk()
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            browserToolbarController,
-            mockk(),
-            mockk(),
-            mockk()
-        )
 
         interactor.onBrowserToolbarMenuItemTapped(item)
 
@@ -59,18 +75,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetOpened() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            mockk(),
-            mockk(),
-            mockk()
-        )
-
-        every { context.metrics } returns metrics
         every { metrics.track(Event.QuickActionSheetOpened) } just Runs
 
         interactor.onQuickActionSheetOpened()
@@ -80,18 +84,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetClosed() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            mockk(),
-            mockk(),
-            mockk()
-        )
-
-        every { context.metrics } returns metrics
         every { metrics.track(Event.QuickActionSheetClosed) } just Runs
 
         interactor.onQuickActionSheetClosed()
@@ -101,19 +93,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetSharePressed() {
-        val context: Context = mockk()
-        val session: Session = mockk()
-        val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            quickActionSheetController,
-            mockk(),
-            session
-        )
-
         interactor.onQuickActionSheetSharePressed()
 
         verify { quickActionSheetController.handleShare() }
@@ -121,20 +100,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetDownloadPressed() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            quickActionSheetController,
-            mockk(),
-            mockk()
-        )
-
-        every { context.metrics } returns metrics
         every { metrics.track(Event.QuickActionSheetDownloadTapped) } just Runs
 
         interactor.onQuickActionSheetDownloadPressed()
@@ -144,19 +109,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetBookmarkPressed() {
-        val context: Context = mockk()
-        val session: Session = mockk()
-        val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            quickActionSheetController,
-            mockk(),
-            session
-        )
-
         interactor.onQuickActionSheetBookmarkPressed()
 
         verify { quickActionSheetController.handleBookmark() }
@@ -164,22 +116,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetReadPressed() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val session: Session = mockk()
-        val readerModeController: ReaderModeController = mockk(relaxed = true)
-        val browserStore: BrowserFragmentStore = mockk(relaxed = true)
-        val interactor = BrowserInteractor(
-            context,
-            browserStore,
-            mockk(),
-            mockk(),
-            readerModeController,
-            session
-        )
-
-        every { context.metrics } returns metrics
-        every { context.components.core.sessionManager.selectedSession } returns session
         every { session.readerMode } returns false
         every { metrics.track(Event.QuickActionSheetOpened) } just Runs
 
@@ -191,23 +127,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetReadPressedWithActiveReaderMode() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val session: Session = mockk()
-        val readerModeController: ReaderModeController = mockk(relaxed = true)
-        val browserStore: BrowserFragmentStore = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            browserStore,
-            mockk(),
-            mockk(),
-            readerModeController,
-            session
-        )
-
-        every { context.metrics } returns metrics
-        every { context.components.core.sessionManager.selectedSession } returns session
         every { session.readerMode } returns true
         every { metrics.track(Event.QuickActionSheetClosed) } just Runs
 
@@ -219,19 +138,6 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetOpenLinkPressed() {
-        val context: Context = mockk()
-        val session: Session = mockk()
-        val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            quickActionSheetController,
-            mockk(),
-            session
-        )
-
         interactor.onQuickActionSheetOpenLinkPressed()
 
         verify { quickActionSheetController.handleOpenLink() }
@@ -239,21 +145,7 @@ class BrowserInteractorTest {
 
     @Test
     fun onQuickActionSheetAppearancePressed() {
-        val context: Context = mockk()
-        val metrics: MetricController = mockk()
-        val readerModeController: ReaderModeController = mockk(relaxed = true)
-
-        every { context.metrics } returns metrics
         every { metrics.track(Event.ReaderModeAppearanceOpened) } just Runs
-
-        val interactor = BrowserInteractor(
-            context,
-            mockk(),
-            mockk(),
-            mockk(),
-            readerModeController,
-            mockk()
-        )
 
         interactor.onQuickActionSheetAppearancePressed()
 
