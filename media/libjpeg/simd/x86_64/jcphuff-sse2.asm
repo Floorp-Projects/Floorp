@@ -322,6 +322,8 @@ EXTN(jsimd_encode_mcu_AC_first_prepare_sse2):
     add         LUT, 16*SIZEOF_INT
     dec         K
     jnz         .BLOOP16
+    test        LEN, 15
+    je          .PADDING
 .ELOOP16:
     test        LEN, 8
     jz          .TRY7

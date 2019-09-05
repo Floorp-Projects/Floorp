@@ -429,8 +429,6 @@ h2v2_merged_upsample(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
 #define PACK_TWO_PIXELS_LE(l, r)    ((r << 16) | l)
 #define PACK_TWO_PIXELS_BE(l, r)    ((l << 16) | r)
 
-#define PACK_NEED_ALIGNMENT(ptr)    (((size_t)(ptr)) & 3)
-
 #define WRITE_TWO_PIXELS_LE(addr, pixels) { \
   ((INT16 *)(addr))[0] = (INT16)(pixels); \
   ((INT16 *)(addr))[1] = (INT16)((pixels) >> 16); \
@@ -448,7 +446,7 @@ h2v2_merged_upsample(j_decompress_ptr cinfo, JSAMPIMAGE input_buf,
 /* Declarations for ordered dithering
  *
  * We use a 4x4 ordered dither array packed into 32 bits.  This array is
- * sufficent for dithering RGB888 to RGB565.
+ * sufficient for dithering RGB888 to RGB565.
  */
 
 #define DITHER_MASK       0x3

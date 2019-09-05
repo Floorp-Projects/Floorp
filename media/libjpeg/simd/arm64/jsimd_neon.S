@@ -63,7 +63,7 @@ _\fname:
     trn2            \x1\literal, \xi\literal, \x1\literal
 .endm
 
-/* Transpose elements of 2 differnet registers */
+/* Transpose elements of 2 different registers */
 .macro transpose x0, x1, xi, xilen, literal
     mov             \xi\xilen, \x0\xilen
     trn1            \x0\literal, \x0\literal, \x1\literal

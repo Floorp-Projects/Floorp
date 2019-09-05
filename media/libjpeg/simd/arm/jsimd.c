@@ -5,6 +5,7 @@
  * Copyright (C) 2011, Nokia Corporation and/or its subsidiary(-ies).
  * Copyright (C) 2009-2011, 2013-2014, 2016, 2018, D. R. Commander.
  * Copyright (C) 2015-2016, 2018, Matthieu Darbois.
+ * Copyright (C) 2019, Google LLC.
  *
  * Based on the x86 SIMD extension for IJG JPEG library,
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
@@ -30,7 +31,7 @@
 static unsigned int simd_support = ~0;
 static unsigned int simd_huffman = 1;
 
-#if defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
+#if !defined(__ARM_NEON__) && (defined(__linux__) || defined(ANDROID) || defined(__ANDROID__))
 
 #define SOMEWHAT_SANE_PROC_CPUINFO_SIZE_LIMIT  (1024 * 1024)
 
@@ -105,7 +106,7 @@ init_simd(void)
 #ifndef NO_GETENV
   char *env = NULL;
 #endif
-#if !defined(__ARM_NEON__) && defined(__linux__) || defined(ANDROID) || defined(__ANDROID__)
+#if !defined(__ARM_NEON__) && (defined(__linux__) || defined(ANDROID) || defined(__ANDROID__))
   int bufsize = 1024; /* an initial guess for the line buffer size limit */
 #endif
 
