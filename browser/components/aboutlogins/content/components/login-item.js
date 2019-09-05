@@ -149,6 +149,7 @@ export default class LoginItem extends HTMLElement {
     this._passwordInput.defaultValue = this._login.password || "";
     if (this.dataset.editing) {
       this._usernameInput.removeAttribute("data-l10n-id");
+      this._usernameInput.placeholder = "";
     } else {
       document.l10n.setAttributes(
         this._usernameInput,
