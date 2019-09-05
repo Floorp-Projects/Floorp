@@ -2125,7 +2125,7 @@ bool NS_ShouldCheckAppCache(nsIPrincipal* aPrincipal) {
   }
 
   bool allowed;
-  rv = offlineService->OfflineAppAllowed(aPrincipal, &allowed);
+  rv = offlineService->OfflineAppAllowed(aPrincipal, nullptr, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
 
