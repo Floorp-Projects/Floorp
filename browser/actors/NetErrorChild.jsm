@@ -13,14 +13,6 @@ const { ActorChild } = ChromeUtils.import(
   "resource://gre/modules/ActorChild.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebNavigationFrames",
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle(
     "chrome://pipnss/locale/pipnss.properties"
@@ -63,18 +55,6 @@ class NetErrorChild extends ActorChild {
     return doc.documentURI.startsWith("about:neterror");
   }
 
-  isAboutCertError(doc) {
-    return doc.documentURI.startsWith("about:certerror");
-  }
-
-  getParams(doc) {
-    let searchParams = new URL(doc.documentURI).searchParams;
-    return {
-      cssClass: searchParams.get("s"),
-      error: searchParams.get("e"),
-    };
-  }
-
   handleEvent(aEvent) {
     // Documents have a null ownerDocument.
     let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
@@ -90,15 +70,18 @@ class NetErrorChild extends ActorChild {
         this.onResetPreferences(aEvent);
         break;
       case "click":
-        if (aEvent.button == 0) {
-          if (this.isAboutCertError(doc)) {
-            this.recordClick(aEvent.originalTarget);
-            this.onCertError(aEvent.originalTarget, doc.defaultView);
-          } else {
-            this.onClick(aEvent);
-          }
-        } else if (this.isAboutCertError(doc)) {
-          this.recordClick(aEvent.originalTarget);
+        let elem = aEvent.originalTarget;
+        if (
+          elem.id == "viewCertificate" ||
+          elem.id == "exceptionDialogButton"
+        ) {
+          this.mm.sendAsyncMessage("Browser:CertExceptionError", {
+            location: doc.location.href,
+            elementId: elem.id,
+            securityInfoAsString: getSerializedSecurityInfo(
+              doc.defaultView.docShell
+            ),
+          });
         }
         break;
     }
@@ -231,68 +214,6 @@ class NetErrorChild extends ActorChild {
         Ci.nsISecurityReporter
       );
       errorReporter.reportTLSError(securityInfo, host, port);
-    }
-  }
-
-  onCertError(target, win) {
-    this.mm.sendAsyncMessage("Browser:CertExceptionError", {
-      frameId: WebNavigationFrames.getFrameId(win),
-      location: win.document.location.href,
-      elementId: target.getAttribute("id"),
-      isTopFrame: win.parent === win,
-      securityInfoAsString: getSerializedSecurityInfo(win.docShell),
-    });
-  }
-
-  getCSSClass(doc) {
-    let searchParams = new URL(doc.documentURI).searchParams;
-    return searchParams.get("s");
-  }
-
-  recordClick(element) {
-    let telemetryId = element.dataset.telemetryId;
-    if (!telemetryId) {
-      return;
-    }
-    let doc = element.ownerDocument;
-    let cssClass = this.getCSSClass(doc);
-    // Telemetry values for events are max. 80 bytes.
-    let errorCode = doc.body.getAttribute("code").substring(0, 40);
-    let panel = doc.getElementById("badCertAdvancedPanel");
-    Services.telemetry.recordEvent(
-      "security.ui.certerror",
-      "click",
-      telemetryId,
-      errorCode,
-      {
-        panel_open: (panel.style.display == "none").toString(),
-        has_sts: (cssClass == "badStsCert").toString(),
-        is_frame: (doc.ownerGlobal.parent != doc.ownerGlobal).toString(),
-      }
-    );
-  }
-
-  onClick(event) {
-    let { documentURI } = event.target.ownerDocument;
-
-    let elmId = event.originalTarget.getAttribute("id");
-    if (elmId == "returnButton") {
-      this.mm.sendAsyncMessage("Browser:SSLErrorGoBack", {});
-      return;
-    }
-
-    if (
-      !event.originalTarget.classList.contains("try-again") ||
-      !/e=netOffline/.test(documentURI)
-    ) {
-      return;
-    }
-    // browser front end will handle clearing offline mode and refreshing
-    // the page *if* we're in offline mode now. Otherwise let the error page
-    // handle the click.
-    if (Services.io.offline) {
-      event.preventDefault();
-      this.mm.sendAsyncMessage("Browser:EnableOnlineMode", {});
     }
   }
 }
