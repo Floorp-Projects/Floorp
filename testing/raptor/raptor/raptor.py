@@ -186,10 +186,6 @@ either Raptor or browsertime."""
         return artifact_dir
 
     @abstractmethod
-    def check_for_crashes(self):
-        pass
-
-    @abstractmethod
     def run_test_setup(self, test):
         LOG.info("starting test: %s" % test['name'])
 
@@ -233,11 +229,92 @@ either Raptor or browsertime."""
         return self.results_handler.summarize_and_output(self.config, test_names)
 
     @abstractmethod
+    def check_for_crashes(self):
+        pass
+
+    @abstractmethod
     def clean_up(self):
         pass
 
     def get_page_timeout_list(self):
         return self.results_handler.page_timeout_list
+
+    def get_recording_paths(self, test):
+        recordings = test.get("playback_recordings")
+
+        if recordings:
+            recording_paths = []
+            proxy_dir = self.playback.mozproxy_dir
+
+            for recording in recordings.split():
+                if not recording:
+                    continue
+                recording_paths.append(os.path.join(proxy_dir, recording))
+
+            return recording_paths
+
+    def log_recording_dates(self, test):
+        _recording_paths = self.get_recording_paths(test)
+        if _recording_paths is None:
+            LOG.info("No playback recordings specified in the test; so not getting recording info")
+            return
+
+        for r in _recording_paths:
+            json_path = '{}.json'.format(r.split('.')[0])
+
+            if os.path.exists(json_path):
+                with open(json_path) as f:
+                    recording_date = json.loads(f.read()).get('recording_date')
+
+                    if recording_date is not None:
+                        LOG.info('Playback recording date: {} '.
+                                 format(recording_date.split(' ')[0]))
+                    else:
+                        LOG.info('Playback recording date not available')
+            else:
+                LOG.info('Playback recording information not available')
+
+    def get_playback_config(self, test):
+        platform = self.config['platform']
+        playback_dir = os.path.join(here, 'playback')
+
+        self.config.update({
+            'playback_tool': test.get('playback'),
+            'playback_version': test.get('playback_version', "4.0.4"),
+            'playback_binary_zip': test.get('playback_binary_zip_%s' % platform),
+            'playback_pageset_zip': test.get('playback_pageset_zip_%s' % platform),
+            'playback_binary_manifest': test.get('playback_binary_manifest'),
+            'playback_pageset_manifest': test.get('playback_pageset_manifest'),
+        })
+
+        for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
+            if self.config.get(key) is None:
+                continue
+            self.config[key] = os.path.join(playback_dir, self.config[key])
+
+        LOG.info("test uses playback tool: %s " % self.config['playback_tool'])
+
+    def delete_proxy_settings_from_profile(self):
+        # Must delete the proxy settings from the profile if running
+        # the test with a host different from localhost.
+        userjspath = os.path.join(self.profile.profile, 'user.js')
+        with open(userjspath) as userjsfile:
+            prefs = userjsfile.readlines()
+        prefs = [pref for pref in prefs if 'network.proxy' not in pref]
+        with open(userjspath, 'w') as userjsfile:
+            userjsfile.writelines(prefs)
+
+    def start_playback(self, test):
+        # creating the playback tool
+        self.get_playback_config(test)
+        self.playback = get_playback(self.config, self.device)
+
+        self.playback.config['playback_files'] = self.get_recording_paths(test)
+
+        # let's start it!
+        self.playback.start()
+
+        self.log_recording_dates(test)
 
 
 class Browsertime(Perftest):
@@ -267,11 +344,8 @@ class Browsertime(Perftest):
     def run_test_setup(self, test):
         super(Browsertime, self).run_test_setup(test)
 
-        # TODO - Bug 1568048 - Lift mozproxy management out of `Raptor` and into `Perftest`
-        LOG.info("TODO: Add playback support - Bug 1568048")
-        # if using playback, start it up
-        # if test.get('playback') is not None:
-        #    self.start_playback(test)
+        if test.get('playback') is not None:
+            self.start_playback(test)
 
         # TODO: geckodriver/chromedriver from tasks.
         self.driver_paths = []
@@ -458,26 +532,6 @@ class Raptor(Perftest):
         if self.config['enable_control_server_wait']:
             self.control_server_wait_set('webext_shutdownBrowser')
 
-    def get_playback_config(self, test):
-        platform = self.config['platform']
-        playback_dir = os.path.join(here, 'playback')
-
-        self.config.update({
-            'playback_tool': test.get('playback'),
-            'playback_version': test.get('playback_version', "4.0.4"),
-            'playback_binary_zip': test.get('playback_binary_zip_%s' % platform),
-            'playback_pageset_zip': test.get('playback_pageset_zip_%s' % platform),
-            'playback_binary_manifest': test.get('playback_binary_manifest'),
-            'playback_pageset_manifest': test.get('playback_pageset_manifest'),
-        })
-
-        for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
-            if self.config.get(key) is None:
-                continue
-            self.config[key] = os.path.join(playback_dir, self.config[key])
-
-        LOG.info("test uses playback tool: %s " % self.config['playback_tool'])
-
     def serve_benchmark_source(self, test):
         # benchmark-type tests require the benchmark test to be served out
         self.benchmark = Benchmark(self.config, test)
@@ -512,58 +566,6 @@ class Raptor(Perftest):
         chrome_apps = CHROMIUM_DISTROS + ["chrome-android", "chromium-android"]
         if self.config['app'] in chrome_apps:
             self.profile.addons.remove(self.raptor_webext)
-
-    def start_playback(self, test):
-        # creating the playback tool
-        self.get_playback_config(test)
-        self.playback = get_playback(self.config, self.device)
-
-        self.playback.config['playback_files'] = self.get_recording_paths(test)
-
-        # let's start it!
-        self.playback.start()
-
-        self.log_recording_dates(test)
-
-    def get_recording_paths(self, test):
-        recordings = test.get("playback_recordings")
-
-        if recordings:
-            recording_paths = []
-            proxy_dir = self.playback.mozproxy_dir
-
-            for recording in recordings.split():
-                if not recording:
-                    continue
-                recording_paths.append(os.path.join(proxy_dir, recording))
-
-            return recording_paths
-
-    def log_recording_dates(self, test):
-        for r in self.get_recording_paths(test):
-            json_path = '{}.json'.format(r.split('.')[0])
-
-            if os.path.exists(json_path):
-                with open(json_path) as f:
-                    recording_date = json.loads(f.read()).get('recording_date')
-
-                    if recording_date is not None:
-                        LOG.info('Playback recording date: {} '.
-                                 format(recording_date.split(' ')[0]))
-                    else:
-                        LOG.info('Playback recording date not available')
-            else:
-                LOG.info('Playback recording information not available')
-
-    def delete_proxy_settings_from_profile(self):
-        # Must delete the proxy settings from the profile if running
-        # the test with a host different from localhost.
-        userjspath = os.path.join(self.profile.profile, 'user.js')
-        with open(userjspath) as userjsfile:
-            prefs = userjsfile.readlines()
-        prefs = [pref for pref in prefs if 'network.proxy' not in pref]
-        with open(userjspath, 'w') as userjsfile:
-            userjsfile.writelines(prefs)
 
     def _init_gecko_profiling(self, test):
         LOG.info("initializing gecko profiler")
