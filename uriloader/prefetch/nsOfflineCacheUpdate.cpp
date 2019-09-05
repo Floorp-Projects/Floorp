@@ -1218,7 +1218,7 @@ nsresult nsOfflineCacheUpdate::Init(nsIURI* aManifestURI, nsIURI* aDocumentURI,
   }
 
   rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(aDocumentURI,
-                                                           nullptr, &mPinned);
+                                                           &mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mState = STATE_INITIALIZED;
@@ -1265,7 +1265,7 @@ nsresult nsOfflineCacheUpdate::InitForUpdateCheck(
   mApplicationCache = mPreviousApplicationCache;
 
   rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(aManifestURI,
-                                                           nullptr, &mPinned);
+                                                           &mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mUpdateAvailableObserver = aObserver;
@@ -1322,7 +1322,7 @@ nsresult nsOfflineCacheUpdate::InitPartial(nsIURI* aManifestURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(aDocumentURI,
-                                                           nullptr, &mPinned);
+                                                           &mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mState = STATE_INITIALIZED;
@@ -2033,8 +2033,7 @@ static nsresult EvictOneOfCacheGroups(nsIApplicationCacheService* cacheService,
     if (NS_FAILED(rv) || !cache) continue;
 
     bool pinned;
-    rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(uri, nullptr,
-                                                             &pinned);
+    rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(uri, &pinned);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!pinned) {
@@ -2100,6 +2099,14 @@ nsOfflineCacheUpdate::GetManifestURI(nsIURI** aManifestURI) {
   NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
 
   NS_IF_ADDREF(*aManifestURI = mManifestURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdate::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal) {
+  NS_ENSURE_TRUE(mState >= STATE_INITIALIZED, NS_ERROR_NOT_INITIALIZED);
+
+  NS_IF_ADDREF(*aLoadingPrincipal = mLoadingPrincipal);
   return NS_OK;
 }
 

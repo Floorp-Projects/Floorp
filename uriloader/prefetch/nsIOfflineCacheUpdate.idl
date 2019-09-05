@@ -89,6 +89,11 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute nsIURI manifestURI;
 
   /**
+   * The principal of the page that is requesting the update.
+   */
+  readonly attribute nsIPrincipal loadingPrincipal;
+
+  /**
    * TRUE if the cache update completed successfully.
    */
   readonly attribute boolean succeeded;
@@ -261,26 +266,16 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      * cache.
      * @param aPrincipal
      *        The principal to check.
-     * @param aPrefBranch
-     *        The pref branch to use to check the
-     *        offline-apps.allow_by_default pref.  If not specified,
-     *        the pref service will be used.
      */
-    boolean offlineAppAllowed(in nsIPrincipal aPrincipal,
-                              in nsIPrefBranch aPrefBranch);
+    boolean offlineAppAllowed(in nsIPrincipal aPrincipal);
 
     /**
      * Checks whether a document at the given URI should have access
      * to the offline cache.
      * @param aURI
      *        The URI to check
-     * @param aPrefBranch
-     *        The pref branch to use to check the
-     *        offline-apps.allow_by_default pref.  If not specified,
-     *        the pref service will be used.
      */
-    boolean offlineAppAllowedForURI(in nsIURI aURI,
-                                    in nsIPrefBranch aPrefBranch);
+    boolean offlineAppAllowedForURI(in nsIURI aURI);
 
     /**
      * Sets the "offline-app" permission for the principal.

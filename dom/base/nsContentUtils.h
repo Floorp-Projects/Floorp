@@ -1958,12 +1958,6 @@ class nsContentUtils {
   static bool PrincipalAllowsL10n(nsIPrincipal* aPrincipal);
 
   /**
-   * If offline-apps.allow_by_default is true, we set offline-app permission
-   * for the principal and return true.  Otherwise false.
-   */
-  static bool MaybeAllowOfflineAppByDefault(nsIPrincipal* aPrincipal);
-
-  /**
    * Increases the count of blockers preventing scripts from running.
    * NOTE: You might want to use nsAutoScriptBlocker rather than calling
    * this directly

@@ -1652,8 +1652,7 @@ bool nsContentUtils::OfflineAppAllowed(nsIURI* aURI) {
   }
 
   bool allowed;
-  nsresult rv = updateService->OfflineAppAllowedForURI(
-      aURI, Preferences::GetRootBranch(), &allowed);
+  nsresult rv = updateService->OfflineAppAllowedForURI(aURI, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
 
@@ -1666,8 +1665,7 @@ bool nsContentUtils::OfflineAppAllowed(nsIPrincipal* aPrincipal) {
   }
 
   bool allowed;
-  nsresult rv = updateService->OfflineAppAllowed(
-      aPrincipal, Preferences::GetRootBranch(), &allowed);
+  nsresult rv = updateService->OfflineAppAllowed(aPrincipal, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
 }
 
@@ -1697,28 +1695,6 @@ bool nsContentUtils::PrincipalAllowsL10n(nsIPrincipal* aPrincipal) {
                            &hasFlags);
   NS_ENSURE_SUCCESS(rv, false);
   return hasFlags;
-}
-
-bool nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal* aPrincipal) {
-  if (!Preferences::GetRootBranch()) return false;
-
-  nsresult rv;
-
-  bool allowedByDefault;
-  rv = Preferences::GetRootBranch()->GetBoolPref(
-      "offline-apps.allow_by_default", &allowedByDefault);
-  if (NS_FAILED(rv)) return false;
-
-  if (!allowedByDefault) return false;
-
-  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      components::OfflineCacheUpdate::Service();
-  if (!updateService) {
-    return false;
-  }
-
-  rv = updateService->AllowOfflineApp(aPrincipal);
-  return NS_SUCCEEDED(rv);
 }
 
 // static

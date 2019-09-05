@@ -951,10 +951,6 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // 2 - pre-populate site URL and pre-fetch certificate
 pref("browser.ssl_override_behavior", 2);
 
-// True if the user should be prompted when a web application supports
-// offline apps.
-pref("browser.offline-apps.notify", true);
-
 // if true, use full page zoom instead of text zoom
 pref("browser.zoom.full", true);
 
