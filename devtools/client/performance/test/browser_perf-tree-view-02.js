@@ -168,7 +168,7 @@ add_task(function() {
   );
   is(
     $fun(".call-tree-category", $$(".call-tree-item")[1]).textContent.trim(),
-    "Gecko",
+    "JIT",
     "The .A node's function cell displays the correct category."
   );
 
@@ -208,6 +208,27 @@ add_task(function() {
     "The .E node in the tree has the correct class name."
   );
 
+  ok(
+    $fun(".call-tree-url", $$(".call-tree-item")[1])
+      .getAttribute("tooltiptext")
+      .includes("http://foo/bar/baz"),
+    "The .A node's function cell displays the correct url tooltiptext."
+  );
+  is(
+    $fun(".call-tree-line", $$(".call-tree-item")[1]).textContent.trim(),
+    ":12",
+    "The .A node's function cell displays the correct line."
+  );
+  is(
+    $fun(".call-tree-column", $$(".call-tree-item")[1]).textContent.trim(),
+    ":9",
+    "The .A node's function cell displays the correct column."
+  );
+  is(
+    $fun(".call-tree-host", $$(".call-tree-item")[1]).textContent.trim(),
+    "foo",
+    "The .A node's function cell displays the correct host."
+  );
   is(
     $$dur(2).textContent.trim(),
     "15 ms",
@@ -225,36 +246,19 @@ add_task(function() {
   );
   is(
     $fun(".call-tree-name", $$(".call-tree-item")[2]).textContent.trim(),
-    "B",
+    "B InterruptibleLayout",
     "The .A.B node's function cell displays the correct name."
   );
   is(
-    $fun(".call-tree-url", $$(".call-tree-item")[2]).textContent.trim(),
-    "baz",
-    "The .A.B node's function cell displays the correct url."
-  );
-  ok(
-    $fun(".call-tree-url", $$(".call-tree-item")[2])
-      .getAttribute("tooltiptext")
-      .includes("http://foo/bar/baz"),
-    "The .A.B node's function cell displays the correct url tooltiptext."
-  );
-  is(
-    $fun(".call-tree-line", $$(".call-tree-item")[2]).textContent.trim(),
-    ":34",
-    "The .A.B node's function cell displays the correct line."
-  );
-  is(
-    $fun(".call-tree-host", $$(".call-tree-item")[2]).textContent.trim(),
-    "foo",
-    "The .A.B node's function cell displays the correct host."
+    $fun(".call-tree-url", $$(".call-tree-item")[2]),
+    null,
+    "The .A.B node's function cell has no url."
   );
   is(
     $fun(".call-tree-category", $$(".call-tree-item")[2]).textContent.trim(),
     "Layout",
     "The .A.B node's function cell displays the correct category."
   );
-
   is(
     $$dur(3).textContent.trim(),
     "5 ms",
@@ -274,27 +278,6 @@ add_task(function() {
     $fun(".call-tree-name", $$(".call-tree-item")[3]).textContent.trim(),
     "E",
     "The .A.E node's function cell displays the correct name."
-  );
-  is(
-    $fun(".call-tree-url", $$(".call-tree-item")[3]).textContent.trim(),
-    "baz",
-    "The .A.E node's function cell displays the correct url."
-  );
-  ok(
-    $fun(".call-tree-url", $$(".call-tree-item")[3])
-      .getAttribute("tooltiptext")
-      .includes("http://foo/bar/baz"),
-    "The .A.E node's function cell displays the correct url tooltiptext."
-  );
-  is(
-    $fun(".call-tree-line", $$(".call-tree-item")[3]).textContent.trim(),
-    ":90",
-    "The .A.E node's function cell displays the correct line."
-  );
-  is(
-    $fun(".call-tree-host", $$(".call-tree-item")[3]).textContent.trim(),
-    "foo",
-    "The .A.E node's function cell displays the correct host."
   );
   is(
     $fun(".call-tree-category", $$(".call-tree-item")[3]).textContent.trim(),
