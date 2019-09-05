@@ -1149,7 +1149,7 @@ bool XPCWrappedNative::CallMethod(XPCCallContext& ccx,
   return helper.get().Call();
 }
 
-#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
+#if (__GNUC__ && __linux__ && __PPC64__ && defined(_LITTLE_ENDIAN))
 // Work around a compiler bug on ppc64le (bug 1512162).
 __attribute__ ((noinline,noclone))
 #endif
@@ -1311,7 +1311,7 @@ bool CallMethodHelper::GetOutParamSource(uint8_t paramIndex,
   return true;
 }
 
-#if (__GNUC__ && __linux__ && __PPC64__ && _LITTLE_ENDIAN)
+#if (__GNUC__ && __linux__ && __PPC64__ && defined(_LITTLE_ENDIAN))
 // Work around a compiler bug on ppc64le (bug 1512162).
 __attribute__ ((noinline,noclone))
 #endif
