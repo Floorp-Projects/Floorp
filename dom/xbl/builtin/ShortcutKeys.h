@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ShortcutKeys_h
-#define mozilla_ShortcutKeys_h
+#ifndef mozilla_dom_ShortcutKeys_h
+#define mozilla_dom_ShortcutKeys_h
 
 #include "nsIObserver.h"
 
+class nsXBLPrototypeHandler;
 class nsAtom;
 
 namespace mozilla {
-class KeyEventHandler;
+
 class WidgetKeyboardEvent;
 
 typedef struct {
@@ -34,7 +35,7 @@ class ShortcutKeys : public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   // Returns a pointer to the first handler for the given type.
-  static KeyEventHandler* GetHandlers(HandlerType aType);
+  static nsXBLPrototypeHandler* GetHandlers(HandlerType aType);
 
   // Gets the event type for a widget keyboard event.
   static nsAtom* ConvertEventToDOMEventType(
@@ -45,7 +46,7 @@ class ShortcutKeys : public nsIObserver {
   virtual ~ShortcutKeys();
 
   // Returns a pointer to the first handler for the given type.
-  KeyEventHandler* EnsureHandlers(HandlerType aType);
+  nsXBLPrototypeHandler* EnsureHandlers(HandlerType aType);
 
   // Maintains a strong reference to the only instance.
   static StaticRefPtr<ShortcutKeys> sInstance;
@@ -57,12 +58,12 @@ class ShortcutKeys : public nsIObserver {
   static ShortcutKeyData sTextAreaHandlers[];
 
   // Cached event handlers generated from the above data.
-  KeyEventHandler* mBrowserHandlers;
-  KeyEventHandler* mEditorHandlers;
-  KeyEventHandler* mInputHandlers;
-  KeyEventHandler* mTextAreaHandlers;
+  nsXBLPrototypeHandler* mBrowserHandlers;
+  nsXBLPrototypeHandler* mEditorHandlers;
+  nsXBLPrototypeHandler* mInputHandlers;
+  nsXBLPrototypeHandler* mTextAreaHandlers;
 };
 
 }  // namespace mozilla
 
-#endif  // #ifndef mozilla_ShortcutKeys_h
+#endif  // #ifndef mozilla_dom_ShortcutKeys_h

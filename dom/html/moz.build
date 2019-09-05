@@ -243,6 +243,7 @@ LOCAL_INCLUDES += [
     '/dom/html/input',
     '/dom/media',
     '/dom/security',
+    '/dom/xbl',
     '/dom/xul',
     '/image',
     '/layout/forms',
