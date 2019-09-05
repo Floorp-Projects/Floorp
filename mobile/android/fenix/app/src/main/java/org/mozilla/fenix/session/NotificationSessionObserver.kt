@@ -20,7 +20,7 @@ class NotificationSessionObserver(
 ) : SessionManager.Observer {
 
     override fun onSessionRemoved(session: Session) {
-        val privateTabsEmpty = !context.components.core.sessionManager.sessionsOfType(private = true).none()
+        val privateTabsEmpty = context.components.core.sessionManager.sessionsOfType(private = true).none()
 
         if (privateTabsEmpty) {
             SessionNotificationService.stop(context)
