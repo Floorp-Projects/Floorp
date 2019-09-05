@@ -268,14 +268,6 @@ class StoreBuffer {
     template <typename CellType>
     void traceTyped(TenuringTracer& mover) const;
 
-    CellPtrEdge tagged() const {
-      return CellPtrEdge((Cell**)(uintptr_t(edge) | 1));
-    }
-    CellPtrEdge untagged() const {
-      return CellPtrEdge((Cell**)(uintptr_t(edge) & ~1));
-    }
-    bool isTagged() const { return bool(uintptr_t(edge) & 1); }
-
     explicit operator bool() const { return edge != nullptr; }
 
     typedef PointerEdgeHasher<CellPtrEdge> Hasher;
@@ -300,14 +292,6 @@ class StoreBuffer {
     }
 
     void trace(TenuringTracer& mover) const;
-
-    ValueEdge tagged() const {
-      return ValueEdge((JS::Value*)(uintptr_t(edge) | 1));
-    }
-    ValueEdge untagged() const {
-      return ValueEdge((JS::Value*)(uintptr_t(edge) & ~1));
-    }
-    bool isTagged() const { return bool(uintptr_t(edge) & 1); }
 
     explicit operator bool() const { return edge != nullptr; }
 
