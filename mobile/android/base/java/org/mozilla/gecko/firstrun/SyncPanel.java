@@ -7,10 +7,10 @@ package org.mozilla.gecko.firstrun;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
@@ -18,11 +18,10 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
-import org.mozilla.gecko.util.OnboardingResources;
 
 public class SyncPanel extends FirstrunPanel {
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_sync_fragment, container, false);
         final Bundle args = getArguments();
         if (args != null) {
@@ -40,32 +39,23 @@ public class SyncPanel extends FirstrunPanel {
             } else {
                 messageView.setText(message);
             }
-
-            OnboardingResources onboardingUtil = OnboardingResources.getInstance(getContext());
-            ((Button) root.findViewById(R.id.welcome_account)).setText(onboardingUtil.getSyncButtonText());
         }
 
-        root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
-                showBrowserHint = false;
+        root.findViewById(R.id.firstrun_account).setOnClickListener(v -> {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-signup");
+            showBrowserHint = false;
 
-                final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
-                intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(intent);
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+            intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(intent);
 
-                close();
-            }
+            close();
         });
 
-        root.findViewById(R.id.welcome_browse).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-browser");
-                close();
-            }
+        root.findViewById(R.id.firstrun_browse).setOnClickListener(v -> {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-browser");
+            close();
         });
 
         return root;

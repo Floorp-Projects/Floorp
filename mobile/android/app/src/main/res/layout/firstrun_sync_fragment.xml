@@ -46,23 +46,23 @@
             android:layout_weight="1"
             android:visibility="invisible"/>
 
-        <Button
-            android:id="@+id/welcome_account"
-            style="@style/Widget.Firstrun.Button"
-            android:layout_gravity="center"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/button_background_action_photon_round"
-            android:text="@string/firstrun_signin_button"/>
-
         <TextView
-            android:id="@+id/welcome_browse"
+            android:id="@+id/firstrun_browse"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
             android:text="@string/firstrun_welcome_button_browser"
             android:textAllCaps="true"
             android:textAppearance="@style/TextAppearance.Link"/>
+
+        <Button
+            android:id="@+id/firstrun_account"
+            style="@style/Widget.Firstrun.Button"
+            android:layout_gravity="center"
+            android:layout_marginBottom="30dp"
+            android:background="@drawable/button_background_action_photon_round"
+            android:text="@string/firstrun_signup_button"/>
 
     </LinearLayout>
 </ScrollView>
