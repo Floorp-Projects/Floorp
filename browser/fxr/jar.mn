@@ -5,5 +5,15 @@
 #if defined(NIGHTLY_BUILD) && defined(XP_WIN) 
 browser.jar:
 %  content fxr %content/browser/fxr/
-   content/browser/fxr/fxrui.html (content/fxrui.html)
+   content/browser/fxr/fxrui.html   (content/fxrui.html)
+   content/browser/fxr/fxrui.css    (content/fxrui.css)
+   content/browser/fxr/fxrui.js     (content/fxrui.js)
+   
+   content/browser/fxr/assets/icon-backward.svg         (content/assets/icon-backward.svg)
+   content/browser/fxr/assets/icon-forward.svg          (content/assets/icon-forward.svg)
+   content/browser/fxr/assets/icon-home.svg             (content/assets/icon-home.svg)
+   content/browser/fxr/assets/icon-refresh.svg          (content/assets/icon-refresh.svg)
+   content/browser/fxr/assets/icon-secure.svg           (content/assets/icon-secure.svg)
+   content/browser/fxr/assets/icon-stop-reload.svg      (content/assets/icon-stop-reload.svg)
+   content/browser/fxr/assets/Logo-256px.png            (content/assets/Logo-256px.png)
 #endif
