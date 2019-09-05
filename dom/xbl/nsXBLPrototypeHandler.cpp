@@ -112,20 +112,6 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(Element* aHandlerElement,
   ConstructPrototype(aHandlerElement);
 }
 
-nsXBLPrototypeHandler::nsXBLPrototypeHandler(ShortcutKeyData* aKeyData)
-    : mHandlerText(nullptr),
-      mLineNumber(0),
-      mReserved(XBLReservedKey_False),
-      mNextHandler(nullptr),
-      mPrototypeBinding(nullptr) {
-  Init();
-
-  ConstructPrototype(nullptr, aKeyData->event, nullptr, nullptr,
-                     aKeyData->command, aKeyData->keycode, aKeyData->key,
-                     aKeyData->modifiers, nullptr, nullptr, nullptr, nullptr,
-                     nullptr);
-}
-
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding)
     : mHandlerText(nullptr),
       mLineNumber(0),

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXBLWindowKeyHandler_h__
-#define nsXBLWindowKeyHandler_h__
+#ifndef mozilla_GlobalKeyListener_h_
+#define mozilla_GlobalKeyListener_h_
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/KeyboardMap.h"
@@ -13,44 +13,50 @@
 #include "nsIWeakReferenceUtils.h"
 
 class nsAtom;
-class nsXBLPrototypeHandler;
 
 namespace mozilla {
 class EventListenerManager;
 class WidgetKeyboardEvent;
 struct IgnoreModifierState;
+
+namespace layers {
+class KeyboardMap;
+}
+
 namespace dom {
 class Element;
 class EventTarget;
 class KeyboardEvent;
 }  // namespace dom
-}  // namespace mozilla
 
-class nsXBLWindowKeyHandler : public nsIDOMEventListener {
-  typedef mozilla::EventListenerManager EventListenerManager;
-  typedef mozilla::IgnoreModifierState IgnoreModifierState;
-  typedef mozilla::layers::KeyboardMap KeyboardMap;
-  typedef mozilla::dom::KeyboardEvent KeyboardEvent;
+using namespace dom;
 
+class KeyEventHandler;
+
+/**
+ * A generic listener for key events.
+ *
+ * Maintains a list of shortcut handlers and is registered as a listener for DOM
+ * key events from a target. Responsible for executing the appropriate handler
+ * when a keyboard event is received.
+ */
+class GlobalKeyListener : public nsIDOMEventListener {
  public:
-  nsXBLWindowKeyHandler(mozilla::dom::Element* aElement,
-                        mozilla::dom::EventTarget* aTarget);
+  explicit GlobalKeyListener(EventTarget* aTarget);
 
   void InstallKeyboardEventListenersTo(
       EventListenerManager* aEventListenerManager);
   void RemoveKeyboardEventListenersFrom(
       EventListenerManager* aEventListenerManager);
 
-  static KeyboardMap CollectKeyboardShortcuts();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
  protected:
-  virtual ~nsXBLWindowKeyHandler();
+  virtual ~GlobalKeyListener() = default;
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult WalkHandlers(KeyboardEvent* aKeyEvent);
+  void WalkHandlers(KeyboardEvent* aKeyEvent);
 
   // walk the handlers, looking for one to handle the event
   MOZ_CAN_RUN_SCRIPT
@@ -81,22 +87,57 @@ class nsXBLWindowKeyHandler : public nsIDOMEventListener {
 
   // Returns true if the key would be reserved for the given handler. A reserved
   // key is not sent to a content process or single-process equivalent.
-  bool IsReservedKey(mozilla::WidgetKeyboardEvent* aKeyEvent,
-                     nsXBLPrototypeHandler* aHandler);
+  bool IsReservedKey(WidgetKeyboardEvent* aKeyEvent, KeyEventHandler* aHandler);
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
-  nsresult EnsureHandlers();
+  virtual void EnsureHandlers() = 0;
 
-  // Is an HTML editable element focused
-  bool IsHTMLEditableFieldFocused();
+  virtual bool CanHandle(KeyEventHandler* aHandler, bool aWillExecute) const {
+    return true;
+  }
+
+  virtual bool IsDisabled() const { return false; }
+
+  virtual already_AddRefed<EventTarget> GetHandlerTarget(
+      KeyEventHandler* aHandler) {
+    return do_AddRef(mTarget);
+  }
+
+  EventTarget* mTarget;  // weak ref;
+
+  KeyEventHandler* mHandler;  // Linked list of event handlers.
+};
+
+/**
+ * A listener for shortcut keys defined in XUL keyset elements.
+ *
+ * Listens for keyboard events from the document object and triggers the
+ * appropriate XUL key elements.
+ */
+class XULKeySetGlobalKeyListener final : public GlobalKeyListener {
+ public:
+  explicit XULKeySetGlobalKeyListener(Element* aElement, EventTarget* aTarget);
+
+  static void AttachKeyHandler(Element* aElementTarget);
+  static void DetachKeyHandler(Element* aElementTarget);
+
+ protected:
+  virtual ~XULKeySetGlobalKeyListener();
 
   // Returns the element which was passed as a parameter to the constructor,
   // unless the element has been removed from the document. Optionally returns
   // whether the disabled attribute is set on the element (assuming the element
   // is non-null).
-  already_AddRefed<mozilla::dom::Element> GetElement(
-      bool* aIsDisabled = nullptr);
+  Element* GetElement(bool* aIsDisabled = nullptr) const;
+
+  virtual void EnsureHandlers() override;
+
+  virtual bool CanHandle(KeyEventHandler* aHandler,
+                         bool aWillExecute) const override;
+  virtual bool IsDisabled() const override;
+  virtual already_AddRefed<EventTarget> GetHandlerTarget(
+      KeyEventHandler* aHandler) override;
 
   /**
    * GetElementForHandler() retrieves an element for the handler.  The element
@@ -107,23 +148,40 @@ class nsXBLWindowKeyHandler : public nsIDOMEventListener {
    *                           this.
    * @return                   true if the handler is valid.  Otherwise, false.
    */
-  bool GetElementForHandler(nsXBLPrototypeHandler* aHandler,
-                            mozilla::dom::Element** aElementForHandler);
+  bool GetElementForHandler(KeyEventHandler* aHandler,
+                            Element** aElementForHandler) const;
 
   /**
    * IsExecutableElement() returns true if aElement is executable.
    * Otherwise, false. aElement should be a command element or a key element.
    */
-  bool IsExecutableElement(mozilla::dom::Element* aElement) const;
+  bool IsExecutableElement(Element* aElement) const;
 
   // Using weak pointer to the DOM Element.
   nsWeakPtr mWeakPtrForElement;
-  mozilla::dom::EventTarget* mTarget;  // weak ref
-
-  nsXBLPrototypeHandler* mHandler;  // platform bindings
 };
 
-already_AddRefed<nsXBLWindowKeyHandler> NS_NewXBLWindowKeyHandler(
-    mozilla::dom::Element* aElement, mozilla::dom::EventTarget* aTarget);
+/**
+ * Listens for built-in shortcut keys.
+ *
+ * Listens to DOM keyboard events from the window or text input and runs the
+ * built-in shortcuts (see dom/events/keyevents) as necessary.
+ */
+class RootWindowGlobalKeyListener final : public GlobalKeyListener {
+ public:
+  explicit RootWindowGlobalKeyListener(EventTarget* aTarget);
+
+  static void AttachKeyHandler(EventTarget* aTarget);
+
+  static layers::KeyboardMap CollectKeyboardShortcuts();
+
+ protected:
+  // Is an HTML editable element focused
+  static bool IsHTMLEditorFocused();
+
+  virtual void EnsureHandlers() override;
+};
+
+}  // namespace mozilla
 
 #endif
