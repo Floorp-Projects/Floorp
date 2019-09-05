@@ -4146,7 +4146,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorvar = actor.var()
         method = MethodDefn(self.makeDtorMethodDecl(md))
 
-        method.addstmts(self.dtorPrologue(actorvar))
+        method.addstmt(self.dtorPrologue(actorvar))
 
         msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
         sendok, sendstmts = self.sendAsync(md, msgvar, actorvar)
@@ -4172,7 +4172,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorvar = actor.var()
         method = MethodDefn(self.makeDtorMethodDecl(md))
 
-        method.addstmts(self.dtorPrologue(actorvar))
+        method.addstmt(self.dtorPrologue(actorvar))
 
         msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
 
@@ -4220,7 +4220,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             protoId=_protocolId(destroyedType))]
 
     def dtorPrologue(self, actorexpr):
-        return [self.failIfNullActor(actorexpr), Whitespace.NL]
+        return StmtCode(
+            '''
+            if (!${actor} || !${actor}->CanSend()) {
+                NS_WARNING("Attempt to __delete__ missing or closed actor");
+                return false;
+            }
+            ''',
+            actor=actorexpr)
 
     def dtorEpilogue(self, md, actorexpr):
         return self.destroyActor(md, actorexpr)
@@ -4407,13 +4414,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return lbl, case
 
     # helper methods
-
-    def failIfNullActor(self, actorExpr, retOnNull=ExprLiteral.FALSE, msg=None):
-        failif = StmtIf(ExprNot(actorExpr))
-        if msg:
-            failif.addifstmt(_printWarningMessage(msg))
-        failif.addifstmt(StmtReturn(retOnNull))
-        return failif
 
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar
