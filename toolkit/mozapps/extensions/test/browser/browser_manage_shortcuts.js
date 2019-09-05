@@ -5,27 +5,32 @@ const { PromiseTestUtils } = ChromeUtils.import(
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
-let gManagerWindow;
-
 async function loadShortcutsView() {
-  gManagerWindow = await open_manager(null);
-  let categoryUtilities = new CategoryUtilities(gManagerWindow);
-  await categoryUtilities.openType("extension");
+  // Load the theme view initially so we can verify that the category is switched
+  // to "extension" when the shortcuts view is loaded.
+  let win = await loadInitialView("theme");
+  let { managerWindow } = win;
 
-  // There should be a manage shortcuts link.
-  let doc = gManagerWindow.document;
-  let shortcutsLink = doc.getElementById("manage-shortcuts");
+  is(
+    managerWindow.gCategories.node.value,
+    "addons://list/theme",
+    "The theme category is selected"
+  );
+
+  let shortcutsLink = managerWindow.document.getElementById("manage-shortcuts");
   ok(!shortcutsLink.hidden, "The shortcuts link is visible");
 
-  // Open the shortcuts view.
+  let loaded = waitForViewLoad(win);
   shortcutsLink.click();
-  await wait_for_view_load(gManagerWindow);
+  await loaded;
 
-  return doc.getElementById("shortcuts-view").contentDocument;
-}
+  is(
+    managerWindow.gCategories.node.value,
+    "addons://list/extension",
+    "The extension category is now selected"
+  );
 
-function closeView() {
-  return close_manager(gManagerWindow);
+  return win;
 }
 
 add_task(async function testUpdatingCommands() {
@@ -73,7 +78,8 @@ add_task(async function testUpdatingCommands() {
   await checkShortcut("commandOne", "7", { shiftKey: true, altKey: true });
   await checkShortcut("commandTwo", "4", { altKey: true });
 
-  let doc = await loadShortcutsView();
+  let win = await loadShortcutsView();
+  let doc = win.document;
 
   let card = doc.querySelector(`.card[addon-id="${extension.id}"]`);
   ok(card, `There is a card for the extension`);
@@ -162,7 +168,7 @@ add_task(async function testUpdatingCommands() {
   checkLabel("commandTwo", "Command Two!");
   checkLabel("_execute_browser_action", "shortcuts-browserAction");
 
-  await closeView();
+  await closeView(win);
   await extension.unload();
 });
 
@@ -195,7 +201,8 @@ add_task(async function testExpanding() {
 
   let extension = await startExtensionWithCommands(numCommands);
 
-  let doc = await loadShortcutsView();
+  let win = await loadShortcutsView();
+  let doc = win.document;
 
   let card = doc.querySelector(`.card[addon-id="${extension.id}"]`);
   ok(!card.hasAttribute("expanded"), "The card is not expanded");
@@ -254,7 +261,7 @@ add_task(async function testExpanding() {
 
   assertCollapsedVisibility({ collapsed: true });
 
-  await closeView();
+  await closeView(win);
   await extension.unload();
 });
 
@@ -262,7 +269,8 @@ add_task(async function testOneExtraCommandIsNotCollapsed() {
   const numCommands = 6;
   let extension = await startExtensionWithCommands(numCommands);
 
-  let doc = await loadShortcutsView();
+  let win = await loadShortcutsView();
+  let doc = win.document;
 
   // The card is not expanded, since it doesn't collapse.
   let card = doc.querySelector(`.card[addon-id="${extension.id}"]`);
@@ -281,6 +289,6 @@ add_task(async function testOneExtraCommandIsNotCollapsed() {
     ok(getComputedStyle(row).display != "none", "All the rows are visible");
   }
 
-  await closeView();
+  await closeView(win);
   await extension.unload();
 });

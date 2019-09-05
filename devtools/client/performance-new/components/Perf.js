@@ -52,6 +52,7 @@ class Perf extends PureComponent {
       perfFront: PropTypes.object.isRequired,
       recordingState: PropTypes.string.isRequired,
       isSupportedPlatform: PropTypes.bool,
+      isPopup: PropTypes.bool,
 
       // DispatchProps:
       changeRecordingState: PropTypes.func.isRequired,
@@ -72,7 +73,7 @@ class Perf extends PureComponent {
   }
 
   componentDidMount() {
-    const { perfFront, reportProfilerReady } = this.props;
+    const { perfFront, reportProfilerReady, isPopup } = this.props;
 
     // Ask for the initial state of the profiler.
     Promise.all([
@@ -92,11 +93,23 @@ class Perf extends PureComponent {
       if (recordingState === NOT_YET_KNOWN && isSupportedPlatform) {
         if (isLockedForPrivateBrowsing) {
           recordingState = LOCKED_BY_PRIVATE_BROWSING;
+        } else if (isActive) {
+          // The popup is a global control for the recording, so allow it to take
+          // control of it.
+          recordingState = isPopup ? RECORDING : OTHER_IS_RECORDING;
         } else {
-          recordingState = isActive ? OTHER_IS_RECORDING : AVAILABLE_TO_RECORD;
+          recordingState = AVAILABLE_TO_RECORD;
         }
       }
       reportProfilerReady(isSupportedPlatform, recordingState);
+
+      // If this component is inside the popup, then report it being ready so that
+      // it will show. This defers the initial visibility of the popup until the
+      // React components have fully rendered, and thus there is no annoying "blip"
+      // to the screen when the page goes from fully blank, to showing the content.
+      if (window.gReportReady) {
+        window.gReportReady();
+      }
     });
 
     // Handle when the profiler changes state. It might be us, it might be someone else.
@@ -134,7 +147,7 @@ class Perf extends PureComponent {
   }
 
   handleProfilerStarting() {
-    const { changeRecordingState, recordingState } = this.props;
+    const { changeRecordingState, recordingState, isPopup } = this.props;
     switch (recordingState) {
       case NOT_YET_KNOWN:
       // We couldn't have started it yet, so it must have been someone
@@ -145,10 +158,15 @@ class Perf extends PureComponent {
       // We requested to stop the profiler, but someone else already started
       // it up. (fallthrough)
       case REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER:
-        // Someone re-started the profiler while we were asking for the completed
-        // profile.
-
-        changeRecordingState(OTHER_IS_RECORDING);
+        if (isPopup) {
+          // The profiler popup doesn't care who is recording. It will take control
+          // of it.
+          changeRecordingState(RECORDING);
+        } else {
+          // Someone re-started the profiler while we were asking for the completed
+          // profile.
+          changeRecordingState(OTHER_IS_RECORDING);
+        }
         break;
 
       case REQUEST_TO_START_RECORDING:
@@ -239,18 +257,20 @@ class Perf extends PureComponent {
   }
 
   render() {
-    const { isSupportedPlatform } = this.props;
+    const { isSupportedPlatform, isPopup } = this.props;
 
     if (isSupportedPlatform === null) {
       // We don't know yet if this is a supported platform, wait for a response.
       return null;
     }
 
+    const additionalClassName = isPopup ? "perf-popup" : "perf-devtools";
+
     return div(
-      { className: "perf" },
+      { className: `perf ${additionalClassName}` },
       RecordingButton(),
       Settings(),
-      Description()
+      isPopup ? null : Description()
     );
   }
 }
@@ -260,6 +280,7 @@ function mapStateToProps(state) {
     perfFront: selectors.getPerfFront(state),
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
+    isPopup: selectors.getIsPopup(state),
   };
 }
 

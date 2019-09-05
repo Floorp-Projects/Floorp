@@ -12,9 +12,6 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-4.*:
-                    - android/android_common.py
-                    - android/androidarm_4_3.py
                 android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
@@ -33,18 +30,14 @@ cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
     treeherder-symbol: cppunit
-    instance-size:
+    target:
         by-test-platform:
-            android-em.*: xlarge
-            default: default
+            android-em-7.*: geckoview-androidTest.apk
+            default: null
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    run-on-projects:
-        by-test-platform:
-            android-em-4.3-arm7-api-16/opt: []  # bug 1548659
-            default: built-projects
 
 gtest:
     description: "GTests run"
@@ -80,10 +73,6 @@ jittest:
         category: jittest
         name: jittest-chunked
     treeherder-symbol: Jit
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
-            default: default
     run-on-projects:
         by-test-platform:
             # Turn off for all linux and windows platforms, since it is
@@ -111,7 +100,6 @@ jittest:
             windows10-64-ccov/debug: 6
             macosx.*/opt: 1
             macosx.*/debug: 3
-            android-em-4.3-arm7-api-15/debug: 20
             android.*: 10
             default: 6
     max-run-time:
@@ -125,6 +113,10 @@ jittest:
                 windows.*: false
                 macosx.*: false
                 default: true
+    target:
+        by-test-platform:
+            android-.*: geckoview-androidTest.apk
+            default: null
     tier:
         by-test-platform:
             android-hw.*: 2

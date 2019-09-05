@@ -15,6 +15,7 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
 #include "nsLiteralString.h"
+#include "nsNSSCertificate.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

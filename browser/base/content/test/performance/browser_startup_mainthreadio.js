@@ -110,15 +110,6 @@ const startupPhases = {
       close: 1,
     },
     {
-      // bug 1546931
-      path: "UAppData:installs.ini",
-      condition: WIN || MAC,
-      ignoreIfUnused: true, // only if a real profile exists on the system.
-      read: 1,
-      stat: 2,
-      close: 1,
-    },
-    {
       // At least the read seems unavoidable for a regular startup.
       path: "UAppData:profiles.ini",
       condition: WIN,

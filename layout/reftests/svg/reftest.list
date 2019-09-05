@@ -296,6 +296,10 @@ fuzzy(0-128,0-141) == mask-img.html mask-img-ref.html
 == mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
+fuzzy(0-2,0-65536) == mask-opacity-02.svg mask-opacity-02-ref.svg
+fuzzy(0-1,0-5000) == mask-opacity-03.svg mask-opacity-02-ref.svg
+fuzzy(0-1,0-5000) == mask-opacity-04.svg mask-opacity-02-ref.svg
+fuzzy(0-1,0-5000) == mask-opacity-05.svg mask-opacity-02-ref.svg
 != mask-root-svg.svg about:blank
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == mask-transformed-02.svg pass.svg

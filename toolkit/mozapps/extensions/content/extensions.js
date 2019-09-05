@@ -666,8 +666,7 @@ var gViewController = {
     this.headeredViewsDeck = document.getElementById("headered-views-content");
     this.backButton = document.getElementById("go-back");
 
-    this.viewObjects.shortcuts = gShortcutsView;
-
+    this.viewObjects.shortcuts = htmlView("shortcuts");
     this.viewObjects.list = htmlView("list");
     this.viewObjects.detail = htmlView("detail");
     this.viewObjects.updates = htmlView("updates");
@@ -2074,38 +2073,6 @@ var gUpdatesView = {
   },
 };
 
-var gShortcutsView = {
-  node: null,
-  loaded: null,
-  isRoot: false,
-
-  initialize() {
-    this.node = document.getElementById("shortcuts-view");
-    this.node.loadURI("chrome://mozapps/content/extensions/shortcuts.html", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-    // Store a Promise for when the contentWindow will exist.
-    this.loaded = new Promise(resolve =>
-      this.node.addEventListener("load", resolve, { once: true })
-    );
-  },
-
-  async show() {
-    // Ensure the Extensions category is selected in case of refresh/restart.
-    gCategories.select("addons://list/extension");
-
-    await this.loaded;
-    await this.node.contentWindow.render();
-    gViewController.notifyViewChanged();
-  },
-
-  hide() {},
-
-  getSelectedAddon() {
-    return null;
-  },
-};
-
 var gDragDrop = {
   onDragOver(aEvent) {
     if (!XPINSTALL_ENABLED) {
@@ -2224,11 +2191,12 @@ function getHtmlBrowser() {
   return htmlBrowser;
 }
 
+let leafViewTypes = ["detail", "shortcuts"];
 function htmlView(type) {
   return {
     _browser: null,
     node: null,
-    isRoot: type != "detail",
+    isRoot: !leafViewTypes.includes(type),
 
     initialize() {
       this._browser = getHtmlBrowser();

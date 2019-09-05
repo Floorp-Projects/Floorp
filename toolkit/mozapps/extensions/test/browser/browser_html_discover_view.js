@@ -181,7 +181,9 @@ async function switchToDiscoView(win) {
 // There must be at least one `<img>` in the document.
 // Returns the number of loaded images.
 async function waitForAllImagesLoaded(win) {
-  let imgs = Array.from(win.document.querySelectorAll("img[src]"));
+  let imgs = Array.from(
+    win.document.querySelectorAll("discovery-pane img[src]")
+  );
   function areAllImagesLoaded() {
     let loadCount = imgs.filter(img => img.naturalWidth).length;
     info(`Loaded ${loadCount} out of ${imgs.length} images`);

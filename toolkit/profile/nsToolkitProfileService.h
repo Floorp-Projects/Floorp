@@ -163,9 +163,6 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   bool mProfileDBExists;
   int64_t mProfileDBFileSize;
   PRTime mProfileDBModifiedTime;
-  bool mInstallDBExists;
-  int64_t mInstallDBFileSize;
-  PRTime mInstallDBModifiedTime;
 
   static nsToolkitProfileService* gService;
 

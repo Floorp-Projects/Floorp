@@ -3,18 +3,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .perf {
-  width: 100%;
-  height: 100%;
-  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.devtools-button.perf-button {
-  padding: 5px;
-  margin: auto;
-  font-size: 120%;
+.perf-popup {
+  padding: 7px 16px;
+}
+
+.perf-devtools {
+  width: 100%;
+  height: 100%;
+  position: absolute;
 }
 
 .perf-button-image {
@@ -28,9 +29,12 @@
   align-items: center;
 }
 
+.perf-devtools .perf-button-container {
+  margin-top: 65px;
+}
+
 .perf-additional-message {
   margin: 10px;
-  margin-top: 65px;
 }
 
 .perf > * {
@@ -56,6 +60,9 @@
 
 .perf-settings {
   width: 100%;
+}
+
+.perf-devtools .perf-settings {
   margin: 50px 0 25px;
 }
 
@@ -116,7 +123,7 @@
 .perf-settings-notch {
   margin-right: 1px;
   flex: 1;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 2px;
 }
 
@@ -157,7 +164,7 @@
   opacity: 0;
   transform: translateY(-100px);
   transition-duration: 250ms;
-  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  transition-timing-function: cubic-bezier(0.07, 0.95, 0, 1);
   transition-property: transform, opacity;
 }
 
@@ -167,7 +174,13 @@
 }
 
 .perf-settings-summary {
-  height: 30px;
+  /* This is a little bit odd, but in order to match the heights of the elements and
+   * have a fairly large hit area for the summary element, make the element position
+   * relative, and adjust the position up by a few pixels. This maintains positioning,
+   * but also provides a larger hit area for the dropdown with the padding property. */
+  position: relative;
+  top: -4px;
+  padding: 8px 0;
   cursor: default;
   user-select: none;
 }
@@ -244,4 +257,75 @@
 
 .perf-settings-dir-list-button-group {
   padding: 4px 2px;
+}
+
+/* See https://design.firefox.com/photon/components/buttons.html for the spec */
+.perf-photon-button {
+  --blue-50-a30: rgba(10, 132, 255, 0.3);
+  padding: 0 8px;
+  border: none;
+  margin: 0;
+
+  /* reset default styles */
+  background: none;
+
+  /* photon styles */
+  background-color: var(--grey-90-a10);
+  border-radius: 2px;
+  color: var(--grey-90);
+  font: inherit;
+}
+
+/* This is a Firefox-specific style because Firefox adds a focusring at a bad
+ * position. We're adding our own below. */
+.perf-photon-button::-moz-focus-inner {
+  border: none;
+}
+
+.perf-photon-button:hover:not([disabled]) {
+  background-color: var(--grey-90-a20);
+}
+
+.perf-photon-button:hover:active:not([disabled]) {
+  background-color: var(--grey-90-a30);
+}
+
+.perf-photon-button-primary,
+.perf-photon-button-default {
+  min-width: 132px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.perf-photon-button-primary {
+  background-color: var(--blue-60);
+  color: #fff;
+}
+
+.perf-photon-button-primary:hover:not([disabled]) {
+  background-color: var(--blue-70);
+}
+
+.perf-photon-button-primary:hover:active:not([disabled]) {
+  background-color: var(--blue-80);
+}
+
+.perf-photon-button[disabled] {
+  opacity: 0.4;
+}
+
+.perf-photon-button.perf-button {
+  margin: 10px;
+}
+
+button.perf-photon-button:focus {
+  box-shadow: 0 0 0 1px var(--blue-50) inset, 0 0 0 1px var(--blue-50),
+    0 0 0 4px var(--blue-50-a30);
+  outline: 0;
+}
+
+a.perf-photon-button:focus {
+  box-shadow: 0 0 0 2px var(--blue-50), 0 0 0 6px var(--blue-50-a30);
+  outline: 0;
 }

@@ -242,6 +242,10 @@ panelview {
   padding-bottom: 0px;
 }
 
+#BMB_bookmarksPopup menupopup[nofooterpopup=true]::part(popupbox) {
+  padding-bottom: 4px;
+}
+
 #confirmation-hint {
   --arrowpanel-background: #0060df;
   --arrowpanel-border-color: #0060df;

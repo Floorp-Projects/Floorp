@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for the combination of rect, mask, fill-opacity</title>
+  <!-- Shapes -->
+  <defs>
+    <rect id="frame" x="0" y="0" width="256" height="256"></rect>
+    <circle id="outter" cx="128" cy="128" r="128"></circle>
+  </defs>
+
+  <!-- Masks -->
+  <defs>
+    <mask id="donut">
+      <use xlink:href="#outter" fill="white"></use>
+    </mask>
+  </defs>
+
+  <g transform="translate(0,0)">
+    <rect x="0" y="0" width="512" height="256" class="shape" fill-opacity="0.33" mask="url(#donut)"></rect>
+  </g>
+</svg>
