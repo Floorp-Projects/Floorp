@@ -3795,8 +3795,14 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
            "HTTP response header Sec-WebSocket-Accept check failed\n"));
       LOG(("WebSocketChannel::OnStartRequest: Expected %s received %s\n",
            mHashedSecret.get(), respAccept.get()));
-      AbortSession(NS_ERROR_ILLEGAL_VALUE);
-      return NS_ERROR_ILLEGAL_VALUE;
+#ifdef FUZZING
+      if (NS_FAILED(rv) || respAccept.IsEmpty()) {
+#endif
+        AbortSession(NS_ERROR_ILLEGAL_VALUE);
+        return NS_ERROR_ILLEGAL_VALUE;
+#ifdef FUZZING
+      }
+#endif
     }
   }
 

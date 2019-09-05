@@ -121,6 +121,11 @@ static PRInt32 FuzzyRecv(PRFileDesc* fd, void* buf, PRInt32 amount,
     return -1;
   }
 
+  if (gFuzzingConnClosed) {
+    FUZZING_LOG(("[FuzzyRecv] Denying read, connection is closed."));
+    return 0;
+  }
+
   // No data left, act as if the connection was closed.
   if (!gFuzzingSize) return 0;
 
