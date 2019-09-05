@@ -101,12 +101,12 @@ add_task(function() {
   );
   is(
     $$nam(2).textContent.trim(),
-    "B",
+    "B InterruptibleLayout",
     "The .A.B node's function cell displays the correct name."
   );
   is(
     $$nam(3).textContent.trim(),
-    "D",
+    "D INTER_SLICE_GC",
     "The .A.B.D node's function cell displays the correct name."
   );
   is(
