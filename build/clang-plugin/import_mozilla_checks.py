@@ -96,8 +96,10 @@ def add_item_to_cmake_section(cmake_path, section, library):
 def write_third_party_paths(mozilla_path, module_path):
     tpp_txt = os.path.join(
         mozilla_path, '../../tools/rewriting/ThirdPartyPaths.txt')
+    generated_txt = os.path.join(
+        mozilla_path, '../../tools/rewriting/Generated.txt')
     with open(os.path.join(module_path, 'ThirdPartyPaths.cpp'), 'w') as f:
-        ThirdPartyPaths.generate(f, tpp_txt)
+        ThirdPartyPaths.generate(f, tpp_txt, generated_txt)
 
 
 def do_import(mozilla_path, clang_tidy_path):

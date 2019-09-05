@@ -1,13 +1,9 @@
 build/pymake
 browser/components/newtab/logs/
-browser/components/newtab/node_modules/
 browser/components/newtab/vendor/
 browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
-devtools/client/aboutdebugging/test/jest/node_modules/
-devtools/client/application/test/components/node_modules/
-devtools/client/debugger/flow-typed/
-devtools/client/debugger/node_modules/
+devtools/client/debugger/flow-typed/npm/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
 devtools/client/shared/sourceeditor/tern/
@@ -32,8 +28,6 @@ dom/media/webspeech/recognition/energy_endpointer.cc
 dom/media/webspeech/recognition/energy_endpointer.h
 dom/media/webspeech/recognition/energy_endpointer_params.cc
 dom/media/webspeech/recognition/energy_endpointer_params.h
-dom/tests/ajax/jquery/
-dom/tests/ajax/mochikit/
 dom/tests/mochitest/ajax/
 dom/tests/mochitest/dom-level1-core/
 dom/tests/mochitest/dom-level2-core/
@@ -113,7 +107,6 @@ mozglue/misc/decimal/
 netwerk/dns/nsIDNKitInterface.h
 netwerk/sctp/src/
 netwerk/srtp/src/
-node_modules/
 nsprpub/
 other-licenses/
 parser/expat/
