@@ -22,6 +22,7 @@ $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclien
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.TabHistoryEntry)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/into.md
+$dokka.location:mozilla.components.service.fxa$toAuthType(kotlin.String)mozilla.components.service.fxa/kotlin.-string/to-auth-type.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(androidx.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/androidx.lifecycle.-live-data/await-value.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertHasFocus(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-has-focus.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsChecked(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-checked.md
@@ -70,7 +71,6 @@ mozilla.components.browser.engine.gecko.permission
 mozilla.components.browser.engine.gecko.prompt
 mozilla.components.browser.engine.gecko.webextension
 mozilla.components.browser.engine.gecko.window
-mozilla.components.browser.engine.servo
 mozilla.components.browser.engine.system
 mozilla.components.browser.engine.system.matcher
 mozilla.components.browser.engine.system.permission

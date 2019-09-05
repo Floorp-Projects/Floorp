@@ -18,7 +18,6 @@
 | [mozilla.components.browser.engine.gecko.prompt](mozilla.components.browser.engine.gecko.prompt/index.md) |  |
 | [mozilla.components.browser.engine.gecko.webextension](mozilla.components.browser.engine.gecko.webextension/index.md) |  |
 | [mozilla.components.browser.engine.gecko.window](mozilla.components.browser.engine.gecko.window/index.md) |  |
-| [mozilla.components.browser.engine.servo](mozilla.components.browser.engine.servo/index.md) |  |
 | [mozilla.components.browser.engine.system](mozilla.components.browser.engine.system/index.md) |  |
 | [mozilla.components.browser.engine.system.matcher](mozilla.components.browser.engine.system.matcher/index.md) |  |
 | [mozilla.components.browser.engine.system.permission](mozilla.components.browser.engine.system.permission/index.md) |  |

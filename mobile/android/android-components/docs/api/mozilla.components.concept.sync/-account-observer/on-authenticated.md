@@ -2,7 +2,7 @@
 
 # onAuthenticated
 
-`open fun onAuthenticated(account: `[`OAuthAccount`](../-o-auth-account/index.md)`, newAccount: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L67)
+`open fun onAuthenticated(account: `[`OAuthAccount`](../-o-auth-account/index.md)`, authType: `[`AuthType`](../-auth-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L113)
 
 Account was successfully authenticated.
 
@@ -10,4 +10,4 @@ Account was successfully authenticated.
 
 `account` - An authenticated instance of a [OAuthAccount](../-o-auth-account/index.md).
 
-`newAccount` - True if an account was just signed in.
+`authType` - Describes what kind of authentication event caused this invocation.

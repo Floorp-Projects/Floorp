@@ -38,6 +38,8 @@
 | [mozilla.components.service.fxa.manager.AuthErrorObserver](../mozilla.components.service.fxa.manager/-auth-error-observer/index.md) |  |
 | [mozilla.components.concept.sync.AuthException](../mozilla.components.concept.sync/-auth-exception/index.md) | An exception which may happen while obtaining auth information using [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
 | [mozilla.components.concept.sync.AuthExceptionType](../mozilla.components.concept.sync/-auth-exception-type/index.md) | An auth-related exception type, for use with [AuthException](../mozilla.components.concept.sync/-auth-exception/index.md). |
+| [mozilla.components.concept.sync.AuthFlowUrl](../mozilla.components.concept.sync/-auth-flow-url/index.md) | An object that represents a login flow initiated by [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
+| [mozilla.components.concept.sync.AuthType](../mozilla.components.concept.sync/-auth-type/index.md) |  |
 | [mozilla.components.support.base.android.view.AutoFitTextureView](../mozilla.components.support.base.android.view/-auto-fit-texture-view/index.md) | A [TextureView](#) that can be adjusted to a specified aspect ratio. |
 | [mozilla.components.feature.push.AutoPushFeature](../mozilla.components.feature.push/-auto-push-feature/index.md) | A implementation of a [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
 | [mozilla.components.feature.push.AutoPushSubscription](../mozilla.components.feature.push/-auto-push-subscription/index.md) | The subscription information from AutoPush that can be used to send push messages to other devices. |
@@ -219,12 +221,14 @@
 | [mozilla.components.feature.session.FullScreenFeature](../mozilla.components.feature.session/-full-screen-feature/index.md) | Feature implementation for handling fullscreen mode (exiting and back button presses). |
 | [mozilla.components.service.glean.histogram.FunctionalHistogram](../mozilla.components.service.glean.histogram/-functional-histogram/index.md) | This class represents a histogram where the bucketing is performed by a function, rather than pre-computed buckets. It is meant to help serialize and deserialize data to the correct format for transport and storage, as well as performing the calculations to determine the correct bucket for each sample. |
 | [mozilla.components.service.fxa.manager.FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) | An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
+| [mozilla.components.service.fxa.FxaAuthData](../mozilla.components.service.fxa/-fxa-auth-data/index.md) | Captures basic OAuth authentication data (code, state) and any additional data FxA passes along. |
 | [mozilla.components.service.fxa.FxaDeviceConstellation](../mozilla.components.service.fxa/-fxa-device-constellation/index.md) | Provides an implementation of [DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
 | [mozilla.components.service.fxa.FxaException](../mozilla.components.service.fxa/-fxa-exception.md) | High-level exception class for the exceptions thrown in the Rust library. |
 | [mozilla.components.service.fxa.FxaNetworkException](../mozilla.components.service.fxa/-fxa-network-exception.md) | Thrown on a network error. |
 | [mozilla.components.service.fxa.FxaPanicException](../mozilla.components.service.fxa/-fxa-panic-exception.md) | Thrown when the Rust library hits an assertion or panic (this is always a bug). |
 | [mozilla.components.service.fxa.FxaUnauthorizedException](../mozilla.components.service.fxa/-fxa-unauthorized-exception.md) | Thrown when the operation requires additional authorization. |
 | [mozilla.components.service.fxa.FxaUnspecifiedException](../mozilla.components.service.fxa/-fxa-unspecified-exception.md) | Thrown when the Rust library hits an unexpected error that isn't a panic. This may indicate library misuse, network errors, etc. |
+| [mozilla.components.feature.accounts.FxaWebChannelFeature](../mozilla.components.feature.accounts/-fxa-web-channel-feature/index.md) | Feature implementation that provides Firefox Accounts WebChannel support. For more information https://github.com/mozilla/fxa/blob/master/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md This feature uses a web extension to communicate with FxA Web Content. |
 | [mozilla.components.browser.engine.gecko.prompt.GECKO_AUTH_FLAGS](../mozilla.components.browser.engine.gecko.prompt/-g-e-c-k-o_-a-u-t-h_-f-l-a-g-s.md) |  |
 | [mozilla.components.browser.engine.gecko.prompt.GECKO_AUTH_LEVEL](../mozilla.components.browser.engine.gecko.prompt/-g-e-c-k-o_-a-u-t-h_-l-e-v-e-l.md) |  |
 | [mozilla.components.browser.engine.gecko.prompt.GECKO_PROMPT_CHOICE_TYPE](../mozilla.components.browser.engine.gecko.prompt/-g-e-c-k-o_-p-r-o-m-p-t_-c-h-o-i-c-e_-t-y-p-e.md) |  |
@@ -476,10 +480,6 @@
 | [mozilla.components.service.fxa.ServerConfig](../mozilla.components.service.fxa/-server-config.md) |  |
 | [mozilla.components.service.sync.logins.ServerPassword](../mozilla.components.service.sync.logins/-server-password.md) | Raw password data that is stored by the storage implementation. |
 | [mozilla.components.feature.push.ServiceType](../mozilla.components.feature.push/-service-type/index.md) | Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging. |
-| [mozilla.components.browser.engine.servo.ServoEngine](../mozilla.components.browser.engine.servo/-servo-engine/index.md) | Servo-based implementation of the Engine interface. |
-| [mozilla.components.browser.engine.servo.ServoEngineSession](../mozilla.components.browser.engine.servo/-servo-engine-session/index.md) | Servo-based EngineSession implementation. |
-| [mozilla.components.browser.engine.servo.ServoEngineSessionState](../mozilla.components.browser.engine.servo/-servo-engine-session-state/index.md) | No-op implementation of [EngineSessionState](../mozilla.components.concept.engine/-engine-session-state/index.md). |
-| [mozilla.components.browser.engine.servo.ServoEngineView](../mozilla.components.browser.engine.servo/-servo-engine-view/index.md) | Servo-based implementation of EngineView. |
 | [mozilla.components.browser.session.Session](../mozilla.components.browser.session/-session/index.md) | Value type that represents the state of a browser session. Changes can be observed. |
 | [org.mozilla.telemetry.measurement.SessionCountMeasurement](../org.mozilla.telemetry.measurement/-session-count-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.SessionDurationMeasurement](../org.mozilla.telemetry.measurement/-session-duration-measurement/index.md) |  |
@@ -518,6 +518,7 @@
 | [mozilla.components.concept.sync.StoreSyncStatus](../mozilla.components.concept.sync/-store-sync-status/index.md) |  |
 | [kotlin.String](../mozilla.components.browser.engine.system.matcher/kotlin.-string/index.md) (extensions in package mozilla.components.browser.engine.system.matcher) |  |
 | [kotlin.String](../mozilla.components.lib.jexl.ext/kotlin.-string/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [kotlin.String](../mozilla.components.service.fxa/kotlin.-string/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [kotlin.String](../mozilla.components.support.ktx.kotlin/kotlin.-string/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [kotlin.String](../mozilla.components.support.locale/kotlin.-string/index.md) (extensions in package mozilla.components.support.locale) |  |
 | [mozilla.components.service.glean.private.StringListMetricType](../mozilla.components.service.glean.private/-string-list-metric-type/index.md) | This implements the developer facing API for recording string list metrics. |
@@ -532,6 +533,7 @@
 | [mozilla.components.service.sync.logins.SyncAuthInvalidException](../mozilla.components.service.sync.logins/-sync-auth-invalid-exception.md) | This indicates that the authentication information (e.g. the [SyncUnlockInfo](../mozilla.components.service.sync.logins/-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](../mozilla.components.service.sync.logins/-async-logins-storage/sync.md) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
 | [mozilla.components.service.fxa.SyncConfig](../mozilla.components.service.fxa/-sync-config/index.md) | Configuration for sync. |
 | [mozilla.components.service.fxa.sync.SyncDispatcher](../mozilla.components.service.fxa.sync/-sync-dispatcher/index.md) | Internal interface to enable testing SyncManager implementations independently from SyncDispatcher. |
+| [mozilla.components.service.fxa.SyncEngine](../mozilla.components.service.fxa/-sync-engine/index.md) | Describes possible sync engines that device can support. |
 | [mozilla.components.service.fretboard.scheduler.jobscheduler.SyncJob](../mozilla.components.service.fretboard.scheduler.jobscheduler/-sync-job/index.md) | JobScheduler job used to updating the list of experiments |
 | [mozilla.components.service.fxa.sync.SyncManager](../mozilla.components.service.fxa.sync/-sync-manager/index.md) | A base sync manager implementation. |
 | [mozilla.components.concept.sync.SyncResult](../mozilla.components.concept.sync/-sync-result.md) | A set of results of running a sync operation for multiple instances of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md). |
