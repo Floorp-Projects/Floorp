@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <script>
@@ -29,12 +32,30 @@
             function expect_no_coalesced_events(event, eventName) {
                 test(function () {
                     assert_equals(event.getCoalescedEvents().length, 0, eventName + ' should not have any coalesced events');
-                }, expectedPointerType + ' ' + eventName + ' should not have any coalesced events'); 
+                }, expectedPointerType + ' ' + eventName + ' should not have any coalesced events');
+            }
+            function getInViewPoint(element) {
+                var rectangles = element.getClientRects();
+                if (rectangles.length === 0) {
+                  return false;
+                }
+
+                var rect = rectangles[0];
+                var left = Math.max(0, rect.left);
+                var right = Math.min(window.innerWidth, rect.right);
+                var top = Math.max(0, rect.top);
+                var bottom = Math.min(window.innerHeight, rect.bottom);
+
+                var x = parseInt(0.5 * (left + right));
+                var y = parseInt(0.5 * (top + bottom));
+
+                return [x, y];
             }
             function run() {
                 var test_pointerEvent = setup_pointerevent_test("coalesced events attributes in pointerevents", ['touch']);
                 var target0 = document.getElementById("target0");
                 var target1 = document.getElementById("target1");
+                var actions_promise;
 
                 on_event(target0, 'pointercancel', function (event) {
                     if (phase == PhaseEnum.WaitingForCancel) {
@@ -61,7 +82,7 @@
                             if (eventName == 'pointerdown') {
                               expect_no_coalesced_events(event, eventName);
                               phase++;
-                              setTimeout(function(){
+                              step_timeout(function(){
                                 // This is just a way to block the main thread.
                                 var current = new Date().getTime();
                                 for (; new Date().getTime() - current < 500;);
@@ -110,13 +131,40 @@
                             if (eventName == 'pointerleave') {
                               expect_no_coalesced_events(event, eventName);
                               phase++;
-                              test_pointerEvent.done();
+                              actions_promise.then( () => {
+                                test_pointerEvent.done();
+                              });
                             }
                             break;
                         }
                     });
                 });
-            }
+
+                // Inject touch inputs.
+                var elementPoint1 = getInViewPoint(target0);
+                var x1 = elementPoint1[0];
+                var y1 = elementPoint1[1];
+                var elementPoint2 = getInViewPoint(target1);
+                var x2 = elementPoint2[0];
+                var y2 = elementPoint2[1];
+                actions_promise = new test_driver.Actions(0)
+                   .addPointer("touchPointer1", "touch")
+                   .pointerMove(x1, y1)
+                   .pointerDown()
+                   .pointerMove(x1 + 10, y1)
+                   .pointerMove(x1 + 20, y1)
+                   .pointerMove(x1 + 30, y1)
+                   .addTick(20)
+                   .pointerUp()
+                   .pointerMove(x2, y2)
+                   .pointerDown()
+                   .pointerMove(x2 + 10, y2)
+                   .pointerMove(x2 + 20, y2)
+                   .pointerMove(x2 + 30, y2)
+                   .addTick(20)
+                   .pointerUp()
+                   .send();
+             }
         </script>
     </head>
     <body onload="run()">
