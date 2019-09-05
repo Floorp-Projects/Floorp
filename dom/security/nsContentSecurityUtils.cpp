@@ -18,6 +18,8 @@
 void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // We want to get to a point where all about: pages ship with a CSP. This
   // assertion ensures that we can not deploy new about: pages without a CSP.
+  // Initially we will whitelist legacy about: pages which not yet have a CSP
+  // attached, but ultimately that whitelist should disappear.
   // Please note that any about: page should not use inline JS or inline CSS,
   // and instead should load JS and CSS from an external file (*.js, *.css)
   // which allows us to apply a strong CSP omitting 'unsafe-inline'. Ideally,
@@ -25,15 +27,43 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // should at least be as strong as:
   // <meta http-equiv="Content-Security-Policy" content="default-src chrome:"/>
 
-  // Check if we should skip the assertion
-  if (Preferences::GetBool("csp.skip_about_page_has_csp_assert")) {
+  // Check if we are loading an about: URI at all
+  nsCOMPtr<nsIURI> documentURI = aDocument->GetDocumentURI();
+  if (!documentURI->SchemeIs("about") ||
+      Preferences::GetBool("csp.skip_about_page_has_csp_assert")) {
     return;
   }
 
-  // Check if we are loading an about: URI at all
-  nsCOMPtr<nsIURI> documentURI = aDocument->GetDocumentURI();
-  if (!documentURI->SchemeIs("about")) {
-    return;
+  // Potentially init the legacy whitelist of about URIs without a CSP.
+  static StaticAutoPtr<nsTArray<nsCString>> sLegacyAboutPagesWithNoCSP;
+  if (!sLegacyAboutPagesWithNoCSP ||
+      Preferences::GetBool("csp.overrule_about_uris_without_csp_whitelist")) {
+    sLegacyAboutPagesWithNoCSP = new nsTArray<nsCString>();
+    nsAutoCString legacyAboutPages;
+    Preferences::GetCString("csp.about_uris_without_csp", legacyAboutPages);
+    for (const nsACString& hostString : legacyAboutPages.Split(',')) {
+      // please note that for the actual whitelist we only store the path of
+      // about: URI. Let's reassemble the full about URI here so we don't
+      // have to remove query arguments later.
+      nsCString aboutURI;
+      aboutURI.AppendLiteral("about:");
+      aboutURI.Append(hostString);
+      sLegacyAboutPagesWithNoCSP->AppendElement(aboutURI);
+    }
+    ClearOnShutdown(&sLegacyAboutPagesWithNoCSP);
+  }
+
+  // Check if the about URI is whitelisted
+  nsAutoCString aboutSpec;
+  documentURI->GetSpec(aboutSpec);
+  ToLowerCase(aboutSpec);
+  for (auto& legacyPageEntry : *sLegacyAboutPagesWithNoCSP) {
+    // please note that we perform a substring match here on purpose,
+    // so we don't have to deal and parse out all the query arguments
+    // the various about pages rely on.
+    if (aboutSpec.Find(legacyPageEntry) == 0) {
+      return;
+    }
   }
 
   nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
@@ -50,44 +80,10 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
       }
     }
   }
-
-  // Check if we should skip the allowlist and assert right away. Please note
-  // that this pref can and should only be set for automated testing.
-  if (Preferences::GetBool("csp.skip_about_page_csp_allowlist_and_assert")) {
+  if (Preferences::GetBool("csp.overrule_about_uris_without_csp_whitelist")) {
     NS_ASSERTION(foundDefaultSrc, "about: page must have a CSP");
     return;
   }
-
-  nsAutoCString aboutSpec;
-  documentURI->GetSpec(aboutSpec);
-  ToLowerCase(aboutSpec);
-
-  // This allowlist contains about: pages that are permanently allowed to
-  // render without a CSP applied.
-  static nsLiteralCString sAllowedAboutPagesWithNoCSP[] = {
-      // about:blank is a special about page -> no CSP
-      NS_LITERAL_CSTRING("about:blank"),
-      // about:srcdoc is a special about page -> no CSP
-      NS_LITERAL_CSTRING("about:srcdoc"),
-      // about:sync-log displays plain text only -> no CSP
-      NS_LITERAL_CSTRING("about:sync-log"),
-      // about:printpreview displays plain text only -> no CSP
-      NS_LITERAL_CSTRING("about:printpreview"),
-      // Bug 1497200: Apply Meta CSP to about:downloads
-      NS_LITERAL_CSTRING("about:downloads"),
-      // Bug 1497584: Apply Meta CSP to about:preferences
-      NS_LITERAL_CSTRING("about:preferences"),
-  };
-
-  for (const nsLiteralCString& allowlistEntry : sAllowedAboutPagesWithNoCSP) {
-    // please note that we perform a substring match here on purpose,
-    // so we don't have to deal and parse out all the query arguments
-    // the various about pages rely on.
-    if (StringBeginsWith(aboutSpec, allowlistEntry)) {
-      return;
-    }
-  }
-
   MOZ_ASSERT(foundDefaultSrc,
              "about: page must contain a CSP including default-src");
 }
