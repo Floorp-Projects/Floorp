@@ -102,7 +102,7 @@ class FullParseHandler {
         lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
-        sourceKind_(SourceKind::Text) {}
+        sourceKind_(kind) {}
 
   static NullNode null() { return NullNode(); }
 
