@@ -19,6 +19,7 @@
 
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
+#include "threading/ThreadId.h"
 #include "vm/MutexIDs.h"
 
 #ifdef XP_WIN
@@ -39,24 +40,7 @@ class ThreadTrampoline;
 // stream and within the current address space. Use with care.
 class Thread {
  public:
-  class Id {
-    class PlatformData;
-    void* platformData_[2];
-
-   public:
-    Id();
-
-    Id(const Id&) = default;
-    Id(Id&&) = default;
-    Id& operator=(const Id&) = default;
-    Id& operator=(Id&&) = default;
-
-    bool operator==(const Id& aOther) const;
-    bool operator!=(const Id& aOther) const { return !operator==(aOther); }
-
-    inline PlatformData* platformData();
-    inline const PlatformData* platformData() const;
-  };
+  using Id = ThreadId;
 
   // Provides optional parameters to a Thread.
   class Options {
