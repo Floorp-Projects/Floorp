@@ -84,6 +84,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/XULCommandEvent.h"
+#include "mozilla/GlobalKeyListener.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -660,7 +661,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   if (NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
     // Create our XUL key listener and hook it up.
-    nsXBLService::AttachGlobalKeyHandler(this);
+    XULKeySetGlobalKeyListener::AttachKeyHandler(this);
   }
 
   if (NeedTooltipSupport(*this)) {
@@ -679,7 +680,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
 void nsXULElement::UnbindFromTree(bool aNullParent) {
   if (NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
-    nsXBLService::DetachGlobalKeyHandler(this);
+    XULKeySetGlobalKeyListener::DetachKeyHandler(this);
   }
 
   if (NeedTooltipSupport(*this)) {

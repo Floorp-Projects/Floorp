@@ -7,14 +7,11 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "XBL")
 
-DIRS += ['builtin']
-
 EXPORTS += [
     'nsBindingManager.h',
     'nsXBLBinding.h',
     'nsXBLPrototypeHandler.h',
     'nsXBLService.h',
-    'nsXBLWindowKeyHandler.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -35,7 +32,6 @@ UNIFIED_SOURCES += [
     'nsXBLPrototypeHandler.cpp',
     'nsXBLSerialize.cpp',
     'nsXBLService.cpp',
-    'nsXBLWindowKeyHandler.cpp',
     'XBLChildrenElement.cpp',
 ]
 
