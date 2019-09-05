@@ -1470,18 +1470,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   // allocating much larger textures than necessary in webrender.
   //
   // Don’t bother fixing this unless we run into this in the real world, though.
-  auto layerBounds = LayerIntRect::FromUnknownRect(
-      ScaleToOutsidePixelsOffset(groupBounds, scale.width, scale.height,
-                                 appUnitsPerDevPixel, residualOffset));
-  GP("scale: %f %f - %d - %f %f\n", scale.width, scale.height,
-     group.mAppUnitsPerDevPixel, residualOffset.x, residualOffset.y);
-
-  GP("LayerBounds: %d %d %d %d\n", layerBounds.x, layerBounds.y,
-     layerBounds.width, layerBounds.height);
-  GP("VisibleRect: %d %d %d %d\n", visibleRect.x, visibleRect.y,
-     visibleRect.width, visibleRect.height);
-
-  GP("Inherrited scale %f %f\n", scale.width, scale.height);
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
      q.y, q.width, q.height);
   if (!group.mGroupBounds.IsEqualEdges(groupBounds) ||
@@ -1526,8 +1514,10 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
-  group.mLayerBounds = layerBounds;
-  group.mImageBounds = layerBounds.ToUnknownRect();
+  group.mLayerBounds = LayerIntRect::FromUnknownRect(
+      ScaleToOutsidePixelsOffset(group.mGroupBounds, scale.width, scale.height,
+                                 group.mAppUnitsPerDevPixel, residualOffset));
+  group.mImageBounds = group.mLayerBounds.ToUnknownRect();
   group.mClippedImageBounds = group.mImageBounds;
 
   const nsRect& untransformedPaintRect =
