@@ -142,6 +142,10 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
             }
             auto windowId = window->WindowID();
             nsTArray<RefPtr<MediaDeviceInfo>> infos;
+            bool allowLabel =
+                aDevices->Length() == 0 ||
+                MediaManager::Get()->IsActivelyCapturingOrHasAPermission(
+                    windowId);
             for (auto& device : *aDevices) {
               MOZ_ASSERT(device->mKind == dom::MediaDeviceKind::Audioinput ||
                          device->mKind == dom::MediaDeviceKind::Videoinput ||
@@ -149,8 +153,7 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
               // Include name only if page currently has a gUM stream active
               // or persistent permissions (audio or video) have been granted
               nsString label;
-              if (MediaManager::Get()->IsActivelyCapturingOrHasAPermission(
-                      windowId) ||
+              if (allowLabel ||
                   Preferences::GetBool("media.navigator.permission.disabled",
                                        false)) {
                 label = device->mName;
