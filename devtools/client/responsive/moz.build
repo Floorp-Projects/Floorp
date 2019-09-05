@@ -19,7 +19,6 @@ DevToolsModules(
     'index.js',
     'manager.js',
     'reducers.js',
-    'setting-onboarding-tooltip.js',
     'store.js',
     'types.js',
 )
