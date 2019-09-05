@@ -2,7 +2,7 @@
 
 # channel
 
-`@ExperimentalCoroutinesApi @MainThread fun <S : `[`State`](../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../mozilla.components.lib.state/-action.md)`> `[`Store`](../mozilla.components.lib.state/-store/index.md)`<`[`S`](channel.md#S)`, `[`A`](channel.md#A)`>.channel(owner: LifecycleOwner = ProcessLifecycleOwner.get()): ReceiveChannel<`[`S`](channel.md#S)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/StoreExtensions.kt#L104)
+`@ExperimentalCoroutinesApi @MainThread fun <S : `[`State`](../mozilla.components.lib.state/-state.md)`, A : `[`Action`](../mozilla.components.lib.state/-action.md)`> `[`Store`](../mozilla.components.lib.state/-store/index.md)`<`[`S`](channel.md#S)`, `[`A`](channel.md#A)`>.channel(owner: LifecycleOwner = ProcessLifecycleOwner.get()): ReceiveChannel<`[`S`](channel.md#S)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/StoreExtensions.kt#L111)
 
 Creates a conflated [Channel](#) for observing [State](../mozilla.components.lib.state/-state.md) changes in the [Store](../mozilla.components.lib.state/-store/index.md).
 

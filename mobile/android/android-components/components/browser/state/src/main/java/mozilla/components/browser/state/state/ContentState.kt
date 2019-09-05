@@ -5,6 +5,8 @@
 package mozilla.components.browser.state.state
 
 import android.graphics.Bitmap
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.concept.engine.HitResult
 
 /**
  * Value type that represents the state of the content within a [SessionState].
@@ -21,6 +23,8 @@ import android.graphics.Bitmap
  * @property thumbnail the last generated [Bitmap] of this session's content, to
  * be used as a preview in e.g. a tab switcher.
  * @property icon the icon of the page currently loaded by this session.
+ * @property download Last unhandled download request.
+ * @property hitResult the target of the latest long click operation.
  */
 data class ContentState(
     val url: String,
@@ -31,5 +35,7 @@ data class ContentState(
     val searchTerms: String = "",
     val securityInfo: SecurityInfoState = SecurityInfoState(),
     val thumbnail: Bitmap? = null,
-    val icon: Bitmap? = null
+    val icon: Bitmap? = null,
+    val download: DownloadState? = null,
+    val hitResult: HitResult? = null
 )

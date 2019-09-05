@@ -25,4 +25,30 @@
     <string name="mozac_feature_prompts_allow">Baimendu</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Ukatu</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Hautatu hilabetea</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Urt</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Ots</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Mar</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Api</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Mai</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Eka</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Uzt</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Abu</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Ira</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Urr</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Aza</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Abe</string>
 </resources>

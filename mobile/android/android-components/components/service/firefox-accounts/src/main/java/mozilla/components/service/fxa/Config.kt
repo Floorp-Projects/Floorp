@@ -33,11 +33,25 @@ data class DeviceConfig(
 /**
  * Configuration for sync.
  *
- * @property syncableStores A set of store names to sync, exposed via [GlobalSyncableStoreProvider].
+ * @property supportedEngines A set of supported sync engines, exposed via [GlobalSyncableStoreProvider].
  * @property syncPeriodInMinutes Optional, how frequently periodic sync should happen. If this is `null`,
  * periodic syncing will be disabled.
  */
 data class SyncConfig(
-    val syncableStores: Set<String>,
+    val supportedEngines: Set<SyncEngine>,
     val syncPeriodInMinutes: Long? = null
 )
+
+/**
+ * Describes possible sync engines that device can support.
+ * @property nativeName Internally, Rust SyncManager represents engines as strings. Forward-compatibility
+ * with new engines is one of the reasons for this. E.g. during any sync, an engine may appear that we
+ * do not know about. At the public API level, we expose a concrete [SyncEngine] type to allow for more
+ * robust integrations. We do not expose "unknown" engines via our public API, but do handle them
+ * internally (by persisting their enabled/disabled status).
+*/
+enum class SyncEngine(val nativeName: String) {
+    HISTORY("history"),
+    BOOKMARKS("bookmarks"),
+    PASSWORDS("passwords"),
+}

@@ -35,11 +35,12 @@ class OriginVerifier(
     private val packageName: String,
     @Relation private val relation: Int,
     packageManager: PackageManager,
-    httpClient: Client
+    httpClient: Client,
+    apiKey: String?
 ) {
 
     @VisibleForTesting
-    internal val handler = DigitalAssetLinksHandler(httpClient)
+    internal val handler = DigitalAssetLinksHandler(httpClient, apiKey)
     @VisibleForTesting
     internal val signatureFingerprint by lazy {
         getCertificateSHA256FingerprintForPackage(packageManager)

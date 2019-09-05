@@ -2,7 +2,7 @@
 
 # SUSPENDED
 
-`SUSPENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L117)
+`SUSPENDED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L154)
 
 Sent when loading of the media is suspended. This may happen either because the download has completed or
 because it has been paused for any other reason.

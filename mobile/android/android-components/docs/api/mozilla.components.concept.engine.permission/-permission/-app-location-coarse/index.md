@@ -2,7 +2,7 @@
 
 # AppLocationCoarse
 
-`data class AppLocationCoarse : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L75)
+`data class AppLocationCoarse : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L77)
 
 ### Constructors
 

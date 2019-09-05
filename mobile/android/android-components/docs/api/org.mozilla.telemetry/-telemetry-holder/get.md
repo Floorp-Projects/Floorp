@@ -2,4 +2,4 @@
 
 # get
 
-`open static fun get(): `[`Telemetry`](../-telemetry/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/TelemetryHolder.java#L19)
+`open static fun get(): `[`Telemetry`](../-telemetry/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/TelemetryHolder.java#L23)

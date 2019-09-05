@@ -2,7 +2,7 @@
 
 # ActionSpace
 
-`open class ActionSpace : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L317)
+`open class ActionSpace : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L322)
 
 An "empty" action with a desired width to be used as "placeholder".
 

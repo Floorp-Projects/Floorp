@@ -20,26 +20,94 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਅਸਫ਼ਲ ਹੈ</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>ਜਿਸ ਸਫ਼ੇ ਨੂੰ ਤੁਸੀਂ ਵੇਖਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਹੇ ਹੋ, ਉਹ ਨਹੀਂ ਦਿਖਾਇਆ ਜਾ ਸਕਦਾ ਕਿਉਂਕਿ ਮਿਲੇ ਡਾਟੇ ਦੀ ਪ੍ਰਮਾਣਿਕਤਾ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੋ ਸਕੀ।</li>
+        <li>ਇਸ ਸਮੱਸਿਆ ਬਾਰੇ ਜਾਣਕਾਰੀ ਦੇਣ ਲਈ ਵੈਬਸਾਈਟ ਮਾਲਕਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।</li>
+      </ul>
+        ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ ਅਸਫ਼ਲ ਹੈ</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>ਇਹ ਸਰਵਰ ਦੀ ਸੰਰਚਨਾ ਕਰਕੇ ਸਮੱਸਿਆ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਕੋਈ ਸਰਵਰ ਦੀ ਨਕਲ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਰਿਹਾ ਹੈ।</li>
+        <li>ਜੇ ਤੁਸੀਂ ਪਹਿਲਾਂ ਵੀ ਇਸ ਸਰਵਰ ਨਾਲ ਠੀਕ ਤਰ੍ਹਾਂ ਕਨੈਕਟ ਹੁੰਦੇ ਰਹੇ ਹੋ ਤਾਂ ਗਲਤੀ ਆਰਜ਼ੀ ਹੋ ਸਕਦਾ ਹੈ ਅਤੇ ਤੁਸੀਂ ਬਾਅਦ ‘ਚ ਕੋਸ਼ਿਸ਼ ਕਰ ਸਕਦੇ ਹੋ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ਕਨੈਕਸ਼ਨ ‘ਚ ਰੁਕਾਵਟ ਆਈ ਸੀ</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>ਬਰਾਊਜ਼ਰ ਕਾਮਯਾਬੀ ਨਾਲ ਕਨੈਕਟ ਹੋ ਗਿਆ, ਪਰ ਜਾਣਕਾਰੀ ਤਬਦੀਲ ਕਰਨ ਦੇ ਦੌਰਾਨ ਕਨੈਕਸ਼ਨ ‘ਚ ਰੁਕਾਵਟ ਆਈ ਸੀ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</p>
+      <ul>
+        <li>ਸਾਈਟ ਆਰਜ਼ੀ ਤੌਰ ‘ਤੇ ਅਣ-ਉਪਲਬਧ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਜ਼ਿਆਦਾ ਰੁਝੀ ਹੋ ਸਕਦੀ ਹੈ। ਕੁਝ ਪਲ਼ਾਂ ‘ਚ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</li>
+        <li>ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੀ ਸਫ਼ਾ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹੋ ਤਾਂ ਆਪਣੇ ਡਿਵਾਈਸ ਦੇ ਡਾਟੇ ਜਾਂ Wi-Fi ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ਕਨੈਕਸ਼ਨ ਲਈ ਸਮਾਂ ਸਮਾਪਤ ਹੈ</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>ਮੰਗ ਕੀਤੀ ਸਾਇਟ ਨੇ ਕਨੈਕਸ਼ਨ ਬੇਨਤੀ ਦਾ ਜਵਾਬ ਨਹੀਂ ਦਿੱਤਾ ਅਤੇ ਬਰਾਊਜ਼ਰ ਨੇ ਜਵਾਬ ਲਈ ਉਡੀਕ ਕਰਨੀ ਛੱਡ ਦਿੱਤੀ ਹੈ।</p>
+      <ul>
+        <li>ਕੀ ਸਰਵਰ ਦੀ ਮੰਗ ਬਹੁਤ ਵੱਧ ਹੋ ਗਈ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਆਰਜ਼ੀ ਤੌਰ ‘ਤੇ ਸਮੱਸਿਆ ਹੋ ਸਕਦੀ ਹੈ? ਬਾਅਦ ‘ਚ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</li>
+        <li>ਕੀ ਤੁਸੀਂ ਹੋਰ ਸਾਈਟਾਂ ਨੂੰ ਬਰਾਊਜ਼ ਕਰ ਸਕਦੇ ਹੋ? ਕੰਪਿਊਟਰ ਦੇ ਨੈੱਟਵਰਕ ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ।</li>
+        <li>ਕੀ ਤੁਹਾਡਾ ਕੰਪਿਊਟਰ ਜਾਂ ਨੈੱਟਵਰਕ ਫਾਇਰਵਾਲ ਜਾਂ ਪਰਾਕਸੀ ਰਾਹੀਂ ਸੁਰੱਖਿਅਤ ਹੈ? ਗਲਤ ਸੈਟਿੰਗਾਂ ਵੈੱਬ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਰਾਹ ਵਿੱਚ ਰੁਕਾਵਟ ਪਾ ਸਕਦੀਆਂ ਹਨ।</li>
+        <li>ਹਾਲੇ ਵੀ ਸਮੱਸਿਆ ਆ ਰਹੀ ਹੈ? ਸਹਾਇਤਾ ਲਈ ਆਪਣੇ ਨੈੱਟਵਰਕ ਪਰਸ਼ਾਸ਼ਕ ਜਾਂ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ</li>
+      </ul>
+    
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">ਕਨੈਕਟ ਕਰਨ ਲਈ ਅਸਮਰੱਥ ਹੈ</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>ਸਾਈਟ ਆਰਜ਼ੀ ਰੂਪ ਵਿੱਚ ਬੰਦ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਬਹੁਤ ਰੁਝੀ ਹੋ ਸਕਦੀ ਹੈ। ਕੁਝ ਕੁ ਪਲਾਂ ਵਿੱਚ ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</li>
+        <li>ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੀ ਸਫ਼ਾ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦੇ ਹੋ ਤਾਂ ਆਪਣੇ ਡਿਵਾਈਸ ਦੇ ਡਾਟੇ ਜਾਂ Wi-Fi ਕੁਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">ਸਰਵਰ ਤੋਂ ਅਣਚਿਤਵਿਆ ਜਵਾਬ ਮਿਲਿਆ</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ਸਾਇਟ ਨੈੱਟਵਰਕ ਬੇਨਤੀ ਨੂੰ ਇੱਕ ਅਣਜਾਣੇ ਢੰਗ ਨਾਲ ਜਵਾਬ ਦੇ ਰਹੀ ਹੈ ਅਤੇ ਬਰਾਊਜ਼ਰ ਜਾਰੀ ਨਹੀਂ ਰੱਖ ਸਕਦਾ ਹੈ।</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ਸਫ਼ੇ ਲਈ ਠੀਕ ਤਰ੍ਹਾਂ ਮੁੜ-ਦਿਸ਼ਾ ਪਰਿਵਰਤਨ ਨਹੀਂ ਕੀਤਾ ਗਿਆ</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ਬਰਾਊਜਰ ਨੇ ਮੰਗ ਕੀਤੀ ਚੀਜ਼ ਪ੍ਰਾਪਤ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਨੂੰ ਰੋਕ ਦਿੱਤਾ ਹੈ। ਸਾਇਟ ਬੇਨਤੀ ਨੂੰ ਇਸ ਢੰਗ ਨਾਲ ਦਿਸ਼ਾ ਪਰਿਵਰਤਨ ਕਰ ਰਹੀ ਹੈ ਜੋ ਕਿ ਕਦੇ ਪੂਰੀ ਨਹੀਂ ਹੋਵੇਗੀ।</p>
+      <ul>
+        <li>ਕੀ ਤੁਸੀਂ ਇਸ ਸਾਈਟ ਲਈ ਚਾਹੀਦੇ ਕੂਕੀਜ਼ ਅਸਮਰੱਥ ਕੀਤੇ ਜਾਂ ਪਾਬੰਦੀ ਲਗਾਏ ਹਨ?</li>
+        <li>ਜੇ ਸਾਈਟ ਦੇ ਕੂਕੀਜ਼ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰਨ ਨਾਲ ਸਮੱਸਿਆ ਹੱਲ ਨਹੀਂ ਹੁੰਦੀ ਹੈ ਤਾਂ ਇਹ ਸਰਵਰ ਦੀ ਸੰਰਚਨਾ ਨਾਲ ਮਸਲਾ ਹੋ ਸਕਦਾ, ਨਾ ਕਿ ਤੁਹਾਡੇ ਕੰਪਿਊਟਰ ਨਾਲ।</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ਆਫ਼ਲਾਈਨ ਢੰਗ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[ 
+      <p>ਬਰਾਊਜ਼ਰ ਆਫ਼ਲਾਈਨ ਢੰਗ ਵਿੱਚ ਕੰਮ ਕਰ ਰਿਹਾ ਹੈ ਅਤੇ ਮੰਗ ਕੀਤੀ ਚੀਜ਼ ਨਾਲ ਕਨੈਕਟ ਨਹੀਂ ਕਰ ਸਕਦਾ ਹੈ।</p>
+      <ul>
+        <li>ਕੀ ਕੰਪਿਊਟਰ ਸਰਗਰਮ ਨੈੱਟਵਰਕ ਨਾਲ ਕਨੈਕਟ ਹੈ?</li>
+        <li>ਆਨਲਾਈਨ ਢੰਗ ‘ਚ ਜਾਣ ਅਤੇ ਸਫ਼ੇ ਨੂੰ ਮੁੜ-ਲੋਡ ਕਰਨ ਲਈ “ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ” ਨੂੰ ਦਬਾਓ।</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">ਸੁਰੱਖਿਆ ਕਾਰਨਾਂ ਕਰਕੇ ਪੋਰਟ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ</string>
@@ -82,4 +150,44 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ਫਾਈਲ ਲਈ ਪਹੁੰਚ ਤੋਂ ਨਾਂਹ ਕੀਤੀ</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ਪਰਾਕਸੀ ਸਰਵਰ ਨੇ ਕਨੈਕਸ਼ਨ ਤੋਂ ਇਨਕਾਰ ਕੀਤਾ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ਪਰਾਕਸੀ ਸਰਵਰ ਨਹੀਂ ਲੱਭਿਆ</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>ਬਰਾਊਜ਼ਰ ਨੂੰ ਪਰਾਕਸੀ ਸਰਵਰ ਵਰਤਣ ਲਈ ਸੰਰਚਿਤ ਕੀਤਾ ਗਿਆ ਹੈ, ਪਰ ਪਰਾਕਸੀ ਲੱਭਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</p>
+      <ul>
+        <li>ਕੀ ਬਰਾਊਜ਼ਰ ਦੀ ਪਰਾਕਸੀ ਸੰਰਚਨਾ ਠੀਕ ਹੈ? ਸੈਟਿੰਗਾਂ ਚੈੱਕ ਕਰਕੇ ਮੁੜ-ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜੀ।</li>
+        <li>ਕੀ ਕੰਪਿਊਟਰ ਸਰਗਰਮ ਨੈੱਟਵਰਕ ਨਾਲ ਕਨੈਕਟ ਹੈ?</li>
+        <li>ਹਾਲੇ ਵੀ ਸਮੱਸਿਆ ਹੈ? ਮਦਦ ਲਈ ਆਪਣੇ ਨੈੱਟਵਰਕ ਪਰਸ਼ਾਸ਼ਕ ਜਾਂ ਇੰਟਰਨੈੱਟ ਪਰੋਵਾਇਡਰ ਨਾਲ ਸੰਪਰਕ ਕਰੋ ਜੀ।</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ਮਾਲਵੇਅਰ ਸਾਈਟ ਮਸਲਾ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>%1$s ਤੇ ਸਾਈਟ ਨੂੰ ਇੱਕ ਅਟੈਕ ਸਾਈਟ ਵਜੋਂ ਦੱਸਿਆ ਗਿਆ ਹੈ ਅਤੇ ਤੁਹਾਡੀ ਸੁਰੱਖਿਆ ਤਰਜੀਹਾਂ ਦੇ ਅਧਾਰ ਤੇ ਬਲੌਕ ਕੀਤਾ ਗਿਆ ਹੈ।</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ਬੇਲੋੜੀ ਸਾਈਟ ਮਸਲਾ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">ਨੁਕਸਾਨਦੇਹ ਸਾਈਟ ਮਸਲਾ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>%1$s ਤੋਂ ਸਾਈਟ ਨੂੰ ਸੰਭਾਵਿਤ ਹਮਲਾਵਰ ਸਾਈਟ ਵਜੋਂ ਇਤਲਾਹ ਦਿੱਤੀ ਗਈ ਹੈ ਅਤੇ ਇਸ ‘ਤੇ ਤੁਹਾਡੀ ਸੁਰੱਖਿਆ ਪਸੰਦਾਂ ਦੇ ਮੁਤਾਬਕ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ।</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">ਭਰਮਪੂਰਨ ਸਾਈਟ ਮਸਲਾ</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>%1$s ਤੋਂ ਇਸ ਵੈੱਬ ਸਫ਼ੇ ਨੂੰ ਭਰਮਪੂਰਕ ਸਾਈਟ ਵਜੋਂ ਇਤਲਾਹ ਦਿੱਤੀ ਗਈ ਹੈ ਅਤੇ ਤੁਹਾਡੀਆਂ ਸੁਰੱਖਿਆ ਪਸੰਦਾਂ ਦੇ ਮੁਤਾਬਕ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ।</p>
+    ]]></string>
+</resources>

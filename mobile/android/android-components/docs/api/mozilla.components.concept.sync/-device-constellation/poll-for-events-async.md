@@ -2,11 +2,11 @@
 
 # pollForEventsAsync
 
-`abstract fun pollForEventsAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceEvent`](../-device-event/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L91)
+`abstract fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L93)
 
-Poll for events targeted at the current [Device](../-device/index.md). It's expected that if a [DeviceEvent](../-device-event/index.md) was
-returned after a poll, it will not be returned in consequent polls.
+Polls for any pending [DeviceEvent](../-device-event/index.md) events.
+In case of new events, registered [DeviceEventsObserver](../-device-events-observer/index.md) observers will be notified.
 
 **Return**
-A list of [DeviceEvent](../-device-event/index.md) instances that are currently pending for this [Device](../-device/index.md), or `null` on failure.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 

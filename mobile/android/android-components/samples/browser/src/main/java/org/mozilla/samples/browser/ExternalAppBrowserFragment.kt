@@ -4,19 +4,23 @@
 
 package org.mozilla.samples.browser
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putWebAppManifest
+import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
@@ -30,8 +34,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
 
     private val manifest: WebAppManifest?
         get() = arguments?.getWebAppManifest()
-    private val trustedScopes: List<Uri>
-        get() = arguments?.getParcelableArrayList<Uri>(ARG_TRUSTED_SCOPES).orEmpty()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
@@ -54,7 +56,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 components.sessionManager,
                 layout.toolbar,
                 sessionId!!,
-                trustedScopes
+                listOfNotNull(manifest?.getTrustedScope())
             ),
             owner = this,
             view = layout.toolbar)
@@ -81,6 +83,26 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         return layout
     }
 
+    @ObsoleteCoroutinesApi
+    @ExperimentalCoroutinesApi
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val scope = listOfNotNull(manifest?.getTrustedScope())
+
+        consumeFrom(components.customTabsStore) { state ->
+            sessionId
+                ?.let { components.sessionManager.findSessionById(it) }
+                ?.let { session -> session.customTabConfig?.sessionToken }
+                ?.let { token -> state.tabs[token] }
+                ?.let { tabState ->
+                    hideToolbarFeature.withFeature {
+                        it.onTrustedScopesChange(scope + tabState.trustedOrigins)
+                    }
+                }
+        }
+    }
+
     /**
      * Calls [onBackPressed] for features in the base class first,
      * before trying to call the external app [BackHandler].
@@ -89,17 +111,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         super.onBackPressed() || customTabsToolbarFeature.onBackPressed()
 
     companion object {
-        private const val ARG_TRUSTED_SCOPES = "org.mozilla.samples.browser.TRUSTED_SCOPES"
-
         fun create(
             sessionId: String,
-            manifest: WebAppManifest?,
-            trustedScopes: List<Uri>
+            manifest: WebAppManifest?
         ) = ExternalAppBrowserFragment().apply {
             arguments = Bundle().apply {
                 putSessionId(sessionId)
                 putWebAppManifest(manifest)
-                putParcelableArrayList(ARG_TRUSTED_SCOPES, ArrayList(trustedScopes))
             }
         }
     }

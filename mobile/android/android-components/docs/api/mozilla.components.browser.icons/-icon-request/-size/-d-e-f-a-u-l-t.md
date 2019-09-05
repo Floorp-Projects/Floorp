@@ -2,7 +2,7 @@
 
 # DEFAULT
 
-`DEFAULT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L32)
+`DEFAULT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L33)
 
 ### Inherited Properties
 

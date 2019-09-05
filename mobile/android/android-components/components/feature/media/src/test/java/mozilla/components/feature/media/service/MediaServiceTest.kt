@@ -47,6 +47,7 @@ class MediaServiceTest {
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
         val service = spy(Robolectric.buildService(MediaService::class.java)
             .create()
@@ -71,6 +72,7 @@ class MediaServiceTest {
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
         val service = spy(Robolectric.buildService(MediaService::class.java)
             .create()
@@ -81,6 +83,7 @@ class MediaServiceTest {
         verify(service, never()).stopSelf()
 
         media.playbackState = Media.PlaybackState.ENDED
+        MediaStateMachine.waitForStateChange()
 
         service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
 
@@ -101,6 +104,7 @@ class MediaServiceTest {
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
         val service = spy(Robolectric.buildService(MediaService::class.java)
             .create()
@@ -113,6 +117,7 @@ class MediaServiceTest {
         verify(service).startForeground(anyInt(), any())
 
         media.playbackState = Media.PlaybackState.PAUSE
+        MediaStateMachine.waitForStateChange()
 
         verify(service, never()).stopForeground(false)
 

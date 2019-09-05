@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="app_name">Glean - Metrics Demo</string>
-    <string name="send_baseline_ping">Send ping(s)</string>
     <string name="generate_data">Record Text</string>
     <string name="string_list_input_hint">Enter some text here</string>
     <string name="counter_metric_info">
@@ -14,9 +13,6 @@
         and should persist from launch to launch of the app.\n\nAn event metric is also being used
         to attach a dictionary of values to the extras of the event ping. See MainActivity for
         where all of this is happening.
-    </string>
-    <string name="send_ping_info">
-        Clicking the SEND PING button simulates an event that causes pings to be sent.
     </string>
     <string name="experiment_not_active">Experiment not active</string>
     <string name="experiment_active_branch">Experiment active, branch: %1$s</string>

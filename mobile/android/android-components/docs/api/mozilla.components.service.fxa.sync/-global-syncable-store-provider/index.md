@@ -2,7 +2,7 @@
 
 # GlobalSyncableStoreProvider
 
-`object GlobalSyncableStoreProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L44)
+`object GlobalSyncableStoreProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L45)
 
 A singleton registry of [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) objects. [WorkManagerSyncDispatcher](../-work-manager-sync-dispatcher/index.md) will use this to
 access configured [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) instances.
@@ -14,5 +14,4 @@ available instances of stores within an application.
 
 | Name | Summary |
 |---|---|
-| [configureStore](configure-store.md) | `fun configureStore(storePair: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [getStore](get-store.md) | `fun getStore(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`?` |
+| [configureStore](configure-store.md) | `fun configureStore(storePair: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

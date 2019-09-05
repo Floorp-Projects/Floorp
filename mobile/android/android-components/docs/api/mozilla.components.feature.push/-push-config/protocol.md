@@ -2,4 +2,7 @@
 
 # protocol
 
-`val protocol: `[`Protocol`](../-protocol/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L357)
+`val protocol: `[`Protocol`](../-protocol/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L362)
+
+The socket protocol to use when communicating with the server.
+

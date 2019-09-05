@@ -14,6 +14,7 @@
     <dimen name="mozac_browser_toolbar_menu_padding">16dp</dimen>
 
     <!-- EditToolbar -->
-    <dimen name="mozac_browser_toolbar_url_padding">8dp</dimen>
+    <dimen name="mozac_browser_toolbar_url_horizontal_padding">8dp</dimen>
+    <dimen name="mozac_browser_toolbar_url_vertical_padding">0dp</dimen>
     <dimen name="mozac_browser_toolbar_cancel_padding">16dp</dimen>
 </resources>

@@ -4,6 +4,11 @@
 
 package mozilla.components.support.base.observer
 
+import java.util.Collections
+import java.util.WeakHashMap
+
+typealias ConsumableListener = () -> Unit
+
 /**
  * A generic wrapper for values that can get consumed.
  *
@@ -12,8 +17,15 @@ package mozilla.components.support.base.observer
  */
 class Consumable<T> private constructor(
     internal var value: T?,
-    private val onConsume: (() -> Unit)? = null
+    onConsume: ConsumableListener? = null
 ) {
+
+    private val listeners = Collections.newSetFromMap(WeakHashMap<ConsumableListener, Boolean>()).also { listeners ->
+        if (onConsume != null) {
+            listeners.add(onConsume)
+        }
+    }
+
     /**
      * Invokes the given lambda and marks the value as consumed if the lambda returns true.
      */
@@ -21,7 +33,7 @@ class Consumable<T> private constructor(
     fun consume(consumer: (value: T) -> Boolean): Boolean {
         return if (value?.let(consumer) == true) {
             value = null
-            onConsume?.invoke()
+            listeners.forEach { it() }
             true
         } else {
             false
@@ -39,7 +51,7 @@ class Consumable<T> private constructor(
 
         return if (results.contains(true)) {
             this.value = null
-            onConsume?.invoke()
+            listeners.forEach { it() }
             true
         } else {
             false
@@ -51,6 +63,22 @@ class Consumable<T> private constructor(
      */
     @Synchronized
     fun isConsumed() = value == null
+
+    /**
+     * Returns the value of this [Consumable] without consuming it.
+     */
+    @Synchronized
+    fun peek(): T? = value
+
+    /**
+     * Adds a listener to be invoked when this [Consumable] is consumed.
+     *
+     * @param listener the listener to add.
+     */
+    @Synchronized
+    fun onConsume(listener: ConsumableListener) {
+        listeners.add(listener)
+    }
 
     companion object {
         /**

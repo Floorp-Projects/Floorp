@@ -107,8 +107,8 @@ class MenuButtonTest {
         val highlightMenuBuilder = spy(BrowserMenuBuilder(listOf(
             BrowserMenuHighlightableItem(
                 label = "Test",
-                imageResource = 0,
-                highlight = BrowserMenuHighlightableItem.Highlight(0, colorResource, colorResource),
+                startImageResource = 0,
+                highlight = BrowserMenuHighlightableItem.Highlight(0, 0, colorResource, colorResource),
                 isHighlighted = { isHighlighted }
             )
         )))
@@ -124,6 +124,15 @@ class MenuButtonTest {
         menuButton.invalidateMenu()
 
         verify(context).getDrawable(R.drawable.mozac_menu_indicator)
+    }
+
+    @Test
+    fun `menu can be dismissed`() {
+        menuButton.menu = menu
+
+        menuButton.dismissMenu()
+
+        verify(menuButton.menu)?.dismiss()
     }
 
     private fun extractIcon() =

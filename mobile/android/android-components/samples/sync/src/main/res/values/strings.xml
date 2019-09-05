@@ -5,8 +5,8 @@
 <resources>
     <string name="app_name">Firefox Sync Demo</string>
     <string name="sign_in">FxA sign in</string>
-    <string name="signed_in_waiting_for_profile">Signed in; waiting for profile</string>
-    <string name="signed_in_with_profile">Signed in: %1$s</string>
+    <string name="signed_in_waiting_for_profile">Signed in (type=%1$s); waiting for profile</string>
+    <string name="signed_in_with_profile">Authenticated (type=%1$s) as %2$s</string>
     <string name="account_error">FxA error: %1$s</string>
     <string name="sync_idle">Sync is idle</string>
     <string name="syncing">Syncing&#8230;</string>

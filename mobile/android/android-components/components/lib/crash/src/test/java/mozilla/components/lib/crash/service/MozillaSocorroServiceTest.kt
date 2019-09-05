@@ -26,7 +26,7 @@ class MozillaSocorroServiceTest {
         ))
         doNothing().`when`(service).sendViaGeckoViewCrashReporter(any())
 
-        val crash = Crash.NativeCodeCrash("", true, "", false)
+        val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
@@ -41,7 +41,7 @@ class MozillaSocorroServiceTest {
         ))
         doNothing().`when`(service).sendViaGeckoViewCrashReporter(any())
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)

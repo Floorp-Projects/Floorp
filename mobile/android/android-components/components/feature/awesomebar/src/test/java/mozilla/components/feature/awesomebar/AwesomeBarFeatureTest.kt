@@ -6,13 +6,18 @@ package mozilla.components.feature.awesomebar
 
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -89,16 +94,36 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
-    fun `addSearchProvider adds provider`() {
+    fun `addSearchProvider adds provider with specified search engine`() {
         val awesomeBar: AwesomeBar = mock()
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
 
         verify(awesomeBar, never()).addProviders(any())
 
-        feature.addSearchProvider(mock(), mock(), mock())
+        val searchEngine: SearchEngine = mock()
+        feature.addSearchProvider(searchEngine, mock(), mock())
 
-        verify(awesomeBar).addProviders(any())
+        val provider = argumentCaptor<SearchSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(searchEngine, provider.value.client.searchEngine)
+    }
+
+    @Test
+    fun `addSearchProvider adds provider for default search engine`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+
+        verify(awesomeBar, never()).addProviders(any())
+
+        val context = testContext
+        val searchEngineManager: SearchEngineManager = mock()
+        feature.addSearchProvider(context, searchEngineManager, mock(), mock())
+
+        val provider = argumentCaptor<SearchSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(searchEngineManager, provider.value.client.searchEngineManager)
     }
 
     @Test

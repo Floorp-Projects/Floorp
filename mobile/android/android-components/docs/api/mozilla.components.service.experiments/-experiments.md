@@ -2,7 +2,17 @@
 
 # Experiments
 
-`object Experiments : `[`ExperimentsInternalAPI`](-experiments-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L364)
+`object Experiments : `[`ExperimentsInternalAPI`](-experiments-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L399)
+
+The main Experiments object.
+
+This is a global object that must be initialized by the application by calling the [initialize](-experiments-internal-a-p-i/initialize.md)
+function before the experiments library can fetch updates from the server or be used to determine
+experiment enrollment.
+
+```
+Experiments.initialize(applicationContext)
+```
 
 ### Inherited Functions
 

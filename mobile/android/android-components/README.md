@@ -67,8 +67,6 @@ High-level components for building browser(-like) apps.
 
 * ⚪ [**Engine-Gecko-Nightly**](components/browser/engine-gecko-nightly/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
 
-* 🔴 [**Engine-Servo**](components/browser/engine-servo/README.md) - *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
-
 * ⚪ [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
 * 🔵 [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
@@ -198,6 +196,8 @@ _Supporting components with generic helper code._
 * 🔵 [**Ktx**](components/support/ktx/README.md) - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
 * 🔵 [**Test**](components/support/test/README.md) - A collection of helpers for testing components in local unit tests (`src/test`).
+
+* 🔵 [**Test Appservices**](components/support/test-appservices/README.md) - A component for synchronizing Application Services' unit testing dependencies used in Android Components.
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 

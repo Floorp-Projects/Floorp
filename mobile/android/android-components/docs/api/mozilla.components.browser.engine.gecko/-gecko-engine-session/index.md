@@ -2,7 +2,7 @@
 
 # GeckoEngineSession
 
-`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L46)
+`class GeckoEngineSession : CoroutineScope, `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L48)
 
 Gecko-based EngineSession implementation.
 
@@ -15,12 +15,12 @@ Gecko-based EngineSession implementation.
             .usePrivateMode(privateMode)
             .build()
         GeckoSession(settings)
-    }, context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO)`<br>`GeckoEngineSession(runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`, privateMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null, geckoSessionProvider: () -> `[`GeckoSession`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.html)` = {
+    }, context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, openGeckoSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>`GeckoEngineSession(runtime: `[`GeckoRuntime`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntime.html)`, privateMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, defaultSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`? = null, geckoSessionProvider: () -> `[`GeckoSession`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.html)` = {
         val settings = GeckoSessionSettings.Builder()
             .usePrivateMode(privateMode)
             .build()
         GeckoSession(settings)
-    }, context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, openGeckoSession: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>Gecko-based EngineSession implementation. |
+    }, context: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO)`<br>Gecko-based EngineSession implementation. |
 
 ### Properties
 

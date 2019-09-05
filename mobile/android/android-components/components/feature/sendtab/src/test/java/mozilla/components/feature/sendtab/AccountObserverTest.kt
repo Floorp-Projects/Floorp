@@ -6,6 +6,7 @@
 
 package mozilla.components.feature.sendtab
 
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.PushType
 import mozilla.components.support.test.mock
@@ -19,7 +20,7 @@ class AccountObserverTest {
         val feature: AutoPushFeature = mock()
         val observer = AccountObserver(feature)
 
-        observer.onAuthenticated(mock(), true)
+        observer.onAuthenticated(mock(), AuthType.Signin)
 
         verify(feature).subscribeForType(PushType.Services)
 
@@ -31,7 +32,7 @@ class AccountObserverTest {
         val feature: AutoPushFeature = mock()
         val observer = AccountObserver(null)
 
-        observer.onAuthenticated(mock(), true)
+        observer.onAuthenticated(mock(), AuthType.Signup)
         observer.onLoggedOut()
 
         verifyNoMoreInteractions(feature)
@@ -42,7 +43,7 @@ class AccountObserverTest {
         val feature: AutoPushFeature = mock()
         val observer = AccountObserver(feature)
 
-        observer.onAuthenticated(mock(), false)
+        observer.onAuthenticated(mock(), AuthType.Existing)
 
         verifyNoMoreInteractions(feature)
     }

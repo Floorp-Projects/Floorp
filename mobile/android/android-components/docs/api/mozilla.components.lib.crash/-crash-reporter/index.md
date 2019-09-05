@@ -43,4 +43,5 @@ crashes and forward them to the configured crash reporting services.
 | Name | Summary |
 |---|---|
 | [install](install.md) | `fun install(applicationContext: <ERROR CLASS>): `[`CrashReporter`](./index.md)<br>Install this [CrashReporter](./index.md) instance. At this point the component will be setup to collect crash reports. |
+| [recordCrashBreadcrumb](record-crash-breadcrumb.md) | `fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Add a crash breadcrumb to all registered services with breadcrumb support. |
 | [submitReport](submit-report.md) | `fun submitReport(crash: `[`Crash`](../-crash/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Submit a crash report to all registered services. |

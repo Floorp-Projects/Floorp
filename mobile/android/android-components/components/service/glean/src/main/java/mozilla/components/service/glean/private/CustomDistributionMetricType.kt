@@ -6,7 +6,7 @@ package mozilla.components.service.glean.private
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
-import mozilla.components.service.glean.storages.CustomDistributionData
+import mozilla.components.service.glean.histogram.PrecomputedHistogram
 import mozilla.components.service.glean.storages.CustomDistributionsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -37,7 +37,7 @@ data class CustomDistributionMetricType(
     val rangeMax: Long,
     val bucketCount: Int,
     val histogramType: HistogramType
-) : CommonMetricData, HistogramBase {
+) : CommonMetricData, HistogramMetricBase {
 
     private val logger = Logger("glean/CustomDistributionMetricType")
 
@@ -97,7 +97,7 @@ data class CustomDistributionMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testGetValue(pingName: String = sendInPings.first()): CustomDistributionData {
+    fun testGetValue(pingName: String = sendInPings.first()): PrecomputedHistogram {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 

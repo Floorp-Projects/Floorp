@@ -6,11 +6,14 @@ package mozilla.components.browser.search.suggestions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.SearchEngineParser
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
@@ -80,12 +83,35 @@ class SearchSuggestionClientTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun `Check that a search engine without a suggestURI will throw an exception`() {
+    @Test
+    fun `Check that a search engine without a suggestURI will return an empty suggestion list`() {
         val searchEngine = SearchEngineParser().load(
             testContext.assets,
                 "drae", "searchplugins/drae.xml")
 
-        SearchSuggestionClient(searchEngine) { "no-op" }
+        val client = SearchSuggestionClient(searchEngine) { "no-op" }
+        runBlocking {
+            val results = client.getSuggestions("firefox")
+            assertEquals(emptyList<String>(), results)
+        }
+    }
+
+    @Test
+    fun `Default search engine is used if search engine manager provided`() {
+        val searchEngine = SearchEngineParser().load(
+                testContext.assets,
+                "google", "searchplugins/google-b-m.xml")
+
+        val searchEngineManager: SearchEngineManager = mock()
+        val client = SearchSuggestionClient(testContext, searchEngineManager, GOOGLE_MOCK_RESPONSE)
+
+        runBlocking {
+            `when`(searchEngineManager.getDefaultSearchEngineAsync(testContext)).thenReturn(searchEngine)
+
+            val results = client.getSuggestions("firefox")
+            val expectedResults = listOf("firefox", "firefox for mac", "firefox quantum", "firefox update", "firefox esr", "firefox focus", "firefox addons", "firefox extensions", "firefox nightly", "firefox clear cache")
+
+            assertEquals(expectedResults, results)
+        }
     }
 }

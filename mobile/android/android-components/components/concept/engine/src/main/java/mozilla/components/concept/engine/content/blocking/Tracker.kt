@@ -4,13 +4,17 @@
 
 package mozilla.components.concept.engine.content.blocking
 
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+
 /**
  * Represents a blocked content tracker.
  * @property url The URL of the tracker.
- * @property categories A list of categories that this [Tracker] belongs.
+ * @property trackingCategories The anti-tracking category types of the blocked resource.
+ * @property cookiePolicies The cookie types of the blocked resource.
  */
-class Tracker(val url: String, val categories: List<Category> = emptyList()) {
-    enum class Category {
-        Ad, Analytic, Social, Cryptomining, Fingerprinting, Content
-    }
-}
+class Tracker(
+    val url: String,
+    val trackingCategories: List<TrackingCategory> = emptyList(),
+    val cookiePolicies: List<CookiePolicy> = emptyList()
+)

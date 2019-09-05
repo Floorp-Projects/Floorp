@@ -2,7 +2,7 @@
 
 # SyncManager
 
-`abstract class SyncManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L72)
+`abstract class SyncManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L73)
 
 A base sync manager implementation.
 

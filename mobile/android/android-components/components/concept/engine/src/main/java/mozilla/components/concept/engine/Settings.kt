@@ -5,6 +5,7 @@
 package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -47,6 +48,11 @@ abstract class Settings {
      * Setting to control tracking protection.
      */
     open var trackingProtectionPolicy: TrackingProtectionPolicy? by UnsupportedSetting()
+
+    /**
+     * Setting to control tracking protection.
+     */
+    open var safeBrowsingPolicy: Array<SafeBrowsingPolicy> by UnsupportedSetting()
 
     /**
      * Setting to intercept and override requests.

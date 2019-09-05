@@ -4,8 +4,8 @@
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.3.40"
-    const val coroutines = "1.2.2"
+    const val kotlin = "1.3.50"
+    const val coroutines = "1.3.0"
 
     const val junit = "4.12"
     const val robolectric = "4.1"
@@ -26,8 +26,7 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val leakcanary = "1.6.3"
 
-    const val mozilla_appservices = "0.36.0"
-    const val servo = "0.0.1.20181017.aa95911"
+    const val mozilla_appservices = "0.38.1"
 
     const val material = "1.0.0"
 
@@ -68,6 +67,7 @@ object Dependencies {
 
     const val testing_junit = "junit:junit:${Versions.junit}"
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
+    const val testing_robolectric_playservices = "org.robolectric:shadows-playservices:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
@@ -124,8 +124,6 @@ object Dependencies {
     const val mozilla_full_megazord_forUnitTests = "org.mozilla.appservices:full-megazord-forUnitTests:${Versions.mozilla_appservices}"
 
     const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
-    const val mozilla_servo_arm = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
-    const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"
     const val mozilla_sync15 = "org.mozilla.appservices:sync15:${Versions.mozilla_appservices}"
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"

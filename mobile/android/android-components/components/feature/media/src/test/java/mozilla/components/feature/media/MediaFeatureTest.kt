@@ -49,14 +49,16 @@ class MediaFeatureTest {
         session.media = listOf(media)
 
         media.playbackState = Media.PlaybackState.WAITING
+        MediaStateMachine.waitForStateChange()
 
         // So far nothing has happened yet
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         // Media starts playing!
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 
     @Test
@@ -79,15 +81,17 @@ class MediaFeatureTest {
         session.media = listOf(media)
 
         media.playbackState = Media.PlaybackState.WAITING
+        MediaStateMachine.waitForStateChange()
 
         // So far nothing has happened yet
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         // Media starts playing!
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
         // Service still not started since duration is too short
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
     }
 
     @Test
@@ -101,16 +105,18 @@ class MediaFeatureTest {
         }
 
         MediaStateMachine.start(sessionManager)
+        MediaStateMachine.waitForStateChange()
 
         val feature = MediaFeature(context)
         feature.enable()
 
         reset(context)
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         media.playbackState = Media.PlaybackState.PAUSE
+        MediaStateMachine.waitForStateChange()
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 
     @Test
@@ -129,14 +135,16 @@ class MediaFeatureTest {
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
 
         reset(context)
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         media.playbackState = Media.PlaybackState.ENDED
+        MediaStateMachine.waitForStateChange()
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 }

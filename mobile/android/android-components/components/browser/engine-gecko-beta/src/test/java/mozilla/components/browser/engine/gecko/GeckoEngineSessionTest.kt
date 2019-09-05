@@ -14,6 +14,9 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -21,6 +24,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -64,6 +68,9 @@ import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
+typealias GeckoAntiTracking = ContentBlocking.AntiTracking
+typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
+typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -782,8 +789,10 @@ class GeckoEngineSessionTest {
 
     @Test
     fun trackingProtectionDelegateNotifiesObservers() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider
+        )
 
         var trackerBlocked: Tracker? = null
         engineSession.register(object : EngineSession.Observer {
@@ -793,20 +802,75 @@ class GeckoEngineSessionTest {
         })
 
         captureDelegates()
+        var geckoCategories = 0
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.AD)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.ANALYTIC)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.SOCIAL)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.CRYPTOMINING)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.FINGERPRINTING)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.CONTENT)
+        geckoCategories = geckoCategories.or(GeckoAntiTracking.TEST)
 
-        var geckoCatgories = 0
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_AD)
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_ANALYTIC)
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_SOCIAL)
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_CRYPTOMINING)
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_FINGERPRINTING)
-        geckoCatgories = geckoCatgories.or(ContentBlocking.AT_CONTENT)
-
-        contentBlockingDelegate.value.onContentBlocked(geckoSession,
-            ContentBlocking.BlockEvent("tracker1", geckoCatgories)
+        contentBlockingDelegate.value.onContentBlocked(
+            geckoSession,
+            ContentBlocking.BlockEvent("tracker1", geckoCategories, 0, 0, false)
         )
+
         assertEquals("tracker1", trackerBlocked!!.url)
-        assertTrue(trackerBlocked!!.categories.containsAll(Tracker.Category.values().toList()))
+
+        val expectedBlockedCategories = listOf(
+            TrackingCategory.AD,
+            TrackingCategory.ANALYTICS,
+            TrackingCategory.SOCIAL,
+            TrackingCategory.CRYPTOMINING,
+            TrackingCategory.FINGERPRINTING,
+            TrackingCategory.CONTENT,
+            TrackingCategory.TEST
+        )
+
+        assertTrue(trackerBlocked!!.trackingCategories.containsAll(expectedBlockedCategories))
+
+        var trackerLoaded: Tracker? = null
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTrackerLoaded(tracker: Tracker) {
+                trackerLoaded = tracker
+            }
+        })
+
+        var geckoCookieCategories = 0
+        geckoCookieCategories = geckoCookieCategories.or(GeckoCookieBehavior.ACCEPT_ALL)
+        geckoCookieCategories = geckoCookieCategories.or(GeckoCookieBehavior.ACCEPT_VISITED)
+        geckoCookieCategories = geckoCookieCategories.or(GeckoCookieBehavior.ACCEPT_NON_TRACKERS)
+        geckoCookieCategories = geckoCookieCategories.or(GeckoCookieBehavior.ACCEPT_NONE)
+        geckoCookieCategories = geckoCookieCategories.or(GeckoCookieBehavior.ACCEPT_FIRST_PARTY)
+
+        contentBlockingDelegate.value.onContentLoaded(
+            geckoSession,
+            ContentBlocking.BlockEvent("tracker1", 0, 0, geckoCookieCategories, false)
+        )
+
+        val expectedCookieCategories = listOf(
+            CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            CookiePolicy.ACCEPT_NONE,
+            CookiePolicy.ACCEPT_VISITED,
+            CookiePolicy.ACCEPT_NON_TRACKERS
+        )
+
+        assertEquals("tracker1", trackerLoaded!!.url)
+        assertTrue(trackerLoaded!!.cookiePolicies.containsAll(expectedCookieCategories))
+
+        contentBlockingDelegate.value.onContentLoaded(
+            geckoSession,
+            ContentBlocking.BlockEvent("tracker1", 0, 0, GeckoCookieBehavior.ACCEPT_ALL, false)
+        )
+
+        assertTrue(
+            trackerLoaded!!.cookiePolicies.containsAll(
+                listOf(
+                    CookiePolicy.ACCEPT_ALL
+                )
+            )
+        )
     }
 
     @Test
@@ -814,7 +878,11 @@ class GeckoEngineSessionTest {
         val runtime = mock<GeckoRuntime>()
         whenever(runtime.settings).thenReturn(mock())
         val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
-        val privSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider, privateMode = true)
+        val privSession = GeckoEngineSession(
+            runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = true
+        )
 
         var trackerBlockingObserved = false
         session.register(object : EngineSession.Observer {
@@ -829,9 +897,15 @@ class GeckoEngineSessionTest {
             }
         })
 
-        val allPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD)
-        val regularOnlyPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forRegularSessionsOnly()
-        val privateOnlyPolicy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forPrivateSessionsOnly()
+        val allPolicy = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(TrackingCategory.AD)
+        )
+        val regularOnlyPolicy = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(TrackingCategory.AD)
+        ).forRegularSessionsOnly()
+        val privateOnlyPolicy = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(TrackingCategory.AD)
+        ).forPrivateSessionsOnly()
 
         session.enableTrackingProtection(allPolicy)
         assertTrue(trackerBlockingObserved)
@@ -870,33 +944,49 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun trackingProtectionCategoriesAreAligned() {
-        assertEquals(TrackingProtectionPolicy.AD, ContentBlocking.AT_AD)
-        assertEquals(TrackingProtectionPolicy.ANALYTICS, ContentBlocking.AT_ANALYTIC)
-        assertEquals(TrackingProtectionPolicy.CONTENT, ContentBlocking.AT_CONTENT)
-        assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
-        assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
-        assertEquals(TrackingProtectionPolicy.CRYPTOMINING, ContentBlocking.AT_CRYPTOMINING)
-        assertEquals(TrackingProtectionPolicy.FINGERPRINTING, ContentBlocking.AT_FINGERPRINTING)
-        assertEquals(TrackingProtectionPolicy.SAFE_BROWSING_ALL, ContentBlocking.SB_ALL)
-        assertEquals(TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL, ContentBlocking.SB_HARMFUL)
-        assertEquals(TrackingProtectionPolicy.SAFE_BROWSING_MALWARE, ContentBlocking.SB_MALWARE)
-        assertEquals(TrackingProtectionPolicy.SAFE_BROWSING_PHISHING, ContentBlocking.SB_PHISHING)
-        assertEquals(TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED, ContentBlocking.SB_UNWANTED)
+    fun safeBrowsingCategoriesAreAligned() {
+        assertEquals(GeckoSafeBrowsing.NONE, SafeBrowsingPolicy.NONE.id)
+        assertEquals(GeckoSafeBrowsing.MALWARE, SafeBrowsingPolicy.MALWARE.id)
+        assertEquals(GeckoSafeBrowsing.UNWANTED, SafeBrowsingPolicy.UNWANTED.id)
+        assertEquals(GeckoSafeBrowsing.HARMFUL, SafeBrowsingPolicy.HARMFUL.id)
+        assertEquals(GeckoSafeBrowsing.PHISHING, SafeBrowsingPolicy.PHISHING.id)
+        assertEquals(GeckoSafeBrowsing.DEFAULT, SafeBrowsingPolicy.RECOMMENDED.id)
+    }
 
-        assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.CB_STRICT)
-        assertEquals(TrackingProtectionPolicy.recommended().categories, ContentBlocking.CB_DEFAULT)
-        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL.id, ContentBlocking.COOKIE_ACCEPT_ALL)
+    @Test
+    fun trackingProtectionCategoriesAreAligned() {
+
+        assertEquals(GeckoAntiTracking.NONE, TrackingCategory.NONE.id)
+        assertEquals(GeckoAntiTracking.AD, TrackingCategory.AD.id)
+        assertEquals(GeckoAntiTracking.CONTENT, TrackingCategory.CONTENT.id)
+        assertEquals(GeckoAntiTracking.SOCIAL, TrackingCategory.SOCIAL.id)
+        assertEquals(GeckoAntiTracking.TEST, TrackingCategory.TEST.id)
+        assertEquals(GeckoAntiTracking.CRYPTOMINING, TrackingCategory.CRYPTOMINING.id)
+        assertEquals(GeckoAntiTracking.FINGERPRINTING, TrackingCategory.FINGERPRINTING.id)
+        assertEquals(GeckoAntiTracking.DEFAULT, TrackingCategory.RECOMMENDED.id)
+        assertEquals(GeckoAntiTracking.STRICT, TrackingCategory.STRICT.id)
+
+        val recommendedPolicy = TrackingProtectionPolicy.recommended()
+        val strictPolicy = TrackingProtectionPolicy.strict()
+        var antiTrackingCategories = strictPolicy.trackingCategories.sumBy { it.id }
+
+        assertEquals(GeckoAntiTracking.STRICT, antiTrackingCategories)
+
+        antiTrackingCategories = recommendedPolicy.trackingCategories.sumBy { it.id }
+
+        assertEquals(GeckoAntiTracking.DEFAULT, antiTrackingCategories)
+
+        assertEquals(GeckoCookieBehavior.ACCEPT_ALL, CookiePolicy.ACCEPT_ALL.id)
         assertEquals(
-            TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS.id,
-            ContentBlocking.COOKIE_ACCEPT_NON_TRACKERS
+            GeckoCookieBehavior.ACCEPT_NON_TRACKERS,
+            CookiePolicy.ACCEPT_NON_TRACKERS.id
         )
-        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE.id, ContentBlocking.COOKIE_ACCEPT_NONE)
+        assertEquals(GeckoCookieBehavior.ACCEPT_NONE, CookiePolicy.ACCEPT_NONE.id)
         assertEquals(
-            TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
-            ContentBlocking.COOKIE_ACCEPT_FIRST_PARTY
+            GeckoCookieBehavior.ACCEPT_FIRST_PARTY, CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id
+
         )
-        assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED.id, ContentBlocking.COOKIE_ACCEPT_VISITED)
+        assertEquals(GeckoCookieBehavior.ACCEPT_VISITED, CookiePolicy.ACCEPT_VISITED.id)
     }
 
     @Test
@@ -990,7 +1080,7 @@ class GeckoEngineSessionTest {
         }
 
         expectException(UnsupportedSettingException::class) {
-            settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+            settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
         }
     }
 
@@ -1286,7 +1376,8 @@ class GeckoEngineSessionTest {
         val runtime = mock<GeckoRuntime>()
         whenever(runtime.settings).thenReturn(mock())
 
-        val defaultSettings = DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.all())
+        val defaultSettings =
+            DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.strict())
 
         GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
                 privateMode = false, defaultSettings = defaultSettings)
@@ -1565,8 +1656,7 @@ class GeckoEngineSessionTest {
                 mockLoadRequest("sample:about", GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
 
         assertNotNull(result)
-        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
-        verify(geckoSession).loadUri("sample:about")
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
     }
 
     @Test
@@ -1798,7 +1888,7 @@ class GeckoEngineSessionTest {
     @Test
     fun `onKill will recover, restore state and notify observers`() {
         val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+            geckoSessionProvider = geckoSessionProvider)
 
         captureDelegates()
 
@@ -1819,6 +1909,26 @@ class GeckoEngineSessionTest {
 
         verify(geckoSession).restoreState(mockedState)
         assertTrue(observerNotified)
+    }
+
+    @Test
+    fun `onNewSession creates window request`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var receivedWindowRequest: WindowRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onOpenWindowRequest(windowRequest: WindowRequest) {
+                receivedWindowRequest = windowRequest
+            }
+        })
+
+        navigationDelegate.value.onNewSession(mock(), "mozilla.org")
+
+        assertNotNull(receivedWindowRequest)
+        assertEquals("mozilla.org", receivedWindowRequest!!.url)
     }
 
     private fun mockGeckoSession(): GeckoSession {

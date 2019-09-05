@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# IMPORTANT NOTE: this file is here only as a safety measure, to make
+# sure the correct code is generated even though the GeckoView AAR file
+# reports an empty metrics.yaml file. The metric in this file is currently
+# disabled and not supposed to collect any data.
+
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+test.glean.geckoview:
+  streaming:
+    type: timing_distribution
+    gecko_datapoint: TELEMETRY_TEST_STREAMING
+    disabled: true
+    description: |
+      A test-only, disabled metric. This is required to guarantee
+      that a `GleanGeckoHistogramMapping` is always generated, even
+      though the GeckoView AAR exports no metric. Please note that
+      the data-review field below contains no review, since this
+      metric is disabled and not allowed to collect any data.
+    bugs:
+      - 1566374
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1566374
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never

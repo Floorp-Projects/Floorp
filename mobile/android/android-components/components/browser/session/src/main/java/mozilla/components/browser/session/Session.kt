@@ -10,17 +10,22 @@ import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
-import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
+import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
+import mozilla.components.browser.state.action.ContentAction.UpdateDownloadAction
+import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
-import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
+import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -85,6 +90,7 @@ class Session(
         fun onDownload(session: Session, download: Download): Boolean = false
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
+        fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
         fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
@@ -272,6 +278,16 @@ class Session(
      * Last download request if it wasn't consumed by at least one observer.
      */
     var download: Consumable<Download> by Delegates.vetoable(Consumable.empty()) { _, _, download ->
+        store?.let {
+            val actualDownload = download.peek()
+            if (actualDownload == null) {
+                it.syncDispatch(ConsumeDownloadAction(id))
+            } else {
+                it.syncDispatch(UpdateDownloadAction(id, actualDownload.toDownloadState()))
+                download.onConsume { it.syncDispatch(ConsumeDownloadAction(id)) }
+            }
+        }
+
         val consumers = wrapConsumers<Download> { onDownload(this@Session, it) }
         !download.consumeBy(consumers)
     }
@@ -300,6 +316,8 @@ class Session(
      */
     var trackerBlockingEnabled: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onTrackerBlockingEnabledChanged(this@Session, new) }
+
+        store?.syncDispatch(TrackingProtectionAction.ToggleAction(id, new))
     }
 
     /**
@@ -310,6 +328,37 @@ class Session(
             if (new.isNotEmpty()) {
                 onTrackerBlocked(this@Session, new.last(), new)
             }
+        }
+
+        if (new.isEmpty()) {
+            // From `EngineObserver` we can assume that this means the trackers have been cleared.
+            // The `ClearTrackers` action will also clear the loaded trackers list. That is always
+            // the case when this list is cleared from `EngineObserver`. For the sake of migrating
+            // to browser-state we assume that no other code changes the tracking properties.
+            store?.syncDispatch(TrackingProtectionAction.ClearTrackers(id))
+        } else {
+            // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
+            // an action for the last item in the list.
+            store?.syncDispatch(TrackingProtectionAction.TrackerBlockedAction(id, new.last()))
+        }
+    }
+
+    /**
+     * List of [Tracker]s that could be blocked but have been loaded in this session.
+     */
+    var trackersLoaded: List<Tracker> by Delegates.observable(emptyList()) { _, old, new ->
+        notifyObservers(old, new) {
+            if (new.isNotEmpty()) {
+                onTrackerLoaded(this@Session, new.last(), new)
+            }
+        }
+
+        if (new.isNotEmpty()) {
+            // The empty case is already handled by the `trackersBlocked` property since both
+            // properties are always cleared together by `EngineObserver`.
+            // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
+            // an action for the last item in the list.
+            store?.syncDispatch(TrackingProtectionAction.TrackerLoadedAction(id, new.last()))
         }
     }
 
@@ -328,6 +377,16 @@ class Session(
      * The target of the latest long click operation.
      */
     var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
+        store?.let {
+            val hitResult = result.peek()
+            if (hitResult == null) {
+                it.syncDispatch(ConsumeHitResultAction(id))
+            } else {
+                it.syncDispatch(UpdateHitResultAction(id, hitResult))
+                result.onConsume { it.syncDispatch(ConsumeHitResultAction(id)) }
+            }
+        }
+
         val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
         !result.consumeBy(consumers)
     }

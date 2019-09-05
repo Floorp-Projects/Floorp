@@ -29,13 +29,15 @@ import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
-import mozilla.components.feature.intent.TabIntentProcessor
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.pwa.ManifestStorage
-import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.pwa.WebAppUseCases
+import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
+import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
@@ -72,6 +74,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
     val store by lazy { BrowserStore() }
+
+    val customTabsStore by lazy { CustomTabsServiceStore() }
 
     val sessionManager by lazy {
         SessionManager(engine, store).apply {
@@ -118,11 +122,19 @@ open class DefaultComponents(private val applicationContext: Context) {
     val tabIntentProcessor by lazy {
         TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
     }
-    val customTabIntentProcessor by lazy {
-        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
-    }
-    val webAppIntentProcessor by lazy {
-        WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(applicationContext))
+    val externalAppIntentProcessors by lazy {
+        listOf(
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(applicationContext)),
+            TrustedWebActivityIntentProcessor(
+                sessionManager,
+                sessionUseCases.loadUrl,
+                client,
+                applicationContext.packageManager,
+                null,
+                customTabsStore
+            ),
+            CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, applicationContext.resources)
+        )
     }
 
     // Menu
@@ -133,7 +145,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuToolbar,
                 BrowserMenuHighlightableItem("Highlight", R.drawable.mozac_ic_share, android.R.color.black, highlight =
                 BrowserMenuHighlightableItem.Highlight(
-                    R.drawable.mozac_ic_stop, R.drawable.background_with_ripple, android.R.color.holo_green_dark
+                    R.drawable.mozac_ic_search, R.drawable.mozac_ic_stop,
+                    R.drawable.background_with_ripple,
+                    android.R.color.holo_green_dark
                 )) {
                     Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
                 },

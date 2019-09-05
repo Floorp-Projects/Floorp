@@ -11,6 +11,12 @@ import java.util.TreeMap
  * Returns the value mapped by {@code key} if it exists, and
  * if the value returned is not null. If it's null, it returns null
  */
+fun JSONObject.tryGet(key: String): Any? = if (isNull(key)) null else get(key)
+
+/**
+ * Returns the value mapped by {@code key} if it exists, and
+ * if the value returned is not null. If it's null, it returns null
+ */
 fun JSONObject.tryGetString(key: String): String? = if (isNull(key)) null else getString(key)
 
 /**

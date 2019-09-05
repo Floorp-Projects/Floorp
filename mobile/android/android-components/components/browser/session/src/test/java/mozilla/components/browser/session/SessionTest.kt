@@ -13,8 +13,8 @@ import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.toSecurityInfoState
-import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
@@ -450,6 +450,25 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when hit result changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.hitResult = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumeHitResultAction(session.id))
+
+        val hitResult = HitResult.UNKNOWN("test")
+        session.hitResult = Consumable.from(hitResult)
+        verify(store).dispatch(ContentAction.UpdateHitResultAction(session.id, hitResult))
+
+        session.hitResult.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumeHitResultAction(session.id))
+    }
+
+    @Test
     fun `All observers will not be notified about a download`() {
         var firstCallbackExecuted = false
         var secondCallbackExecuted = false
@@ -530,6 +549,28 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when download changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.download = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumeDownloadAction(session.id))
+
+        val download: Download = mock()
+        `when`(download.id).thenReturn("1")
+        `when`(download.url).thenReturn("https://www.mozilla.org")
+        `when`(download.destinationDirectory).thenReturn("test")
+        session.download = Consumable.from(download)
+        verify(store).dispatch(ContentAction.UpdateDownloadAction(session.id, download.toDownloadState()))
+
+        session.download.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumeDownloadAction(session.id))
+    }
+
+    @Test
     fun `observer is notified when title changes`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -594,6 +635,40 @@ class SessionTest {
         assertEquals(listOf(tracker1, tracker2), session.trackersBlocked)
 
         session.trackersBlocked = emptyList()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when a tracker is loaded`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        val tracker1 = Tracker("trackerUrl1")
+        val tracker2 = Tracker("trackerUrl2")
+
+        session.trackersLoaded += tracker1
+
+        verify(observer).onTrackerLoaded(
+            eq(session),
+            eq(tracker1),
+            eq(listOf(tracker1))
+        )
+
+        assertEquals(listOf(tracker1), session.trackersLoaded)
+
+        session.trackersLoaded += tracker2
+
+        verify(observer).onTrackerLoaded(
+            eq(session),
+            eq(tracker2),
+            eq(listOf(tracker1, tracker2))
+        )
+
+        assertEquals(listOf(tracker1, tracker2), session.trackersLoaded)
+
+        session.trackersLoaded = emptyList()
         verifyNoMoreInteractions(observer)
     }
 
@@ -910,6 +985,33 @@ class SessionTest {
                     session.trackersBlocked = emptyList()
                     session.trackersBlocked += Tracker("test")
                     session.trackersBlocked = emptyList()
+                }
+                def.await()
+                def2.await()
+            }
+        }
+    }
+
+    @Test
+    fun `handle empty loaded trackers list race conditions`() {
+        val observer = mock(Session.Observer::class.java)
+        val observer2 = mock(Session.Observer::class.java)
+
+        val session = Session("about:blank")
+        session.register(observer)
+        session.register(observer2)
+
+        runBlocking {
+            (1..3).map {
+                val def = GlobalScope.async(IO) {
+                    session.trackersLoaded = emptyList()
+                    session.trackersLoaded += Tracker("test")
+                    session.trackersLoaded = emptyList()
+                }
+                val def2 = GlobalScope.async(IO) {
+                    session.trackersLoaded = emptyList()
+                    session.trackersLoaded += Tracker("test")
+                    session.trackersLoaded = emptyList()
                 }
                 def.await()
                 def2.await()

@@ -6,7 +6,7 @@
     <dimen name="mozac_browser_menu_corner_radius">4dp</dimen>
     <dimen name="mozac_browser_menu_elevation">8dp</dimen>
     <dimen name="mozac_browser_menu_width">250dp</dimen>
-    <dimen name="mozac_browser_menu_padding_vertical">8dp</dimen>
+    <dimen name="mozac_browser_menu_padding_vertical">0dp</dimen>
 
     <!--Menu Item -->
     <dimen name="mozac_browser_menu_item_text_size">16sp</dimen>
@@ -32,4 +32,6 @@
 
     <!--BrowserMenuImageText-->
 
+    <!-- BrowserMenuItemToolbar -->
+    <dimen name="mozac_browser_menu_item_toolbar_height">56dp</dimen>
 </resources>

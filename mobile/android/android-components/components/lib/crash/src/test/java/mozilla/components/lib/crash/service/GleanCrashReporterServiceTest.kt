@@ -45,7 +45,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash("", true, "", false)
+            val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
             service.report(crash)
 
             verify(service).report(crash)
@@ -84,7 +84,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"))
+            val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
             service.report(crash)
             verify(service).report(crash)
 
@@ -124,8 +124,8 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("Test"))
-            val nativeCodeCrash = Crash.NativeCodeCrash("", true, "", false)
+            val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
+            val nativeCodeCrash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
 
             // Record some crashes
             service.report(uncaughtExceptionCrash)
@@ -172,7 +172,7 @@ class GleanCrashReporterServiceTest {
 
         assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
         service.report(crash)
         verify(service).report(crash)
 
@@ -197,7 +197,7 @@ class GleanCrashReporterServiceTest {
 
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
-            val crash = Crash.NativeCodeCrash("", true, "", false)
+            val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
             service.report(crash)
 
             verify(service).report(crash)

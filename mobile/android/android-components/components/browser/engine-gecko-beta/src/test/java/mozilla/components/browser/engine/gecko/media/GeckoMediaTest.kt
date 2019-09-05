@@ -28,36 +28,47 @@ class GeckoMediaTest {
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_PLAYING)
         assertEquals(Media.PlaybackState.PLAYING, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_SEEKING)
         assertEquals(Media.PlaybackState.SEEKING, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_WAITING)
         assertEquals(Media.PlaybackState.WAITING, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_PAUSE)
         assertEquals(Media.PlaybackState.PAUSE, media.playbackState)
+        assertEquals(Media.State.PAUSED, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_PLAY)
         assertEquals(Media.PlaybackState.PLAY, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_SEEKED)
         assertEquals(Media.PlaybackState.SEEKED, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_STALLED)
         assertEquals(Media.PlaybackState.STALLED, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_SUSPEND)
         assertEquals(Media.PlaybackState.SUSPENDED, media.playbackState)
+        assertEquals(Media.State.PLAYING, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_ABORT)
         assertEquals(Media.PlaybackState.ABORT, media.playbackState)
+        assertEquals(Media.State.STOPPED, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_EMPTIED)
         assertEquals(Media.PlaybackState.EMPTIED, media.playbackState)
+        assertEquals(Media.State.STOPPED, media.state)
 
         delegate.onPlaybackStateChange(mediaElement, MediaElement.MEDIA_STATE_ENDED)
         assertEquals(Media.PlaybackState.ENDED, media.playbackState)
+        assertEquals(Media.State.STOPPED, media.state)
     }
 
     @Test

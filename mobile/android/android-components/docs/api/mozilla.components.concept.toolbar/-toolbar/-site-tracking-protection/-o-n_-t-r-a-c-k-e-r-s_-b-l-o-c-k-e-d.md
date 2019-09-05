@@ -2,7 +2,7 @@
 
 # ON_TRACKERS_BLOCKED
 
-`ON_TRACKERS_BLOCKED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L376)
+`ON_TRACKERS_BLOCKED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L381)
 
 The site has tracking protection enabled, and trackers have been blocked or detected.
 

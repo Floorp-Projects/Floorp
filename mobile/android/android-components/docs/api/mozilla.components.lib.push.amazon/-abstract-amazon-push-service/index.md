@@ -18,6 +18,7 @@ An Amazon Cloud Messaging implementation of the [PushService](../../mozilla.comp
 | Name | Summary |
 |---|---|
 | [deleteToken](delete-token.md) | `open fun deleteToken(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Tells the push service to delete the registration token. |
+| [isServiceAvailable](is-service-available.md) | `open fun isServiceAvailable(context: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>If the push service is support on the device. |
 | [onMessage](on-message.md) | `open fun onMessage(intent: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onRegistered](on-registered.md) | `open fun onRegistered(registrationId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onRegistrationError](on-registration-error.md) | `open fun onRegistrationError(errorId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

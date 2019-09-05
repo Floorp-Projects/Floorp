@@ -1,4 +1,4 @@
-componentsVersion: 8.0.0
+componentsVersion: 12.0.0
 projects:
   concept-awesomebar:
     path: components/concept/awesomebar
@@ -144,10 +144,6 @@ projects:
     path: components/browser/engine-system
     description: 'Engine implementation based on the system WebView.'
     publish: true
-  browser-engine-servo:
-    path: components/browser/engine-servo
-    description: 'Engine implementation based on the Servo Browser Engine.'
-    publish: true
   browser-errorpages:
     path: components/browser/errorpages
     description: 'Responsive browser error pages for Android apps.'
@@ -255,6 +251,10 @@ projects:
   support-android-test:
     path: components/support/android-test
     description: 'A collection of helpers for testing components from instrumented (on device) tests.'
+    publish: true
+  support-test-appservices:
+    path: components/support/test-appservices
+    description: 'A component for synchronizing Application Services'' unit testing dependencies used in Android Components.'
     publish: true
   support-utils:
     path: components/support/utils

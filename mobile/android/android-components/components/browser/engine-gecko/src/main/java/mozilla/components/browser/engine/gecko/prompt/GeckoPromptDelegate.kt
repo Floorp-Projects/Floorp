@@ -132,6 +132,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
 
+        val captureMode = PromptRequest.File.FacingMode.NONE
+
         val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
             callback.confirm(context, uri.toFileUri(context))
         }
@@ -145,6 +147,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 PromptRequest.File(
                     mimeTypes ?: emptyArray(),
                     isMultipleFilesSelection,
+                    captureMode,
                     onSelectSingle,
                     onSelectMultiple,
                     onDismiss
@@ -377,8 +380,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         geckoCallback: TextCallback
     ) {
         val initialDate = initialDateString.toDate(format)
-        val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate(format)
-        val maxDate = if (maxDateString.isNullOrEmpty()) null else maxDateString.toDate(format)
+        val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate()
+        val maxDate = if (maxDateString.isNullOrEmpty()) null else maxDateString.toDate()
         val onSelect: (Date) -> Unit = {
             val stringDate = it.toString(format)
             geckoCallback.confirm(stringDate)
@@ -386,6 +389,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val selectionType = when (format) {
             "HH:mm" -> TimeSelection.Type.TIME
+            "yyyy-MM" -> TimeSelection.Type.MONTH
             "yyyy-MM-dd'T'HH:mm" -> TimeSelection.Type.DATE_AND_TIME
             else -> TimeSelection.Type.DATE
         }

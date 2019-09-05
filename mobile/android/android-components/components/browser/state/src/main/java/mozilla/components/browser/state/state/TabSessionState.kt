@@ -11,6 +11,7 @@ import java.util.UUID
  *
  * @property id the ID of this tab and session.
  * @property content the [ContentState] of this tab.
+ * @property trackingProtection the [TrackingProtectionState] of this tab.
  * @property parentId the parent ID of this tab or null if this tab has no
  * parent. The parent tab is usually the tab that initiated opening this
  * tab (e.g. the user clicked a link with target="_blank" or selected
@@ -19,10 +20,11 @@ import java.util.UUID
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
+    override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
     val parentId: String? = null
 ) : SessionState
 
-internal fun createTab(
+fun createTab(
     url: String,
     private: Boolean = false,
     id: String = UUID.randomUUID().toString(),
@@ -32,12 +34,5 @@ internal fun createTab(
         id = id,
         content = ContentState(url, private),
         parentId = parent?.id
-    )
-}
-
-internal fun createCustomTab(url: String, id: String = UUID.randomUUID().toString()): CustomTabSessionState {
-    return CustomTabSessionState(
-        id = id,
-        content = ContentState(url)
     )
 }

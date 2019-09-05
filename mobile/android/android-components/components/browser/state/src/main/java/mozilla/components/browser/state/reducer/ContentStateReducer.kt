@@ -45,6 +45,18 @@ internal object ContentStateReducer {
             is ContentAction.UpdateThumbnailAction -> updateContentState(state, action.sessionId) {
                 it.copy(thumbnail = action.thumbnail)
             }
+            is ContentAction.UpdateDownloadAction -> updateContentState(state, action.sessionId) {
+                it.copy(download = action.download)
+            }
+            is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
+                it.copy(download = null)
+            }
+            is ContentAction.UpdateHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = action.hitResult)
+            }
+            is ContentAction.ConsumeHitResultAction -> updateContentState(state, action.sessionId) {
+                it.copy(hitResult = null)
+            }
         }
     }
 }

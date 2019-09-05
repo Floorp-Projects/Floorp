@@ -4,8 +4,16 @@
 
 package mozilla.components.lib.jexl.parser
 
+import mozilla.components.lib.jexl.ast.ArrayLiteral
 import mozilla.components.lib.jexl.ast.AstNode
-import mozilla.components.lib.jexl.ast.AstType
+import mozilla.components.lib.jexl.ast.BinaryExpression
+import mozilla.components.lib.jexl.ast.ConditionalExpression
+import mozilla.components.lib.jexl.ast.FilterExpression
+import mozilla.components.lib.jexl.ast.Identifier
+import mozilla.components.lib.jexl.ast.Literal
+import mozilla.components.lib.jexl.ast.ObjectLiteral
+import mozilla.components.lib.jexl.ast.Transformation
+import mozilla.components.lib.jexl.ast.UnaryExpression
 import mozilla.components.lib.jexl.grammar.Grammar
 import mozilla.components.lib.jexl.lexer.Lexer
 import org.junit.Assert.assertEquals
@@ -13,12 +21,13 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ParserTest {
+
     @Test
     fun `Should parse literal`() {
         val expression = "42"
 
         assertExpressionYieldsTree(expression,
-            AstNode(AstType.LITERAL, 42)
+            Literal(42)
         )
     }
 
@@ -27,17 +36,10 @@ class ParserTest {
         val expression = "42 + 23"
 
         assertExpressionYieldsTree(expression,
-            AstNode(
-                AstType.BINARY_EXPRESSION,
-                operator = "+",
-                left = AstNode(
-                    AstType.LITERAL,
-                    42
-                ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    23
-                )
+            BinaryExpression(
+                left = Literal(42),
+                right = Literal(23),
+                operator = "+"
             )
         )
     }
@@ -53,17 +55,10 @@ class ParserTest {
         val expression = "age > 21"
 
         assertExpressionYieldsTree(expression,
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = ">",
-                left = AstNode(
-                    AstType.IDENTIFIER,
-                    "age"
-                ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    21
-                )
+                left = Identifier("age"),
+                right = Literal(21)
             )
         )
     }
@@ -73,25 +68,14 @@ class ParserTest {
         val expression = "(age + 5) > 42"
 
         assertExpressionYieldsTree(expression,
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = ">",
-                left = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = BinaryExpression(
                     operator = "+",
-                    left = AstNode(
-                        AstType.IDENTIFIER,
-                        "age"
-                    ),
-                    right = AstNode(
-                        AstType.LITERAL,
-                        5
-                    )
+                    left = Identifier("age"),
+                    right = Literal(5)
                 ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    42
-                )
+                right = Literal(42)
             )
         )
     }
@@ -99,48 +83,26 @@ class ParserTest {
     @Test
     fun `Should parse expression following operator precedence`() {
         assertExpressionYieldsTree("5 + 7 * 2",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "+",
-                left = AstNode(
-                    AstType.LITERAL,
-                    5
-                ),
-                right = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = Literal(5),
+                right = BinaryExpression(
                     operator = "*",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        7
-                    ),
-                    right = AstNode(
-                        AstType.LITERAL,
-                        2
-                    )
+                    left = Literal(7),
+                    right = Literal(2)
                 )
             )
         )
 
         assertExpressionYieldsTree("5 * 7 + 2",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "+",
-                left = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = BinaryExpression(
                     operator = "*",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        5
-                    ),
-                    right = AstNode(
-                        AstType.LITERAL,
-                        7
-                    )
+                    left = Literal(5),
+                    right = Literal(7)
                 ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    2
-                )
+                right = Literal(2)
             )
         )
     }
@@ -148,48 +110,25 @@ class ParserTest {
     @Test
     fun `Should handle encapsulation of subtree`() {
         assertExpressionYieldsTree("2+3*4==5/6-7",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "==",
-                left = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = BinaryExpression(
                     operator = "+",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        2
-                    ),
-                    right = AstNode(
-                        AstType.BINARY_EXPRESSION,
+                    left = Literal(2),
+                    right = BinaryExpression(
                         operator = "*",
-                        left = AstNode(
-                            AstType.LITERAL,
-                            3
-                        ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            4
-                        )
+                        left = Literal(3),
+                        right = Literal(4)
                     )
                 ),
-                right = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                right = BinaryExpression(
                     operator = "-",
-                    left = AstNode(
-                        AstType.BINARY_EXPRESSION,
+                    left = BinaryExpression(
                         operator = "/",
-                        left = AstNode(
-                            AstType.LITERAL,
-                            5
-                        ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            6
-                        )
+                        left = Literal(5),
+                        right = Literal(6)
                     ),
-                    right = AstNode(
-                        AstType.LITERAL,
-                        7
-                    )
+                    right = Literal(7)
                 )
             )
         )
@@ -198,33 +137,20 @@ class ParserTest {
     @Test
     fun `Should handle a unary operator`() {
         assertExpressionYieldsTree("1*!!true-2",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "-",
-                left = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = BinaryExpression(
                     operator = "*",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        1
-                    ),
-                    right = AstNode(
-                        AstType.UNARY_EXPRESSION,
+                    left = Literal(1),
+                    right = UnaryExpression(
                         operator = "!",
-                        right = AstNode(
-                            AstType.UNARY_EXPRESSION,
+                        right = UnaryExpression(
                             operator = "!",
-                            right = AstNode(
-                                AstType.LITERAL,
-                                true
-                            )
+                            right = Literal(true)
                         )
                     )
                 ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    2
-                )
+                right = Literal(2)
             )
         )
     }
@@ -232,33 +158,18 @@ class ParserTest {
     @Test
     fun `Should handle nested subexpressions`() {
         assertExpressionYieldsTree("(4*(2+3))/5",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "/",
-                left = AstNode(
-                    AstType.BINARY_EXPRESSION,
+                left = BinaryExpression(
                     operator = "*",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        4
-                    ),
-                    right = AstNode(
-                        AstType.BINARY_EXPRESSION,
+                    left = Literal(4),
+                    right = BinaryExpression(
                         operator = "+",
-                        left = AstNode(
-                            AstType.LITERAL,
-                            2
-                        ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            3
-                        )
+                        left = Literal(2),
+                        right = Literal(3)
                     )
                 ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    5
-                )
+                right = Literal(5)
             )
         )
     }
@@ -266,17 +177,10 @@ class ParserTest {
     @Test
     fun `Should handle whitespace in an expression`() {
         assertExpressionYieldsTree("\t2\r\n+\n\r3\n\n",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "+",
-                left = AstNode(
-                    AstType.LITERAL,
-                    2
-                ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    3
-                )
+                left = Literal(2),
+                right = Literal(3)
             )
         )
     }
@@ -284,25 +188,12 @@ class ParserTest {
     @Test
     fun `Should handle object literals`() {
         assertExpressionYieldsTree("{foo: \"bar\", tek: 1+2}",
-            AstNode(
-                AstType.OBJECT_LITERAL,
-                value = mapOf(
-                    "foo" to AstNode(
-                        AstType.LITERAL,
-                        "bar"
-                    ),
-                    "tek" to AstNode(
-                        AstType.BINARY_EXPRESSION,
-                        operator = "+",
-                        left = AstNode(
-                            AstType.LITERAL,
-                            1
-                        ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            2
-                        )
-                    )
+            ObjectLiteral(
+                "foo" to Literal("bar"),
+                "tek" to BinaryExpression(
+                    operator = "+",
+                    left = Literal(1),
+                    right = Literal(2)
                 )
             )
         )
@@ -310,19 +201,17 @@ class ParserTest {
 
     @Test
     fun `Should handle nested object literals`() {
-        assertExpressionYieldsTree("{foo: {bar: \"tek\"}}",
-            AstNode(
-                AstType.OBJECT_LITERAL,
-                value = mapOf(
-                    "foo" to AstNode(
-                        AstType.OBJECT_LITERAL,
-                        value = mapOf(
-                            "bar" to AstNode(
-                                AstType.LITERAL,
-                                "tek"
-                            )
-                        )
-                    )
+        assertExpressionYieldsTree(
+            """{
+              foo: {
+                bar: "tek",
+                baz: 42
+              }
+            }""",
+            ObjectLiteral(
+                "foo" to ObjectLiteral(
+                    "bar" to Literal("tek"),
+                    "baz" to Literal(42)
                 )
             )
         )
@@ -331,34 +220,19 @@ class ParserTest {
     @Test
     fun `Should handle empty object literals`() {
         assertExpressionYieldsTree("{}",
-            AstNode(
-                AstType.OBJECT_LITERAL,
-                value = emptyMap<String, AstNode>()
-            )
+            ObjectLiteral()
         )
     }
 
     @Test
     fun `Should handle array literals`() {
         assertExpressionYieldsTree("[\"foo\", 1+2]",
-            AstNode(
-                AstType.ARRAY_LITERAL, listOf(
-                    AstNode(
-                        AstType.LITERAL,
-                        "foo"
-                    ),
-                    AstNode(
-                        AstType.BINARY_EXPRESSION,
-                        operator = "+",
-                        left = AstNode(
-                            AstType.LITERAL,
-                            1
-                        ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            2
-                        )
-                    )
+            ArrayLiteral(
+                Literal("foo"),
+                BinaryExpression(
+                    operator = "+",
+                    left = Literal(1),
+                    right = Literal(2)
                 )
             )
         )
@@ -367,24 +241,11 @@ class ParserTest {
     @Test
     fun `Should handle nested array literals`() {
         assertExpressionYieldsTree("[\"foo\", [\"bar\", \"tek\"]]",
-            AstNode(
-                AstType.ARRAY_LITERAL, listOf(
-                    AstNode(
-                        AstType.LITERAL,
-                        "foo"
-                    ),
-                    AstNode(
-                        AstType.ARRAY_LITERAL, listOf(
-                            AstNode(
-                                AstType.LITERAL,
-                                "bar"
-                            ),
-                            AstNode(
-                                AstType.LITERAL,
-                                "tek"
-                            )
-                        )
-                    )
+            ArrayLiteral(
+                Literal("foo"),
+                ArrayLiteral(
+                    Literal("bar"),
+                    Literal("tek")
                 )
             )
         )
@@ -393,33 +254,21 @@ class ParserTest {
     @Test
     fun `Should handle empty array literals`() {
         assertExpressionYieldsTree("[]",
-            AstNode(
-                AstType.ARRAY_LITERAL,
-                emptyList<AstNode>()
-            )
+            ArrayLiteral()
         )
     }
 
     @Test
     fun `Should chain traversed identifiers`() {
         assertExpressionYieldsTree("foo.bar.baz + 1",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "+",
-                left = AstNode(
-                    AstType.IDENTIFIER, "baz",
-                    from = AstNode(
-                        AstType.IDENTIFIER, "bar",
-                        from = AstNode(
-                            AstType.IDENTIFIER,
-                            "foo"
-                        )
+                left = Identifier("baz",
+                    from = Identifier("bar",
+                        from = Identifier("foo")
                     )
                 ),
-                right = AstNode(
-                    AstType.LITERAL,
-                    1
-                )
+                right = Literal(1)
             )
         )
     }
@@ -427,33 +276,20 @@ class ParserTest {
     @Test
     fun `Should apply transforms and arguments`() {
         assertExpressionYieldsTree("foo|tr1|tr2.baz|tr3({bar:\"tek\"})",
-            AstNode(
-                AstType.TRANSFORM,
+            Transformation(
                 name = "tr3",
                 arguments = mutableListOf(
-                    AstNode(
-                        AstType.OBJECT_LITERAL,
-                        value = mapOf(
-                            "bar" to AstNode(
-                                AstType.LITERAL,
-                                "tek"
-                            )
-                        )
+                    ObjectLiteral(
+                        "bar" to Literal("tek")
                     )
                 ),
-                subject = AstNode(
-                    AstType.IDENTIFIER,
+                subject = Identifier(
                     value = "baz",
-                    from = AstNode(
-                        AstType.TRANSFORM,
+                    from = Transformation(
                         name = "tr2",
-                        subject = AstNode(
-                            AstType.TRANSFORM,
+                        subject = Transformation(
                             name = "tr1",
-                            subject = AstNode(
-                                AstType.IDENTIFIER,
-                                "foo"
-                            )
+                            subject = Identifier("foo")
                         )
                     )
                 )
@@ -464,20 +300,13 @@ class ParserTest {
     @Test
     fun `Should handle multiple arguments in transforms`() {
         assertExpressionYieldsTree("foo|bar(\"tek\", 5, true)",
-            AstNode(
-                AstType.TRANSFORM,
+            Transformation(
                 name = "bar",
-                subject = AstNode(
-                    AstType.IDENTIFIER,
-                    "foo"
-                ),
+                subject = Identifier("foo"),
                 arguments = mutableListOf(
-                    AstNode(
-                        AstType.LITERAL,
-                        "tek"
-                    ),
-                    AstNode(AstType.LITERAL, 5),
-                    AstNode(AstType.LITERAL, true)
+                    Literal("tek"),
+                    Literal(5),
+                    Literal(true)
                 )
             )
         )
@@ -485,44 +314,26 @@ class ParserTest {
 
     @Test
     fun `Should apply filters to identifiers`() {
-        assertExpressionYieldsTree("foo[1][.bar[0]==\"tek\"].baz",
-            AstNode(
-                AstType.IDENTIFIER, "baz",
-                from = AstNode(
-                    AstType.FILTER_EXPRESSION,
+        assertExpressionYieldsTree("""foo[1][.bar[0] == "tek"].baz""",
+            Identifier("baz",
+                from = FilterExpression(
                     relative = true,
-                    expression = AstNode(
-                        AstType.BINARY_EXPRESSION,
+                    expression = BinaryExpression(
                         operator = "==",
-                        left = AstNode(
-                            AstType.FILTER_EXPRESSION,
+                        left = FilterExpression(
                             relative = false,
-                            expression = AstNode(
-                                AstType.LITERAL,
-                                0
-                            ),
-                            subject = AstNode(
-                                AstType.IDENTIFIER,
+                            expression = Literal(0),
+                            subject = Identifier(
                                 value = "bar",
                                 relative = true
                             )
                         ),
-                        right = AstNode(
-                            AstType.LITERAL,
-                            "tek"
-                        )
+                        right = Literal("tek")
                     ),
-                    subject = AstNode(
-                        AstType.FILTER_EXPRESSION,
+                    subject = FilterExpression(
                         relative = false,
-                        expression = AstNode(
-                            AstType.LITERAL,
-                            1
-                        ),
-                        subject = AstNode(
-                            AstType.IDENTIFIER,
-                            "foo"
-                        )
+                        expression = Literal(1),
+                        subject = Identifier("foo")
                     )
                 )
             )
@@ -532,25 +343,12 @@ class ParserTest {
     @Test
     fun `Should allow dot notation for all operands`() {
         assertExpressionYieldsTree("\"foo\".length + {foo: \"bar\"}.foo",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "+",
-                left = AstNode(
-                    AstType.IDENTIFIER, "length",
-                    from = AstNode(
-                        AstType.LITERAL,
-                        "foo"
-                    )
-                ),
-                right = AstNode(
-                    AstType.IDENTIFIER, "foo",
-                    from = AstNode(
-                        AstType.OBJECT_LITERAL, mutableMapOf(
-                            "foo" to AstNode(
-                                AstType.LITERAL,
-                                "bar"
-                            )
-                        )
+                left = Identifier("length", from = Literal("foo")),
+                right = Identifier("foo",
+                    from = ObjectLiteral(
+                        "foo" to Literal("bar")
                     )
                 )
             )
@@ -560,19 +358,11 @@ class ParserTest {
     @Test
     fun `Should allow dot notation on subexpressions`() {
         assertExpressionYieldsTree("(\"foo\" + \"bar\").length",
-            AstNode(
-                AstType.IDENTIFIER, "length",
-                from = AstNode(
-                    AstType.BINARY_EXPRESSION,
+            Identifier("length",
+                from = BinaryExpression(
                     operator = "+",
-                    left = AstNode(
-                        AstType.LITERAL,
-                        "foo"
-                    ),
-                    right = AstNode(
-                        AstType.LITERAL,
-                        "bar"
-                    )
+                    left = Literal("foo"),
+                    right = Literal("bar")
                 )
             )
         )
@@ -581,20 +371,10 @@ class ParserTest {
     @Test
     fun `Should allow dot notation on arrays`() {
         assertExpressionYieldsTree("[\"foo\", \"bar\"].length",
-            AstNode(
-                AstType.IDENTIFIER, "length",
-                from = AstNode(
-                    AstType.ARRAY_LITERAL,
-                    value = listOf(
-                        AstNode(
-                            AstType.LITERAL,
-                            "foo"
-                        ),
-                        AstNode(
-                            AstType.LITERAL,
-                            "bar"
-                        )
-                    )
+            Identifier("length",
+                from = ArrayLiteral(
+                    Literal("foo"),
+                    Literal("bar")
                 )
             )
         )
@@ -603,20 +383,10 @@ class ParserTest {
     @Test
     fun `Should handle a ternary expression`() {
         assertExpressionYieldsTree("foo ? 1 : 0",
-            AstNode(
-                AstType.CONDITIONAL_EXPRESSION,
-                test = AstNode(
-                    AstType.IDENTIFIER,
-                    "foo"
-                ),
-                consequent = AstNode(
-                    AstType.LITERAL,
-                    1
-                ),
-                alternate = AstNode(
-                    AstType.LITERAL,
-                    0
-                )
+            ConditionalExpression(
+                test = Identifier("foo"),
+                consequent = Literal(1),
+                alternate = Literal(0)
             )
         )
     }
@@ -624,31 +394,14 @@ class ParserTest {
     @Test
     fun `Should handle nested and grouped ternary expressions`() {
         assertExpressionYieldsTree("foo ? (bar ? 1 : 2) : 3",
-            AstNode(
-                AstType.CONDITIONAL_EXPRESSION,
-                test = AstNode(
-                    AstType.IDENTIFIER,
-                    "foo"
+            ConditionalExpression(
+                test = Identifier("foo"),
+                consequent = ConditionalExpression(
+                    test = Identifier("bar"),
+                    consequent = Literal(1),
+                    alternate = Literal(2)
                 ),
-                consequent = AstNode(
-                    AstType.CONDITIONAL_EXPRESSION,
-                    test = AstNode(
-                        AstType.LITERAL,
-                        "bar"
-                    ),
-                    consequent = AstNode(
-                        AstType.LITERAL,
-                        1
-                    ),
-                    alternate = AstNode(
-                        AstType.LITERAL,
-                        2
-                    )
-                ),
-                alternate = AstNode(
-                    AstType.LITERAL,
-                    3
-                )
+                alternate = Literal(3)
             )
         )
     }
@@ -656,30 +409,14 @@ class ParserTest {
     @Test
     fun `Should handle nested, non-grouped ternary expressions`() {
         assertExpressionYieldsTree("foo ? bar ? 1 : 2 : 3",
-            AstNode(
-                AstType.CONDITIONAL_EXPRESSION,
-                test = AstNode(
-                    AstType.IDENTIFIER,
-                    "foo"
+            ConditionalExpression(
+                test = Identifier("foo"),
+                consequent = ConditionalExpression(
+                    test = Identifier("bar"),
+                    consequent = Literal(1),
+                    alternate = Literal(2)
                 ),
-                consequent = AstNode(
-                    AstType.CONDITIONAL_EXPRESSION,
-                    test = AstNode(
-                        AstType.IDENTIFIER, "bar",
-                        consequent = AstNode(
-                            AstType.LITERAL,
-                            1
-                        ),
-                        alternate = AstNode(
-                            AstType.LITERAL,
-                            2
-                        )
-                    )
-                ),
-                alternate = AstNode(
-                    AstType.LITERAL,
-                    3
-                )
+                alternate = Literal(3)
             )
         )
     }
@@ -687,24 +424,12 @@ class ParserTest {
     @Test
     fun `Should handle ternary expression with objects`() {
         assertExpressionYieldsTree("foo ? {bar: \"tek\"} : \"baz\"",
-            AstNode(
-                AstType.CONDITIONAL_EXPRESSION,
-                test = AstNode(
-                    AstType.IDENTIFIER,
-                    "foo"
+            ConditionalExpression(
+                test = Identifier("foo"),
+                consequent = ObjectLiteral(
+                    "bar" to Literal("tek")
                 ),
-                consequent = AstNode(
-                    AstType.OBJECT_LITERAL, mutableMapOf(
-                        "bar" to AstNode(
-                            AstType.LITERAL,
-                            "tek"
-                        )
-                    ),
-                    alternate = AstNode(
-                        AstType.LITERAL,
-                        "bar"
-                    )
-                )
+                alternate = Literal("baz")
             )
         )
     }
@@ -712,22 +437,15 @@ class ParserTest {
     @Test
     fun `Should correctly balance a binary op between complex identifiers`() {
         assertExpressionYieldsTree("a.b == c.d",
-            AstNode(
-                AstType.BINARY_EXPRESSION,
+            BinaryExpression(
                 operator = "==",
-                left = AstNode(
-                    AstType.IDENTIFIER, "b",
-                    from = AstNode(
-                        AstType.IDENTIFIER,
-                        "a"
-                    )
+                left = Identifier(
+                    value = "b",
+                    from = Identifier("a")
                 ),
-                right = AstNode(
-                    AstType.IDENTIFIER, "d",
-                    from = AstNode(
-                        AstType.IDENTIFIER,
-                        "c"
-                    )
+                right = Identifier(
+                    value = "d",
+                    from = Identifier("c")
                 )
             )
         )
@@ -740,7 +458,7 @@ class ParserTest {
             assertNotNull(actual)
         }
 
-        actual?.print()
+        println(actual)
 
         assertEquals(tree, actual)
     }

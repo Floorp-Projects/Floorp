@@ -30,7 +30,7 @@ internal class MediaMap {
      */
     fun findPlayingSession(): Pair<Session, List<Media>>? {
         map.forEach { (session, media) ->
-            val playingMedia = media.filter { it.playbackState in playStates }
+            val playingMedia = media.filter { it.state == Media.State.PLAYING }
             if (playingMedia.isNotEmpty()) {
                 return Pair(session, playingMedia)
             }
@@ -43,7 +43,7 @@ internal class MediaMap {
      */
     fun getPlayingMedia(session: Session): List<Media> {
         val media = map[session] ?: emptyList()
-        return media.filter { it.playbackState in activePlayStates }
+        return media.filter { it.state == Media.State.PLAYING }
     }
 
     /**
@@ -51,7 +51,7 @@ internal class MediaMap {
      */
     fun getPausedMedia(session: Session): List<Media> {
         val media = map[session] ?: emptyList()
-        return media.filter { it.playbackState in pauseStates }
+        return media.filter { it.state == Media.State.PAUSED }
     }
 
     /**
@@ -61,18 +61,3 @@ internal class MediaMap {
         return map[session] ?: emptyList()
     }
 }
-
-private val playStates = listOf(
-    Media.PlaybackState.PLAY,
-    Media.PlaybackState.PLAYING
-)
-
-private val activePlayStates = playStates + listOf(
-    // If media was playing or started to play and is now waiting then we consider this media to be still in
-    // playing state until it switches to a different state.
-    Media.PlaybackState.WAITING
-)
-
-private val pauseStates = listOf(
-    Media.PlaybackState.PAUSE
-)

@@ -10,6 +10,7 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
@@ -25,7 +26,7 @@ internal class MenuButton(
     private val parent: View
 ) : FrameLayout(context) {
 
-    private var menu: BrowserMenu? = null
+    @VisibleForTesting internal var menu: BrowserMenu? = null
 
     private val menuIcon = AppCompatImageView(context).apply {
         setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_menu_padding))
@@ -94,6 +95,10 @@ internal class MenuButton(
         } else {
             menuIcon.setBackgroundResource(0)
         }
+    }
+
+    fun dismissMenu() {
+        menu?.dismiss()
     }
 
     fun setColorFilter(@ColorInt color: Int) {

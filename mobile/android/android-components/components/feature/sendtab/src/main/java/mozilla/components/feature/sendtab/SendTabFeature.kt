@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.PushService
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
@@ -116,10 +117,10 @@ internal class AccountObserver(
 ) : SyncAccountObserver {
     private val logger = Logger("AccountObserver")
 
-    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         // We need a new subscription only when we have a new account.
         // This is removed when an account logs out.
-        if (newAccount) {
+        if (authType != AuthType.Existing) {
             logger.debug("Subscribing for ${PushType.Services} events.")
 
             feature?.subscribeForType(PushType.Services)

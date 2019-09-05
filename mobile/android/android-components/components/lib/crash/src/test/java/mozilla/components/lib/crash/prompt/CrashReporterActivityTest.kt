@@ -53,7 +53,7 @@ class CrashReporterActivityTest {
             services = listOf(service)
         ).install(testContext)
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
         val scenario = launchActivityWith(crash)
 
         scenario.onActivity { activity ->
@@ -75,7 +75,7 @@ class CrashReporterActivityTest {
             services = listOf(service)
         ).install(testContext)
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
         val scenario = launchActivityWith(crash)
 
         scenario.onActivity { activity ->
@@ -101,7 +101,7 @@ class CrashReporterActivityTest {
             services = listOf(mock())
         ).install(testContext)
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
         val scenario = launchActivityWith(crash)
 
         scenario.onActivity { activity ->
@@ -117,7 +117,7 @@ class CrashReporterActivityTest {
             services = listOf(service)
         ).install(testContext)
 
-        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"))
+        val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
         val scenario = launchActivityWith(crash)
 
         scenario.onActivity { activity ->

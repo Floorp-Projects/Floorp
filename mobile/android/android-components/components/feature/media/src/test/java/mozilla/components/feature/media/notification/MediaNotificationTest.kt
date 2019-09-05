@@ -17,7 +17,6 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.lang.IllegalArgumentException
 
 @RunWith(AndroidJUnit4::class)
 class MediaNotificationTest {
@@ -59,14 +58,20 @@ class MediaNotificationTest {
         assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
     }
 
-    @Test(expected = IllegalArgumentException::class)
     fun `media notification for none state`() {
-        // This notification will actually never get displayed
+        // This notification is only used to call into startForeground() to fulfil the API contract.
+        // It gets immediately replaced or removed.
 
         val state = MediaState.None
 
         MediaNotification(testContext)
             .create(state, mock())
+
+        val notification = MediaNotification(testContext)
+            .create(state, mock())
+
+        assertEquals("", notification.text)
+        assertEquals("", notification.title)
     }
 
     @Test
@@ -84,6 +89,44 @@ class MediaNotificationTest {
         assertEquals("https://www.mozilla.org", notification.title)
 
         assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+    }
+
+    @Test
+    fun `media notification for playing state in private mode`() {
+        val state = MediaState.Playing(
+                Session("https://www.mozilla.org", private = true).apply {
+                    title = "Mozilla"
+                },
+                listOf(
+                    MockMedia(Media.PlaybackState.PLAYING)
+                ))
+
+        val notification = MediaNotification(testContext)
+            .create(state, mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+
+        assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+    }
+
+    @Test
+    fun `media notification for paused state in private mode`() {
+        val state = MediaState.Paused(
+                Session("https://www.mozilla.org", private = true).apply {
+                    title = "Mozilla"
+                },
+                listOf(
+                        MockMedia(Media.PlaybackState.PAUSE)
+                ))
+
+        val notification = MediaNotification(testContext)
+                .create(state, mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
     }
 }
 

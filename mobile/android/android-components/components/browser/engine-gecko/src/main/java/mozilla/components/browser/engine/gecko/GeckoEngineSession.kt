@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
@@ -20,6 +19,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
@@ -27,6 +27,8 @@ import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
+import mozilla.components.support.utils.DownloadUtils
+import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -321,8 +323,9 @@ class GeckoEngineSession(
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 notifyObservers {
-                    // As the name LoadRequest.isRedirect may imply this flag is about http redirects. The flag
+                    // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
                     // is "True if and only if the request was triggered by an HTTP redirect."
+                    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
                     onLoadRequest(
                         url = request.uri,
                         triggeredByRedirect = request.isRedirect,
@@ -450,12 +453,10 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(false)
             }
 
-            val result = GeckoResult<Boolean>()
-            launch {
+            return launchGeckoResult {
                 delegate.onVisited(url, visitType)
-                result.complete(true)
+                true
             }
-            return result
         }
 
         override fun getVisited(
@@ -468,12 +469,10 @@ class GeckoEngineSession(
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(null)
 
-            val result = GeckoResult<BooleanArray>()
-            launch {
-                val visits: List<Boolean>? = delegate.getVisited(urls.toList())
-                result.complete(visits?.toBooleanArray())
+            return launchGeckoResult {
+                val visits = delegate.getVisited(urls.toList())
+                visits.toBooleanArray()
             }
-            return result
         }
     }
 
@@ -496,10 +495,33 @@ class GeckoEngineSession(
         override fun onCrash(session: GeckoSession) {
             stateBeforeCrash = lastSessionState
 
-            geckoSession.close()
-            createGeckoSession()
+            recoverGeckoSession()
 
             notifyObservers { onCrash() }
+        }
+
+        override fun onKill(session: GeckoSession) {
+            // The content process of this session got killed (resources reclaimed by Android).
+            // Let's recover and restore the last known state.
+
+            val state = lastSessionState
+
+            recoverGeckoSession()
+
+            state?.let { geckoSession.restoreState(it) }
+
+            notifyObservers { onProcessKilled() }
+        }
+
+        private fun recoverGeckoSession() {
+            // Recover the GeckoSession after the process getting killed or crashing. We create a
+            // new underlying GeckoSession.
+            // Eventually we may be able to re-use the same GeckoSession by re-opening it. However
+            // that seems to have caused issues:
+            // https://github.com/mozilla-mobile/android-components/issues/3640
+
+            geckoSession.close()
+            createGeckoSession()
         }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
@@ -508,11 +530,13 @@ class GeckoEngineSession(
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {
+                val fileName = response.filename
+                    ?: DownloadUtils.guessFileName(null, response.uri, response.contentType)
                 onExternalResource(
                         url = response.uri,
                         contentLength = response.contentLength,
                         contentType = response.contentType,
-                        fileName = response.filename)
+                        fileName = fileName)
             }
         }
 
@@ -532,6 +556,13 @@ class GeckoEngineSession(
         }
 
         override fun onFocusRequest(session: GeckoSession) = Unit
+
+        override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
+            val parsed = WebAppManifestParser().parse(manifest)
+            if (parsed is WebAppManifestParser.Result.Success) {
+                notifyObservers { onWebAppManifestLoaded(parsed.manifest) }
+            }
+        }
     }
 
     private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {
@@ -543,29 +574,33 @@ class GeckoEngineSession(
     }
 
     private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
-        val blockedContentCategories = ArrayList<Tracker.Category>()
+        val blockedContentCategories = mutableListOf<TrackingProtectionPolicy.TrackingCategory>()
 
         if (categories.contains(ContentBlocking.AT_AD)) {
-            blockedContentCategories.add(Tracker.Category.Ad)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.AD)
         }
 
         if (categories.contains(ContentBlocking.AT_ANALYTIC)) {
-            blockedContentCategories.add(Tracker.Category.Analytic)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.ANALYTICS)
         }
 
         if (categories.contains(ContentBlocking.AT_SOCIAL)) {
-            blockedContentCategories.add(Tracker.Category.Social)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.SOCIAL)
         }
 
         if (categories.contains(ContentBlocking.AT_FINGERPRINTING)) {
-            blockedContentCategories.add(Tracker.Category.Fingerprinting)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING)
         }
 
         if (categories.contains(ContentBlocking.AT_CRYPTOMINING)) {
-            blockedContentCategories.add(Tracker.Category.Cryptomining)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING)
         }
         if (categories.contains(ContentBlocking.AT_CONTENT)) {
-            blockedContentCategories.add(Tracker.Category.Content)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CONTENT)
+        }
+
+        if (categories.contains(ContentBlocking.AT_TEST)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.TEST)
         }
         return Tracker(uri, blockedContentCategories)
     }

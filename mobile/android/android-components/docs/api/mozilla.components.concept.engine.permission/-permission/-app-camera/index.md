@@ -2,7 +2,7 @@
 
 # AppCamera
 
-`data class AppCamera : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L73)
+`data class AppCamera : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L75)
 
 ### Constructors
 

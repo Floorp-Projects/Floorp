@@ -39,12 +39,19 @@ internal class MediaNotification(
             .setContentTitle(data.title)
             .setContentText(data.description)
             .setLargeIcon(data.largeIcon)
-            .addAction(data.action)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession.sessionToken)
-                .setShowActionsInCompactView(0))
+
+        val style = androidx.media.app.NotificationCompat.MediaStyle()
+            .setMediaSession(mediaSession.sessionToken)
+
+        if (data.action != null) {
+            builder.addAction(data.action)
+
+            style.setShowActionsInCompactView(0)
+        }
+
+        builder.setStyle(style)
 
         if (!state.isForExternalApp()) {
             // We only set a content intent if this media notification is not for an "external app"
@@ -60,10 +67,10 @@ internal class MediaNotification(
 private fun MediaState.toNotificationData(context: Context): NotificationData {
     return when (this) {
         is MediaState.Playing -> NotificationData(
-            title = session.titleOrUrl,
-            description = session.url,
+            title = session.getTitleOrUrl(context),
+            description = session.nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_playing,
-            largeIcon = session.icon,
+            largeIcon = session.nonPrivateIcon,
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_pause,
                 context.getString(R.string.mozac_feature_media_notification_action_pause),
@@ -75,10 +82,10 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
             ).build()
         )
         is MediaState.Paused -> NotificationData(
-            title = session.titleOrUrl,
-            description = session.url,
+            title = session.getTitleOrUrl(context),
+            description = session.nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_paused,
-            largeIcon = session.icon,
+            largeIcon = session.nonPrivateIcon,
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_play,
                 context.getString(R.string.mozac_feature_media_notification_action_play),
@@ -89,19 +96,30 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     0)
             ).build()
         )
-        else -> throw IllegalArgumentException("Cannot create notification for state: $this")
+        // Dummy notification that is only used to satisfy the requirement to ALWAYS call
+        // startForeground with a notification.
+        else -> NotificationData()
     }
 }
 
-private val Session.titleOrUrl
-    get() = if (title.isNotEmpty()) title else url
+private fun Session.getTitleOrUrl(context: Context): String = when {
+    private -> context.getString(R.string.mozac_feature_media_notification_private_mode)
+    title.isNotEmpty() -> title
+    else -> url
+}
+
+private val Session.nonPrivateUrl
+    get() = if (private) "" else url
+
+private val Session.nonPrivateIcon: Bitmap?
+    get() = if (private) null else icon
 
 private data class NotificationData(
-    val title: String,
-    val description: String,
-    @DrawableRes val icon: Int,
+    val title: String = "",
+    val description: String = "",
+    @DrawableRes val icon: Int = R.drawable.mozac_feature_media_playing,
     val largeIcon: Bitmap? = null,
-    val action: NotificationCompat.Action
+    val action: NotificationCompat.Action? = null
 )
 
 private fun MediaState.isForExternalApp(): Boolean {

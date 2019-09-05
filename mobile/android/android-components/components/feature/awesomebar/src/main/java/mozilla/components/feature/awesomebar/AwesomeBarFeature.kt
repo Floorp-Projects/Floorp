@@ -8,6 +8,7 @@ import android.content.Context
 import android.view.View
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineView
@@ -58,7 +59,7 @@ class AwesomeBarFeature(
     }
 
     /**
-     * Add a [AwesomeBar.SuggestionProvider] for search engine suggestions to the [AwesomeBar].
+     * Adds a [AwesomeBar.SuggestionProvider] for search engine suggestions to the [AwesomeBar].
      */
     fun addSearchProvider(
         searchEngine: SearchEngine,
@@ -68,6 +69,27 @@ class AwesomeBarFeature(
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, limit, mode))
+        return this
+    }
+
+    /**
+     * Adds a [AwesomeBar.SuggestionProvider] for search engine suggestions to the [AwesomeBar].
+     * If the default search engine is to be used for fetching search engine suggestions then
+     * this method is preferable over [addSearchProvider], as it will lazily load the default
+     * search engine using the provided [SearchEngineManager].
+     */
+    @Suppress("LongParameterList")
+    fun addSearchProvider(
+        context: Context,
+        searchEngineManager: SearchEngineManager,
+        searchUseCase: SearchUseCases.SearchUseCase,
+        fetchClient: Client,
+        limit: Int = 15,
+        mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
+    ): AwesomeBarFeature {
+        awesomeBar.addProviders(
+            SearchSuggestionProvider(context, searchEngineManager, searchUseCase, fetchClient, limit, mode)
+        )
         return this
     }
 
