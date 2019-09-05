@@ -37,7 +37,7 @@ class MarkupContextMenu {
     this.markup = markup;
     this.inspector = markup.inspector;
     this.selection = this.inspector.selection;
-    this.target = this.inspector.target;
+    this.target = this.inspector.currentTarget;
     this.telemetry = this.inspector.telemetry;
     this.toolbox = this.inspector.toolbox;
     this.walker = this.inspector.walker;

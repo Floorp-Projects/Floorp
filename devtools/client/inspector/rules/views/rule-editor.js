@@ -303,7 +303,7 @@ RuleEditor.prototype = {
       return;
     }
 
-    const target = this.ruleView.inspector.target;
+    const target = this.ruleView.inspector.currentTarget;
     if (Tools.styleEditor.isTargetSupported(target)) {
       gDevTools.showToolbox(target, "styleeditor").then(toolbox => {
         const { url, line, column } = this._currentLocation;

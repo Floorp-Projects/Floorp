@@ -13,7 +13,7 @@ add_task(async function() {
   assertMarkupViewIsLoaded();
   await selectNode("#one", inspector);
 
-  const willNavigate = inspector.target.once("will-navigate");
+  const willNavigate = inspector.currentTarget.once("will-navigate");
   await testActor.eval(`window.location = "${URL_2}"`);
 
   info("Waiting for will-navigate");
