@@ -157,7 +157,7 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
-    data class UpdateSecurityInfo(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
+    data class UpdateSecurityInfoAction(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
 
     /**
      * Updates the icon of the [ContentState] with the given [sessionId].
@@ -213,5 +213,5 @@ sealed class TrackingProtectionAction : BrowserAction() {
     /**
      * Clears the [TrackingProtectionState.blockedTrackers] and [TrackingProtectionState.blockedTrackers] lists.
      */
-    data class ClearTrackers(val tabId: String) : TrackingProtectionAction()
+    data class ClearTrackersAction(val tabId: String) : TrackingProtectionAction()
 }

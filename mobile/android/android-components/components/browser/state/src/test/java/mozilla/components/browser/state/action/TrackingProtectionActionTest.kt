@@ -122,7 +122,7 @@ class TrackingProtectionActionTest {
         assertEquals(2, trackingProtectionState().blockedTrackers.size)
         assertEquals(3, trackingProtectionState().loadedTrackers.size)
 
-        store.dispatch(TrackingProtectionAction.ClearTrackers(tab.id)).joinBlocking()
+        store.dispatch(TrackingProtectionAction.ClearTrackersAction(tab.id)).joinBlocking()
 
         assertEquals(0, trackingProtectionState().blockedTrackers.size)
         assertEquals(0, trackingProtectionState().loadedTrackers.size)

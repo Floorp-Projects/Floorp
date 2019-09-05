@@ -151,7 +151,7 @@ class ContentActionTest {
         assertNotEquals(newSecurityInfo, otherTab.content.securityInfo)
 
         store.dispatch(
-            ContentAction.UpdateSecurityInfo(tab.id, newSecurityInfo)
+            ContentAction.UpdateSecurityInfoAction(tab.id, newSecurityInfo)
         ).joinBlocking()
 
         assertEquals(newSecurityInfo, tab.content.securityInfo)

@@ -122,7 +122,7 @@ class ToolbarPresenterTest {
 
         verify(toolbar, never()).siteSecure = Toolbar.SiteSecurity.SECURE
 
-        store.dispatch(ContentAction.UpdateSecurityInfo("tab1", SecurityInfoState(
+        store.dispatch(ContentAction.UpdateSecurityInfoAction("tab1", SecurityInfoState(
             secure = true,
             host = "mozilla.org",
             issuer = "Mozilla"

@@ -20,7 +20,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
-import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
+import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
@@ -257,7 +257,7 @@ class Session(
      */
     var securityInfo: SecurityInfo by Delegates.observable(SecurityInfo()) { _, old, new ->
         notifyObservers(old, new) { onSecurityChanged(this@Session, new) }
-        store?.syncDispatch(UpdateSecurityInfo(id, new.toSecurityInfoState()))
+        store?.syncDispatch(UpdateSecurityInfoAction(id, new.toSecurityInfoState()))
     }
 
     /**
@@ -332,10 +332,10 @@ class Session(
 
         if (new.isEmpty()) {
             // From `EngineObserver` we can assume that this means the trackers have been cleared.
-            // The `ClearTrackers` action will also clear the loaded trackers list. That is always
+            // The `ClearTrackersAction` will also clear the loaded trackers list. That is always
             // the case when this list is cleared from `EngineObserver`. For the sake of migrating
             // to browser-state we assume that no other code changes the tracking properties.
-            store?.syncDispatch(TrackingProtectionAction.ClearTrackers(id))
+            store?.syncDispatch(TrackingProtectionAction.ClearTrackersAction(id))
         } else {
             // `EngineObserver` always adds new trackers to the end of the list. So we just dispatch
             // an action for the last item in the list.
