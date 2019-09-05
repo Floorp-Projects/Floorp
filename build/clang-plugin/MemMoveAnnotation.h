@@ -38,7 +38,11 @@ protected:
           Name == "_Atomic_ushort" || Name == "_Atomic_int" ||
           Name == "_Atomic_uint" || Name == "_Atomic_long" ||
           Name == "_Atomic_ulong" || Name == "_Atomic_llong" ||
-          Name == "_Atomic_ullong" || Name == "_Atomic_address") {
+          Name == "_Atomic_ullong" || Name == "_Atomic_address" ||
+          // MSVCRT 2019
+          Name == "_Atomic_integral" || Name == "_Atomic_integral_facade" ||
+          Name == "_Atomic_padded" || Name == "_Atomic_pointer" ||
+          Name == "_Atomic_storage") {
         return "";
       }
       return "it is an stl-provided type not guaranteed to be memmove-able";
