@@ -22,6 +22,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Range.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -1746,6 +1747,12 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
 
+  // Use a ScopeExit to ensure the data is released on eager or error paths.
+  // The funbox is in a LifoAlloc and will not have it's destructor called so
+  // we need to be careful about ownership.
+  auto cleanupGuard =
+      mozilla::MakeScopeExit([funbox]() { funbox->lazyScriptData().reset(); });
+
   // Emplace the data required for the lazy script here. It will
   // be emitted before the rest of script emission.
   funbox->lazyScriptData().emplace(cx_);
@@ -1757,6 +1764,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   // If we can defer the LazyScript creation, we are now done.
   if (getTreeHolder().isDeferred()) {
+    cleanupGuard.release();
     return true;
   }
 
