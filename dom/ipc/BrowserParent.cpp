@@ -652,7 +652,7 @@ void BrowserParent::Destroy() {
 
   mIsDestroyed = true;
 
-  ContentParent::NotifyTabDestroying(this->GetTabId(), Manager()->ChildID());
+  Manager()->NotifyTabDestroying();
 
   mMarkedDestroying = true;
 }
@@ -2690,8 +2690,7 @@ void BrowserParent::ReconstructWebProgressAndRequest(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    nsTArray<nsCString>&& aPositions,
-    nsTArray<int32_t>&& aPositionDescendants,
+    nsTArray<nsCString>&& aPositions, nsTArray<int32_t>&& aPositionDescendants,
     const nsTArray<InputFormData>& aInputs,
     const nsTArray<CollectedInputDataValue>& aIdVals,
     const nsTArray<CollectedInputDataValue>& aXPathVals,

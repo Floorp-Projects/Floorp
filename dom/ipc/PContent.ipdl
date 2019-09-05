@@ -1052,11 +1052,6 @@ parent:
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
     /**
-     * Tell the chrome process there is a destruction of PBrowser(Tab)
-     */
-    async NotifyTabDestroying(TabId tabId,
-                              ContentParentId cpId);
-    /**
      * Starts an offline application cache update.
      * @param manifestURI
      *   URI of the manifest to fetch, the application cache group ID
