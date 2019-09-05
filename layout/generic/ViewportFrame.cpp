@@ -248,21 +248,11 @@ nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
                "We don't handle correct positioning of fixed frames with "
                "scrollbars in odd positions");
 
-  // Layout fixed position elements to the visual viewport size if and only if
-  // it has been set and it is larger than the computed size, otherwise use the
-  // computed size.
   nsRect rect(0, 0, aReflowInput->ComputedWidth(),
               aReflowInput->ComputedHeight());
-  mozilla::PresShell* presShell = PresShell();
-  if (presShell->IsVisualViewportSizeSet() &&
-      rect.Size() < presShell->GetVisualViewportSize()) {
-    rect.SizeTo(presShell->GetVisualViewportSize());
-  }
-  // Expand the size to the layout viewport size if necessary.
-  const nsSize layoutViewportSize = presShell->GetLayoutViewportSize();
-  if (rect.Size() < layoutViewportSize) {
-    rect.SizeTo(layoutViewportSize);
-  }
+
+  rect.SizeTo(AdjustViewportSizeForFixedPosition(rect));
+
   return rect;
 }
 
@@ -387,6 +377,27 @@ void ViewportFrame::AppendDirectlyOwnedAnonBoxes(
   if (mFrames.NotEmpty()) {
     aResult.AppendElement(mFrames.FirstChild());
   }
+}
+
+nsSize ViewportFrame::AdjustViewportSizeForFixedPosition(
+    const nsRect& aViewportRect) const {
+  nsSize result = aViewportRect.Size();
+
+  mozilla::PresShell* presShell = PresShell();
+  // Layout fixed position elements to the visual viewport size if and only if
+  // it has been set and it is larger than the computed size, otherwise use the
+  // computed size.
+  if (presShell->IsVisualViewportSizeSet() &&
+      result < presShell->GetVisualViewportSize()) {
+    result = presShell->GetVisualViewportSize();
+  }
+  // Expand the size to the layout viewport size if necessary.
+  const nsSize layoutViewportSize = presShell->GetLayoutViewportSize();
+  if (result < layoutViewportSize) {
+    result = layoutViewportSize;
+  }
+
+  return result;
 }
 
 #ifdef DEBUG_FRAME_DUMP

@@ -7383,19 +7383,12 @@ already_AddRefed<Layer> nsDisplayFixedPosition::BuildLayer(
   // layer). This is the same as the display items' reference frame.
   nsRect anchorRect;
   if (viewportFrame) {
+    anchorRect.SizeTo(viewportFrame->GetSize());
     // Fixed position frames are reflowed into the scroll-port size if one has
     // been set.
-    if (presContext->PresShell()->IsVisualViewportSizeSet()) {
-      anchorRect.SizeTo(presContext->PresShell()->GetVisualViewportSize());
-    } else {
-      anchorRect.SizeTo(viewportFrame->GetSize());
-    }
-
-    // Expand the size to the layout viewport size if necessary.
-    const nsSize layoutViewportSize =
-        presContext->PresShell()->GetLayoutViewportSize();
-    if (anchorRect.Size() < layoutViewportSize) {
-      anchorRect.SizeTo(layoutViewportSize);
+    if (const ViewportFrame* viewport = do_QueryFrame(viewportFrame)) {
+      anchorRect.SizeTo(
+          viewport->AdjustViewportSizeForFixedPosition(anchorRect));
     }
   } else {
     // A display item directly attached to the viewport.
