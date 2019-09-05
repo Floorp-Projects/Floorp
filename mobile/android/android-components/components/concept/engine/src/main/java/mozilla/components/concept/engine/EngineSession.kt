@@ -130,7 +130,8 @@ abstract class EngineSession(
         val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
         val useForRegularSessions: Boolean = true,
-        val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
+        val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+        val strictSocialTrackingProtection: Boolean? = null
     ) {
 
         /**
@@ -248,10 +249,12 @@ abstract class EngineSession(
 
             fun select(
                 trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-                cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
+                cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+                strictSocialTrackingProtection: Boolean? = null
             ) = TrackingProtectionPolicyForSessionTypes(
                 trackingCategories,
-                cookiePolicy
+                cookiePolicy,
+                strictSocialTrackingProtection
             )
         }
 
@@ -276,10 +279,12 @@ abstract class EngineSession(
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
         trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
-        cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
+        cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS,
+        strictSocialTrackingProtection: Boolean? = null
     ) : TrackingProtectionPolicy(
         trackingCategories = trackingCategory,
-        cookiePolicy = cookiePolicy
+        cookiePolicy = cookiePolicy,
+        strictSocialTrackingProtection = strictSocialTrackingProtection
     ) {
         /**
          * Marks this policy to be used for private sessions only.

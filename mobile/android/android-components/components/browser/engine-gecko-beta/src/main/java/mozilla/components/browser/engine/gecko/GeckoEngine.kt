@@ -169,7 +169,10 @@ class GeckoEngine(
             set(value) {
                 value?.let { policy ->
                     val activateStrictSocialTracking =
-                        policy.trackingCategories.contains(TrackingProtectionPolicy.TrackingCategory.STRICT)
+                        policy.strictSocialTrackingProtection ?: policy.trackingCategories.contains(
+                            TrackingProtectionPolicy.TrackingCategory.STRICT
+                        )
+
                     runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
                         activateStrictSocialTracking
                     )
