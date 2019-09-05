@@ -525,7 +525,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
-    // around <q>, etc.  I mean it!  Don't make me smack you!
+    // around <q>, etc.
 
     return NS_OK;
   }
@@ -645,14 +645,14 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
 
     // To make the separation between cells most obvious and
     // importable, we use a TAB.
-    if (GetLastBool(mHasWrittenCellsForRow)) {
-      // Bypass |Write| so that the TAB isn't compressed away.
-      AddToLine(u"\t", 1);
-      mInWhitespace = true;
-    } else if (mHasWrittenCellsForRow.IsEmpty()) {
+    if (mHasWrittenCellsForRow.IsEmpty()) {
       // We don't always see a <tr> (nor a <table>) before the <td> if we're
       // copying part of a table
       PushBool(mHasWrittenCellsForRow, true);  // will never be popped
+    } else if (GetLastBool(mHasWrittenCellsForRow)) {
+      // Bypass |Write| so that the TAB isn't compressed away.
+      AddToLine(u"\t", 1);
+      mInWhitespace = true;
     } else {
       SetLastBool(mHasWrittenCellsForRow, true);
     }
@@ -838,7 +838,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
     // characters such as list item bullets, quote characters
-    // around <q>, etc.  I mean it!  Don't make me smack you!
+    // around <q>, etc.
 
     return NS_OK;
   }
