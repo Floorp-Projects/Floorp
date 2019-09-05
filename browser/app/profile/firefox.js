@@ -2252,6 +2252,7 @@ pref("devtools.webconsole.timestampMessages", false);
 
 // Saved editor mode state in the console.
 pref("devtools.webconsole.input.editor", false);
+pref("devtools.browserconsole.input.editor", false);
 
 // Editor width for webconsole and browserconsole.
 pref("devtools.webconsole.input.editorWidth", 0);
