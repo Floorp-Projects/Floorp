@@ -221,6 +221,10 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
     void CreateQuotesAndIndent(nsAString& aResult) const;
 
+    bool HasContentOrIndentationHeader() const {
+      return !mContent.mValue.IsEmpty() || !mIndentation.mHeader.IsEmpty();
+    }
+
     Indentation mIndentation;
 
     // The number of '>' characters.
