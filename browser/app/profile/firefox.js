@@ -2319,13 +2319,6 @@ pref("devtools.responsive.metaViewport.enabled", false);
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
 
-// Whether to show the settings onboarding tooltip only in release or beta
-// builds.
-#if defined(RELEASE_OR_BETA)
-  pref("devtools.responsive.show-setting-tooltip", true);
-#else
-  pref("devtools.responsive.show-setting-tooltip", false);
-#endif
 // Show the custom user agent input in Nightly builds.
 #if defined(NIGHTLY_BUILD)
   pref("devtools.responsive.showUserAgentInput", true);
