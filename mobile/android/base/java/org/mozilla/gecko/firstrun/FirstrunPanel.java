@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko.firstrun;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,8 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 
 /**
  * Base class for our first run pages. We call these FirstrunPanel for consistency
@@ -29,7 +33,7 @@ public class FirstrunPanel extends Fragment {
     public static final String NO_MESSAGE = "";
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_basepanel_checkable_fragment, container, false);
         final Bundle args = getArguments();
         if (args != null) {
@@ -49,12 +53,21 @@ public class FirstrunPanel extends Fragment {
             }
         }
 
-        root.findViewById(R.id.firstrun_link).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-next");
-                next();
-            }
+        root.findViewById(R.id.firstrun_link).setOnClickListener(v -> {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-next");
+            next();
+        });
+
+        root.findViewById(R.id.firstrun_account).setOnClickListener(v -> {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-signup");
+            showBrowserHint = false;
+
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+            intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(intent);
+
+            close();
         });
 
         return root;
