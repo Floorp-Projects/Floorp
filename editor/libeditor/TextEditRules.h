@@ -249,10 +249,6 @@ class TextEditRules {
                                      nsAString* aOutString, int32_t aMaxLength,
                                      bool* aTruncated);
 
-  nsresult CheckBidiLevelForDeletion(const EditorRawDOMPoint& aSelectionPoint,
-                                     nsIEditor::EDirection aAction,
-                                     bool* aCancel);
-
   /**
    * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
    * text node if:

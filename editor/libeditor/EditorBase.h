@@ -70,6 +70,7 @@ class CSSEditUtils;
 class DeleteNodeTransaction;
 class DeleteRangeTransaction;
 class DeleteTextTransaction;
+class EditActionResult;
 class EditAggregateTransaction;
 class EditorEventListener;
 class EditTransactionBase;
@@ -2036,6 +2037,21 @@ class EditorBase : public nsIEditor,
   void HideCaret(bool aHide);
 
  protected:  // Edit sub-action handler
+  /**
+   * SetCaretBidiLevelForDeletion() sets caret bidi level if necessary.
+   * If current point is bidi boundary and caller shouldn't handle the
+   * deletion, returns as "canceled".  Note that even if this sets caret
+   * bidi level, this won't mark the result as "handled" so that you can
+   * use the result as edit sub-action handler's result.
+   *
+   * @param aPointAtCaret       Collapsed `Selection` point.
+   * @param aDirectionAndAmount The direction and amount to delete.
+   */
+  template <typename PT, typename CT>
+  EditActionResult SetCaretBidiLevelForDeletion(
+      const EditorDOMPointBase<PT, CT>& aPointAtCaret,
+      nsIEditor::EDirection aDirectionAndAmount) const;
+
   /**
    * UndefineCaretBidiLevel() resets bidi level of the caret.
    */

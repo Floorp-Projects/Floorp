@@ -2407,11 +2407,13 @@ nsresult HTMLEditRules::WillDeleteSelection(
     }
 
     // Test for distance between caret and text that will be deleted
-    rv = CheckBidiLevelForDeletion(startPoint, aAction, aCancel);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    EditActionResult result =
+        HTMLEditorRef().SetCaretBidiLevelForDeletion(startPoint, aAction);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.Rv();
     }
-    if (*aCancel) {
+    if (result.Canceled()) {
+      *aCancel = true;
       return NS_OK;
     }
 

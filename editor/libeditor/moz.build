@@ -72,7 +72,6 @@ UNIFIED_SOURCES += [
     'TextEditor.cpp',
     'TextEditorDataTransfer.cpp',
     'TextEditRules.cpp',
-    'TextEditRulesBidi.cpp',
     'TextEditUtils.cpp',
     'TypeInState.cpp',
     'WSRunObject.cpp',
