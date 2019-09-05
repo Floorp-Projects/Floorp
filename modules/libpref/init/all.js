@@ -2251,10 +2251,13 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-  pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,downloads,preferences,sync-log");
-  // the following prefs are for testing purposes only.
-  pref("csp.overrule_about_uris_without_csp_whitelist", false);
+  // For testing purposes only: Flipping this pref to true allows
+  // to skip the assertion that every about page ships with a CSP.
   pref("csp.skip_about_page_has_csp_assert", false);
+  // For testing purposes only: Flipping this pref to true allows
+  // to skip the allowlist for about: pages and do not ship with a
+  // CSP and NS_ASSERT right away.
+  pref("csp.skip_about_page_csp_allowlist_and_assert", false);
 #endif
 
 #ifdef EARLY_BETA_OR_EARLIER
