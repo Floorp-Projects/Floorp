@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+  '/gfx/vr/service/VRSession.cpp',
   '/gfx/vr/VRShMem.cpp',
   'vrhostapi.cpp'
 ]
