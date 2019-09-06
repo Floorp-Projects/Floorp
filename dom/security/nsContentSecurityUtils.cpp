@@ -75,8 +75,6 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
       NS_LITERAL_CSTRING("about:printpreview"),
       // Bug 1497200: Apply Meta CSP to about:downloads
       NS_LITERAL_CSTRING("about:downloads"),
-      // Bug 1497584: Apply Meta CSP to about:preferences
-      NS_LITERAL_CSTRING("about:preferences"),
   };
 
   for (const nsLiteralCString& allowlistEntry : sAllowedAboutPagesWithNoCSP) {
