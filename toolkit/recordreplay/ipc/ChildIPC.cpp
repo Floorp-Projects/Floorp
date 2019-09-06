@@ -536,14 +536,6 @@ bool Repaint(nsAString& aData) {
     gDidRepaint = true;
     gRepainting = true;
 
-    // Allow other threads to diverge from the recording so the compositor can
-    // perform any paint we are about to trigger, or finish any in flight paint
-    // that existed at the point we are paused at.
-    for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
-      Thread::GetById(i)->SetShouldDivergeFromRecording();
-    }
-    Thread::ResumeIdleThreads();
-
     // Create an artifical vsync to see if graphics have changed since the last
     // paint and a new paint is needed.
     NotifyVsyncObserver();
@@ -557,7 +549,6 @@ bool Repaint(nsAString& aData) {
       }
     }
 
-    Thread::WaitForIdleThreads();
     gRepainting = false;
   }
 
