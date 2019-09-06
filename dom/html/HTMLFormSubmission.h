@@ -42,6 +42,7 @@ class HTMLFormSubmission {
    */
   static nsresult GetFromForm(HTMLFormElement* aForm,
                               nsGenericHTMLElement* aOriginatingElement,
+                              NotNull<const Encoding*>& aEncoding,
                               HTMLFormSubmission** aFormSubmission);
 
   virtual ~HTMLFormSubmission() { MOZ_COUNT_DTOR(HTMLFormSubmission); }
