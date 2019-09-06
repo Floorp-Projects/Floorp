@@ -47,7 +47,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ShortcutKeys.h"
-#include "nsXBLPrototypeHandler.h"
+#include "mozilla/KeyEventHandler.h"
 #include "mozilla/dom/KeyboardEvent.h"
 
 using namespace mozilla;
@@ -888,17 +888,17 @@ TextInputListener::HandleEvent(Event* aEvent) {
 
   WidgetKeyboardEvent* widgetKeyEvent =
       aEvent->WidgetEventPtr()->AsKeyboardEvent();
-  if (!keyEvent) {
+  if (!widgetKeyEvent) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsXBLPrototypeHandler* keyHandlers = ShortcutKeys::GetHandlers(
+  KeyEventHandler* keyHandlers = ShortcutKeys::GetHandlers(
       mTxtCtrlElement->IsTextArea() ? HandlerType::eTextArea
                                     : HandlerType::eInput);
 
   RefPtr<nsAtom> eventTypeAtom =
       ShortcutKeys::ConvertEventToDOMEventType(widgetKeyEvent);
-  for (nsXBLPrototypeHandler* handler = keyHandlers; handler;
+  for (KeyEventHandler* handler = keyHandlers; handler;
        handler = handler->GetNextHandler()) {
     if (!handler->EventTypeEquals(eventTypeAtom)) {
       continue;

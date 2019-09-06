@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsXBLService.h"
-#include "nsXBLWindowKeyHandler.h"
 #include "nsIInputStream.h"
 #include "nsNameSpaceManager.h"
 #include "nsIURI.h"
@@ -544,84 +543,6 @@ void nsXBLService::FlushStyleBindings(Element* aElement) {
 
     aElement->SetXBLBinding(nullptr);  // Flush old style bindings
   }
-}
-
-//
-// AttachGlobalKeyHandler
-//
-// Creates a new key handler and prepares to listen to key events on the given
-// event receiver (either a document or an content node). If the receiver is
-// content, then extra work needs to be done to hook it up to the document (XXX
-// WHY??)
-//
-nsresult nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget) {
-  // check if the receiver is a content node (not a document), and hook
-  // it to the document if that is the case.
-  nsCOMPtr<EventTarget> piTarget = aTarget;
-  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
-  if (contentNode) {
-    // Only attach if we're really in a document
-    nsCOMPtr<Document> doc = contentNode->GetUncomposedDoc();
-    if (doc) piTarget = doc;  // We're a XUL keyset. Attach to our document.
-  }
-
-  if (!piTarget) return NS_ERROR_FAILURE;
-
-  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
-  if (!manager) return NS_ERROR_FAILURE;
-
-  // the listener already exists, so skip this
-  if (contentNode && contentNode->GetProperty(nsGkAtoms::listener))
-    return NS_OK;
-
-  Element* elt = Element::FromNodeOrNull(contentNode);
-
-  // Create the key handler
-  RefPtr<nsXBLWindowKeyHandler> handler =
-      NS_NewXBLWindowKeyHandler(elt, piTarget);
-
-  handler->InstallKeyboardEventListenersTo(manager);
-
-  if (contentNode)
-    return contentNode->SetProperty(nsGkAtoms::listener,
-                                    handler.forget().take(),
-                                    nsPropertyTable::SupportsDtorFunc, true);
-
-  // The reference to the handler will be maintained by the event target,
-  // and, if there is a content node, the property.
-  return NS_OK;
-}
-
-//
-// DetachGlobalKeyHandler
-//
-// Removes a key handler added by DeatchGlobalKeyHandler.
-//
-nsresult nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget) {
-  nsCOMPtr<EventTarget> piTarget = aTarget;
-  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
-  if (!contentNode)  // detaching is only supported for content nodes
-    return NS_ERROR_FAILURE;
-
-  // Only attach if we're really in a document
-  nsCOMPtr<Document> doc = contentNode->GetUncomposedDoc();
-  if (doc) piTarget = doc;
-
-  if (!piTarget) return NS_ERROR_FAILURE;
-
-  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
-  if (!manager) return NS_ERROR_FAILURE;
-
-  nsIDOMEventListener* handler = static_cast<nsIDOMEventListener*>(
-      contentNode->GetProperty(nsGkAtoms::listener));
-  if (!handler) return NS_ERROR_FAILURE;
-
-  static_cast<nsXBLWindowKeyHandler*>(handler)
-      ->RemoveKeyboardEventListenersFrom(manager);
-
-  contentNode->DeleteProperty(nsGkAtoms::listener);
-
-  return NS_OK;
 }
 
 // Internal helper methods /////////////////////////////////////////////////////
