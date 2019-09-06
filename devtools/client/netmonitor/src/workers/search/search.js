@@ -9,12 +9,12 @@
  * Search within specified resource. Note that this function runs
  * within a worker thread.
  */
-function searchInResource(resource, query) {
+function searchInResource(resource, query, modifiers) {
   const results = [];
 
   if (resource.url) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "url",
         label: "Url",
         type: "url",
@@ -25,7 +25,7 @@ function searchInResource(resource, query) {
 
   if (resource.responseHeaders) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "responseHeaders.headers",
         type: "responseHeaders",
         panel: "headers",
@@ -35,7 +35,7 @@ function searchInResource(resource, query) {
 
   if (resource.requestHeaders) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "requestHeaders.headers",
         type: "requestHeaders",
         panel: "headers",
@@ -45,7 +45,7 @@ function searchInResource(resource, query) {
 
   if (resource.requestHeadersFromUploadStream) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "requestHeadersFromUploadStream.headers",
         type: "requestHeadersFromUploadStream",
         panel: "headers",
@@ -61,7 +61,7 @@ function searchInResource(resource, query) {
     }
 
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key,
         type: "responseCookies",
         panel: "cookies",
@@ -77,7 +77,7 @@ function searchInResource(resource, query) {
     }
 
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key,
         type: "requestCookies",
         panel: "cookies",
@@ -87,7 +87,7 @@ function searchInResource(resource, query) {
 
   if (resource.responseContent) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "responseContent.content.text",
         type: "responseContent",
         panel: "response",
@@ -97,7 +97,7 @@ function searchInResource(resource, query) {
 
   if (resource.requestPostData) {
     results.push(
-      findMatches(resource, query, {
+      findMatches(resource, query, modifiers, {
         key: "requestPostData.postData.text",
         type: "requestPostData",
         panel: "params",
@@ -125,15 +125,24 @@ function getResults(results, resource) {
   return tempResults;
 }
 
+function find(query, modifiers, source) {
+  const { caseSensitive } = modifiers;
+  const value = caseSensitive ? source : source.toLowerCase();
+  const q = caseSensitive ? query : query.toLowerCase();
+
+  return value.includes(q);
+}
+
 /**
  * Find query matches in arrays, objects and strings.
  * @param resource
  * @param query
+ * @param modifiers
  * @param data
- * @returns {*}
+ * @returns {*[]|[]|Array|*}
  */
-function findMatches(resource, query, data) {
-  if (!resource || !query || !data) {
+function findMatches(resource, query, modifiers, data) {
+  if (!resource || !query || !modifiers || !data) {
     return [];
   }
 
@@ -141,33 +150,34 @@ function findMatches(resource, query, data) {
   const resourceType = getType(resourceValue);
 
   if (resource.hasOwnProperty("name") && resource.hasOwnProperty("value")) {
-    return searchInProperties(query, resource, data);
+    return searchInProperties(query, modifiers, resource, data);
   }
 
   switch (resourceType) {
     case "string":
-      return searchInText(query, resourceValue, data);
+      return searchInText(query, modifiers, resourceValue, data);
     case "array":
-      return searchInArray(query, resourceValue, data);
+      return searchInArray(query, modifiers, resourceValue, data);
     case "object":
-      return searchInObject(query, resourceValue, data);
+      return searchInObject(query, modifiers, resourceValue, data);
     default:
       return [];
   }
 }
 
-function searchInProperties(query, obj, data) {
+function searchInProperties(query, modifiers, obj, data) {
+  const { name, value } = obj;
   const match = {
     ...data,
   };
 
-  if (obj.name.includes(query)) {
-    match.label = obj.name;
+  if (find(query, modifiers, name)) {
+    match.label = name;
   }
 
-  if (obj.name.includes(query) || obj.value.includes(query)) {
-    match.value = obj.value;
-    match.startIndex = obj.value.indexOf(query);
+  if (find(query, modifiers, name) || find(query, modifiers, value)) {
+    match.value = value;
+    match.startIndex = value.indexOf(query);
 
     return match;
   }
@@ -198,18 +208,24 @@ function getValue(path, obj) {
 /**
  * Search text for specific string and return all matches found
  * @param query
+ * @param modifiers
  * @param text
  * @param data
- * @returns {Array}
+ * @returns {*}
  */
-function searchInText(query, text, data) {
+function searchInText(query, modifiers, text, data) {
   const { type } = data;
   const lines = text.split(/\r\n|\r|\n/);
   const matches = [];
 
   // iterate through each line
   lines.forEach((curr, i) => {
-    const regexQuery = RegExp(query, "gmi");
+    const { caseSensitive } = modifiers;
+    const flags = caseSensitive ? "g" : "gi";
+    const regexQuery = RegExp(
+      caseSensitive ? query : query.toLowerCase(),
+      flags
+    );
     const lineMatches = [];
     let singleMatch;
 
@@ -243,21 +259,20 @@ function searchInText(query, text, data) {
  * Search for query in array.
  * Iterates through each array item and handles item based on type.
  * @param query
+ * @param modifiers
  * @param arr
  * @param data
- * @returns {*}
+ * @returns {*[]}
  */
-function searchInArray(query, arr, data) {
+function searchInArray(query, modifiers, arr, data) {
   const { key, label } = data;
-  const matches = arr
-    .filter(match => JSON.stringify(match).includes(query))
-    .map((match, i) =>
-      findMatches(match, query, {
-        ...data,
-        label: match.hasOwnProperty("name") ? match.name : label,
-        key: key + ".[" + i + "]",
-      })
-    );
+  const matches = arr.map((match, i) =>
+    findMatches(match, query, modifiers, {
+      ...data,
+      label: match.hasOwnProperty("name") ? match.name : label,
+      key: key + ".[" + i + "]",
+    })
+  );
 
   return getResults(matches);
 }
@@ -286,14 +301,15 @@ function getTruncatedValue(value, query, startIndex) {
 
 /**
  * Iterates through object, including nested objects, returns all
- * found matches.
  * @param query
+ * @param modifiers
  * @param obj
  * @param data
- * @returns {*}
+ * @returns {*|[]}
  */
-function searchInObject(query, obj, data) {
+function searchInObject(query, modifiers, obj, data) {
   const matches = data.hasOwnProperty("collector") ? data.collector : [];
+  const { caseSensitive } = modifiers;
 
   for (const objectKey in obj) {
     const objectKeyType = getType(obj[objectKey]);
@@ -304,20 +320,26 @@ function searchInObject(query, obj, data) {
         ...data,
         collector: matches,
       });
-    } else if (
-      (objectKeyType === "string" && obj[objectKey].includes(query)) ||
-      objectKey.includes(query)
-    ) {
+
+      continue;
+    }
+
+    const value = !caseSensitive
+      ? obj[objectKey].toLowerCase()
+      : obj[objectKey];
+    const key = !caseSensitive ? objectKey.toLowerCase() : objectKey;
+    const q = !caseSensitive ? query.toLowerCase() : query;
+
+    if ((objectKeyType === "string" && value.includes(q)) || key.includes(q)) {
       const match = {
         ...data,
       };
 
-      const value = obj[objectKey];
-      const startIndex = value.indexOf(query);
+      const startIndex = value.indexOf(q);
 
       match.label = objectKey;
       match.startIndex = startIndex;
-      match.value = getTruncatedValue(value, query, startIndex);
+      match.value = getTruncatedValue(obj[objectKey], query, startIndex);
 
       matches.push(match);
     }
