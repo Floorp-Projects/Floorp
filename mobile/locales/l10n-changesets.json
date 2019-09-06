@@ -39,7 +39,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "76fdb13cdf13"
+        "revision": "5c280941d63a"
     },
     "br": {
         "platforms": [
@@ -129,7 +129,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "7ce7e9c237a2"
+        "revision": "0f22600aa61c"
     },
     "es-ES": {
         "platforms": [
@@ -243,7 +243,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "e0a60ad9dd51"
+        "revision": "aece9db761fc"
     },
     "hy-AM": {
         "platforms": [
@@ -255,7 +255,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "526367d47b5f"
+        "revision": "91730b47d8f2"
     },
     "is": {
         "platforms": [
@@ -267,7 +267,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "a18fb11fcbe0"
+        "revision": "ce5aae18a3f2"
     },
     "ja": {
         "platforms": [
@@ -357,25 +357,25 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "92c847b14865"
+        "revision": "cf2e385b6049"
     },
     "ne-NP": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ed5e3f5ff1e3"
+        "revision": "d24a7a2f9a2d"
     },
     "nl": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "abf38ef7e615"
+        "revision": "6a5a5e47de69"
     },
     "nn-NO": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "6aee764e9fcd"
+        "revision": "a87ac03d099e"
     },
     "oc": {
         "platforms": [
@@ -483,7 +483,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "6625c734b355"
+        "revision": "b9bc2f953729"
     },
     "trs": {
         "platforms": [
@@ -495,7 +495,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "111ae13810ff"
+        "revision": "fa6a05e69878"
     },
     "ur": {
         "platforms": [
