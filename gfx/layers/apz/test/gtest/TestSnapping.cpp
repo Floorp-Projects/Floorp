@@ -42,7 +42,7 @@ TEST_F(APZCSnappingTester, Bug1265510) {
 
   UniquePtr<ScopedLayerTreeRegistration> registration =
       MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   TestAsyncPanZoomController* outer = ApzcOf(layers[0]);
   TestAsyncPanZoomController* inner = ApzcOf(layers[1]);
@@ -122,7 +122,7 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
 
   UniquePtr<ScopedLayerTreeRegistration> registration =
       MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
 

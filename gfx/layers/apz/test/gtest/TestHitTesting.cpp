@@ -147,8 +147,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
 
   // Now we have a root APZC that will match the page
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
-  manager->UpdateHitTestingTree(root, false, LayersId{0},
-                                paintSequenceNumber++);
+  UpdateHitTestingTree(paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(ApzcOf(root), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
@@ -160,8 +159,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   // Now we have a sub APZC with a better fit
   SetScrollableFrameMetrics(layers[3],
                             ScrollableLayerGuid::START_SCROLL_ID + 1);
-  manager->UpdateHitTestingTree(root, false, LayersId{0},
-                                paintSequenceNumber++);
+  UpdateHitTestingTree(paintSequenceNumber++);
   EXPECT_NE(ApzcOf(root), ApzcOf(layers[3]));
   hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(ApzcOf(layers[3]), hit.get());
@@ -179,8 +177,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
   // Now test hit testing when we have two scrollable layers
   SetScrollableFrameMetrics(layers[4],
                             ScrollableLayerGuid::START_SCROLL_ID + 2);
-  manager->UpdateHitTestingTree(root, false, LayersId{0},
-                                paintSequenceNumber++);
+  UpdateHitTestingTree(paintSequenceNumber++);
   hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(ApzcOf(layers[4]), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
@@ -218,7 +215,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   CreateHitTesting2LayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   // At this point, the following holds (all coordinates in screen pixels):
   // layers[0] has content from (0,0)-(200,200), clipped by composition bounds
@@ -363,7 +360,7 @@ TEST_F(APZHitTestingTester, HitTesting3) {
 
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(75, 75));
   EXPECT_EQ(ApzcOf(layers[1]), hit.get());
@@ -374,7 +371,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
 
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   /* The layer tree looks like this:
 
@@ -464,7 +461,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
 
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
   RefPtr<TestAsyncPanZoomController> apzcroot = ApzcOf(root);
 
   // At this point, the following holds (all coordinates in screen pixels):
@@ -537,7 +534,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
 
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(3));
@@ -567,7 +564,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
   CreateSimpleScrollingLayer();
   DisableApzOn(root);
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
   ScreenPoint origin(100, 50);
@@ -614,7 +611,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
 TEST_F(APZHitTestingTester, Bug1148350) {
   CreateBug1148350LayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   MockFunction<void(std::string checkPointName)> check;
   {
@@ -644,7 +641,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
 
   layers[0]->SetVisibleRegion(LayerIntRegion(LayerIntRect(0, 50, 200, 150)));
   layers[0]->SetBaseTransform(Matrix4x4::Translation(0, 50, 0));
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   TouchUp(manager, ScreenIntPoint(100, 100), mcc->Time());
   mcc->RunThroughDelayedTasks();
@@ -684,7 +681,7 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
 
   // Build the hit testing tree.
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
-  manager->UpdateHitTestingTree(root, false, LayersId{0}, 0);
+  UpdateHitTestingTree();
 
   // Pan on a region that's inside layers[2]'s layer clip, but outside
   // its subframe metadata's scroll clip.
