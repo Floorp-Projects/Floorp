@@ -455,7 +455,11 @@ class WebConsoleWrapper {
         closeSplitConsole: this.closeSplitConsole.bind(this),
         autocomplete,
         editorFeatureEnabled,
-        hideShowContentMessagesCheckbox: !webConsoleUI.isBrowserConsole,
+        hidePersistLogsCheckbox:
+          webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole,
+        hideShowContentMessagesCheckbox:
+          !webConsoleUI.isBrowserConsole &&
+          !webConsoleUI.isBrowserToolboxConsole,
       });
 
       // Render the root Application component.

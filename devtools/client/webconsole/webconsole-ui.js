@@ -51,6 +51,10 @@ class WebConsoleUI {
     this.hud = hud;
     this.hudId = this.hud.hudId;
     this.isBrowserConsole = this.hud.isBrowserConsole;
+    this.isBrowserToolboxConsole =
+      this.hud.currentTarget &&
+      this.hud.currentTarget.isParentProcess &&
+      !this.hud.currentTarget.isAddon;
     this.window = this.hud.iframeWindow;
 
     this._onPanelSelected = this._onPanelSelected.bind(this);
