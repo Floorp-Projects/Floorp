@@ -44,6 +44,9 @@ const {
 // Specified by the author CSS rule type.
 const STYLE_RULE = 1;
 
+// Accessible action for showing long description.
+const SHOW_LONG_DESC_ACTION = "showlongdesc";
+
 /**
  * Focus specific pseudo classes that the keyboard audit simulates to determine
  * focus styling.
@@ -337,8 +340,21 @@ function semanticsRule(accessible) {
     return { score: WARNING, issue: FOCUSABLE_NO_SEMANTICS };
   }
 
-  if (accessible.actionCount > 0) {
-    return { score: FAIL, issue: MOUSE_INTERACTIVE_ONLY };
+  if (
+    // Ignore text leafs.
+    accessible.role === Ci.nsIAccessibleRole.ROLE_TEXT_LEAF ||
+    // Ignore accessibles with no accessible actions.
+    accessible.actionCount === 0
+  ) {
+    return null;
+  }
+
+  // Long desc action might be present for images, ignore it in the list of
+  // actions.
+  for (let i = 0; i < accessible.actionCount; i++) {
+    if (accessible.getActionName(i) !== SHOW_LONG_DESC_ACTION) {
+      return { score: FAIL, issue: MOUSE_INTERACTIVE_ONLY };
+    }
   }
 
   return null;
