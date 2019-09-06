@@ -15,7 +15,8 @@
 
 namespace GeckoViewStreamingTelemetry {
 
-void HistogramAccumulate(const nsCString& aName, uint32_t aValue);
+void HistogramAccumulate(const nsCString& aName, bool aIsCategorical,
+                         uint32_t aValue);
 
 void BoolScalarSet(const nsCString& aName, bool aValue);
 void StringScalarSet(const nsCString& aName, const nsCString& aValue);
@@ -32,6 +33,8 @@ class StreamingTelemetryDelegate
   // Receive* methods will be called from time to time on the main thread.
   virtual void ReceiveHistogramSamples(const nsCString& aName,
                                        const nsTArray<uint32_t>& aSamples) = 0;
+  virtual void ReceiveCategoricalHistogramSamples(
+      const nsCString& aName, const nsTArray<uint32_t>& aSamples) = 0;
   virtual void ReceiveBoolScalarValue(const nsCString& aName, bool aValue) = 0;
   virtual void ReceiveStringScalarValue(const nsCString& aName,
                                         const nsCString& aValue) = 0;

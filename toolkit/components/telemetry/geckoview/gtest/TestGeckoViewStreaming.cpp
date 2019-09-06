@@ -24,6 +24,8 @@ const char* kBatchTimeoutPref = "toolkit.telemetry.geckoview.batchDurationMS";
 
 NS_NAMED_LITERAL_CSTRING(kTestHgramName, "TELEMETRY_TEST_STREAMING");
 NS_NAMED_LITERAL_CSTRING(kTestHgramName2, "TELEMETRY_TEST_STREAMING_2");
+NS_NAMED_LITERAL_CSTRING(kTestCategoricalName,
+                         "TELEMETRY_TEST_CATEGORICAL_OPTOUT");
 const HistogramID kTestHgram = Telemetry::TELEMETRY_TEST_STREAMING;
 const HistogramID kTestHgram2 = Telemetry::TELEMETRY_TEST_STREAMING_2;
 
@@ -44,6 +46,9 @@ class TelemetryStreamingFixture : public TelemetryTestFixture {
 class MockDelegate final : public StreamingTelemetryDelegate {
  public:
   MOCK_METHOD2(ReceiveHistogramSamples,
+               void(const nsCString& aHistogramName,
+                    const nsTArray<uint32_t>& aSamples));
+  MOCK_METHOD2(ReceiveCategoricalHistogramSamples,
                void(const nsCString& aHistogramName,
                     const nsTArray<uint32_t>& aSamples));
   MOCK_METHOD2(ReceiveBoolScalarValue,
@@ -70,6 +75,27 @@ TEST_F(TelemetryStreamingFixture, HistogramSamples) {
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_STREAMING, kSampleOne);
   Preferences::SetInt(kBatchTimeoutPref, 0);
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_STREAMING, kSampleTwo);
+}
+
+TEST_F(TelemetryStreamingFixture, CategoricalHistogramSamples) {
+  auto kSampleOne =
+      Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL_OPTOUT::CommonLabel;
+  auto kSampleTwo = Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL_OPTOUT::Label5;
+
+  nsTArray<uint32_t> samplesArray;
+  samplesArray.AppendElement(static_cast<uint32_t>(kSampleOne));
+  samplesArray.AppendElement(static_cast<uint32_t>(kSampleOne));
+  samplesArray.AppendElement(static_cast<uint32_t>(kSampleTwo));
+
+  auto md = MakeRefPtr<MockDelegate>();
+  EXPECT_CALL(*md, ReceiveCategoricalHistogramSamples(
+                       Eq(kTestCategoricalName), Eq(std::move(samplesArray))));
+  GeckoViewStreamingTelemetry::RegisterDelegate(md);
+
+  Telemetry::AccumulateCategorical(kSampleOne);
+  Telemetry::AccumulateCategorical(kSampleOne);
+  Preferences::SetInt(kBatchTimeoutPref, 0);
+  Telemetry::AccumulateCategorical(kSampleTwo);
 }
 
 TEST_F(TelemetryStreamingFixture, MultipleHistograms) {

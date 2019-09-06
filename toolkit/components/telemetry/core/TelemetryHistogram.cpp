@@ -697,8 +697,10 @@ nsresult internal_HistogramAdd(const StaticMutexAutoLock& aLock,
   }
 
   if (GetCurrentProduct() == SupportedProduct::GeckoviewStreaming) {
+    const HistogramInfo& info = gHistogramInfos[id];
     GeckoViewStreamingTelemetry::HistogramAccumulate(
-        nsDependentCString(gHistogramInfos[id].name()), value);
+        nsDependentCString(info.name()),
+        info.histogramType == nsITelemetry::HISTOGRAM_CATEGORICAL, value);
     return NS_OK;
   }
 
