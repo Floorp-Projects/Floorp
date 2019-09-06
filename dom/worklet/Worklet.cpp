@@ -342,7 +342,7 @@ bool ExecutionRunnable::ParseAndLinkModule(
     JSContext* aCx, JS::MutableHandle<JSObject*> aModule) {
   JS::CompileOptions compileOptions(aCx);
   compileOptions.setIntroductionType("Worklet");
-  compileOptions.setFileAndLine(mHandler->URL().get(), 0);
+  compileOptions.setFileAndLine(mHandler->URL().get(), 1);
   compileOptions.setIsRunOnce(true);
   compileOptions.setNoScriptRval(true);
 
