@@ -633,7 +633,9 @@ add_task(async function test_inprogress() {
     resumePromise = new Promise(resolve => {
       resume = resolve;
     });
-  server.registerPathHandler("/slow", async (request, response) => {
+  let hit = false;
+  server.registerPathHandler("/data/slow", async (request, response) => {
+    hit = true;
     response.processAsync();
     await resumePromise;
     response.setHeader("Content-type", "text/plain");
@@ -662,7 +664,7 @@ add_task(async function test_inprogress() {
         );
 
         browser.downloads.onChanged.addListener(info => {
-          if (info.id == id && info.state.current == "complete") {
+          if (info.id == id && info.state && info.state.current == "complete") {
             browser.test.notifyPass("done");
           }
         });
@@ -678,4 +680,5 @@ add_task(async function test_inprogress() {
   resume();
   await extension.awaitFinish("done");
   await extension.unload();
+  Assert.ok(hit, "slow path was actually hit");
 });
