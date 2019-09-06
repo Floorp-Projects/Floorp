@@ -14,7 +14,9 @@ exports[`ManifestEmpty renders the expected snapshot 1`] = `
   <Localized
     id="manifest-non-existing"
   >
-    <p />
+    <p
+      className="js-manifest-non-existing"
+    />
   </Localized>
 </article>
 `;

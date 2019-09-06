@@ -4,16 +4,26 @@
 
 "use strict";
 
-const { UPDATE_MANIFEST } = require("../constants");
+const { services } = require("../modules/services");
+const {
+  FETCH_MANIFEST_FAILURE,
+  FETCH_MANIFEST_START,
+  FETCH_MANIFEST_SUCCESS,
+} = require("../constants");
 
-function updateManifest(manifest, errorMessage) {
-  return {
-    type: UPDATE_MANIFEST,
-    manifest,
-    errorMessage,
+function fetchManifest() {
+  return async (dispatch, getState) => {
+    dispatch({ type: FETCH_MANIFEST_START });
+    const { manifest, errorMessage } = await services.fetchManifest();
+
+    if (!errorMessage) {
+      dispatch({ type: FETCH_MANIFEST_SUCCESS, manifest });
+    } else {
+      dispatch({ type: FETCH_MANIFEST_FAILURE, error: errorMessage });
+    }
   };
 }
 
 module.exports = {
-  updateManifest,
+  fetchManifest,
 };
