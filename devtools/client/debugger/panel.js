@@ -93,7 +93,6 @@ DebuggerPanel.prototype = {
   },
 
   openInspector: async function() {
-    await this.toolbox.initInspector();
     this.toolbox.selectTool("inspector");
   },
 
