@@ -96,7 +96,9 @@ class UITourChild extends ActorChild {
       return true;
     }
 
-    return this.isTestingOrigin(uri);
+    // Bug 1557153: To allow Skyline messaging, workaround for UNKNOWN_ACTION
+    // overriding browser/app/permissions default
+    return uri.host == "www.mozilla.org" || this.isTestingOrigin(uri);
   }
 
   receiveMessage(aMessage) {
