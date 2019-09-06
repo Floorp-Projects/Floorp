@@ -981,15 +981,22 @@ const gManifestStartHandlers = {
     }
 
     const displayName = formatDisplayName(frame);
-    const rv = frame.evalWithBindings(text, { displayName });
+    const rv = frame.evalWithBindings(`[${text}]`, { displayName });
 
     const pauseData = getPauseData();
     pauseData.paintData = RecordReplayControl.repaint();
     ClearPausedState();
 
-    const result = convertCompletionValue(rv);
+    let result;
+    if (rv.return) {
+      result = getDebuggeeValue(rv.return);
+    } else {
+      result = [getDebuggeeValue(rv.throw)];
+    }
+    result = result.map(v => convertValue(makeDebuggeeValue(v)));
+
     const resultData = new PreviewedObjects();
-    resultData.addCompletionValue(result, true);
+    result.forEach(v => resultData.addValue(v, true));
 
     RecordReplayControl.manifestFinished({ result, resultData, pauseData });
   },
@@ -1560,14 +1567,6 @@ PreviewedObjects.prototype = {
       value.forEach(v => this.addValue(v));
     } else {
       this.addValue(value);
-    }
-  },
-
-  addCompletionValue(value, includeProperties) {
-    if ("return" in value) {
-      this.addValue(value.return, includeProperties);
-    } else if ("throw" in value) {
-      this.addValue(value.throw, includeProperties);
     }
   },
 
