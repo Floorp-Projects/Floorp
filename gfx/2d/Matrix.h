@@ -823,7 +823,7 @@ class Matrix4x4Typed {
    * The resulting vertices are populated in aVerts.  aVerts must be
    * pre-allocated to hold at least kTransformAndClipRectMaxVerts Points.
    * The vertex count is returned by TransformAndClipRect.  It is possible to
-   * emit fewer that 3 vertices, indicating that aRect will not be visible
+   * emit fewer than 3 vertices, indicating that aRect will not be visible
    * within aClip.
    */
   template <class F>
@@ -833,7 +833,8 @@ class Matrix4x4Typed {
     // Initialize a double-buffered array of points in homogenous space with
     // the input rectangle, aRect.
     Point4DTyped<UnknownUnits, F> points[2][kTransformAndClipRectMaxVerts];
-    Point4DTyped<UnknownUnits, F>* dstPoint = points[0];
+    Point4DTyped<UnknownUnits, F>* dstPointStart = points[0];
+    Point4DTyped<UnknownUnits, F>* dstPoint = dstPointStart;
 
     *dstPoint++ = TransformPoint(
         Point4DTyped<UnknownUnits, F>(aRect.X(), aRect.Y(), 0, 1));
@@ -855,16 +856,26 @@ class Matrix4x4Typed {
         Point4DTyped<UnknownUnits, F>(0.0, -1.0, 0.0, aClip.YMost());
 
     // Iterate through each clipping plane and clip the polygon.
-    // In each pass, we double buffer, alternating between points[0] and
-    // points[1].
+    // For each clipping plane, we intersect the plane with all polygon edges.
+    // Each pass can increase or decrease the number of points that make up the
+    // current clipped polygon. We double buffer that set of points, alternating
+    // between points[0] and points[1].
     for (int plane = 0; plane < 4; plane++) {
       planeNormals[plane].Normalize();
-      Point4DTyped<UnknownUnits, F>* srcPoint = points[plane & 1];
+      Point4DTyped<UnknownUnits, F>* srcPoint = dstPointStart;
       Point4DTyped<UnknownUnits, F>* srcPointEnd = dstPoint;
 
-      dstPoint = points[~plane & 1];
-      Point4DTyped<UnknownUnits, F>* dstPointStart = dstPoint;
+      dstPointStart = points[~plane & 1];
+      dstPoint = dstPointStart;
 
+      // Iterate over the polygon edges. In each iteration the current edge is
+      // the edge from prevPoint to srcPoint. If the two end points lie on
+      // different sides of the plane, we have an intersection. Otherwise, the
+      // edge is either completely "inside" the half-space created by the
+      // clipping plane, and we add srcPoint, or it is completely "outside", and
+      // we discard srcPoint.
+      // We may create duplicated points in the polygon. We keep those around
+      // until all clipping is done and then filter out duplicates at the end.
       Point4DTyped<UnknownUnits, F>* prevPoint = srcPointEnd - 1;
       F prevDot = planeNormals[plane].DotProduct(*prevPoint);
       while (srcPoint < srcPointEnd &&
@@ -889,14 +900,16 @@ class Matrix4x4Typed {
       }
 
       if (dstPoint == dstPointStart) {
+        // No polygon points were produced, so the polygon has been
+        // completely clipped away by the current clipping plane. Exit.
         break;
       }
     }
 
-    size_t dstPointCount = 0;
-    size_t srcPointCount = dstPoint - points[0];
-    for (Point4DTyped<UnknownUnits, F>* srcPoint = points[0];
-         srcPoint < points[0] + srcPointCount; srcPoint++) {
+    Point4DTyped<UnknownUnits, F>* srcPoint = dstPointStart;
+    Point4DTyped<UnknownUnits, F>* srcPointEnd = dstPoint;
+    size_t vertCount = 0;
+    while (srcPoint < srcPointEnd) {
       PointTyped<TargetUnits, F> p;
       if (srcPoint->w == 0.0) {
         // If a point lies on the intersection of the clipping planes at
@@ -906,12 +919,13 @@ class Matrix4x4Typed {
         p = srcPoint->As2DPoint();
       }
       // Emit only unique points
-      if (dstPointCount == 0 || p != aVerts[dstPointCount - 1]) {
-        aVerts[dstPointCount++] = p;
+      if (vertCount == 0 || p != aVerts[vertCount - 1]) {
+        aVerts[vertCount++] = p;
       }
+      srcPoint++;
     }
 
-    return dstPointCount;
+    return vertCount;
   }
 
   static const int kTransformAndClipRectMaxVerts = 32;
