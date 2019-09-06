@@ -108,7 +108,7 @@ BreakpointActor.prototype = {
               lineNumber,
               columnNumber,
               executionPoint,
-              arguments: ["return" in rv ? rv.return : rv.throw],
+              arguments: rv,
               logpointId: options.logGroupId,
             };
             this.threadActor._parent._consoleActor.onConsoleAPICall(message);

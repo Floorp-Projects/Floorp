@@ -1427,7 +1427,7 @@ async function findLogpointHits(
   const hits = await findHits(checkpoint, position);
   for (const point of hits) {
     if (!condition) {
-      callback(point, { return: "Loading..." });
+      callback(point, ["Loading..."]);
     }
     sendAsyncManifest({
       shouldSkip: () => false,
