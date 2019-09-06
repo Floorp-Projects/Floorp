@@ -121,7 +121,6 @@ function run_test() {
     Ci.nsIPrefBranch
   );
   ps.setBoolPref("browser.cache.offline.enable", true);
-  ps.setBoolPref("browser.cache.offline.storage.enable", true);
   // Set this pref to mimic the default browser behavior.
   ps.setComplexValue(
     "browser.cache.offline.parent_directory",
