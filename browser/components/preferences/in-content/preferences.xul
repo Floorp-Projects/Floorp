@@ -18,8 +18,13 @@
 
 <!DOCTYPE page>
 
+<!-- @CSP: The 'oncommand' handler for 'focusSearch1' can not easily be rewritten (see Bug 371900)
+     hence we are allowing the inline handler in the script-src directive using the hash
+     sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ==
+     Additionally we should remove 'unsafe-inline' from style-src, see Bug 1579160 -->
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
+      csp="default-src chrome:; script-src chrome: 'sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ=='; img-src chrome: moz-icon:; style-src chrome: data: 'unsafe-inline'"
       role="document"
       data-l10n-id="pref-page"
       data-l10n-attrs="title">
@@ -159,6 +164,8 @@
     </vbox>
 
     <keyset>
+      <!-- If you change the code within the oncommand handler of 'focusSearch1' you have to update the current hash of
+           sha512-X8+p/CqXeMdssOoFOf5RV+RpkvnN9pukQ20acGc7LqMgfYLW+lR0WAYT66OtSTpFHE/Qgx/ZCBs2RMc4QrA8FQ== within the CSP above. -->
       <key data-l10n-id="focus-search" key="" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
 
