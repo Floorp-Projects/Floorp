@@ -295,15 +295,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AfterEditInner();
 
   /**
-   * IndentAroundSelectionWithCSS() indents around Selection with CSS.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult IndentAroundSelectionWithCSS();
-
-  /**
    * IndentAroundSelectionWithHTML() indents around Selection with HTML.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * need to check if the editor is still available even if this returns
