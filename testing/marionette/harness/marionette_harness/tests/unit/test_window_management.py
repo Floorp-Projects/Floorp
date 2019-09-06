@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from marionette_driver import By
 from marionette_driver.errors import NoSuchWindowException
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin, skip_if_mobile
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
@@ -19,7 +19,6 @@ class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.close_all_tabs()
         super(TestNoSuchWindowContent, self).tearDown()
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_closed_chrome_window(self):
         with self.marionette.using_context("chrome"):
             new_window = self.open_window()
@@ -39,7 +38,6 @@ class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
         with self.assertRaises(NoSuchWindowException):
             self.marionette.switch_to_window(new_window)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_closed_chrome_window_while_in_frame(self):
         new_window = self.open_chrome_window("chrome://marionette/content/test.xul")
         self.marionette.switch_to_window(new_window)

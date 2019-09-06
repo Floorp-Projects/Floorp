@@ -17,7 +17,6 @@ from .marionette_test import (
     skip_if_chrome,
     skip_if_desktop,
     skip_if_e10s,
-    skip_if_mobile,
     SkipTest,
     skip_unless_protocol,
 )
