@@ -11,13 +11,20 @@ const {
   flushPromises,
   setupStore,
 } = require("devtools/client/application/test/components/helpers/helpers");
+// Import fixtures
+const {
+  MANIFEST_NO_ISSUES,
+} = require("devtools/client/application/test/components/fixtures/data/constants");
 
 // Import app modules
 const {
   services,
 } = require("devtools/client/application/src/modules/services");
+
 const {
-  UPDATE_MANIFEST,
+  FETCH_MANIFEST_FAILURE,
+  FETCH_MANIFEST_START,
+  FETCH_MANIFEST_SUCCESS,
 } = require("devtools/client/application/src/constants");
 
 const ManifestLoader = createFactory(
@@ -29,101 +36,79 @@ const ManifestLoader = createFactory(
  */
 
 describe("ManifestLoader", () => {
-  const store = setupStore({
-    preloadedState: {
-      manifest: {
+  function buildStore({ manifest, errorMessage, isLoading }) {
+    const manifestState = Object.assign(
+      {
         manifest: null,
-        errorMesssage: "",
+        errorMessage: "",
+        isLoading: false,
       },
-    },
-  });
+      { manifest, errorMessage, isLoading }
+    );
 
-  let fetchManifestSpy;
-  let dispatchSpy;
+    return setupStore({ manifest: manifestState });
+  }
 
-  beforeAll(() => {
-    fetchManifestSpy = jest.spyOn(services, "fetchManifest");
-    dispatchSpy = jest.spyOn(store, "dispatch");
-  });
+  it("loads a manifest when mounted and triggers actions when loading is OK", async () => {
+    const fetchManifestSpy = jest
+      .spyOn(services, "fetchManifest")
+      .mockResolvedValue({ manifest: MANIFEST_NO_ISSUES, errorMessage: "" });
 
-  beforeEach(() => {
-    fetchManifestSpy.mockReset();
-    dispatchSpy.mockReset();
-  });
+    const store = buildStore({});
 
-  it("triggers loading a manifest and renders 'Loading' message", () => {
-    fetchManifestSpy.mockImplementation(() => new Promise(() => {}));
-    const wrapper = shallow(ManifestLoader({ store })).dive();
-
-    expect(wrapper.state("hasLoaded")).toBe(false);
-    expect(wrapper.state("hasManifest")).toBe(false);
-    expect(wrapper.state("error")).toBe("");
-    expect(services.fetchManifest).toHaveBeenCalled();
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("updates the state and renders a message when manifest has loaded OK", async () => {
-    fetchManifestSpy.mockResolvedValue({
-      manifest: { name: "foo" },
-      errorMessage: "",
-    });
-
-    const wrapper = shallow(ManifestLoader({ store })).dive();
+    shallow(ManifestLoader({ store })).dive();
     await flushPromises();
 
-    expect(wrapper.state("hasLoaded")).toBe(true);
-    expect(wrapper.state("hasManifest")).toBe(true);
-    expect(wrapper.state("error")).toBe("");
-    expect(store.dispatch).toHaveBeenCalledWith({
-      type: UPDATE_MANIFEST,
-      manifest: { name: "foo" },
-      errorMessage: "",
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
+    expect(store.getActions()).toEqual([
+      { type: FETCH_MANIFEST_START },
+      { type: FETCH_MANIFEST_SUCCESS, manifest: MANIFEST_NO_ISSUES },
+    ]);
 
-  it("updates the state and renders a message when manifest has failed to load", async () => {
-    fetchManifestSpy.mockResolvedValue({
-      manifest: null,
-      errorMessage: "lorem ipsum",
-    });
-
-    const wrapper = shallow(ManifestLoader({ store })).dive();
-    await flushPromises();
-
-    expect(wrapper.state("hasLoaded")).toBe(true);
-    expect(wrapper.state("hasManifest")).toBe(false);
-    expect(wrapper.state("error")).toBe("lorem ipsum");
-    expect(store.dispatch).toHaveBeenCalledWith({
-      type: UPDATE_MANIFEST,
-      manifest: null,
-      errorMessage: "lorem ipsum",
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("updates the state and renders a message when page has no manifest", async () => {
-    fetchManifestSpy.mockResolvedValue({
-      manifest: null,
-      errorMessage: "",
-    });
-
-    const wrapper = shallow(ManifestLoader({ store })).dive();
-    await flushPromises();
-
-    expect(wrapper.state("hasLoaded")).toBe(true);
-    expect(wrapper.state("hasManifest")).toBe(false);
-    expect(wrapper.state("error")).toBe("");
-    expect(store.dispatch).toHaveBeenCalledWith({
-      type: UPDATE_MANIFEST,
-      manifest: null,
-      errorMessage: "",
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  afterAll(() => {
     fetchManifestSpy.mockRestore();
-    dispatchSpy.mockRestore();
+  });
+
+  it("loads a manifest when mounted and triggers actions when loading fails", async () => {
+    const fetchManifestSpy = jest
+      .spyOn(services, "fetchManifest")
+      .mockResolvedValue({ manifest: null, errorMessage: "lorem ipsum" });
+
+    const store = buildStore({});
+
+    shallow(ManifestLoader({ store })).dive();
+    await flushPromises();
+
+    expect(store.getActions()).toEqual([
+      { type: FETCH_MANIFEST_START },
+      { type: FETCH_MANIFEST_FAILURE, error: "lorem ipsum" },
+    ]);
+
+    fetchManifestSpy.mockRestore();
+  });
+
+  it("renders a message when it is loading", async () => {
+    const store = buildStore({ isLoading: true });
+    const wrapper = shallow(ManifestLoader({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders a message when manifest has loaded OK", async () => {
+    const store = buildStore({
+      isLoading: false,
+      manifest: MANIFEST_NO_ISSUES,
+      errorMessage: "",
+    });
+    const wrapper = shallow(ManifestLoader({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders a message when manifest has failed to load", async () => {
+    const store = buildStore({
+      manifest: null,
+      isLoading: false,
+      errorMessage: "lorem ipsum",
+    });
+    const wrapper = shallow(ManifestLoader({ store })).dive();
+
+    expect(wrapper).toMatchSnapshot();
   });
 });

@@ -31,7 +31,10 @@ class ManifestEmpty extends PureComponent {
         },
         h1({ className: "app-page__title" })
       ),
-      Localized({ id: "manifest-non-existing" }, p({}))
+      Localized(
+        { id: "manifest-non-existing" },
+        p({ className: "js-manifest-non-existing" })
+      )
     );
   }
 }

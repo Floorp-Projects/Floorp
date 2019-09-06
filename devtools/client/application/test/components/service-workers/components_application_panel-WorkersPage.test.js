@@ -38,7 +38,7 @@ describe("WorkersPage", () => {
   function buildStoreWithWorkers(workerList) {
     const workers = { list: workerList, canDebugWorkers: true };
     const state = Object.assign({}, baseState, { workers });
-    return setupStore({ preloadedState: state });
+    return setupStore(state);
   }
 
   it("renders an empty list if there are no workers", () => {
