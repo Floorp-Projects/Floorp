@@ -1000,6 +1000,9 @@ class ContentParent final : public PContentParent,
       const IPC::Principal& aPrincipal, const bool& aHighAccuracy);
   mozilla::ipc::IPCResult RecvRemoveGeolocationListener();
 
+  mozilla::ipc::IPCResult RecvGetGeoSysPermission(
+      std::function<void(const bool)>&& aCallback);
+
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we don't have MOZ_CAN_RUN_SCRIPT bits
   // in IPC code yet.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
