@@ -555,7 +555,7 @@ partial interface Document {
   [ChromeOnly] readonly attribute boolean userHasInteracted;
 };
 
-// Extension to give chrome JS the ability to simulate activate the docuement
+// Extension to give chrome JS the ability to simulate activate the document
 // by user gesture.
 partial interface Document {
   [ChromeOnly]
@@ -565,6 +565,8 @@ partial interface Document {
   void clearUserGestureActivation();
   [ChromeOnly]
   readonly attribute boolean hasBeenUserGestureActivated;
+  [ChromeOnly]
+  readonly attribute boolean hasValidTransientUserGestureActivation;
 };
 
 // Extension to give chrome JS the ability to set an event handler which is
