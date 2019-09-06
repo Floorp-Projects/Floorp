@@ -499,15 +499,6 @@ void MediaTransportHandlerSTS::Destroy() {
                       stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
                       stats.turn_438s);
 
-          Telemetry::ScalarAdd(
-              Telemetry::ScalarID::WEBRTC_NICER_STUN_RETRANSMITS,
-              stats.stun_retransmits);
-          Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_401S,
-                               stats.turn_401s);
-          Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_403S,
-                               stats.turn_403s);
-          Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_438S,
-                               stats.turn_438s);
           mIceCtx = nullptr;
         }
         mTransports.clear();
