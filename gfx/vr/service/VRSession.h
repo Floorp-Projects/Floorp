@@ -21,7 +21,18 @@ namespace gfx {
 class VRSession {
  public:
   VRSession();
+
+  // Since this class doesn't use smartpointers for its refcounted
+  // members (so that it can compile outside of mozilla-central),
+  // prevent copying the addresses without increasing the refcount.
+  VRSession(const VRSession&) = delete;
+  VRSession& operator=(const VRSession&) = delete;
+
+#ifdef XP_WIN
+  virtual ~VRSession();
+#else
   virtual ~VRSession() = default;
+#endif
 
   virtual bool Initialize(mozilla::gfx::VRSystemState& aSystemState) = 0;
   virtual void Shutdown() = 0;
@@ -41,13 +52,16 @@ class VRSession {
 #if defined(XP_WIN)
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                            ID3D11Texture2D* aTexture) = 0;
-  bool CreateD3DContext(RefPtr<ID3D11Device> aDevice);
-  RefPtr<ID3D11Device1> mDevice;
-  RefPtr<ID3D11DeviceContext1> mContext;
+  bool CreateD3DContext(ID3D11Device* aDevice);
+
   ID3D11Device1* GetD3DDevice();
   ID3D11DeviceContext1* GetD3DDeviceContext();
   ID3DDeviceContextState* GetD3DDeviceContextState();
-  RefPtr<ID3DDeviceContextState> mDeviceContextState;
+
+  ID3D11Device1* mDevice;
+  ID3D11DeviceContext1* mContext;
+  ID3DDeviceContextState* mDeviceContextState;
+
 #elif defined(XP_MACOSX)
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer,
                            const VRLayerTextureHandle& aTexture) = 0;
