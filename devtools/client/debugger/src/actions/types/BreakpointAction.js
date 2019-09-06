@@ -51,6 +51,7 @@ export type BreakpointAction =
       +cx: Context,
       +location: SourceLocation,
     |}>
+  | PromiseAction<{| +type: "REMOVE_BREAKPOINTS" |}>
   | {|
       +type: "REMOVE_PENDING_BREAKPOINT",
       +cx: Context,
