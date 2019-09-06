@@ -14,6 +14,11 @@ export default class LoginIntro extends HTMLElement {
     shadowRoot.appendChild(loginIntroTemplate.content.cloneNode(true));
   }
 
+  focus() {
+    let helpLink = this.shadowRoot.querySelector(".intro-help-link");
+    helpLink.focus();
+  }
+
   set supportURL(val) {
     this.shadowRoot.querySelector(".intro-help-link").setAttribute("href", val);
   }

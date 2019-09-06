@@ -433,6 +433,12 @@ export default class LoginList extends HTMLElement {
       if (event.shiftKey) {
         return;
       }
+      if (this.classList.contains("no-logins")) {
+        let loginIntro = document.querySelector("login-intro");
+        event.preventDefault();
+        loginIntro.focus();
+        return;
+      }
       let loginItem = document.querySelector("login-item");
       if (loginItem) {
         event.preventDefault();
