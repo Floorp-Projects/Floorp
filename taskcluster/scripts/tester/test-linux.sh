@@ -53,19 +53,20 @@ maybe_start_pulse() {
         if [ $DISTRIBUTION == "Ubuntu" ]; then
             pulseaudio --fail --daemonize --start
         elif [ $DISTRIBUTION == "Debian" ]; then
-            # kill existing daemons/processes if exist
+            # temporarily turn errexit off
+            # nicely kill existing daemons/processes if exist
             set +e
             pulseaudio --kill
 
             # Debian needs additional stabilization and debugging
-            # turn off errexit temporarily
             ps ax | grep 'pulseaudio'
             ps -ef | grep 'pulseaudio' | grep -v grep | awk '{print $2}' | xargs -r kill -9
             ps ax | grep 'pulseaudio'
 
-            # check and start pulseaudio (debugging)
+            # check and start pulseaudio with debugging
             pulseaudio --check; echo $?
             pulseaudio --fail --daemonize --start -vvvv --exit-idle-time=-1 --log-level=4 --log-time=1
+            set -e
         else
             :
         fi
