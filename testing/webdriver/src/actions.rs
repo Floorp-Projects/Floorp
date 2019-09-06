@@ -84,7 +84,7 @@ where
 {
     String::deserialize(deserializer).map(|value| {
         // Only a single Unicode grapheme cluster is allowed
-        if value.graphemes(true).collect::<Vec<&str>>().len() != 1 {
+        if value.graphemes(true).count() != 1 {
             return Err(de::Error::custom(format!(
                 "'{}' should only contain a single Unicode code point",
                 value

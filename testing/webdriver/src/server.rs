@@ -241,7 +241,7 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
     }
     .or(warp::head())
     .unify()
-    .map(|| Parameters::new())
+    .map(Parameters::new)
     .boxed();
 
     // For each part of the path, if it's a normal part, just append it to the current filter,
