@@ -294,7 +294,7 @@ struct DIGroup {
 
   IntRect mInvalidRect;
   nsRect mGroupBounds;
-  LayerIntRect mPaintRect;
+  LayerIntRect mVisibleRect;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   ScrollableLayerGuid::ViewID mScrollId;
@@ -392,7 +392,7 @@ struct DIGroup {
       aData->mRect = transformedRect.Intersect(mClippedImageBounds);
       GP("CGC %s %d %d %d %d\n", aItem->Name(), clippedBounds.x,
          clippedBounds.y, clippedBounds.width, clippedBounds.height);
-      GP("%d %d,  %f %f\n", mPaintRect.TopLeft().x, mPaintRect.TopLeft().y,
+      GP("%d %d,  %f %f\n", mVisibleRect.TopLeft().x, mVisibleRect.TopLeft().y,
          aMatrix._11, aMatrix._22);
       GP("mRect %d %d %d %d\n", aData->mRect.x, aData->mRect.y,
          aData->mRect.width, aData->mRect.height);
@@ -626,7 +626,7 @@ struct DIGroup {
         // detect if this is a no-op on its side, if that matters)
         aResources.SetBlobImageVisibleArea(
             mKey.value().second(),
-            ViewAs<ImagePixel>(mPaintRect,
+            ViewAs<ImagePixel>(mVisibleRect,
                                PixelCastJustification::LayerIsImage));
         PushImage(aBuilder, itemBounds);
       }
@@ -706,7 +706,7 @@ struct DIGroup {
       MOZ_RELEASE_ASSERT(bytes.length() > sizeof(size_t));
       if (!aResources.AddBlobImage(
               key, descriptor, bytes,
-              ViewAs<ImagePixel>(mPaintRect,
+              ViewAs<ImagePixel>(mVisibleRect,
                                  PixelCastJustification::LayerIsImage))) {
         return;
       }
@@ -728,7 +728,7 @@ struct DIGroup {
          mInvalidRect.width, mInvalidRect.height);
       if (!aResources.UpdateBlobImage(
               mKey.value().second(), descriptor, bytes,
-              ViewAs<ImagePixel>(mPaintRect,
+              ViewAs<ImagePixel>(mVisibleRect,
                                  PixelCastJustification::LayerIsImage),
               dirtyRect)) {
         return;
@@ -738,7 +738,7 @@ struct DIGroup {
     mInvalidRect.SetEmpty();
     aResources.SetBlobImageVisibleArea(
         mKey.value().second(),
-        ViewAs<ImagePixel>(mPaintRect, PixelCastJustification::LayerIsImage));
+        ViewAs<ImagePixel>(mVisibleRect, PixelCastJustification::LayerIsImage));
     PushImage(aBuilder, itemBounds);
     GP("End EndGroup\n\n");
   }
@@ -759,7 +759,7 @@ struct DIGroup {
 
     // XXX - clipping the item against the paint rect breaks some content.
     // cf. Bug 1455422.
-    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mPaintRect));
+    // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
 
     aBuilder.SetHitTestInfo(mScrollId, hitInfo);
     aBuilder.PushImage(dest, dest, !backfaceHidden,
@@ -1282,7 +1282,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       groupData->mFollowingGroup.mScale = currentGroup->mScale;
       groupData->mFollowingGroup.mResidualOffset =
           currentGroup->mResidualOffset;
-      groupData->mFollowingGroup.mPaintRect = currentGroup->mPaintRect;
+      groupData->mFollowingGroup.mVisibleRect = currentGroup->mVisibleRect;
 
       currentGroup = &groupData->mFollowingGroup;
 
@@ -1476,8 +1476,18 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   GP("scale: %f %f - %d - %f %f\n", scale.width, scale.height,
      group.mAppUnitsPerDevPixel, residualOffset.x, residualOffset.y);
 
+  const nsRect& untransformedPaintRect = aWrappingItem->GetUntransformedPaintRect();
+
+  auto visibleRect = LayerIntRect::FromUnknownRect(
+                         ScaleToOutsidePixelsOffset(
+                             untransformedPaintRect, scale.width,
+                             scale.height, appUnitsPerDevPixel, residualOffset))
+                         .Intersect(layerBounds);
+
   GP("LayerBounds: %d %d %d %d\n", layerBounds.x, layerBounds.y,
      layerBounds.width, layerBounds.height);
+  GP("VisibleRect: %d %d %d %d\n", visibleRect.x, visibleRect.y,
+     visibleRect.width, visibleRect.height);
 
   GP("Inherrited scale %f %f\n", scale.width, scale.height);
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
@@ -1523,23 +1533,15 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
-  group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mLayerBounds = layerBounds;
+  group.mVisibleRect = visibleRect;
+  group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mImageBounds = layerBounds.ToUnknownRect();
   group.mClippedImageBounds = group.mImageBounds;
-
-  const nsRect& untransformedPaintRect =
-      aWrappingItem->GetUntransformedPaintRect();
-
-  group.mPaintRect = LayerIntRect::FromUnknownRect(
-                         ScaleToOutsidePixelsOffset(
-                             untransformedPaintRect, scale.width, scale.height,
-                             group.mAppUnitsPerDevPixel, residualOffset))
-                         .Intersect(group.mLayerBounds);
   // XXX: Make the paint rect relative to the layer bounds. After we include
   // mLayerBounds.TopLeft() in the blob image we want to stop doing this
   // adjustment.
-  group.mPaintRect = group.mPaintRect - group.mLayerBounds.TopLeft();
+  group.mVisibleRect = group.mVisibleRect - group.mLayerBounds.TopLeft();
 
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
                      .PostTranslate(residualOffset.x, residualOffset.y);
