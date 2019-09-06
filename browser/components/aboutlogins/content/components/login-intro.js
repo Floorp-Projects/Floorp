@@ -12,20 +12,10 @@ export default class LoginIntro extends HTMLElement {
     let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(loginIntroTemplate.content.cloneNode(true));
-
-    shadowRoot.addEventListener("click", this);
   }
 
-  handleEvent(event) {
-    let helpLink = this.shadowRoot.querySelector(".intro-help-link");
-
-    if (event.type == "click" && event.originalTarget == helpLink) {
-      document.dispatchEvent(
-        new CustomEvent("AboutLoginsGetHelp", {
-          bubbles: true,
-        })
-      );
-    }
+  set supportURL(val) {
+    this.shadowRoot.querySelector(".intro-help-link").setAttribute("href", val);
   }
 }
 customElements.define("login-intro", LoginIntro);
