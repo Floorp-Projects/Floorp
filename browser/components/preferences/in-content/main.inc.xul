@@ -69,8 +69,7 @@
     <label><html:h2 data-l10n-id="tabs-group-header"/></label>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
-              preference="browser.ctrlTab.recentlyUsedOrder"
-              oncommand="Services.prefs.clearUserPref('browser.ctrlTab.migrated');"/>
+              preference="browser.ctrlTab.recentlyUsedOrder"/>
 
     <checkbox id="linkTargeting" data-l10n-id="open-new-link-as-tabs"
               preference="browser.link.open_newwindow"/>
@@ -284,8 +283,7 @@
       <button id="manageBrowserLanguagesButton"
               is="highlightable-button"
               class="accessory-button"
-              data-l10n-id="manage-browser-languages-button"
-              oncommand="gMainPane.showBrowserLanguages({search: false})"/>
+              data-l10n-id="manage-browser-languages-button"/>
     </hbox>
   </vbox>
   <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
@@ -451,22 +449,19 @@
         <spacer flex="1"/>
         <button id="checkForUpdatesButton"
                 is="highlightable-button"
-                data-l10n-id="update-checkForUpdatesButton"
-                oncommand="gAppUpdater.checkForUpdates();"/>
+                data-l10n-id="update-checkForUpdatesButton"/>
       </hbox>
       <hbox id="downloadAndInstall" align="start">
         <spacer flex="1"/>
         <button id="downloadAndInstallButton"
-                is="highlightable-button"
-                oncommand="gAppUpdater.startDownload();"/>
+                is="highlightable-button"/>
                 <!-- label and accesskey will be filled by JS -->
       </hbox>
       <hbox id="apply" align="start">
         <spacer flex="1"/>
         <button id="updateButton"
                 is="highlightable-button"
-                data-l10n-id="update-updateButton"
-                oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+                data-l10n-id="update-updateButton"/>
       </hbox>
       <hbox id="checkingForUpdates" align="start">
         <image class="update-throbber"/>
@@ -489,9 +484,9 @@
           <html:a id="failedLink" target="_blank" class="learnMore text-link" data-l10n-name="failed-link-main"></html:a>
         </label>
         <spacer flex="1"/>
-        <button data-l10n-id="update-checkForUpdatesButton"
-                is="highlightable-button"
-                oncommand="gAppUpdater.checkForUpdates();"/>
+        <button id="checkForUpdatesButton2"
+                data-l10n-id="update-checkForUpdatesButton"
+                is="highlightable-button"/>
       </hbox>
       <hbox id="policyDisabled" align="start">
         <label data-l10n-id="update-adminDisabled"></label>
@@ -504,9 +499,9 @@
         <image class="face-smile"/>
         <label data-l10n-id="update-noUpdatesFound"></label>
         <spacer flex="1"/>
-        <button data-l10n-id="update-checkForUpdatesButton"
-                is="highlightable-button"
-                oncommand="gAppUpdater.checkForUpdates();"/>
+        <button id="checkForUpdatesButton3"
+                data-l10n-id="update-checkForUpdatesButton"
+                is="highlightable-button"/>
       </hbox>
       <hbox id="otherInstanceHandlingUpdates" align="start">
         <label data-l10n-id="update-otherInstanceHandlingUpdates"></label>

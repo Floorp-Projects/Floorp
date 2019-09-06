@@ -419,6 +419,10 @@ var gPrivacyPane = {
       gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane)
     );
 
+    setEventListener("a11yPrivacyCheckbox", "command", function() {
+      return gPrivacyPane.updateA11yPrefs(this.checked);
+    });
+
     setEventListener(
       "trackingProtectionExceptions",
       "command",

@@ -423,6 +423,28 @@ var gMainPane = {
       document.getElementById("warnOpenMany").hidden = true;
     }
 
+    setEventListener("ctrlTabRecentlyUsedOrder", "command", function() {
+      Services.prefs.clearUserPref("browser.ctrlTab.migrated");
+    });
+    setEventListener("manageBrowserLanguagesButton", "command", function() {
+      gMainPane.showBrowserLanguages({ search: false });
+    });
+    setEventListener("checkForUpdatesButton", "command", function() {
+      gAppUpdater.checkForUpdates();
+    });
+    setEventListener("downloadAndInstallButton", "command", function() {
+      gAppUpdater.startDownload();
+    });
+    setEventListener("updateButton", "command", function() {
+      gAppUpdater.buttonRestartAfterDownload();
+    });
+    setEventListener("checkForUpdatesButton2", "command", function() {
+      gAppUpdater.checkForUpdates();
+    });
+    setEventListener("checkForUpdatesButton3", "command", function() {
+      gAppUpdater.checkForUpdates();
+    });
+
     // Startup pref
     setEventListener(
       "browserRestoreSession",

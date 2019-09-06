@@ -23,6 +23,12 @@ let gContainersPane = {
         }
       });
 
+    document
+      .getElementById("containersAdd")
+      .addEventListener("command", function() {
+        gContainersPane.onAddButtonCommand();
+      });
+
     this._rebuildView();
   },
 
@@ -63,19 +69,17 @@ let gContainersPane = {
       item.appendChild(containerButtons);
 
       let prefsButton = document.createXULElement("button");
-      prefsButton.setAttribute(
-        "oncommand",
-        "gContainersPane.onPreferenceCommand(event.originalTarget)"
-      );
+      prefsButton.addEventListener("command", function(event) {
+        gContainersPane.onPreferenceCommand(event.originalTarget);
+      });
       prefsButton.setAttribute("value", container.userContextId);
       document.l10n.setAttributes(prefsButton, "containers-preferences-button");
       containerButtons.appendChild(prefsButton);
 
       let removeButton = document.createXULElement("button");
-      removeButton.setAttribute(
-        "oncommand",
-        "gContainersPane.onRemoveCommand(event.originalTarget)"
-      );
+      removeButton.addEventListener("command", function(event) {
+        gContainersPane.onRemoveCommand(event.originalTarget);
+      });
       removeButton.setAttribute("value", container.userContextId);
       document.l10n.setAttributes(removeButton, "containers-remove-button");
       containerButtons.appendChild(removeButton);

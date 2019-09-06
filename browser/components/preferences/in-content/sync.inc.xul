@@ -76,10 +76,9 @@
 
             <!-- logged in and verified and all is good -->
             <hbox id="fxaLoginVerified" align="center" flex="1">
-              <image class="fxaProfileImage actionable"
+              <image id="openChangeProfileImage"
+                     class="fxaProfileImage actionable"
                      role="button"
-                     onclick="gSyncPane.openChangeProfileImage(event);"
-                     onkeypress="gSyncPane.openChangeProfileImage(event);"
                      data-l10n-id="sync-profile-picture"/>
               <vbox flex="1" pack="center">
                 <hbox flex="1" align="baseline">
@@ -94,8 +93,7 @@
                 </hbox>
                 <hbox>
                   <html:a id="verifiedManage" class="openLink"
-                          data-l10n-id="sync-manage-account"
-                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"/>
+                          data-l10n-id="sync-manage-account"/>
                 </hbox>
               </vbox>
             </hbox>
