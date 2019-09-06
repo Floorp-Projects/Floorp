@@ -65,4 +65,9 @@ class MediaFeature(
             }
         }
     }
+
+    companion object {
+        const val ACTION_SWITCH_TAB = "mozac.feature.media.SWITCH_TAB"
+        const val EXTRA_TAB_ID = "mozac.feature.media.TAB_ID"
+    }
 }
