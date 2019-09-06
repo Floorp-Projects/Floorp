@@ -110,9 +110,12 @@ class DebuggerScript : public NativeObject {
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];
 
+  class SetPrivateMatcher;
+  struct GetStartLineMatcher;
   struct GetStartColumnMatcher;
   struct GetLineCountMatcher;
   class GetSourceMatcher;
+  class GetFormatMatcher;
   template <bool OnlyOffsets>
   class GetPossibleBreakpointsMatcher;
   class GetOffsetMetadataMatcher;
