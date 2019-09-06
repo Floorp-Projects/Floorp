@@ -130,6 +130,12 @@ const kEventConstructors = {
                                                          return new FontFaceSetLoadEvent(aName, aProps);
                                                        },
                                              },
+  FormDataEvent:                             { create (aName, aProps) {
+                                                        return new FormDataEvent(aName, {
+                                                            formData: new FormData()
+                                                        });
+                                                      },
+                                             },
   GamepadEvent:                              { create (aName, aProps) {
                                                          return new GamepadEvent(aName, aProps);
                                                        },
