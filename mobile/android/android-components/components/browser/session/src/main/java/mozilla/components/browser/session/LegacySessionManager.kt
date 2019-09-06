@@ -20,6 +20,7 @@ import kotlin.math.min
 @Suppress("TooManyFunctions", "LargeClass")
 class LegacySessionManager(
     val engine: Engine,
+    private val engineSessionLinker: SessionManager.EngineSessionLinker,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     // It's important that any access to `values` is synchronized;
@@ -236,7 +237,7 @@ class LegacySessionManager(
      * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
      *   notification will fire.
      *
-     * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
+     * @param snapshot A [SessionManager.Snapshot] which may be produced by [createSnapshot].
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
     fun restore(snapshot: SessionManager.Snapshot, updateSelection: Boolean = true) = synchronized(values) {
@@ -299,6 +300,7 @@ class LegacySessionManager(
                 engineSession.loadUrl(session.url)
             }
         }
+        engineSessionLinker.link(session, engineSession)
     }
 
     private fun unlink(session: Session) {
@@ -311,6 +313,7 @@ class LegacySessionManager(
                 engineObserver = null
             }
         }
+        engineSessionLinker.unlink(session)
     }
 
     /**

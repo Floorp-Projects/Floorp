@@ -7,6 +7,7 @@ package mozilla.components.browser.state.reducer
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -28,6 +29,7 @@ internal object BrowserStateReducer {
             is SystemAction -> SystemReducer.reduce(state, action)
             is TabListAction -> TabListReducer.reduce(state, action)
             is TrackingProtectionAction -> TrackingProtectionStateReducer.reduce(state, action)
+            is EngineAction -> EngineStateReducer.reduce(state, action)
         }
     }
 }

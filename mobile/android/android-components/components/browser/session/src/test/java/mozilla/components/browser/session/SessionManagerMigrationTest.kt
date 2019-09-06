@@ -7,6 +7,9 @@ package mozilla.components.browser.session
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.base.observer.Consumable
@@ -18,6 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.`when`
 
 /**
@@ -735,6 +739,70 @@ class SessionManagerMigrationTest {
         session.download.consume { true }
         store.state.findTab("session")!!.also { tab ->
             assertNull(tab.content.download)
+        }
+    }
+
+    @Test
+    fun `Linking session to engine session`() {
+        val store = BrowserStore()
+        val engine: Engine = mock()
+
+        val engineSession1: EngineSession = mock()
+        doReturn(engineSession1).`when`(engine).createSession(false)
+
+        val sessionManager = SessionManager(engine, store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        sessionManager.add(session)
+
+        assertNull(sessionManager.getEngineSession(session))
+        assertEquals(engineSession1, sessionManager.getOrCreateEngineSession(session))
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(engineSession1, tab.engineState.engineSession)
+        }
+
+        // Force unlink and link again
+        val engineSession2: EngineSession = mock()
+        doReturn(engineSession2).`when`(engine).createSession(false)
+        session.engineSessionHolder.engineSession = null
+        assertEquals(engineSession2, sessionManager.getOrCreateEngineSession(session))
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(engineSession2, tab.engineState.engineSession)
+        }
+    }
+
+    @Test
+    fun `Restoring engine session with state`() {
+        val engine: Engine = mock()
+        val store = BrowserStore()
+        val sessionManager = SessionManager(engine, store)
+
+        val engineSession: EngineSession = mock()
+        val engineSessionState: EngineSessionState = mock()
+
+        val snapshot = SessionManager.Snapshot(
+            listOf(
+                SessionManager.Snapshot.Item(
+                    session = Session(id = "session1", initialUrl = "http://www.firefox.com"),
+                    engineSessionState = engineSessionState
+                ),
+                SessionManager.Snapshot.Item(
+                    session = Session(id = "session2", initialUrl = "http://www.mozilla.org"),
+                    engineSession = engineSession
+                )
+            ),
+            selectedSessionIndex = 0
+        )
+
+        sessionManager.restore(snapshot)
+        assertEquals(2, sessionManager.size)
+
+        store.state.findTab("session1")!!.also { tab ->
+            assertEquals(engineSessionState, tab.engineState.engineSessionState)
+        }
+
+        store.state.findTab("session2")!!.also { tab ->
+            assertEquals(engineSession, tab.engineState.engineSession)
         }
     }
 }
