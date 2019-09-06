@@ -74,6 +74,8 @@ exclude: true
   ([bug 1621094]({{bugzilla}}1621094))
 - Added support for Web Push via [`WebPushController`][70.24], [`WebPushDelegate`][70.25], and
   [`WebPushSubscription`][70.26].
+- Added [`ContentBlockingController`][70.27], accessible via [`GeckoRuntime.getContentBlockingController`][70.28]
+  to allow modification and inspection of a content blocking exception list.
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -101,6 +103,8 @@ exclude: true
 [70.24]: {{javadoc_uri}}/WebPushController.html
 [70.25]: {{javadoc_uri}}/WebPushDelegate.html
 [70.26]: {{javadoc_uri}}/WebPushSubscription.html
+[70.27]: {{javadoc_uri}}/ContentBlockingController.html
+[70.28]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController--
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -344,4 +348,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 0a0ac56ba2b8204077f874e49f4976a12051a18e
+[api-version]: c35dda98b313f389d0bb297a1226c801035f7c77
