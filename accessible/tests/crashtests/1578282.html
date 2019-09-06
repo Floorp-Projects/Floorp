@@ -1,0 +1,21 @@
+<html class="reftest-wait">
+<head>
+<script>
+function onload() {
+  document.documentElement.style.display = "none"
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.style.display = ""
+  window.setTimeout(() => {
+    document.documentElement.removeAttribute("class");
+  }, 1000);
+}
+</script>
+</head>
+<body onload="onload()">
+<marquee style="display: inline-grid">
+<video></video>
+<bgsound></bgsound>
+&lt;
+</marquee>
+</body>
+</html>
