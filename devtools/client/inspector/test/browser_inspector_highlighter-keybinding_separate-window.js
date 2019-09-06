@@ -73,6 +73,26 @@ add_task(async () => {
     EventUtils.synthesizeKey("c", modifier, window);
     await assertStatuses(toolbox, false, false);
 
+    info("Select a tool other than the inspector");
+    const onConsoleLoaded = toolbox.once("webconsole-ready");
+    await toolbox.selectTool("webconsole");
+    await onConsoleLoaded;
+    await waitForFocusChanged(toolbox.doc, true);
+
+    info("Focus on main window");
+    window.focus();
+    await waitForFocusChanged(document, true);
+
+    info("Type the shortcut key again after selecting other tool");
+    const onInspectorSelected = toolbox.once("inspector-selected");
+    EventUtils.synthesizeKey("c", modifier, window);
+    await onInspectorSelected;
+    await assertStatuses(toolbox, true, false);
+
+    info("Cancel the picker mode");
+    EventUtils.synthesizeKey("c", modifier, window);
+    await waitUntil(() => toolbox.pickerButton.isChecked === false);
+
     info("Close the toolbox");
     await toolbox.closeToolbox();
   }
