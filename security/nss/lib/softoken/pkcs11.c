@@ -324,6 +324,8 @@ static const struct mechanismList mechanisms[] = {
     { CKM_AES_CBC, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
     { CKM_AES_MAC, { 16, 32, CKF_SN_VR }, PR_TRUE },
     { CKM_AES_MAC_GENERAL, { 16, 32, CKF_SN_VR }, PR_TRUE },
+    { CKM_AES_CMAC, { 16, 32, CKF_SN_VR }, PR_TRUE },
+    { CKM_AES_CMAC_GENERAL, { 16, 32, CKF_SN_VR }, PR_TRUE },
     { CKM_AES_CBC_PAD, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
     { CKM_AES_CTS, { 16, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_AES_CTR, { 16, 32, CKF_EN_DE }, PR_TRUE },

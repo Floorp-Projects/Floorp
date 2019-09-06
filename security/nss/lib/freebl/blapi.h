@@ -10,6 +10,7 @@
 
 #include "blapit.h"
 #include "hasht.h"
+#include "cmac.h"
 #include "alghmac.h"
 
 SEC_BEGIN_PROTOS

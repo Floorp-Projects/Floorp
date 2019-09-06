@@ -5,6 +5,7 @@
   'sources': [
     'aeskeywrap.c',
     'alg2268.c',
+    'cmac.c',
     'alghmac.c',
     'arcfive.c',
     'arcfour.c',

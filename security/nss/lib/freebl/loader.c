@@ -2245,3 +2245,54 @@ BLAKE2B_Resurrect(unsigned char *space, void *arg)
     }
     return (vector->p_BLAKE2B_Resurrect)(space, arg);
 }
+
+/* == New for CMAC == */
+SECStatus
+CMAC_Init(CMACContext *ctx, CMACCipher type, const unsigned char *key,
+          unsigned int key_len)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_CMAC_Init)(ctx, type, key, key_len);
+}
+
+CMACContext *
+CMAC_Create(CMACCipher type, const unsigned char *key, unsigned int key_len)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return NULL;
+    return (vector->p_CMAC_Create)(type, key, key_len);
+}
+
+SECStatus
+CMAC_Begin(CMACContext *ctx)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_CMAC_Begin)(ctx);
+}
+
+SECStatus
+CMAC_Update(CMACContext *ctx, const unsigned char *data, unsigned int data_len)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_CMAC_Update)(ctx, data, data_len);
+}
+
+SECStatus
+CMAC_Finish(CMACContext *ctx, unsigned char *result, unsigned int *result_len,
+            unsigned int max_result_len)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_CMAC_Finish)(ctx, result, result_len, max_result_len);
+}
+
+void
+CMAC_Destroy(CMACContext *ctx, PRBool free_it)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return;
+    (vector->p_CMAC_Destroy)(ctx, free_it);
+}

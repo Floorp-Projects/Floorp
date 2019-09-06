@@ -236,6 +236,8 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len)
         case CKM_AES_GCM:
         case CKM_AES_MAC:
         case CKM_AES_MAC_GENERAL:
+        case CKM_AES_CMAC:
+        case CKM_AES_CMAC_GENERAL:
         case CKM_AES_CBC_PAD:
         case CKM_AES_KEY_GEN:
         case CKM_NETSCAPE_AES_KEY_WRAP:
@@ -453,6 +455,8 @@ PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
         case CKM_AES_GCM:
         case CKM_AES_MAC:
         case CKM_AES_MAC_GENERAL:
+        case CKM_AES_CMAC:
+        case CKM_AES_CMAC_GENERAL:
         case CKM_AES_CBC_PAD:
         case CKM_AES_KEY_GEN:
             return CKM_AES_KEY_GEN;

@@ -883,6 +883,14 @@ SECStatus
 PK11_FindRawCertsWithSubject(PK11SlotInfo *slot, SECItem *derSubject,
                              CERTCertificateList **results);
 
+/*
+ * Finds and returns all certificates with a public key that matches the given
+ * private key. May return an empty list if no certificates match. Returns NULL
+ * if a failure is encountered.
+ */
+CERTCertList *
+PK11_GetCertsMatchingPrivateKey(SECKEYPrivateKey *privKey);
+
 /**********************************************************************
  * New functions which are already deprecated....
  **********************************************************************/
