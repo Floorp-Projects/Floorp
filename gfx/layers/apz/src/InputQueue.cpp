@@ -749,6 +749,13 @@ void InputQueue::ProcessQueue() {
     // target may be null here if the initial target was unconfirmed and then
     // we later got a confirmed null target. in that case drop the events.
     if (target) {
+      // If the event is targeting a different APZC than the previous one,
+      // we want to clear the previous APZC's gesture state regardless of
+      // whether we're actually dispatching the event or not.
+      if (mLastActiveApzc && mLastActiveApzc != target &&
+          mTouchCounter.GetActiveTouchCount() > 0) {
+        mLastActiveApzc->ResetTouchInputState();
+      }
       if (curBlock->ShouldDropEvents()) {
         if (curBlock->AsTouchBlock()) {
           target->ResetTouchInputState();
@@ -797,10 +804,6 @@ bool InputQueue::CanDiscardBlock(InputBlockState* aBlock) {
 
 void InputQueue::UpdateActiveApzc(
     const RefPtr<AsyncPanZoomController>& aNewActive) {
-  if (mLastActiveApzc && mLastActiveApzc != aNewActive &&
-      mTouchCounter.GetActiveTouchCount() > 0) {
-    mLastActiveApzc->ResetTouchInputState();
-  }
   mLastActiveApzc = aNewActive;
 }
 
