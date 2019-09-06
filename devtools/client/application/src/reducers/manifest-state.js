@@ -86,9 +86,9 @@ function _processRawManifest(rawManifest) {
 
 function ManifestState() {
   return {
-    manifest: undefined,
-    isLoading: false,
     errorMessage: "",
+    isLoading: false,
+    manifest: undefined,
   };
 }
 
@@ -97,6 +97,7 @@ function manifestReducer(state = ManifestState(), action) {
     case FETCH_MANIFEST_START:
       return Object.assign({}, state, {
         isLoading: true,
+        mustLoadManifest: false,
       });
 
     case FETCH_MANIFEST_FAILURE:

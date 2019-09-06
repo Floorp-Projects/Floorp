@@ -4,11 +4,14 @@
 
 "use strict";
 
+const { openDocLink } = require("devtools/client/shared/link");
+
 const {
   createFactory,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const {
+  a,
   article,
   h1,
   p,
@@ -17,24 +20,33 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const DOC_URL =
+  "https://developer.mozilla.org/en-US/docs/Web/Manifest" +
+  "?utm_source=devtools&utm_medium=sw-panel-blank";
+
 /**
  * This component displays help information when no manifest is found for the
  * current target.
  */
 class ManifestEmpty extends PureComponent {
+  openDocumentation() {
+    openDocLink(DOC_URL);
+  }
+
   render() {
     return article(
-      { className: "manifest-empty" },
+      { className: "manifest-empty js-manifest-empty" },
       Localized(
         {
-          id: "manifest-view-header",
+          id: "manifest-empty-intro",
+          a: a({
+            className: "external-link",
+            onClick: () => this.openDocumentation(),
+          }),
         },
         h1({ className: "app-page__title" })
       ),
-      Localized(
-        { id: "manifest-non-existing" },
-        p({ className: "js-manifest-non-existing" })
-      )
+      Localized({ id: "manifest-non-existing" }, p({}))
     );
   }
 }

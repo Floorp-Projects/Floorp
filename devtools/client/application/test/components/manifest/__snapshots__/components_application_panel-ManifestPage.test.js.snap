@@ -1,10 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ManifestPage renders the expected snapshot when the manifest is loading 1`] = `
+<section
+  className="app-page app-page--empty"
+>
+  <Connect(ManifestLoader) />
+</section>
+`;
+
+exports[`ManifestPage renders the expected snapshot when the manifest needs to load 1`] = `
+<section
+  className="app-page app-page--empty"
+>
+  <Connect(ManifestLoader) />
+</section>
+`;
+
 exports[`ManifestPage renders the expected snapshot when there is a manifest 1`] = `
 <section
   className="app-page "
 >
-  <Connect(ManifestLoader) />
   <Manifest
     icons={
       Array [
@@ -50,7 +65,6 @@ exports[`ManifestPage renders the expected snapshot when there is no manifest 1`
 <section
   className="app-page app-page--empty"
 >
-  <Connect(ManifestLoader) />
   <ManifestEmpty />
 </section>
 `;

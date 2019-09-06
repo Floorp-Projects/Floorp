@@ -1,0 +1,10 @@
+.manifest-loader {
+  font-size: var(--body-20-font-size);
+  font-weight: var(--body-20-font-weight);
+}
+
+.manifest-loader__load {
+  /* TODO: implement a spinner when tackling the UX review bug
+     https://bugzilla.mozilla.org/show_bug.cgi?id=1566023 */
+  text-align: center;
+}
