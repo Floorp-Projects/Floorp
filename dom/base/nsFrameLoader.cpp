@@ -1963,13 +1963,6 @@ bool nsFrameLoader::ShouldUseRemoteProcess() {
     return false;
   }
 
-  // Check if the force fission test attribute is enabled.
-  if (XRE_IsContentProcess() &&
-      Preferences::GetBool("fission.oopif.attribute", false) &&
-      mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::fission)) {
-    return true;
-  }
-
   if (XRE_IsContentProcess() &&
       !(PR_GetEnv("MOZ_NESTED_OOP_TABS") ||
         Preferences::GetBool("dom.ipc.tabs.nested.enabled", false))) {
