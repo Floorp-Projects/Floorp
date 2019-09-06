@@ -28,7 +28,6 @@ class EditActionResult;
 class HTMLEditor;
 class SplitNodeResult;
 class TextEditor;
-class WSRunObject;
 enum class EditSubAction : int32_t;
 
 namespace dom {
@@ -120,174 +119,11 @@ class HTMLEditRules : public TextEditRules {
   }
 
   /**
-   * Called before deleting selected contents.  This method actually removes
-   * selected contents.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  WillDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
-                      nsIEditor::EStripWrappers aStripWrappers);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
-   * collapsed selection at whitespaces in a text node.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
-   *                            the caret point.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteCollapsedSelectionAtWhiteSpaces(
-      nsIEditor::EDirection aDirectionAndAmount,
-      WSRunObject& aWSRunObjectAtCaret);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtTextNode() handles deletion of
-   * collapsed selection in a text node.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aPointToDelete      The point in a text node to delete character(s).
-   *                            Caller must guarantee that this is in a text
-   *                            node.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteCollapsedSelectionAtTextNode(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aPointToDelete);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtAtomicContent() handles deletion of
-   * atomic elements like `<br>`, `<hr>`, `<img>`, `<input>`, etc and
-   * data nodes except text node (e.g., comment node).
-   * If aAtomicContent is a invisible `<br>` element, this will call
-   * `WillDeleteSelection()` recursively after deleting it.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   * @param aAtomicContent      The atomic content to be deleted.
-   * @param aCaretPoint         The caret point (i.e., selection start or
-   *                            end).
-   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
-   *                            the caret point.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteCollapsedSelectionAtAtomicContent(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, nsIContent& aAtomicContent,
-      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtOtherBlockBoundary() handles deletion at
-   * other block boundary (i.e., immediately before or after a block).
-   * If this does not join blocks, `WillDeleteSelection()` may be called
-   * recursively.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   * @param aOtherBlockElement  The block element which follows the caret or
-   *                            is followed by caret.
-   * @param aCaretPoint         The caret point (i.e., selection start or
-   *                            end).
-   * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
-   *                            the caret point.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteCollapsedSelectionAtOtherBlockBoundary(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers, Element& aOtherBlockElement,
-      const EditorDOMPoint& aCaretPoint, WSRunObject& aWSRunObjectAtCaret);
-
-  /**
-   * HandleDeleteCollapsedSelectionAtCurrentBlockBoundary() handles deletion
-   * at current block boundary (i.e., at start or end of current block).
-   *
-   * @param aDirectionAndAmount         Direction of the deletion.
-   * @param aCurrentBlockElement        The current block element.
-   * @param aCaretPoint                 The caret point (i.e., selection start
-   *                                    or end).
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteCollapsedSelectionAtCurrentBlockBoundary(
-      nsIEditor::EDirection aDirectionAndAmount, Element& aCurrentBlockElement,
-      const EditorDOMPoint& aCaretPoint);
-
-  /**
-   * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
-   * around aSelectionStartPoint and aSelectionEndPoint.  Then, collapse
-   * selection at aSelectionStartPoint or aSelectionEndPoint (depending on
-   * aDirectionAndAmount).
-   *
-   * @param aDirectionAndAmount         Direction of the deletion.
-   *                                    If nsIEditor::ePrevious, selection will
-   *                                    be collapsed to aSelectionEndPoint.
-   *                                    Otherwise, selection will be collapsed
-   *                                    to aSelectionStartPoint.
-   * @param aSelectionStartPoint        First selection range start after
-   *                                    computing the deleting range.
-   * @param aSelectionEndPoint          First selection range end after
-   *                                    computing the deleting range.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  DeleteUnnecessaryNodesAndCollapseSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aSelectionStartPoint,
-      const EditorDOMPoint& aSelectionEndPoint);
-
-  /**
-   * HandleDeleteAroundCollapsedSelection() handles deletion with collapsed
-   * `Selection`.  Callers must guarantee that this is called only when
-   * `Selection` is collapsed.
-   *
-   * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteAroundCollapsedSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers);
-
-  /**
-   * HandleDeleteNonCollapsedSelection() handles deletion with non-collapsed
-   * `Selection`.  Callers must guarantee that this is called only when
-   * `Selection` is NOT collapsed.
-   *
-   * @param aDirectionAndAmount         Direction of the deletion.
-   * @param aStripWrappers              Must be eStrip or eNoStrip.
-   * @param aSelectionWasCollpased      If the caller extended `Selection`
-   *                                    from collapsed, set this to `Yes`.
-   *                                    Otherwise, i.e., `Selection` is not
-   *                                    collapsed from the beginning, set
-   *                                    this to `No`.
-   */
-  enum class SelectionWasCollapsed { Yes, No };
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
-  HandleDeleteNonCollapsedSelection(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers,
-      SelectionWasCollapsed aSelectionWasCollapsed);
-
-  /**
    * Called after deleting selected content.
    * This method removes unnecessary empty nodes and/or inserts <br> if
    * necessary.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
-
-  /**
-   * DeleteElementsExceptTableRelatedElements() removes elements except
-   * table related elements (except <table> itself) and their contents
-   * from the DOM tree.
-   *
-   * @param aNode               If this is not a table related element, this
-   *                            node will be removed from the DOM tree.
-   *                            Otherwise, this method calls itself recursively
-   *                            with its children.
-   *
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  DeleteElementsExceptTableRelatedElements(nsINode& aNode);
 
   /**
    * Called before removing a list element.  This method actually removes
