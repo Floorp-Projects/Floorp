@@ -26,7 +26,6 @@ class FormData final : public nsISupports,
                        public HTMLFormSubmission,
                        public nsWrapperCache {
  private:
-  FormData(const FormData& aFormData);
   ~FormData() {}
 
   struct FormDataTuple {
@@ -50,11 +49,7 @@ class FormData final : public nsISupports,
                             Directory* aDirectory);
 
  public:
-  explicit FormData(nsISupports* aOwner = nullptr,
-                    NotNull<const Encoding*> aEncoding = UTF_8_ENCODING,
-                    Element* aOriginatingElement = nullptr);
-
-  already_AddRefed<FormData> Clone();
+  explicit FormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FormData)
@@ -140,8 +135,6 @@ class FormData final : public nsISupports,
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentTypeWithCharset,
                        nsACString& aCharset) const;
-
-  nsresult CopySubmissionDataTo(HTMLFormSubmission* aFormSubmission) const;
 
  private:
   nsCOMPtr<nsISupports> mOwner;
