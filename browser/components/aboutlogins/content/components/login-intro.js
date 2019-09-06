@@ -16,6 +16,11 @@ export default class LoginIntro extends HTMLElement {
     shadowRoot.addEventListener("click", this);
   }
 
+  focus() {
+    let helpLink = this.shadowRoot.querySelector(".intro-help-link");
+    helpLink.focus();
+  }
+
   handleEvent(event) {
     let helpLink = this.shadowRoot.querySelector(".intro-help-link");
 
