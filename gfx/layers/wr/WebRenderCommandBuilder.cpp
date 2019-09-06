@@ -794,11 +794,6 @@ struct DIGroup {
       if (!mInvalidRect.Contains(bounds)) {
         GP("Passing\n");
         dirty = false;
-      }
-
-      if (mInvalidRect.Contains(bounds)) {
-        GP("Wholely contained\n");
-      } else {
         BlobItemData* data = GetBlobItemData(item);
         if (data->mInvalid) {
           if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
