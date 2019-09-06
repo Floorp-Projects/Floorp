@@ -1330,12 +1330,34 @@ this.DownloadSource.prototype = {
   adjustChannel: null,
 
   /**
+   * For downloads handled by the (default) DownloadCopySaver, this function
+   * will determine, if provided, if a download can progress or has to be
+   * cancelled based on the HTTP status code of the network channel.
+   *
+   * @note If this is defined this object will not be serializable, thus the
+   *       Download object will not be persisted across sessions.
+   *
+   * @param aDownload
+   *        The download asking.
+   * @param aStatus
+   *        The HTTP status in question
+   *
+   * @return {Boolean} Download can progress
+   */
+  allowHttpStatus: null,
+
+  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
   toSerializable() {
     if (this.adjustChannel) {
+      // If the callback was used, we can't reproduce this across sessions.
+      return null;
+    }
+
+    if (this.allowHttpStatus) {
       // If the callback was used, we can't reproduce this across sessions.
       return null;
     }
@@ -1381,6 +1403,11 @@ this.DownloadSource.prototype = {
  *                         this function can adjust the network channel before
  *                         it is opened, for example to change the HTTP headers
  *                         or to upload a stream as POST data.  Optional.
+ *          allowHttpStatus: For downloads handled by the (default)
+ *                           DownloadCopySaver, this function will determine, if
+ *                           provided, if a download can progress or has to be
+ *                           cancelled based on the HTTP status code of the
+ *                           network channel.
  *        }
  *
  * @return The newly created DownloadSource object.
@@ -1417,6 +1444,10 @@ this.DownloadSource.fromSerializable = function(aSerializable) {
     }
     if ("adjustChannel" in aSerializable) {
       source.adjustChannel = aSerializable.adjustChannel;
+    }
+
+    if ("allowHttpStatus" in aSerializable) {
+      source.allowHttpStatus = aSerializable.allowHttpStatus;
     }
 
     deserializeUnknownProperties(
@@ -2099,6 +2130,19 @@ this.DownloadCopySaver.prototype = {
             // Set a flag that can be retrieved later when handling the
             // cancellation so that the proper error can be thrown.
             this.download._blockedByParentalControls = true;
+            aRequest.cancel(Cr.NS_BINDING_ABORTED);
+            return;
+          }
+
+          // Check back with the initiator if we should allow a certain
+          // HTTP code. By default, we'll just save error pages too,
+          // however a consumer down the line, such as the WebExtensions
+          // downloads API might want to handle this differently.
+          if (
+            download.source.allowHttpStatus &&
+            aRequest instanceof Ci.nsIHttpChannel &&
+            !download.source.allowHttpStatus(download, aRequest.responseStatus)
+          ) {
             aRequest.cancel(Cr.NS_BINDING_ABORTED);
             return;
           }

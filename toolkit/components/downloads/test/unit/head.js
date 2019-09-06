@@ -916,6 +916,13 @@ add_task(function test_common_initialize() {
     }
   );
 
+  gHttpServer.registerPathHandler("/busy.txt", function(aRequest, aResponse) {
+    aResponse.setStatusLine("1.1", 504, "Gateway Timeout");
+    aResponse.setHeader("Content-Type", "text/plain", false);
+    aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT.length, false);
+    aResponse.write(TEST_DATA_SHORT);
+  });
+
   // This URL will emulate being blocked by Windows Parental controls
   gHttpServer.registerPathHandler("/parentalblocked.zip", function(
     aRequest,
