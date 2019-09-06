@@ -23,10 +23,19 @@ class nsBaseHashtable;  // forward declaration
 template <class KeyClass, class DataType>
 class nsBaseHashtableET : public KeyClass {
  public:
-  DataType mData;
-  friend class nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>;
+  const DataType& GetData() const { return mData; }
+  DataType* GetModifiableData() { return &mData; }
+  template <typename U>
+  void SetData(U&& aData) {
+    mData = std::forward<U>(aData);
+  }
 
  private:
+  DataType mData;
+  friend class nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>;
+  template <typename KeyClassX, typename DataTypeX, typename UserDataTypeX>
+  friend class nsBaseHashtable;
+
   typedef typename KeyClass::KeyType KeyType;
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
 
