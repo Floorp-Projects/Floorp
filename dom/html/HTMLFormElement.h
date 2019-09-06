@@ -9,6 +9,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
@@ -32,7 +33,6 @@ class EventChainPreVisitor;
 namespace dom {
 class HTMLFormControlsCollection;
 class HTMLImageElement;
-class FormData;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
                               public nsIWebProgressListener,
@@ -277,13 +277,12 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool SubmissionCanProceed(Element* aSubmitter);
 
   /**
-   * Contruct the entry list to get their data pumped into the FormData and
-   * fire a `formdata` event with the entry list in formData attribute.
-   * <https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-form-data-set>
+   * Walk over the form elements and call SubmitNamesValues() on them to get
+   * their data pumped into the FormSubmitter.
    *
-   * @param aFormData the form data object
+   * @param aFormSubmission the form submission object
    */
-  nsresult ConstructEntryList(FormData* aFormData);
+  nsresult WalkFormElements(HTMLFormSubmission* aFormSubmission);
 
   /**
    * Whether the submission of this form has been ever prevented because of
@@ -612,11 +611,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    * being invalid.
    */
   bool mEverTriedInvalidSubmit;
-  /** Whether we are constructing entry list */
-  bool mIsConstructingEntryList;
 
  private:
-  NotNull<const Encoding*> GetSubmitEncoding();
   ~HTMLFormElement();
 };
 

@@ -2016,7 +2016,6 @@ STATIC_ATOMS = [
     Atom("ontimeout", "ontimeout"),
     Atom("ontimeupdate", "ontimeupdate"),
     Atom("onended", "onended"),
-    Atom("onformdata", "onformdata"),
     Atom("onratechange", "onratechange"),
     Atom("ondurationchange", "ondurationchange"),
     Atom("onvolumechange", "onvolumechange"),
