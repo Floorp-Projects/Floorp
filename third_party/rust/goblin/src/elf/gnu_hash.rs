@@ -12,26 +12,40 @@
 //!   3. maskwords
 //!   4. shift2
 //!
-//! See: https://blogs.oracle.com/ali/entry/gnu_hash_elf_sections
+//! See: https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
+
+/// GNU hash function: takes a string and returns the u32 hash of that string
+pub fn hash(symbol: &str) -> u32 {
+    const HASH_SEED: u32 = 5381;
+    let mut hash = HASH_SEED;
+    for b in symbol.as_bytes() {
+        hash = hash
+            .wrapping_mul(33)
+            .wrapping_add(u32::from(*b));
+    }
+    hash
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hash;
+    #[test]
+    fn test_hash() {
+        assert_eq!(hash("")             , 0x00001505);
+        assert_eq!(hash("printf")       , 0x156b2bb8);
+        assert_eq!(hash("exit")         , 0x7c967e3f);
+        assert_eq!(hash("syscall")      , 0xbac212a0);
+        assert_eq!(hash("flapenguin.me"), 0x8ae9f18e);
+    }
+}
 
 macro_rules! elf_gnu_hash_impl {
     ($size:ty) => {
 
         use core::slice;
         use core::mem;
-        use strtab::Strtab;
+        use crate::strtab::Strtab;
         use super::sym;
-
-        /// GNU hash function: takes a string and returns the u32 hash of that string
-        pub fn hash(symbol: &str) -> u32 {
-            let bytes = symbol.as_bytes();
-            const HASH_SEED: u32 = 5381;
-            let mut hash = HASH_SEED;
-            for b in bytes {
-                hash = hash.wrapping_mul(32).wrapping_add(*b as u32).wrapping_add(hash);
-            }
-            hash
-        }
 
         pub struct GnuHash<'process> {
             nbuckets: u32,
@@ -48,25 +62,25 @@ macro_rules! elf_gnu_hash_impl {
         impl<'process> GnuHash<'process> {
             pub unsafe fn new(hashtab: *const u32, total_dynsyms: usize, symtab: &'process [sym::Sym]) -> GnuHash<'process> {
                 let nbuckets = *hashtab;
-                let symindex = *hashtab.offset(1) as usize;
-                let maskwords = *hashtab.offset(2) as usize; // how many words our bloom filter mask has
-                let shift2 = *hashtab.offset(3);
-                let bloomwords_ptr = hashtab.offset(4) as *const $size;
-                let buckets_ptr = bloomwords_ptr.offset(maskwords as isize) as *const u32;
+                let symindex = *hashtab.add(1) as usize;
+                let maskwords = *hashtab.add(2) as usize; // how many words our bloom filter mask has
+                let shift2 = *hashtab.add(3);
+                let bloomwords_ptr = hashtab.add(4) as *const $size;
+                let buckets_ptr = bloomwords_ptr.add(maskwords) as *const u32;
                 let buckets = slice::from_raw_parts(buckets_ptr, nbuckets as usize);
-                let hashvalues_ptr = buckets_ptr.offset(nbuckets as isize);
+                let hashvalues_ptr = buckets_ptr.add(nbuckets as usize);
                 let hashvalues = slice::from_raw_parts(hashvalues_ptr, total_dynsyms - symindex);
                 let bloomwords = slice::from_raw_parts(bloomwords_ptr, maskwords);
                 GnuHash {
-                    nbuckets: nbuckets,
-                    symindex: symindex,
-                    shift2: shift2,
+                    nbuckets,
+                    symindex,
+                    shift2,
                     maskbits: mem::size_of::<usize>() as u32,
-                    bloomwords: bloomwords,
-                    hashvalues: hashvalues,
-                    buckets: buckets,
+                    bloomwords,
+                    hashvalues,
+                    buckets,
                     maskwords_bitmask: ((maskwords as i32) - 1) as u32,
-                    symtab: symtab,
+                    symtab,
                 }
             }
 

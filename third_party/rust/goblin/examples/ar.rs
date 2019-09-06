@@ -1,7 +1,5 @@
 //cargo run --example=ar -- crt1.a
 
-extern crate goblin;
-
 use goblin::elf;
 use goblin::archive;
 use std::env;

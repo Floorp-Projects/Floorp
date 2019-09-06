@@ -1,20 +1,21 @@
-use alloc::borrow::Cow;
-use alloc::vec::Vec;
+use crate::alloc::borrow::Cow;
+use crate::alloc::vec::Vec;
 use core::fmt::{LowerHex, Debug};
 
-use scroll::{self, Pread};
+use scroll::{Pread, Pwrite, SizeWith};
 use scroll::ctx::TryFromCtx;
-use error;
+use crate::error;
 
-use pe::section_table;
-use pe::utils;
-use pe::data_directories;
+use crate::pe::section_table;
+use crate::pe::utils;
+use crate::pe::data_directories;
 
+use log::{debug, warn};
 
 pub const IMPORT_BY_ORDINAL_32: u32 = 0x8000_0000;
 pub const IMPORT_BY_ORDINAL_64: u64 = 0x8000_0000_0000_0000;
-pub const IMPORT_RVA_MASK_32: u32 = 0x8fff_ffff;
-pub const IMPORT_RVA_MASK_64: u64 = 0x0000_0000_8fff_ffff;
+pub const IMPORT_RVA_MASK_32: u32 = 0x7fff_ffff;
+pub const IMPORT_RVA_MASK_64: u64 = 0x0000_0000_7fff_ffff;
 
 pub trait Bitfield<'a>: Into<u64> + PartialEq + Eq + LowerHex + Debug + TryFromCtx<'a, scroll::Endian, Error=scroll::Error, Size=usize> {
     fn is_ordinal(&self) -> bool;
@@ -51,7 +52,7 @@ impl<'a> HintNameTableEntry<'a> {
         let offset = &mut offset;
         let hint = bytes.gread_with(offset, scroll::LE)?;
         let name = bytes.pread::<&'a str>(*offset)?;
-        Ok(HintNameTableEntry { hint: hint, name: name })
+        Ok(HintNameTableEntry { hint, name })
     }
 }
 
@@ -64,8 +65,7 @@ pub enum SyntheticImportLookupTableEntry<'a> {
 pub type ImportLookupTable<'a> = Vec<SyntheticImportLookupTableEntry<'a>>;
 
 impl<'a> SyntheticImportLookupTableEntry<'a> {
-    pub fn parse<T: Bitfield<'a>>(bytes: &'a [u8], mut offset: usize, sections: &[section_table::SectionTable])
-                                                                      -> error::Result<ImportLookupTable<'a>> {
+    pub fn parse<T: Bitfield<'a>>(bytes: &'a [u8], mut offset: usize, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<ImportLookupTable<'a>> {
         let le = scroll::LE;
         let offset = &mut offset;
         let mut table = Vec::new();
@@ -86,7 +86,7 @@ impl<'a> SyntheticImportLookupTableEntry<'a> {
                         let rva = bitfield.to_rva();
                         let hentry = {
                             debug!("searching for RVA {:#x}", rva);
-                            if let Some(offset) = utils::find_offset(rva as usize, sections) {
+                            if let Some(offset) = utils::find_offset(rva as usize, sections, file_alignment) {
                                 debug!("offset {:#x}", offset);
                                 HintNameTableEntry::parse(bytes, offset)?
                             } else {
@@ -142,33 +142,39 @@ pub struct SyntheticImportDirectoryEntry<'a> {
 }
 
 impl<'a> SyntheticImportDirectoryEntry<'a> {
-    pub fn parse<T: Bitfield<'a>>(bytes: &'a [u8], import_directory_entry: ImportDirectoryEntry, sections: &[section_table::SectionTable]) -> error::Result<SyntheticImportDirectoryEntry<'a>> {
+    pub fn parse<T: Bitfield<'a>>(bytes: &'a [u8], import_directory_entry: ImportDirectoryEntry, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<SyntheticImportDirectoryEntry<'a>> {
         const LE: scroll::Endian = scroll::LE;
         let name_rva = import_directory_entry.name_rva;
-        let name = utils::try_name(bytes, name_rva as usize, sections)?;
+        let name = utils::try_name(bytes, name_rva as usize, sections, file_alignment)?;
         let import_lookup_table = {
             let import_lookup_table_rva = import_directory_entry.import_lookup_table_rva;
-            debug!("Synthesizing lookup table imports for {} lib, with import lookup table rva: {:#x}", name, import_lookup_table_rva);
-            if let Some(import_lookup_table_offset) = utils::find_offset(import_lookup_table_rva as usize, sections) {
-                let import_lookup_table = SyntheticImportLookupTableEntry::parse::<T>(bytes, import_lookup_table_offset, sections)?;
-                debug!("Successfully synthesized import lookup table entry: {:#?}", import_lookup_table);
+            let import_address_table_rva = import_directory_entry.import_address_table_rva;
+            if let Some(import_lookup_table_offset) = utils::find_offset(import_lookup_table_rva as usize, sections, file_alignment) {
+                debug!("Synthesizing lookup table imports for {} lib, with import lookup table rva: {:#x}", name, import_lookup_table_rva);
+                let import_lookup_table = SyntheticImportLookupTableEntry::parse::<T>(bytes, import_lookup_table_offset, sections, file_alignment)?;
+                debug!("Successfully synthesized import lookup table entry from lookup table: {:#?}", import_lookup_table);
                 Some(import_lookup_table)
+            } else if let Some(import_address_table_offset) = utils::find_offset(import_address_table_rva as usize, sections, file_alignment) {
+                debug!("Synthesizing lookup table imports for {} lib, with import address table rva: {:#x}", name, import_lookup_table_rva);
+                let import_address_table  = SyntheticImportLookupTableEntry::parse::<T>(bytes, import_address_table_offset, sections, file_alignment)?;
+                debug!("Successfully synthesized import lookup table entry from IAT: {:#?}", import_address_table);
+                Some(import_address_table)
             } else {
                 None
             }
         };
 
-        let import_address_table_offset = &mut utils::find_offset(import_directory_entry.import_address_table_rva as usize, sections).ok_or(error::Error::Malformed(format!("Cannot map import_address_table_rva {:#x} into offset for {}", import_directory_entry.import_address_table_rva, name)))?;
+        let import_address_table_offset = &mut utils::find_offset(import_directory_entry.import_address_table_rva as usize, sections, file_alignment).ok_or_else(|| error::Error::Malformed(format!("Cannot map import_address_table_rva {:#x} into offset for {}", import_directory_entry.import_address_table_rva, name)))?;
         let mut import_address_table = Vec::new();
         loop {
             let import_address = bytes.gread_with::<T>(import_address_table_offset, LE)?.into();
             if import_address == 0 { break } else { import_address_table.push(import_address); }
         }
         Ok(SyntheticImportDirectoryEntry {
-            import_directory_entry: import_directory_entry,
-            name: name,
-            import_lookup_table: import_lookup_table,
-            import_address_table: import_address_table
+            import_directory_entry,
+            name,
+            import_lookup_table,
+            import_address_table
         })
     }
 }
@@ -180,10 +186,10 @@ pub struct ImportData<'a> {
 }
 
 impl<'a> ImportData<'a> {
-    pub fn parse<T: Bitfield<'a>>(bytes: &'a[u8], dd: &data_directories::DataDirectory, sections: &[section_table::SectionTable]) -> error::Result<ImportData<'a>> {
+    pub fn parse<T: Bitfield<'a>>(bytes: &'a[u8], dd: data_directories::DataDirectory, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<ImportData<'a>> {
         let import_directory_table_rva = dd.virtual_address as usize;
         debug!("import_directory_table_rva {:#x}", import_directory_table_rva);
-        let offset = &mut utils::find_offset(import_directory_table_rva, sections).ok_or(error::Error::Malformed(format!("Cannot create ImportData; cannot map import_directory_table_rva {:#x} into offset", import_directory_table_rva)))?;;
+        let offset = &mut utils::find_offset(import_directory_table_rva, sections, file_alignment).ok_or_else(|| error::Error::Malformed(format!("Cannot create ImportData; cannot map import_directory_table_rva {:#x} into offset", import_directory_table_rva)))?;;
         debug!("import data offset {:#x}", offset);
         let mut import_data = Vec::new();
         loop {
@@ -192,13 +198,13 @@ impl<'a> ImportData<'a> {
             if import_directory_entry.is_null() {
                 break;
             } else {
-                let entry = SyntheticImportDirectoryEntry::parse::<T>(bytes, import_directory_entry, sections)?;
+                let entry = SyntheticImportDirectoryEntry::parse::<T>(bytes, import_directory_entry, sections, file_alignment)?;
                 debug!("entry {:#?}", entry);
                 import_data.push(entry);
             }
         }
         debug!("finished ImportData");
-        Ok(ImportData { import_data: import_data})
+        Ok(ImportData { import_data})
     }
 }
 
@@ -225,23 +231,23 @@ impl<'a> Import<'a> {
                     let offset = import_base + (i * T::size_of());
                     use self::SyntheticImportLookupTableEntry::*;
                     let (rva, name, ordinal) =
-                        match entry {
-                            &HintNameTableRVA ((rva, ref hint_entry)) => {
+                        match *entry {
+                            HintNameTableRVA ((rva, ref hint_entry)) => {
                                 // if hint_entry.name = "" && hint_entry.hint = 0 {
                                 //     println!("<PE.Import> warning hint/name table rva from {} without hint {:#x}", dll, rva);
                                 // }
-                                (rva, Cow::Borrowed(hint_entry.name), hint_entry.hint.clone())
+                                (rva, Cow::Borrowed(hint_entry.name), hint_entry.hint)
                             },
-                            &OrdinalNumber(ordinal) => {
+                            OrdinalNumber(ordinal) => {
                                 let name = format!("ORDINAL {}", ordinal);
                                 (0x0, Cow::Owned(name), ordinal)
                             },
                         };
                     let import =
                         Import {
-                            name: name,
-                            ordinal: ordinal, dll: dll,
-                            size: T::size_of(), offset: offset, rva: rva as usize
+                            name,
+                            ordinal, dll,
+                            size: T::size_of(), offset, rva: rva as usize
                         };
                     imports.push(import);
                 }

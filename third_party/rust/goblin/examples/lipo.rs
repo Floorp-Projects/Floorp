@@ -1,5 +1,3 @@
-extern crate goblin;
-
 use goblin::mach::{self, Mach};
 use std::env;
 use std::process;
@@ -29,7 +27,7 @@ fn main () {
                     "-m64" => { m64 = true }
                     other => {
                         println!("unknown flag: {}", other);
-                        println!("");
+                        println!();
                         usage();
                     }
                 }

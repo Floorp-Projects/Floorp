@@ -2,11 +2,12 @@
 //!
 //! Symbols are essentially a type, offset, and the symbol name
 
-use scroll::{ctx, Pread, Pwrite};
+use scroll::ctx;
 use scroll::ctx::SizeWith;
-use error;
-use container::{self, Container};
-use mach::load_command;
+use scroll::{Pread, Pwrite, SizeWith, IOread, IOwrite};
+use crate::error;
+use crate::container::{self, Container};
+use crate::mach::load_command;
 use core::fmt::{self, Debug};
 
 // The n_type field really contains four fields which are used via the following masks.
@@ -82,6 +83,48 @@ pub const NLIST_TYPE_MASK: u8 = 0xe;
 pub const NLIST_TYPE_GLOBAL: u8 = 0x1;
 pub const NLIST_TYPE_LOCAL: u8 = 0x0;
 
+/// Mask for reference flags of `n_desc` field.
+pub const REFERENCE_TYPE: u16 = 0xf;
+/// This symbol is a reference to an external non-lazy (data) symbol.
+pub const REFERENCE_FLAG_UNDEFINED_NON_LAZY: u16 = 0x0;
+/// This symbol is a reference to an external lazy symbol—that is, to a function call.
+pub const REFERENCE_FLAG_UNDEFINED_LAZY: u16 = 0x1;
+/// This symbol is defined in this module.
+pub const REFERENCE_FLAG_DEFINED: u16 = 0x2;
+/// This symbol is defined in this module and is visible only to modules within this
+/// shared library.
+pub const REFERENCE_FLAG_PRIVATE_DEFINED: u16 = 0x3;
+/// This symbol is defined in another module in this file, is a non-lazy (data) symbol,
+/// and is visible only to modules within this shared library.
+pub const REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY: u16 = 0x4;
+/// This symbol is defined in another module in this file, is a lazy (function) symbol,
+/// and is visible only to modules within this shared library.
+pub const REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY: u16 = 0x5;
+
+// Additional flags of n_desc field.
+
+/// Must be set for any defined symbol that is referenced by dynamic-loader APIs
+/// (such as dlsym and NSLookupSymbolInImage) and not ordinary undefined symbol
+/// references. The `strip` tool uses this bit to avoid removing symbols that must
+/// exist: If the symbol has this bit set, `strip` does not strip it.
+pub const REFERENCED_DYNAMICALLY: u16 = 0x10;
+/// Sometimes used by the dynamic linker at runtime in a fully linked image. Do not
+/// set this bit in a fully linked image.
+pub const N_DESC_DISCARDED: u16 = 0x20;
+/// When set in a relocatable object file (file type MH_OBJECT) on a defined symbol,
+/// indicates to the static linker to never dead-strip the symbol.
+// (Note that the same bit (0x20) is used for two nonoverlapping purposes.)
+pub const N_NO_DEAD_STRIP: u16 = 0x20;
+/// Indicates that this undefined symbol is a weak reference. If the dynamic linker
+/// cannot find a definition for this symbol, it sets the address of this symbol to 0.
+/// The static linker sets this symbol given the appropriate weak-linking flags.
+pub const N_WEAK_REF: u16 = 0x40;
+/// Indicates that this symbol is a weak definition. If the static linker or the
+/// dynamic linker finds another (non-weak) definition for this symbol, the weak
+/// definition is ignored. Only symbols in a coalesced section can be marked as a
+/// weak definition.
+pub const N_WEAK_DEF: u16 = 0x80;
+
 pub fn n_type_to_str(n_type: u8) -> &'static str {
     match n_type {
         N_UNDF => "N_UNDF",
@@ -112,13 +155,13 @@ pub const SIZEOF_NLIST_32: usize = 12;
 
 impl Debug for Nlist32 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "strx: {:04} type: {:#02x} sect: {:#x} desc: {:#03x} value: {:#x}",
-               self.n_strx,
-               self.n_type,
-               self.n_sect,
-               self.n_desc,
-               self.n_value,
-        )
+        fmt.debug_struct("Nlist32")
+           .field("n_strx", &format_args!("{:04}", self.n_strx))
+           .field("n_type", &format_args!("{:#02x}", self.n_type))
+           .field("n_sect", &format_args!("{:#x}", self.n_sect))
+           .field("n_desc", &format_args!("{:#03x}", self.n_desc))
+           .field("n_value", &format_args!("{:#x}", self.n_value))
+           .finish()
     }
 }
 
@@ -141,13 +184,13 @@ pub const SIZEOF_NLIST_64: usize = 16;
 
 impl Debug for Nlist64 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "strx: {:04} type: {:#02x} sect: {:#x} desc: {:#03x} value: {:#x}",
-               self.n_strx,
-               self.n_type,
-               self.n_sect,
-               self.n_desc,
-               self.n_value,
-        )
+        fmt.debug_struct("Nlist64")
+           .field("n_strx", &format_args!("{:04}", self.n_strx))
+           .field("n_type", &format_args!("{:#02x}", self.n_type))
+           .field("n_sect", &format_args!("{:#x}", self.n_sect))
+           .field("n_desc", &format_args!("{:#03x}", self.n_desc))
+           .field("n_value", &format_args!("{:#x}", self.n_value))
+           .finish()
     }
 }
 
@@ -178,6 +221,10 @@ impl Nlist {
     pub fn is_global(&self) -> bool {
         self.n_type & N_EXT != 0
     }
+    /// Whether this symbol is weak or not
+    pub fn is_weak(&self) -> bool {
+        self.n_desc & (N_WEAK_REF | N_WEAK_DEF) != 0
+    }
     /// Whether this symbol is undefined or not
     pub fn is_undefined(&self) -> bool {
         self.n_sect == 0 && self.n_type & N_TYPE == N_UNDF
@@ -191,7 +238,6 @@ impl Nlist {
 impl ctx::SizeWith<container::Ctx> for Nlist {
     type Units = usize;
     fn size_with(ctx: &container::Ctx) -> usize {
-        use container::Container;
         match ctx.container {
             Container::Little => {
                 SIZEOF_NLIST_32
@@ -210,7 +256,7 @@ impl From<Nlist32> for Nlist {
             n_type: nlist.n_type,
             n_sect: nlist.n_sect as usize,
             n_desc: nlist.n_desc,
-            n_value: nlist.n_value as u64,
+            n_value: u64::from(nlist.n_value),
         }
     }
 }
@@ -252,9 +298,9 @@ impl From<Nlist> for Nlist64 {
 }
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
-    fn try_from_ctx(bytes: &'a [u8], container::Ctx { container, le }: container::Ctx) -> ::error::Result<(Self, Self::Size)> {
+    fn try_from_ctx(bytes: &'a [u8], container::Ctx { container, le }: container::Ctx) -> crate::error::Result<(Self, Self::Size)> {
         let nlist = match container {
             Container::Little => {
                 (bytes.pread_with::<Nlist32>(0, le)?.into(), SIZEOF_NLIST_32)
@@ -268,7 +314,7 @@ impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
 }
 
 impl ctx::TryIntoCtx<container::Ctx> for Nlist {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
 
     fn try_into_ctx(self, bytes: &mut [u8], container::Ctx { container, le }: container::Ctx) -> Result<Self::Size, Self::Error> {
@@ -298,18 +344,18 @@ pub struct SymbolsCtx {
 }
 
 impl<'a, T: ?Sized> ctx::TryFromCtx<'a, SymbolsCtx, T> for Symbols<'a> where T: AsRef<[u8]> {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
     fn try_from_ctx(bytes: &'a T, SymbolsCtx {
         nsyms, strtab, ctx
-    }: SymbolsCtx) -> ::error::Result<(Self, Self::Size)> {
+    }: SymbolsCtx) -> crate::error::Result<(Self, Self::Size)> {
         let data = bytes.as_ref();
         Ok ((Symbols {
-            data: data,
+            data,
             start: 0,
-            nsyms: nsyms,
-            strtab: strtab,
-            ctx: ctx,
+            nsyms,
+            strtab,
+            ctx,
         }, data.len()))
     }
 }
@@ -337,10 +383,10 @@ impl<'a> Iterator for SymbolIterator<'a> {
                         Ok(name) => {
                             Some(Ok((name, symbol)))
                         },
-                        Err(e) => return Some(Err(e.into()))
+                        Err(e) => Some(Err(e.into()))
                     }
                 },
-                Err(e) => return Some(Err(e.into()))
+                Err(e) => Some(Err(e))
             }
         }
     }
@@ -372,16 +418,16 @@ impl<'a> Symbols<'a> {
         let nsyms = count;
         Ok (Symbols {
             data: bytes,
-            start: start,
-            nsyms: nsyms,
-            strtab: strtab,
+            start,
+            nsyms,
+            strtab,
             ctx: container::Ctx::default(),
         })
     }
     pub fn parse(bytes: &'a [u8], symtab: &load_command::SymtabCommand, ctx: container::Ctx) -> error::Result<Symbols<'a>> {
         // we need to normalize the strtab offset before we receive the truncated bytes in pread_with
         let strtab = symtab.stroff - symtab.symoff;
-        Ok(bytes.pread_with(symtab.symoff as usize, SymbolsCtx { nsyms: symtab.nsyms as usize, strtab: strtab as usize, ctx: ctx })?)
+        Ok(bytes.pread_with(symtab.symoff as usize, SymbolsCtx { nsyms: symtab.nsyms as usize, strtab: strtab as usize, ctx })?)
     }
 
     pub fn iter(&self) -> SymbolIterator<'a> {
@@ -396,7 +442,7 @@ impl<'a> Symbols<'a> {
     }
 
     /// Parses a single Nlist symbol from the binary, with its accompanying name
-    pub fn get(&self, index: usize) -> ::error::Result<(&'a str, Nlist)> {
+    pub fn get(&self, index: usize) -> crate::error::Result<(&'a str, Nlist)> {
         let sym: Nlist = self.data.pread_with(self.start + (index * Nlist::size_with(&self.ctx)), self.ctx)?;
         let name = self.data.pread(self.strtab + sym.n_strx)?;
         Ok((name, sym))
@@ -405,16 +451,22 @@ impl<'a> Symbols<'a> {
 
 impl<'a> Debug for Symbols<'a> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(fmt, "Data: {} start: {:#?}, nsyms: {} strtab: {:#x}", self.data.len(), self.start, self.nsyms, self.strtab)?;
-        writeln!(fmt, "Symbols: {{")?;
+        fmt.debug_struct("Symbols")
+            .field("data", &self.data.len())
+            .field("start", &format_args!("{:#?}", self.start))
+            .field("nsyms", &self.nsyms)
+            .field("strtab", &format_args!("{:#x}", self.strtab))
+            .finish()?;
+
+        writeln!(fmt, "Symbol List {{")?;
         for (i, res) in self.iter().enumerate() {
             match res {
-                Ok((name, nlist)) => {
-                    writeln!(fmt, "{: >10x} {} sect: {:#x} type: {:#02x} desc: {:#03x}", nlist.n_value, name, nlist.n_sect, nlist.n_type, nlist.n_desc)?;
-                },
-                Err(error) => {
-                    writeln!(fmt, "  Bad symbol, index: {}, sym: {:?}", i, error)?;
-                }
+                Ok((name, nlist)) => writeln!(
+                    fmt,
+                    "{: >10x} {} sect: {:#x} type: {:#02x} desc: {:#03x}",
+                    nlist.n_value, name, nlist.n_sect, nlist.n_type, nlist.n_desc
+                )?,
+                Err(error) => writeln!(fmt, "  Bad symbol, index: {}, sym: {:?}", i, error)?,
             }
         }
         writeln!(fmt, "}}")

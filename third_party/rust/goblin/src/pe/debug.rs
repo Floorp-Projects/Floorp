@@ -1,9 +1,9 @@
-use scroll::{self, Pread};
-use error;
+use scroll::{Pread, Pwrite, SizeWith};
+use crate::error;
 
-use pe::section_table;
-use pe::utils;
-use pe::data_directories;
+use crate::pe::section_table;
+use crate::pe::utils;
+use crate::pe::data_directories;
 
 #[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub struct DebugData<'a> {
@@ -12,16 +12,16 @@ pub struct DebugData<'a> {
 }
 
 impl<'a> DebugData<'a> {
-    pub fn parse(bytes: &'a [u8], dd: &data_directories::DataDirectory, sections: &[section_table::SectionTable]) -> error::Result<Self> {
-        let image_debug_directory = ImageDebugDirectory::parse(bytes, dd, sections)?;
+    pub fn parse(bytes: &'a [u8], dd: data_directories::DataDirectory, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<Self> {
+        let image_debug_directory = ImageDebugDirectory::parse(bytes, dd, sections, file_alignment)?;
         let codeview_pdb70_debug_info = CodeviewPDB70DebugInfo::parse(bytes, &image_debug_directory)?;
 
         Ok(DebugData{
-            image_debug_directory: image_debug_directory,
-            codeview_pdb70_debug_info: codeview_pdb70_debug_info
+            image_debug_directory,
+            codeview_pdb70_debug_info
         })
     }
-    
+
     /// Return this executable's debugging GUID, suitable for matching against a PDB file.
     pub fn guid(&self) -> Option<[u8; 16]> {
         self.codeview_pdb70_debug_info
@@ -54,18 +54,18 @@ pub const IMAGE_DEBUG_TYPE_FIXUP: u32 = 6;
 pub const IMAGE_DEBUG_TYPE_BORLAND: u32 = 9;
 
 impl ImageDebugDirectory {
-    fn parse(bytes: &[u8], dd: &data_directories::DataDirectory, sections: &[section_table::SectionTable]) -> error::Result<Self> {
+    fn parse(bytes: &[u8], dd: data_directories::DataDirectory, sections: &[section_table::SectionTable], file_alignment: u32) -> error::Result<Self> {
         let rva = dd.virtual_address as usize;
-        let offset = utils::find_offset(rva, sections).ok_or(error::Error::Malformed(format!("Cannot map ImageDebugDirectory rva {:#x} into offset", rva)))?;;
+        let offset = utils::find_offset(rva, sections, file_alignment).ok_or_else(|| error::Error::Malformed(format!("Cannot map ImageDebugDirectory rva {:#x} into offset", rva)))?;;
         let idd: Self = bytes.pread_with(offset, scroll::LE)?;
         Ok (idd)
     }
 }
 
-pub const CODEVIEW_PDB70_MAGIC: u32 = 0x53445352;
-pub const CODEVIEW_PDB20_MAGIC: u32 = 0x3031424e;
-pub const CODEVIEW_CV50_MAGIC: u32 = 0x3131424e;
-pub const CODEVIEW_CV41_MAGIC: u32 = 0x3930424e;
+pub const CODEVIEW_PDB70_MAGIC: u32 = 0x5344_5352;
+pub const CODEVIEW_PDB20_MAGIC: u32 = 0x3031_424e;
+pub const CODEVIEW_CV50_MAGIC: u32 = 0x3131_424e;
+pub const CODEVIEW_CV41_MAGIC: u32 = 0x3930_424e;
 
 // http://llvm.org/doxygen/CVDebugRecord_8h_source.html
 #[repr(C)]
@@ -104,17 +104,15 @@ impl<'a> CodeviewPDB70DebugInfo<'a> {
 
         // read the rest
         let mut signature: [u8; 16] = [0; 16];
-        for i in 0..16 {
-            signature[i] = bytes.gread_with(&mut offset, scroll::LE)?;
-        }
+        signature.copy_from_slice(bytes.gread_with(&mut offset, 16)?);
         let age: u32 = bytes.gread_with(&mut offset, scroll::LE)?;
         let filename = &bytes[offset..offset + filename_length];
 
         Ok(Some(CodeviewPDB70DebugInfo{
-            codeview_signature: codeview_signature,
-            signature: signature,
-            age: age,
-            filename: filename,
+            codeview_signature,
+            signature,
+            age,
+            filename,
         }))
     }
 }
