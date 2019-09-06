@@ -3134,7 +3134,6 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     }
   }
 
-  bool join = false;
   EditActionResult result(NS_OK);
   result.MarkAsHandled();
   {
@@ -3240,7 +3239,7 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
 
         // Else blocks not same type, or not siblings.  Delete everything
         // except table elements.
-        join = true;
+        bool join = true;
 
         AutoRangeArray arrayOfRanges(SelectionRefPtr());
         for (auto& range : arrayOfRanges.mRanges) {
@@ -3326,27 +3325,60 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
           if (NS_WARN_IF(result.Failed())) {
             return result;
           }
+
+          // If we're joining blocks: if deleting forward the selection should
+          // be collapsed to the end of the selection, if deleting backward the
+          // selection should be collapsed to the beginning of the selection.
+          // But if we're not joining then the selection should collapse to the
+          // beginning of the selection if we'redeleting forward, because the
+          // end of the selection will still be in the next block. And same
+          // thing for deleting backwards (selection should collapse to the end,
+          // because the beginning will still be in the first block). See Bug
+          // 507936.
+          if (aDirectionAndAmount == nsIEditor::eNext) {
+            aDirectionAndAmount = nsIEditor::ePrevious;
+          } else {
+            aDirectionAndAmount = nsIEditor::eNext;
+          }
         }
       }
     }
   }
 
+  nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
+      aDirectionAndAmount, firstRangeStart, firstRangeEnd);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "DeleteUnnecessaryNodesAndCollapseSelection() failed");
+  return result.SetResult(rv);
+}
+
+nsresult HTMLEditRules::DeleteUnnecessaryNodesAndCollapseSelection(
+    nsIEditor::EDirection aDirectionAndAmount,
+    const EditorDOMPoint& aSelectionStartPoint,
+    const EditorDOMPoint& aSelectionEndPoint) {
+  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(HTMLEditorRef().IsTopLevelEditSubActionDataAvailable());
+
+  EditorDOMPoint selectionStartPoint(aSelectionStartPoint);
+  EditorDOMPoint selectionEndPoint(aSelectionEndPoint);
+
   // If we're handling D&D, this is called to delete dragging item from the
   // tree.  In this case, we should move parent blocks if it becomes empty.
   if (HTMLEditorRef().GetEditAction() == EditAction::eDrop) {
-    MOZ_ASSERT(firstRangeStart.GetContainer() == firstRangeEnd.GetContainer());
-    MOZ_ASSERT(firstRangeStart.Offset() == firstRangeEnd.Offset());
+    MOZ_ASSERT(selectionStartPoint.GetContainer() ==
+               selectionEndPoint.GetContainer());
+    MOZ_ASSERT(selectionStartPoint.Offset() == selectionEndPoint.Offset());
     {
       AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                     &firstRangeStart);
+                                     &selectionStartPoint);
       AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                   &firstRangeEnd);
+                                   &selectionEndPoint);
 
       nsresult rv =
           MOZ_KnownLive(HTMLEditorRef())
-              .DeleteParentBlocksWithTransactionIfEmpty(firstRangeStart);
+              .DeleteParentBlocksWithTransactionIfEmpty(selectionStartPoint);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return result.SetResult(rv);
+        return rv;
       }
       HTMLEditorRef()
           .TopLevelEditSubActionDataRef()
@@ -3358,67 +3390,59 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
             .TopLevelEditSubActionDataRef()
             .mDidDeleteEmptyParentBlocks) {
       nsresult rv =
-          SelectionRefPtr()->Collapse(firstRangeStart.ToRawRangeBoundary());
+          SelectionRefPtr()->Collapse(selectionStartPoint.ToRawRangeBoundary());
       if (NS_WARN_IF(!CanHandleEditAction())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+        return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
-      return result.SetResult(rv);
+      return rv;
     }
   }
 
   // We might have left only collapsed whitespace in the start/end nodes
   {
     AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                   &firstRangeStart);
+                                   &selectionStartPoint);
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                 &firstRangeEnd);
+                                 &selectionEndPoint);
 
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
                       .DeleteNodeIfInvisibleAndEditableTextNode(
-                          MOZ_KnownLive(*firstRangeStart.GetContainer()));
+                          MOZ_KnownLive(*selectionStartPoint.GetContainer()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "DeleteNodeIfInvisibleAndEditableTextNode() failed to "
                          "remove start node, but ignored");
     rv = MOZ_KnownLive(HTMLEditorRef())
              .DeleteNodeIfInvisibleAndEditableTextNode(
-                 MOZ_KnownLive(*firstRangeEnd.GetContainer()));
+                 MOZ_KnownLive(*selectionEndPoint.GetContainer()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "DeleteNodeIfInvisibleAndEditableTextNode() failed to "
                          "remove end node, but ignored");
   }
 
-  // If we're joining blocks: if deleting forward the selection should be
-  // collapsed to the end of the selection, if deleting backward the selection
-  // should be collapsed to the beginning of the selection. But if we're not
-  // joining then the selection should collapse to the beginning of the
-  // selection if we'redeleting forward, because the end of the selection will
-  // still be in the next block. And same thing for deleting backwards
-  // (selection should collapse to the end, because the beginning will still be
-  // in the first block). See Bug 507936
-  if (aDirectionAndAmount == (join ? nsIEditor::eNext : nsIEditor::ePrevious)) {
+  if (aDirectionAndAmount == nsIEditor::ePrevious) {
     nsresult rv =
-        SelectionRefPtr()->Collapse(firstRangeEnd.ToRawRangeBoundary());
+        SelectionRefPtr()->Collapse(selectionEndPoint.ToRawRangeBoundary());
     if (NS_WARN_IF(!CanHandleEditAction())) {
-      return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
-    return result.SetResult(rv);
+    return rv;
   }
 
   nsresult rv =
-      SelectionRefPtr()->Collapse(firstRangeStart.ToRawRangeBoundary());
+      SelectionRefPtr()->Collapse(selectionStartPoint.ToRawRangeBoundary());
   if (NS_WARN_IF(!CanHandleEditAction())) {
-    return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
-  return result.SetResult(rv);
+  return rv;
 }
 
 nsresult HTMLEditor::DeleteNodeIfInvisibleAndEditableTextNode(nsINode& aNode) {
