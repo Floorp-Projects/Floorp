@@ -12,6 +12,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const {
   aside,
+  h1,
   p,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -57,7 +58,7 @@ class ManifestLoader extends PureComponent {
           id: "manifest-loaded-error",
           key: "manifest-error-label",
         },
-        p({ className: "js-manifest-loaded-error" })
+        h1({ className: "js-manifest-loaded-error app-page__title" })
       ),
       p({ className: "technical-text", key: "manifest-error-message" }, error),
     ];
@@ -67,13 +68,21 @@ class ManifestLoader extends PureComponent {
     const { error, isLoading } = this.props;
 
     const loadingDOM = isLoading
-      ? Localized({ id: "manifest-loading" }, p({}))
+      ? Localized(
+          { id: "manifest-loading" },
+          p({ className: "manifest-loader__load" })
+        )
       : null;
 
     const errorDOM = error ? this.renderError() : null;
     const resultDOM = !isLoading && !error ? this.renderResult() : null;
 
-    return aside({}, loadingDOM, errorDOM, resultDOM);
+    return aside(
+      { className: "manifest-loader" },
+      loadingDOM,
+      errorDOM,
+      resultDOM
+    );
   }
 }
 

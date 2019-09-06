@@ -18,7 +18,7 @@ add_task(async function() {
   selectPage(panel, "manifest");
 
   info("Waiting for the manifest to load");
-  await waitUntil(() => doc.querySelector(".js-manifest-loaded-ok") !== null);
+  await waitUntil(() => doc.querySelector(".js-manifest") !== null);
   ok(true, "Manifest loaded successfully");
 
   // close the tab
@@ -58,9 +58,7 @@ add_task(async function() {
   selectPage(panel, "manifest");
 
   info("Waiting for the 'no manifest' message to appear");
-  await waitUntil(
-    () => doc.querySelector(".js-manifest-non-existing") !== null
-  );
+  await waitUntil(() => doc.querySelector(".js-manifest-empty") !== null);
   ok(true, "Manifest page displays a 'no manifest' message");
 
   // close the tab

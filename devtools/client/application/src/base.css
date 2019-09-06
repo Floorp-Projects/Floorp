@@ -19,8 +19,6 @@
   --title-30-font-weight: 300;
 
   /* Global styles */
-  --base-font-size: var(--body-10-font-size);
-  --base-font-weight: var(--body-10-font-weight);
   --base-line-height: 1.8;
   --list-line-height: 1.25;
 
@@ -60,4 +58,12 @@ a {
 
 p {
   margin: 0;
+}
+
+/*
+ * utility classes
+ */
+
+.technical-text {
+  font-family: monospace;
 }
