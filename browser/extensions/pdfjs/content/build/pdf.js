@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.3.129';
-var pdfjsBuild = '3dfce2d4';
+var pdfjsVersion = '2.3.146';
+var pdfjsBuild = '7e37eb42';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1322,7 +1322,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.3.129',
+    apiVersion: '2.3.146',
     source: {
       data: source.data,
       url: source.url,
@@ -1859,16 +1859,16 @@ class PDFPageProxy {
   }
 
   _tryCleanup(resetStats = false) {
-    if (!this.pendingCleanup || Object.keys(this.intentStates).some(function (intent) {
+    if (!this.pendingCleanup || Object.keys(this.intentStates).some(intent => {
       const intentState = this.intentStates[intent];
       return intentState.renderTasks.length !== 0 || !intentState.operatorList.lastChunk;
-    }, this)) {
+    })) {
       return;
     }
 
-    Object.keys(this.intentStates).forEach(function (intent) {
+    Object.keys(this.intentStates).forEach(intent => {
       delete this.intentStates[intent];
-    }, this);
+    });
     this.objs.clear();
     this.annotationsPromise = null;
 
@@ -2047,11 +2047,11 @@ class LoopbackPort {
     }
 
     if (!this._defer) {
-      this._listeners.forEach(function (listener) {
+      this._listeners.forEach(listener => {
         listener.call(this, {
           data: obj
         });
-      }, this);
+      });
 
       return;
     }
@@ -2062,9 +2062,9 @@ class LoopbackPort {
     };
 
     this._deferred.then(() => {
-      this._listeners.forEach(function (listener) {
+      this._listeners.forEach(listener => {
         listener.call(this, e);
-      }, this);
+      });
     });
   }
 
@@ -2425,7 +2425,7 @@ class WorkerTransport {
       messageHandler,
       loadingTask
     } = this;
-    messageHandler.on('GetReader', function (data, sink) {
+    messageHandler.on('GetReader', (data, sink) => {
       (0, _util.assert)(this._networkStream);
       this._fullReader = this._networkStream.getFullReader();
 
@@ -2456,8 +2456,8 @@ class WorkerTransport {
       sink.onCancel = reason => {
         this._fullReader.cancel(reason);
       };
-    }, this);
-    messageHandler.on('ReaderHeadersReady', function (data) {
+    });
+    messageHandler.on('ReaderHeadersReady', data => {
       const headersCapability = (0, _util.createPromiseCapability)();
       const fullReader = this._fullReader;
       fullReader.headersReady.then(() => {
@@ -2483,8 +2483,8 @@ class WorkerTransport {
         });
       }, headersCapability.reject);
       return headersCapability.promise;
-    }, this);
-    messageHandler.on('GetRangeReader', function (data, sink) {
+    });
+    messageHandler.on('GetRangeReader', (data, sink) => {
       (0, _util.assert)(this._networkStream);
 
       const rangeReader = this._networkStream.getRangeReader(data.begin, data.end);
@@ -2514,15 +2514,15 @@ class WorkerTransport {
       sink.onCancel = reason => {
         rangeReader.cancel(reason);
       };
-    }, this);
-    messageHandler.on('GetDoc', function ({
+    });
+    messageHandler.on('GetDoc', ({
       pdfInfo
-    }) {
+    }) => {
       this._numPages = pdfInfo.numPages;
 
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
-    }, this);
-    messageHandler.on('PasswordRequest', function (exception) {
+    });
+    messageHandler.on('PasswordRequest', exception => {
       this._passwordCapability = (0, _util.createPromiseCapability)();
 
       if (loadingTask.onPassword) {
@@ -2542,23 +2542,23 @@ class WorkerTransport {
       }
 
       return this._passwordCapability.promise;
-    }, this);
+    });
     messageHandler.on('PasswordException', function (exception) {
       loadingTask._capability.reject(new _util.PasswordException(exception.message, exception.code));
-    }, this);
+    });
     messageHandler.on('InvalidPDF', function (exception) {
       loadingTask._capability.reject(new _util.InvalidPDFException(exception.message));
-    }, this);
+    });
     messageHandler.on('MissingPDF', function (exception) {
       loadingTask._capability.reject(new _util.MissingPDFException(exception.message));
-    }, this);
+    });
     messageHandler.on('UnexpectedResponse', function (exception) {
       loadingTask._capability.reject(new _util.UnexpectedResponseException(exception.message, exception.status));
-    }, this);
+    });
     messageHandler.on('UnknownError', function (exception) {
       loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
-    }, this);
-    messageHandler.on('DataLoaded', function (data) {
+    });
+    messageHandler.on('DataLoaded', data => {
       if (loadingTask.onProgress) {
         loadingTask.onProgress({
           loaded: data.length,
@@ -2567,8 +2567,8 @@ class WorkerTransport {
       }
 
       this.downloadInfoCapability.resolve(data);
-    }, this);
-    messageHandler.on('StartRenderPage', function (data) {
+    });
+    messageHandler.on('StartRenderPage', data => {
       if (this.destroyed) {
         return;
       }
@@ -2578,8 +2578,8 @@ class WorkerTransport {
       page._stats.timeEnd('Page Request');
 
       page._startRenderPage(data.transparency, data.intent);
-    }, this);
-    messageHandler.on('commonobj', function (data) {
+    });
+    messageHandler.on('commonobj', data => {
       if (this.destroyed) {
         return;
       }
@@ -2638,8 +2638,8 @@ class WorkerTransport {
         default:
           throw new Error(`Got unknown common object type ${type}`);
       }
-    }, this);
-    messageHandler.on('obj', function (data) {
+    });
+    messageHandler.on('obj', data => {
       if (this.destroyed) {
         return undefined;
       }
@@ -2685,8 +2685,8 @@ class WorkerTransport {
       }
 
       return undefined;
-    }, this);
-    messageHandler.on('DocProgress', function (data) {
+    });
+    messageHandler.on('DocProgress', data => {
       if (this.destroyed) {
         return;
       }
@@ -2697,9 +2697,9 @@ class WorkerTransport {
           total: data.total
         });
       }
-    }, this);
-    messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
-    messageHandler.on('JpegDecode', function (data) {
+    });
+    messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature.bind(this));
+    messageHandler.on('JpegDecode', data => {
       if (this.destroyed) {
         return Promise.reject(new Error('Worker was destroyed'));
       }
@@ -2763,16 +2763,14 @@ class WorkerTransport {
 
         img.src = imageUrl;
       });
-    }, this);
-    messageHandler.on('FetchBuiltInCMap', function (data) {
+    });
+    messageHandler.on('FetchBuiltInCMap', data => {
       if (this.destroyed) {
         return Promise.reject(new Error('Worker was destroyed'));
       }
 
-      return this.CMapReaderFactory.fetch({
-        name: data.name
-      });
-    }, this);
+      return this.CMapReaderFactory.fetch(data);
+    });
   }
 
   _onUnsupportedFeature({
@@ -3172,9 +3170,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.3.129';
+const version = '2.3.146';
 exports.version = version;
-const build = '3dfce2d4';
+const build = '7e37eb42';
 exports.build = build;
 
 /***/ }),
@@ -6462,13 +6460,17 @@ exports.MessageHandler = MessageHandler;
 
 var _util = __w_pdfjs_require__(1);
 
-async function resolveCall(fn, args, thisArg = null) {
-  if (!fn) {
-    return undefined;
-  }
-
-  return fn.apply(thisArg, args);
-}
+const StreamKind = {
+  UNKNOWN: 0,
+  CANCEL: 1,
+  CANCEL_COMPLETE: 2,
+  CLOSE: 3,
+  ENQUEUE: 4,
+  ERROR: 5,
+  PULL: 6,
+  PULL_COMPLETE: 7,
+  START_COMPLETE: 8
+};
 
 function wrapReason(reason) {
   if (typeof reason !== 'object') {
@@ -6485,17 +6487,12 @@ function wrapReason(reason) {
     case 'UnexpectedResponseException':
       return new _util.UnexpectedResponseException(reason.message, reason.status);
 
-    default:
+    case 'UnknownErrorException':
       return new _util.UnknownErrorException(reason.message, reason.details);
-  }
-}
 
-function makeReasonSerializable(reason) {
-  if (!(reason instanceof Error) || reason instanceof _util.AbortException || reason instanceof _util.MissingPDFException || reason instanceof _util.UnexpectedResponseException || reason instanceof _util.UnknownErrorException) {
-    return reason;
+    default:
+      return new _util.UnknownErrorException(reason.message, reason.toString());
   }
-
-  return new _util.UnknownErrorException(reason.message, reason.toString());
 }
 
 function resolveOrReject(capability, data) {
@@ -6548,9 +6545,9 @@ function MessageHandler(sourceName, targetName, comObj) {
       if (data.callbackId) {
         let sourceName = this.sourceName;
         let targetName = data.sourceName;
-        Promise.resolve().then(function () {
-          return action[0].call(action[1], data.data);
-        }).then(result => {
+        new Promise(function (resolve) {
+          resolve(action(data.data));
+        }).then(function (result) {
           comObj.postMessage({
             sourceName,
             targetName,
@@ -6558,19 +6555,19 @@ function MessageHandler(sourceName, targetName, comObj) {
             callbackId: data.callbackId,
             data: result
           });
-        }, reason => {
+        }, function (reason) {
           comObj.postMessage({
             sourceName,
             targetName,
             isReply: true,
             callbackId: data.callbackId,
-            error: makeReasonSerializable(reason)
+            error: wrapReason(reason)
           });
         });
       } else if (data.streamId) {
         this._createStreamSink(data);
       } else {
-        action[0].call(action[1], data.data);
+        action(data.data);
       }
     } else {
       throw new Error(`Unknown action from worker: ${data.action}`);
@@ -6581,42 +6578,40 @@ function MessageHandler(sourceName, targetName, comObj) {
 }
 
 MessageHandler.prototype = {
-  on(actionName, handler, scope) {
+  on(actionName, handler) {
     var ah = this.actionHandler;
 
     if (ah[actionName]) {
       throw new Error(`There is already an actionName called "${actionName}"`);
     }
 
-    ah[actionName] = [handler, scope];
+    ah[actionName] = handler;
   },
 
   send(actionName, data, transfers) {
-    var message = {
+    this.postMessage({
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
       data
-    };
-    this.postMessage(message, transfers);
+    }, transfers);
   },
 
   sendWithPromise(actionName, data, transfers) {
     var callbackId = this.callbackId++;
-    var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      action: actionName,
-      data,
-      callbackId
-    };
     var capability = (0, _util.createPromiseCapability)();
     this.callbacksCapabilities[callbackId] = capability;
 
     try {
-      this.postMessage(message, transfers);
-    } catch (e) {
-      capability.reject(e);
+      this.postMessage({
+        sourceName: this.sourceName,
+        targetName: this.targetName,
+        action: actionName,
+        callbackId,
+        data
+      }, transfers);
+    } catch (ex) {
+      capability.reject(ex);
     }
 
     return capability.promise;
@@ -6626,6 +6621,7 @@ MessageHandler.prototype = {
     let streamId = this.streamId++;
     let sourceName = this.sourceName;
     let targetName = this.targetName;
+    const comObj = this.comObj;
     return new _util.ReadableStream({
       start: controller => {
         let startCapability = (0, _util.createPromiseCapability)();
@@ -6641,31 +6637,32 @@ MessageHandler.prototype = {
           streamId,
           data,
           desiredSize: controller.desiredSize
-        });
+        }, transfers);
         return startCapability.promise;
       },
       pull: controller => {
         let pullCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].pullCall = pullCapability;
-        this.postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
-          stream: 'pull',
+          stream: StreamKind.PULL,
           streamId,
           desiredSize: controller.desiredSize
         });
         return pullCapability.promise;
       },
       cancel: reason => {
+        (0, _util.assert)(reason instanceof Error, 'cancel must have a valid reason');
         let cancelCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].cancelCall = cancelCapability;
         this.streamControllers[streamId].isClosed = true;
-        this.postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
-          stream: 'cancel',
-          reason,
-          streamId
+          stream: StreamKind.CANCEL,
+          streamId,
+          reason: wrapReason(reason)
         });
         return cancelCapability.promise;
       }
@@ -6680,25 +6677,7 @@ MessageHandler.prototype = {
     let sourceName = this.sourceName;
     let targetName = data.sourceName;
     let capability = (0, _util.createPromiseCapability)();
-
-    let sendStreamRequest = ({
-      stream,
-      chunk,
-      transfers,
-      success,
-      reason
-    }) => {
-      this.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        streamId,
-        chunk,
-        success,
-        reason
-      }, transfers);
-    };
-
+    const comObj = this.comObj;
     let streamSink = {
       enqueue(chunk, size = 1, transfers) {
         if (this.isCancelled) {
@@ -6713,11 +6692,13 @@ MessageHandler.prototype = {
           this.ready = this.sinkCapability.promise;
         }
 
-        sendStreamRequest({
-          stream: 'enqueue',
-          chunk,
-          transfers
-        });
+        self.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.ENQUEUE,
+          streamId,
+          chunk
+        }, transfers);
       },
 
       close() {
@@ -6726,21 +6707,29 @@ MessageHandler.prototype = {
         }
 
         this.isCancelled = true;
-        sendStreamRequest({
-          stream: 'close'
+        comObj.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.CLOSE,
+          streamId
         });
         delete self.streamSinks[streamId];
       },
 
       error(reason) {
+        (0, _util.assert)(reason instanceof Error, 'error must have a valid reason');
+
         if (this.isCancelled) {
           return;
         }
 
         this.isCancelled = true;
-        sendStreamRequest({
-          stream: 'error',
-          reason
+        comObj.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.ERROR,
+          streamId,
+          reason: wrapReason(reason)
         });
       },
 
@@ -6754,16 +6743,23 @@ MessageHandler.prototype = {
     streamSink.sinkCapability.resolve();
     streamSink.ready = streamSink.sinkCapability.promise;
     this.streamSinks[streamId] = streamSink;
-    resolveCall(action[0], [data.data, streamSink], action[1]).then(() => {
-      sendStreamRequest({
-        stream: 'start_complete',
+    new Promise(function (resolve) {
+      resolve(action(data.data, streamSink));
+    }).then(function () {
+      comObj.postMessage({
+        sourceName,
+        targetName,
+        stream: StreamKind.START_COMPLETE,
+        streamId,
         success: true
       });
-    }, reason => {
-      sendStreamRequest({
-        stream: 'start_complete',
-        success: false,
-        reason
+    }, function (reason) {
+      comObj.postMessage({
+        sourceName,
+        targetName,
+        stream: StreamKind.START_COMPLETE,
+        streamId,
+        reason: wrapReason(reason)
       });
     });
   },
@@ -6772,21 +6768,7 @@ MessageHandler.prototype = {
     let sourceName = this.sourceName;
     let targetName = data.sourceName;
     let streamId = data.streamId;
-
-    let sendStreamResponse = ({
-      stream,
-      success,
-      reason
-    }) => {
-      this.comObj.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        success,
-        streamId,
-        reason
-      });
-    };
+    const comObj = this.comObj;
 
     let deleteStreamController = () => {
       Promise.all([this.streamControllers[data.streamId].startCall, this.streamControllers[data.streamId].pullCall, this.streamControllers[data.streamId].cancelCall].map(function (capability) {
@@ -6797,18 +6779,21 @@ MessageHandler.prototype = {
     };
 
     switch (data.stream) {
-      case 'start_complete':
+      case StreamKind.START_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].startCall, data);
         break;
 
-      case 'pull_complete':
+      case StreamKind.PULL_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].pullCall, data);
         break;
 
-      case 'pull':
+      case StreamKind.PULL:
         if (!this.streamSinks[data.streamId]) {
-          sendStreamResponse({
-            stream: 'pull_complete',
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
             success: true
           });
           break;
@@ -6819,21 +6804,31 @@ MessageHandler.prototype = {
         }
 
         this.streamSinks[data.streamId].desiredSize = data.desiredSize;
-        resolveCall(this.streamSinks[data.streamId].onPull).then(() => {
-          sendStreamResponse({
-            stream: 'pull_complete',
+        const {
+          onPull
+        } = this.streamSinks[data.streamId];
+        new Promise(function (resolve) {
+          resolve(onPull && onPull());
+        }).then(function () {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
             success: true
           });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'pull_complete',
-            success: false,
-            reason
+        }, function (reason) {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
+            reason: wrapReason(reason)
           });
         });
         break;
 
-      case 'enqueue':
+      case StreamKind.ENQUEUE:
         (0, _util.assert)(this.streamControllers[data.streamId], 'enqueue should have stream controller');
 
         if (!this.streamControllers[data.streamId].isClosed) {
@@ -6842,7 +6837,7 @@ MessageHandler.prototype = {
 
         break;
 
-      case 'close':
+      case StreamKind.CLOSE:
         (0, _util.assert)(this.streamControllers[data.streamId], 'close should have stream controller');
 
         if (this.streamControllers[data.streamId].isClosed) {
@@ -6854,32 +6849,42 @@ MessageHandler.prototype = {
         deleteStreamController();
         break;
 
-      case 'error':
+      case StreamKind.ERROR:
         (0, _util.assert)(this.streamControllers[data.streamId], 'error should have stream controller');
         this.streamControllers[data.streamId].controller.error(wrapReason(data.reason));
         deleteStreamController();
         break;
 
-      case 'cancel_complete':
+      case StreamKind.CANCEL_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].cancelCall, data);
         deleteStreamController();
         break;
 
-      case 'cancel':
+      case StreamKind.CANCEL:
         if (!this.streamSinks[data.streamId]) {
           break;
         }
 
-        resolveCall(this.streamSinks[data.streamId].onCancel, [wrapReason(data.reason)]).then(() => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
+        const {
+          onCancel
+        } = this.streamSinks[data.streamId];
+        new Promise(function (resolve) {
+          resolve(onCancel && onCancel(wrapReason(data.reason)));
+        }).then(function () {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.CANCEL_COMPLETE,
+            streamId,
             success: true
           });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
-            success: false,
-            reason
+        }, function (reason) {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.CANCEL_COMPLETE,
+            streamId,
+            reason: wrapReason(reason)
           });
         });
         this.streamSinks[data.streamId].sinkCapability.reject(wrapReason(data.reason));
@@ -8986,7 +8991,7 @@ var _util = __w_pdfjs_require__(1);
 
 class AnnotationElementFactory {
   static create(parameters) {
-    let subtype = parameters.data.annotationType;
+    const subtype = parameters.data.annotationType;
 
     switch (subtype) {
       case _util.AnnotationType.LINK:
@@ -8996,7 +9001,7 @@ class AnnotationElementFactory {
         return new TextAnnotationElement(parameters);
 
       case _util.AnnotationType.WIDGET:
-        let fieldType = parameters.data.fieldType;
+        const fieldType = parameters.data.fieldType;
 
         switch (fieldType) {
           case 'Tx':
@@ -9088,32 +9093,32 @@ class AnnotationElement {
   }
 
   _createContainer(ignoreBorder = false) {
-    let data = this.data,
-        page = this.page,
-        viewport = this.viewport;
-    let container = document.createElement('section');
+    const data = this.data,
+          page = this.page,
+          viewport = this.viewport;
+    const container = document.createElement('section');
     let width = data.rect[2] - data.rect[0];
     let height = data.rect[3] - data.rect[1];
     container.setAttribute('data-annotation-id', data.id);
 
-    let rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
+    const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
-    container.style.transform = 'matrix(' + viewport.transform.join(',') + ')';
-    container.style.transformOrigin = -rect[0] + 'px ' + -rect[1] + 'px';
+    container.style.transform = `matrix(${viewport.transform.join(',')})`;
+    container.style.transformOrigin = `-${rect[0]}px -${rect[1]}px`;
 
     if (!ignoreBorder && data.borderStyle.width > 0) {
-      container.style.borderWidth = data.borderStyle.width + 'px';
+      container.style.borderWidth = `${data.borderStyle.width}px`;
 
       if (data.borderStyle.style !== _util.AnnotationBorderStyleType.UNDERLINE) {
         width = width - 2 * data.borderStyle.width;
         height = height - 2 * data.borderStyle.width;
       }
 
-      let horizontalRadius = data.borderStyle.horizontalCornerRadius;
-      let verticalRadius = data.borderStyle.verticalCornerRadius;
+      const horizontalRadius = data.borderStyle.horizontalCornerRadius;
+      const verticalRadius = data.borderStyle.verticalCornerRadius;
 
       if (horizontalRadius > 0 || verticalRadius > 0) {
-        let radius = horizontalRadius + 'px / ' + verticalRadius + 'px';
+        const radius = `${horizontalRadius}px / ${verticalRadius}px`;
         container.style.borderRadius = radius;
       }
 
@@ -9149,10 +9154,10 @@ class AnnotationElement {
       }
     }
 
-    container.style.left = rect[0] + 'px';
-    container.style.top = rect[1] + 'px';
-    container.style.width = width + 'px';
-    container.style.height = height + 'px';
+    container.style.left = `${rect[0]}px`;
+    container.style.top = `${rect[1]}px`;
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
     return container;
   }
 
@@ -9164,7 +9169,7 @@ class AnnotationElement {
       container.appendChild(trigger);
     }
 
-    let popupElement = new PopupElement({
+    const popupElement = new PopupElement({
       container,
       trigger,
       color: data.color,
@@ -9173,7 +9178,7 @@ class AnnotationElement {
       contents: data.contents,
       hideWrapper: true
     });
-    let popup = popupElement.render();
+    const popup = popupElement.render();
     popup.style.left = container.style.width;
     container.appendChild(popup);
   }
@@ -9186,17 +9191,17 @@ class AnnotationElement {
 
 class LinkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action);
+    const isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action);
     super(parameters, isRenderable);
   }
 
   render() {
     this.container.className = 'linkAnnotation';
-    let {
+    const {
       data,
       linkService
     } = this;
-    let link = document.createElement('a');
+    const link = document.createElement('a');
     (0, _display_utils.addLinkAttributes)(link, {
       url: data.url,
       target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
@@ -9247,13 +9252,13 @@ class LinkAnnotationElement extends AnnotationElement {
 
 class TextAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable);
   }
 
   render() {
     this.container.className = 'textAnnotation';
-    let image = document.createElement('img');
+    const image = document.createElement('img');
     image.style.height = this.container.style.height;
     image.style.width = this.container.style.width;
     image.src = this.imageResourcesPath + 'annotation-' + this.data.name.toLowerCase() + '.svg';
@@ -9282,7 +9287,7 @@ class WidgetAnnotationElement extends AnnotationElement {
 
 class TextWidgetAnnotationElement extends WidgetAnnotationElement {
   constructor(parameters) {
-    let isRenderable = parameters.renderInteractiveForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
+    const isRenderable = parameters.renderInteractiveForms || !parameters.data.hasAppearance && !!parameters.data.fieldValue;
     super(parameters, isRenderable);
   }
 
@@ -9308,10 +9313,10 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       }
 
       if (this.data.comb) {
-        let fieldWidth = this.data.rect[2] - this.data.rect[0];
-        let combWidth = fieldWidth / this.data.maxLen;
+        const fieldWidth = this.data.rect[2] - this.data.rect[0];
+        const combWidth = fieldWidth / this.data.maxLen;
         element.classList.add('comb');
-        element.style.letterSpacing = 'calc(' + combWidth + 'px - 1ch)';
+        element.style.letterSpacing = `calc(${combWidth}px - 1ch)`;
       }
     } else {
       element = document.createElement('div');
@@ -9336,8 +9341,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
   }
 
   _setTextStyle(element, font) {
-    let style = element.style;
-    style.fontSize = this.data.fontSize + 'px';
+    const style = element.style;
+    style.fontSize = `${this.data.fontSize}px`;
     style.direction = this.data.fontDirection < 0 ? 'rtl' : 'ltr';
 
     if (!font) {
@@ -9346,8 +9351,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
     style.fontWeight = font.black ? font.bold ? '900' : 'bold' : font.bold ? 'bold' : 'normal';
     style.fontStyle = font.italic ? 'italic' : 'normal';
-    let fontFamily = font.loadedName ? '"' + font.loadedName + '", ' : '';
-    let fallbackName = font.fallbackName || 'Helvetica, sans-serif';
+    const fontFamily = font.loadedName ? `"${font.loadedName}", ` : '';
+    const fallbackName = font.fallbackName || 'Helvetica, sans-serif';
     style.fontFamily = fontFamily + fallbackName;
   }
 
@@ -9360,7 +9365,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
   render() {
     this.container.className = 'buttonWidgetAnnotation checkBox';
-    let element = document.createElement('input');
+    const element = document.createElement('input');
     element.disabled = this.data.readOnly;
     element.type = 'checkbox';
 
@@ -9381,7 +9386,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 
   render() {
     this.container.className = 'buttonWidgetAnnotation radioButton';
-    let element = document.createElement('input');
+    const element = document.createElement('input');
     element.disabled = this.data.readOnly;
     element.type = 'radio';
     element.name = this.data.fieldName;
@@ -9398,7 +9403,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
   render() {
-    let container = super.render();
+    const container = super.render();
     container.className = 'buttonWidgetAnnotation pushButton';
     return container;
   }
@@ -9412,7 +9417,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
   render() {
     this.container.className = 'choiceWidgetAnnotation';
-    let selectElement = document.createElement('select');
+    const selectElement = document.createElement('select');
     selectElement.disabled = this.data.readOnly;
 
     if (!this.data.combo) {
@@ -9423,9 +9428,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       }
     }
 
-    for (let i = 0, ii = this.data.options.length; i < ii; i++) {
-      let option = this.data.options[i];
-      let optionElement = document.createElement('option');
+    for (const option of this.data.options) {
+      const optionElement = document.createElement('option');
       optionElement.textContent = option.displayValue;
       optionElement.value = option.exportValue;
 
@@ -9444,7 +9448,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class PopupAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable);
   }
 
@@ -9456,14 +9460,14 @@ class PopupAnnotationElement extends AnnotationElement {
       return this.container;
     }
 
-    let selector = '[data-annotation-id="' + this.data.parentId + '"]';
-    let parentElement = this.layer.querySelector(selector);
+    const selector = `[data-annotation-id="${this.data.parentId}"]`;
+    const parentElement = this.layer.querySelector(selector);
 
     if (!parentElement) {
       return this.container;
     }
 
-    let popup = new PopupElement({
+    const popup = new PopupElement({
       container: this.container,
       trigger: parentElement,
       color: this.data.color,
@@ -9471,10 +9475,10 @@ class PopupAnnotationElement extends AnnotationElement {
       modificationDate: this.data.modificationDate,
       contents: this.data.contents
     });
-    let parentLeft = parseFloat(parentElement.style.left);
-    let parentWidth = parseFloat(parentElement.style.width);
-    this.container.style.transformOrigin = -(parentLeft + parentWidth) + 'px -' + parentElement.style.top;
-    this.container.style.left = parentLeft + parentWidth + 'px';
+    const parentLeft = parseFloat(parentElement.style.left);
+    const parentWidth = parseFloat(parentElement.style.width);
+    this.container.style.transformOrigin = `-${parentLeft + parentWidth}px -${parentElement.style.top}`;
+    this.container.style.left = `${parentLeft + parentWidth}px`;
     this.container.appendChild(popup.render());
     return this.container;
   }
@@ -9495,22 +9499,22 @@ class PopupElement {
 
   render() {
     const BACKGROUND_ENLIGHT = 0.7;
-    let wrapper = document.createElement('div');
+    const wrapper = document.createElement('div');
     wrapper.className = 'popupWrapper';
     this.hideElement = this.hideWrapper ? wrapper : this.container;
     this.hideElement.setAttribute('hidden', true);
-    let popup = document.createElement('div');
+    const popup = document.createElement('div');
     popup.className = 'popup';
-    let color = this.color;
+    const color = this.color;
 
     if (color) {
-      let r = BACKGROUND_ENLIGHT * (255 - color[0]) + color[0];
-      let g = BACKGROUND_ENLIGHT * (255 - color[1]) + color[1];
-      let b = BACKGROUND_ENLIGHT * (255 - color[2]) + color[2];
+      const r = BACKGROUND_ENLIGHT * (255 - color[0]) + color[0];
+      const g = BACKGROUND_ENLIGHT * (255 - color[1]) + color[1];
+      const b = BACKGROUND_ENLIGHT * (255 - color[2]) + color[2];
       popup.style.backgroundColor = _util.Util.makeCssRgb(r | 0, g | 0, b | 0);
     }
 
-    let title = document.createElement('h1');
+    const title = document.createElement('h1');
     title.textContent = this.title;
     popup.appendChild(title);
 
@@ -9527,7 +9531,7 @@ class PopupElement {
       popup.appendChild(modificationDate);
     }
 
-    let contents = this._formatContents(this.contents);
+    const contents = this._formatContents(this.contents);
 
     popup.appendChild(contents);
     this.trigger.addEventListener('click', this._toggle.bind(this));
@@ -9539,11 +9543,11 @@ class PopupElement {
   }
 
   _formatContents(contents) {
-    let p = document.createElement('p');
-    let lines = contents.split(/(?:\r\n?|\n)/);
+    const p = document.createElement('p');
+    const lines = contents.split(/(?:\r\n?|\n)/);
 
     for (let i = 0, ii = lines.length; i < ii; ++i) {
-      let line = lines[i];
+      const line = lines[i];
       p.appendChild(document.createTextNode(line));
 
       if (i < ii - 1) {
@@ -9606,17 +9610,17 @@ class FreeTextAnnotationElement extends AnnotationElement {
 
 class LineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
   render() {
     this.container.className = 'lineAnnotation';
-    let data = this.data;
-    let width = data.rect[2] - data.rect[0];
-    let height = data.rect[3] - data.rect[1];
-    let svg = this.svgFactory.create(width, height);
-    let line = this.svgFactory.createElement('svg:line');
+    const data = this.data;
+    const width = data.rect[2] - data.rect[0];
+    const height = data.rect[3] - data.rect[1];
+    const svg = this.svgFactory.create(width, height);
+    const line = this.svgFactory.createElement('svg:line');
     line.setAttribute('x1', data.rect[2] - data.lineCoordinates[0]);
     line.setAttribute('y1', data.rect[3] - data.lineCoordinates[1]);
     line.setAttribute('x2', data.rect[2] - data.lineCoordinates[2]);
@@ -9635,18 +9639,18 @@ class LineAnnotationElement extends AnnotationElement {
 
 class SquareAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
   render() {
     this.container.className = 'squareAnnotation';
-    let data = this.data;
-    let width = data.rect[2] - data.rect[0];
-    let height = data.rect[3] - data.rect[1];
-    let svg = this.svgFactory.create(width, height);
-    let borderWidth = data.borderStyle.width;
-    let square = this.svgFactory.createElement('svg:rect');
+    const data = this.data;
+    const width = data.rect[2] - data.rect[0];
+    const height = data.rect[3] - data.rect[1];
+    const svg = this.svgFactory.create(width, height);
+    const borderWidth = data.borderStyle.width;
+    const square = this.svgFactory.createElement('svg:rect');
     square.setAttribute('x', borderWidth / 2);
     square.setAttribute('y', borderWidth / 2);
     square.setAttribute('width', width - borderWidth);
@@ -9666,18 +9670,18 @@ class SquareAnnotationElement extends AnnotationElement {
 
 class CircleAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
   render() {
     this.container.className = 'circleAnnotation';
-    let data = this.data;
-    let width = data.rect[2] - data.rect[0];
-    let height = data.rect[3] - data.rect[1];
-    let svg = this.svgFactory.create(width, height);
-    let borderWidth = data.borderStyle.width;
-    let circle = this.svgFactory.createElement('svg:ellipse');
+    const data = this.data;
+    const width = data.rect[2] - data.rect[0];
+    const height = data.rect[3] - data.rect[1];
+    const svg = this.svgFactory.create(width, height);
+    const borderWidth = data.borderStyle.width;
+    const circle = this.svgFactory.createElement('svg:ellipse');
     circle.setAttribute('cx', width / 2);
     circle.setAttribute('cy', height / 2);
     circle.setAttribute('rx', width / 2 - borderWidth / 2);
@@ -9697,7 +9701,7 @@ class CircleAnnotationElement extends AnnotationElement {
 
 class PolylineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
     this.containerClassName = 'polylineAnnotation';
     this.svgElementName = 'svg:polyline';
@@ -9705,24 +9709,22 @@ class PolylineAnnotationElement extends AnnotationElement {
 
   render() {
     this.container.className = this.containerClassName;
-    let data = this.data;
-    let width = data.rect[2] - data.rect[0];
-    let height = data.rect[3] - data.rect[1];
-    let svg = this.svgFactory.create(width, height);
-    let vertices = data.vertices;
+    const data = this.data;
+    const width = data.rect[2] - data.rect[0];
+    const height = data.rect[3] - data.rect[1];
+    const svg = this.svgFactory.create(width, height);
     let points = [];
 
-    for (let i = 0, ii = vertices.length; i < ii; i++) {
-      let x = vertices[i].x - data.rect[0];
-      let y = data.rect[3] - vertices[i].y;
+    for (const coordinate of data.vertices) {
+      const x = coordinate.x - data.rect[0];
+      const y = data.rect[3] - coordinate.y;
       points.push(x + ',' + y);
     }
 
     points = points.join(' ');
-    let borderWidth = data.borderStyle.width;
-    let polyline = this.svgFactory.createElement(this.svgElementName);
+    const polyline = this.svgFactory.createElement(this.svgElementName);
     polyline.setAttribute('points', points);
-    polyline.setAttribute('stroke-width', borderWidth);
+    polyline.setAttribute('stroke-width', data.borderStyle.width);
     polyline.setAttribute('stroke', 'transparent');
     polyline.setAttribute('fill', 'none');
     svg.appendChild(polyline);
@@ -9764,7 +9766,7 @@ class CaretAnnotationElement extends AnnotationElement {
 
 class InkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
     this.containerClassName = 'inkAnnotation';
     this.svgElementName = 'svg:polyline';
@@ -9772,27 +9774,24 @@ class InkAnnotationElement extends AnnotationElement {
 
   render() {
     this.container.className = this.containerClassName;
-    let data = this.data;
-    let width = data.rect[2] - data.rect[0];
-    let height = data.rect[3] - data.rect[1];
-    let svg = this.svgFactory.create(width, height);
-    let inkLists = data.inkLists;
+    const data = this.data;
+    const width = data.rect[2] - data.rect[0];
+    const height = data.rect[3] - data.rect[1];
+    const svg = this.svgFactory.create(width, height);
 
-    for (let i = 0, ii = inkLists.length; i < ii; i++) {
-      let inkList = inkLists[i];
+    for (const inkList of data.inkLists) {
       let points = [];
 
-      for (let j = 0, jj = inkList.length; j < jj; j++) {
-        let x = inkList[j].x - data.rect[0];
-        let y = data.rect[3] - inkList[j].y;
-        points.push(x + ',' + y);
+      for (const coordinate of inkList) {
+        const x = coordinate.x - data.rect[0];
+        const y = data.rect[3] - coordinate.y;
+        points.push(`${x},${y}`);
       }
 
       points = points.join(' ');
-      let borderWidth = data.borderStyle.width;
-      let polyline = this.svgFactory.createElement(this.svgElementName);
+      const polyline = this.svgFactory.createElement(this.svgElementName);
       polyline.setAttribute('points', points);
-      polyline.setAttribute('stroke-width', borderWidth);
+      polyline.setAttribute('stroke-width', data.borderStyle.width);
       polyline.setAttribute('stroke', 'transparent');
       polyline.setAttribute('fill', 'none');
 
@@ -9809,7 +9808,7 @@ class InkAnnotationElement extends AnnotationElement {
 
 class HighlightAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
@@ -9827,7 +9826,7 @@ class HighlightAnnotationElement extends AnnotationElement {
 
 class UnderlineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
@@ -9845,7 +9844,7 @@ class UnderlineAnnotationElement extends AnnotationElement {
 
 class SquigglyAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
@@ -9863,7 +9862,7 @@ class SquigglyAnnotationElement extends AnnotationElement {
 
 class StrikeOutAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
@@ -9881,7 +9880,7 @@ class StrikeOutAnnotationElement extends AnnotationElement {
 
 class StampAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
     super(parameters, isRenderable, true);
   }
 
@@ -9919,7 +9918,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
 
   render() {
     this.container.className = 'fileAttachmentAnnotation';
-    let trigger = document.createElement('div');
+    const trigger = document.createElement('div');
     trigger.style.height = this.container.style.height;
     trigger.style.width = this.container.style.width;
     trigger.addEventListener('dblclick', this._download.bind(this));
@@ -9945,14 +9944,12 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
 
 class AnnotationLayer {
   static render(parameters) {
-    for (let i = 0, ii = parameters.annotations.length; i < ii; i++) {
-      let data = parameters.annotations[i];
-
+    for (const data of parameters.annotations) {
       if (!data) {
         continue;
       }
 
-      let element = AnnotationElementFactory.create({
+      const element = AnnotationElementFactory.create({
         data,
         layer: parameters.div,
         page: parameters.page,
@@ -9971,12 +9968,11 @@ class AnnotationLayer {
   }
 
   static update(parameters) {
-    for (let i = 0, ii = parameters.annotations.length; i < ii; i++) {
-      let data = parameters.annotations[i];
-      let element = parameters.div.querySelector('[data-annotation-id="' + data.id + '"]');
+    for (const data of parameters.annotations) {
+      const element = parameters.div.querySelector(`[data-annotation-id="${data.id}"]`);
 
       if (element) {
-        element.style.transform = 'matrix(' + parameters.viewport.transform.join(',') + ')';
+        element.style.transform = `matrix(${parameters.viewport.transform.join(',')})`;
       }
     }
 

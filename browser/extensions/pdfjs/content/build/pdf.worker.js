@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.129';
-const pdfjsBuild = '3dfce2d4';
+const pdfjsVersion = '2.3.146';
+const pdfjsBuild = '7e37eb42';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -239,8 +239,8 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
-    let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.129';
+    const apiVersion = docParams.apiVersion;
+    const workerVersion = '2.3.146';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -18171,16 +18171,16 @@ class AnnotationFactory {
   }
 
   static _create(xref, ref, pdfManager, idFactory) {
-    let dict = xref.fetchIfRef(ref);
+    const dict = xref.fetchIfRef(ref);
 
     if (!(0, _primitives.isDict)(dict)) {
       return undefined;
     }
 
-    let id = (0, _primitives.isRef)(ref) ? ref.toString() : `annot_${idFactory.createObjId()}`;
+    const id = (0, _primitives.isRef)(ref) ? ref.toString() : `annot_${idFactory.createObjId()}`;
     let subtype = dict.get('Subtype');
     subtype = (0, _primitives.isName)(subtype) ? subtype.name : null;
-    let parameters = {
+    const parameters = {
       xref,
       dict,
       subtype,
@@ -18311,19 +18311,14 @@ function getQuadPoints(dict, rect) {
 }
 
 function getTransformMatrix(rect, bbox, matrix) {
-  let bounds = _util.Util.getAxialAlignedBoundingBox(bbox, matrix);
-
-  let minX = bounds[0];
-  let minY = bounds[1];
-  let maxX = bounds[2];
-  let maxY = bounds[3];
+  const [minX, minY, maxX, maxY] = _util.Util.getAxialAlignedBoundingBox(bbox, matrix);
 
   if (minX === maxX || minY === maxY) {
     return [1, 0, 0, 1, rect[0], rect[1]];
   }
 
-  let xRatio = (rect[2] - rect[0]) / (maxX - minX);
-  let yRatio = (rect[3] - rect[1]) / (maxY - minY);
+  const xRatio = (rect[2] - rect[0]) / (maxX - minX);
+  const yRatio = (rect[3] - rect[1]) / (maxY - minY);
   return [xRatio, 0, 0, yRatio, rect[0] - minX * xRatio, rect[1] - minY * yRatio];
 }
 
@@ -18403,7 +18398,7 @@ class Annotation {
   }
 
   setColor(color) {
-    let rgbColor = new Uint8ClampedArray(3);
+    const rgbColor = new Uint8ClampedArray(3);
 
     if (!Array.isArray(color)) {
       this.color = rgbColor;
@@ -18447,8 +18442,8 @@ class Annotation {
     }
 
     if (borderStyle.has('BS')) {
-      let dict = borderStyle.get('BS');
-      let dictType = dict.get('Type');
+      const dict = borderStyle.get('BS');
+      const dictType = dict.get('Type');
 
       if (!dictType || (0, _primitives.isName)(dictType, 'Border')) {
         this.borderStyle.setWidth(dict.get('W'), this.rectangle);
@@ -18456,7 +18451,7 @@ class Annotation {
         this.borderStyle.setDashArray(dict.getArray('D'));
       }
     } else if (borderStyle.has('Border')) {
-      let array = borderStyle.getArray('Border');
+      const array = borderStyle.getArray('Border');
 
       if (Array.isArray(array) && array.length >= 3) {
         this.borderStyle.setHorizontalCornerRadius(array[0]);
@@ -18474,13 +18469,13 @@ class Annotation {
 
   setAppearance(dict) {
     this.appearance = null;
-    let appearanceStates = dict.get('AP');
+    const appearanceStates = dict.get('AP');
 
     if (!(0, _primitives.isDict)(appearanceStates)) {
       return;
     }
 
-    let normalAppearanceState = appearanceStates.get('N');
+    const normalAppearanceState = appearanceStates.get('N');
 
     if ((0, _primitives.isStream)(normalAppearanceState)) {
       this.appearance = normalAppearanceState;
@@ -18491,7 +18486,7 @@ class Annotation {
       return;
     }
 
-    let as = dict.get('AS');
+    const as = dict.get('AS');
 
     if (!(0, _primitives.isName)(as) || !normalAppearanceState.has(as.name)) {
       return;
@@ -18506,7 +18501,7 @@ class Annotation {
         return undefined;
       }
 
-      let objectLoader = new _obj.ObjectLoader(resources, keys, resources.xref);
+      const objectLoader = new _obj.ObjectLoader(resources, keys, resources.xref);
       return objectLoader.load().then(function () {
         return resources;
       });
@@ -18518,14 +18513,14 @@ class Annotation {
       return Promise.resolve(new _operator_list.OperatorList());
     }
 
-    let data = this.data;
-    let appearanceDict = this.appearance.dict;
-    let resourcesPromise = this.loadResources(['ExtGState', 'ColorSpace', 'Pattern', 'Shading', 'XObject', 'Font']);
-    let bbox = appearanceDict.getArray('BBox') || [0, 0, 1, 1];
-    let matrix = appearanceDict.getArray('Matrix') || [1, 0, 0, 1, 0, 0];
-    let transform = getTransformMatrix(data.rect, bbox, matrix);
+    const data = this.data;
+    const appearanceDict = this.appearance.dict;
+    const resourcesPromise = this.loadResources(['ExtGState', 'ColorSpace', 'Pattern', 'Shading', 'XObject', 'Font']);
+    const bbox = appearanceDict.getArray('BBox') || [0, 0, 1, 1];
+    const matrix = appearanceDict.getArray('Matrix') || [1, 0, 0, 1, 0, 0];
+    const transform = getTransformMatrix(data.rect, bbox, matrix);
     return resourcesPromise.then(resources => {
-      let opList = new _operator_list.OperatorList();
+      const opList = new _operator_list.OperatorList();
       opList.addOp(_util.OPS.beginAnnotation, [data.rect, transform, matrix]);
       return evaluator.getOperatorList({
         stream: this.appearance,
@@ -18610,9 +18605,8 @@ class AnnotationBorderStyle {
       let isValid = true;
       let allZeros = true;
 
-      for (let i = 0, len = dashArray.length; i < len; i++) {
-        let element = dashArray[i];
-        let validNumber = +element >= 0;
+      for (const element of dashArray) {
+        const validNumber = +element >= 0;
 
         if (!validNumber) {
           isValid = false;
@@ -18711,8 +18705,8 @@ exports.MarkupAnnotation = MarkupAnnotation;
 class WidgetAnnotation extends Annotation {
   constructor(params) {
     super(params);
-    let dict = params.dict;
-    let data = this.data;
+    const dict = params.dict;
+    const data = this.data;
     data.annotationType = _util.AnnotationType.WIDGET;
     data.fieldName = this._constructFieldName(dict);
     data.fieldValue = (0, _core_utils.getInheritableProperty)({
@@ -18725,7 +18719,7 @@ class WidgetAnnotation extends Annotation {
       dict,
       key: 'DA'
     }) || '';
-    let fieldType = (0, _core_utils.getInheritableProperty)({
+    const fieldType = (0, _core_utils.getInheritableProperty)({
       dict,
       key: 'FT'
     });
@@ -18761,7 +18755,7 @@ class WidgetAnnotation extends Annotation {
       return (0, _util.stringToPDFString)(dict.get('T'));
     }
 
-    let fieldName = [];
+    const fieldName = [];
 
     if (dict.has('T')) {
       fieldName.unshift((0, _util.stringToPDFString)(dict.get('T')));
@@ -18832,13 +18826,13 @@ class TextWidgetAnnotation extends WidgetAnnotation {
       return super.getOperatorList(evaluator, task, renderForms);
     }
 
-    let operatorList = new _operator_list.OperatorList();
+    const operatorList = new _operator_list.OperatorList();
 
     if (!this.data.defaultAppearance) {
       return Promise.resolve(operatorList);
     }
 
-    let stream = new _stream.Stream((0, _util.stringToBytes)(this.data.defaultAppearance));
+    const stream = new _stream.Stream((0, _util.stringToBytes)(this.data.defaultAppearance));
     return evaluator.getOperatorList({
       stream,
       task,
@@ -18898,33 +18892,31 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
   _processRadioButton(params) {
     this.data.fieldValue = this.data.buttonValue = null;
-    let fieldParent = params.dict.get('Parent');
+    const fieldParent = params.dict.get('Parent');
 
     if ((0, _primitives.isDict)(fieldParent) && fieldParent.has('V')) {
-      let fieldParentValue = fieldParent.get('V');
+      const fieldParentValue = fieldParent.get('V');
 
       if ((0, _primitives.isName)(fieldParentValue)) {
         this.data.fieldValue = fieldParentValue.name;
       }
     }
 
-    let appearanceStates = params.dict.get('AP');
+    const appearanceStates = params.dict.get('AP');
 
     if (!(0, _primitives.isDict)(appearanceStates)) {
       return;
     }
 
-    let normalAppearanceState = appearanceStates.get('N');
+    const normalAppearanceState = appearanceStates.get('N');
 
     if (!(0, _primitives.isDict)(normalAppearanceState)) {
       return;
     }
 
-    let keys = normalAppearanceState.getKeys();
-
-    for (let i = 0, ii = keys.length; i < ii; i++) {
-      if (keys[i] !== 'Off') {
-        this.data.buttonValue = keys[i];
+    for (const key of normalAppearanceState.getKeys()) {
+      if (key !== 'Off') {
+        this.data.buttonValue = key;
         break;
       }
     }
@@ -18949,13 +18941,13 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
   constructor(params) {
     super(params);
     this.data.options = [];
-    let options = (0, _core_utils.getInheritableProperty)({
+    const options = (0, _core_utils.getInheritableProperty)({
       dict: params.dict,
       key: 'Opt'
     });
 
     if (Array.isArray(options)) {
-      let xref = params.xref;
+      const xref = params.xref;
 
       for (let i = 0, ii = options.length; i < ii; i++) {
         let option = xref.fetchIfRef(options[i]);
@@ -19026,17 +19018,16 @@ class PopupAnnotation extends Annotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.POPUP;
-    let dict = parameters.dict;
-    let parentItem = dict.get('Parent');
+    let parentItem = parameters.dict.get('Parent');
 
     if (!parentItem) {
       (0, _util.warn)('Popup annotation has a missing or invalid parent annotation.');
       return;
     }
 
-    let parentSubtype = parentItem.get('Subtype');
+    const parentSubtype = parentItem.get('Subtype');
     this.data.parentType = (0, _primitives.isName)(parentSubtype) ? parentSubtype.name : null;
-    const rawParent = dict.getRaw('Parent');
+    const rawParent = parameters.dict.getRaw('Parent');
     this.data.parentId = (0, _primitives.isRef)(rawParent) ? rawParent.toString() : null;
     const rt = parentItem.get('RT');
 
@@ -19059,7 +19050,7 @@ class PopupAnnotation extends Annotation {
     }
 
     if (!this.viewable) {
-      let parentFlags = parentItem.get('F');
+      const parentFlags = parentItem.get('F');
 
       if (this._isViewable(parentFlags)) {
         this.setFlags(parentFlags);
@@ -19084,8 +19075,7 @@ class LineAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.LINE;
-    let dict = parameters.dict;
-    this.data.lineCoordinates = _util.Util.normalizeRect(dict.getArray('L'));
+    this.data.lineCoordinates = _util.Util.normalizeRect(parameters.dict.getArray('L'));
   }
 
 }
@@ -19110,8 +19100,7 @@ class PolylineAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.POLYLINE;
-    let dict = parameters.dict;
-    let rawVertices = dict.getArray('Vertices');
+    const rawVertices = parameters.dict.getArray('Vertices');
     this.data.vertices = [];
 
     for (let i = 0, ii = rawVertices.length; i < ii; i += 2) {
@@ -19144,9 +19133,8 @@ class InkAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.INK;
-    let dict = parameters.dict;
     const xref = parameters.xref;
-    let originalInkLists = dict.getArray('InkList');
+    const originalInkLists = parameters.dict.getArray('InkList');
     this.data.inkLists = [];
 
     for (let i = 0, ii = originalInkLists.length; i < ii; ++i) {
@@ -19226,7 +19214,7 @@ class StampAnnotation extends MarkupAnnotation {
 class FileAttachmentAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
-    let file = new _obj.FileSpec(parameters.dict.get('FS'), parameters.xref);
+    const file = new _obj.FileSpec(parameters.dict.get('FS'), parameters.xref);
     this.data.annotationType = _util.AnnotationType.FILEATTACHMENT;
     this.data.file = file.serializable;
   }
@@ -44743,13 +44731,17 @@ exports.MessageHandler = MessageHandler;
 
 var _util = __w_pdfjs_require__(2);
 
-async function resolveCall(fn, args, thisArg = null) {
-  if (!fn) {
-    return undefined;
-  }
-
-  return fn.apply(thisArg, args);
-}
+const StreamKind = {
+  UNKNOWN: 0,
+  CANCEL: 1,
+  CANCEL_COMPLETE: 2,
+  CLOSE: 3,
+  ENQUEUE: 4,
+  ERROR: 5,
+  PULL: 6,
+  PULL_COMPLETE: 7,
+  START_COMPLETE: 8
+};
 
 function wrapReason(reason) {
   if (typeof reason !== 'object') {
@@ -44766,17 +44758,12 @@ function wrapReason(reason) {
     case 'UnexpectedResponseException':
       return new _util.UnexpectedResponseException(reason.message, reason.status);
 
-    default:
+    case 'UnknownErrorException':
       return new _util.UnknownErrorException(reason.message, reason.details);
-  }
-}
 
-function makeReasonSerializable(reason) {
-  if (!(reason instanceof Error) || reason instanceof _util.AbortException || reason instanceof _util.MissingPDFException || reason instanceof _util.UnexpectedResponseException || reason instanceof _util.UnknownErrorException) {
-    return reason;
+    default:
+      return new _util.UnknownErrorException(reason.message, reason.toString());
   }
-
-  return new _util.UnknownErrorException(reason.message, reason.toString());
 }
 
 function resolveOrReject(capability, data) {
@@ -44829,9 +44816,9 @@ function MessageHandler(sourceName, targetName, comObj) {
       if (data.callbackId) {
         let sourceName = this.sourceName;
         let targetName = data.sourceName;
-        Promise.resolve().then(function () {
-          return action[0].call(action[1], data.data);
-        }).then(result => {
+        new Promise(function (resolve) {
+          resolve(action(data.data));
+        }).then(function (result) {
           comObj.postMessage({
             sourceName,
             targetName,
@@ -44839,19 +44826,19 @@ function MessageHandler(sourceName, targetName, comObj) {
             callbackId: data.callbackId,
             data: result
           });
-        }, reason => {
+        }, function (reason) {
           comObj.postMessage({
             sourceName,
             targetName,
             isReply: true,
             callbackId: data.callbackId,
-            error: makeReasonSerializable(reason)
+            error: wrapReason(reason)
           });
         });
       } else if (data.streamId) {
         this._createStreamSink(data);
       } else {
-        action[0].call(action[1], data.data);
+        action(data.data);
       }
     } else {
       throw new Error(`Unknown action from worker: ${data.action}`);
@@ -44862,42 +44849,40 @@ function MessageHandler(sourceName, targetName, comObj) {
 }
 
 MessageHandler.prototype = {
-  on(actionName, handler, scope) {
+  on(actionName, handler) {
     var ah = this.actionHandler;
 
     if (ah[actionName]) {
       throw new Error(`There is already an actionName called "${actionName}"`);
     }
 
-    ah[actionName] = [handler, scope];
+    ah[actionName] = handler;
   },
 
   send(actionName, data, transfers) {
-    var message = {
+    this.postMessage({
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
       data
-    };
-    this.postMessage(message, transfers);
+    }, transfers);
   },
 
   sendWithPromise(actionName, data, transfers) {
     var callbackId = this.callbackId++;
-    var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      action: actionName,
-      data,
-      callbackId
-    };
     var capability = (0, _util.createPromiseCapability)();
     this.callbacksCapabilities[callbackId] = capability;
 
     try {
-      this.postMessage(message, transfers);
-    } catch (e) {
-      capability.reject(e);
+      this.postMessage({
+        sourceName: this.sourceName,
+        targetName: this.targetName,
+        action: actionName,
+        callbackId,
+        data
+      }, transfers);
+    } catch (ex) {
+      capability.reject(ex);
     }
 
     return capability.promise;
@@ -44907,6 +44892,7 @@ MessageHandler.prototype = {
     let streamId = this.streamId++;
     let sourceName = this.sourceName;
     let targetName = this.targetName;
+    const comObj = this.comObj;
     return new _util.ReadableStream({
       start: controller => {
         let startCapability = (0, _util.createPromiseCapability)();
@@ -44922,31 +44908,32 @@ MessageHandler.prototype = {
           streamId,
           data,
           desiredSize: controller.desiredSize
-        });
+        }, transfers);
         return startCapability.promise;
       },
       pull: controller => {
         let pullCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].pullCall = pullCapability;
-        this.postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
-          stream: 'pull',
+          stream: StreamKind.PULL,
           streamId,
           desiredSize: controller.desiredSize
         });
         return pullCapability.promise;
       },
       cancel: reason => {
+        (0, _util.assert)(reason instanceof Error, 'cancel must have a valid reason');
         let cancelCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].cancelCall = cancelCapability;
         this.streamControllers[streamId].isClosed = true;
-        this.postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
-          stream: 'cancel',
-          reason,
-          streamId
+          stream: StreamKind.CANCEL,
+          streamId,
+          reason: wrapReason(reason)
         });
         return cancelCapability.promise;
       }
@@ -44961,25 +44948,7 @@ MessageHandler.prototype = {
     let sourceName = this.sourceName;
     let targetName = data.sourceName;
     let capability = (0, _util.createPromiseCapability)();
-
-    let sendStreamRequest = ({
-      stream,
-      chunk,
-      transfers,
-      success,
-      reason
-    }) => {
-      this.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        streamId,
-        chunk,
-        success,
-        reason
-      }, transfers);
-    };
-
+    const comObj = this.comObj;
     let streamSink = {
       enqueue(chunk, size = 1, transfers) {
         if (this.isCancelled) {
@@ -44994,11 +44963,13 @@ MessageHandler.prototype = {
           this.ready = this.sinkCapability.promise;
         }
 
-        sendStreamRequest({
-          stream: 'enqueue',
-          chunk,
-          transfers
-        });
+        self.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.ENQUEUE,
+          streamId,
+          chunk
+        }, transfers);
       },
 
       close() {
@@ -45007,21 +44978,29 @@ MessageHandler.prototype = {
         }
 
         this.isCancelled = true;
-        sendStreamRequest({
-          stream: 'close'
+        comObj.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.CLOSE,
+          streamId
         });
         delete self.streamSinks[streamId];
       },
 
       error(reason) {
+        (0, _util.assert)(reason instanceof Error, 'error must have a valid reason');
+
         if (this.isCancelled) {
           return;
         }
 
         this.isCancelled = true;
-        sendStreamRequest({
-          stream: 'error',
-          reason
+        comObj.postMessage({
+          sourceName,
+          targetName,
+          stream: StreamKind.ERROR,
+          streamId,
+          reason: wrapReason(reason)
         });
       },
 
@@ -45035,16 +45014,23 @@ MessageHandler.prototype = {
     streamSink.sinkCapability.resolve();
     streamSink.ready = streamSink.sinkCapability.promise;
     this.streamSinks[streamId] = streamSink;
-    resolveCall(action[0], [data.data, streamSink], action[1]).then(() => {
-      sendStreamRequest({
-        stream: 'start_complete',
+    new Promise(function (resolve) {
+      resolve(action(data.data, streamSink));
+    }).then(function () {
+      comObj.postMessage({
+        sourceName,
+        targetName,
+        stream: StreamKind.START_COMPLETE,
+        streamId,
         success: true
       });
-    }, reason => {
-      sendStreamRequest({
-        stream: 'start_complete',
-        success: false,
-        reason
+    }, function (reason) {
+      comObj.postMessage({
+        sourceName,
+        targetName,
+        stream: StreamKind.START_COMPLETE,
+        streamId,
+        reason: wrapReason(reason)
       });
     });
   },
@@ -45053,21 +45039,7 @@ MessageHandler.prototype = {
     let sourceName = this.sourceName;
     let targetName = data.sourceName;
     let streamId = data.streamId;
-
-    let sendStreamResponse = ({
-      stream,
-      success,
-      reason
-    }) => {
-      this.comObj.postMessage({
-        sourceName,
-        targetName,
-        stream,
-        success,
-        streamId,
-        reason
-      });
-    };
+    const comObj = this.comObj;
 
     let deleteStreamController = () => {
       Promise.all([this.streamControllers[data.streamId].startCall, this.streamControllers[data.streamId].pullCall, this.streamControllers[data.streamId].cancelCall].map(function (capability) {
@@ -45078,18 +45050,21 @@ MessageHandler.prototype = {
     };
 
     switch (data.stream) {
-      case 'start_complete':
+      case StreamKind.START_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].startCall, data);
         break;
 
-      case 'pull_complete':
+      case StreamKind.PULL_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].pullCall, data);
         break;
 
-      case 'pull':
+      case StreamKind.PULL:
         if (!this.streamSinks[data.streamId]) {
-          sendStreamResponse({
-            stream: 'pull_complete',
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
             success: true
           });
           break;
@@ -45100,21 +45075,31 @@ MessageHandler.prototype = {
         }
 
         this.streamSinks[data.streamId].desiredSize = data.desiredSize;
-        resolveCall(this.streamSinks[data.streamId].onPull).then(() => {
-          sendStreamResponse({
-            stream: 'pull_complete',
+        const {
+          onPull
+        } = this.streamSinks[data.streamId];
+        new Promise(function (resolve) {
+          resolve(onPull && onPull());
+        }).then(function () {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
             success: true
           });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'pull_complete',
-            success: false,
-            reason
+        }, function (reason) {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.PULL_COMPLETE,
+            streamId,
+            reason: wrapReason(reason)
           });
         });
         break;
 
-      case 'enqueue':
+      case StreamKind.ENQUEUE:
         (0, _util.assert)(this.streamControllers[data.streamId], 'enqueue should have stream controller');
 
         if (!this.streamControllers[data.streamId].isClosed) {
@@ -45123,7 +45108,7 @@ MessageHandler.prototype = {
 
         break;
 
-      case 'close':
+      case StreamKind.CLOSE:
         (0, _util.assert)(this.streamControllers[data.streamId], 'close should have stream controller');
 
         if (this.streamControllers[data.streamId].isClosed) {
@@ -45135,32 +45120,42 @@ MessageHandler.prototype = {
         deleteStreamController();
         break;
 
-      case 'error':
+      case StreamKind.ERROR:
         (0, _util.assert)(this.streamControllers[data.streamId], 'error should have stream controller');
         this.streamControllers[data.streamId].controller.error(wrapReason(data.reason));
         deleteStreamController();
         break;
 
-      case 'cancel_complete':
+      case StreamKind.CANCEL_COMPLETE:
         resolveOrReject(this.streamControllers[data.streamId].cancelCall, data);
         deleteStreamController();
         break;
 
-      case 'cancel':
+      case StreamKind.CANCEL:
         if (!this.streamSinks[data.streamId]) {
           break;
         }
 
-        resolveCall(this.streamSinks[data.streamId].onCancel, [wrapReason(data.reason)]).then(() => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
+        const {
+          onCancel
+        } = this.streamSinks[data.streamId];
+        new Promise(function (resolve) {
+          resolve(onCancel && onCancel(wrapReason(data.reason)));
+        }).then(function () {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.CANCEL_COMPLETE,
+            streamId,
             success: true
           });
-        }, reason => {
-          sendStreamResponse({
-            stream: 'cancel_complete',
-            success: false,
-            reason
+        }, function (reason) {
+          comObj.postMessage({
+            sourceName,
+            targetName,
+            stream: StreamKind.CANCEL_COMPLETE,
+            streamId,
+            reason: wrapReason(reason)
           });
         });
         this.streamSinks[data.streamId].sinkCapability.reject(wrapReason(data.reason));
