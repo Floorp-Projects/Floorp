@@ -16,13 +16,13 @@ add_task(async function() {
 
   await selectSource(dbg, "doc_rr_basic.html");
   await addBreakpoint(dbg, "doc_rr_basic.html", 21, undefined, {
-    logValue: `displayName + " Logpoint Number " + number`,
+    logValue: `displayName, "Logpoint Number", number`,
   });
   await addBreakpoint(dbg, "doc_rr_basic.html", 6, undefined, {
-    logValue: `displayName + "Logpoint Beginning"`,
+    logValue: `displayName, "Logpoint Beginning"`,
   });
   await addBreakpoint(dbg, "doc_rr_basic.html", 8, undefined, {
-    logValue: `displayName + " Logpoint Ending"`,
+    logValue: `displayName, " Logpoint Ending"`,
   });
   await waitForMessageCount(hud, "Logpoint", 12);
 

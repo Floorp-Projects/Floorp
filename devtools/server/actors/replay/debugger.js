@@ -851,7 +851,7 @@ ReplayDebuggerScript.prototype = {
       condition,
       (point, result, resultData) => {
         const pool = new ReplayPool(this._dbg, resultData);
-        const converted = pool.convertCompletionValue(result);
+        const converted = result.map(v => pool.convertValue(v));
         callback(point, converted);
       }
     );
