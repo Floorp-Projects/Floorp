@@ -119,16 +119,18 @@ const previewers = {
         grip.userDisplayName = hooks.createValueGrip(userDisplayName.value);
       }
 
+      let script;
       const dbgGlobal = hooks.getGlobalDebugObject();
       if (dbgGlobal) {
-        const script = dbgGlobal.makeDebuggeeValue(obj.unsafeDereference())
-          .script;
-        if (script) {
-          grip.location = {
-            url: script.url,
-            line: script.startLine,
-          };
-        }
+        script = dbgGlobal.makeDebuggeeValue(obj.unsafeDereference()).script;
+      } else {
+        script = obj.script;
+      }
+      if (script) {
+        grip.location = {
+          url: script.url,
+          line: script.startLine,
+        };
       }
 
       return true;
