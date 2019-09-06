@@ -242,18 +242,18 @@ export function addHighlightToTargetSiblings(target: Element, props: Object) {
     // Note: Declaring previous/next ELEMENT siblings as well because
     // properties like innerHTML can't be checked on nextSibling
     // without creating a flow error even if the node is an element type.
+    while (
+      nextSibling &&
+      nextElementSibling &&
+      nextSibling.nodeType === 1 &&
+      nextElementSibling.className.includes(tokenType) &&
+      previewExpression.includes(nextElementSibling.innerHTML)
+    ) {
+      // All checks passed, add highlight and continue the search.
+      nextElementSibling.classList.add("preview-token");
 
-    while (nextSibling && nextElementSibling && nextSibling.nodeType === 1) {
-      if (
-        nextElementSibling.className.includes(tokenType) &&
-        previewExpression.includes(nextElementSibling.innerHTML)
-      ) {
-        // All checks passed, add highlight and continue the search.
-        nextElementSibling.classList.add("preview-token");
-
-        nextSibling = nextSibling.nextSibling;
-        nextElementSibling = nextElementSibling.nextElementSibling;
-      }
+      nextSibling = nextSibling.nextSibling;
+      nextElementSibling = nextElementSibling.nextElementSibling;
     }
 
     let previousSibling = target.previousSibling;
@@ -262,18 +262,15 @@ export function addHighlightToTargetSiblings(target: Element, props: Object) {
     while (
       previousSibling &&
       previousElementSibling &&
-      previousSibling.nodeType === 1
+      previousSibling.nodeType === 1 &&
+      previousElementSibling.className.includes(tokenType) &&
+      previewExpression.includes(previousElementSibling.innerHTML)
     ) {
-      if (
-        previousElementSibling.className.includes(tokenType) &&
-        previewExpression.includes(previousElementSibling.innerHTML)
-      ) {
-        // All checks passed, add highlight and continue the search.
-        previousElementSibling.classList.add("preview-token");
+      // All checks passed, add highlight and continue the search.
+      previousElementSibling.classList.add("preview-token");
 
-        previousSibling = previousSibling.previousSibling;
-        previousElementSibling = previousElementSibling.previousElementSibling;
-      }
+      previousSibling = previousSibling.previousSibling;
+      previousElementSibling = previousElementSibling.previousElementSibling;
     }
   }
 }
