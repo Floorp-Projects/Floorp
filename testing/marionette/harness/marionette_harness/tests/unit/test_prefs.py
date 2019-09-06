@@ -10,8 +10,6 @@ from marionette_driver.errors import JavascriptException
 from marionette_harness import (
     MarionetteTestCase,
     run_if_manage_instance,
-    skip_if_desktop,
-    skip_if_mobile
 )
 
 
@@ -43,20 +41,8 @@ class TestPreferences(MarionetteTestCase):
                 self.assertEqual(self.marionette.get_pref(key), value,
                                  "Preference {} hasn't been set to {}".format(key, repr(value)))
 
-    @skip_if_mobile("Only runnable with Firefox")
     def test_desktop_instance_preferences(self):
         required_prefs = geckoinstance.DesktopInstance.desktop_prefs
-
-        for key, value in required_prefs.iteritems():
-            if key in ["browser.tabs.remote.autostart"]:
-                return
-
-            self.assertEqual(self.marionette.get_pref(key), value,
-                             "Preference {} hasn't been set to {}".format(key, value))
-
-    @skip_if_desktop("Only runnable with Fennec")
-    def test_fennec_instance_preferences(self):
-        required_prefs = geckoinstance.FennecInstance.required_prefs
 
         for key, value in required_prefs.iteritems():
             if key in ["browser.tabs.remote.autostart"]:

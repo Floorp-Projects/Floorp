@@ -18,7 +18,6 @@ from marionette_driver.errors import NoSuchWindowException
 from marionette_harness import (
     MarionetteTestCase,
     skip,
-    skip_if_mobile,
     WindowManagerMixin,
 )
 
@@ -146,7 +145,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         screenshot_chrome = self.marionette.screenshot()
         self.assertNotEqual(screenshot_content, screenshot_chrome)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_element(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -164,7 +162,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_full_area(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -185,7 +182,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertEqual(root_dimensions, self.get_image_dimensions(screenshot_full))
         self.assertEqual(screenshot_root, screenshot_full)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_window_already_closed(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -194,7 +190,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_window)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_formats(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -233,7 +228,6 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_mobile("Bug 1487124 - Android need its own maximum allowed dimensions")
     def test_capture_vertical_bounds(self):
         self.marionette.navigate(inline("<body style='margin-top: 32768px'>foo"))
         screenshot = self.marionette.screenshot()

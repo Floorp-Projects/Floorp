@@ -9,7 +9,7 @@ import urllib
 
 from marionette_driver import errors
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 def inline(doc):
@@ -78,7 +78,6 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def tst_window_handles_after_opening_new_non_browser_window(self):
         new_window = self.open_chrome_window(self.xul_dialog)
         self.assert_window_handles()
