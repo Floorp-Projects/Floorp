@@ -11,22 +11,23 @@ function observeOnce(topic) {
   });
 }
 
-add_task(async function setPrefs() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["fission.oopif.attribute", true], ["dom.ipc.processCount", 10000]],
-  });
-});
-
 add_task(async function runTest() {
+  let fissionWindow = await BrowserTestUtils.openNewBrowserWindow({
+    fission: true,
+    remote: true,
+  });
+
   info(`chrome, parent`);
-  let chromeBC = window.docShell.browsingContext;
+  let chromeBC = fissionWindow.docShell.browsingContext;
   ok(chromeBC.currentWindowGlobal, "Should have a current WindowGlobal");
   is(chromeBC.embedderWindowGlobal, null, "chrome has no embedder global");
   is(chromeBC.embedderElement, null, "chrome has no embedder element");
   is(chromeBC.parent, null, "chrome has no parent");
 
   // Open a new tab, and check that basic frames work out.
-  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: fissionWindow.gBrowser,
+  });
 
   info(`root, parent`);
   let rootBC = tab.linkedBrowser.browsingContext;
@@ -74,27 +75,15 @@ add_task(async function runTest() {
 
   // Test with an out-of-process iframe.
 
-  info(`registering oop windowglobal promise`);
-  // Unfortunately we currently don't create a WindowGlobal for the initial
-  // about:blank synchronously, so we need to set up a promise to wait for its
-  // creation.
-  let oopWindowGlobalPromise = new Promise(resolve => {
-    const TOPIC = "window-global-created";
-    Services.obs.addObserver(function observer(subject) {
-      info(`Saw ${TOPIC}: ${subject}`);
-      if (subject.browsingContext.parent == rootBC) {
-        info(`Resolving with ${subject}`);
-        Services.obs.removeObserver(observer, TOPIC);
-        resolve(subject);
-      }
-    }, TOPIC);
-  });
-
   let oopID = await ContentTask.spawn(tab.linkedBrowser, {}, async () => {
     info(`creating oop iframe`);
     let oop = content.document.createElement("iframe");
-    oop.setAttribute("fission", "true");
+    oop.setAttribute("src", "https://example.com");
     content.document.body.appendChild(oop);
+
+    await new Promise(resolve => {
+      oop.addEventListener("load", resolve, { once: true });
+    });
 
     info(`oop frame, child`);
     let oopBC = oop.frameLoader.browsingContext;
@@ -119,16 +108,14 @@ add_task(async function runTest() {
   is(oopBC.parent, rootBC, "[parent] oop frame has root as parent");
 
   info(`waiting for oop window global`);
-  let oopWindowGlobal = await oopWindowGlobalPromise;
-  is(
-    oopBC.currentWindowGlobal,
-    oopWindowGlobal,
-    "[parent] oop frame has a window global"
-  );
+  ok(oopBC.currentWindowGlobal, "[parent] oop frame has a window global");
 
   // Open a new window, and adopt |tab| into it.
 
-  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow({
+    fission: true,
+    remote: true,
+  });
 
   info(`new chrome, parent`);
   let newChromeBC = newWindow.docShell.browsingContext;
@@ -165,4 +152,5 @@ add_task(async function runTest() {
 
   info(`closing window`);
   await BrowserTestUtils.closeWindow(newWindow);
+  await BrowserTestUtils.closeWindow(fissionWindow);
 });

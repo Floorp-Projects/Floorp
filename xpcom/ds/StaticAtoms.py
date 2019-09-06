@@ -427,7 +427,6 @@ STATIC_ATOMS = [
     Atom("figure", "figure"),
     Atom("findbar", "findbar"),
     Atom("fixed", "fixed"),
-    Atom("fission", "fission"),
     Atom("flags", "flags"),
     Atom("flex", "flex"),
     Atom("flip", "flip"),
