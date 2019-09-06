@@ -30,6 +30,10 @@ function dbg() {
   return _dbg;
 }
 
+function dbgObject(id) {
+  return dbg()._pool.getObject(id);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Public Interface
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,7 +100,7 @@ const ReplayInspector = {
       clientX: event.clientX,
       clientY: event.clientY,
     });
-    const obj = dbg()._getObject(rv.id);
+    const obj = dbgObject(rv.id);
     return wrapValue(obj);
   },
 
@@ -139,7 +143,7 @@ function createSubstituteChrome(chrome) {
           const data = dbg()._sendRequestAllowDiverge({
             type: "newDeepTreeWalker",
           });
-          const obj = dbg()._getObject(data.id);
+          const obj = dbgObject(data.id);
           return wrapObject(obj);
         },
       },
@@ -155,10 +159,10 @@ function createSubstituteChrome(chrome) {
         // Objects are considered dead if we have unpaused since creating them
         // and they are not one of the fixed proxies. This prevents the
         // inspector from trying to continue using them.
-        if (!unwrapped._data) {
+        if (unwrapped._pool != dbg()._pool) {
           updateFixedProxies();
           unwrapped = proxyMap.get(node);
-          return !unwrapped._data;
+          return unwrapped._pool != dbg()._pool;
         }
         return false;
       },
@@ -266,7 +270,7 @@ function unwrapValue(value) {
 
   if (value instanceof Object) {
     const rv = dbg()._sendRequest({ type: "createObject" });
-    const newobj = dbg()._getObject(rv.id);
+    const newobj = dbgObject(rv.id);
 
     Object.entries(value).forEach(([name, propvalue]) => {
       const unwrapped = unwrapValue(propvalue);
@@ -284,7 +288,7 @@ function getObjectProperty(obj, name) {
     id: obj._data.id,
     name,
   });
-  return dbg()._convertCompletionValue(rv);
+  return dbg()._pool.convertCompletionValue(rv);
 }
 
 function setObjectProperty(obj, name, value) {
@@ -294,7 +298,7 @@ function setObjectProperty(obj, name, value) {
     name,
     value: dbg()._convertValueForChild(value),
   });
-  return dbg()._convertCompletionValue(rv);
+  return dbg()._pool.convertCompletionValue(rv);
 }
 
 function getTargetObject(target) {
@@ -479,11 +483,7 @@ function updateFixedProxies() {
         ReplayInspectorProxyHandler
       );
     }
-    initFixedProxy(
-      gFixedProxy[key],
-      gFixedProxyTargets[key],
-      dbg()._getObject(value)
-    );
+    initFixedProxy(gFixedProxy[key], gFixedProxyTargets[key], dbgObject(value));
   }
 }
 

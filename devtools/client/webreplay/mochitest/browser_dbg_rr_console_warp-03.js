@@ -45,6 +45,11 @@ async function checkMessageObjectContents(msg, expected, expandList = []) {
   });
 }
 
+function checkJumpIcon(msg) {
+  const jumpIcon = msg.querySelector(".jump-definition");
+  ok(jumpIcon, "Found a jump icon");
+}
+
 // Test evaluating various expressions in the console after time warping.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_objects.html", {
@@ -54,13 +59,32 @@ add_task(async function() {
   const { threadFront, toolbox } = dbg;
   const console = await toolbox.selectTool("webconsole");
   const hud = console.hud;
+  let msg;
+
+  await waitForMessage(hud, "Array(20) [ 0, 1, 2, 3, 4, 5,");
+  await waitForMessage(hud, "Uint8Array(20) [ 0, 1, 2, 3, 4, 5,");
+  await waitForMessage(hud, "Set(22) [ null, null, 0, 1, 2, 3, 4, 5,");
+  await waitForMessage(
+    hud,
+    "Map(21) { {…} → {…}, 0 → 1, 1 → 2, 2 → 3, 3 → 4, 4 → 5,"
+  );
+  await waitForMessage(hud, "WeakSet(10)");
+  await waitForMessage(hud, "WeakMap(10)");
+  await waitForMessage(
+    hud,
+    "Object { a: 0, a0: 0, a1: 1, a2: 2, a3: 3, a4: 4,"
+  );
+  await waitForMessage(hud, "/abc/gi");
+
+  msg = await waitForMessage(hud, "function bar()");
+  checkJumpIcon(msg);
 
   await warpToMessage(hud, dbg, "Done");
 
   const requests = await threadFront.debuggerRequests();
 
   requests.forEach(({ request, stack }) => {
-    if (request.type != "pauseData") {
+    if (request.type != "pauseData" && request.type != "repaint") {
       dump(`Unexpected debugger request stack:\n${stack}\n`);
       ok(false, `Unexpected debugger request while paused: ${request.type}`);
     }
@@ -80,8 +104,6 @@ f();
   );
   await BrowserTest.checkMessageStack(hud, "Error: there", [3, 5]);
 
-  let msg;
-
   BrowserTest.execute(hud, "Array(1, 2, 3)");
   msg = await waitForMessage(hud, "Array(3) [ 1, 2, 3 ]");
   await checkMessageObjectContents(msg, ["0: 1", "1: 2", "2: 3", "length: 3"]);
@@ -97,9 +119,9 @@ f();
     "byteOffset: 0",
   ]);
 
-  BrowserTest.execute(hud, `RegExp("abc", "g")`);
-  msg = await waitForMessage(hud, "/abc/g");
-  await checkMessageObjectContents(msg, ["global: true", `source: "abc"`]);
+  BrowserTest.execute(hud, `RegExp("abd", "g")`);
+  msg = await waitForMessage(hud, "/abd/g");
+  await checkMessageObjectContents(msg, ["global: true", `source: "abd"`]);
 
   BrowserTest.execute(hud, "new Set([1, 2, 3])");
   msg = await waitForMessage(hud, "Set(3) [ 1, 2, 3 ]");
@@ -132,6 +154,10 @@ f();
     ["0: Object { … } → Object { … }", "1: Object { … } → Object { … }"],
     ["<entries>"]
   );
+
+  BrowserTest.execute(hud, "baz");
+  msg = await waitForMessage(hud, "function baz()");
+  checkJumpIcon(msg);
 
   await shutdownDebugger(dbg);
 });

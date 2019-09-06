@@ -31,8 +31,28 @@ var h = /abc/gi;
 var i = new Date();
 var j = RangeError();
 var k = document.getElementById("foo");
+var l = bar;
+console.log(a);
+console.log(b);
+console.log(c);
+console.log(d);
+console.log(e);
+console.log(f);
+console.log(g);
+console.log(h);
+console.log(i);
+console.log(j);
+console.log(l);
 console.log("Done");
 window.setTimeout(recordingFinished);
 }
 foo();
+
+function bar() {
+console.log("bar");
+}
+
+function baz() {
+console.log("baz");
+}
 </script>

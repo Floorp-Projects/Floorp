@@ -1434,10 +1434,10 @@ async function findLogpointHits(
       contents() {
         return { kind: "hitLogpoint", text, condition };
       },
-      onFinished(child, { data, result }) {
+      onFinished(child, { pauseData, result, resultData }) {
         if (result) {
-          addPauseData(point, data, /* trackCached */ true);
-          callback(point, gDebugger._convertCompletionValue(result));
+          addPauseData(point, pauseData, /* trackCached */ true);
+          callback(point, result, resultData);
         }
         child.divergedFromRecording = true;
       },

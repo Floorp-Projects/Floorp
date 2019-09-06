@@ -269,13 +269,10 @@ Services.obs.addObserver(
   {
     observe(subject, topic, data) {
       assert(topic == "devtools-html-content");
-      const { uri, offset, contents } = JSON.parse(data);
+      const { uri, contents } = JSON.parse(data);
       if (gHtmlContent.has(uri)) {
         const existing = gHtmlContent.get(uri);
-        if (existing.content.length == offset) {
-          assert(!existing.complete);
-          existing.content = existing.content + contents;
-        }
+        existing.content = existing.content + contents;
       } else {
         gHtmlContent.set(uri, {
           content: contents,
@@ -288,52 +285,6 @@ Services.obs.addObserver(
 );
 
 ///////////////////////////////////////////////////////////////////////////////
-// Object Snapshots
-///////////////////////////////////////////////////////////////////////////////
-
-// Snapshots are generated for objects that might be inspected at times when we
-// are not paused at the point where the snapshot was originally taken. The
-// snapshot data is provided to the server, which can use it to provide limited
-// answers to the client about the object's contents, without having to consult
-// a child process.
-
-function snapshotObjectProperty([name, desc]) {
-  // Only capture primitive properties in object snapshots.
-  if ("value" in desc && !convertedValueIsObject(desc.value)) {
-    return { name, desc };
-  }
-  return { name, desc: { value: "<unavailable>" } };
-}
-
-function makeObjectSnapshot(object) {
-  assert(object instanceof Debugger.Object);
-
-  // Include properties that would be included in a normal object's data packet,
-  // except do not allow inspection of any other referenced objects.
-  // In particular, don't set the prototype so that the object inspector will
-  // not attempt to crawl the object's prototype chain.
-  return {
-    kind: "Object",
-    callable: object.callable,
-    isBoundFunction: object.isBoundFunction,
-    isArrowFunction: object.isArrowFunction,
-    isGeneratorFunction: object.isGeneratorFunction,
-    isAsyncFunction: object.isAsyncFunction,
-    class: object.class,
-    name: object.name,
-    displayName: object.displayName,
-    parameterNames: object.parameterNames,
-    isProxy: object.isProxy,
-    isExtensible: object.isExtensible(),
-    isSealed: object.isSealed(),
-    isFrozen: object.isFrozen(),
-    properties: Object.entries(getObjectProperties(object)).map(
-      snapshotObjectProperty
-    ),
-  };
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Console Message State
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -343,13 +294,7 @@ const gConsoleMessages = [];
 // Any new console messages since the last checkpoint.
 const gNewConsoleMessages = [];
 
-function newConsoleMessage(messageType, executionPoint, contents) {
-  if (!executionPoint) {
-    executionPoint = currentScriptedExecutionPoint();
-  }
-
-  contents.messageType = messageType;
-  contents.executionPoint = executionPoint;
+function newConsoleMessage(contents) {
   gConsoleMessages.push(contents);
 
   if (gManifest.kind == "resume") {
@@ -379,11 +324,16 @@ Services.console.registerListener({
       // If there is a warp target associated with the error, use that. This
       // will take users to the point where the error was originally generated,
       // rather than where it was reported to the console.
-      const executionPoint = gWarpTargetPoints[message.timeWarpTarget];
+      let executionPoint = gWarpTargetPoints[message.timeWarpTarget];
+      if (!executionPoint) {
+        executionPoint = currentScriptedExecutionPoint();
+      }
 
       const contents = JSON.parse(JSON.stringify(message));
       contents.stack = convertStack(message.stack);
-      newConsoleMessage("PageError", executionPoint, contents);
+      contents.executionPoint = executionPoint;
+      contents.messageType = "PageError";
+      newConsoleMessage(contents);
     }
   },
 });
@@ -396,21 +346,30 @@ Services.obs.addObserver(
     observe(message, topic, data) {
       const apiMessage = message.wrappedJSObject;
 
-      const contents = {};
+      const contents = { messageType: "ConsoleAPI" };
       for (const id in apiMessage) {
         if (id != "wrappedJSObject" && id != "arguments") {
           contents[id] = JSON.parse(JSON.stringify(apiMessage[id]));
         }
       }
 
+      contents.executionPoint = currentScriptedExecutionPoint();
+
       // Message arguments are preserved as debuggee values.
       if (apiMessage.arguments) {
         contents.arguments = apiMessage.arguments.map(v => {
-          return convertValue(makeDebuggeeValue(v), { snapshot: true });
+          return convertValue(makeDebuggeeValue(v));
         });
+
+        contents.argumentsData = new PreviewedObjects();
+        contents.arguments.forEach(v =>
+          contents.argumentsData.addValue(v, true)
+        );
+
+        ClearPausedState();
       }
 
-      newConsoleMessage("ConsoleAPI", null, contents);
+      newConsoleMessage(contents);
     },
   },
   "console-api-log-event"
@@ -822,11 +781,8 @@ function getObjectId(obj) {
 }
 
 // Convert a value for sending to the parent.
-function convertValue(value, options) {
+function convertValue(value) {
   if (value instanceof Debugger.Object) {
-    if (options && options.snapshot) {
-      return { snapshot: makeObjectSnapshot(value) };
-    }
     return { object: getObjectId(value) };
   }
   if (
@@ -841,17 +797,13 @@ function convertValue(value, options) {
   return value;
 }
 
-function convertedValueIsObject(value) {
-  return isNonNullObject(value) && "object" in value;
-}
-
-function convertCompletionValue(value, options) {
+function convertCompletionValue(value) {
   if ("return" in value) {
-    return { return: convertValue(value.return, options) };
+    return { return: convertValue(value.return) };
   }
   if ("throw" in value) {
     return {
-      throw: convertValue(value.throw, options),
+      throw: convertValue(value.throw),
       stack: convertSavedFrameToPlainObject(value.stack),
     };
   }
@@ -1030,12 +982,16 @@ const gManifestStartHandlers = {
 
     const displayName = formatDisplayName(frame);
     const rv = frame.evalWithBindings(text, { displayName });
-    const converted = convertCompletionValue(rv, { snapshot: true });
 
-    const data = getPauseData();
-    data.paintData = RecordReplayControl.repaint();
+    const pauseData = getPauseData();
+    pauseData.paintData = RecordReplayControl.repaint();
+    ClearPausedState();
 
-    RecordReplayControl.manifestFinished({ result: converted, data });
+    const result = convertCompletionValue(rv);
+    const resultData = new PreviewedObjects();
+    resultData.addCompletionValue(result, true);
+
+    RecordReplayControl.manifestFinished({ result, resultData, pauseData });
   },
 };
 
@@ -1076,12 +1032,14 @@ function currentScriptedExecutionPoint() {
   if (!numFrames) {
     return null;
   }
-  const frame = getFrameData(numFrames - 1);
+
+  const index = numFrames - 1;
+  const frame = scriptFrameForIndex(index);
   return currentExecutionPoint({
     kind: "OnStep",
-    script: frame.script,
+    script: gScripts.getId(frame.script),
     offset: frame.offset,
-    frameIndex: frame.index,
+    frameIndex: index,
   });
 }
 
@@ -1495,6 +1453,143 @@ function getWindow() {
 // object.
 const OBJECT_PREVIEW_MAX_ITEMS = 10;
 
+// A collection of objects which we can send up to the server, along with
+// property information so that the server can show a preview for the object.
+function PreviewedObjects() {
+  this.objects = {};
+  this.environments = {};
+}
+
+PreviewedObjects.prototype = {
+  addValue(value, includeProperties) {
+    if (value && typeof value == "object" && value.object) {
+      this.addObject(value.object, includeProperties);
+    }
+  },
+
+  addObject(id, includeProperties) {
+    if (!id) {
+      return;
+    }
+
+    // If includeProperties is set then previewing the object requires knowledge
+    // of its enumerable properties.
+    const needObject = !this.objects[id];
+    const needProperties =
+      includeProperties &&
+      (needObject || !this.objects[id].preview.enumerableOwnProperties);
+
+    if (!needObject && !needProperties) {
+      return;
+    }
+
+    const object = gPausedObjects.getObject(id);
+    assert(object instanceof Debugger.Object);
+
+    const properties = getObjectProperties(object);
+    const propertyEntries = Object.entries(properties);
+
+    if (needObject) {
+      this.objects[id] = {
+        data: getObjectData(id),
+        preview: {
+          ownPropertyNamesCount: propertyEntries.length,
+        },
+      };
+
+      const preview = this.objects[id].preview;
+
+      // Add some properties (if present) which the server might ask for
+      // even when it isn't interested in the rest of the properties.
+      if (properties.length) {
+        preview.lengthProperty = properties.length;
+      }
+      if (properties.displayName) {
+        preview.displayNameProperty = properties.displayName;
+      }
+    }
+
+    if (needProperties) {
+      const preview = this.objects[id].preview;
+
+      // The server is only interested in enumerable properties, and at most
+      // OBJECT_PREVIEW_MAX_ITEMS of them. Limiting the properties we send to
+      // only those the server needs avoids having to send the contents of huge
+      // objects like Windows, most of which will not be used.
+      const enumerableOwnProperties = Object.create(null);
+      let enumerablePropertyCount = 0;
+      for (const [name, desc] of propertyEntries) {
+        if (desc.enumerable) {
+          enumerableOwnProperties[name] = desc;
+          this.addPropertyDescriptor(desc, false);
+          if (++enumerablePropertyCount == OBJECT_PREVIEW_MAX_ITEMS) {
+            break;
+          }
+        }
+      }
+      preview.enumerableOwnProperties = enumerableOwnProperties;
+
+      // The server is interested in at most OBJECT_PREVIEW_MAX_ITEMS items in
+      // set and map containers.
+      const containerContents = getObjectContainerContents(object);
+      if (containerContents) {
+        preview.containerContents = containerContents.slice(
+          0,
+          OBJECT_PREVIEW_MAX_ITEMS
+        );
+        preview.containerContents.forEach(v => this.addContainerValue(v));
+      }
+    }
+  },
+
+  addPropertyDescriptor(desc, includeProperties) {
+    if (desc.value) {
+      this.addValue(desc.value, includeProperties);
+    }
+    if (desc.get) {
+      this.addObject(desc.get, includeProperties);
+    }
+    if (desc.set) {
+      this.addObject(desc.set, includeProperties);
+    }
+  },
+
+  addContainerValue(value) {
+    // Watch for [key, value] pairs in maps.
+    if (value.length == 2) {
+      value.forEach(v => this.addValue(v));
+    } else {
+      this.addValue(value);
+    }
+  },
+
+  addCompletionValue(value, includeProperties) {
+    if ("return" in value) {
+      this.addValue(value.return, includeProperties);
+    } else if ("throw" in value) {
+      this.addValue(value.throw, includeProperties);
+    }
+  },
+
+  addEnvironment(id) {
+    if (!id || this.environments[id]) {
+      return;
+    }
+
+    const env = gPausedObjects.getObject(id);
+    assert(env instanceof Debugger.Environment);
+
+    const data = getObjectData(id);
+    const names = getEnvironmentNames(env);
+    this.environments[id] = { data, names };
+
+    names.forEach(({ value }) => this.addValue(value, true));
+
+    this.addObject(data.callee);
+    this.addEnvironment(data.parent);
+  },
+};
+
 // When the replaying process pauses, the server needs to inspect a lot of state
 // around frames, objects, etc. in order to fill in all the information the
 // client needs to update the UI for the pause location. Done naively, this
@@ -1514,133 +1609,11 @@ function getPauseData() {
     return {};
   }
 
-  const rv = {
-    frames: [],
-    scripts: {},
-    offsetMetadata: [],
-    objects: {},
-    environments: {},
-  };
+  const rv = new PreviewedObjects();
 
-  function addValue(value, includeProperties) {
-    if (value && typeof value == "object" && value.object) {
-      addObject(value.object, includeProperties);
-    }
-  }
-
-  function addObject(id, includeProperties) {
-    if (!id) {
-      return;
-    }
-
-    // If includeProperties is set then previewing the object requires knowledge
-    // of its enumerable properties.
-    const needObject = !rv.objects[id];
-    const needProperties =
-      includeProperties &&
-      (needObject || !rv.objects[id].preview.enumerableOwnProperties);
-
-    if (!needObject && !needProperties) {
-      return;
-    }
-
-    const object = gPausedObjects.getObject(id);
-    assert(object instanceof Debugger.Object);
-
-    const properties = getObjectProperties(object);
-    const propertyEntries = Object.entries(properties);
-
-    if (needObject) {
-      rv.objects[id] = {
-        data: getObjectData(id),
-        preview: {
-          ownPropertyNamesCount: propertyEntries.length,
-        },
-      };
-
-      const preview = rv.objects[id].preview;
-
-      // Add some properties (if present) which the server might ask for
-      // even when it isn't interested in the rest of the properties.
-      if (properties.length) {
-        preview.lengthProperty = properties.length;
-      }
-      if (properties.displayName) {
-        preview.displayNameProperty = properties.displayName;
-      }
-    }
-
-    if (needProperties) {
-      const preview = rv.objects[id].preview;
-
-      // The server is only interested in enumerable properties, and at most
-      // OBJECT_PREVIEW_MAX_ITEMS of them. Limiting the properties we send to
-      // only those the server needs avoids having to send the contents of huge
-      // objects like Windows, most of which will not be used.
-      const enumerableOwnProperties = Object.create(null);
-      let enumerablePropertyCount = 0;
-      for (const [name, desc] of propertyEntries) {
-        if (desc.enumerable) {
-          enumerableOwnProperties[name] = desc;
-          addPropertyDescriptor(desc, false);
-          if (++enumerablePropertyCount == OBJECT_PREVIEW_MAX_ITEMS) {
-            break;
-          }
-        }
-      }
-      preview.enumerableOwnProperties = enumerableOwnProperties;
-
-      // The server is interested in at most OBJECT_PREVIEW_MAX_ITEMS items in
-      // set and map containers.
-      const containerContents = getObjectContainerContents(object);
-      if (containerContents) {
-        preview.containerContents = containerContents.slice(
-          0,
-          OBJECT_PREVIEW_MAX_ITEMS
-        );
-        preview.containerContents.forEach(v => addContainerValue(v));
-      }
-    }
-  }
-
-  function addPropertyDescriptor(desc, includeProperties) {
-    if (desc.value) {
-      addValue(desc.value, includeProperties);
-    }
-    if (desc.get) {
-      addObject(desc.get, includeProperties);
-    }
-    if (desc.set) {
-      addObject(desc.set, includeProperties);
-    }
-  }
-
-  function addContainerValue(value) {
-    // Watch for [key, value] pairs in maps.
-    if (value.length == 2) {
-      value.forEach(v => addValue(v));
-    } else {
-      addValue(value);
-    }
-  }
-
-  function addEnvironment(id) {
-    if (!id || rv.environments[id]) {
-      return;
-    }
-
-    const env = gPausedObjects.getObject(id);
-    assert(env instanceof Debugger.Environment);
-
-    const data = getObjectData(id);
-    const names = getEnvironmentNames(env);
-    rv.environments[id] = { data, names };
-
-    names.forEach(({ value }) => addValue(value, true));
-
-    addObject(data.callee);
-    addEnvironment(data.parent);
-  }
+  rv.frames = [];
+  rv.scripts = {};
+  rv.offsetMetadata = [];
 
   // eslint-disable-next-line no-shadow
   function addScript(id) {
@@ -1660,14 +1633,14 @@ function getPauseData() {
       metadata: script.getOffsetMetadata(dbgFrame.offset),
     });
     addScript(frame.script);
-    addValue(frame.this, true);
+    rv.addValue(frame.this, true);
     if (frame.arguments) {
       for (const arg of frame.arguments) {
-        addValue(arg, true);
+        rv.addValue(arg, true);
       }
     }
-    addObject(frame.callee, false);
-    addEnvironment(frame.environment, true);
+    rv.addObject(frame.callee, false);
+    rv.addEnvironment(frame.environment, true);
   }
 
   return rv;
@@ -1687,11 +1660,6 @@ function divergeFromRecording() {
 }
 
 const gRequestHandlers = {
-  repaint() {
-    divergeFromRecording();
-    return RecordReplayControl.repaint();
-  },
-
   /////////////////////////////////////////////////////////
   // Debugger Requests
   /////////////////////////////////////////////////////////
@@ -1809,7 +1777,7 @@ const gRequestHandlers = {
     divergeFromRecording();
     const frame = scriptFrameForIndex(request.index);
     const rv = frame.eval(request.text, request.options);
-    return convertCompletionValue(rv, request.convertOptions);
+    return convertCompletionValue(rv);
   },
 
   popFrameResult(request) {
