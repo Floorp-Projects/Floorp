@@ -271,7 +271,7 @@ class SessionTest {
         session.store = store
         session.securityInfo = Session.SecurityInfo(true, "mozilla.org", "issuer")
 
-        verify(store).dispatch(ContentAction.UpdateSecurityInfo(session.id, session.securityInfo.toSecurityInfoState()))
+        verify(store).dispatch(ContentAction.UpdateSecurityInfoAction(session.id, session.securityInfo.toSecurityInfoState()))
         verifyNoMoreInteractions(store)
     }
 

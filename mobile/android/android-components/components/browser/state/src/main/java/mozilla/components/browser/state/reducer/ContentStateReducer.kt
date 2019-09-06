@@ -36,7 +36,7 @@ internal object ContentStateReducer {
             is ContentAction.UpdateSearchTermsAction -> updateContentState(state, action.sessionId) {
                 it.copy(searchTerms = action.searchTerms)
             }
-            is ContentAction.UpdateSecurityInfo -> updateContentState(state, action.sessionId) {
+            is ContentAction.UpdateSecurityInfoAction -> updateContentState(state, action.sessionId) {
                 it.copy(securityInfo = action.securityInfo)
             }
             is ContentAction.UpdateIconAction -> updateContentState(state, action.sessionId) {
