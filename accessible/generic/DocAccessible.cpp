@@ -1830,8 +1830,8 @@ bool InsertIterator::Next() {
       continue;
     }
 
-    Accessible* container =
-        Document()->AccessibleOrTrueContainer(node->GetParentNode(), true);
+    Accessible* container = Document()->AccessibleOrTrueContainer(
+        node->GetFlattenedTreeParentNode(), true);
     if (container != Context()) {
       continue;
     }
