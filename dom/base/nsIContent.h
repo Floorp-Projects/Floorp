@@ -542,9 +542,8 @@ class nsIContent : public nsINode {
    * For container elements, this is called *before* any of the children are
    * created or added into the tree.
    *
-   * NOTE: this is currently only called for input and button, in the HTML
-   * content sink.  If you want to call it on your element, modify the content
-   * sink of your choice to do so.  This is an efficiency measure.
+   * NOTE: this is only called for elements listed in
+   * RequiresDoneCreatingElement. This is an efficiency measure.
    *
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
@@ -565,10 +564,8 @@ class nsIContent : public nsINode {
    * This method is called when the parser finishes creating the element's
    * children, if any are present.
    *
-   * NOTE: this is currently only called for textarea, select, and object
-   * elements in the HTML content sink. If you want to call it on your element,
-   * modify the content sink of your choice to do so. This is an efficiency
-   * measure.
+   * NOTE: this is only called for elements listed in
+   * RequiresDoneAddingChildren. This is an efficiency measure.
    *
    * If you also need to determine whether the parser is the one creating your
    * element (through createElement() or cloneNode() generally) then add a
@@ -594,6 +591,47 @@ class nsIContent : public nsINode {
    * @returns true otherwise.
    */
   virtual bool IsDoneAddingChildren() { return true; }
+
+  /**
+   * Returns true if an element needs its DoneCreatingElement method to be
+   * called after it has been created.
+   * @see nsIContent::DoneCreatingElement
+   *
+   * @param aNamespaceID the node's namespace ID
+   * @param aName the node's tag name
+   */
+  static inline bool RequiresDoneCreatingElement(int32_t aNamespace,
+                                                 nsAtom* aName) {
+    if (aNamespace == kNameSpaceID_XHTML &&
+        (aName == nsGkAtoms::input || aName == nsGkAtoms::button ||
+         aName == nsGkAtoms::menuitem || aName == nsGkAtoms::audio ||
+         aName == nsGkAtoms::video)) {
+      MOZ_ASSERT(
+          !RequiresDoneAddingChildren(aNamespace, aName),
+          "Both DoneCreatingElement and DoneAddingChildren on a same element "
+          "isn't supported.");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if an element needs its DoneAddingChildren method to be
+   * called after all of its children have been added.
+   * @see nsIContent::DoneAddingChildren
+   *
+   * @param aNamespace the node's namespace ID
+   * @param aName the node's tag name
+   */
+  static inline bool RequiresDoneAddingChildren(int32_t aNamespace,
+                                                nsAtom* aName) {
+    return (aNamespace == kNameSpaceID_XHTML &&
+            (aName == nsGkAtoms::select || aName == nsGkAtoms::textarea ||
+             aName == nsGkAtoms::head || aName == nsGkAtoms::title ||
+             aName == nsGkAtoms::object || aName == nsGkAtoms::output)) ||
+           (aNamespace == kNameSpaceID_SVG && aName == nsGkAtoms::title) ||
+           (aNamespace == kNameSpaceID_XUL && aName == nsGkAtoms::linkset);
+  }
 
   /**
    * Get the ID of this content node (the atom corresponding to the
