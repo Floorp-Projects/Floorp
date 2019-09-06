@@ -20,7 +20,7 @@ random skip-if(Android) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random skip-if(Android) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 skip-if(Android) fuzzy-if(winWidget,0-1,0-56000) fuzzy-if(cocoaWidget,0-1,0-56000) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 == poster-1.html poster-ref-blue250x200.html
-fails-if(Android) skip-if(Android&&AndroidVersion=='18') == poster-2.html poster-ref-black140x100.html
+fails-if(Android) == poster-2.html poster-ref-black140x100.html
 random-if(Android) == poster-3.html poster-ref-black140x100.html
 == poster-4.html poster-ref-black140x100.html
 random-if(Android) == poster-5.html poster-ref-black140x100.html
