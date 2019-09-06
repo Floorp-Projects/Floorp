@@ -380,25 +380,6 @@ class HTMLEditRules : public TextEditRules {
                           nsTArray<bool>& aTransitionArray);
 
   /**
-   * PopListItem() tries to move aListItem outside its parent.  If it's
-   * in a middle of a list element, the parent list element is split before
-   * aListItem.  Then, moves aListItem to before its parent list element.
-   * I.e., moves aListItem between the 2 list elements if original parent
-   * was split.  Then, if new parent is not a list element, the list item
-   * element is removed and its contents are moved to where the list item
-   * element was.
-   *
-   * @param aListItem           Should be a <li>, <dt> or <dd> element.
-   *                            If it's not so, returns NS_ERROR_FAILURE.
-   * @param aOutOfList          Returns true if the list item element is
-   *                            removed (i.e., unwrapped contents of
-   *                            aListItem).  Otherwise, false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult PopListItem(nsIContent& aListItem,
-                                    bool* aOutOfList = nullptr);
-
-  /**
    * RemoveListStructure() destroys the list structure of aListElement.
    * If aListElement has <li>, <dl> or <dt> as a child, the element is removed
    * but its descendants are moved to where the list item element was.

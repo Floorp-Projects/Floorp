@@ -2274,6 +2274,32 @@ class HTMLEditor final : public TextEditor,
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers);
 
+  /**
+   * LiftUpListItemElement() moves aListItemElement outside its parent.
+   * If it's in a middle of a list element, the parent list element is split
+   * before aListItemElement.  Then, moves aListItemElement to before its
+   * parent list element.  I.e., moves aListItemElement between the 2 list
+   * elements if original parent was split.  Then, if new parent becomes not a
+   * list element, the list item element is removed and its contents are moved
+   * to where the list item element was.  If aListItemElement becomse not a
+   * child of list element, its contents are unwrapped from aListItemElement.
+   *
+   * @param aListItemElement    Must be a <li>, <dt> or <dd> element.
+   * @param aLiftUpFromAllParentListElements
+   *                            If Yes, this method calls itself recursively
+   *                            to unwrap the contents in aListItemElement
+   *                            from any ancestor list elements.
+   *                            XXX This checks only direct parent of list
+   *                                elements.  Therefore, if a parent list
+   *                                element in a list item element, the
+   *                                list item element and its list element
+   *                                won't be unwrapped.
+   */
+  enum class LiftUpFromAllParentListElements { Yes, No };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult LiftUpListItemElement(
+      dom::Element& aListItemElement,
+      LiftUpFromAllParentListElements aLiftUpFromAllParentListElements);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
