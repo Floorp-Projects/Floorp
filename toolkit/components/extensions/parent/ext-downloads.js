@@ -97,6 +97,7 @@ class DownloadItem {
     this.download = download;
     this.extension = extension;
     this.prechange = {};
+    this._error = null;
   }
 
   get url() {
@@ -137,7 +138,7 @@ class DownloadItem {
     if (this.download.succeeded) {
       return "complete";
     }
-    if (this.download.canceled) {
+    if (this.download.canceled || this.error) {
       return "interrupted";
     }
     return "in_progress";
@@ -157,6 +158,9 @@ class DownloadItem {
     );
   }
   get error() {
+    if (this._error) {
+      return this._error;
+    }
     if (
       !this.download.startTime ||
       !this.download.stopped ||
@@ -176,6 +180,9 @@ class DownloadItem {
       return "CRASH";
     }
     return "USER_CANCELED";
+  }
+  set error(value) {
+    this._error = value && value.toString();
   }
   get bytesReceived() {
     return this.download.currentBytes;
@@ -636,6 +643,33 @@ this.downloads = class extends ExtensionAPI {
             return Promise.resolve();
           }
 
+          function allowHttpStatus(download, status) {
+            if (status < 400) {
+              return true;
+            }
+
+            const item = DownloadMap.byDownload.get(download);
+            if (item === null) {
+              return true;
+            }
+
+            if (status === 404) {
+              item.error = "SERVER_BAD_CONTENT";
+              return false;
+            }
+            if (status === 403) {
+              item.error = "SERVER_FORBIDDEN";
+              return false;
+            }
+            // Unauthorized and proxy authorization required
+            if (status === 402 || status == 407) {
+              item.error = "SERVER_UNAUTHORIZED";
+              return false;
+            }
+            item.error = "SERVER_FAILED";
+            return false;
+          }
+
           async function createTarget(downloadsDir) {
             if (!filename) {
               let uri = Services.io.newURI(options.url);
@@ -728,6 +762,7 @@ this.downloads = class extends ExtensionAPI {
               const source = {
                 url: options.url,
                 isPrivate: options.incognito,
+                allowHttpStatus,
               };
 
               if (options.method || options.headers || options.body) {
@@ -752,7 +787,12 @@ this.downloads = class extends ExtensionAPI {
 
               // This is necessary to make pause/resume work.
               download.tryToKeepPartialData = true;
-              download.start();
+
+              // Do not handle errors.
+              // Extensions will use listeners to be informed about errors.
+              // Just ignore any errors from |start()| to avoid spamming the
+              // error console.
+              download.start().catch(() => {});
 
               return item.id;
             });
@@ -826,6 +866,7 @@ this.downloads = class extends ExtensionAPI {
               });
             }
 
+            item.error = null;
             return item.download.start();
           });
         },
