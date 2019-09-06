@@ -32,6 +32,9 @@
     <dimen name="site_permissions_exceptions_item_height">56dp</dimen>
     <dimen name="component_collection_creation_list_margin">16dp</dimen>
 
+    <dimen name="context_menu_height">48dp</dimen>
+    <dimen name="context_menu_x_offset">8dp</dimen>
+
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">46dp</dimen>
     <dimen name="tracking_protection_item_height">48dp</dimen>
