@@ -552,6 +552,10 @@ void APZUpdater::ProcessQueue() {
   }
 }
 
+void APZUpdater::MarkAsDetached(LayersId aLayersId) {
+  mApz->MarkAsDetached(aLayersId);
+}
+
 APZUpdater::EpochState::EpochState() : mRequired{0}, mIsRoot(false) {}
 
 bool APZUpdater::EpochState::IsBlocked() const {
