@@ -11,9 +11,10 @@
 <iframe></iframe>
 <script>
 
-function waitForEvent(aTarget, aEvent) {
+function waitForEvent(aTarget, aEvent, aCallback) {
   return new Promise((aResolve) => {
     aTarget.addEventListener(aEvent, function listener(event) {
+      aCallback(event);
       aResolve();
     }, { once: true });
   });
@@ -42,7 +43,7 @@ add_task(async function triggerUserActivation() {
 
 add_task(async function iframeNavigation() {
   frames[0].frameElement.src = "file_empty.html";
-  await waitForEvent(frames[0].frameElement, "load");
+  await waitForEvent(frames[0].frameElement, "load", () => {});
   // We should reset the flag on iframe that navigates away from current page,
   // but the flag on its ancestor isn't changed.
   ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
@@ -51,6 +52,24 @@ add_task(async function iframeNavigation() {
      "check has-been-user-activated on the first iframe");
   ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
      "check has-been-user-activated on the second iframe");
+});
+
+add_task(async function triggerUserActivationOnCrossOriginFrame() {
+  // Reset the activation flag.
+  SpecialPowers.wrap(document).clearUserGestureActivation();
+
+  // load cross-origin test page on iframe.
+  frames[0].frameElement.src = "https://example.com/tests/dom/base/test/useractivation/file_iframe_user_activated.html";
+  await waitForEvent(window, "message", (event) => {
+    if (event.data === "done") {
+      ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
+         "check has-been-user-activated on the top-level document");
+      ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
+         "check has-been-user-activated on the second iframe");
+    } else {
+      ok(false, "receive unexpected message: " + event.data);
+    }
+  });
 });
 
 add_task(async function endTests() {
