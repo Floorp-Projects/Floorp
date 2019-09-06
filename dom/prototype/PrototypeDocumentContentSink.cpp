@@ -410,7 +410,9 @@ nsresult PrototypeDocumentContentSink::InsertXMLStylesheetPI(
 }
 
 void PrototypeDocumentContentSink::CloseElement(Element* aElement) {
-  if (aElement->IsXULElement(nsGkAtoms::linkset)) {
+  if (nsIContent::RequiresDoneAddingChildren(
+          aElement->NodeInfo()->NamespaceID(),
+          aElement->NodeInfo()->NameAtom())) {
     aElement->DoneAddingChildren(false);
   }
 }
@@ -511,6 +513,12 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           // ...and append it to the content model.
           rv = nodeToPushTo->AppendChildTo(child, false);
           if (NS_FAILED(rv)) return rv;
+
+          if (nsIContent::RequiresDoneCreatingElement(
+                  protoele->mNodeInfo->NamespaceID(),
+                  protoele->mNodeInfo->NameAtom())) {
+            child->DoneCreatingElement();
+          }
 
           // If it has children, push the element onto the context
           // stack and begin to process them.

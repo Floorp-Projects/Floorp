@@ -61,6 +61,15 @@ add_task(async function test_prototype_document() {
   // TODO: Test whitespace within XUL elements, since it is handled differently
   // with and without the prototype sink (bug 1544567).
 });
+
+add_task(async function test_prototype_document_form() {
+  let browser = document.getElementById("browser");
+  await load(browser, "form.xhtml");
+  ok(browser.contentDocument.loadedFromPrototype, `form.xhtml should load from prototype.`);
+  browser.contentDocument.getElementById("input").value = "test";
+  await load(browser, "form.xhtml");
+  is(browser.contentDocument.getElementById("input").value, "test", "input value should persist after reload");
+});
 ]]></script>
 </body>
 </window>
