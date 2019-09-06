@@ -108,17 +108,20 @@ const proto = {
   },
 
   addWatchpoint(property, label, watchpointType) {
+    // We promote the object actor to the thread pool
+    // so that it lives for the lifetime of the watchpoint.
+    this.thread.threadObjectGrip(this);
+
     if (this._originalDescriptors.has(property)) {
       return;
     }
     const desc = this.obj.getOwnPropertyDescriptor(property);
 
-    //If there is already a setter or getter, don't add watchpoint.
     if (desc.set || desc.get) {
       return;
     }
 
-    this._originalDescriptors.set(property, desc);
+    this._originalDescriptors.set(property, { desc, watchpointType });
 
     const pauseAndRespond = () => {
       const frame = this.thread.dbg.getNewestFrame();
@@ -137,6 +140,7 @@ const proto = {
         }),
         get: this.obj.makeDebuggeeValue(() => {
           pauseAndRespond();
+          return desc.value;
         }),
       });
     }
@@ -146,8 +150,11 @@ const proto = {
         configurable: desc.configurable,
         enumerable: desc.enumerable,
         set: this.obj.makeDebuggeeValue(v => {
-          desc.value = v;
           pauseAndRespond();
+          desc.value = v;
+        }),
+        get: this.obj.makeDebuggeeValue(v => {
+          return desc.value;
         }),
       });
     }
@@ -158,9 +165,15 @@ const proto = {
       return;
     }
 
-    const desc = this._originalDescriptors.get(property);
+    const desc = this._originalDescriptors.get(property).desc;
     this._originalDescriptors.delete(property);
     this.obj.defineProperty(property, desc);
+  },
+
+  removeWatchpoints() {
+    this._originalDescriptors.forEach(property =>
+      this.removeWatchpoint(property)
+    );
   },
 
   /**
@@ -781,8 +794,10 @@ const proto = {
       retval.writable = desc.writable;
       retval.value = this.hooks.createValueGrip(desc.value);
     } else if (this._originalDescriptors.has(name)) {
-      const value = this._originalDescriptors.get(name).value;
-      retval.value = this.hooks.createValueGrip(value);
+      const watchpointType = this._originalDescriptors.get(name).watchpointType;
+      desc = this._originalDescriptors.get(name).desc;
+      retval.value = this.hooks.createValueGrip(desc.value);
+      retval.watchpoint = watchpointType;
     } else {
       if ("get" in desc) {
         retval.get = this.hooks.createValueGrip(desc.get);
@@ -1016,7 +1031,9 @@ const proto = {
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release: function() {},
+  release: function() {
+    this.removeWatchpoints();
+  },
 };
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);
