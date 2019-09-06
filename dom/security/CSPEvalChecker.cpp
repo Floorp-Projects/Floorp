@@ -31,7 +31,7 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aAllowed);
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
+#if !defined(ANDROID)
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   nsContentSecurityManager::AssertEvalNotRestricted(cx, aSubjectPrincipal,
                                                     aExpression);
