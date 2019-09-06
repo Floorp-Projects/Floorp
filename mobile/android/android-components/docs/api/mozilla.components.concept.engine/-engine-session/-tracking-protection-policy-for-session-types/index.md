@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicyForSessionTypes
 
-`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L277)
+`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L280)
 
 Subtype of [TrackingProtectionPolicy](../-tracking-protection-policy/index.md) to control the type of session this policy
 should be applied to. By default, a policy will be applied to all sessions.
@@ -12,6 +12,7 @@ should be applied to. By default, a policy will be applied to all sessions.
 | Name | Summary |
 |---|---|
 | [cookiePolicy](../-tracking-protection-policy/cookie-policy.md) | `val cookiePolicy: `[`CookiePolicy`](../-tracking-protection-policy/-cookie-policy/index.md) |
+| [strictSocialTrackingProtection](../-tracking-protection-policy/strict-social-tracking-protection.md) | `val strictSocialTrackingProtection: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`?` |
 | [trackingCategories](../-tracking-protection-policy/tracking-categories.md) | `val trackingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`TrackingCategory`](../-tracking-protection-policy/-tracking-category/index.md)`>` |
 | [useForPrivateSessions](../-tracking-protection-policy/use-for-private-sessions.md) | `val useForPrivateSessions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [useForRegularSessions](../-tracking-protection-policy/use-for-regular-sessions.md) | `val useForRegularSessions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
