@@ -148,6 +148,8 @@ class APZUpdater {
   void RunOnControllerThread(UpdaterQueueSelector aSelector,
                              already_AddRefed<Runnable> aTask);
 
+  void MarkAsDetached(LayersId aLayersId);
+
  protected:
   virtual ~APZUpdater();
 
