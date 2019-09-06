@@ -7,7 +7,6 @@
 #include "nsTouchBar.h"
 #include "nsITouchBarInput.h"
 #include "nsTouchBarUpdater.h"
-#include "nsTouchBarNativeAPIDefines.h"
 
 #include "nsCocoaWindow.h"
 #include "nsIArray.h"
@@ -20,6 +19,9 @@ extern BOOL sTouchBarIsInitialized;
 #if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
 @interface BaseWindow (NSTouchBarProvider)
 @property(strong) NSTouchBar* touchBar;
+@end
+@interface NSApplication (TouchBarMenu)
+- (IBAction)toggleTouchBarCustomizationPalette:(id)sender;
 @end
 #endif
 
