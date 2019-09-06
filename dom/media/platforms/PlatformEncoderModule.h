@@ -23,8 +23,6 @@ namespace mozilla {
 class MediaDataEncoder;
 struct CreateEncoderParams;
 
-static LazyLogModule sPEMLog("PlatformEncoderModule");
-
 class PlatformEncoderModule {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformEncoderModule)
