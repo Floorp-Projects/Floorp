@@ -1,5 +1,3 @@
-extern crate goblin;
-
 use goblin::mach;
 use std::env;
 use std::process;
@@ -15,7 +13,7 @@ fn usage() -> ! {
     process::exit(1);
 }
 
-fn name_to_str<'a>(name: &'a [u8; 16]) -> Cow<'a, str> {
+fn name_to_str(name: &[u8; 16]) -> Cow<'_, str> {
     for i in 0..16 {
         if name[i] == 0 {
             return String::from_utf8_lossy(&name[0..i])
@@ -38,21 +36,19 @@ fn print_binds(sections: &[mach::segment::Section], imports: &[mach::imports::Im
     println!("bind information:");
 
     println!(
-        "{:7} {:16} {:14} {:7} {:6} {:16} {}",
+        "{:7} {:16} {:14} {:7} {:6} {:16} symbol",
         "segment",
         "section",
         "address",
         "type",
         "addend",
         "dylib",
-        "symbol"
     );
 
     for import in imports.iter().filter(|i| !i.is_lazy) {
         // find the section that imported this symbol
         let section = sections.iter()
-            .filter(|s| import.address >= s.addr && import.address < (s.addr + s.size))
-            .next();
+            .find(|s| import.address >= s.addr && import.address < (s.addr + s.size));
 
         // get &strs for its name
         let (segname, sectname) = section
@@ -77,20 +73,18 @@ fn print_lazy_binds(sections: &[mach::segment::Section], imports: &[mach::import
     println!("lazy binding information (from lazy_bind part of dyld info):");
 
     println!(
-        "{:7} {:16} {:10} {:6} {:16} {}",
+        "{:7} {:16} {:10} {:6} {:16} symbol",
         "segment",
         "section",
         "address",
         "index",
         "dylib",
-        "symbol"
     );
 
     for import in imports.iter().filter(|i| i.is_lazy) {
         // find the section that imported this symbol
         let section = sections.iter()
-            .filter(|s| import.address >= s.addr && import.address < (s.addr + s.size))
-            .next();
+            .find(|s| import.address >= s.addr && import.address < (s.addr + s.size));
 
         // get &strs for its name
         let (segname, sectname) = section
@@ -129,7 +123,7 @@ fn main () {
                     "-lazy_bind" => { lazy_bind = true }
                     other => {
                         println!("unknown flag: {}", other);
-                        println!("");
+                        println!();
                         usage();
                     }
                 }

@@ -5,6 +5,73 @@ Before 1.0, this project does not adhere to [Semantic Versioning](http://semver.
 
 I'm sorry, I will try my best to ease breaking changes.  We're almost to 1.0, don't worry!
 
+## [0.0.24] - 2019-7-13
+### Added
+- archive: new public enum type to determine which kind of archive was parsed
+### Fixed
+- archive: thanks @raindev
+    * fix parsing of windows style archives: https://github.com/m4b/goblin/pull/174
+    * stricter parsing of archives with multiple indexes: https://github.com/m4b/goblin/pull/175
+
+## [0.0.23] - 2019-6-30
+### Added
+- pe: add write support for COFF object files!!! This is huge; we now support at a basic level writing out all major binary object formats, thanks @philipc: https://github.com/m4b/goblin/pull/159
+- elf: add more e_ident constants
+- mach: add segment protection constants
+- elf: add risc-v relocation constants
+- elf: add constants for arm64_32 (ILP32 ABI on 64-bit arm)
+- pe: coff relocations and other auxiliary symbol records
+
+### Fixed
+- mach: fix 0 length data sections in mach-o segments, seen in some object files, thanks @raindev: https://github.com/m4b/goblin/pull/172
+- build: alloc build was fixed: https://github.com/m4b/goblin/pull/170
+- pe: fix `set_name_offset` compilation for 32-bit: https://github.com/m4b/goblin/pull/163
+
+## [0.0.22] - 2019-4-13
+### Added
+- Beautify debugging by using `debug_struct` in `Debug` implementation of many structs.
+- PE: fix rva mask, thanks @wickawacka: https://github.com/m4b/goblin/pull/152
+- PE: add PE exception tables, thanks @jan-auer: https://github.com/m4b/goblin/pull/136
+
+### Changed
+- Bump lowest Rust version to 1.31.1 and transition project to Rust 2018 edition.
+- BREAKING: Rename module `goblin::elf::dyn` to `goblin::elf::dynamic` due to `dyn`
+  become a keyword in Rust 2018 edition.
+- BREAKING: Rename `mach::exports::SymbolKind::to_str(kind: SymbolKind)` -> `to_str(&self)`.
+- BREAKING: Rename `strtab::Strtab::to_vec(self)` -> `to_vec(&self).`
+
+### Removed
+- BREAKING: `goblin::error::Error::description` would be removed. Use `to_string()` method instead.
+
+### Fixed
+- elf: handle some invalid sizes, thanks @philipc: https://github.com/m4b/goblin/pull/121
+
+## [0.0.21] - 2019-2-21
+### Added
+- elf: add symbol visibility. thanks @pchickey: https://github.com/m4b/goblin/pull/119
+
+## [0.0.20] - 2019-2-10
+### Added
+- elf: parse section header relocs even when not an object file. thanks @Techno-Coder: https://github.com/m4b/goblin/pull/118
+- pe: make utils public, add better examples for data directory usage. thanks @Pzixel: https://github.com/m4b/goblin/pull/116
+
+## [0.0.19] - 2018-10-23
+### Added
+- elf: fix regression when parsing dynamic symbols from some binaries, thanks @philipc: https://github.com/m4b/goblin/issues/111
+
+## [0.0.18] - 2018-10-14
+### Changed
+ - BREAKING: updated required compiler to 1.20 (due to scroll 1.20 requirement)
+ - BREAKING: elf: removed bias field, as it was misleading/useless/incorrect
+ - BREAKING: elf: add lazy relocation iterators: Thanks @ibabushkin https://github.com/m4b/goblin/pull/102
+ - BREAKING: mach: remove repr(packed) from dylib and fvmlib (this should not affect anyone): https://github.com/m4b/goblin/issues/105
+### Added
+ - elf: use gnu/sysv hash table to compute sizeof dynsyms more accurately: again _huge_ thanks to @philipc https://github.com/m4b/goblin/pull/109
+ - elf: handle multiple load biases: _huge_ thanks @philipc: https://github.com/m4b/goblin/pull/107
+ - mach: add arm64e constants: Thanks @mitsuhiko https://github.com/m4b/goblin/pull/103
+ - PE: calculate read bytes using alignment: Thanks @tathanhdinh https://github.com/m4b/goblin/pull/101
+ - PE: get proper names for PE sections: Thanks @roblabla https://github.com/m4b/goblin/pull/100
+
 ## [0.0.17] - 2018-7-16
 ### Changed
  - BREAKING: updated required compiler to 1.19 (technically only required for tests, but assume this is required for building as well)

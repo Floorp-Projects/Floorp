@@ -1,9 +1,10 @@
-use container;
-use error;
+use crate::container;
+use crate::error;
 
-use pe::data_directories;
+use crate::pe::data_directories;
 
-use scroll::{ctx, Endian, LE, Pread};
+use scroll::{ctx, Endian, LE};
+use scroll::{Pread, Pwrite, SizeWith};
 
 /// standard COFF fields
 #[repr(C)]
@@ -62,11 +63,11 @@ impl From<StandardFields32> for StandardFields {
             magic: fields.magic,
             major_linker_version: fields.major_linker_version,
             minor_linker_version: fields.minor_linker_version,
-            size_of_code: fields.size_of_code as u64,
-            size_of_initialized_data: fields.size_of_initialized_data as u64,
-            size_of_uninitialized_data: fields.size_of_uninitialized_data as u64,
-            address_of_entry_point: fields.address_of_entry_point as u64,
-            base_of_code: fields.base_of_code as u64,
+            size_of_code: u64::from(fields.size_of_code),
+            size_of_initialized_data: u64::from(fields.size_of_initialized_data),
+            size_of_uninitialized_data: u64::from(fields.size_of_uninitialized_data),
+            address_of_entry_point: u64::from(fields.address_of_entry_point),
+            base_of_code: u64::from(fields.base_of_code),
             base_of_data: fields.base_of_data,
         }
     }
@@ -78,11 +79,11 @@ impl From<StandardFields64> for StandardFields {
             magic: fields.magic,
             major_linker_version: fields.major_linker_version,
             minor_linker_version: fields.minor_linker_version,
-            size_of_code: fields.size_of_code as u64,
-            size_of_initialized_data: fields.size_of_initialized_data as u64,
-            size_of_uninitialized_data: fields.size_of_uninitialized_data as u64,
-            address_of_entry_point: fields.address_of_entry_point as u64,
-            base_of_code: fields.base_of_code as u64,
+            size_of_code: u64::from(fields.size_of_code),
+            size_of_initialized_data: u64::from(fields.size_of_initialized_data),
+            size_of_uninitialized_data: u64::from(fields.size_of_uninitialized_data),
+            address_of_entry_point: u64::from(fields.address_of_entry_point),
+            base_of_code: u64::from(fields.base_of_code),
             base_of_data: 0,
         }
     }
@@ -182,7 +183,7 @@ pub const SIZEOF_WINDOWS_FIELDS_64: usize = 88;
 impl From<WindowsFields32> for WindowsFields {
     fn from(windows: WindowsFields32) -> Self {
         WindowsFields {
-            image_base: windows.image_base as u64,
+            image_base: u64::from(windows.image_base),
             section_alignment: windows.section_alignment,
             file_alignment: windows.file_alignment,
             major_operating_system_version: windows.major_operating_system_version,
@@ -197,10 +198,10 @@ impl From<WindowsFields32> for WindowsFields {
             check_sum: windows.check_sum,
             subsystem: windows.subsystem,
             dll_characteristics: windows.dll_characteristics,
-            size_of_stack_reserve: windows.size_of_stack_reserve as u64,
-            size_of_stack_commit: windows.size_of_stack_commit as u64,
-            size_of_heap_reserve: windows.size_of_heap_reserve as u64,
-            size_of_heap_commit: windows.size_of_heap_commit as u64,
+            size_of_stack_reserve: u64::from(windows.size_of_stack_reserve),
+            size_of_stack_commit: u64::from(windows.size_of_stack_commit),
+            size_of_heap_reserve: u64::from(windows.size_of_heap_reserve),
+            size_of_heap_commit: u64::from(windows.size_of_heap_commit),
             loader_flags: windows.loader_flags,
             number_of_rva_and_sizes: windows.number_of_rva_and_sizes,
         }
@@ -254,14 +255,14 @@ impl OptionalHeader {
                 Ok(container::Container::Big)
             },
             magic => {
-                Err(error::Error::BadMagic(magic as u64))
+                Err(error::Error::BadMagic(u64::from(magic)))
             }
         }
     }
 }
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for OptionalHeader {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
     fn try_from_ctx(bytes: &'a [u8], _: Endian) -> error::Result<(Self, Self::Size)> {
         let magic = bytes.pread_with::<u16>(0, LE)?;
@@ -277,13 +278,13 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for OptionalHeader {
                 let windows_fields = bytes.gread_with::<WindowsFields64>(offset, LE)?;
                 (standard_fields, windows_fields)
             },
-            _ => return Err(error::Error::BadMagic(magic as u64))
+            _ => return Err(error::Error::BadMagic(u64::from(magic)))
         };
         let data_directories = data_directories::DataDirectories::parse(&bytes, windows_fields.number_of_rva_and_sizes as usize, offset)?;
         Ok ((OptionalHeader {
-            standard_fields: standard_fields,
-            windows_fields: windows_fields, 
-            data_directories: data_directories,
+            standard_fields,
+            windows_fields,
+            data_directories,
         }, 0)) // TODO: FIXME
     }
 }

@@ -1,13 +1,14 @@
 //! A header contains minimal architecture information, the binary kind, the number of load commands, as well as an endianness hint
 
 use core::fmt;
-use scroll::{ctx, Pwrite, Pread};
+use scroll::ctx;
+use scroll::{Pread, Pwrite, SizeWith};
 use scroll::ctx::SizeWith;
-use plain::{self, Plain};
+use plain::Plain;
 
-use mach::constants::cputype::{CpuType, CpuSubType, CPU_SUBTYPE_MASK};
-use error;
-use container::{self, Container};
+use crate::mach::constants::cputype::{CpuType, CpuSubType, CPU_SUBTYPE_MASK};
+use crate::error;
+use crate::container::{self, Container};
 
 // Constants for the flags field of the mach_header
 /// the object file has no undefined references
@@ -57,23 +58,23 @@ pub const MH_ROOT_SAFE: u32 = 0x40000;
 pub const MH_SETUID_SAFE: u32 = 0x80000;
 /// When this bit is set on a dylib,  the static linker does not need to examine dependent dylibs to
 /// see if any are re-exported
-pub const MH_NO_REEXPORTED_DYLIBS: u32 = 0x100000;
+pub const MH_NO_REEXPORTED_DYLIBS: u32 = 0x0010_0000;
 /// When this bit is set, the OS will load the main executable at a random address.
 /// Only used in MH_EXECUTE filetypes.
-pub const MH_PIE: u32 = 0x200000;
+pub const MH_PIE: u32 = 0x0020_0000;
 /// Only for use on dylibs.  When linking against a dylib that has this bit set, the static linker
 /// will automatically not create a LC_LOAD_DYLIB load command to the dylib if no symbols are being
 /// referenced from the dylib.
-pub const MH_DEAD_STRIPPABLE_DYLIB: u32 = 0x400000;
+pub const MH_DEAD_STRIPPABLE_DYLIB: u32 = 0x0040_0000;
 /// Contains a section of type S_THREAD_LOCAL_VARIABLES
-pub const MH_HAS_TLV_DESCRIPTORS: u32 = 0x800000;
+pub const MH_HAS_TLV_DESCRIPTORS: u32 = 0x0080_0000;
 /// When this bit is set, the OS will run the main executable with a non-executable heap even on
 /// platforms (e.g. i386) that don't require it. Only used in MH_EXECUTE filetypes.
-pub const MH_NO_HEAP_EXECUTION: u32 = 0x1000000;
+pub const MH_NO_HEAP_EXECUTION: u32 = 0x0100_0000;
 
 // TODO: verify this number is correct, it was previously 0x02000000 which could indicate a typo/data entry error
 /// The code was linked for use in an application extension.
-pub const MH_APP_EXTENSION_SAFE: u32 = 0x2000000;
+pub const MH_APP_EXTENSION_SAFE: u32 = 0x0200_0000;
 
 #[inline(always)]
 pub fn flag_to_str(flag: u32) -> &'static str {
@@ -109,11 +110,11 @@ pub fn flag_to_str(flag: u32) -> &'static str {
 }
 
 /// Mach Header magic constant
-pub const MH_MAGIC: u32 = 0xfeedface;
-pub const MH_CIGAM: u32 = 0xcefaedfe;
+pub const MH_MAGIC: u32 = 0xfeed_face;
+pub const MH_CIGAM: u32 = 0xcefa_edfe;
 /// Mach Header magic constant for 64-bit
-pub const MH_MAGIC_64: u32 = 0xfeedfacf;
-pub const MH_CIGAM_64: u32 = 0xcffaedfe;
+pub const MH_MAGIC_64: u32 = 0xfeed_facf;
+pub const MH_CIGAM_64: u32 = 0xcffa_edfe;
 
 // Constants for the filetype field of the mach_header
 /// relocatable object file
@@ -247,16 +248,16 @@ pub struct Header {
 
 impl fmt::Debug for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "0x{:x} {} 0x{:x} {} {} {} 0x{:x} 0x{:x}",
-               self.magic,
-               self.cputype(),
-               self.cpusubtype(),
-               filetype_to_str(self.filetype),
-               self.ncmds,
-               self.sizeofcmds,
-               self.flags,
-               self.reserved)
+        f.debug_struct("Header")
+            .field("magic", &format_args!("0x{:x}", self.magic))
+            .field("cputype", &self.cputype())
+            .field("cpusubtype", &format_args!("0x{:x}", self.cpusubtype()))
+            .field("filetype", &filetype_to_str(self.filetype))
+            .field("ncmds", &self.ncmds)
+            .field("sizeofcmds", &self.sizeofcmds)
+            .field("flags", &format_args!("0x{:x}", self.flags))
+            .field("reserved", &format_args!("0x{:x}", self.reserved))
+            .finish()
     }
 }
 
@@ -320,7 +321,7 @@ impl From<Header> for Header64 {
 }
 
 impl Header {
-    pub fn new(ctx: &container::Ctx) -> Self {
+    pub fn new(ctx: container::Ctx) -> Self {
         let mut header = Header::default();
         header.magic = if ctx.is_big () { MH_MAGIC_64 } else { MH_MAGIC };
         header
@@ -357,10 +358,10 @@ impl ctx::SizeWith<Container> for Header {
     type Units = usize;
     fn size_with(container: &Container) -> usize {
         match container {
-            &Container::Little => {
+            Container::Little => {
                 SIZEOF_HEADER_32
             },
-            &Container::Big => {
+            Container::Big => {
                 SIZEOF_HEADER_64
             },
         }
@@ -368,12 +369,12 @@ impl ctx::SizeWith<Container> for Header {
 }
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Header {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
     fn try_from_ctx(bytes: &'a [u8], container::Ctx { le, container }: container::Ctx) -> error::Result<(Self, Self::Size)> {
         let size = bytes.len();
         if size < SIZEOF_HEADER_32 || size < SIZEOF_HEADER_64 {
-            let error = error::Error::Malformed(format!("bytes size is smaller than a Mach-o header"));
+            let error = error::Error::Malformed("bytes size is smaller than a Mach-o header".into());
             Err(error)
         } else {
             match container {
@@ -391,7 +392,7 @@ impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Header {
 }
 
 impl ctx::TryIntoCtx<container::Ctx> for Header {
-    type Error = ::error::Error;
+    type Error = crate::error::Error;
     type Size = usize;
     fn try_into_ctx(self, bytes: &mut [u8], ctx: container::Ctx) -> error::Result<Self::Size> {
         match ctx.container {
@@ -419,10 +420,10 @@ mod tests {
 
     #[test]
     fn test_parse_armv7_header() {
-        use mach::constants::cputype::CPU_TYPE_ARM;
+        use crate::mach::constants::cputype::CPU_TYPE_ARM;
         const CPU_SUBTYPE_ARM_V7: u32 = 9;
         use super::Header;
-        use container::{Ctx, Container, Endian};
+        use crate::container::{Ctx, Container, Endian};
         use scroll::{Pread};
         let bytes = b"\xce\xfa\xed\xfe\x0c\x00\x00\x00\t\x00\x00\x00\n\x00\x00\x00\x06\x00\x00\x00\x8c\r\x00\x00\x00\x00\x00\x00\x1b\x00\x00\x00\x18\x00\x00\x00\xe0\xf7B\xbb\x1c\xf50w\xa6\xf7u\xa3\xba(";
         let header: Header = bytes.pread_with(0, Ctx::new(Container::Little, Endian::Little)).unwrap();

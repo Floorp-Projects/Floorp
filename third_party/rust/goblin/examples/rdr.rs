@@ -1,6 +1,3 @@
-extern crate goblin;
-extern crate env_logger;
-
 use goblin::error;
 use std::path::Path;
 use std::env;
@@ -21,7 +18,6 @@ fn run () -> error::Result<()> {
 }
 
 pub fn main () {
-    env_logger::init();
     match run() {
         Ok(()) => (),
         Err(err) => println!("{:#}", err)

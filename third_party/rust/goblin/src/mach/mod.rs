@@ -1,12 +1,14 @@
 //! The Mach-o, mostly zero-copy, binary format parser and raw struct definitions
 use core::fmt;
-use alloc::vec::Vec;
+use crate::alloc::vec::Vec;
 
-use scroll::{self, Pread, BE};
+use log::debug;
+
+use scroll::{Pread, BE};
 use scroll::ctx::SizeWith;
 
-use error;
-use container;
+use crate::error;
+use crate::container;
 
 pub mod header;
 pub mod constants;
@@ -28,8 +30,8 @@ pub fn peek(bytes: &[u8], offset: usize) -> error::Result<u32> {
 
 /// Parses a magic number, and an accompanying mach-o binary parsing context, according to the magic number.
 pub fn parse_magic_and_ctx(bytes: &[u8], offset: usize) -> error::Result<(u32, Option<container::Ctx>)> {
-    use mach::header::*;
-    use container::Container;
+    use crate::mach::header::*;
+    use crate::container::Container;
     let magic = bytes.pread_with::<u32>(offset, BE)?;
     let ctx = match magic {
         MH_CIGAM_64 | MH_CIGAM | MH_MAGIC_64 | MH_MAGIC => {
@@ -97,7 +99,7 @@ impl<'a> MachO<'a> {
     }
     /// Return an iterator over all the symbols in this binary
     pub fn symbols(&self) -> symbols::SymbolIterator<'a> {
-        if let &Some(ref symbols) = &self.symbols {
+        if let Some(ref symbols) = self.symbols {
             symbols.into_iter()
         } else {
             symbols::SymbolIterator::default()
@@ -128,7 +130,7 @@ impl<'a> MachO<'a> {
     /// Return the imported symbols in this binary that dyld knows about (if any)
     pub fn imports(&self) -> error::Result<Vec<imports::Import>> {
         if let Some(ref interpreter) = self.bind_interpreter {
-            interpreter.imports(self.libs.as_slice(), self.segments.as_slice(), &self.ctx)
+            interpreter.imports(self.libs.as_slice(), self.segments.as_slice(), self.ctx)
         } else {
             Ok(vec![])
         }
@@ -136,14 +138,14 @@ impl<'a> MachO<'a> {
     /// Parses the Mach-o binary from `bytes` at `offset`
     pub fn parse(bytes: &'a [u8], mut offset: usize) -> error::Result<MachO<'a>> {
         let (magic, maybe_ctx) = parse_magic_and_ctx(bytes, offset)?;
-        let ctx = if let Some(ctx) = maybe_ctx { ctx } else { return Err(error::Error::BadMagic(magic as u64)) };
+        let ctx = if let Some(ctx) = maybe_ctx { ctx } else { return Err(error::Error::BadMagic(u64::from(magic))) };
         debug!("Ctx: {:?}", ctx);
         let offset = &mut offset;
         let header: header::Header = bytes.pread_with(*offset, ctx)?;
         debug!("Mach-o header: {:?}", header);
         let little_endian = ctx.le.is_little();
         let is_64 = ctx.container.is_big();
-        *offset = *offset + header::Header::size_with(&ctx.container);
+        *offset += header::Header::size_with(&ctx.container);
         let ncmds = header.ncmds;
         let mut cmds: Vec<load_command::LoadCommand> = Vec::with_capacity(ncmds);
         let mut symbols = None;
@@ -223,19 +225,19 @@ impl<'a> MachO<'a> {
         };
 
         Ok(MachO {
-            header: header,
+            header,
             load_commands: cmds,
-            segments: segments,
-            symbols: symbols,
-            libs: libs,
-            export_trie: export_trie,
-            bind_interpreter: bind_interpreter,
-            entry: entry,
-            old_style_entry: old_style_entry,
-            name: name,
-            ctx: ctx,
-            is_64: is_64,
-            little_endian: little_endian,
+            segments,
+            symbols,
+            libs,
+            export_trie,
+            bind_interpreter,
+            entry,
+            old_style_entry,
+            name,
+            ctx,
+            is_64,
+            little_endian,
             data: bytes,
         })
     }
@@ -263,7 +265,7 @@ impl<'a> Iterator for FatArchIterator<'a> {
             None
         } else {
             let offset = (self.index * fat::SIZEOF_FAT_ARCH) + self.start;
-            let arch = self.data.pread_with::<fat::FatArch>(offset, scroll::BE).map_err(|e| e.into());
+            let arch = self.data.pread_with::<fat::FatArch>(offset, scroll::BE).map_err(core::convert::Into::into);
             self.index += 1;
             Some(arch)
         }
@@ -342,7 +344,7 @@ impl<'a> MultiArch<'a> {
     /// Try to get the Mach-o binary at `index`
     pub fn get(&self, index: usize) -> error::Result<MachO<'a>> {
         if index >= self.narches {
-            return Err(error::Error::Malformed(format!("Requested the {}-th binary, but there are only {} architectures in this container", index, self.narches).into()))
+            return Err(error::Error::Malformed(format!("Requested the {}-th binary, but there are only {} architectures in this container", index, self.narches)))
         }
         let offset = (index * fat::SIZEOF_FAT_ARCH) + self.start;
         let arch = self.data.pread_with::<fat::FatArch>(offset, scroll::BE)?;
@@ -378,6 +380,7 @@ impl<'a> fmt::Debug for MultiArch<'a> {
 }
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 /// Either a collection of multiple architectures, or a single mach-o binary
 pub enum Mach<'a> {
     /// A "fat" multi-architecture binary container
@@ -391,8 +394,7 @@ impl<'a> Mach<'a> {
     pub fn parse(bytes: &'a [u8]) -> error::Result<Self> {
         let size = bytes.len();
         if size < 4 {
-            let error = error::Error::Malformed(
-                                       format!("size is smaller than a magical number"));
+            let error = error::Error::Malformed("size is smaller than a magical number".into());
             return Err(error);
         }
         let magic = peek(&bytes, 0)?;

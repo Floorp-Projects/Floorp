@@ -1,3 +1,5 @@
+/* Legal values for p_type (segment type).  */
+
 /// Program header table entry unused
 pub const PT_NULL: u32 = 0;
 /// Loadable program segment
@@ -17,36 +19,36 @@ pub const PT_TLS: u32 = 7;
 /// Number of defined types
 pub const PT_NUM: u32 = 8;
 /// Start of OS-specific
-pub const PT_LOOS: u32 = 0x60000000;
+pub const PT_LOOS: u32 = 0x6000_0000;
 /// GCC .eh_frame_hdr segment
-pub const PT_GNU_EH_FRAME: u32 = 0x6474e550;
+pub const PT_GNU_EH_FRAME: u32 = 0x6474_e550;
 /// Indicates stack executability
-pub const PT_GNU_STACK: u32 = 0x6474e551;
+pub const PT_GNU_STACK: u32 = 0x6474_e551;
 /// Read-only after relocation
-pub const PT_GNU_RELRO: u32 = 0x6474e552;
+pub const PT_GNU_RELRO: u32 = 0x6474_e552;
 /// Sun Specific segment
-pub const PT_LOSUNW: u32 = 0x6ffffffa;
+pub const PT_LOSUNW: u32 = 0x6fff_fffa;
 /// Sun Specific segment
-pub const PT_SUNWBSS: u32 = 0x6ffffffa;
+pub const PT_SUNWBSS: u32 = 0x6fff_fffa;
 /// Stack segment
-pub const PT_SUNWSTACK: u32 = 0x6ffffffb;
+pub const PT_SUNWSTACK: u32 = 0x6fff_fffb;
 /// End of OS-specific
-pub const PT_HISUNW: u32 = 0x6fffffff;
+pub const PT_HISUNW: u32 = 0x6fff_ffff;
 /// End of OS-specific
-pub const PT_HIOS: u32 = 0x6fffffff;
+pub const PT_HIOS: u32 = 0x6fff_ffff;
 /// Start of processor-specific
-pub const PT_LOPROC: u32 = 0x70000000;
+pub const PT_LOPROC: u32 = 0x7000_0000;
 /// ARM unwind segment
-pub const PT_ARM_EXIDX: u32 = 0x70000001;
+pub const PT_ARM_EXIDX: u32 = 0x7000_0001;
 /// End of processor-specific
-pub const PT_HIPROC: u32 = 0x7fffffff;
+pub const PT_HIPROC: u32 = 0x7fff_ffff;
+
+/* Legal values for p_flags (segment flags).  */
 
 /// Segment is executable
-pub const PF_X: u32 = 1 << 0;
-
+pub const PF_X: u32 = 1;
 /// Segment is writable
 pub const PF_W: u32 = 1 << 1;
-
 /// Segment is readable
 pub const PF_R: u32 = 1 << 2;
 
@@ -80,8 +82,8 @@ if_alloc! {
     use scroll::ctx;
     use core::result;
     use core::ops::Range;
-    use container::{Ctx, Container};
-    use alloc::vec::Vec;
+    use crate::container::{Ctx, Container};
+    use crate::alloc::vec::Vec;
 
     #[derive(Default, PartialEq, Clone)]
     /// A unified ProgramHeader - convertable to and from 32-bit and 64-bit variants
@@ -99,9 +101,9 @@ if_alloc! {
     impl ProgramHeader {
         /// Return the size of the underlying program header, given a `Ctx`
         #[inline]
-        pub fn size(ctx: &Ctx) -> usize {
+        pub fn size(ctx: Ctx) -> usize {
             use scroll::ctx::SizeWith;
-            Self::size_with(ctx)
+            Self::size_with(&ctx)
         }
         /// Create a new `PT_LOAD` ELF program header
         pub fn new() -> Self {
@@ -150,7 +152,7 @@ if_alloc! {
             self.p_flags & PF_W != 0
         }
         #[cfg(feature = "endian_fd")]
-        pub fn parse(bytes: &[u8], mut offset: usize, count: usize, ctx: Ctx) -> ::error::Result<Vec<ProgramHeader>> {
+        pub fn parse(bytes: &[u8], mut offset: usize, count: usize, ctx: Ctx) -> crate::error::Result<Vec<ProgramHeader>> {
             use scroll::Pread;
             let mut program_headers = Vec::with_capacity(count);
             for _ in 0..count {
@@ -163,17 +165,16 @@ if_alloc! {
 
     impl fmt::Debug for ProgramHeader {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f,
-                   "p_type: {} p_flags 0x{:x} p_offset: 0x{:x} p_vaddr: 0x{:x} p_paddr: 0x{:x} \
-                    p_filesz: 0x{:x} p_memsz: 0x{:x} p_align: {}",
-                   pt_to_str(self.p_type),
-                   self.p_flags,
-                   self.p_offset,
-                   self.p_vaddr,
-                   self.p_paddr,
-                   self.p_filesz,
-                   self.p_memsz,
-                   self.p_align)
+            f.debug_struct("ProgramHeader")
+                .field("p_type", &pt_to_str(self.p_type))
+                .field("p_flags", &format_args!("0x{:x}", self.p_flags))
+                .field("p_offset", &format_args!("0x{:x}", self.p_offset))
+                .field("p_vaddr", &format_args!("0x{:x}", self.p_vaddr))
+                .field("p_paddr", &format_args!("0x{:x}", self.p_paddr))
+                .field("p_filesz", &format_args!("0x{:x}", self.p_filesz))
+                .field("p_memsz", &format_args!("0x{:x}", self.p_memsz))
+                .field("p_align", &self.p_align)
+                .finish()
         }
     }
 
@@ -192,7 +193,7 @@ if_alloc! {
     }
 
     impl<'a> ctx::TryFromCtx<'a, Ctx> for ProgramHeader {
-        type Error = ::error::Error;
+        type Error = crate::error::Error;
         type Size = usize;
         fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, Self::Size), Self::Error> {
             use scroll::Pread;
@@ -209,7 +210,7 @@ if_alloc! {
     }
 
     impl ctx::TryIntoCtx<Ctx> for ProgramHeader {
-        type Error = ::error::Error;
+        type Error = crate::error::Error;
         type Size = usize;
         fn try_into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) -> result::Result<Self::Size, Self::Error> {
             use scroll::Pwrite;
@@ -230,7 +231,7 @@ if_alloc! {
 macro_rules! elf_program_header_std_impl { ($size:ty) => {
 
     #[cfg(test)]
-    mod test {
+    mod tests {
         use super::*;
         #[test]
         fn size_of() {
@@ -240,9 +241,9 @@ macro_rules! elf_program_header_std_impl { ($size:ty) => {
 
     if_alloc! {
 
-        use elf::program_header::ProgramHeader as ElfProgramHeader;
+        use crate::elf::program_header::ProgramHeader as ElfProgramHeader;
         #[cfg(any(feature = "std", feature = "endian_fd"))]
-        use error::Result;
+        use crate::error::Result;
 
         use core::slice;
         use core::fmt;
@@ -260,12 +261,12 @@ macro_rules! elf_program_header_std_impl { ($size:ty) => {
                 ElfProgramHeader {
                     p_type   : ph.p_type,
                     p_flags  : ph.p_flags,
-                    p_offset : ph.p_offset as u64,
-                    p_vaddr  : ph.p_vaddr as u64,
-                    p_paddr  : ph.p_paddr as u64,
-                    p_filesz : ph.p_filesz as u64,
-                    p_memsz  : ph.p_memsz as u64,
-                    p_align  : ph.p_align as u64,
+                    p_offset : u64::from(ph.p_offset),
+                    p_vaddr  : u64::from(ph.p_vaddr),
+                    p_paddr  : u64::from(ph.p_paddr),
+                    p_filesz : u64::from(ph.p_filesz),
+                    p_memsz  : u64::from(ph.p_memsz),
+                    p_align  : u64::from(ph.p_align),
                 }
             }
         }
@@ -287,17 +288,16 @@ macro_rules! elf_program_header_std_impl { ($size:ty) => {
 
         impl fmt::Debug for ProgramHeader {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f,
-                       "p_type: {} p_flags 0x{:x} p_offset: 0x{:x} p_vaddr: 0x{:x} p_paddr: 0x{:x} \
-                        p_filesz: 0x{:x} p_memsz: 0x{:x} p_align: {}",
-                       pt_to_str(self.p_type),
-                       self.p_flags,
-                       self.p_offset,
-                       self.p_vaddr,
-                       self.p_paddr,
-                       self.p_filesz,
-                       self.p_memsz,
-                       self.p_align)
+                f.debug_struct("ProgramHeader")
+                    .field("p_type", &pt_to_str(self.p_type))
+                    .field("p_flags", &format_args!("0x{:x}", self.p_flags))
+                    .field("p_offset", &format_args!("0x{:x}", self.p_offset))
+                    .field("p_vaddr", &format_args!("0x{:x}", self.p_vaddr))
+                    .field("p_paddr", &format_args!("0x{:x}", self.p_paddr))
+                    .field("p_filesz", &format_args!("0x{:x}", self.p_filesz))
+                    .field("p_memsz", &format_args!("0x{:x}", self.p_memsz))
+                    .field("p_align", &self.p_align)
+                    .finish()
             }
         }
 
@@ -326,9 +326,9 @@ macro_rules! elf_program_header_std_impl { ($size:ty) => {
             #[cfg(feature = "std")]
             pub fn from_fd(fd: &mut File, offset: u64, count: usize) -> Result<Vec<ProgramHeader>> {
                 let mut phdrs = vec![ProgramHeader::default(); count];
-                try!(fd.seek(Start(offset)));
+                fd.seek(Start(offset))?;
                 unsafe {
-                    try!(fd.read(plain::as_mut_bytes(&mut *phdrs)));
+                    fd.read_exact(plain::as_mut_bytes(&mut *phdrs))?;
                 }
                 Ok(phdrs)
             }
@@ -336,9 +336,11 @@ macro_rules! elf_program_header_std_impl { ($size:ty) => {
     } // end if_alloc
 };}
 
+#[cfg(feature = "alloc")]
+use scroll::{Pread, Pwrite, SizeWith};
 
 pub mod program_header32 {
-    pub use elf::program_header::*;
+    pub use crate::elf::program_header::*;
 
     #[repr(C)]
     #[derive(Copy, Clone, PartialEq, Default)]
@@ -374,7 +376,7 @@ pub mod program_header32 {
 
 
 pub mod program_header64 {
-    pub use elf::program_header::*;
+    pub use crate::elf::program_header::*;
 
     #[repr(C)]
     #[derive(Copy, Clone, PartialEq, Default)]

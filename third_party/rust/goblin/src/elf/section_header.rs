@@ -1,5 +1,7 @@
 macro_rules! elf_section_header {
     ($size:ident) => {
+        #[cfg(feature = "alloc")]
+        use scroll::{Pread, Pwrite, SizeWith};
         #[repr(C)]
         #[derive(Copy, Clone, Eq, PartialEq, Default)]
         #[cfg_attr(feature = "alloc", derive(Pread, Pwrite, SizeWith))]
@@ -35,19 +37,18 @@ macro_rules! elf_section_header {
 
         impl ::core::fmt::Debug for SectionHeader {
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-                write!(f,
-                       "sh_name: {} sh_type {} sh_flags: 0x{:x} sh_addr: 0x{:x} sh_offset: 0x{:x} \
-                        sh_size: 0x{:x} sh_link: 0x{:x} sh_info: 0x{:x} sh_addralign 0x{:x} sh_entsize 0x{:x}",
-                       self.sh_name,
-                       sht_to_str(self.sh_type as u32),
-                       self.sh_flags,
-                       self.sh_addr,
-                       self.sh_offset,
-                       self.sh_size,
-                       self.sh_link,
-                       self.sh_info,
-                       self.sh_addralign,
-                       self.sh_entsize)
+                f.debug_struct("SectionHeader")
+                    .field("sh_name", &self.sh_name)
+                    .field("sh_type", &sht_to_str(self.sh_type))
+                    .field("sh_flags", &format_args!("0x{:x}", self.sh_flags))
+                    .field("sh_addr", &format_args!("0x{:x}", self.sh_addr))
+                    .field("sh_offset", &format_args!("0x{:x}", self.sh_offset))
+                    .field("sh_size", &format_args!("0x{:x}", self.sh_size))
+                    .field("sh_link", &format_args!("0x{:x}", self.sh_link))
+                    .field("sh_info", &format_args!("0x{:x}", self.sh_info))
+                    .field("sh_addralign", &format_args!("0x{:x}", self.sh_addralign))
+                    .field("sh_entsize", &format_args!("0x{:x}", self.sh_entsize))
+                    .finish()
             }
         }
     }
@@ -116,38 +117,38 @@ pub const SHT_SYMTAB_SHNDX: u32 = 18;
 /// Number of defined types.
 pub const SHT_NUM: u32 = 19;
 /// Start OS-specific.
-pub const SHT_LOOS: u32 = 0x60000000;
+pub const SHT_LOOS: u32 = 0x6000_0000;
 /// Object attributes.
-pub const SHT_GNU_ATTRIBUTES: u32 = 0x6ffffff5;
+pub const SHT_GNU_ATTRIBUTES: u32 = 0x6fff_fff5;
 /// GNU-style hash table.
-pub const SHT_GNU_HASH: u32 = 0x6ffffff6;
+pub const SHT_GNU_HASH: u32 = 0x6fff_fff6;
 /// Prelink library list.
-pub const SHT_GNU_LIBLIST: u32 = 0x6ffffff7;
+pub const SHT_GNU_LIBLIST: u32 = 0x6fff_fff7;
 /// Checksum for DSO content.
-pub const SHT_CHECKSUM: u32 = 0x6ffffff8;
+pub const SHT_CHECKSUM: u32 = 0x6fff_fff8;
 /// Sun-specific low bound.
-pub const SHT_LOSUNW: u32 = 0x6ffffffa;
-pub const SHT_SUNW_MOVE: u32 = 0x6ffffffa;
-pub const SHT_SUNW_COMDAT: u32 = 0x6ffffffb;
-pub const SHT_SUNW_SYMINFO: u32 = 0x6ffffffc;
+pub const SHT_LOSUNW: u32 = 0x6fff_fffa;
+pub const SHT_SUNW_MOVE: u32 = 0x6fff_fffa;
+pub const SHT_SUNW_COMDAT: u32 = 0x6fff_fffb;
+pub const SHT_SUNW_SYMINFO: u32 = 0x6fff_fffc;
 /// Version definition section.
-pub const SHT_GNU_VERDEF: u32 = 0x6ffffffd;
+pub const SHT_GNU_VERDEF: u32 = 0x6fff_fffd;
 /// Version needs section.
-pub const SHT_GNU_VERNEED: u32 = 0x6ffffffe;
+pub const SHT_GNU_VERNEED: u32 = 0x6fff_fffe;
 /// Version symbol table.
-pub const SHT_GNU_VERSYM: u32 = 0x6fffffff;
+pub const SHT_GNU_VERSYM: u32 = 0x6fff_ffff;
 /// Sun-specific high bound.
-pub const SHT_HISUNW: u32 = 0x6fffffff;
+pub const SHT_HISUNW: u32 = 0x6fff_ffff;
 /// End OS-specific type.
-pub const SHT_HIOS: u32 = 0x6fffffff;
+pub const SHT_HIOS: u32 = 0x6fff_ffff;
 /// Start of processor-specific.
-pub const SHT_LOPROC: u32 = 0x70000000;
+pub const SHT_LOPROC: u32 = 0x7000_0000;
 /// End of processor-specific.
-pub const SHT_HIPROC: u32 = 0x7fffffff;
+pub const SHT_HIPROC: u32 = 0x7fff_ffff;
 /// Start of application-specific.
-pub const SHT_LOUSER: u32 = 0x80000000;
+pub const SHT_LOUSER: u32 = 0x8000_0000;
 /// End of application-specific.
-pub const SHT_HIUSER: u32 = 0x8fffffff;
+pub const SHT_HIUSER: u32 = 0x8fff_ffff;
 
 // Legal values for sh_flags (section flags)
 /// Writable.
@@ -173,9 +174,9 @@ pub const SHF_TLS: u32 = 0x400;
 /// Section with compressed data.
 pub const SHF_COMPRESSED: u32 = 0x800;
 /// OS-specific..
-pub const SHF_MASKOS: u32 = 0x0ff00000;
+pub const SHF_MASKOS: u32 = 0x0ff0_0000;
 /// Processor-specific.
-pub const SHF_MASKPROC: u32 = 0xf0000000;
+pub const SHF_MASKPROC: u32 = 0xf000_0000;
 /// Special ordering requirement (Solaris).
 pub const SHF_ORDERED: u32 = 1 << 30;
 /// Number of "regular" section header flags
@@ -259,7 +260,7 @@ pub fn shf_to_str(shf: u32) -> &'static str {
 macro_rules! elf_section_header_std_impl { ($size:ty) => {
 
     #[cfg(test)]
-    mod test {
+    mod tests {
         use super::*;
         #[test]
         fn size_of() {
@@ -268,13 +269,13 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
     }
 
     if_alloc! {
-        use elf::section_header::SectionHeader as ElfSectionHeader;
+        use crate::elf::section_header::SectionHeader as ElfSectionHeader;
 
         use plain::Plain;
-        use alloc::vec::Vec;
+        use crate::alloc::vec::Vec;
 
         if_std! {
-            use error::Result;
+            use crate::error::Result;
 
             use std::fs::File;
             use std::io::{Read, Seek};
@@ -286,14 +287,14 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
                 ElfSectionHeader {
                     sh_name: sh.sh_name as usize,
                     sh_type: sh.sh_type,
-                    sh_flags: sh.sh_flags   as u64,
-                    sh_addr: sh.sh_addr     as u64,
-                    sh_offset: sh.sh_offset as u64,
-                    sh_size: sh.sh_size     as u64,
+                    sh_flags: u64::from(sh.sh_flags),
+                    sh_addr: u64::from(sh.sh_addr),
+                    sh_offset: u64::from(sh.sh_offset),
+                    sh_size: u64::from(sh.sh_size),
                     sh_link: sh.sh_link,
                     sh_info: sh.sh_info,
-                    sh_addralign: sh.sh_addralign as u64,
-                    sh_entsize: sh.sh_entsize as u64,
+                    sh_addralign: u64::from(sh.sh_addralign),
+                    sh_entsize: u64::from(sh.sh_entsize),
                 }
             }
         }
@@ -315,6 +316,7 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
         }
 
         impl SectionHeader {
+            // FIXME: > 65535 sections
             pub fn from_bytes(bytes: &[u8], shnum: usize) -> Vec<SectionHeader> {
                 let mut shdrs = vec![SectionHeader::default(); shnum];
                 shdrs.copy_from_bytes(bytes).expect("buffer is too short for given number of entries");
@@ -322,11 +324,12 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
             }
 
             #[cfg(feature = "std")]
+            // FIXME: > 65535 sections
             pub fn from_fd(fd: &mut File, offset: u64, shnum: usize) -> Result<Vec<SectionHeader>> {
                 let mut shdrs = vec![SectionHeader::default(); shnum];
-                try!(fd.seek(Start(offset)));
+                fd.seek(Start(offset))?;
                 unsafe {
-                    try!(fd.read(plain::as_mut_bytes(&mut *shdrs)));
+                    fd.read_exact(plain::as_mut_bytes(&mut *shdrs))?;
                 }
                 Ok(shdrs)
             }
@@ -336,7 +339,7 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
 
 
 pub mod section_header32 {
-    pub use elf::section_header::*;
+    pub use crate::elf::section_header::*;
 
     elf_section_header!(u32);
 
@@ -348,7 +351,7 @@ pub mod section_header32 {
 
 pub mod section_header64 {
 
-    pub use elf::section_header::*;
+    pub use crate::elf::section_header::*;
 
     elf_section_header!(u64);
 
@@ -362,15 +365,15 @@ pub mod section_header64 {
 ///////////////////////////////
 
 if_alloc! {
-    use error;
+    use crate::error;
     use core::fmt;
     use core::result;
     use core::ops::Range;
     use scroll::ctx;
-    use container::{Container, Ctx};
+    use crate::container::{Container, Ctx};
 
     #[cfg(feature = "endian_fd")]
-    use alloc::vec::Vec;
+    use crate::alloc::vec::Vec;
 
     #[derive(Default, PartialEq, Clone)]
     /// A unified SectionHeader - convertable to and from 32-bit and 64-bit variants
@@ -400,15 +403,15 @@ if_alloc! {
     impl SectionHeader {
         /// Return the size of the underlying program header, given a `container`
         #[inline]
-        pub fn size(ctx: &Ctx) -> usize {
+        pub fn size(ctx: Ctx) -> usize {
             use scroll::ctx::SizeWith;
-            Self::size_with(ctx)
+            Self::size_with(&ctx)
         }
         pub fn new() -> Self {
             SectionHeader {
                 sh_name: 0,
                 sh_type: SHT_PROGBITS,
-                sh_flags: SHF_ALLOC as u64,
+                sh_flags: u64::from(SHF_ALLOC),
                 sh_addr: 0,
                 sh_offset: 0,
                 sh_size: 0,
@@ -431,7 +434,13 @@ if_alloc! {
         pub fn parse(bytes: &[u8], mut offset: usize, count: usize, ctx: Ctx) -> error::Result<Vec<SectionHeader>> {
             use scroll::Pread;
             let mut section_headers = Vec::with_capacity(count);
-            for _ in 0..count {
+            let mut nsection_headers = count;
+            let empty_sh = bytes.gread_with::<SectionHeader>(&mut offset, ctx)?;
+            if count == 0 as usize {
+                nsection_headers = empty_sh.sh_size as usize;
+            }
+            section_headers.push(empty_sh);
+            for _ in 1..nsection_headers {
                 let shdr = bytes.gread_with(&mut offset, ctx)?;
                 section_headers.push(shdr);
             }
@@ -465,19 +474,18 @@ if_alloc! {
 
     impl fmt::Debug for SectionHeader {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f,
-                   "sh_name: {} sh_type {} sh_flags: 0x{:x} sh_addr: 0x{:x} sh_offset: 0x{:x} \
-                    sh_size: 0x{:x} sh_link: 0x{:x} sh_info: 0x{:x} sh_addralign 0x{:x} sh_entsize 0x{:x}",
-                   self.sh_name,
-                   sht_to_str(self.sh_type as u32),
-                   self.sh_flags,
-                   self.sh_addr,
-                   self.sh_offset,
-                   self.sh_size,
-                   self.sh_link,
-                   self.sh_info,
-                   self.sh_addralign,
-                   self.sh_entsize)
+            f.debug_struct("SectionHeader")
+                .field("sh_name", &self.sh_name)
+                .field("sh_type", &sht_to_str(self.sh_type))
+                .field("sh_flags", &format_args!("0x{:x}", self.sh_flags))
+                .field("sh_addr", &format_args!("0x{:x}", self.sh_addr))
+                .field("sh_offset", &format_args!("0x{:x}", self.sh_offset))
+                .field("sh_size", &format_args!("0x{:x}", self.sh_size))
+                .field("sh_link", &format_args!("0x{:x}", self.sh_link))
+                .field("sh_info", &format_args!("0x{:x}", self.sh_info))
+                .field("sh_addralign", &format_args!("0x{:x}", self.sh_addralign))
+                .field("sh_entsize", &format_args!("0x{:x}", self.sh_entsize))
+                .finish()
         }
     }
 
@@ -496,7 +504,7 @@ if_alloc! {
     }
 
     impl<'a> ctx::TryFromCtx<'a, Ctx> for SectionHeader {
-        type Error = ::error::Error;
+        type Error = crate::error::Error;
         type Size = usize;
         fn try_from_ctx(bytes: &'a [u8], Ctx {container, le}: Ctx) -> result::Result<(Self, Self::Size), Self::Error> {
             use scroll::Pread;
@@ -513,7 +521,7 @@ if_alloc! {
     }
 
     impl ctx::TryIntoCtx<Ctx> for SectionHeader {
-        type Error = ::error::Error;
+        type Error = crate::error::Error;
         type Size = usize;
         fn try_into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) -> result::Result<Self::Size, Self::Error> {
             use scroll::Pwrite;

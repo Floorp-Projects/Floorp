@@ -6,18 +6,18 @@
 //! names in the archive with a / as a sigil for the end of the name, and uses a special symbol
 //! index for looking up symbols faster.
 
-use scroll::{self, Pread};
+use scroll::{Pread, Pwrite, SizeWith};
 
-use strtab;
-use error::{Result, Error};
+use crate::strtab;
+use crate::error::{Result, Error};
 
 use core::usize;
-use alloc::collections::btree_map::BTreeMap;
-use alloc::vec::Vec;
+use crate::alloc::collections::btree_map::BTreeMap;
+use crate::alloc::vec::Vec;
 
 pub const SIZEOF_MAGIC: usize = 8;
 /// The magic number of a Unix Archive
-pub const MAGIC: &'static [u8; SIZEOF_MAGIC] = b"!<arch>\x0A";
+pub const MAGIC: &[u8; SIZEOF_MAGIC] = b"!<arch>\x0A";
 
 const SIZEOF_FILE_IDENTIFER: usize = 16;
 const SIZEOF_FILE_SIZE: usize = 10;
@@ -71,7 +71,7 @@ impl MemberHeader {
         Ok(self.identifier.pread_with::<&str>(0, ::scroll::ctx::StrCtx::Length(SIZEOF_FILE_IDENTIFER))?)
     }
     pub fn size(&self) -> Result<usize> {
-        match usize::from_str_radix(self.file_size.pread_with::<&str>(0, ::scroll::ctx::StrCtx::Length(self.file_size.len()))?.trim_right(), 10) {
+        match usize::from_str_radix(self.file_size.pread_with::<&str>(0, ::scroll::ctx::StrCtx::Length(self.file_size.len()))?.trim_end(), 10) {
             Ok(file_size) => Ok(file_size),
             Err(err) => Err(Error::Malformed(format!("{:?} Bad file_size in header: {:?}", err, self)))
         }
@@ -101,7 +101,7 @@ impl<'a> Member<'a> {
         let header_offset = *offset;
         let name = buffer.pread_with::<&str>(*offset, ::scroll::ctx::StrCtx::Length(SIZEOF_FILE_IDENTIFER))?;
         let archive_header = buffer.gread::<MemberHeader>(offset)?;
-        let mut header = Header { name: name, size: archive_header.size()? };
+        let mut header = Header { name, size: archive_header.size()? };
 
         // skip newline padding if we're on an uneven byte boundary
         if *offset & 1 == 1 {
@@ -117,16 +117,16 @@ impl<'a> Member<'a> {
             header.size -= len;
 
             // the name may have trailing NULs which we don't really want to keep
-            Some(name.trim_right_matches('\0'))
+            Some(name.trim_end_matches('\0'))
         } else {
             None
         };
 
         Ok(Member {
-            header: header,
+            header,
             header_offset: header_offset as u64,
             offset: *offset as u64,
-            bsd_name: bsd_name,
+            bsd_name,
             sysv_name: None,
         })
     }
@@ -142,7 +142,7 @@ impl<'a> Member<'a> {
         use core::str::FromStr;
 
         if name.len() > 3 && &name[0..3] == "#1/" {
-            let trimmed_name = &name[3..].trim_right_matches(' ');
+            let trimmed_name = &name[3..].trim_end_matches(' ');
             if let Ok(len) = usize::from_str(trimmed_name) {
                 Some(len)
             } else {
@@ -160,7 +160,7 @@ impl<'a> Member<'a> {
         } else if let Some(ref sysv_name) = self.sysv_name {
             sysv_name
         } else {
-            self.header.name.trim_right_matches(' ').trim_right_matches('/')
+            self.header.name.trim_end_matches(' ').trim_end_matches('/')
         }
     }
 
@@ -186,12 +186,12 @@ pub struct Index<'a> {
 }
 
 /// SysV Archive Variant Symbol Lookup Table "Magic" Name
-const INDEX_NAME: &'static str = "/               ";
+const INDEX_NAME: &str = "/               ";
 /// SysV Archive Variant Extended Filename String Table Name
-const NAME_INDEX_NAME: &'static str = "//              ";
+const NAME_INDEX_NAME: &str = "//              ";
 /// BSD symbol definitions
-const BSD_SYMDEF_NAME: &'static str = "__.SYMDEF";
-const BSD_SYMDEF_SORTED_NAME: &'static str = "__.SYMDEF SORTED";
+const BSD_SYMDEF_NAME: &str = "__.SYMDEF";
+const BSD_SYMDEF_SORTED_NAME: &str = "__.SYMDEF SORTED";
 
 impl<'a> Index<'a> {
     /// Parses the given byte buffer into an Index. NB: the buffer must be the start of the index
@@ -279,6 +279,33 @@ impl<'a> Index<'a> {
             strtab: strings,
         })
     }
+
+    // Parses Windows Second Linker Member:
+    // number of members (m):   4
+    // member offsets:          4 * m
+    // number of symbols (n):   4
+    // symbol member indexes:   2 * n
+    // followed by SysV-style string table
+    // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#first-linker-member
+    pub fn parse_windows_linker_member(buffer: &'a [u8]) -> Result<Self> {
+        let offset = &mut 0;
+        let members = buffer.gread_with::<u32>(offset, scroll::LE)? as usize;
+        let mut member_offsets = Vec::with_capacity(members);
+        for _ in 0..members {
+            member_offsets.push(buffer.gread_with::<u32>(offset, scroll::LE)?);
+        }
+        let symbols = buffer.gread_with::<u32>(offset, scroll::LE)? as usize;
+        let mut symbol_offsets = Vec::with_capacity(symbols);
+        for _ in 0..symbols {
+            symbol_offsets.push(member_offsets[buffer.gread_with::<u16>(offset, scroll::LE)? as usize - 1]);
+        }
+        let strtab = strtab::Strtab::parse(buffer, *offset, buffer.len() - *offset, 0x0)?;
+        Ok(Index {
+            size: symbols,
+            symbol_indexes: symbol_offsets,
+            strtab: strtab.to_vec()?,
+        })
+    }
 }
 
 /// Member names greater than 16 bytes are indirectly referenced using a `/<idx` schema,
@@ -294,16 +321,16 @@ impl<'a> NameIndex<'a> {
         // This is a total hack, because strtab returns "" if idx == 0, need to change
         // but previous behavior might rely on this, as ELF strtab's have "" at 0th index...
         let hacked_size = size + 1;
-        let strtab = strtab::Strtab::parse(buffer, *offset-1, hacked_size, '\n' as u8)?;
+        let strtab = strtab::Strtab::parse(buffer, *offset-1, hacked_size, b'\n')?;
         // precious time was lost when refactoring because strtab::parse doesn't update the mutable seek...
         *offset += hacked_size - 2;
         Ok (NameIndex {
-            strtab: strtab
+            strtab
         })
     }
 
     pub fn get(&self, name: &str) -> Result<&'a str> {
-        let idx = name.trim_left_matches('/').trim_right();
+        let idx = name.trim_start_matches('/').trim_end();
         match usize::from_str_radix(idx, 10) {
             Ok(idx) => {
                 let name = match self.strtab.get(idx+1) {
@@ -312,16 +339,31 @@ impl<'a> NameIndex<'a> {
                 }?;
 
                 if name != "" {
-                    Ok(name.trim_right_matches('/'))
+                    Ok(name.trim_end_matches('/'))
                 }  else {
-                    return Err(Error::Malformed(format!("Could not find {:?} in index", name).into()));
+                    Err(Error::Malformed(format!("Could not find {:?} in index", name)))
                 }
             },
             Err (_) => {
-                return Err(Error::Malformed(format!("Bad name index {:?} in index", name).into()));
+                Err(Error::Malformed(format!("Bad name index {:?} in index", name)))
             }
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+/// The type of symbol index can be present in an archive. Can serve as an indication of the
+/// archive format.
+pub enum IndexType {
+    /// No symbol index present.
+    None,
+    /// SystemV/GNU style symbol index, used on Windows as well.
+    SysV,
+    /// Windows specific extension of SysV symbol index, so called Second Linker Member. Has the
+    /// same member name as SysV symbol index but different structure.
+    Windows,
+    /// BSD style symbol index.
+    BSD,
 }
 
 // TODO: add pretty printer fmt::Display with number of members, and names of members, along with
@@ -337,23 +379,26 @@ pub struct Archive<'a> {
     member_array: Vec<Member<'a>>,
     members: BTreeMap<&'a str, usize>,
     // symbol -> member
-    symbol_index: BTreeMap<&'a str, usize>
+    symbol_index: BTreeMap<&'a str, usize>,
+    /// Type of the symbol index that was found in the archive.
+    index_type: IndexType,
 }
 
 
 impl<'a> Archive<'a> {
     pub fn parse(buffer: &'a [u8]) -> Result<Archive<'a>> {
+
         let mut magic = [0u8; SIZEOF_MAGIC];
         let offset = &mut 0usize;
         buffer.gread_inout(offset, &mut magic)?;
         if &magic != MAGIC {
-            use scroll::Pread;
-            return Err(Error::BadMagic(magic.pread(0)?).into());
+            return Err(Error::BadMagic(magic.pread(0)?));
         }
         let mut member_array = Vec::new();
         let mut index = Index::default();
+        let mut index_type = IndexType::None;
         let mut sysv_name_index = NameIndex::default();
-        while *offset < buffer.len() {
+        while *offset + 1 < buffer.len() {
             // realign the cursor to a word boundary, if it's not on one already
             if *offset & 1 == 1 {
                 *offset += 1;
@@ -367,9 +412,25 @@ impl<'a> Archive<'a> {
             let name = member.raw_name();
             if name == INDEX_NAME {
                 let data: &[u8] = buffer.pread_with(member.offset as usize, member.size())?;
-                index = Index::parse_sysv_index(data)?;
+                index = match index_type {
+                    IndexType::None => {
+                        index_type = IndexType::SysV;
+                        Index::parse_sysv_index(data)?
+                    },
+                    IndexType::SysV => {
+                        index_type = IndexType::Windows;
+                        // second symbol index is Microsoft's extension of SysV format
+                        Index::parse_windows_linker_member(data)?
+                    },
+                    IndexType::BSD => return Err(Error::Malformed("SysV index occurs after BSD index".into())),
+                    IndexType::Windows => return Err(Error::Malformed("More than two Windows Linker members".into())),
+                }
 
             } else if member.bsd_name == Some(BSD_SYMDEF_NAME) || member.bsd_name == Some(BSD_SYMDEF_SORTED_NAME) {
+                if index_type != IndexType::None {
+                    return Err(Error::Malformed("BSD index occurs after SysV index".into()));
+                }
+                index_type = IndexType::BSD;
                 let data: &[u8] = buffer.pread_with(member.offset as usize, member.size())?;
                 index = Index::parse_bsd_symdef(data)?;
 
@@ -403,20 +464,18 @@ impl<'a> Archive<'a> {
         // build the symbol index, translating symbol names into member indexes
         let mut symbol_index: BTreeMap<&str, usize> = BTreeMap::new();
         for (member_offset, name) in index.symbol_indexes.iter().zip(index.strtab.iter()) {
-            let name = name.clone();
             let member_index = member_index_by_offset[member_offset];
-            symbol_index.insert(name, member_index);
+            symbol_index.insert(&name, member_index);
         }
 
-        let archive = Archive {
-            index: index,
-            member_array: member_array,
-            sysv_name_index: sysv_name_index,
-            members: members,
-            symbol_index: symbol_index,
-        };
-
-        Ok(archive)
+        Ok(Archive {
+            index,
+            member_array,
+            sysv_name_index,
+            members,
+            symbol_index,
+            index_type,
+        })
     }
 
     /// Get the member named `member` in this archive, if any
@@ -434,7 +493,7 @@ impl<'a> Archive<'a> {
             let bytes = buffer.pread_with(member.offset as usize, member.size())?;
             Ok(bytes)
         } else {
-            Err(Error::Malformed(format!("Cannot extract member {:?}", member).into()))
+            Err(Error::Malformed(format!("Cannot extract member {:?}", member)))
         }
     }
 
@@ -457,7 +516,7 @@ impl<'a> Archive<'a> {
 
     /// Get the list of member names in this archive
     pub fn members(&self) -> Vec<&'a str> {
-        self.members.keys().map(|s| *s).collect()
+        self.members.keys().cloned().collect()
     }
 
     /// Returns the member's name which contains the given `symbol`, if it is in the archive

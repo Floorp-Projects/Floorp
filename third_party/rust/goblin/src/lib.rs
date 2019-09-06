@@ -10,7 +10,7 @@
 //! * A PE32/PE32+ (64-bit) parser, and raw C structs
 //! * A Unix archive parser and loader
 //!
-//! Goblin _should_ require at least `rustc` 1.16, but is developed on stable.
+//! Goblin requires at least `rustc` 1.31.1, uses the 2018 rust edition, and is developed on stable.
 //!
 //! Goblin primarily supports the following important use cases:
 //!
@@ -81,14 +81,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(all(feature = "alloc", not(feature = "std")), feature(alloc))]
 
-extern crate plain;
-#[cfg_attr(feature = "alloc", macro_use)]
-extern crate scroll;
-
-#[cfg(feature = "log")]
-#[macro_use]
-extern crate log;
-
 #[cfg(feature = "std")]
 extern crate core;
 
@@ -133,7 +125,7 @@ pub mod strtab;
 /// Binary container size information and byte-order context
 pub mod container {
     use scroll;
-    pub use scroll::Endian as Endian;
+    pub use scroll::Endian;
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     /// The size of a binary container
@@ -144,8 +136,8 @@ pub mod container {
 
     impl Container {
         /// Is this a 64-bit container or not?
-        pub fn is_big(&self) -> bool {
-            *self == Container::Big
+        pub fn is_big(self) -> bool {
+            self == Container::Big
         }
     }
 
@@ -173,19 +165,19 @@ pub mod container {
 
     impl Ctx {
         /// Whether this binary container context is "big" or not
-        pub fn is_big(&self) -> bool {
+        pub fn is_big(self) -> bool {
             self.container.is_big()
         }
         /// Whether this binary container context is little endian or not
-        pub fn is_little_endian(&self) -> bool {
+        pub fn is_little_endian(self) -> bool {
             self.le.is_little()
         }
         /// Create a new binary container context
         pub fn new (container: Container, le: scroll::Endian) -> Self {
-            Ctx { container: container, le: le }
+            Ctx { container, le }
         }
         /// Return a dubious pointer/address byte size for the container
-        pub fn size(&self) -> usize {
+        pub fn size(self) -> usize {
             match self.container {
                 // TODO: require pointer size initialization/setting or default to container size with these values, e.g., avr pointer width will be smaller iirc
                 Container::Little => 4,
@@ -196,13 +188,13 @@ pub mod container {
 
     impl From<Container> for Ctx {
         fn from(container: Container) -> Self {
-            Ctx { container: container, le: scroll::Endian::default() }
+            Ctx { container, le: scroll::Endian::default() }
         }
     }
 
     impl From<scroll::Endian> for Ctx {
         fn from(le: scroll::Endian) -> Self {
-            Ctx { container: CONTAINER, le: le }
+            Ctx { container: CONTAINER, le }
         }
     }
 
@@ -244,7 +236,7 @@ if_everything! {
     /// Peeks at `bytes`, and returns a `Hint`
     pub fn peek_bytes(bytes: &[u8; 16]) -> error::Result<Hint> {
         use scroll::{Pread, LE, BE};
-        use mach::{fat, header};
+        use crate::mach::{fat, header};
         if &bytes[0..elf::header::SELFMAG] == elf::header::ELFMAG {
             let class = bytes[elf::header::EI_CLASS];
             let is_lsb = bytes[elf::header::EI_DATA] == elf::header::ELFDATA2LSB;
@@ -272,7 +264,7 @@ if_everything! {
                     if let Some(ctx) = maybe_ctx {
                         Ok(Hint::Mach(HintData { is_lsb: ctx.le.is_little(), is_64: Some(ctx.container.is_big()) }))
                     } else {
-                        Err(error::Error::Malformed(format!("Correct mach magic {:#x} does not have a matching parsing context!", magic).into()))
+                        Err(error::Error::Malformed(format!("Correct mach magic {:#x} does not have a matching parsing context!", magic)))
                     }
                 },
                 // its something else
@@ -293,6 +285,7 @@ if_everything! {
     }
 
     #[derive(Debug)]
+    #[allow(clippy::large_enum_variant)]
     /// A parseable object that goblin understands
     pub enum Object<'a> {
         /// An ELF32/ELF64!
@@ -335,15 +328,16 @@ pub mod elf;
 #[cfg(feature = "elf32")]
 /// The ELF 32-bit struct definitions and associated values, re-exported for easy "type-punning"
 pub mod elf32 {
-    pub use elf::header::header32 as header;
-    pub use elf::program_header::program_header32 as program_header;
-    pub use elf::section_header::section_header32 as section_header;
-    pub use elf::dyn::dyn32 as dyn;
-    pub use elf::sym::sym32 as sym;
-    pub use elf::reloc::reloc32 as reloc;
-    pub use elf::note::Nhdr32 as Note;
+    pub use crate::elf::header::header32 as header;
+    pub use crate::elf::program_header::program_header32 as program_header;
+    pub use crate::elf::section_header::section_header32 as section_header;
+    pub use crate::elf::dynamic::dyn32 as dynamic;
+    pub use crate::elf::sym::sym32 as sym;
+    pub use crate::elf::reloc::reloc32 as reloc;
+    pub use crate::elf::note::Nhdr32 as Note;
 
     pub mod gnu_hash {
+        pub use crate::elf::gnu_hash::hash;
         elf_gnu_hash_impl!(u32);
     }
 }
@@ -351,15 +345,16 @@ pub mod elf32 {
 #[cfg(feature = "elf64")]
 /// The ELF 64-bit struct definitions and associated values, re-exported for easy "type-punning"
 pub mod elf64 {
-    pub use elf::header::header64 as header;
-    pub use elf::program_header::program_header64 as program_header;
-    pub use elf::section_header::section_header64 as section_header;
-    pub use elf::dyn::dyn64 as dyn;
-    pub use elf::sym::sym64 as sym;
-    pub use elf::reloc::reloc64 as reloc;
-    pub use elf::note::Nhdr64 as Note;
+    pub use crate::elf::header::header64 as header;
+    pub use crate::elf::program_header::program_header64 as program_header;
+    pub use crate::elf::section_header::section_header64 as section_header;
+    pub use crate::elf::dynamic::dyn64 as dynamic;
+    pub use crate::elf::sym::sym64 as sym;
+    pub use crate::elf::reloc::reloc64 as reloc;
+    pub use crate::elf::note::Nhdr64 as Note;
 
     pub mod gnu_hash {
+        pub use crate::elf::gnu_hash::hash;
         elf_gnu_hash_impl!(u64);
     }
 }

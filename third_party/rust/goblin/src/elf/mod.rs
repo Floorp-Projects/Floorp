@@ -13,6 +13,7 @@
 //!       let entry = binary.entry;
 //!       for ph in binary.program_headers {
 //!         if ph.p_type == goblin::elf::program_header::PT_LOAD {
+//!           // TODO: you should validate p_filesz before allocating.
 //!           let mut _buf = vec![0u8; ph.p_filesz as usize];
 //!           // read responsibly
 //!          }
@@ -37,7 +38,7 @@
 //! `endian_fd` features if you disable `default`.
 
 #[macro_use]
-mod gnu_hash;
+pub(crate) mod gnu_hash;
 
 // These are shareable values for the 32/64 bit implementations.
 //
@@ -48,7 +49,7 @@ pub mod section_header;
 pub mod compression_header;
 #[macro_use]
 pub mod sym;
-pub mod dyn;
+pub mod dynamic;
 #[macro_use]
 pub mod reloc;
 pub mod note;
@@ -61,20 +62,22 @@ macro_rules! if_sylvan {
 }
 
 if_sylvan! {
-    use scroll::{self, ctx, Pread, Endian};
-    use strtab::Strtab;
-    use error;
-    use container::{Container, Ctx};
-    use alloc::vec::Vec;
+    use scroll::{ctx, Pread, Endian};
+    use crate::strtab::Strtab;
+    use crate::error;
+    use crate::container::{Container, Ctx};
+    use crate::alloc::vec::Vec;
+    use core::cmp;
 
     pub type Header = header::Header;
     pub type ProgramHeader = program_header::ProgramHeader;
     pub type SectionHeader = section_header::SectionHeader;
     pub type Symtab<'a> = sym::Symtab<'a>;
     pub type Sym = sym::Sym;
-    pub type Dyn = dyn::Dyn;
-    pub type Dynamic = dyn::Dynamic;
+    pub type Dyn = dynamic::Dyn;
+    pub type Dynamic = dynamic::Dynamic;
     pub type Reloc = reloc::Reloc;
+    pub type RelocSection<'a> = reloc::RelocSection<'a>;
 
     pub type ProgramHeaders = Vec<ProgramHeader>;
     pub type SectionHeaders = Vec<SectionHeader>;
@@ -106,13 +109,13 @@ if_sylvan! {
         /// Contains dynamic linking information, with the _DYNAMIC array + a preprocessed DynamicInfo for that array
         pub dynamic: Option<Dynamic>,
         /// The dynamic relocation entries (strings, copy-data, etc.) with an addend
-        pub dynrelas: Vec<Reloc>,
+        pub dynrelas: RelocSection<'a>,
         /// The dynamic relocation entries without an addend
-        pub dynrels: Vec<Reloc>,
+        pub dynrels: RelocSection<'a>,
         /// The plt relocation entries (procedure linkage table). For 32-bit binaries these are usually Rel (no addend)
-        pub pltrelocs: Vec<Reloc>,
+        pub pltrelocs: RelocSection<'a>,
         /// Section relocations by section index (only present if this is a relocatable object file)
-        pub shdr_relocs: Vec<(ShdrIdx, Vec<Reloc>)>,
+        pub shdr_relocs: Vec<(ShdrIdx, RelocSection<'a>)>,
         /// The binary's soname, if it has one
         pub soname: Option<&'a str>,
         /// The binary's program interpreter (e.g., dynamic linker), if it has one
@@ -124,8 +127,6 @@ if_sylvan! {
         pub is_lib: bool,
         /// The binaries entry point address, if it has one
         pub entry: u64,
-        /// The bias used to overflow virtual memory addresses into physical byte offsets into the binary
-        pub bias: u64,
         /// Whether the binary is little endian or not
         pub little_endian: bool,
         ctx: Ctx,
@@ -211,34 +212,13 @@ if_sylvan! {
             if class != header::ELFCLASS64 && class != header::ELFCLASS32 {
                 return Err(error::Error::Malformed(format!("Unknown values in ELF ident header: class: {} endianness: {}",
                                                            class,
-                                                           header.e_ident[header::EI_DATA])).into());
+                                                           header.e_ident[header::EI_DATA])));
             }
             let is_64 = class == header::ELFCLASS64;
             let container = if is_64 { Container::Big } else { Container::Little };
             let ctx = Ctx::new(container, endianness);
 
             let program_headers = ProgramHeader::parse(bytes, header.e_phoff as usize, header.e_phnum as usize, ctx)?;
-
-            let mut bias: usize = 0;
-            for ph in &program_headers {
-                if ph.p_type == program_header::PT_LOAD {
-                    // NB this _only_ works on the first load address, and the GOT values (usually at base + 2000) will be incorrect binary offsets...
-                    // this is an overflow hack that allows us to use virtual memory addresses
-                    // as though they're in the file by generating a fake load bias which is then
-                    // used to overflow the values in the dynamic array, and in a few other places
-                    // (see Dyn::DynamicInfo), to generate actual file offsets; you may have to
-                    // marinate a bit on why this works. i am unsure whether it works in every
-                    // conceivable case. i learned this trick from reading too much dynamic linker
-                    // C code (a whole other class of C code) and having to deal with broken older
-                    // kernels on VMs. enjoi
-                    bias = match container {
-                        Container::Little => (::core::u32::MAX - (ph.p_vaddr as u32)).wrapping_add(1) as usize,
-                        Container::Big    => (::core::u64::MAX - ph.p_vaddr).wrapping_add(1) as usize,
-                    };
-                    // we must grab only the first one, otherwise the bias will be incorrect
-                    break;
-                }
-            }
 
             let mut interpreter = None;
             for ph in &program_headers {
@@ -279,11 +259,11 @@ if_sylvan! {
             let mut soname = None;
             let mut libraries = vec![];
             let mut dynsyms = Symtab::default();
-            let mut dynrelas = vec![];
-            let mut dynrels = vec![];
-            let mut pltrelocs = vec![];
+            let mut dynrelas = RelocSection::default();
+            let mut dynrels = RelocSection::default();
+            let mut pltrelocs = RelocSection::default();
             let mut dynstrtab = Strtab::default();
-            let dynamic = Dynamic::parse(bytes, &program_headers, bias, ctx)?;
+            let dynamic = Dynamic::parse(bytes, &program_headers, ctx)?;
             if let Some(ref dynamic) = dynamic {
                 let dyn_info = &dynamic.info;
                 dynstrtab = Strtab::parse(bytes,
@@ -298,55 +278,59 @@ if_sylvan! {
                 if dyn_info.needed_count > 0 {
                     libraries = dynamic.get_libraries(&dynstrtab);
                 }
-                let num_syms = if dyn_info.syment == 0 { 0 } else { if dyn_info.strtab <= dyn_info.symtab { 0 } else { (dyn_info.strtab - dyn_info.symtab) / dyn_info.syment }};
-                dynsyms = Symtab::parse(bytes, dyn_info.symtab, num_syms, ctx)?;
                 // parse the dynamic relocations
-                dynrelas = Reloc::parse(bytes, dyn_info.rela, dyn_info.relasz, true, ctx)?;
-                dynrels = Reloc::parse(bytes, dyn_info.rel, dyn_info.relsz, false, ctx)?;
-                let is_rela = dyn_info.pltrel as u64 == dyn::DT_RELA;
-                pltrelocs = Reloc::parse(bytes, dyn_info.jmprel, dyn_info.pltrelsz, is_rela, ctx)?;
+                dynrelas = RelocSection::parse(bytes, dyn_info.rela, dyn_info.relasz, true, ctx)?;
+                dynrels = RelocSection::parse(bytes, dyn_info.rel, dyn_info.relsz, false, ctx)?;
+                let is_rela = dyn_info.pltrel as u64 == dynamic::DT_RELA;
+                pltrelocs = RelocSection::parse(bytes, dyn_info.jmprel, dyn_info.pltrelsz, is_rela, ctx)?;
+
+                let mut num_syms = if let Some(gnu_hash) = dyn_info.gnu_hash {
+                    gnu_hash_len(bytes, gnu_hash as usize, ctx)?
+                } else if let Some(hash) = dyn_info.hash {
+                    hash_len(bytes, hash as usize, header.e_machine, ctx)?
+                } else {
+                    0
+                };
+                let max_reloc_sym = dynrelas.iter()
+                    .chain(dynrels.iter())
+                    .chain(pltrelocs.iter())
+                    .fold(0, |num, reloc| cmp::max(num, reloc.r_sym));
+                if max_reloc_sym != 0 {
+                    num_syms = cmp::max(num_syms, max_reloc_sym + 1);
+                }
+                dynsyms = Symtab::parse(bytes, dyn_info.symtab, num_syms, ctx)?;
             }
 
-            // iterate through shdrs again iff we're an ET_REL
-            let shdr_relocs = {
-                let mut relocs = vec![];
-                if header.e_type == header::ET_REL {
-                    for (idx, section) in section_headers.iter().enumerate() {
-                        if section.sh_type == section_header::SHT_REL {
-                            section.check_size(bytes.len())?;
-                            let sh_relocs = Reloc::parse(bytes, section.sh_offset as usize, section.sh_size as usize, false, ctx)?;
-                            relocs.push((idx, sh_relocs));
-                        }
-                        if section.sh_type == section_header::SHT_RELA {
-                            section.check_size(bytes.len())?;
-                            let sh_relocs = Reloc::parse(bytes, section.sh_offset as usize, section.sh_size as usize, true, ctx)?;
-                            relocs.push((idx, sh_relocs));
-                        }
-                    }
+            let mut shdr_relocs = vec![];
+            for (idx, section) in section_headers.iter().enumerate() {
+                let is_rela = section.sh_type == section_header::SHT_RELA;
+                if is_rela || section.sh_type == section_header::SHT_REL {
+                    section.check_size(bytes.len())?;
+                    let sh_relocs = RelocSection::parse(bytes, section.sh_offset as usize, section.sh_size as usize, is_rela, ctx)?;
+                    shdr_relocs.push((idx, sh_relocs));
                 }
-                relocs
-            };
+            }
+
             Ok(Elf {
-                header: header,
-                program_headers: program_headers,
-                section_headers: section_headers,
-                shdr_strtab: shdr_strtab,
-                dynamic: dynamic,
-                dynsyms: dynsyms,
-                dynstrtab: dynstrtab,
-                syms: syms,
-                strtab: strtab,
-                dynrelas: dynrelas,
-                dynrels: dynrels,
-                pltrelocs: pltrelocs,
-                shdr_relocs: shdr_relocs,
-                soname: soname,
-                interpreter: interpreter,
-                libraries: libraries,
-                is_64: is_64,
-                is_lib: is_lib,
+                header,
+                program_headers,
+                section_headers,
+                shdr_strtab,
+                dynamic,
+                dynsyms,
+                dynstrtab,
+                syms,
+                strtab,
+                dynrelas,
+                dynrels,
+                pltrelocs,
+                shdr_relocs,
+                soname,
+                interpreter,
+                libraries,
+                is_64,
+                is_lib,
                 entry: entry as u64,
-                bias: bias as u64,
                 little_endian: is_lsb,
                 ctx,
             })
@@ -354,12 +338,55 @@ if_sylvan! {
     }
 
     impl<'a> ctx::TryFromCtx<'a, (usize, Endian)> for Elf<'a> {
-        type Error = ::error::Error;
+        type Error = crate::error::Error;
         type Size = usize;
         fn try_from_ctx(src: &'a [u8], (_, _): (usize, Endian)) -> Result<(Elf<'a>, Self::Size), Self::Error> {
             let elf = Elf::parse(src)?;
             Ok((elf, src.len()))
         }
+    }
+
+    fn gnu_hash_len(bytes: &[u8], offset: usize, ctx: Ctx) -> error::Result<usize> {
+        let buckets_num = bytes.pread_with::<u32>(offset, ctx.le)? as usize;
+        let min_chain = bytes.pread_with::<u32>(offset + 4, ctx.le)? as usize;
+        let bloom_size = bytes.pread_with::<u32>(offset + 8, ctx.le)? as usize;
+        // We could handle min_chain==0 if we really had to, but it shouldn't happen.
+        if buckets_num == 0 || min_chain == 0 || bloom_size == 0 {
+            return Err(error::Error::Malformed(format!("Invalid DT_GNU_HASH: buckets_num={} min_chain={} bloom_size={}",
+                                                       buckets_num, min_chain, bloom_size)));
+        }
+        // Find the last bucket.
+        let buckets_offset = offset + 16 + bloom_size * if ctx.container.is_big() { 8 } else { 4 };
+        let mut max_chain = 0;
+        for bucket in 0..buckets_num {
+            let chain = bytes.pread_with::<u32>(buckets_offset + bucket * 4, ctx.le)? as usize;
+            if max_chain < chain {
+                max_chain = chain;
+            }
+        }
+        if max_chain < min_chain {
+            return Ok(0);
+        }
+        // Find the last chain within the bucket.
+        let mut chain_offset = buckets_offset + buckets_num * 4 + (max_chain - min_chain) * 4;
+        loop {
+            let hash = bytes.pread_with::<u32>(chain_offset, ctx.le)?;
+            max_chain += 1;
+            chain_offset += 4;
+            if hash & 1 != 0 {
+                return Ok(max_chain);
+            }
+        }
+    }
+
+    fn hash_len(bytes: &[u8], offset: usize, machine: u16, ctx: Ctx) -> error::Result<usize> {
+        // Based on readelf code.
+        let nchain = if (machine == header::EM_FAKE_ALPHA || machine == header::EM_S390) && ctx.container.is_big() {
+            bytes.pread_with::<u64>(offset + 4, ctx.le)? as usize
+        } else {
+            bytes.pread_with::<u32>(offset + 4, ctx.le)? as usize
+        };
+        Ok(nchain)
     }
 }
 
@@ -375,26 +402,22 @@ mod tests {
                 assert!(binary.is_64);
                 assert!(!binary.is_lib);
                 assert_eq!(binary.entry, 0);
-                assert_eq!(binary.bias, 0);
                 assert!(binary.syms.get(1000).is_none());
                 assert!(binary.syms.get(5).is_some());
                 let syms = binary.syms.to_vec();
-                let mut i = 0;
-                assert!(binary.section_headers.len() != 0);
-                for sym in &syms {
+                assert!(!binary.section_headers.is_empty());
+                for (i, sym) in syms.iter().enumerate() {
                     if i == 11 {
                         let symtab = binary.strtab;
                         println!("sym: {:?}", &sym);
                         assert_eq!(&symtab[sym.st_name], "_start");
                         break;
                     }
-                    i += 1;
                 }
-                assert!(syms.len() != 0);
+                assert!(!syms.is_empty());
              },
             Err (err) => {
-                println!("failed: {}", err);
-                assert!(false)
+                panic!("failed: {}", err);
             }
         }
     }
@@ -407,26 +430,22 @@ mod tests {
                 assert!(!binary.is_64);
                 assert!(!binary.is_lib);
                 assert_eq!(binary.entry, 0);
-                assert_eq!(binary.bias, 0);
                 assert!(binary.syms.get(1000).is_none());
                 assert!(binary.syms.get(5).is_some());
                 let syms = binary.syms.to_vec();
-                let mut i = 0;
-                assert!(binary.section_headers.len() != 0);
-                for sym in &syms {
+                assert!(!binary.section_headers.is_empty());
+                for (i, sym) in syms.iter().enumerate() {
                     if i == 11 {
                         let symtab = binary.strtab;
                         println!("sym: {:?}", &sym);
                         assert_eq!(&symtab[sym.st_name], "__libc_csu_fini");
                         break;
                     }
-                    i += 1;
                 }
-                assert!(syms.len() != 0);
+                assert!(!syms.is_empty());
              },
             Err (err) => {
-                println!("failed: {}", err);
-                assert!(false)
+                panic!("failed: {}", err);
             }
         }
     }

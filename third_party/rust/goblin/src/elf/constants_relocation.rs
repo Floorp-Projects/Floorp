@@ -794,9 +794,120 @@ pub const R_MIPS_COPY: u32 = 126;
 pub const R_MIPS_JUMP_SLOT: u32 = 127;
 pub const R_MIPS_NUM: u32 = 128;
 
+///////////////////
+// RISC-V
+// See https://github.com/riscv/riscv-elf-psabi-doc
+///////////////////
+/// None
+pub const R_RISCV_NONE: u32 = 0;
+/// Runtime relocation: word32 = S + A
+pub const R_RISCV_32: u32 = 1;
+/// Runtime relocation: word64 = S + A
+pub const R_RISCV_64: u32 = 2;
+/// Runtime relocation: word32,64 = B + A
+pub const R_RISCV_RELATIVE: u32 = 3;
+/// Runtime relocation: must be in executable, not allowed in shared library
+pub const R_RISCV_COPY: u32 = 4;
+/// Runtime relocation: word32,64 = S; handled by PLT unless LD_BIND_NOW
+pub const R_RISCV_JUMP_SLOT: u32 = 5;
+/// TLS relocation: word32 = S->TLSINDEX
+pub const R_RISCV_TLS_DTPMOD32: u32 = 6;
+/// TLS relocation: word64 = S->TLSINDEX
+pub const R_RISCV_TLS_DTPMOD64: u32 = 7;
+/// TLS relocation: word32 = TLS + S + A - TLS_TP_OFFSET
+pub const R_RISCV_TLS_DTPREL32: u32 = 8;
+/// TLS relocation: word64 = TLS + S + A - TLS_TP_OFFSET
+pub const R_RISCV_TLS_DTPREL64: u32 = 9;
+/// TLS relocation: word32 = TLS + S + A + S_TLS_OFFSET - TLS_DTV_OFFSET
+pub const R_RISCV_TLS_TPREL32: u32 = 10;
+/// TLS relocation: word64 = TLS + S + A + S_TLS_OFFSET - TLS_DTV_OFFSET
+pub const R_RISCV_TLS_TPREL64: u32 = 11;
+/// PC-relative branch (SB-Type)
+pub const R_RISCV_BRANCH: u32 = 16;
+/// PC-relative jump (UJ-Type)
+pub const R_RISCV_JAL: u32 = 17;
+/// PC-relative call: MACRO call,tail (auipc+jalr pair)
+pub const R_RISCV_CALL: u32 = 18;
+/// PC-relative call (PLT): MACRO call,tail (auipc+jalr pair) PIC
+pub const R_RISCV_CALL_PLT: u32 = 19;
+/// PC-relative GOT reference: MACRO la
+pub const R_RISCV_GOT_HI20: u32 = 20;
+/// PC-relative TLS IE GOT offset: MACRO la.tls.ie
+pub const R_RISCV_TLS_GOT_HI20: u32 = 21;
+/// PC-relative TLS GD reference: MACRO la.tls.gd
+pub const R_RISCV_TLS_GD_HI20: u32 = 22;
+/// PC-relative reference: %pcrel_hi(symbol) (U-Type)
+pub const R_RISCV_PCREL_HI20: u32 = 23;
+/// PC-relative reference: %pcrel_lo(symbol) (I-Type)
+pub const R_RISCV_PCREL_LO12_I: u32 = 24;
+/// PC-relative reference: %pcrel_lo(symbol) (S-Type)
+pub const R_RISCV_PCREL_LO12_S: u32 = 25;
+/// Absolute address: %hi(symbol) (U-Type)
+pub const R_RISCV_HI20: u32 = 26;
+/// Absolute address: %lo(symbol) (I-Type)
+pub const R_RISCV_LO12_I: u32 = 27;
+/// Absolute address: %lo(symbol) (S-Type)
+pub const R_RISCV_LO12_S: u32 = 28;
+/// TLS LE thread offset: %tprel_hi(symbol) (U-Type)
+pub const R_RISCV_TPREL_HI20: u32 = 29;
+/// TLS LE thread offset: %tprel_lo(symbol) (I-Type)
+pub const R_RISCV_TPREL_LO12_I: u32 = 30;
+/// TLS LE thread offset: %tprel_lo(symbol) (S-Type)
+pub const R_RISCV_TPREL_LO12_S: u32 = 31;
+/// TLS LE thread usage: %tprel_add(symbol)
+pub const R_RISCV_TPREL_ADD: u32 = 32;
+/// 8-bit label addition: word8 = S + A
+pub const R_RISCV_ADD8: u32 = 33;
+/// 16-bit label addition: word16 = S + A
+pub const R_RISCV_ADD16: u32 = 34;
+/// 32-bit label addition: word32 = S + A
+pub const R_RISCV_ADD32: u32 = 35;
+/// 64-bit label addition: word64 = S + A
+pub const R_RISCV_ADD64: u32 = 36;
+/// 8-bit label subtraction: word8 = S - A
+pub const R_RISCV_SUB8: u32 = 37;
+/// 16-bit label subtraction: word16 = S - A
+pub const R_RISCV_SUB16: u32 = 38;
+/// 32-bit label subtraction: word32 = S - A
+pub const R_RISCV_SUB32: u32 = 39;
+/// 64-bit label subtraction: word64 = S - A
+pub const R_RISCV_SUB64: u32 = 40;
+/// GNU C++ vtable hierarchy
+pub const R_RISCV_GNU_VTINHERIT: u32 = 41;
+/// GNU C++ vtable member usage
+pub const R_RISCV_GNU_VTENTRY: u32 = 42;
+/// Alignment statement
+pub const R_RISCV_ALIGN: u32 = 43;
+/// PC-relative branch offset (CB-Type)
+pub const R_RISCV_RVC_BRANCH: u32 = 44;
+/// PC-relative jump offset (CJ-Type)
+pub const R_RISCV_RVC_JUMP: u32 = 45;
+/// Absolute address (CI-Type)
+pub const R_RISCV_RVC_LUI: u32 = 46;
+/// GP-relative reference (I-Type)
+pub const R_RISCV_GPREL_I: u32 = 47;
+/// GP-relative reference (S-Type)
+pub const R_RISCV_GPREL_S: u32 = 48;
+/// TP-relative TLS LE load (I-Type)
+pub const R_RISCV_TPREL_I: u32 = 49;
+/// TP-relative TLS LE store (S-Type)
+pub const R_RISCV_TPREL_S: u32 = 50;
+/// Instruction pair can be relaxed
+pub const R_RISCV_RELAX: u32 = 51;
+/// Local label subtraction
+pub const R_RISCV_SUB6: u32 = 52;
+/// Local label subtraction
+pub const R_RISCV_SET6: u32 = 53;
+/// Local label subtraction
+pub const R_RISCV_SET8: u32 = 54;
+/// Local label subtraction
+pub const R_RISCV_SET16: u32 = 55;
+/// Local label subtraction
+pub const R_RISCV_SET32: u32 = 56;
+
 #[inline]
 pub fn r_to_str(typ: u32, machine: u16) -> &'static str {
-    use elf::header::*;
+    use crate::elf::header::*;
     match machine {
         // x86
         EM_386 => { match typ {
@@ -1243,6 +1354,64 @@ pub fn r_to_str(typ: u32, machine: u16) -> &'static str {
         R_MIPS_COPY => "R_MIPS_COPY",
         R_MIPS_JUMP_SLOT => "R_MIPS_JUMP_SLOT",
         _ => "R_UNKNOWN_MIPS",
-        }} _ => "R_UNKNOWN"
+        }},
+        // RISC-V
+        EM_RISCV => { match typ {
+        R_RISCV_NONE => "R_RISCV_NONE",
+        R_RISCV_32 => "R_RISCV_32",
+        R_RISCV_64 => "R_RISCV_64",
+        R_RISCV_RELATIVE => "R_RISCV_RELATIVE",
+        R_RISCV_COPY => "R_RISCV_COPY",
+        R_RISCV_JUMP_SLOT => "R_RISCV_JUMP_SLOT",
+        R_RISCV_TLS_DTPMOD32 => "R_RISCV_TLS_DTPMOD32",
+        R_RISCV_TLS_DTPMOD64 => "R_RISCV_TLS_DTPMOD64",
+        R_RISCV_TLS_DTPREL32 => "R_RISCV_TLS_DTPREL32",
+        R_RISCV_TLS_DTPREL64 => "R_RISCV_TLS_DTPREL64",
+        R_RISCV_TLS_TPREL32 => "R_RISCV_TLS_TPREL32",
+        R_RISCV_TLS_TPREL64 => "R_RISCV_TLS_TPREL64",
+        R_RISCV_BRANCH => "R_RISCV_BRANCH",
+        R_RISCV_JAL => "R_RISCV_JAL",
+        R_RISCV_CALL => "R_RISCV_CALL",
+        R_RISCV_CALL_PLT => "R_RISCV_CALL_PLT",
+        R_RISCV_GOT_HI20 => "R_RISCV_GOT_HI20",
+        R_RISCV_TLS_GOT_HI20 => "R_RISCV_TLS_GOT_HI20",
+        R_RISCV_TLS_GD_HI20 => "R_RISCV_TLS_GD_HI20",
+        R_RISCV_PCREL_HI20 => "R_RISCV_PCREL_HI20",
+        R_RISCV_PCREL_LO12_I => "R_RISCV_PCREL_LO12_I",
+        R_RISCV_PCREL_LO12_S => "R_RISCV_PCREL_LO12_S",
+        R_RISCV_HI20 => "R_RISCV_HI20",
+        R_RISCV_LO12_I => "R_RISCV_LO12_I",
+        R_RISCV_LO12_S => "R_RISCV_LO12_S",
+        R_RISCV_TPREL_HI20 => "R_RISCV_TPREL_HI20",
+        R_RISCV_TPREL_LO12_I => "R_RISCV_TPREL_LO12_I",
+        R_RISCV_TPREL_LO12_S => "R_RISCV_TPREL_LO12_S",
+        R_RISCV_TPREL_ADD => "R_RISCV_TPREL_ADD",
+        R_RISCV_ADD8 => "R_RISCV_ADD8",
+        R_RISCV_ADD16 => "R_RISCV_ADD16",
+        R_RISCV_ADD32 => "R_RISCV_ADD32",
+        R_RISCV_ADD64 => "R_RISCV_ADD64",
+        R_RISCV_SUB8 => "R_RISCV_SUB8",
+        R_RISCV_SUB16 => "R_RISCV_SUB16",
+        R_RISCV_SUB32 => "R_RISCV_SUB32",
+        R_RISCV_SUB64 => "R_RISCV_SUB64",
+        R_RISCV_GNU_VTINHERIT => "R_RISCV_GNU_VTINHERIT",
+        R_RISCV_GNU_VTENTRY => "R_RISCV_GNU_VTENTRY",
+        R_RISCV_ALIGN => "R_RISCV_ALIGN",
+        R_RISCV_RVC_BRANCH => "R_RISCV_RVC_BRANCH",
+        R_RISCV_RVC_JUMP => "R_RISCV_RVC_JUMP",
+        R_RISCV_RVC_LUI => "R_RISCV_RVC_LUI",
+        R_RISCV_GPREL_I => "R_RISCV_GPREL_I",
+        R_RISCV_GPREL_S => "R_RISCV_GPREL_S",
+        R_RISCV_TPREL_I => "R_RISCV_TPREL_I",
+        R_RISCV_TPREL_S => "R_RISCV_TPREL_S",
+        R_RISCV_RELAX => "R_RISCV_RELAX",
+        R_RISCV_SUB6 => "R_RISCV_SUB6",
+        R_RISCV_SET6 => "R_RISCV_SET6",
+        R_RISCV_SET8 => "R_RISCV_SET8",
+        R_RISCV_SET16 => "R_RISCV_SET16",
+        R_RISCV_SET32 => "R_RISCV_SET32",
+        _ => "R_UNKNOWN_RISCV",
+        }},
+        _ => "R_UNKNOWN",
     }
 }

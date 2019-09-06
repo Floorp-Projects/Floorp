@@ -1,9 +1,5 @@
-extern crate memmap;
-extern crate object;
-
+use object::{Object, ObjectSection};
 use std::{env, fs, process};
-
-use object::Object;
 
 fn main() {
     let arg_len = env::args().len();
@@ -47,15 +43,35 @@ fn main() {
             println!("Build ID: {:x?}", build_id);
         }
         if let Some((filename, crc)) = file.gnu_debuglink() {
-            println!("GNU debug link: {} CRC: {:08x}", String::from_utf8_lossy(filename), crc);
+            println!(
+                "GNU debug link: {} CRC: {:08x}",
+                String::from_utf8_lossy(filename),
+                crc
+            );
         }
 
         for segment in file.segments() {
             println!("{:?}", segment);
         }
 
+        for (index, section) in file.sections().enumerate() {
+            println!("{}: {:?}", index, section);
+        }
+
+        for (index, symbol) in file.symbols() {
+            println!("{}: {:?}", index.0, symbol);
+        }
+
         for section in file.sections() {
-            println!("{:?}", section);
+            if section.relocations().next().is_some() {
+                println!(
+                    "\n{} relocations",
+                    section.name().unwrap_or("<invalid name>")
+                );
+                for relocation in section.relocations() {
+                    println!("{:?}", relocation);
+                }
+            }
         }
     }
 }
