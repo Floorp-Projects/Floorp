@@ -3181,6 +3181,9 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
       HTMLEditor::GetBlock(*firstRangeStart.GetContainer());
   RefPtr<Element> rightBlock =
       HTMLEditor::GetBlock(*firstRangeEnd.GetContainer());
+  if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
+    return EditActionHandled(NS_ERROR_FAILURE);  // XXX "handled"??
+  }
 
   // XXX This is also odd.  We do we simply use
   //     `DeleteSelectionWithTransaction()` only when **first** range is in
@@ -3205,64 +3208,56 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     return EditActionHandled(rv);
   }
 
+  // Deleting across blocks.
+
+  // If left block and right block are adjuscent siblings and they are same
+  // type of elements, we can merge them after deleting the selected contents.
+  // MOOSE: this could conceivably screw up a table.. fix me.
+  if (leftBlock->GetParentNode() == rightBlock->GetParentNode() &&
+      HTMLEditorRef().AreNodesSameType(*leftBlock, *rightBlock) &&
+      // XXX What's special about these three types of block?
+      (leftBlock->IsHTMLElement(nsGkAtoms::p) ||
+       HTMLEditUtils::IsListItem(leftBlock) ||
+       HTMLEditUtils::IsHeader(*leftBlock))) {
+    // First delete the selection
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .DeleteSelectionWithTransaction(aDirectionAndAmount,
+                                                      aStripWrappers);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionHandled(rv);
+    }
+    // Join blocks
+    EditorDOMPoint atFirstChildOfTheLastRightNode =
+        MOZ_KnownLive(HTMLEditorRef())
+            .JoinNodesDeepWithTransaction(*leftBlock, *rightBlock);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(!atFirstChildOfTheLastRightNode.IsSet())) {
+      return EditActionHandled(NS_ERROR_FAILURE);
+    }
+    // Fix up selection
+    ErrorResult error;
+    SelectionRefPtr()->Collapse(atFirstChildOfTheLastRightNode, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+    return EditActionHandled(error.StealNSResult());
+  }
+
+  // Otherwise, delete every nodes in all ranges, then, clean up something.
   EditActionResult result(NS_OK);
   result.MarkAsHandled();
   {
-    // Track location of where we are deleting
-    // NOTE: Right now, firstRangeStart.mOffset and firstRangeEnd.mOffset
-    //       are fixed so that we keep compatibility with older code which
-    //       treated offset directly.
     AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
                                    &firstRangeStart);
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
                                  &firstRangeEnd);
-
-    // Deleting across blocks.  Are the blocks of same type?
-    if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
-      return result.SetResult(NS_ERROR_FAILURE);
-    }
-
-    // Are the blocks siblings?
-    nsCOMPtr<nsINode> leftBlockParent = leftBlock->GetParentNode();
-    nsCOMPtr<nsINode> rightBlockParent = rightBlock->GetParentNode();
-
-    // MOOSE: this could conceivably screw up a table.. fix me.
-    if (leftBlockParent == rightBlockParent &&
-        HTMLEditorRef().AreNodesSameType(*leftBlock, *rightBlock) &&
-        // XXX What's special about these three types of block?
-        (leftBlock->IsHTMLElement(nsGkAtoms::p) ||
-         HTMLEditUtils::IsListItem(leftBlock) ||
-         HTMLEditUtils::IsHeader(*leftBlock))) {
-      // First delete the selection
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DeleteSelectionWithTransaction(aDirectionAndAmount,
-                                                        aStripWrappers);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return result.SetResult(rv);
-      }
-      // Join blocks
-      EditorDOMPoint atFirstChildOfTheLastRightNode =
-          MOZ_KnownLive(HTMLEditorRef())
-              .JoinNodesDeepWithTransaction(*leftBlock, *rightBlock);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (NS_WARN_IF(!atFirstChildOfTheLastRightNode.IsSet())) {
-        return result.SetResult(NS_ERROR_FAILURE);
-      }
-      // Fix up selection
-      ErrorResult error;
-      SelectionRefPtr()->Collapse(atFirstChildOfTheLastRightNode, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        error.SuppressException();
-        return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
-      return result.SetResult(error.StealNSResult());
-    }
 
     // Else blocks not same type, or not siblings.  Delete everything
     // except table elements.
