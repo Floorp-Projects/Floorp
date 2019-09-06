@@ -59,7 +59,9 @@ const MONITOR_RESPONSE_PROPS = ["monitoredEmails", "numBreaches", "passwords"];
 
 var AboutProtectionsHandler = {
   _inited: false,
+  monitorResponse: null,
   _topics: [
+    "ClearMonitorCache",
     // Opening about:* pages
     "OpenAboutLogins",
     "OpenContentBlockingPreferences",
@@ -100,7 +102,15 @@ var AboutProtectionsHandler = {
    * @return valid data from endpoint.
    */
   async fetchUserBreachStats(token) {
-    let monitorResponse = null;
+    if (this.monitorResponse && this.monitorResponse.timestamp) {
+      var timeDiff = Date.now() - this.monitorResponse.timestamp;
+      let oneDayInMS = 24 * 60 * 60 * 1000;
+      if (timeDiff >= oneDayInMS) {
+        this.monitorResponse = null;
+      } else {
+        return this.monitorResponse;
+      }
+    }
 
     // Make the request
     const headers = new Headers();
@@ -122,31 +132,33 @@ var AboutProtectionsHandler = {
         }
       }
 
-      monitorResponse = isValid ? json : new Error(UNEXPECTED_RESPONSE);
+      this.monitorResponse = isValid ? json : new Error(UNEXPECTED_RESPONSE);
+      if (isValid) {
+        this.monitorResponse.timestamp = Date.now();
+      }
     } else {
       // Check the reason for the error
       switch (response.status) {
         case 400:
         case 401:
-          monitorResponse = new Error(INVALID_OAUTH_TOKEN);
+          this.monitorResponse = new Error(INVALID_OAUTH_TOKEN);
           break;
         case 404:
-          monitorResponse = new Error(USER_UNSUBSCRIBED_TO_MONITOR);
+          this.monitorResponse = new Error(USER_UNSUBSCRIBED_TO_MONITOR);
           break;
         case 503:
-          monitorResponse = new Error(SERVICE_UNAVAILABLE);
+          this.monitorResponse = new Error(SERVICE_UNAVAILABLE);
           break;
         default:
-          monitorResponse = new Error(UNKNOWN_ERROR);
+          this.monitorResponse = new Error(UNKNOWN_ERROR);
           break;
       }
     }
 
-    if (monitorResponse instanceof Error) {
-      throw monitorResponse;
+    if (this.monitorResponse instanceof Error) {
+      throw this.monitorResponse;
     }
-
-    return monitorResponse;
+    return this.monitorResponse;
   },
 
   /**
@@ -359,6 +371,9 @@ var AboutProtectionsHandler = {
           "SendUserLoginsData",
           await this.getLoginData()
         );
+        break;
+      case "ClearMonitorCache":
+        this.monitorResponse = null;
         break;
     }
   },
