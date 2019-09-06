@@ -4543,6 +4543,20 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
     number = -1;
   }
 
+  // Disallow enabling or disabling the Baseline Interpreter at runtime.
+  // Enabling is a problem because the Baseline Interpreter code is only
+  // present if the interpreter was enabled when the JitRuntime was created.
+  // To support disabling we would have to discard all JitScripts. Furthermore,
+  // we really want JitOptions to be immutable after startup so it's better to
+  // use shell flags.
+  if (opt == JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE &&
+      bool(number) != jit::IsBaselineInterpreterEnabled()) {
+    JS_ReportErrorASCII(cx,
+                        "Enabling or disabling the Baseline Interpreter at "
+                        "runtime is not supported.");
+    return false;
+  }
+
   // Throw if disabling the JITs and there's JIT code on the stack, to avoid
   // assertion failures.
   if ((opt == JSJITCOMPILER_BASELINE_ENABLE ||
