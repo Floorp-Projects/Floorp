@@ -629,7 +629,7 @@ where
     let opt = Option::deserialize(deserializer)?.map(|value: f64| value as i64);
     let value = match opt {
         Some(n) => {
-            if n < i32::min_value() as i64 || n > i32::max_value() as i64 {
+            if n < i64::from(i32::min_value()) || n > i64::from(i32::max_value()) {
                 return Err(de::Error::custom(format!("'{}' is larger than i32", n)));
             }
             Some(n as i32)
@@ -647,7 +647,7 @@ where
     let opt = Option::deserialize(deserializer)?.map(|value: f64| value as i64);
     let value = match opt {
         Some(n) => {
-            if n < 0 || n > i32::max_value() as i64 {
+            if n < 0 || n > i64::from(i32::max_value()) {
                 return Err(de::Error::custom(format!("'{}' is outside of i32", n)));
             }
             Some(n as i32)
