@@ -19,11 +19,8 @@ namespace mozilla {
 // ---------------------------------------------------------------------------
 // WorkletLoadInfo
 
-WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow,
-                                 nsIPrincipal* aPrincipal)
-    : mInnerWindowID(aWindow->WindowID()),
-      mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()),
-      mPrincipal(aPrincipal) {
+WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
+    : mInnerWindowID(aWindow->WindowID()) {
   MOZ_ASSERT(NS_IsMainThread());
   nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
   if (outerWindow) {
@@ -33,17 +30,19 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow,
   }
 }
 
-WorkletLoadInfo::~WorkletLoadInfo() {
-  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
-}
-
 // ---------------------------------------------------------------------------
 // WorkletImpl
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
-    : mWorkletLoadInfo(aWindow, aPrincipal), mTerminated(false) {}
+    : mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()),
+      mPrincipal(aPrincipal),
+      mWorkletLoadInfo(aWindow),
+      mTerminated(false) {}
 
-WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
+WorkletImpl::~WorkletImpl() {
+  MOZ_ASSERT(!mGlobalScope);
+  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
+}
 
 JSObject* WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -96,7 +95,7 @@ void WorkletImpl::NotifyWorkletFinished() {
     mWorkletThread->Terminate();
     mWorkletThread = nullptr;
   }
-  mWorkletLoadInfo.mPrincipal = nullptr;
+  mPrincipal = nullptr;
 }
 
 nsresult WorkletImpl::SendControlMessage(
