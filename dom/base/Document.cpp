@@ -14858,6 +14858,11 @@ void Document::ClearUserGestureActivation() {
   }
 }
 
+bool Document::HasValidTransientUserGestureActivation() {
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  return bc && bc->HasValidTransientUserGestureActivation();
+}
+
 void Document::SetDocTreeHadAudibleMedia() {
   Document* topLevelDoc = GetTopLevelContentDocument();
   if (!topLevelDoc) {
