@@ -85,6 +85,7 @@ class App extends Component {
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
+      hidePersistLogsCheckbox: PropTypes.bool,
       hideShowContentMessagesCheckbox: PropTypes.bool,
       sidebarVisible: PropTypes.bool.isRequired,
       filterBarDisplayMode: PropTypes.oneOf([
@@ -245,15 +246,15 @@ class App extends Component {
 
   renderFilterBar() {
     const {
-      webConsoleUI,
       closeSplitConsole,
       filterBarDisplayMode,
+      hidePersistLogsCheckbox,
       hideShowContentMessagesCheckbox,
     } = this.props;
 
     return FilterBar({
       key: "filterbar",
-      hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
+      hidePersistLogsCheckbox,
       hideShowContentMessagesCheckbox,
       closeSplitConsole,
       displayMode: filterBarDisplayMode,
