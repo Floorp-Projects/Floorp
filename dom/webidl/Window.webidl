@@ -90,7 +90,7 @@ typedef OfflineResourceList ApplicationCache;
 
   // also has obsolete members
 };
-Window implements GlobalEventHandlers;
+Window includes GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
 // https://www.w3.org/TR/appmanifest/#onappinstalled-attribute

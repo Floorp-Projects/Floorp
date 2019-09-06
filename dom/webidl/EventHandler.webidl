@@ -22,8 +22,7 @@ typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
 callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long column, optional any error);
 typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
 
-[NoInterfaceObject]
-interface GlobalEventHandlers {
+interface mixin GlobalEventHandlers {
            attribute EventHandler onabort;
            attribute EventHandler onblur;
 // We think the spec is wrong here. See OnErrorEventHandlerForNodes/Window
@@ -163,8 +162,7 @@ interface WindowEventHandlers {
            attribute EventHandler onunload;
 };
 
-[NoInterfaceObject]
-interface DocumentAndElementEventHandlers {
+interface mixin DocumentAndElementEventHandlers {
   attribute EventHandler oncopy;
   attribute EventHandler oncut;
   attribute EventHandler onpaste;

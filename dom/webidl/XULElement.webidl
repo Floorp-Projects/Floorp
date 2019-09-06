@@ -81,9 +81,6 @@ interface XULElement : Element {
   void                      click();
   void                      doCommand();
 
-  [Constant]
-  readonly attribute CSSStyleDeclaration style;
-
   // Returns true if this is a menu-type element that has a menu
   // frame associated with it.
   boolean hasMenu();
@@ -93,7 +90,8 @@ interface XULElement : Element {
   void openMenu(boolean open);
 };
 
-XULElement implements GlobalEventHandlers;
+XULElement includes GlobalEventHandlers;
 XULElement includes HTMLOrForeignElement;
+XULElement includes ElementCSSInlineStyle;
 XULElement implements TouchEventHandlers;
 XULElement implements OnErrorEventHandlerForNodes;
