@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from marionette_driver.errors import JavascriptException
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile
+from marionette_harness import MarionetteTestCase
 
 
 class TestExecuteSandboxes(MarionetteTestCase):
@@ -41,7 +41,6 @@ class TestExecuteSandboxes(MarionetteTestCase):
             "return foo", sandbox="2", new_sandbox=False)
         self.assertEqual(foo, 2)
 
-    @skip_if_mobile("Intermittent on Android - bug 1526914")
     def test_execute_new_sandbox(self):
         # test that clearing a sandbox does not affect other sandboxes
         self.marionette.execute_script("foo = 1", sandbox="1")

@@ -9,7 +9,7 @@ import time
 
 from marionette_driver import errors
 from marionette_driver.marionette import Marionette
-from marionette_harness import MarionetteTestCase, run_if_manage_instance, skip_if_mobile
+from marionette_harness import MarionetteTestCase, run_if_manage_instance
 
 
 class TestMarionette(MarionetteTestCase):
@@ -25,7 +25,6 @@ class TestMarionette(MarionetteTestCase):
         self.assertIn(expected_test_name, self.marionette.test_name)
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
-    @skip_if_mobile("Bug 1322993 - Missing temporary folder")
     def test_raise_for_port_non_existing_process(self):
         """Test that raise_for_port doesn't run into a timeout if instance is not running."""
         self.marionette.quit()
@@ -61,7 +60,6 @@ class TestMarionette(MarionetteTestCase):
         self.assertEqual(current_socket_timeout,
                          self.marionette.client._sock.gettimeout())
 
-    @skip_if_mobile("No application update service available on Android")
     def test_application_update_disabled(self):
         # Updates of the application should always be disabled by default
         with self.marionette.using_context("chrome"):

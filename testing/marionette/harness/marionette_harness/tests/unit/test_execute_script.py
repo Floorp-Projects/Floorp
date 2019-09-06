@@ -7,7 +7,7 @@ from marionette_driver import By, errors
 from marionette_driver.marionette import Alert, HTMLElement
 from marionette_driver.wait import Wait
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 def inline(doc):
@@ -351,7 +351,6 @@ class TestExecuteContent(MarionetteTestCase):
     def test_comment_in_last_line(self):
         self.marionette.execute_script(" // comment ")
 
-    @skip_if_mobile("Modal dialogs not supported in Fennec")
     def test_return_value_on_alert(self):
         res = self.marionette._send_message("WebDriver:ExecuteScript", {"script": "alert()"})
         self.assertIn("value", res)
@@ -372,7 +371,6 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         self.marionette.execute_script(
             "Components.classes['@mozilla.org/preferences-service;1']")
 
-    @skip_if_mobile("New windows not supported in Fennec")
     def test_unmarshal_element_collection(self):
         try:
             win = self.open_chrome_window("chrome://marionette/content/test.xul")

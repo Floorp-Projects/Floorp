@@ -9,7 +9,6 @@ from marionette_driver.keys import Keys
 
 from marionette_harness import (
     MarionetteTestCase,
-    skip_if_mobile,
     WindowManagerMixin,
 )
 
@@ -89,7 +88,6 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_switch_tabs_in_different_windows_with_focus_change(self):
         new_tab1 = self.open_tab(focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)

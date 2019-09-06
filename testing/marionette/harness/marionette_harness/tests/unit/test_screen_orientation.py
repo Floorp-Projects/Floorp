@@ -10,7 +10,6 @@ from marionette_harness import (
     MarionetteTestCase,
     parameterized,
     skip_if_desktop,
-    skip_if_mobile,
 )
 
 
@@ -22,12 +21,8 @@ class TestScreenOrientation(MarionetteTestCase):
 
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.is_mobile = self.marionette.session_capabilities.get("rotatable", False)
 
     def tearDown(self):
-        if self.is_mobile:
-            self.marionette.set_orientation(default_orientation)
-            self.wait_for_orientation(default_orientation)
         MarionetteTestCase.tearDown(self)
 
     def wait_for_orientation(self, orientation, timeout=None):
@@ -75,7 +70,6 @@ class TestScreenOrientation(MarionetteTestCase):
                                      unknown_orientation.format("null")):
             self.marionette.set_orientation(None)
 
-    @skip_if_mobile("Specific test for Firefox")
     def test_unsupported_operation_on_desktop(self):
         with self.assertRaises(errors.UnsupportedOperationException):
             self.marionette.set_orientation("landscape-primary")

@@ -12,7 +12,7 @@ from marionette_driver.errors import (
 )
 from marionette_driver.marionette import HTMLElement
 
-from marionette_harness import MarionetteTestCase, run_if_manage_instance, skip_if_mobile
+from marionette_harness import MarionetteTestCase, run_if_manage_instance
 
 
 class TestTimeouts(MarionetteTestCase):
@@ -65,7 +65,6 @@ class TestTimeouts(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "newDiv")
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
-    @skip_if_mobile("Bug 1322993 - Missing temporary folder")
     def test_reset_timeout(self):
         timeouts = [getattr(self.marionette.timeout, f) for f in (
             'implicit', 'page_load', 'script',)]

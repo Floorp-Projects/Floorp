@@ -9,7 +9,7 @@ import urllib
 from marionette_driver import By, errors, Wait
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile
+from marionette_harness import MarionetteTestCase
 
 
 def inline(doc):
@@ -78,7 +78,6 @@ class TestPointerActions(BaseMouseAction):
         event_count = self.marionette.execute_script("return window.eventCount", sandbox=None)
         self.assertEqual(event_count, 2)
 
-    @skip_if_mobile("There is no context menu available on mobile")
     def test_context_click_action(self):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
@@ -151,7 +150,6 @@ class TestNonSpecCompliantPointerOrigin(BaseMouseAction):
         self.assertAlmostEqual(click_position["x"], elem_center_point["x"], delta=1)
         self.assertAlmostEqual(click_position["y"], elem_center_point["y"], delta=1)
 
-    @skip_if_mobile("Bug 1534291 - Missing MoveTargetOutOfBoundsException")
     def test_click_element_larger_than_viewport_with_center_point_outside(self):
         self.marionette.navigate(inline("""
           <div id="div" style="width: 300vw; height: 300vh; background: green;"

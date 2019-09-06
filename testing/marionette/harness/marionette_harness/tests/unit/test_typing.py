@@ -10,7 +10,7 @@ from marionette_driver.by import By
 from marionette_driver.errors import ElementNotInteractableException
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, skip, skip_if_mobile
+from marionette_harness import MarionetteTestCase, skip
 
 
 def inline(doc):
@@ -34,7 +34,6 @@ class TestTypingChrome(TypingTestCase):
         super(TestTypingChrome, self).setUp()
         self.marionette.set_context("chrome")
 
-    @skip_if_mobile("Interacting with chrome elements not available for Fennec")
     def test_cut_and_paste_shortcuts(self):
         with self.marionette.using_context("content"):
             test_html = self.marionette.absolute_url("keyboard.html")
@@ -215,7 +214,6 @@ class TestTypingContent(TypingTestCase):
         #  filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
-    @skip_if_mobile("Bug 1333069 - Assertion: 'down: 40' not found in u''")
     def test_should_report_key_code_of_arrow_keys_up_down_events(self):
         test_html = self.marionette.absolute_url("keyboard.html")
         self.marionette.navigate(test_html)

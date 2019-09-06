@@ -12,7 +12,6 @@ from marionette_driver.marionette import Alert
 from marionette_harness import (
     MarionetteTestCase,
     run_if_e10s,
-    skip_if_mobile,
     WindowManagerMixin,
 )
 
@@ -453,7 +452,6 @@ class TestClickCloseContext(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate(self.test_page)
         self.marionette.find_element(By.ID, "close-window").click()
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_click_close_window(self):
         new_tab = self.open_window()
         self.marionette.switch_to_window(new_tab)
