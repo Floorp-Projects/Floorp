@@ -68,6 +68,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": None,
             "help": argparse.SUPPRESS
         }],
+        [["--browsertime-ffmpeg"], {
+            "dest": "browsertime_ffmpeg",
+            "default": None,
+            "help": argparse.SUPPRESS
+        }],
         [["--browsertime-geckodriver"], {
             "dest": "browsertime_geckodriver",
             "default": None,

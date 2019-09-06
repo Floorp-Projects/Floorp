@@ -333,6 +333,7 @@ class Browsertime(Perftest):
         # For debugging.
         for k in ("browsertime_node",
                   "browsertime_browsertimejs",
+                  "browsertime_ffmpeg",
                   "browsertime_geckodriver",
                   "browsertime_chromedriver"):
             LOG.info("{}: {}".format(k, getattr(self, k)))
@@ -406,8 +407,20 @@ class Browsertime(Perftest):
         LOG.info('browsertime cwd: {}'.format(os.getcwd()))
         LOG.info('browsertime cmd: {}'.format(cmd))
 
+        # browsertime requires ffmpeg on the PATH for `--video=true`.
+        # It's easier to configure the PATH here than at the TC level.
+        env = dict(os.environ)
+        if self.browsertime_ffmpeg:
+            ffmpeg_dir = os.path.dirname(os.path.abspath(self.browsertime_ffmpeg))
+            old_path = env.setdefault('PATH', '')
+            new_path = os.pathsep.join([ffmpeg_dir, old_path])
+            if isinstance(new_path, unicode):
+                # Python 2 doesn't like unicode in the environment.
+                new_path = new_path.encode('utf-8', 'strict')
+            env['PATH'] = new_path
+
         try:
-            proc = mozprocess.ProcessHandler(cmd)
+            proc = mozprocess.ProcessHandler(cmd, env=env)
             proc.run(timeout=timeout,
                      outputTimeout=2*60)
             proc.wait()

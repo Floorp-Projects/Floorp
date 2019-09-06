@@ -162,6 +162,9 @@ class RaptorRunner(MozbuildObject):
             import mach_commands as browsertime
             # We don't set `browsertime_{chromedriver,geckodriver} -- those will be found by
             # browsertime in its `node_modules` directory, which is appropriate for local builds.
+            # We don't set `browsertime_ffmpeg` yet: it will need to be on the path.  There is code
+            # to configure the environment including the path in
+            # `tools/browsertime/mach_commands.py` but integrating it here will take more effort.
             self.config.update({
                 'browsertime_node': browsertime.node_path(),
                 'browsertime_browsertimejs': browsertime.browsertime_path(),
