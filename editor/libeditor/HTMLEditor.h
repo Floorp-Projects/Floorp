@@ -2323,6 +2323,15 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveListAtSelectionAsSubAction();
 
+  /**
+   * ChangeMarginStart() changes margin of aElement to indent or outdent.
+   * If it's rtl text, margin-right will be changed.  Otherwise, margin-left.
+   * XXX This is not aware of vertical writing-mode.
+   */
+  enum class ChangeMargin { Increase, Decrease };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
