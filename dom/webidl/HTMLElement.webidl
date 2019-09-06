@@ -56,10 +56,6 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandHidden;
   //readonly attribute boolean? commandDisabled;
   //readonly attribute boolean? commandChecked;
-
-  // styling
-  [PutForwards=cssText, Constant]
-  readonly attribute CSSStyleDeclaration style;
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
@@ -84,9 +80,10 @@ interface TouchEventHandlers {
            attribute EventHandler ontouchcancel;
 };
 
-HTMLElement implements GlobalEventHandlers;
+HTMLElement includes GlobalEventHandlers;
 HTMLElement includes HTMLOrForeignElement;
-HTMLElement implements DocumentAndElementEventHandlers;
+HTMLElement includes DocumentAndElementEventHandlers;
+HTMLElement includes ElementCSSInlineStyle;
 HTMLElement implements TouchEventHandlers;
 HTMLElement implements OnErrorEventHandlerForNodes;
 
