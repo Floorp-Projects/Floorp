@@ -838,6 +838,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static const JSClass class_;
 
  private:
+  template <typename F>
+  void forEachWeakMap(const F& f);
+
   static MOZ_MUST_USE bool getHookImpl(JSContext* cx, CallArgs& args,
                                        Debugger& dbg, Hook which);
   static MOZ_MUST_USE bool setHookImpl(JSContext* cx, CallArgs& args,
