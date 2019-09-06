@@ -15,15 +15,14 @@ interface SVGElement : Element {
 
   [Constant]
   readonly attribute SVGAnimatedString className;
-  [PutForwards=cssText, Constant]
-  readonly attribute CSSStyleDeclaration style;
 
   readonly attribute SVGSVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
 };
 
-SVGElement implements GlobalEventHandlers;
+SVGElement includes GlobalEventHandlers;
 SVGElement includes HTMLOrForeignElement;
-SVGElement implements DocumentAndElementEventHandlers;
+SVGElement includes DocumentAndElementEventHandlers;
+SVGElement includes ElementCSSInlineStyle;
 SVGElement implements TouchEventHandlers;
 SVGElement implements OnErrorEventHandlerForNodes;

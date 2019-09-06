@@ -172,6 +172,12 @@ interface mixin HTMLOrForeignElement {
   [Throws] void blur();
 };
 
+// https://drafts.csswg.org/cssom/#the-elementcssinlinestyle-mixin
+interface mixin ElementCSSInlineStyle {
+  [SameObject, PutForwards=cssText]
+  readonly attribute CSSStyleDeclaration style;
+};
+
 // http://dev.w3.org/csswg/cssom-view/
 enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
 dictionary ScrollIntoViewOptions : ScrollOptions {
