@@ -5,6 +5,7 @@
 extern crate memmap;
 extern crate rustc_demangle;
 extern crate thin_vec;
+extern crate uuid;
 
 #[cfg(feature = "parse_elf")]
 extern crate goblin;

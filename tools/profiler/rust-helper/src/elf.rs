@@ -4,9 +4,11 @@
 
 use compact_symbol_table::CompactSymbolTable;
 use goblin::elf;
-use object::{ElfFile, Object, SymbolKind, Uuid};
+use object::SymbolKind;
+use object::read::{ElfFile, Object};
 use std::cmp;
 use std::collections::HashMap;
+use uuid::Uuid;
 
 const UUID_SIZE: usize = 16;
 const PAGE_SIZE: usize = 4096;
@@ -18,8 +20,8 @@ where
     object_file
         .dynamic_symbols()
         .chain(object_file.symbols())
-        .filter(|symbol| symbol.kind() == SymbolKind::Text)
-        .filter_map(|symbol| symbol.name().map(|name| (symbol.address() as u32, name)))
+        .filter(|(_, symbol)| symbol.kind() == SymbolKind::Text)
+        .filter_map(|(_, symbol)| symbol.name().map(|name| (symbol.address() as u32, name)))
         .collect()
 }
 
@@ -29,13 +31,13 @@ pub fn get_compact_symbol_table(
 ) -> Option<CompactSymbolTable> {
     let elf_file = ElfFile::parse(buffer).ok()?;
     let elf_id = get_elf_id(&elf_file, buffer)?;
-    if !breakpad_id.map_or(true, |id| id == format!("{:X}0", elf_id.simple())) {
+    if !breakpad_id.map_or(true, |id| id == format!("{:X}0", elf_id.to_simple_ref())) {
         return None;
     }
     return Some(CompactSymbolTable::from_map(get_symbol_map(&elf_file)));
 }
 
-fn create_elf_id(identifier: &[u8], little_endian: bool) -> Option<Uuid> {
+fn create_elf_id(identifier: &[u8], little_endian: bool) -> Uuid {
     // Make sure that we have exactly UUID_SIZE bytes available
     let mut data = [0 as u8; UUID_SIZE];
     let len = cmp::min(identifier.len(), UUID_SIZE);
@@ -50,7 +52,7 @@ fn create_elf_id(identifier: &[u8], little_endian: bool) -> Option<Uuid> {
         data[6..8].reverse(); // uuid field 3
     }
 
-    Uuid::from_bytes(&data).ok()
+    Uuid::from_bytes(data)
 }
 
 /// Tries to obtain the object identifier of an ELF object.
@@ -67,7 +69,7 @@ fn create_elf_id(identifier: &[u8], little_endian: bool) -> Option<Uuid> {
 /// If all of the above fails, this function will return `None`.
 pub fn get_elf_id(elf_file: &ElfFile, data: &[u8]) -> Option<Uuid> {
     if let Some(identifier) = elf_file.build_id() {
-        return create_elf_id(identifier, elf_file.elf().little_endian);
+        return Some(create_elf_id(identifier, elf_file.elf().little_endian));
     }
 
     // We were not able to locate the build ID, so fall back to hashing the
@@ -79,7 +81,7 @@ pub fn get_elf_id(elf_file: &ElfFile, data: &[u8]) -> Option<Uuid> {
             hash[i % UUID_SIZE] ^= section_data[i];
         }
 
-        return create_elf_id(&hash, elf_file.elf().little_endian);
+        return Some(create_elf_id(&hash, elf_file.elf().little_endian));
     }
 
     None
