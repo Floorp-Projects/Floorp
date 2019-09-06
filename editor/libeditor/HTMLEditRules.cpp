@@ -1156,7 +1156,7 @@ nsresult HTMLEditRules::GetAlignment(bool* aMixed,
   return NS_OK;
 }
 
-static nsAtom& MarginPropertyAtomForIndent(nsINode& aNode) {
+static nsStaticAtom& MarginPropertyAtomForIndent(nsINode& aNode) {
   nsAutoString direction;
   CSSEditUtils::GetComputedProperty(aNode, *nsGkAtoms::direction, direction);
   return direction.EqualsLiteral("rtl") ? *nsGkAtoms::marginRight
@@ -5053,7 +5053,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
     }
     // remember our new block for postprocessing
     HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement = theBlock;
-    nsresult rv = IncreaseMarginToIndent(*theBlock);
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .ChangeMarginStart(*theBlock, HTMLEditor::ChangeMargin::Increase);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -5195,8 +5197,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
     // Not a list item.
 
     if (HTMLEditor::NodeIsBlockStatic(*curNode)) {
-      nsresult rv =
-          IncreaseMarginToIndent(MOZ_KnownLive(*curNode->AsElement()));
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .ChangeMarginStart(MOZ_KnownLive(*curNode->AsElement()),
+                                           HTMLEditor::ChangeMargin::Increase);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5228,7 +5231,9 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
       if (NS_WARN_IF(!curQuote)) {
         return NS_ERROR_FAILURE;
       }
-      nsresult rv = IncreaseMarginToIndent(*curQuote);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .ChangeMarginStart(*curQuote, HTMLEditor::ChangeMargin::Increase);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -5766,7 +5771,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
 
     // Is it a block with a 'margin' property?
     if (useCSS && HTMLEditor::NodeIsBlockStatic(curNode)) {
-      nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
       nsAutoString value;
       CSSEditUtils::GetSpecifiedProperty(curNode, marginProperty, value);
       if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -5777,7 +5782,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
       if (f > 0) {
         nsresult rv =
-            DecreaseMarginToOutdent(MOZ_KnownLive(*curNode->AsElement()));
+            MOZ_KnownLive(HTMLEditorRef())
+                .ChangeMarginStart(MOZ_KnownLive(*curNode->AsElement()),
+                                   HTMLEditor::ChangeMargin::Decrease);
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -5871,7 +5878,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         continue;
       }
 
-      nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
       nsAutoString value;
       CSSEditUtils::GetSpecifiedProperty(*n, marginProperty, value);
       if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -5971,7 +5978,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         element = curNode->AsElement();
       }
       if (element) {
-        nsresult rv = DecreaseMarginToOutdent(*element);
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .ChangeMarginStart(
+                              *element, HTMLEditor::ChangeMargin::Decrease);
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -6089,8 +6098,11 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
   }
 
   if (splitResult.GetMiddleContentAsElement()) {
-    nsresult rv = DecreaseMarginToOutdent(
-        MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .ChangeMarginStart(
+                MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()),
+                HTMLEditor::ChangeMargin::Decrease);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return SplitRangeOffFromNodeResult(rv);
     }
@@ -10819,14 +10831,14 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
   return NS_OK;
 }
 
-nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
+                                       ChangeMargin aChangeMargin) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
+  nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
   nsAutoString value;
-  CSSEditUtils::GetSpecifiedProperty(aElement, MOZ_KnownLive(marginProperty),
-                                     value);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  CSSEditUtils::GetSpecifiedProperty(aElement, marginProperty, value);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   float f;
@@ -10837,7 +10849,7 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
     CSSEditUtils::GetDefaultLengthUnit(defaultLengthUnit);
     unit = NS_Atomize(defaultLengthUnit);
   }
-  int8_t multiplier = aIncrease ? +1 : -1;
+  int8_t multiplier = aChangeMargin == ChangeMargin::Increase ? 1 : -1;
   if (nsGkAtoms::in == unit) {
     f += NS_EDITOR_INDENT_INCREMENT_IN * multiplier;
   } else if (nsGkAtoms::cm == unit) {
@@ -10862,37 +10874,39 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
     nsAutoString newValue;
     newValue.AppendFloat(f);
     newValue.Append(nsDependentAtomString(unit));
-    HTMLEditorRef().mCSSEditUtils->SetCSSProperty(
-        aElement, MOZ_KnownLive(marginProperty), newValue);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    mCSSEditUtils->SetCSSProperty(aElement, MOZ_KnownLive(marginProperty),
+                                  newValue);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     return NS_OK;
   }
 
-  HTMLEditorRef().mCSSEditUtils->RemoveCSSProperty(
-      aElement, MOZ_KnownLive(marginProperty), value);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  mCSSEditUtils->RemoveCSSProperty(aElement, MOZ_KnownLive(marginProperty),
+                                   value);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
   // Remove unnecessary divs
   if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
-      &aElement == HTMLEditorRef().GetActiveEditingHost() ||
-      !HTMLEditorRef().IsDescendantOfEditorRoot(&aElement) ||
       HTMLEditor::HasAttributes(&aElement)) {
     return NS_OK;
   }
+  // Don't touch editiong host nor node which is outside of it.
+  Element* editingHost = GetActiveEditingHost();
+  if (&aElement == editingHost ||
+      !aElement.IsInclusiveDescendantOf(editingHost)) {
+    return NS_OK;
+  }
 
-  nsresult rv =
-      MOZ_KnownLive(HTMLEditorRef()).RemoveContainerWithTransaction(aElement);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = RemoveContainerWithTransaction(aElement);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "RemoveContainerWithTransaction() failed");
+  return rv;
 }
 
 nsresult HTMLEditRules::WillAbsolutePosition(bool* aCancel, bool* aHandled) {
