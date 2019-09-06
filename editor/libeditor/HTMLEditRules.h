@@ -380,21 +380,6 @@ class HTMLEditRules : public TextEditRules {
                           nsTArray<bool>& aTransitionArray);
 
   /**
-   * RemoveListStructure() destroys the list structure of aListElement.
-   * If aListElement has <li>, <dl> or <dt> as a child, the element is removed
-   * but its descendants are moved to where the list item element was.
-   * If aListElement has another <ul>, <ol> or <dl> as a child, this method
-   * is called recursively.
-   * If aListElement has other nodes as its child, they are just removed.
-   * Finally, aListElement is removed. and its all children are moved to
-   * where the aListElement was.
-   *
-   * @param aListElement        A <ul>, <ol> or <dl> element.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
-
-  /**
    * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
    * <br> element into empty list item or table cell elements between
    * aStartRef and aEndRef.
