@@ -448,7 +448,8 @@ impl YuvImageData {
             self.write_prim_gpu_blocks(&mut request);
         };
 
-        common.opacity = PrimitiveOpacity::translucent();
+        // YUV images never have transparency
+        common.opacity = PrimitiveOpacity::opaque();
     }
 
     pub fn request_resources(
