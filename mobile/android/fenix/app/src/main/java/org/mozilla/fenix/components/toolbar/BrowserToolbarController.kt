@@ -43,7 +43,6 @@ class DefaultBrowserToolbarController(
     private val navController: NavController,
     private val browsingModeManager: BrowsingModeManager,
     private val findInPageLauncher: () -> Unit,
-    private val nestedScrollQuickActionView: NestedScrollView,
     private val engineView: EngineView,
     private val customTabSession: Session?,
     private val viewModel: CreateCollectionViewModel,

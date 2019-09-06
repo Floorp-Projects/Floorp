@@ -49,7 +49,6 @@ class DefaultBrowserToolbarControllerTest {
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private var navController: NavController = mockk(relaxed = true)
     private var findInPageLauncher: () -> Unit = mockk(relaxed = true)
-    private val nestedScrollQuickActionView: NestedScrollView = mockk(relaxed = true)
     private val engineView: EngineView = mockk(relaxed = true)
     private val currentSession: Session = mockk(relaxed = true)
     private val viewModel: CreateCollectionViewModel = mockk(relaxed = true)
@@ -69,7 +68,6 @@ class DefaultBrowserToolbarControllerTest {
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
-            nestedScrollQuickActionView = nestedScrollQuickActionView,
             engineView = engineView,
             customTabSession = null,
             viewModel = viewModel,
@@ -351,7 +349,6 @@ class DefaultBrowserToolbarControllerTest {
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
-            nestedScrollQuickActionView = nestedScrollQuickActionView,
             engineView = engineView,
             customTabSession = currentSession,
             viewModel = viewModel,
