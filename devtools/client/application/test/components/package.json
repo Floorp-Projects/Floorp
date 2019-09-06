@@ -17,6 +17,9 @@
     "jest": "^24.6",
     "react": "16.4.1",
     "react-dom": "16",
-    "react-test-renderer": "16.4.1"
-  }
+    "react-test-renderer": "16.4.1",
+    "redux": "^4.0.4",
+    "redux-mock-store": "^1.5.3"
+  },
+  "devDependencies": {}
 }

@@ -20,47 +20,36 @@ const Localized = createFactory(FluentReact.Localized);
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { services } = require("../../modules/services");
-const { updateManifest } = require("../../actions/manifest");
+const { fetchManifest } = require("../../actions/manifest");
 
 class ManifestLoader extends PureComponent {
   static get propTypes() {
     return {
       // these props get automatically injected via `connect`
       dispatch: PropTypes.func.isRequired,
+      error: PropTypes.string,
+      hasFetchedManifest: PropTypes.bool.isRequired,
+      isLoading: PropTypes.bool.isRequired,
     };
   }
 
-  constructor(props) {
-    super(props);
-    this.state = { error: "", hasLoaded: false, hasManifest: false };
-  }
-
   componentDidMount() {
-    services.fetchManifest().then(({ manifest, errorMessage }) => {
-      this.props.dispatch(updateManifest(manifest, errorMessage));
-      this.setState({
-        error: errorMessage,
-        hasLoaded: true,
-        hasManifest: !!manifest,
-      });
-    });
+    const { isLoading, hasFetchedManifest } = this.props;
+    const shallLoad = !isLoading && !hasFetchedManifest;
+    if (shallLoad) {
+      this.props.dispatch(fetchManifest());
+    }
   }
 
   renderResult() {
-    return this.state.hasManifest
-      ? Localized(
-          { id: "manifest-loaded-ok" },
-          p({ className: "js-manifest-loaded-ok" })
-        )
-      : Localized(
-          { id: "manifest-non-existing" },
-          p({ className: "js-manifest-non-existing" })
-        );
+    return Localized(
+      { id: "manifest-loaded-ok" },
+      p({ className: "js-manifest-loaded-ok" })
+    );
   }
 
   renderError() {
-    const { error } = this.state;
+    const { error } = this.props;
 
     return [
       Localized(
@@ -75,20 +64,27 @@ class ManifestLoader extends PureComponent {
   }
 
   render() {
-    const { error, hasLoaded } = this.state;
+    const { error, isLoading } = this.props;
 
-    const loadingDOM = hasLoaded
-      ? null
-      : Localized({ id: "manifest-loading" }, p({}));
+    const loadingDOM = isLoading
+      ? Localized({ id: "manifest-loading" }, p({}))
+      : null;
 
     const errorDOM = error ? this.renderError() : null;
-    const resultDOM =
-      this.state.hasLoaded && !error ? this.renderResult() : null;
+    const resultDOM = !isLoading && !error ? this.renderResult() : null;
 
     return aside({}, loadingDOM, errorDOM, resultDOM);
   }
 }
 
 const mapDispatchToProps = dispatch => ({ dispatch });
+const mapStateToProps = state => ({
+  error: state.manifest.errorMessage,
+  hasFetchedManifest: typeof state.manifest.manifest !== "undefined",
+  isLoading: state.manifest.isLoading,
+});
 
-module.exports = connect(mapDispatchToProps)(ManifestLoader);
+module.exports = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ManifestLoader);

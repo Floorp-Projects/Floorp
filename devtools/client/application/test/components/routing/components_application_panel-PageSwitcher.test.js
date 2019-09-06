@@ -25,10 +25,8 @@ const { PAGE_TYPES } = require("devtools/client/application/src/constants");
 describe("PageSwitcher", () => {
   function buildStoreWithSelectedPage(selectedPage) {
     return setupStore({
-      preloadedState: {
-        ui: {
-          selectedPage,
-        },
+      ui: {
+        selectedPage,
       },
     });
   }

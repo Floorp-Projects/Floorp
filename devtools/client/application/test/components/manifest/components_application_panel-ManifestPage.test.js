@@ -25,11 +25,9 @@ const ManifestPage = createFactory(
 describe("ManifestPage", () => {
   function buildStoreWithManifest(manifest) {
     return setupStore({
-      preloadedState: {
-        manifest: {
-          manifest,
-          errorMessage: "",
-        },
+      manifest: {
+        manifest,
+        errorMessage: "",
       },
     });
   }

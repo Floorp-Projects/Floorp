@@ -7,7 +7,9 @@
 const {
   MANIFEST_CATEGORIES,
   MANIFEST_ISSUE_LEVELS,
-  UPDATE_MANIFEST,
+  FETCH_MANIFEST_FAILURE,
+  FETCH_MANIFEST_START,
+  FETCH_MANIFEST_SUCCESS,
 } = require("../constants");
 
 function _processRawManifestIcons(rawIcons) {
@@ -84,19 +86,40 @@ function _processRawManifest(rawManifest) {
 
 function ManifestState() {
   return {
-    manifest: null,
+    manifest: undefined,
+    isLoading: false,
     errorMessage: "",
   };
 }
 
 function manifestReducer(state = ManifestState(), action) {
   switch (action.type) {
-    case UPDATE_MANIFEST:
-      const { manifest, errorMessage } = action;
+    case FETCH_MANIFEST_START:
       return Object.assign({}, state, {
-        manifest: manifest ? _processRawManifest(manifest) : null,
-        errorMessage,
+        isLoading: true,
       });
+
+    case FETCH_MANIFEST_FAILURE:
+      const { error } = action;
+      // If we add a redux middleware to log errors, we should move the
+      // console.error below there.
+      console.error(error);
+      return Object.assign({}, state, {
+        errorMessage: error,
+        isLoading: false,
+        manifest: null,
+      });
+
+    case FETCH_MANIFEST_SUCCESS:
+      // NOTE: we don't get an error when the page does not have a manifest,
+      // but a `null` value there.
+      const { manifest } = action;
+      return Object.assign({}, state, {
+        errorMessage: "",
+        isLoading: false,
+        manifest: manifest ? _processRawManifest(manifest) : null,
+      });
+
     default:
       return state;
   }

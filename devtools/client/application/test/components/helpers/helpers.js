@@ -3,23 +3,24 @@
 
 "use strict";
 
-const reducers = require("devtools/client/application/src/reducers/index");
-const { createStore } = require("devtools/client/shared/vendor/redux");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
+const configureStore = require("redux-mock-store").default;
 
 /**
  * Prepare the store for use in testing.
  */
-function setupStore({ preloadedState } = {}) {
-  const store = createStore(reducers, preloadedState);
-  return store;
+function setupStore(preloadedState = {}) {
+  const middleware = [thunk];
+  const mockStore = configureStore(middleware);
+  return mockStore(preloadedState);
 }
 
 /**
- * This gives an opportunity to Promises to resolve in tests, even if they are
- * resolve immediately (since they are microtasks)
+ * This gives an opportunity to Promises to resolve in tests
+ * (since they are microtasks)
  */
 async function flushPromises() {
-  return new Promise(resolve => resolve());
+  await new Promise(r => setTimeout(r, 0));
 }
 
 module.exports = {

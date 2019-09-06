@@ -4,8 +4,10 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 const {
-  updateManifest,
-} = require("devtools/client/application/src/actions/manifest.js");
+  FETCH_MANIFEST_FAILURE,
+  FETCH_MANIFEST_START,
+  FETCH_MANIFEST_SUCCESS,
+} = require("devtools/client/application/src/constants.js");
 
 const {
   manifestReducer,
@@ -101,23 +103,41 @@ const MANIFEST_PROCESSING = [
 ];
 
 add_task(async function() {
-  info("Test manifest reducer: UPDATE_MANIFEST action");
+  info("Test manifest reducer: FETCH_MANIFEST_START action");
+
+  const state = ManifestState();
+  const action = { type: FETCH_MANIFEST_START };
+  const newState = manifestReducer(state, action);
+
+  equal(newState.isLoading, true, "Loading flag is true");
+});
+
+add_task(async function() {
+  info("Test manifest reducer: FETCH_MANIFEST_FAILURE action");
+
+  const state = Object.assign(ManifestState(), { isLoading: true });
+  const action = { type: FETCH_MANIFEST_FAILURE, error: "some error" };
+  const newState = manifestReducer(state, action);
+
+  equal(newState.errorMessage, "some error", "Error message is as expected");
+  equal(newState.isLoading, false, "Loading flag is false");
+  equal(newState.manifest, null, "Manifest is null");
+});
+
+add_task(async function() {
+  info("Test manifest reducer: FETCH_MANIFEST_SUCCESS action");
 
   // test manifest processing
   MANIFEST_PROCESSING.forEach(({ source, processed }) => {
     test_manifest_processing(source, processed);
   });
-
-  // test errorMessage is updated correctly
-  const state = ManifestState();
-  const action = updateManifest({ name: "foo" }, "some error");
-  const newState = manifestReducer(state, action);
-  equal(newState.errorMessage, "some error");
 });
 
 function test_manifest_processing(source, processed) {
   const state = ManifestState();
-  const action = updateManifest(source, "");
+  state.isLoading = true;
+
+  const action = { type: FETCH_MANIFEST_SUCCESS, manifest: source };
   const newState = manifestReducer(state, action);
 
   // merge the expected processed manifst with some default values
@@ -133,5 +153,6 @@ function test_manifest_processing(source, processed) {
   );
 
   deepEqual(newState.manifest, expected, "Processed manifest as expected");
-  equal(newState.errorMessage, "");
+  equal(newState.errorMessage, "", "Error message is empty");
+  equal(newState.isLoading, false, "Loading flag is false");
 }
