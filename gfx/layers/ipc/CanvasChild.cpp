@@ -79,7 +79,6 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
 
 CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
   aEndpoint.Bind(this);
-  mCanSend = true;
 }
 
 CanvasChild::~CanvasChild() {}
@@ -95,7 +94,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
     mRecorder->Init(OtherPid(), &handle, &readerSem, &writerSem,
                     MakeUnique<RingBufferWriterServices>(this));
 
-    if (mCanSend) {
+    if (CanSend()) {
       Unused << SendCreateTranslator(mTextureType, handle, readerSem,
                                      writerSem);
     }
@@ -106,27 +105,37 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
 }
 
 void CanvasChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mCanSend = false;
-
   // Explicitly drop our reference to the recorder, because it holds a reference
   // to us via the ResumeTranslation callback.
   mRecorder = nullptr;
 }
 
 void CanvasChild::ResumeTranslation() {
-  if (mCanSend) {
+  if (CanSend()) {
     SendResumeTranslation();
   }
 }
 
-void CanvasChild::Destroy() { Close(); }
+void CanvasChild::Destroy() {
+  if (CanSend()) {
+    Close();
+  }
+}
 
 void CanvasChild::OnTextureWriteLock() {
+  if (!mRecorder) {
+    return;
+  }
+
   mHasOutstandingWriteLock = true;
   mLastWriteLockCheckpoint = mRecorder->CreateCheckpoint();
 }
 
 void CanvasChild::OnTextureForwarded() {
+  if (!mRecorder) {
+    return;
+  }
+
   if (mHasOutstandingWriteLock) {
     mRecorder->RecordEvent(RecordedCanvasFlush());
     if (!mRecorder->WaitForCheckpoint(mLastWriteLockCheckpoint)) {
@@ -138,6 +147,10 @@ void CanvasChild::OnTextureForwarded() {
 }
 
 void CanvasChild::EnsureBeginTransaction() {
+  if (!mRecorder) {
+    return;
+  }
+
   if (!mIsInTransaction) {
     mRecorder->RecordEvent(RecordedCanvasBeginTransaction());
     mIsInTransaction = true;
@@ -145,6 +158,10 @@ void CanvasChild::EnsureBeginTransaction() {
 }
 
 void CanvasChild::EndTransaction() {
+  if (!mRecorder) {
+    return;
+  }
+
   if (mIsInTransaction) {
     mRecorder->RecordEvent(RecordedCanvasEndTransaction());
     mIsInTransaction = false;
@@ -165,6 +182,10 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
 }
 
 void CanvasChild::RecordEvent(const gfx::RecordedEvent& aEvent) {
+  if (!mRecorder) {
+    return;
+  }
+
   mRecorder->RecordEvent(aEvent);
 }
 
@@ -172,6 +193,10 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     const gfx::SourceSurface* aSurface) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
+
+  if (!mRecorder) {
+    return nullptr;
+  }
 
   mTransactionsSinceGetDataSurface = 0;
   EnsureBeginTransaction();
