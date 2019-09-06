@@ -259,7 +259,7 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         # Using python to split the preview string is a bit convoluted,
         # but is guaranteed to be available on all platforms.
         '--preview', 'python -c "print(\\"\\n\\".join(sorted([s.strip(\\"\'\\") for s in \\"{+}\\".split()])))"',  # noqa
-        '--preview-window=right:20%',
+        '--preview-window=right:30%',
         '--print-query',
     ]
 
