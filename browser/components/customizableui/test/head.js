@@ -216,16 +216,19 @@ function getAreaWidgetIds(areaId) {
   return CustomizableUI.getWidgetIdsInArea(areaId);
 }
 
-function simulateItemDrag(aToDrag, aTarget, aEvent = {}) {
+function simulateItemDrag(aToDrag, aTarget, aEvent = {}, aOffset = 2) {
   let ev = aEvent;
   if (ev == "end" || ev == "start") {
     let win = aTarget.ownerGlobal;
     const dwu = win.windowUtils;
     let bounds = dwu.getBoundsWithoutFlushing(aTarget);
     if (ev == "end") {
-      ev = { clientX: bounds.right - 2, clientY: bounds.bottom - 2 };
+      ev = {
+        clientX: bounds.right - aOffset,
+        clientY: bounds.bottom - aOffset,
+      };
     } else {
-      ev = { clientX: bounds.left + 2, clientY: bounds.top + 2 };
+      ev = { clientX: bounds.left + aOffset, clientY: bounds.top + aOffset };
     }
   }
   ev._domDispatchOnly = true;
