@@ -22,6 +22,7 @@ import org.json.JSONArray
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Ignore
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -239,6 +240,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 result as String, equalTo("granted"))
     }
 
+    @Ignore("disable test for frequently failing Bug 1542525")
     @Test fun notification_reject() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
