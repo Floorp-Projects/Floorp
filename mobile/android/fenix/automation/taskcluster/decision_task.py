@@ -187,8 +187,8 @@ def nightly_to_production_app(is_staging, version_name):
         build_task_id,
         taskcluster_apk_paths,
         channel='production',  # Since we're publishing to the "production" app, we need to sign for production
-        index_channel='nightly',
         is_staging=is_staging,
+        publish_to_index=False,
     )
 
     push_task_id = taskcluster.slugId()
