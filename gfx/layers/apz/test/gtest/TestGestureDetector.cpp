@@ -7,6 +7,9 @@
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
 
+// Note: There are additional tests that test gesture detection behaviour
+//       with multiple APZCs in TestTreeManager.cpp.
+
 class APZCGestureDetectorTester : public APZCBasicTester {
  public:
   APZCGestureDetectorTester()
