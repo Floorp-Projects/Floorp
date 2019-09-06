@@ -591,8 +591,6 @@ case "$target" in
     ;;
 
 *-android*|*-linuxandroid*)
-    AC_DEFINE(NO_PW_GECOS)
-
     if test "$COMPILE_ENVIRONMENT"; then
         MOZ_LINKER=1
     fi
