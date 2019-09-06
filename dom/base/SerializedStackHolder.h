@@ -30,8 +30,9 @@ class SerializedStackHolder {
  public:
   SerializedStackHolder();
 
-  // Fill this holder with a main thread stack.
-  void SerializeMainThreadStack(JSContext* aCx, JS::HandleObject aStack);
+  // Fill this holder with a main or worklet thread stack.
+  void SerializeMainThreadOrWorkletStack(JSContext* aCx,
+                                         JS::HandleObject aStack);
 
   // Fill this holder with a worker thread stack.
   void SerializeWorkerStack(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
