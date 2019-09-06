@@ -11,6 +11,7 @@ DevToolsModules(
 	'ManifestIssueList.js',
     'ManifestItem.css',
     'ManifestItem.js',
+    'ManifestLoader.css',
     'ManifestLoader.js',
     'ManifestPage.js',
     'ManifestSection.css',

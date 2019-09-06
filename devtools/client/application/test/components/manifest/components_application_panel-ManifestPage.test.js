@@ -23,17 +23,30 @@ const ManifestPage = createFactory(
  */
 
 describe("ManifestPage", () => {
-  function buildStoreWithManifest(manifest) {
+  function buildStoreWithManifest(manifest, isLoading = false) {
     return setupStore({
       manifest: {
         manifest,
         errorMessage: "",
+        isLoading,
       },
     });
   }
 
   it("renders the expected snapshot when there is a manifest", () => {
     const store = buildStoreWithManifest(MANIFEST_SIMPLE);
+    const wrapper = shallow(ManifestPage({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders the expected snapshot when the manifest needs to load", () => {
+    const store = buildStoreWithManifest(undefined);
+    const wrapper = shallow(ManifestPage({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders the expected snapshot when the manifest is loading", () => {
+    const store = buildStoreWithManifest(undefined, true);
     const wrapper = shallow(ManifestPage({ store })).dive();
     expect(wrapper).toMatchSnapshot();
   });
