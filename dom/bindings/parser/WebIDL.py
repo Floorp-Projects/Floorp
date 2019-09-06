@@ -5190,7 +5190,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 assert argument.type.isComplete()
 
                 if ((argument.type.isDictionary() and
-                     argument.type.inner.canBeEmpty())or
+                     argument.type.unroll().inner.canBeEmpty()) or
                     (argument.type.isUnion() and
                      argument.type.unroll().hasPossiblyEmptyDictionaryType())):
                     # Optional dictionaries and unions containing optional
@@ -5214,12 +5214,16 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                                           "must have a default value",
                                           [argument.location])
 
-                    # An argument cannot be a Nullable Dictionary
-                    if argument.type.nullable():
-                        raise WebIDLError("An argument cannot be a nullable "
-                                          "dictionary or nullable union "
-                                          "containing a dictionary",
-                                          [argument.location])
+                # An argument cannot be a nullable dictionary or a
+                # nullable union containing a dictionary.
+                if (argument.type.nullable() and
+                    (argument.type.isDictionary() or
+                     (argument.type.isUnion() and
+                      argument.type.unroll().hasDictionaryType()))):
+                    raise WebIDLError("An argument cannot be a nullable "
+                                      "dictionary or nullable union "
+                                      "containing a dictionary",
+                                      [argument.location])
 
                 # Only the last argument can be variadic
                 if variadicArgument:
