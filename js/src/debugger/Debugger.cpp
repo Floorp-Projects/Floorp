@@ -3511,15 +3511,21 @@ void Debugger::removeAllocationsTrackingForAllDebuggees() {
 
 /*** Debugger JSObjects *****************************************************/
 
+template <typename F>
+inline void Debugger::forEachWeakMap(const F& f) {
+  f(generatorFrames);
+  f(objects);
+  f(environments);
+  f(scripts);
+  f(lazyScripts);
+  f(sources);
+  f(wasmInstanceScripts);
+  f(wasmInstanceSources);
+}
+
 void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
-  generatorFrames.traceCrossCompartmentEdges(trc);
-  objects.traceCrossCompartmentEdges(trc);
-  environments.traceCrossCompartmentEdges(trc);
-  scripts.traceCrossCompartmentEdges(trc);
-  lazyScripts.traceCrossCompartmentEdges(trc);
-  sources.traceCrossCompartmentEdges(trc);
-  wasmInstanceScripts.traceCrossCompartmentEdges(trc);
-  wasmInstanceSources.traceCrossCompartmentEdges(trc);
+  forEachWeakMap(
+      [trc](auto& weakMap) { weakMap.traceCrossCompartmentEdges(trc); });
 }
 
 /*
@@ -3780,14 +3786,7 @@ void Debugger::trace(JSTracer* trc) {
 
   allocationsLog.trace(trc);
 
-  generatorFrames.trace(trc);
-  scripts.trace(trc);
-  lazyScripts.trace(trc);
-  sources.trace(trc);
-  objects.trace(trc);
-  environments.trace(trc);
-  wasmInstanceScripts.trace(trc);
-  wasmInstanceSources.trace(trc);
+  forEachWeakMap([trc](auto& weakMap) { weakMap.trace(trc); });
 }
 
 /* static */
@@ -3859,14 +3858,9 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
       }
     }
 
-    dbg->generatorFrames.findSweepGroupEdges(debuggerZone);
-    dbg->scripts.findSweepGroupEdges(debuggerZone);
-    dbg->lazyScripts.findSweepGroupEdges(debuggerZone);
-    dbg->sources.findSweepGroupEdges(debuggerZone);
-    dbg->objects.findSweepGroupEdges(debuggerZone);
-    dbg->environments.findSweepGroupEdges(debuggerZone);
-    dbg->wasmInstanceScripts.findSweepGroupEdges(debuggerZone);
-    dbg->wasmInstanceSources.findSweepGroupEdges(debuggerZone);
+    dbg->forEachWeakMap([debuggerZone](auto& weakMap) {
+      weakMap.findSweepGroupEdges(debuggerZone);
+    });
   }
 
   return true;
