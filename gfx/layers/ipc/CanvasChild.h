@@ -123,7 +123,6 @@ class CanvasChild final : public PCanvasChild {
   TextureType mTextureType = TextureType::Unknown;
   uint32_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
-  bool mCanSend = false;
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
 };

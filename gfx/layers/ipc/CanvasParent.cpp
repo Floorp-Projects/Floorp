@@ -10,6 +10,7 @@
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/SharedThreadPool.h"
+#include "nsTHashtable.h"
 #include "prsystem.h"
 
 #if defined(XP_WIN)
@@ -56,6 +57,13 @@ static MessageLoop* CanvasPlaybackLoop() {
   return sCanvasThread ? sCanvasThread->message_loop() : nullptr;
 }
 
+typedef nsTHashtable<nsRefPtrHashKey<CanvasParent>> CanvasParentSet;
+
+static CanvasParentSet& CanvasParents() {
+  static CanvasParentSet* sCanvasParents = new CanvasParentSet();
+  return *sCanvasParents;
+}
+
 /* static */
 already_AddRefed<CanvasParent> CanvasParent::Create(
     ipc::Endpoint<PCanvasParent>&& aEndpoint) {
@@ -96,10 +104,29 @@ static already_AddRefed<nsIThreadPool> GetCanvasWorkers() {
   return do_AddRef(sCanvasWorkers);
 }
 
+static void EnsureAllClosed() {
+  // Close removes the CanvasParent from the set so take a copy first.
+  CanvasParentSet canvasParents;
+  for (auto iter = CanvasParents().Iter(); !iter.Done(); iter.Next()) {
+    canvasParents.PutEntry(iter.Get()->GetKey());
+  }
+
+  for (auto iter = canvasParents.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->Close();
+    iter.Remove();
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(CanvasParents().IsEmpty(),
+                        "Closing should have cleared all entries.");
+}
+
 /* static */ void CanvasParent::Shutdown() {
   sShuttingDown = true;
 
   if (sCanvasThread) {
+    RefPtr<Runnable> runnable =
+        NewRunnableFunction("CanvasParent::EnsureAllClosed", &EnsureAllClosed);
+    sCanvasThread->message_loop()->PostTask(runnable.forget());
     sCanvasThread->Stop();
     delete sCanvasThread;
     sCanvasThread = nullptr;
@@ -120,7 +147,7 @@ void CanvasParent::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
     return;
   }
 
-  mSelfRef = this;
+  CanvasParents().PutEntry(this);
 }
 
 mozilla::ipc::IPCResult CanvasParent::RecvCreateTranslator(
@@ -188,7 +215,7 @@ void CanvasParent::ActorDealloc() {
   MOZ_DIAGNOSTIC_ASSERT(!mTranslating);
   MOZ_DIAGNOSTIC_ASSERT(!mTranslator);
 
-  mSelfRef = nullptr;
+  CanvasParents().RemoveEntry(this);
 }
 
 }  // namespace layers
