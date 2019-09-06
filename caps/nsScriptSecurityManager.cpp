@@ -442,7 +442,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     }
   }
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
+#if !defined(ANDROID)
   nsContentSecurityManager::AssertEvalNotRestricted(cx, subjectPrincipal,
                                                     scriptSample);
 #endif
