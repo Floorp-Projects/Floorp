@@ -195,5 +195,4 @@ void StoreBuffer::WholeCellBuffer::clear() {
 }
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
-template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;

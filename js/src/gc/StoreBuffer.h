@@ -127,9 +127,6 @@ class StoreBuffer {
     /* Trace the source of all edges in the store buffer. */
     void trace(TenuringTracer& mover);
 
-    template <typename CellType>
-    void traceTyped(TenuringTracer& mover);
-
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
       return stores_.shallowSizeOfExcludingThis(mallocSizeOf);
     }
@@ -246,13 +243,12 @@ class StoreBuffer {
     static bool match(const Edge& k, const Lookup& l) { return k == l; }
   };
 
+  template <typename T>
   struct CellPtrEdge {
-    Cell** edge;
+    T** edge = nullptr;
 
-    CellPtrEdge() : edge(nullptr) {}
-    explicit CellPtrEdge(Cell** v) : edge(v) {}
-    explicit CellPtrEdge(JSString** v) : edge(reinterpret_cast<Cell**>(v)) {}
-    explicit CellPtrEdge(JSObject** v) : edge(reinterpret_cast<Cell**>(v)) {}
+    CellPtrEdge() = default;
+    explicit CellPtrEdge(T** v) : edge(v) {}
     bool operator==(const CellPtrEdge& other) const {
       return edge == other.edge;
     }
@@ -265,13 +261,15 @@ class StoreBuffer {
       return !nursery.isInside(edge);
     }
 
-    template <typename CellType>
-    void traceTyped(TenuringTracer& mover) const;
+    void trace(TenuringTracer& mover) const;
 
     explicit operator bool() const { return edge != nullptr; }
 
-    typedef PointerEdgeHasher<CellPtrEdge> Hasher;
+    using Hasher = PointerEdgeHasher<CellPtrEdge<T>>;
   };
+
+  using ObjectPtrEdge = CellPtrEdge<JSObject>;
+  using StringPtrEdge = CellPtrEdge<JSString>;
 
   struct ValueEdge {
     JS::Value* edge;
@@ -404,8 +402,8 @@ class StoreBuffer {
   }
 
   MonoTypeBuffer<ValueEdge> bufferVal;
-  MonoTypeBuffer<CellPtrEdge> bufStrCell;
-  MonoTypeBuffer<CellPtrEdge> bufObjCell;
+  MonoTypeBuffer<StringPtrEdge> bufStrCell;
+  MonoTypeBuffer<ObjectPtrEdge> bufObjCell;
   MonoTypeBuffer<SlotsEdge> bufferSlot;
   WholeCellBuffer bufferWholeCell;
   GenericBuffer bufferGeneric;
@@ -440,11 +438,11 @@ class StoreBuffer {
   void putValue(JS::Value* vp) { put(bufferVal, ValueEdge(vp)); }
   void unputValue(JS::Value* vp) { unput(bufferVal, ValueEdge(vp)); }
 
-  void putCell(JSString** strp) { put(bufStrCell, CellPtrEdge(strp)); }
-  void unputCell(JSString** strp) { unput(bufStrCell, CellPtrEdge(strp)); }
+  void putCell(JSString** strp) { put(bufStrCell, StringPtrEdge(strp)); }
+  void unputCell(JSString** strp) { unput(bufStrCell, StringPtrEdge(strp)); }
 
-  void putCell(JSObject** strp) { put(bufObjCell, CellPtrEdge(strp)); }
-  void unputCell(JSObject** strp) { unput(bufObjCell, CellPtrEdge(strp)); }
+  void putCell(JSObject** strp) { put(bufObjCell, ObjectPtrEdge(strp)); }
+  void unputCell(JSObject** strp) { unput(bufObjCell, ObjectPtrEdge(strp)); }
 
   void putSlot(NativeObject* obj, int kind, uint32_t start, uint32_t count) {
     SlotsEdge edge(obj, kind, start, count);
@@ -468,8 +466,8 @@ class StoreBuffer {
   /* Methods to trace the source of all edges in the store buffer. */
   void traceValues(TenuringTracer& mover) { bufferVal.trace(mover); }
   void traceCells(TenuringTracer& mover) {
-    bufStrCell.traceTyped<JSString>(mover);
-    bufObjCell.traceTyped<JSObject>(mover);
+    bufStrCell.trace(mover);
+    bufObjCell.trace(mover);
   }
   void traceSlots(TenuringTracer& mover) { bufferSlot.trace(mover); }
   void traceWholeCells(TenuringTracer& mover) { bufferWholeCell.trace(mover); }
