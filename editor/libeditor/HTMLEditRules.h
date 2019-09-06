@@ -214,6 +214,28 @@ class HTMLEditRules : public TextEditRules {
       const EditorDOMPoint& aCaretPoint);
 
   /**
+   * DeleteUnnecessaryNodesAndCollapseSelection() removes unnecessary nodes
+   * around aSelectionStartPoint and aSelectionEndPoint.  Then, collapse
+   * selection at aSelectionStartPoint or aSelectionEndPoint (depending on
+   * aDirectionAndAmount).
+   *
+   * @param aDirectionAndAmount         Direction of the deletion.
+   *                                    If nsIEditor::ePrevious, selection will
+   *                                    be collapsed to aSelectionEndPoint.
+   *                                    Otherwise, selection will be collapsed
+   *                                    to aSelectionStartPoint.
+   * @param aSelectionStartPoint        First selection range start after
+   *                                    computing the deleting range.
+   * @param aSelectionEndPoint          First selection range end after
+   *                                    computing the deleting range.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DeleteUnnecessaryNodesAndCollapseSelection(
+      nsIEditor::EDirection aDirectionAndAmount,
+      const EditorDOMPoint& aSelectionStartPoint,
+      const EditorDOMPoint& aSelectionEndPoint);
+
+  /**
    * HandleDeleteAroundCollapsedSelection() handles deletion with collapsed
    * `Selection`.  Callers must guarantee that this is called only when
    * `Selection` is collapsed.
