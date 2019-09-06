@@ -186,8 +186,22 @@ void WorkletJSContext::ReportError(JSErrorReport* aReport,
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   xpcReport->Init(aReport, aToStringResult.c_str(), IsSystemCaller(),
                   GetCurrentWorkletWindowID());
-
   RefPtr<AsyncErrorReporter> reporter = new AsyncErrorReporter(xpcReport);
+
+  JSContext* cx = Context();
+  JS::Rooted<JS::Value> exn(cx);
+  if (JS_GetPendingException(cx, &exn)) {
+    JS::Rooted<JSObject*> exnStack(cx, JS::GetPendingExceptionStack(cx));
+    JS_ClearPendingException(cx);
+    JS::Rooted<JSObject*> stack(cx);
+    JS::Rooted<JSObject*> stackGlobal(cx);
+    xpc::FindExceptionStackForConsoleReport(nullptr, exn, exnStack, &stack,
+                                            &stackGlobal);
+    if (stack) {
+      reporter->SerializeStack(cx, stack);
+    }
+  }
+
   NS_DispatchToMainThread(reporter);
 }
 
