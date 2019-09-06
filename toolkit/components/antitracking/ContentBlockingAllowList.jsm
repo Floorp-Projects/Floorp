@@ -112,4 +112,41 @@ const ContentBlockingAllowList = {
       Services.perms.ALLOW_ACTION
     );
   },
+
+  /**
+   * Returns a list of all non-private browsing principals that are on the
+   * content blocking allow list.
+   */
+  getAllowListedPrincipals() {
+    const exceptions = Services.perms
+      .getAllWithTypePrefix("trackingprotection")
+      .filter(
+        // Only export non-private exceptions for security reasons.
+        p => p.type == "trackingprotection"
+      );
+    return exceptions.map(e => e.principal);
+  },
+
+  /**
+   * Takes a list of nsIPrincipals and uses it to update the content blocking allow
+   * list.
+   */
+  addAllowListPrincipals(principals) {
+    principals.forEach(p =>
+      Services.perms.addFromPrincipal(
+        p,
+        "trackingprotection",
+        Services.perms.ALLOW_ACTION,
+        Ci.nsIPermissionManager.EXPIRE_SESSION
+      )
+    );
+  },
+
+  /**
+   * Removes all content blocking exceptions.
+   */
+  wipeLists() {
+    Services.perms.removeByType("trackingprotection");
+    Services.perms.removeByType("trackingprotection-pb");
+  },
 };
