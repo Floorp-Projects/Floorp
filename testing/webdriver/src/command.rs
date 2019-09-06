@@ -525,9 +525,11 @@ pub struct TimeoutsParameters {
         skip_serializing_if = "Option::is_none",
         deserialize_with = "deserialize_to_nullable_u64"
     )]
+    #[allow(clippy::option_option)]
     pub script: Option<Option<u64>>,
 }
 
+#[allow(clippy::option_option)]
 fn deserialize_to_nullable_u64<'de, D>(deserializer: D) -> Result<Option<Option<u64>>, D::Error>
 where
     D: Deserializer<'de>,
