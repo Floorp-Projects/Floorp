@@ -34,6 +34,7 @@ export default class MonitorClass {
     let monitorReportLink = this.doc.getElementById("full-report-link");
     monitorReportLink.addEventListener("click", () => {
       this.doc.sendTelemetryEvent("click", "mtr_report_link");
+      RPMSendAsyncMessage("ClearMonitorCache");
     });
 
     let monitorAboutLink = this.doc.getElementById("monitor-link");
