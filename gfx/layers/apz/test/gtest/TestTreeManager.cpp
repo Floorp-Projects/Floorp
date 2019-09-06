@@ -53,7 +53,7 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 3);
   }
 
-  void CreateBug1194876Tree() {
+  void CreateTwoLayerDTCTree(int32_t aRootContentLayerIndex) {
     const char* layerTreeSyntax = "c(t)";
     // LayerID                     0 1
     nsIntRegion layerVisibleRegion[] = {
@@ -67,10 +67,9 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 1);
     SetScrollHandoff(layers[1], layers[0]);
 
-    // Make layers[1] the root content
-    ScrollMetadata childMetadata = layers[1]->GetScrollMetadata(0);
-    childMetadata.GetMetrics().SetIsRootContent(true);
-    layers[1]->SetScrollMetadata(childMetadata);
+    // Make layers[aRootContentLayerIndex] the root content
+    ModifyFrameMetrics(layers[aRootContentLayerIndex],
+                       [](FrameMetrics& fm) { fm.SetIsRootContent(true); });
 
     // Both layers are fully dispatch-to-content
     EventRegions regions;
@@ -134,7 +133,9 @@ TEST_F(APZCTreeManagerGenericTester, Bug1068268) {
 }
 
 TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
-  CreateBug1194876Tree();
+  // Create a layer tree with parent and child scrollable layers, with the
+  // child being the root content.
+  CreateTwoLayerDTCTree(1);
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
@@ -168,6 +169,45 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   // We want to ensure that ApzcOf(layers[0]) has had its state cleared, because
   // otherwise it will do things like dispatch spurious long-tap events.
 
+  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
+}
+
+TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
+  // Create a layer tree with parent and child scrollable layers, with the
+  // parent being the root content.
+  CreateTwoLayerDTCTree(0);
+  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  UpdateHitTestingTree();
+
+  uint64_t blockId;
+  nsTArray<ScrollableLayerGuid> targets;
+
+  // First touch goes down. APZCTM hits the child layer because it is on top
+  // (and we confirm this target), but do not prevent-default the event, causing
+  // the child APZC's gesture detector to start a long-tap timeout task.
+  MultiTouchInput mti =
+      CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
+  mti.mTouches.AppendElement(
+      SingleTouchData(0, ParentLayerPoint(25, 50), ScreenSize(0, 0), 0, 0));
+  manager->ReceiveInputEvent(mti, nullptr, &blockId);
+  manager->ContentReceivedInputBlock(blockId, /* default prevented = */ false);
+  targets.AppendElement(ApzcOf(layers[1])->GetGuid());
+  manager->SetTargetAPZC(blockId, targets);
+
+  // Second touch goes down (first touch remains down). APZCTM again hits the
+  // child and we confirm this, but multi-touch events are routed to the root
+  // content APZC which is the parent. This event is prevent-defaulted, so we
+  // clear the parent's gesture state. The bug is that we fail to clear the
+  // child's gesture state.
+  mti.mTouches.AppendElement(
+      SingleTouchData(1, ParentLayerPoint(75, 50), ScreenSize(0, 0), 0, 0));
+  manager->ReceiveInputEvent(mti, nullptr, &blockId);
+  manager->ContentReceivedInputBlock(blockId, /* default prevented = */ true);
+  targets.AppendElement(ApzcOf(layers[1])->GetGuid());
+  manager->SetTargetAPZC(blockId, targets);
+
+  // If we've failed to clear the child's gesture state, then the long tap
+  // timeout task will fire in TearDown() and a long-tap will be dispatched.
   EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
 }
 
