@@ -4718,15 +4718,13 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
     // here's where we actually figure out what to do
     if (HTMLEditUtils::IsListItem(curNode)) {
       // unlist this listitem
-      bool bOutOfList;
-      do {
-        nsresult rv =
-            PopListItem(MOZ_KnownLive(*curNode->AsContent()), &bOutOfList);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } while (
-          !bOutOfList);  // keep popping it out until it's not in a list anymore
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .LiftUpListItemElement(
+                            MOZ_KnownLive(*curNode->AsElement()),
+                            HTMLEditor::LiftUpFromAllParentListElements::Yes);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
       nsresult rv = RemoveListStructure(MOZ_KnownLive(*curNode->AsElement()));
@@ -5814,7 +5812,12 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         lastBQChild = nullptr;
         curBlockQuoteIsIndentedWithCSS = false;
       }
-      rv = PopListItem(MOZ_KnownLive(*curNode->AsContent()));
+      // XXX `curNode` could become different element since
+      //     `OutdentPartOfBlock()` may run mutaiton event listeners.
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .LiftUpListItemElement(
+                   MOZ_KnownLive(*curNode->AsElement()),
+                   HTMLEditor::LiftUpFromAllParentListElements::No);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return SplitRangeOffFromNodeResult(rv);
       }
@@ -5919,7 +5922,10 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       nsCOMPtr<nsIContent> child = curNode->GetLastChild();
       while (child) {
         if (HTMLEditUtils::IsListItem(child)) {
-          rv = PopListItem(*child);
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .LiftUpListItemElement(
+                       MOZ_KnownLive(*child->AsElement()),
+                       HTMLEditor::LiftUpFromAllParentListElements::No);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return SplitRangeOffFromNodeResult(rv);
           }
@@ -10122,53 +10128,59 @@ nsresult HTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::LiftUpListItemElement(
+    Element& aListItemElement,
+    LiftUpFromAllParentListElements aLiftUpFromAllParentListElements) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (aOutOfList) {
-    *aOutOfList = false;
+  if (!HTMLEditUtils::IsListItem(&aListItemElement)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(!aListItem.GetParent()) ||
-      NS_WARN_IF(!aListItem.GetParent()->GetParentNode()) ||
-      !HTMLEditUtils::IsListItem(&aListItem)) {
+  if (NS_WARN_IF(!aListItemElement.GetParentElement()) ||
+      NS_WARN_IF(!aListItemElement.GetParentElement()->GetParentNode())) {
     return NS_ERROR_FAILURE;
   }
 
   // if it's first or last list item, don't need to split the list
   // otherwise we do.
-  bool isFirstListItem = HTMLEditorRef().IsFirstEditableChild(&aListItem);
-  bool isLastListItem = HTMLEditorRef().IsLastEditableChild(&aListItem);
+  bool isFirstListItem = IsFirstEditableChild(&aListItemElement);
+  bool isLastListItem = IsLastEditableChild(&aListItemElement);
 
-  nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
+  Element* leftListElement = aListItemElement.GetParentElement();
+  if (NS_WARN_IF(!leftListElement)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // If it's at middle of parent list element, split the parent list element.
   // Then, aListItem becomes the first list item of the right list element.
-  nsCOMPtr<nsIContent> listItem(&aListItem);
   if (!isFirstListItem && !isLastListItem) {
-    EditorDOMPoint atListItem(listItem);
-    if (NS_WARN_IF(!atListItem.IsSet())) {
-      return NS_ERROR_INVALID_ARG;
+    EditorDOMPoint atListItemElement(&aListItemElement);
+    if (NS_WARN_IF(!atListItemElement.IsSet())) {
+      return NS_ERROR_FAILURE;
     }
-    MOZ_ASSERT(atListItem.IsSetAndValid());
+    MOZ_ASSERT(atListItemElement.IsSetAndValid());
     ErrorResult error;
-    leftListNode = MOZ_KnownLive(HTMLEditorRef())
-                       .SplitNodeWithTransaction(atListItem, error);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    nsCOMPtr<nsIContent> maybeLeftListContent =
+        SplitNodeWithTransaction(atListItemElement, error);
+    if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
+    if (NS_WARN_IF(!maybeLeftListContent->IsElement())) {
+      return NS_ERROR_FAILURE;
+    }
+    leftListElement = maybeLeftListContent->AsElement();
   }
 
   // In most cases, insert the list item into the new left list node..
-  EditorDOMPoint pointToInsertListItem(leftListNode);
+  EditorDOMPoint pointToInsertListItem(leftListElement);
   if (NS_WARN_IF(!pointToInsertListItem.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(pointToInsertListItem.IsSetAndValid());
 
   // But when the list item was the first child of the right list, it should
   // be inserted between the both list elements.  This allows user to hit
@@ -10179,39 +10191,41 @@ nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
                          "Failed to advance offset to right list node");
   }
 
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .MoveNodeWithTransaction(*listItem, pointToInsertListItem);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv =
+      MoveNodeWithTransaction(aListItemElement, pointToInsertListItem);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // unwrap list item contents if they are no longer in a list
+  // Unwrap list item contents if they are no longer in a list
   // XXX If the parent list element is a child of another list element
   //     (although invalid tree), the list item element won't be unwrapped.
   //     That makes the parent ancestor element tree valid, but might be
   //     unexpected result.
-  // XXX If aListItem is <dl> or <dd> and current parent is <ul> or <ol>,
-  //     the list items won't be unwrapped.  If aListItem is <li> and its
+  // XXX If aListItemElement is <dl> or <dd> and current parent is <ul> or <ol>,
+  //     the list items won't be unwrapped.  If aListItemElement is <li> and its
   //     current parent is <dl>, there is same issue.
   if (!HTMLEditUtils::IsList(pointToInsertListItem.GetContainer()) &&
-      HTMLEditUtils::IsListItem(listItem)) {
-    rv = MOZ_KnownLive(HTMLEditorRef())
-             .RemoveBlockContainerWithTransaction(
-                 MOZ_KnownLive(*listItem->AsElement()));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+      HTMLEditUtils::IsListItem(&aListItemElement)) {
+    rv = RemoveBlockContainerWithTransaction(aListItemElement);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    if (aOutOfList) {
-      *aOutOfList = true;
-    }
+    return NS_OK;
   }
-  return NS_OK;
+  if (aLiftUpFromAllParentListElements == LiftUpFromAllParentListElements::No) {
+    return NS_OK;
+  }
+  // XXX If aListItemElement is moved to unexpected element by mutation event
+  //     listener, shouldn't we stop calling this?
+  return LiftUpListItemElement(aListItemElement,
+                               LiftUpFromAllParentListElements::Yes);
 }
 
 nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
@@ -10222,23 +10236,21 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
     OwningNonNull<nsIContent> child = *aListElement.GetFirstChild();
 
     if (HTMLEditUtils::IsListItem(child)) {
-      bool isOutOfList;
-      // Keep popping it out until it's not in a list anymore
-      // XXX Using PopuListItem() is too expensive for this purpose.  Looks
-      //     like the reason why this method uses it is, only this loop
-      //     wants to work with first child of aList.  However, what it
-      //     actually does is removing <li> as container.  So, just using
-      //     RemoveBlockContainerWithTransaction() is reasonable.
-      // XXX This loop means that if aListElement is is a child of another
-      //     list element (although it's invalid tree), this moves the
-      //     list item to outside of aListElement's parent.  Is that really
-      //     intentional behavior?
-      do {
-        nsresult rv = PopListItem(child, &isOutOfList);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } while (!isOutOfList);
+      // XXX Using LiftUpListItemElement() is too expensive for this purpose.
+      //     Looks like the reason why this method uses it is, only this loop
+      //     wants to work with first child of aListElement.  However, what it
+      //     actually does is removing <li> as container.  Perhaps, we should
+      //     decide destination first, and then, move contents in `child`.
+      // XXX If aListElement is is a child of another list element (although
+      //     it's invalid tree), this moves the list item to outside of
+      //     aListElement's parent.  Is that really intentional behavior?
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .LiftUpListItemElement(
+                            MOZ_KnownLive(*child->AsElement()),
+                            HTMLEditor::LiftUpFromAllParentListElements::Yes);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       continue;
     }
 
