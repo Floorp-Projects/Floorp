@@ -108,21 +108,6 @@ NativeObject* DebuggerScript::initClass(JSContext* cx,
                    methods_, nullptr, nullptr);
 }
 
-class DebuggerScript::SetPrivateMatcher {
-  DebuggerScript* obj_;
-
- public:
-  explicit SetPrivateMatcher(DebuggerScript* obj) : obj_(obj) {}
-  using ReturnType = void;
-  ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    obj_->setPrivateGCThing(lazyScript);
-  }
-  ReturnType match(Handle<WasmInstanceObject*> instance) {
-    obj_->setPrivateGCThing(instance);
-  }
-};
-
 /* static */
 DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
                                        Handle<DebuggerScriptReferent> referent,
@@ -135,8 +120,8 @@ DebuggerScript* DebuggerScript::create(JSContext* cx, HandleObject proto,
 
   scriptobj->setReservedSlot(DebuggerScript::OWNER_SLOT,
                              ObjectValue(*debugger));
-  SetPrivateMatcher matcher(scriptobj);
-  referent.match(matcher);
+  referent.get().match(
+      [&](auto& scriptHandle) { scriptobj->setPrivateGCThing(scriptHandle); });
 
   return scriptobj;
 }
@@ -356,22 +341,14 @@ bool DebuggerScript::getUrl(JSContext* cx, unsigned argc, Value* vp) {
   return getUrlImpl<LazyScript>(cx, args, lazyScript);
 }
 
-struct DebuggerScript::GetStartLineMatcher {
-  using ReturnType = uint32_t;
-
-  ReturnType match(HandleScript script) { return script->lineno(); }
-  ReturnType match(Handle<LazyScript*> lazyScript) {
-    return lazyScript->lineno();
-  }
-  ReturnType match(Handle<WasmInstanceObject*> wasmInstance) { return 1; }
-};
-
 /* static */
 bool DebuggerScript::getStartLine(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get startLine)", args, obj,
                             referent);
-  GetStartLineMatcher matcher;
-  args.rval().setNumber(referent.match(matcher));
+  args.rval().setNumber(
+      referent.get().match([](JSScript*& s) { return s->lineno(); },
+                           [](LazyScript*& s) { return s->lineno(); },
+                           [](WasmInstanceObject*&) { return (uint32_t)1; }));
   return true;
 }
 
@@ -516,24 +493,13 @@ bool DebuggerScript::getGlobal(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-class DebuggerScript::GetFormatMatcher {
-  const JSAtomState& names_;
-
- public:
-  explicit GetFormatMatcher(const JSAtomState& names) : names_(names) {}
-  using ReturnType = JSAtom*;
-  ReturnType match(HandleScript script) { return names_.js; }
-  ReturnType match(Handle<LazyScript*> lazyScript) { return names_.js; }
-  ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-    return names_.wasm;
-  }
-};
-
 /* static */
 bool DebuggerScript::getFormat(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get format)", args, obj, referent);
-  GetFormatMatcher matcher(cx->names());
-  args.rval().setString(referent.match(matcher));
+  args.rval().setString(referent.get().match(
+      [=](JSScript*&) { return cx->names().js; },
+      [=](LazyScript*&) { return cx->names().js; },
+      [=](WasmInstanceObject*&) { return cx->names().wasm; }));
   return true;
 }
 
