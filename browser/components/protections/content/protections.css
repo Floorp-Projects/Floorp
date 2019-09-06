@@ -102,8 +102,8 @@ a.hidden,
 }
 
 .icon {
-  width: 60px;
-  height: auto;
+  width: 64px;
+  height: 64px;
   grid-column: 1;
   margin: 0 auto;
   z-index: 1;
