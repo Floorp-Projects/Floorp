@@ -53,6 +53,11 @@ class GeckoTelemetryDelegate final
         mozilla::jni::LongArray::New(samples->Elements(), samples->Length()));
   }
 
+  void ReceiveCategoricalHistogramSamples(
+      const nsCString& aName, const nsTArray<uint32_t>& aSamples) override {
+    MOZ_ASSERT_UNREACHABLE("ReceiveCategoricalHistogramSamples unimplemented");
+  }
+
   void ReceiveBoolScalarValue(const nsCString& aName, bool aValue) override {
     if (!mozilla::jni::IsAvailable() || !mProxy) {
       return;
