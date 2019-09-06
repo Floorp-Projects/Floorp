@@ -262,10 +262,10 @@ nsresult txMozillaXMLOutput::endElement() {
     }
 
     // Handle elements that are different when parser-created
-    if (element->IsAnyOfHTMLElements(nsGkAtoms::title, nsGkAtoms::object,
-                                     nsGkAtoms::select, nsGkAtoms::textarea) ||
-        element->IsSVGElement(nsGkAtoms::title)) {
-      element->DoneAddingChildren(true);
+    if (nsIContent::RequiresDoneCreatingElement(
+            element->NodeInfo()->NamespaceID(),
+            element->NodeInfo()->NameAtom())) {
+      element->DoneCreatingElement();
     } else if (element->IsSVGElement(nsGkAtoms::script) ||
                element->IsHTMLElement(nsGkAtoms::script)) {
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element);
@@ -282,10 +282,10 @@ nsresult txMozillaXMLOutput::endElement() {
                    "Script elements need to implement nsIScriptElement and SVG "
                    "wasn't disabled.");
       }
-    } else if (element->IsAnyOfHTMLElements(
-                   nsGkAtoms::input, nsGkAtoms::button, nsGkAtoms::menuitem,
-                   nsGkAtoms::audio, nsGkAtoms::video)) {
-      element->DoneCreatingElement();
+    } else if (nsIContent::RequiresDoneAddingChildren(
+                   element->NodeInfo()->NamespaceID(),
+                   element->NodeInfo()->NameAtom())) {
+      element->DoneAddingChildren(true);
     }
   }
 
