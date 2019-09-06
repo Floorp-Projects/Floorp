@@ -974,11 +974,13 @@ nsresult HTMLEditRules::GetListItemState(bool* aMixed, bool* aLI, bool* aDT,
     } else if (node->IsHTMLElement(nsGkAtoms::dd)) {
       *aDD = true;
     } else if (node->IsHTMLElement(nsGkAtoms::dl)) {
+      if (*aDT && *aDD) {
+        continue;
+      }
       // need to look inside dl and see which types of items it has
-      bool bDT, bDD;
-      GetDefinitionListItemTypes(node->AsElement(), &bDT, &bDD);
-      *aDT |= bDT;
-      *aDD |= bDD;
+      DefinitionListItemScanner scanner(*node->AsElement());
+      *aDT |= scanner.DTElementFound();
+      *aDD |= scanner.DDElementFound();
     } else {
       bNonList = true;
     }
@@ -7869,24 +7871,6 @@ Element* HTMLEditor::GetDeepestEditableOnlyChildDivBlockquoteOrListElement(
     parentElement = content->AsElement();
   }
   return parentElement;
-}
-
-void HTMLEditRules::GetDefinitionListItemTypes(dom::Element* aElement,
-                                               bool* aDT, bool* aDD) const {
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->IsHTMLElement(nsGkAtoms::dl));
-  MOZ_ASSERT(aDT);
-  MOZ_ASSERT(aDD);
-
-  *aDT = *aDD = false;
-  for (nsIContent* child = aElement->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTMLElement(nsGkAtoms::dt)) {
-      *aDT = true;
-    } else if (child->IsHTMLElement(nsGkAtoms::dd)) {
-      *aDD = true;
-    }
-  }
 }
 
 nsresult HTMLEditRules::GetParagraphFormatNodes(

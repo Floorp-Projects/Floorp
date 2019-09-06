@@ -6,15 +6,13 @@
 #ifndef HTMLEditUtils_h
 #define HTMLEditUtils_h
 
-#include <stdint.h>
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/Element.h"
+#include "nsGkAtoms.h"
 
 class nsAtom;
-class nsINode;
 
 namespace mozilla {
-namespace dom {
-class Element;
-}  // namespace dom
 
 class HTMLEditUtils final {
  public:
@@ -62,6 +60,42 @@ class HTMLEditUtils final {
                                                const nsAtom* aAttribute,
                                                bool aToSetStyle);
   static EditAction GetEditActionForAlignment(const nsAString& aAlignType);
+};
+
+/**
+ * DefinitionListItemScanner() scans given `<dl>` element's children.
+ * Then, you can check whether `<dt>` and/or `<dd>` elements are in it.
+ */
+class MOZ_STACK_CLASS DefinitionListItemScanner final {
+ public:
+  DefinitionListItemScanner() = delete;
+  explicit DefinitionListItemScanner(dom::Element& aDLElement) {
+    MOZ_ASSERT(aDLElement.IsHTMLElement(nsGkAtoms::dl));
+    for (nsIContent* child = aDLElement.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (child->IsHTMLElement(nsGkAtoms::dt)) {
+        mDTFound = true;
+        if (mDDFound) {
+          break;
+        }
+        continue;
+      }
+      if (child->IsHTMLElement(nsGkAtoms::dd)) {
+        mDDFound = true;
+        if (mDTFound) {
+          break;
+        }
+        continue;
+      }
+    }
+  }
+
+  bool DTElementFound() const { return mDTFound; }
+  bool DDElementFound() const { return mDDFound; }
+
+ private:
+  bool mDTFound = false;
+  bool mDDFound = false;
 };
 
 }  // namespace mozilla
