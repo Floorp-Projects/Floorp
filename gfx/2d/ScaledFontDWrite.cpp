@@ -493,8 +493,7 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
     Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
     std::vector<FontVariation>* aOutVariations) {
   wr::FontInstanceOptions options;
-  bool useSubpixel = !mParams || mParams->GetClearTypeLevel() != 0.0f;
-  options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode(), useSubpixel);
+  options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
   options.flags = wr::FontInstanceFlags{0};
   if (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) {
     options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
@@ -629,11 +628,22 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFontFromWRFont(
 AntialiasMode ScaledFontDWrite::GetDefaultAAMode() {
   AntialiasMode defaultMode = GetSystemDefaultAAMode();
 
-  if (defaultMode == AntialiasMode::GRAY) {
-    if (!DoGrayscale(mFontFace, mSize)) {
-      defaultMode = AntialiasMode::NONE;
-    }
+  switch (defaultMode) {
+    case AntialiasMode::SUBPIXEL:
+    case AntialiasMode::DEFAULT:
+      if (mParams && mParams->GetClearTypeLevel() == 0.0f) {
+        defaultMode = AntialiasMode::GRAY;
+      }
+      break;
+    case AntialiasMode::GRAY:
+      if (!DoGrayscale(mFontFace, mSize)) {
+        defaultMode = AntialiasMode::NONE;
+      }
+      break;
+    case AntialiasMode::NONE:
+      break;
   }
+
   return defaultMode;
 }
 
