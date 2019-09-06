@@ -130,12 +130,6 @@ const kEventConstructors = {
                                                          return new FontFaceSetLoadEvent(aName, aProps);
                                                        },
                                              },
-  FormDataEvent:                             { create (aName, aProps) {
-                                                        return new FormDataEvent(aName, {
-                                                            formData: new FormData()
-                                                        });
-                                                      },
-                                             },
   GamepadEvent:                              { create (aName, aProps) {
                                                          return new GamepadEvent(aName, aProps);
                                                        },
@@ -477,8 +471,7 @@ function test() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true],
-           ["dom.formdata.event.enabled", true]]},
+  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true]]},
   function() {
     test();
     SimpleTest.finish();
