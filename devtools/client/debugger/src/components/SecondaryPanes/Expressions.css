@@ -126,7 +126,7 @@
 }
 
 .expressions-list .tree.object-inspector .node.object-node {
-  max-width: calc(113% - var(--breakpoint-expression-right-clear-space));
+  max-width: calc(100% - 20px);
   min-width: 0;
   text-overflow: ellipsis;
   overflow: hidden;
