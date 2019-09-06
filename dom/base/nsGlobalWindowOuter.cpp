@@ -179,6 +179,7 @@
 
 #include "nsBindingManager.h"
 #include "nsXBLService.h"
+#include "mozilla/GlobalKeyListener.h"
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
@@ -1924,7 +1925,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     nsPIDOMWindowOuter* privateRoot = GetPrivateRoot();
 
     if (privateRoot == this) {
-      nsXBLService::AttachGlobalKeyHandler(mChromeEventHandler);
+      RootWindowGlobalKeyListener::AttachKeyHandler(mChromeEventHandler);
     }
   }
 
