@@ -677,6 +677,21 @@ contentblocking:
       - 'geckoview'
     record_in_processes:
       - main
+  trackers_blocked_count:
+    bug_numbers:
+      - 1577030
+    description: >
+      A count of the number of tracking events blocked.
+    expires: "75"
+    kind: uint
+    notification_emails:
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 sandbox:
   no_job:
