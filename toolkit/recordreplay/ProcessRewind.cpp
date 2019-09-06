@@ -182,12 +182,14 @@ void DivergeFromRecording() {
     // Reset middleman call state whenever we first diverge from the recording.
     child::SendResetMiddlemanCalls();
 
-    // Make sure all non-main threads are idle before we begin diverging. This
-    // thread's new behavior can change values used by other threads and induce
-    // recording mismatches.
-    Thread::WaitForIdleThreads();
-
     thread->DivergeFromRecording();
+
+    // Direct all other threads to diverge from the recording as well.
+    Thread::WaitForIdleThreads();
+    for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
+      Thread::GetById(i)->SetShouldDivergeFromRecording();
+    }
+    Thread::ResumeIdleThreads();
   }
 
   gUnhandledDivergeAllowed = true;
