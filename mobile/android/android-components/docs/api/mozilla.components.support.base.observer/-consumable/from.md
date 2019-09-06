@@ -2,7 +2,7 @@
 
 # from
 
-`fun <T> from(value: `[`T`](from.md#T)`, onConsume: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Consumable`](index.md)`<`[`T`](from.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L59)
+`fun <T> from(value: `[`T`](from.md#T)`, onConsume: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Consumable`](index.md)`<`[`T`](from.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L87)
 
 Creates a new Consumable wrapping the given value.
 

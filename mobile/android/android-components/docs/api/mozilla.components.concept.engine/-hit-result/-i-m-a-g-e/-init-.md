@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`IMAGE(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`IMAGE(src: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`
 
 If the HTML element was of type 'HTMLImageElement'.
 
