@@ -12,8 +12,10 @@ const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 const { requestIdleCallback } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SCHEMA_VERSION = 1;
+const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";
 
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
@@ -227,6 +229,9 @@ TrackingDBService.prototype = {
           // cookie which is not a tracking cookie. These should not be added to the database.
           let type = this.identifyType(log[thirdParty]);
           if (type) {
+            // Send the blocked event to Telemetry
+            Services.telemetry.scalarAdd(TRACKERS_BLOCKED_COUNT, 1);
+
             // today is a date "YYY-MM-DD" which can compare with what is
             // already saved in the database.
             let today = new Date().toISOString().split("T")[0];
