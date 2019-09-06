@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate env_logger;
-extern crate euclid;
-
 use gleam::gl;
 use glutin;
 use std::env;
@@ -107,6 +104,17 @@ pub fn main_wrapper<E: Example>(
     options: Option<webrender::RendererOptions>,
 ) {
     env_logger::init();
+
+    #[cfg(target_os = "macos")]
+    {
+        use core_foundation::{self as cf, base::TCFType};
+        let i = cf::bundle::CFBundle::main_bundle().info_dictionary();
+        let mut i = unsafe { i.to_mutable() };
+        i.set(
+            cf::string::CFString::new("NSSupportsAutomaticGraphicsSwitching"),
+            cf::boolean::CFBoolean::true_value().into_CFType(),
+        );
+    }
 
     let args: Vec<String> = env::args().collect();
     let res_path = if args.len() > 1 {
