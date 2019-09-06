@@ -1,16 +1,16 @@
 ## Overview ##
 Soft code freeze for a release is the *second Wednesday of the sprint*, and most of releng happens between *Wednesday and Friday*, String freeze is the *first Tuesday* of the sprint.
 
-| Monday       | Tuesday     | Wednesday                    | Thursday       | Friday      |
-|--------------|-------------|------------------------------|----------------|-------------|
-| Sprint Start | Sprint Work | Sprint Work                  | Sprint Work    | Sprint Work |
-| Sprint Work  | Sprint Work | Sprint Work/Soft Code Freeze | Sprint Work/QA | Planning    |
-|              | Release     |                              |                |             |
+| Monday       | Tuesday                   | Wednesday                    | Thursday       | Friday      |
+|--------------|---------------------------|------------------------------|----------------|-------------|
+| Sprint Start | Sprint Work/String Freeze | Sprint Work                  | Sprint Work    | Sprint Work |
+| Sprint Work  | Sprint Work               | Sprint Work/Soft Code Freeze | Sprint Work/QA | Planning    |
+|              | Release                   |                              |                |             |
 
 ## Start of sprint
 - [ ] Create an issue in the *upcoming* milestone: "What's New Entry for [release]" to track work for the SUMO page and Google Play release notes.
 
-## String freeze
+## String freeze [Tuesday, 1st week of sprint]
 - [ ] Make sure all issues with label "strings needed" have strings assigned and the label updated to "strings approved"
 - [ ] Pre-land all strings for features that have not been implemented yet
 
