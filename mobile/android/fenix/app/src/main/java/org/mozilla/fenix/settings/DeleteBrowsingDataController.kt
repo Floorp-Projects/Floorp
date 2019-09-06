@@ -54,7 +54,12 @@ class DefaultDeleteBrowsingDataController(
 
     override suspend fun deleteCookies() {
         withContext(coroutineContext) {
-            context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.COOKIES))
+            context.components.core.engine.clearData(
+                Engine.BrowsingData.select(
+                    Engine.BrowsingData.COOKIES,
+                    Engine.BrowsingData.AUTH_SESSIONS
+                )
+            )
         }
     }
 

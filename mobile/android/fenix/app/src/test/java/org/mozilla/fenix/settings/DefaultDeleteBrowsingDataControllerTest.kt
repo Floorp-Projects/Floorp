@@ -100,7 +100,12 @@ class DefaultDeleteBrowsingDataControllerTest {
         controller.deleteCookies()
 
         verify {
-            context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.COOKIES))
+            context.components.core.engine.clearData(
+                Engine.BrowsingData.select(
+                    Engine.BrowsingData.COOKIES,
+                    Engine.BrowsingData.AUTH_SESSIONS
+                )
+            )
         }
     }
 
