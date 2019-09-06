@@ -4727,7 +4727,9 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
       }
     } else if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
-      nsresult rv = RemoveListStructure(MOZ_KnownLive(*curNode->AsElement()));
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .DestroyListStructureRecursively(
+                            MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10228,10 +10230,13 @@ nsresult HTMLEditor::LiftUpListItemElement(
                                LiftUpFromAllParentListElements::Yes);
 }
 
-nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
 
+  // XXX If mutation event listener inserts new child into `aListElement`,
+  //     this becomes infinite loop so that we should set limit of the
+  //     loop count from original child count.
   while (aListElement.GetFirstChild()) {
     OwningNonNull<nsIContent> child = *aListElement.GetFirstChild();
 
@@ -10244,10 +10249,9 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
       // XXX If aListElement is is a child of another list element (although
       //     it's invalid tree), this moves the list item to outside of
       //     aListElement's parent.  Is that really intentional behavior?
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .LiftUpListItemElement(
-                            MOZ_KnownLive(*child->AsElement()),
-                            HTMLEditor::LiftUpFromAllParentListElements::Yes);
+      nsresult rv = LiftUpListItemElement(
+          MOZ_KnownLive(*child->AsElement()),
+          HTMLEditor::LiftUpFromAllParentListElements::Yes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10255,7 +10259,8 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
     }
 
     if (HTMLEditUtils::IsList(child)) {
-      nsresult rv = RemoveListStructure(MOZ_KnownLive(*child->AsElement()));
+      nsresult rv =
+          DestroyListStructureRecursively(MOZ_KnownLive(*child->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10266,9 +10271,8 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
     // XXX This is not HTML5 aware.  HTML5 allows all list elements to have
     //     <script> and <template> and <dl> element to have <div> to group
     //     some <dt> and <dd> elements.  So, this may break valid children.
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*child);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    nsresult rv = DeleteNodeWithTransaction(*child);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -10277,9 +10281,8 @@ nsresult HTMLEditRules::RemoveListStructure(Element& aListElement) {
   }
 
   // Delete the now-empty list
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .RemoveBlockContainerWithTransaction(aListElement);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = RemoveBlockContainerWithTransaction(aListElement);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {

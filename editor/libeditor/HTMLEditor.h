@@ -2300,6 +2300,22 @@ class HTMLEditor final : public TextEditor,
       dom::Element& aListItemElement,
       LiftUpFromAllParentListElements aLiftUpFromAllParentListElements);
 
+  /**
+   * DestroyListStructureRecursively() destroys the list structure of
+   * aListElement recursively.
+   * If aListElement has <li>, <dl> or <dt> as a child, the element is removed
+   * but its descendants are moved to where the list item element was.
+   * If aListElement has another <ul>, <ol> or <dl> as a child, this method is
+   * called recursively.
+   * If aListElement has other nodes as its child, they are just removed.
+   * Finally, aListElement is removed. and its all children are moved to
+   * where the aListElement was.
+   *
+   * @param aListElement        A <ul>, <ol> or <dl> element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  DestroyListStructureRecursively(Element& aListElement);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
