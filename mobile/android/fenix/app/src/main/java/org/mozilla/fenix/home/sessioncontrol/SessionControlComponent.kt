@@ -5,13 +5,12 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
-import android.os.Parcelable
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
-import kotlinx.android.parcel.Parcelize
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.media.state.MediaState
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
@@ -46,14 +45,14 @@ class SessionControlComponent(
     }
 }
 
-@Parcelize
 data class Tab(
     val sessionId: String,
     val url: String,
     val hostname: String,
     val title: String,
-    val selected: Boolean? = null
-) : Parcelable
+    val selected: Boolean? = null,
+    var mediaState: MediaState? = null
+)
 
 fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
     val sessionBundle = mutableListOf<Session>()
@@ -62,7 +61,6 @@ fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
             sessionBundle.add(session)
         }
     }
-
     return sessionBundle
 }
 
@@ -108,6 +106,8 @@ sealed class TabAction : Action {
     data class Select(val tabView: View, val sessionId: String) : TabAction()
     data class Close(val sessionId: String) : TabAction()
     data class Share(val sessionId: String) : TabAction()
+    data class PauseMedia(val sessionId: String) : TabAction()
+    data class PlayMedia(val sessionId: String) : TabAction()
     object PrivateBrowsingLearnMore : TabAction()
 }
 

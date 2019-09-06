@@ -14,10 +14,12 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.feature.media.state.MediaState
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -31,7 +33,7 @@ class TabViewHolder(
 ) :
     RecyclerView.ViewHolder(view), LayoutContainer {
 
-    var tab: Tab? = null
+    internal var tab: Tab? = null
     private var tabMenu: TabItemMenu
 
     init {
@@ -52,9 +54,21 @@ class TabViewHolder(
             true
         }
 
-        close_tab_button?.run {
-            setOnClickListener {
-                actionEmitter.onNext(TabAction.Close(tab?.sessionId!!))
+        close_tab_button.setOnClickListener {
+            actionEmitter.onNext(TabAction.Close(tab?.sessionId!!))
+        }
+
+        play_pause_button.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
+
+        play_pause_button.setOnClickListener {
+            when (tab?.mediaState) {
+                is MediaState.Playing -> {
+                    actionEmitter.onNext(TabAction.PauseMedia(tab?.sessionId!!))
+                }
+
+                is MediaState.Paused -> {
+                    actionEmitter.onNext(TabAction.PlayMedia(tab?.sessionId!!))
+                }
             }
         }
 
@@ -72,27 +86,59 @@ class TabViewHolder(
         }
     }
 
-    fun bindSession(tab: Tab) {
-        this.tab = tab
-        updateTabUI(tab)
-        item_tab.transitionName = "$TAB_ITEM_TRANSITION_NAME${tab.sessionId}"
+    internal fun bindSession(tab: Tab) {
+        updateTab(tab)
+        updateTitle(tab.title)
+        updateHostname(tab.hostname)
+        updateFavIcon(tab.url)
         updateSelected(tab.selected ?: false)
+        updatePlayPauseButton(tab.mediaState ?: MediaState.None)
+        item_tab.transitionName = "$TAB_ITEM_TRANSITION_NAME${tab.sessionId}"
     }
 
-    private fun updateTabUI(tab: Tab) {
-        hostname.text = tab.hostname
-        tab_title.text = tab.title
-        favicon_image.context.components.core.icons.loadIntoView(favicon_image, tab.url)
+    internal fun updatePlayPauseButton(mediaState: MediaState) {
+        with(play_pause_button) {
+            visibility = if (mediaState is MediaState.Playing || mediaState is MediaState.Paused) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+            if (mediaState is MediaState.Playing) {
+                play_pause_button.contentDescription =
+                    context.getString(R.string.mozac_feature_media_notification_action_pause)
+                setImageDrawable(context.getDrawable(R.drawable.pause_with_background))
+            } else {
+                play_pause_button.contentDescription =
+                    context.getString(R.string.mozac_feature_media_notification_action_play)
+                setImageDrawable(context.getDrawable(R.drawable.play_with_background))
+            }
+        }
     }
 
-    fun updateSelected(selected: Boolean) {
+    internal fun updateTab(tab: Tab) {
+        this.tab = tab
+    }
+    internal fun updateTitle(text: String) {
+        tab_title.text = text
+    }
+
+    internal fun updateHostname(text: String) {
+        hostname.text = text
+    }
+
+    internal fun updateFavIcon(url: String) {
+        favicon_image.context.components.core.icons.loadIntoView(favicon_image, url)
+    }
+
+    internal fun updateSelected(selected: Boolean) {
         selected_border.visibility = if (selected) View.VISIBLE else View.GONE
     }
 
     companion object {
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
+        private const val PLAY_PAUSE_BUTTON_EXTRA_DPS = 24
         const val LAYOUT_ID = R.layout.tab_list_row
-        const val buttonIncreaseDps = 12
         const val favIconBorderRadiusInPx = 4
     }
 }

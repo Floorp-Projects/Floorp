@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
@@ -14,6 +15,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
+import kotlinx.android.synthetic.main.tab_list_row.*
+import mozilla.components.feature.media.state.MediaState
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageViewHolder
@@ -37,7 +40,28 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     data class TabHeader(val isPrivate: Boolean, val hasTabs: Boolean) : AdapterItem(TabHeaderViewHolder.LAYOUT_ID)
     data class TabItem(val tab: Tab) : AdapterItem(TabViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem) = other is TabItem && tab.sessionId == other.tab.sessionId
+
+        // Tell the adapter exactly what values have changed so it only has to draw those
+        override fun getChangePayload(newItem: AdapterItem): Any? {
+            (newItem as TabItem).let {
+                val shouldUpdateUrl = newItem.tab.url != this.tab.url
+                val shouldUpdateHostname = newItem.tab.hostname != this.tab.hostname
+                val shouldUpdateTitle = newItem.tab.title != this.tab.title
+                val shouldUpdateSelected = newItem.tab.selected != this.tab.selected
+                val shouldUpdateMediaState = newItem.tab.mediaState != this.tab.mediaState
+
+                return AdapterItemDiffCallback.TabChangePayload(
+                    tab = newItem.tab,
+                    shouldUpdateUrl = shouldUpdateUrl,
+                    shouldUpdateHostname = shouldUpdateHostname,
+                    shouldUpdateTitle = shouldUpdateTitle,
+                    shouldUpdateSelected = shouldUpdateSelected,
+                    shouldUpdateMediaState = shouldUpdateMediaState
+                )
+            }
+        }
     }
+
     object SaveTabGroup : AdapterItem(SaveTabGroupViewHolder.LAYOUT_ID)
 
     object PrivateBrowsingDescription : AdapterItem(PrivateBrowsingDescriptionViewHolder.LAYOUT_ID)
@@ -85,6 +109,11 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
      * True if this item represents the same value as other. Used by [AdapterItemDiffCallback].
      */
     open fun sameAs(other: AdapterItem) = this::class == other::class
+
+    /**
+     * Returns a payload if there's been a change, or null if not
+     */
+    open fun getChangePayload(newItem: AdapterItem): Any? = null
 }
 
 class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
@@ -92,6 +121,19 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 
     @Suppress("DiffUtilEquals")
     override fun areContentsTheSame(oldItem: AdapterItem, newItem: AdapterItem) = oldItem == newItem
+
+    override fun getChangePayload(oldItem: AdapterItem, newItem: AdapterItem): Any? {
+        return oldItem.getChangePayload(newItem) ?: return super.getChangePayload(oldItem, newItem)
+    }
+
+    data class TabChangePayload(
+        val tab: Tab,
+        val shouldUpdateUrl: Boolean,
+        val shouldUpdateHostname: Boolean,
+        val shouldUpdateTitle: Boolean,
+        val shouldUpdateSelected: Boolean,
+        val shouldUpdateMediaState: Boolean
+    )
 }
 
 class SessionControlAdapter(
@@ -133,9 +175,9 @@ class SessionControlAdapter(
                 val tabHeader = item as AdapterItem.TabHeader
                 holder.bind(tabHeader.isPrivate, tabHeader.hasTabs)
             }
-            is TabViewHolder -> holder.bindSession(
-                (item as AdapterItem.TabItem).tab
-            )
+            is TabViewHolder -> {
+                holder.bindSession((item as AdapterItem.TabItem).tab)
+            }
             is NoContentMessageViewHolder -> {
                 val (icon, header, description) = item as AdapterItem.NoContentMessage
                 holder.bind(icon, header, description)
@@ -152,13 +194,36 @@ class SessionControlAdapter(
                 (item as AdapterItem.OnboardingSectionHeader).labelBuilder
             )
             is OnboardingManualSignInViewHolder -> holder.bind()
-            is OnboardingAutomaticSignInViewHolder -> holder.bind(
-                (
-                    (
-                        item as AdapterItem.OnboardingAutomaticSignIn
-                    ).state as OnboardingState.SignedOutCanAutoSignIn
-                ).withAccount
+            is OnboardingAutomaticSignInViewHolder -> holder.bind((
+                (item as AdapterItem.OnboardingAutomaticSignIn).state
+                    as OnboardingState.SignedOutCanAutoSignIn).withAccount
             )
+        }
+    }
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isEmpty()) {
+            onBindViewHolder(holder, position)
+            return
+        }
+
+        (payloads[0] as AdapterItemDiffCallback.TabChangePayload).let {
+            (holder as TabViewHolder).updateTab(it.tab)
+
+            // Always set the visibility to GONE to avoid the play button sticking around from previous draws
+            holder.play_pause_button.visibility = View.GONE
+
+            if (it.shouldUpdateHostname) { holder.updateHostname(it.tab.hostname) }
+            if (it.shouldUpdateTitle) { holder.updateTitle(it.tab.title) }
+            if (it.shouldUpdateUrl) { holder.updateFavIcon(it.tab.url) }
+            if (it.shouldUpdateSelected) { holder.updateSelected(it.tab.selected ?: false) }
+            if (it.shouldUpdateMediaState) {
+                holder.updatePlayPauseButton(it.tab.mediaState ?: MediaState.None)
+            }
         }
     }
 }

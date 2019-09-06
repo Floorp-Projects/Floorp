@@ -35,6 +35,21 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageButton
+            android:id="@+id/play_pause_button"
+            android:contentDescription="@string/mozac_feature_media_notification_action_pause"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:elevation="10dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/pause_with_background"
+            android:visibility="gone"
+            app:layout_constraintCircleAngle="45"
+            app:layout_constraintCircleRadius="30dp"
+            app:layout_constraintCircle="@id/favicon_image"
+            app:layout_constraintEnd_toEndOf="@id/favicon_image"
+            app:layout_constraintTop_toTopOf="@id/favicon_image" />
+
         <TextView
                 android:id="@+id/hostname"
                 android:layout_width="0dp"
@@ -75,13 +90,15 @@
                 app:layout_constraintTop_toTopOf="parent"/>
 
         <View
-                android:id="@+id/selected_border"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@drawable/session_border"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+            android:id="@+id/selected_border"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/session_border"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

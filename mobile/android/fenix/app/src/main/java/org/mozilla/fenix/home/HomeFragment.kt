@@ -48,6 +48,11 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.feature.media.ext.getSession
+import mozilla.components.feature.media.ext.pauseIfPlaying
+import mozilla.components.feature.media.ext.playIfPaused
+import mozilla.components.feature.media.state.MediaState
+import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.END
@@ -144,6 +149,7 @@ class HomeFragment : Fragment(), AccountObserver {
         val sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
         }
+
         lifecycle.addObserver(sessionObserver)
 
         if (!onboarding.userHasBeenOnboarded()) {
@@ -371,6 +377,12 @@ class HomeFragment : Fragment(), AccountObserver {
                 sessionManager.findSessionById(action.sessionId)?.let { session ->
                     share(session.url)
                 }
+            }
+            is TabAction.PauseMedia -> {
+                MediaStateMachine.state.pauseIfPlaying()
+            }
+            is TabAction.PlayMedia -> {
+                MediaStateMachine.state.playIfPaused()
             }
             is TabAction.CloseAll -> {
                 if (pendingSessionDeletion?.deletionJob == null) {
@@ -926,7 +938,17 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private fun List<Session>.toTabs(): List<Tab> {
         val selected = sessionManager.selectedSession
-        return this.map { it.toTab(requireContext(), it == selected) }
+        val mediaStateSession = MediaStateMachine.state.getSession()
+
+        return this.map {
+            val mediaState = if (mediaStateSession?.id == it.id) {
+                MediaStateMachine.state
+            } else {
+                null
+            }
+
+            it.toTab(requireContext(), it == selected, mediaState)
+        }
     }
 
     companion object {
@@ -935,8 +957,6 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val ANIM_ON_SCREEN_DELAY = 200L
         private const val FADE_ANIM_DURATION = 150L
         private const val ANIM_SNACKBAR_DELAY = 100L
-        private const val ACCESSIBILITY_FOCUS_DELAY = 2000L
-        private const val TELEMETRY_HOME_IDENITIFIER = "home"
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val CFR_WIDTH_DIVIDER = 1.7
@@ -966,6 +986,7 @@ private class BrowserSessionsObserver(
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
+        MediaStateMachine.register(managerObserver)
         manager.register(managerObserver)
         subscribeToAll()
     }
@@ -975,6 +996,7 @@ private class BrowserSessionsObserver(
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onStop() {
+        MediaStateMachine.unregister(managerObserver)
         manager.unregister(managerObserver)
         unsubscribeFromAll()
     }
@@ -995,7 +1017,11 @@ private class BrowserSessionsObserver(
         session.unregister(observer)
     }
 
-    private val managerObserver = object : SessionManager.Observer {
+    private val managerObserver = object : SessionManager.Observer, MediaStateMachine.Observer {
+        override fun onStateChanged(state: MediaState) {
+            onChanged()
+        }
+
         override fun onSessionAdded(session: Session) {
             subscribeTo(session)
             onChanged()
