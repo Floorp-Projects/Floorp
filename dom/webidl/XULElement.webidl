@@ -77,10 +77,6 @@ interface XULElement : Element {
   [Throws, ChromeOnly]
   readonly attribute XULControllers             controllers;
 
-  [SetterThrows]
-  attribute long tabIndex;
-  [Throws]
-  void                      blur();
   [NeedsCallerType]
   void                      click();
   void                      doCommand();
@@ -98,6 +94,6 @@ interface XULElement : Element {
 };
 
 XULElement implements GlobalEventHandlers;
-XULElement implements HTMLOrSVGOrXULElementMixin;
+XULElement includes HTMLOrForeignElement;
 XULElement implements TouchEventHandlers;
 XULElement implements OnErrorEventHandlerForNodes;
