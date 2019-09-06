@@ -704,11 +704,14 @@ npnComplete:
   if (ssl) {
     // Telemetry for tls failure rate with and without esni;
     bool esni;
-    mSocketTransport->GetEsniUsed(&esni);
-    Telemetry::Accumulate(
-        Telemetry::ESNI_NOESNI_TLS_SUCCESS_RATE,
-        (esni) ? ((handshakeSucceeded) ? ESNI_SUCCESSFUL : ESNI_FAILED)
-               : ((handshakeSucceeded) ? NO_ESNI_SUCCESSFUL : NO_ESNI_FAILED));
+    rv = mSocketTransport->GetEsniUsed(&esni);
+    if (NS_SUCCEEDED(rv)) {
+      Telemetry::Accumulate(
+          Telemetry::ESNI_NOESNI_TLS_SUCCESS_RATE,
+          (esni)
+              ? ((handshakeSucceeded) ? ESNI_SUCCESSFUL : ESNI_FAILED)
+              : ((handshakeSucceeded) ? NO_ESNI_SUCCESSFUL : NO_ESNI_FAILED));
+    }
   }
 
   if (rv == psm::GetXPCOMFromNSSError(
