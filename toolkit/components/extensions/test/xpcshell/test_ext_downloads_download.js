@@ -415,6 +415,76 @@ add_task(async function test_downloads() {
   await extension.unload();
 });
 
+add_task(async function test_download_http_errors() {
+  const server = createHttpServer();
+  const url = `http://localhost:${server.identity.primaryPort}/error`;
+
+  server.registerPathHandler("/error", (request, response) => {
+    response.setStatusLine(
+      "1.1",
+      parseInt(request.queryString, 10),
+      "Some Error"
+    );
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Content-Length", "3");
+    response.write("err");
+  });
+
+  function background(code) {
+    let dlid = 0;
+    browser.test.onMessage.addListener(async options => {
+      try {
+        dlid = await browser.downloads.download(options);
+      } catch (err) {
+        browser.test.fail(`Unexpected error in downloads.download(): ${err}`);
+      }
+    });
+    function onChanged({ id, state }) {
+      if (!state || dlid !== id || state.current !== "interrupted") {
+        return;
+      }
+      browser.downloads.search({ id }).then(([download]) => {
+        browser.test.sendMessage("done", download.error);
+      });
+    }
+    browser.downloads.onChanged.addListener(onChanged);
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["downloads"],
+    },
+    background,
+  });
+  await extension.startup();
+
+  function download(code) {
+    const options = {
+      url: url + "?" + code,
+      conflictAction: "overwrite",
+    };
+    extension.sendMessage(options);
+    return extension.awaitMessage("done");
+  }
+
+  let res = await download(404);
+  equal(res, "SERVER_BAD_CONTENT", "error is correct");
+
+  res = await download(403);
+  equal(res, "SERVER_FORBIDDEN", "error is correct");
+
+  res = await download(402);
+  equal(res, "SERVER_UNAUTHORIZED", "error is correct");
+
+  res = await download(407);
+  equal(res, "SERVER_UNAUTHORIZED", "error is correct");
+
+  res = await download(504);
+  equal(res, "SERVER_FAILED", "error is correct");
+
+  await extension.unload();
+});
+
 add_task(async function test_download_http_details() {
   const server = createHttpServer();
   const url = `http://localhost:${server.identity.primaryPort}/post-log`;
