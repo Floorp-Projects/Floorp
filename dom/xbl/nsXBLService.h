@@ -62,10 +62,6 @@ class nsXBLService final : public nsSupportsWeakReference {
                                    bool aForceSyncLoad,
                                    nsXBLDocumentInfo** aResult);
 
-  // Used by XUL key bindings and for window XBL.
-  static nsresult AttachGlobalKeyHandler(mozilla::dom::EventTarget* aTarget);
-  static nsresult DetachGlobalKeyHandler(mozilla::dom::EventTarget* aTarget);
-
  private:
   nsXBLService();
   virtual ~nsXBLService();

@@ -62,7 +62,7 @@ class UiCompositorControllerChild final
       const int32_t& aMessage);
   mozilla::ipc::IPCResult RecvRootFrameMetrics(const ScreenPoint& aScrollOffset,
                                                const CSSToScreenScale& aZoom);
-  mozilla::ipc::IPCResult RecvScreenPixels(ipc::Shmem&& aMem,
+  mozilla::ipc::IPCResult RecvScreenPixels(Shmem&& aMem,
                                            const ScreenIntSize& aSize);
 
  private:
