@@ -87,7 +87,6 @@ class CanvasParent final : public PCanvasParent {
 
   void StartTranslation();
 
-  RefPtr<CanvasParent> mSelfRef;
   UniquePtr<CanvasTranslator> mTranslator;
   volatile bool mTranslating = false;
 };
