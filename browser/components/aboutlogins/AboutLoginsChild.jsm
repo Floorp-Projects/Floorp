@@ -72,6 +72,14 @@ class AboutLoginsChild extends ActorChild {
             cloneFunctions: true,
           }
         );
+
+        const SUPPORT_URL =
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "firefox-lockwise";
+        let loginIntro = Cu.waiveXrays(
+          this.content.document.querySelector("login-intro")
+        );
+        loginIntro.supportURL = SUPPORT_URL;
         break;
       }
       case "AboutLoginsCopyLoginDetail": {
