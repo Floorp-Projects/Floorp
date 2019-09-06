@@ -85,6 +85,7 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	cmac.h \
 	alghmac.h \
 	blake2b.h \
 	blapi.h \
@@ -119,6 +120,7 @@ CSRCS = \
 	md2.c \
 	md5.c \
 	sha512.c \
+	cmac.c \
 	alghmac.c \
 	rawhash.c \
 	alg2268.c \
@@ -162,6 +164,7 @@ CSRCS = \
 ALL_CSRCS := $(CSRCS)
 
 ALL_HDRS =  \
+	cmac.h \
 	alghmac.h \
 	blake2b.h \
 	blapi.h \

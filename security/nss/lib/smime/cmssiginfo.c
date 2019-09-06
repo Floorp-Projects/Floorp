@@ -131,6 +131,22 @@ NSS_CMSSignerInfo_Destroy(NSSCMSSignerInfo *si)
 
     /* XXX storage ??? */
 }
+static SECOidTag
+NSS_CMSSignerInfo_GetSignatureAlgorithmOidTag(KeyType keyType,
+                                              SECOidTag pubkAlgTag,
+                                              SECOidTag signAlgTag)
+{
+    switch (keyType) {
+        case rsaKey:
+            return pubkAlgTag;
+        case rsaPssKey:
+        case dsaKey:
+        case ecKey:
+            return signAlgTag;
+        default:
+            return SEC_OID_UNKNOWN;
+    }
+}
 
 /*
  * NSS_CMSSignerInfo_Sign - sign something
@@ -144,6 +160,8 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
     SECKEYPrivateKey *privkey = NULL;
     SECOidTag digestalgtag;
     SECOidTag pubkAlgTag;
+    SECOidTag signAlgTag;
+    SECOidTag cmsSignAlgTag;
     SECItem signature = { 0 };
     SECStatus rv;
     PLArenaPool *poolp, *tmppoolp = NULL;
@@ -182,12 +200,29 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
      * so that I do not have to know about subjectPublicKeyInfo...
      */
     pubkAlgTag = SECOID_GetAlgorithmTag(algID);
-    if (signerinfo->signerIdentifier.identifierType == NSSCMSSignerID_SubjectKeyID) {
+    if (algID == &freeAlgID) {
         SECOID_DestroyAlgorithmID(&freeAlgID, PR_FALSE);
     }
 
+    signAlgTag = SEC_GetSignatureAlgorithmOidTag(SECKEY_GetPrivateKeyType(privkey),
+                                                 digestalgtag);
+    if (signAlgTag == SEC_OID_UNKNOWN) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        goto loser;
+    }
+
+    cmsSignAlgTag = NSS_CMSSignerInfo_GetSignatureAlgorithmOidTag(
+        SECKEY_GetPrivateKeyType(privkey), pubkAlgTag, signAlgTag);
+    if (cmsSignAlgTag == SEC_OID_UNKNOWN) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        goto loser;
+    }
+
+    if (SECOID_SetAlgorithmID(poolp, &(signerinfo->digestEncAlg),
+                              cmsSignAlgTag, NULL) != SECSuccess)
+        goto loser;
+
     if (signerinfo->authAttr != NULL) {
-        SECOidTag signAlgTag;
         SECItem encoded_attrs;
 
         /* find and fill in the message digest attribute. */
@@ -230,13 +265,6 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
                                          &encoded_attrs) == NULL)
             goto loser;
 
-        signAlgTag = SEC_GetSignatureAlgorithmOidTag(privkey->keyType,
-                                                     digestalgtag);
-        if (signAlgTag == SEC_OID_UNKNOWN) {
-            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-            goto loser;
-        }
-
         rv = SEC_SignData(&signature, encoded_attrs.data, encoded_attrs.len,
                           privkey, signAlgTag);
         PORT_FreeArena(tmppoolp, PR_FALSE); /* awkward memory management :-( */
@@ -254,10 +282,6 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest,
         goto loser;
 
     SECITEM_FreeItem(&signature, PR_FALSE);
-
-    if (SECOID_SetAlgorithmID(poolp, &(signerinfo->digestEncAlg), pubkAlgTag,
-                              NULL) != SECSuccess)
-        goto loser;
 
     return SECSuccess;
 
@@ -326,6 +350,8 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     PLArenaPool *poolp;
     SECOidTag digestalgtag;
     SECOidTag pubkAlgTag;
+    SECOidTag digestalgtagCmp;
+    SECOidTag sigAlgTag;
 
     if (signerinfo == NULL)
         return SECFailure;
@@ -345,8 +371,10 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     }
 
     digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
-    pubkAlgTag = SECOID_GetAlgorithmTag(&(signerinfo->digestEncAlg));
-    if ((pubkAlgTag == SEC_OID_UNKNOWN) || (digestalgtag == SEC_OID_UNKNOWN)) {
+    pubkAlgTag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
+    sigAlgTag = SECOID_GetAlgorithmTag(&(signerinfo->digestEncAlg));
+    if ((pubkAlgTag == SEC_OID_UNKNOWN) || (digestalgtag == SEC_OID_UNKNOWN) ||
+        (sigAlgTag == SEC_OID_UNKNOWN)) {
         vs = NSSCMSVS_SignatureAlgorithmUnknown;
         goto loser;
     }
@@ -414,11 +442,28 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
             goto loser;
         }
 
-        vs = (VFY_VerifyDataDirect(encoded_attrs.data, encoded_attrs.len,
-                                   publickey, &(signerinfo->encDigest), pubkAlgTag,
-                                   digestalgtag, NULL, signerinfo->cmsg->pwfn_arg) != SECSuccess)
-                 ? NSSCMSVS_BadSignature
-                 : NSSCMSVS_GoodSignature;
+        if (sigAlgTag == pubkAlgTag) {
+            /* This is to handle cases in which signatureAlgorithm field
+	     * specifies the public key algorithm rather than a signature
+	     * algorithm. */
+            vs = (VFY_VerifyDataDirect(encoded_attrs.data, encoded_attrs.len,
+                                       publickey, &(signerinfo->encDigest), pubkAlgTag,
+                                       digestalgtag, NULL, signerinfo->cmsg->pwfn_arg) != SECSuccess)
+                     ? NSSCMSVS_BadSignature
+                     : NSSCMSVS_GoodSignature;
+        } else {
+            if (VFY_VerifyDataWithAlgorithmID(encoded_attrs.data,
+                                              encoded_attrs.len, publickey, &(signerinfo->encDigest),
+                                              &(signerinfo->digestEncAlg), &digestalgtagCmp,
+                                              signerinfo->cmsg->pwfn_arg) != SECSuccess) {
+                vs = NSSCMSVS_BadSignature;
+            } else if (digestalgtagCmp != digestalgtag) {
+                PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+                vs = NSSCMSVS_BadSignature;
+            } else {
+                vs = NSSCMSVS_GoodSignature;
+            }
+        }
 
         PORT_FreeArena(poolp, PR_FALSE); /* awkward memory management :-( */
 
@@ -432,11 +477,23 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
         if (sig->len == 0)
             goto loser;
 
-        vs = (!digest ||
-              VFY_VerifyDigestDirect(digest, publickey, sig, pubkAlgTag,
-                                     digestalgtag, signerinfo->cmsg->pwfn_arg) != SECSuccess)
-                 ? NSSCMSVS_BadSignature
-                 : NSSCMSVS_GoodSignature;
+        if (sigAlgTag == pubkAlgTag) {
+            /* This is to handle cases in which signatureAlgorithm field
+	     * specifies the public key algorithm rather than a signature
+	     * algorithm. */
+            vs = (!digest ||
+                  VFY_VerifyDigestDirect(digest, publickey, sig, pubkAlgTag,
+                                         digestalgtag, signerinfo->cmsg->pwfn_arg) != SECSuccess)
+                     ? NSSCMSVS_BadSignature
+                     : NSSCMSVS_GoodSignature;
+        } else {
+            vs = (!digest ||
+                  VFY_VerifyDigestWithAlgorithmID(digest, publickey, sig,
+                                                  &(signerinfo->digestEncAlg), digestalgtag,
+                                                  signerinfo->cmsg->pwfn_arg) != SECSuccess)
+                     ? NSSCMSVS_BadSignature
+                     : NSSCMSVS_GoodSignature;
+        }
     }
 
     if (vs == NSSCMSVS_BadSignature) {
