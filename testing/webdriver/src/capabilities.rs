@@ -433,10 +433,10 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
 
         let selected = merged_capabilities
             .iter()
-            .filter_map(|merged| {
+            .find(|merged| {
                 browser_capabilities.init(merged);
 
-                for (key, value) in merged {
+                for (key, value) in merged.iter() {
                     match &**key {
                         "browserName" => {
                             let browserValue = browser_capabilities
@@ -445,7 +445,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .and_then(|x| x);
 
                             if value.as_str() != browserValue.as_ref().map(|x| &**x) {
-                                return None;
+                                return false;
                             }
                         }
                         "browserVersion" => {
@@ -460,10 +460,10 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                     .compare_browser_version(&*version, version_cond)
                                     .unwrap_or(false)
                                 {
-                                    return None;
+                                    return false;
                                 }
                             } else {
-                                return None;
+                                return false;
                             }
                         }
                         "platformName" => {
@@ -472,7 +472,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .ok()
                                 .and_then(|x| x);
                             if value.as_str() != browserValue.as_ref().map(|x| &**x) {
-                                return None;
+                                return false;
                             }
                         }
                         "acceptInsecureCerts" => {
@@ -481,7 +481,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                     .accept_insecure_certs(merged)
                                     .unwrap_or(false)
                             {
-                                return None;
+                                return false;
                             }
                         }
                         "setWindowRect" => {
@@ -490,7 +490,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                     .set_window_rect(merged)
                                     .unwrap_or(false)
                             {
-                                return None;
+                                return false;
                             }
                         }
                         "strictFileInteractability" => {
@@ -499,7 +499,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                     .strict_file_interactability(merged)
                                     .unwrap_or(false)
                             {
-                                return None;
+                                return false;
                             }
                         }
                         "proxy" => {
@@ -509,7 +509,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                 .accept_proxy(&proxy, merged)
                                 .unwrap_or(false)
                             {
-                                return None;
+                                return false;
                             }
                         }
                         name => {
@@ -518,7 +518,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                                     .accept_custom(name, value, merged)
                                     .unwrap_or(false)
                                 {
-                                    return None;
+                                    return false;
                                 }
                             } else {
                                 // Accept the capability
@@ -527,9 +527,8 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                     }
                 }
 
-                Some(merged)
+                true
             })
-            .next()
             .cloned();
         Ok(selected)
     }
