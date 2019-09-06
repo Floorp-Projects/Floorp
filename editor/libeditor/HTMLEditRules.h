@@ -367,8 +367,6 @@ class HTMLEditRules : public TextEditRules {
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
 
-  void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
-                                  bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
