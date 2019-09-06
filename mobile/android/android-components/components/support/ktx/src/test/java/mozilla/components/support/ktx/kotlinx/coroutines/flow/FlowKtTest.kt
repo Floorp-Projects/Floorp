@@ -21,4 +21,18 @@ class FlowKtTest {
             listOf("A", "B", "C", "A", "D", "A"),
             items)
     }
+
+    @Test
+    fun `ifChanged operator with block`() {
+        val originalFlow = flowOf("banana", "bus", "apple", "big", "coconut", "circle", "home")
+
+        val items = runBlocking {
+            originalFlow.ifChanged { item -> item[0] }.toList()
+        }
+
+        assertEquals(
+            listOf("banana", "apple", "big", "coconut", "home"),
+            items
+        )
+    }
 }

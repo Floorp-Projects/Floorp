@@ -66,6 +66,9 @@ permalink: /changelog/
 * **feature-push**
   * Added more logging into `AutoPushFeature` to aid in debugging in release builds.
 
+* **support-ktx**
+  * Added variant of `Flow.ifChanged()` that takes a mapping function in order to filter items where the mapped value has not changed.
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
