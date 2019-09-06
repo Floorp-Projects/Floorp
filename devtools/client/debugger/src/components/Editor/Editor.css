@@ -201,7 +201,3 @@ html[dir="rtl"] .editor-mount {
 .visible {
   visibility: visible;
 }
-
-.download-anchor {
-  display: none;
-}
