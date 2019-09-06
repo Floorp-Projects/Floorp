@@ -3098,26 +3098,25 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
   HTMLEditorRef().TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange =
       true;
 
-  // Refresh start and end points
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
-  nsCOMPtr<nsINode> startNode = firstRange->GetStartContainer();
-  if (NS_WARN_IF(!startNode)) {
+  EditorDOMPoint firstRangeStart(firstRange->StartRef());
+  EditorDOMPoint firstRangeEnd(firstRange->EndRef());
+  if (NS_WARN_IF(!firstRangeStart.IsSet()) ||
+      NS_WARN_IF(!firstRangeEnd.IsSet())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
-  int32_t startOffset = firstRange->StartOffset();
-  nsCOMPtr<nsINode> endNode = firstRange->GetEndContainer();
-  if (NS_WARN_IF(!endNode)) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
-  int32_t endOffset = firstRange->EndOffset();
 
   // Figure out if the endpoints are in nodes that can be merged.  Adjust
   // surrounding whitespace in preparation to delete selection.
   if (!IsPlaintextEditor()) {
     AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    nsCOMPtr<nsINode> startNode = firstRangeStart.GetContainer();
+    int32_t startOffset = firstRangeStart.Offset();
+    nsCOMPtr<nsINode> endNode = firstRangeEnd.GetContainer();
+    int32_t endOffset = firstRangeEnd.Offset();
     nsresult rv = WSRunObject::PrepareToDeleteRange(
         MOZ_KnownLive(&HTMLEditorRef()), address_of(startNode), &startOffset,
         address_of(endNode), &endOffset);
@@ -3127,6 +3126,12 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionResult(rv);
     }
+    firstRangeStart.Set(startNode, startOffset);
+    firstRangeEnd.Set(endNode, endOffset);
+    if (NS_WARN_IF(!firstRangeStart.IsSet()) ||
+        NS_WARN_IF(!firstRangeEnd.IsSet())) {
+      return EditActionResult(NS_ERROR_FAILURE);
+    }
   }
 
   bool join = false;
@@ -3134,13 +3139,16 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
   result.MarkAsHandled();
   {
     // Track location of where we are deleting
+    // NOTE: Right now, firstRangeStart.mOffset and firstRangeEnd.mOffset
+    //       are fixed so that we keep compatibility with older code which
+    //       treated offset directly.
     AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                   address_of(startNode), &startOffset);
+                                   &firstRangeStart);
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                 address_of(endNode), &endOffset);
+                                 &firstRangeEnd);
     // We are handling all ranged deletions directly now.
 
-    if (endNode == startNode) {
+    if (firstRangeStart.GetContainer() == firstRangeEnd.GetContainer()) {
       nsresult rv = MOZ_KnownLive(HTMLEditorRef())
                         .DeleteSelectionWithTransaction(aDirectionAndAmount,
                                                         aStripWrappers);
@@ -3153,9 +3161,11 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     } else {
       // Figure out mailcite ancestors
       RefPtr<Element> startCiteNode =
-          HTMLEditorRef().GetMostAncestorMailCiteElement(*startNode);
+          HTMLEditorRef().GetMostAncestorMailCiteElement(
+              *firstRangeStart.GetContainer());
       RefPtr<Element> endCiteNode =
-          HTMLEditorRef().GetMostAncestorMailCiteElement(*endNode);
+          HTMLEditorRef().GetMostAncestorMailCiteElement(
+              *firstRangeEnd.GetContainer());
 
       // If we only have a mailcite at one of the two endpoints, set the
       // directionality of the deletion so that the selection will end up
@@ -3167,8 +3177,10 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
       }
 
       // Figure out block parents
-      RefPtr<Element> leftBlock = HTMLEditor::GetBlock(*startNode);
-      RefPtr<Element> rightBlock = HTMLEditor::GetBlock(*endNode);
+      RefPtr<Element> leftBlock =
+          HTMLEditor::GetBlock(*firstRangeStart.GetContainer());
+      RefPtr<Element> rightBlock =
+          HTMLEditor::GetBlock(*firstRangeEnd.GetContainer());
 
       // Are endpoint block parents the same?  Use default deletion
       if (leftBlock && leftBlock == rightBlock) {
@@ -3276,14 +3288,15 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
         // text node is found, we can delete to end or to begining as
         // appropriate, since the case where both sel endpoints in same text
         // node was already handled (we wouldn't be here)
-        if (startNode->IsText() &&
-            startNode->Length() > static_cast<uint32_t>(startOffset)) {
+        if (firstRangeStart.IsInTextNode() &&
+            !firstRangeStart.IsEndOfContainer()) {
           // Delete to last character
-          OwningNonNull<Text> textNode = *startNode->AsText();
-          nsresult rv =
-              MOZ_KnownLive(HTMLEditorRef())
-                  .DeleteTextWithTransaction(textNode, startOffset,
-                                             startNode->Length() - startOffset);
+          OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
+          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                            .DeleteTextWithTransaction(
+                                textNode, firstRangeStart.Offset(),
+                                firstRangeStart.GetContainer()->Length() -
+                                    firstRangeStart.Offset());
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
           }
@@ -3291,11 +3304,13 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
             return result.SetResult(rv);
           }
         }
-        if (endNode->IsText() && endOffset) {
+        if (firstRangeEnd.IsInTextNode() &&
+            !firstRangeEnd.IsStartOfContainer()) {
           // Delete to first character
-          OwningNonNull<Text> textNode = *endNode->AsText();
+          OwningNonNull<Text> textNode = *firstRangeEnd.GetContainerAsText();
           nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .DeleteTextWithTransaction(textNode, 0, endOffset);
+                            .DeleteTextWithTransaction(textNode, 0,
+                                                       firstRangeEnd.Offset());
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
           }
@@ -3319,17 +3334,17 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
   // If we're handling D&D, this is called to delete dragging item from the
   // tree.  In this case, we should move parent blocks if it becomes empty.
   if (HTMLEditorRef().GetEditAction() == EditAction::eDrop) {
-    MOZ_ASSERT(startNode == endNode);
-    MOZ_ASSERT(startOffset == endOffset);
+    MOZ_ASSERT(firstRangeStart.GetContainer() == firstRangeEnd.GetContainer());
+    MOZ_ASSERT(firstRangeStart.Offset() == firstRangeEnd.Offset());
     {
       AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                     address_of(startNode), &startOffset);
+                                     &firstRangeStart);
       AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                   address_of(endNode), &endOffset);
+                                   &firstRangeEnd);
 
-      EditorDOMPoint atStart(startNode, startOffset);
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DeleteParentBlocksWithTransactionIfEmpty(atStart);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .DeleteParentBlocksWithTransactionIfEmpty(firstRangeStart);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return result.SetResult(rv);
       }
@@ -3342,7 +3357,8 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     if (HTMLEditorRef()
             .TopLevelEditSubActionDataRef()
             .mDidDeleteEmptyParentBlocks) {
-      nsresult rv = SelectionRefPtr()->Collapse(startNode, startOffset);
+      nsresult rv =
+          SelectionRefPtr()->Collapse(firstRangeStart.ToRawRangeBoundary());
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -3354,12 +3370,13 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
   // We might have left only collapsed whitespace in the start/end nodes
   {
     AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                   address_of(startNode), &startOffset);
+                                   &firstRangeStart);
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
-                                 address_of(endNode), &endOffset);
+                                 &firstRangeEnd);
 
     nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .DeleteNodeIfInvisibleAndEditableTextNode(*startNode);
+                      .DeleteNodeIfInvisibleAndEditableTextNode(
+                          MOZ_KnownLive(*firstRangeStart.GetContainer()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -3367,7 +3384,8 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
                          "DeleteNodeIfInvisibleAndEditableTextNode() failed to "
                          "remove start node, but ignored");
     rv = MOZ_KnownLive(HTMLEditorRef())
-             .DeleteNodeIfInvisibleAndEditableTextNode(*endNode);
+             .DeleteNodeIfInvisibleAndEditableTextNode(
+                 MOZ_KnownLive(*firstRangeEnd.GetContainer()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -3385,7 +3403,8 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
   // (selection should collapse to the end, because the beginning will still be
   // in the first block). See Bug 507936
   if (aDirectionAndAmount == (join ? nsIEditor::eNext : nsIEditor::ePrevious)) {
-    nsresult rv = SelectionRefPtr()->Collapse(endNode, endOffset);
+    nsresult rv =
+        SelectionRefPtr()->Collapse(firstRangeEnd.ToRawRangeBoundary());
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -3393,7 +3412,8 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     return result.SetResult(rv);
   }
 
-  nsresult rv = SelectionRefPtr()->Collapse(startNode, startOffset);
+  nsresult rv =
+      SelectionRefPtr()->Collapse(firstRangeStart.ToRawRangeBoundary());
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }

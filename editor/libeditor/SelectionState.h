@@ -209,6 +209,19 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
   ~AutoTrackDOMPoint() {
     mRangeUpdater.DropRangeItem(mRangeItem);
     if (mPoint) {
+      // Setting `mPoint` with invalid DOM point causes hitting `NS_ASSERTION()`
+      // and the number of times may be too many.  (E.g., 1533913.html hits
+      // over 700 times!)  We should just put warning instead.
+      if (NS_WARN_IF(!mRangeItem->mStartContainer) ||
+          NS_WARN_IF(mRangeItem->mStartOffset < 0)) {
+        mPoint->Clear();
+        return;
+      }
+      if (NS_WARN_IF(mRangeItem->mStartContainer->Length() <
+                     static_cast<uint32_t>(mRangeItem->mStartOffset))) {
+        mPoint->SetToEndOf(mRangeItem->mStartContainer);
+        return;
+      }
       mPoint->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
       return;
     }
