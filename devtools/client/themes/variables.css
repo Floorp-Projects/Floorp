@@ -21,8 +21,6 @@
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
   --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
 
-  --toolbarbutton-background: var(--theme-toolbar-hover);
-  --toolbarbutton-hover-background: var(--theme-toolbar-hover);
   --toolbarbutton-focus-background: var(--theme-selection-focus-background);
   --toolbarbutton-focus-color: var(--theme-selection-focus-color);
   --toolbarbutton-checked-background: var(--theme-selection-background);
@@ -115,6 +113,10 @@
   --theme-toolbar-hover: var(--grey-20);
   --theme-toolbar-hover-active: var(--grey-20);
   --theme-toolbar-separator: var(--grey-90-a10);
+
+  /* Toolbar buttons */
+  --toolbarbutton-background: var(--theme-toolbar-hover);
+  --toolbarbutton-hover-background: var(--theme-toolbar-hover);
 
   /* Buttons */
   --theme-button-background: rgba(12, 12, 13, 0.05);
@@ -226,6 +228,10 @@
   --theme-toolbar-hover: #232327;
   --theme-toolbar-hover-active: #252526;
   --theme-toolbar-separator: var(--grey-10-a20);
+
+  /* Toolbar buttons */
+  --toolbarbutton-background: var(--grey-70);
+  --toolbarbutton-hover-background: var(--grey-70);
 
   /* Buttons */
   --theme-button-background: rgba(249, 249, 250, 0.1);
