@@ -9,6 +9,7 @@
 const BrowserTest = {
   gTestPath,
   ok,
+  is,
   registerCleanupFunction,
   waitForExplicitFinish,
   BrowserTestUtils,
