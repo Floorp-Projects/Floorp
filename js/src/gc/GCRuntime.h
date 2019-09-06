@@ -620,7 +620,7 @@ class GCRuntime {
   void traceEmbeddingGrayRoots(JSTracer* trc);
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
-  void markCompartments();
+  void findDeadCompartments();
   IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,
                                                gcstats::PhaseKind phase);
   void drainMarkStack();
