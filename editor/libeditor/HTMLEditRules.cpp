@@ -3134,6 +3134,32 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
     }
   }
 
+  // XXX This is odd.  We do we simply use `DeleteSelectionWithTransaction()`
+  //     only when **first** range is in same container?
+  if (firstRangeStart.GetContainer() == firstRangeEnd.GetContainer()) {
+    {
+      AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
+                                     &firstRangeStart);
+      AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
+                                   &firstRangeEnd);
+
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .DeleteSelectionWithTransaction(aDirectionAndAmount,
+                                                        aStripWrappers);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionHandled(rv);
+      }
+    }
+    nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
+        aDirectionAndAmount, firstRangeStart, firstRangeEnd);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteUnnecessaryNodesAndCollapseSelection() failed");
+    return EditActionHandled(rv);
+  }
+
   EditActionResult result(NS_OK);
   result.MarkAsHandled();
   {
@@ -3145,201 +3171,185 @@ EditActionResult HTMLEditRules::HandleDeleteNonCollapsedSelection(
                                    &firstRangeStart);
     AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
                                  &firstRangeEnd);
-    // We are handling all ranged deletions directly now.
 
-    if (firstRangeStart.GetContainer() == firstRangeEnd.GetContainer()) {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DeleteSelectionWithTransaction(aDirectionAndAmount,
-                                                        aStripWrappers);
+    // Figure out mailcite ancestors
+    RefPtr<Element> startCiteNode =
+        HTMLEditorRef().GetMostAncestorMailCiteElement(
+            *firstRangeStart.GetContainer());
+    RefPtr<Element> endCiteNode =
+        HTMLEditorRef().GetMostAncestorMailCiteElement(
+            *firstRangeEnd.GetContainer());
+
+    // If we only have a mailcite at one of the two endpoints, set the
+    // directionality of the deletion so that the selection will end up
+    // outside the mailcite.
+    if (startCiteNode && !endCiteNode) {
+      aDirectionAndAmount = nsIEditor::eNext;
+    } else if (!startCiteNode && endCiteNode) {
+      aDirectionAndAmount = nsIEditor::ePrevious;
+    }
+
+    // Figure out block parents
+    RefPtr<Element> leftBlock =
+        HTMLEditor::GetBlock(*firstRangeStart.GetContainer());
+    RefPtr<Element> rightBlock =
+        HTMLEditor::GetBlock(*firstRangeEnd.GetContainer());
+
+    // Are endpoint block parents the same?  Use default deletion
+    if (leftBlock && leftBlock == rightBlock) {
+      MOZ_KnownLive(HTMLEditorRef())
+          .DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return result.SetResult(rv);
-      }
     } else {
-      // Figure out mailcite ancestors
-      RefPtr<Element> startCiteNode =
-          HTMLEditorRef().GetMostAncestorMailCiteElement(
-              *firstRangeStart.GetContainer());
-      RefPtr<Element> endCiteNode =
-          HTMLEditorRef().GetMostAncestorMailCiteElement(
-              *firstRangeEnd.GetContainer());
-
-      // If we only have a mailcite at one of the two endpoints, set the
-      // directionality of the deletion so that the selection will end up
-      // outside the mailcite.
-      if (startCiteNode && !endCiteNode) {
-        aDirectionAndAmount = nsIEditor::eNext;
-      } else if (!startCiteNode && endCiteNode) {
-        aDirectionAndAmount = nsIEditor::ePrevious;
+      // Deleting across blocks.  Are the blocks of same type?
+      if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
+        return result.SetResult(NS_ERROR_FAILURE);
       }
 
-      // Figure out block parents
-      RefPtr<Element> leftBlock =
-          HTMLEditor::GetBlock(*firstRangeStart.GetContainer());
-      RefPtr<Element> rightBlock =
-          HTMLEditor::GetBlock(*firstRangeEnd.GetContainer());
+      // Are the blocks siblings?
+      nsCOMPtr<nsINode> leftBlockParent = leftBlock->GetParentNode();
+      nsCOMPtr<nsINode> rightBlockParent = rightBlock->GetParentNode();
 
-      // Are endpoint block parents the same?  Use default deletion
-      if (leftBlock && leftBlock == rightBlock) {
-        MOZ_KnownLive(HTMLEditorRef())
-            .DeleteSelectionWithTransaction(aDirectionAndAmount,
-                                            aStripWrappers);
+      // MOOSE: this could conceivably screw up a table.. fix me.
+      if (leftBlockParent == rightBlockParent &&
+          HTMLEditorRef().AreNodesSameType(*leftBlock, *rightBlock) &&
+          // XXX What's special about these three types of block?
+          (leftBlock->IsHTMLElement(nsGkAtoms::p) ||
+           HTMLEditUtils::IsListItem(leftBlock) ||
+           HTMLEditUtils::IsHeader(*leftBlock))) {
+        // First delete the selection
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .DeleteSelectionWithTransaction(aDirectionAndAmount,
+                                                          aStripWrappers);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
-      } else {
-        // Deleting across blocks.  Are the blocks of same type?
-        if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return result.SetResult(rv);
+        }
+        // Join blocks
+        EditorDOMPoint atFirstChildOfTheLastRightNode =
+            MOZ_KnownLive(HTMLEditorRef())
+                .JoinNodesDeepWithTransaction(*leftBlock, *rightBlock);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        if (NS_WARN_IF(!atFirstChildOfTheLastRightNode.IsSet())) {
           return result.SetResult(NS_ERROR_FAILURE);
         }
-
-        // Are the blocks siblings?
-        nsCOMPtr<nsINode> leftBlockParent = leftBlock->GetParentNode();
-        nsCOMPtr<nsINode> rightBlockParent = rightBlock->GetParentNode();
-
-        // MOOSE: this could conceivably screw up a table.. fix me.
-        if (leftBlockParent == rightBlockParent &&
-            HTMLEditorRef().AreNodesSameType(*leftBlock, *rightBlock) &&
-            // XXX What's special about these three types of block?
-            (leftBlock->IsHTMLElement(nsGkAtoms::p) ||
-             HTMLEditUtils::IsListItem(leftBlock) ||
-             HTMLEditUtils::IsHeader(*leftBlock))) {
-          // First delete the selection
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .DeleteSelectionWithTransaction(aDirectionAndAmount,
-                                                            aStripWrappers);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return result.SetResult(rv);
-          }
-          // Join blocks
-          EditorDOMPoint atFirstChildOfTheLastRightNode =
-              MOZ_KnownLive(HTMLEditorRef())
-                  .JoinNodesDeepWithTransaction(*leftBlock, *rightBlock);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_WARN_IF(!atFirstChildOfTheLastRightNode.IsSet())) {
-            return result.SetResult(NS_ERROR_FAILURE);
-          }
-          // Fix up selection
-          ErrorResult error;
-          SelectionRefPtr()->Collapse(atFirstChildOfTheLastRightNode, error);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            error.SuppressException();
-            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
-          return result.SetResult(error.StealNSResult());
+        // Fix up selection
+        ErrorResult error;
+        SelectionRefPtr()->Collapse(atFirstChildOfTheLastRightNode, error);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          error.SuppressException();
+          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
+        NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+        return result.SetResult(error.StealNSResult());
+      }
 
-        // Else blocks not same type, or not siblings.  Delete everything
-        // except table elements.
-        bool join = true;
+      // Else blocks not same type, or not siblings.  Delete everything
+      // except table elements.
+      bool join = true;
 
-        AutoRangeArray arrayOfRanges(SelectionRefPtr());
-        for (auto& range : arrayOfRanges.mRanges) {
-          // Build a list of nodes in the range
-          nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-          TrivialFunctor functor;
-          DOMSubtreeIterator iter;
-          nsresult rv = iter.Init(*range);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return result.SetResult(rv);
+      AutoRangeArray arrayOfRanges(SelectionRefPtr());
+      for (auto& range : arrayOfRanges.mRanges) {
+        // Build a list of nodes in the range
+        nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
+        TrivialFunctor functor;
+        DOMSubtreeIterator iter;
+        nsresult rv = iter.Init(*range);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return result.SetResult(rv);
+        }
+        iter.AppendList(functor, arrayOfNodes);
+
+        // Now that we have the list, delete non-table elements
+        int32_t listCount = arrayOfNodes.Length();
+        for (int32_t j = 0; j < listCount; j++) {
+          OwningNonNull<nsINode> node = arrayOfNodes[0];
+          nsresult rv = DeleteElementsExceptTableRelatedElements(node);
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
           }
-          iter.AppendList(functor, arrayOfNodes);
-
-          // Now that we have the list, delete non-table elements
-          int32_t listCount = arrayOfNodes.Length();
-          for (int32_t j = 0; j < listCount; j++) {
-            OwningNonNull<nsINode> node = arrayOfNodes[0];
-            nsresult rv = DeleteElementsExceptTableRelatedElements(node);
-            if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-              return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "Failed to elements except table related elements");
+          arrayOfNodes.RemoveElementAt(0);
+          // If something visible is deleted, no need to join.  Visible means
+          // all nodes except non-visible textnodes and breaks.
+          if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
+            if (!node->IsContent()) {
+              join = false;
+              continue;
             }
-            NS_WARNING_ASSERTION(
-                NS_SUCCEEDED(rv),
-                "Failed to elements except table related elements");
-            arrayOfNodes.RemoveElementAt(0);
-            // If something visible is deleted, no need to join.  Visible means
-            // all nodes except non-visible textnodes and breaks.
-            if (join && aSelectionWasCollapsed == SelectionWasCollapsed::Yes) {
-              if (!node->IsContent()) {
-                join = false;
-                continue;
-              }
-              nsIContent* content = node->AsContent();
-              if (Text* text = content->GetAsText()) {
-                join = !HTMLEditorRef().IsInVisibleTextFrames(*text);
-              } else {
-                join = content->IsHTMLElement(nsGkAtoms::br) &&
-                       !HTMLEditorRef().IsVisibleBRElement(node);
-              }
+            nsIContent* content = node->AsContent();
+            if (Text* text = content->GetAsText()) {
+              join = !HTMLEditorRef().IsInVisibleTextFrames(*text);
+            } else {
+              join = content->IsHTMLElement(nsGkAtoms::br) &&
+                     !HTMLEditorRef().IsVisibleBRElement(node);
             }
           }
         }
+      }
 
-        // Check endpoints for possible text deletion.  We can assume that if
-        // text node is found, we can delete to end or to begining as
-        // appropriate, since the case where both sel endpoints in same text
-        // node was already handled (we wouldn't be here)
-        if (firstRangeStart.IsInTextNode() &&
-            !firstRangeStart.IsEndOfContainer()) {
-          // Delete to last character
-          OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .DeleteTextWithTransaction(
-                                textNode, firstRangeStart.Offset(),
-                                firstRangeStart.GetContainer()->Length() -
-                                    firstRangeStart.Offset());
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return result.SetResult(rv);
-          }
+      // Check endpoints for possible text deletion.  We can assume that if
+      // text node is found, we can delete to end or to begining as
+      // appropriate, since the case where both sel endpoints in same text
+      // node was already handled (we wouldn't be here)
+      if (firstRangeStart.IsInTextNode() &&
+          !firstRangeStart.IsEndOfContainer()) {
+        // Delete to last character
+        OwningNonNull<Text> textNode = *firstRangeStart.GetContainerAsText();
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .DeleteTextWithTransaction(
+                              textNode, firstRangeStart.Offset(),
+                              firstRangeStart.GetContainer()->Length() -
+                                  firstRangeStart.Offset());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
         }
-        if (firstRangeEnd.IsInTextNode() &&
-            !firstRangeEnd.IsStartOfContainer()) {
-          // Delete to first character
-          OwningNonNull<Text> textNode = *firstRangeEnd.GetContainerAsText();
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .DeleteTextWithTransaction(textNode, 0,
-                                                       firstRangeEnd.Offset());
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return result.SetResult(rv);
-          }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return result.SetResult(rv);
+        }
+      }
+      if (firstRangeEnd.IsInTextNode() && !firstRangeEnd.IsStartOfContainer()) {
+        // Delete to first character
+        OwningNonNull<Text> textNode = *firstRangeEnd.GetContainerAsText();
+        nsresult rv =
+            MOZ_KnownLive(HTMLEditorRef())
+                .DeleteTextWithTransaction(textNode, 0, firstRangeEnd.Offset());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return result.SetResult(rv);
+        }
+      }
+
+      if (join) {
+        result |= MOZ_KnownLive(HTMLEditorRef())
+                      .TryToJoinBlocksWithTransaction(*leftBlock, *rightBlock);
+        if (NS_WARN_IF(result.Failed())) {
+          return result;
         }
 
-        if (join) {
-          result |=
-              MOZ_KnownLive(HTMLEditorRef())
-                  .TryToJoinBlocksWithTransaction(*leftBlock, *rightBlock);
-          if (NS_WARN_IF(result.Failed())) {
-            return result;
-          }
-
-          // If we're joining blocks: if deleting forward the selection should
-          // be collapsed to the end of the selection, if deleting backward the
-          // selection should be collapsed to the beginning of the selection.
-          // But if we're not joining then the selection should collapse to the
-          // beginning of the selection if we'redeleting forward, because the
-          // end of the selection will still be in the next block. And same
-          // thing for deleting backwards (selection should collapse to the end,
-          // because the beginning will still be in the first block). See Bug
-          // 507936.
-          if (aDirectionAndAmount == nsIEditor::eNext) {
-            aDirectionAndAmount = nsIEditor::ePrevious;
-          } else {
-            aDirectionAndAmount = nsIEditor::eNext;
-          }
+        // If we're joining blocks: if deleting forward the selection should
+        // be collapsed to the end of the selection, if deleting backward the
+        // selection should be collapsed to the beginning of the selection.
+        // But if we're not joining then the selection should collapse to the
+        // beginning of the selection if we'redeleting forward, because the
+        // end of the selection will still be in the next block. And same
+        // thing for deleting backwards (selection should collapse to the end,
+        // because the beginning will still be in the first block). See Bug
+        // 507936.
+        if (aDirectionAndAmount == nsIEditor::eNext) {
+          aDirectionAndAmount = nsIEditor::ePrevious;
+        } else {
+          aDirectionAndAmount = nsIEditor::eNext;
         }
       }
     }
