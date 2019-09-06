@@ -407,11 +407,13 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
   bool haveRootContentOutsideAsyncZoomContainer = false;
 
   if (aRoot) {
+    std::unordered_set<LayersId, LayersId::HashFn> seenLayersIds;
     std::stack<gfx::TreeAutoIndent<LOG_DEFAULT>> indents;
     std::stack<AncestorTransform> ancestorTransforms;
     HitTestingTreeNode* parent = nullptr;
     HitTestingTreeNode* next = nullptr;
     LayersId layersId = mRootLayersId;
+    seenLayersIds.insert(mRootLayersId);
     std::stack<wr::RenderRoot> renderRoots;
     renderRoots.push(wr::RenderRoot::Default);
     ancestorTransforms.push(AncestorTransform());
@@ -489,6 +491,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           // Update the layersId or renderroot if we have a new one
           if (Maybe<LayersId> newLayersId = aLayerMetrics.GetReferentId()) {
             layersId = *newLayersId;
+            seenLayersIds.insert(layersId);
           }
           if (Maybe<wr::RenderRoot> newRenderRoot =
                   aLayerMetrics.GetReferentRenderRoot()) {
@@ -557,6 +560,19 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
                   it->second * apzc->GetAncestorTransform(), false});
             }
           });
+    }
+
+    // Remove any layers ids for which we no longer have content from
+    // mDetachedLayersIds.
+    for (auto iter = mDetachedLayersIds.begin();
+         iter != mDetachedLayersIds.end();) {
+      // unordered_set::erase() invalidates the iterator pointing to the
+      // element being erased, but returns an iterator to the next element.
+      if (seenLayersIds.find(*iter) == seenLayersIds.end()) {
+        iter = mDetachedLayersIds.erase(iter);
+      } else {
+        ++iter;
+      }
     }
   }
 
