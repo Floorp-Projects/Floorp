@@ -4028,7 +4028,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
   }
 
   if (isIncremental) {
-    markCompartments();
+    findDeadCompartments();
   }
 
   updateMemoryCountersOnGCStart();
@@ -4046,7 +4046,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
   return true;
 }
 
-void GCRuntime::markCompartments() {
+void GCRuntime::findDeadCompartments() {
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::MARK_ROOTS);
   gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_COMPARTMENTS);
 
@@ -4056,8 +4056,8 @@ void GCRuntime::markCompartments() {
    * flag is false. The maybeAlive flag is set if:
    *
    *   (1) the compartment has been entered (set in beginMarkPhase() above)
-   *   (2) the compartment is not being collected (set in beginMarkPhase()
-   *       above)
+   *   (2) the compartment's zone is not being collected (set in
+   *       beginMarkPhase() above)
    *   (3) an object in the compartment was marked during root marking, either
    *       as a black root or a gray root (set in RootMarking.cpp), or
    *   (4) the compartment has incoming cross-compartment edges from another
@@ -4080,7 +4080,7 @@ void GCRuntime::markCompartments() {
    * allocation and read barriers during JS_TransplantObject and the like.
    */
 
-  /* Propagate the maybeAlive flag via cross-compartment edges. */
+  // Propagate the maybeAlive flag via cross-compartment edges.
 
   Vector<Compartment*, 0, js::SystemAllocPolicy> workList;
 
@@ -4094,6 +4094,8 @@ void GCRuntime::markCompartments() {
 
   while (!workList.empty()) {
     Compartment* comp = workList.popCopy();
+
+    // Check the cross compartment map.
     for (Compartment::WrappedObjectCompartmentEnum e(comp); !e.empty();
          e.popFront()) {
       Compartment* dest = e.front();
@@ -4104,9 +4106,24 @@ void GCRuntime::markCompartments() {
         }
       }
     }
+
+    // Check debugger cross compartment edges.
+    CompartmentSet debuggerTargets;
+    if (!DebugAPI::findCrossCompartmentTargets(rt, comp, debuggerTargets)) {
+      return;
+    }
+    for (auto e = debuggerTargets.all(); !e.empty(); e.popFront()) {
+      Compartment* dest = e.front();
+      if (!dest->gcState.maybeAlive) {
+        dest->gcState.maybeAlive = true;
+        if (!workList.append(dest)) {
+          return;
+        }
+      }
+    }
   }
 
-  /* Set scheduleForDestruction based on maybeAlive. */
+  // Set scheduledForDestruction based on maybeAlive.
 
   for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
     MOZ_ASSERT(!comp->gcState.scheduledForDestruction);
