@@ -89,7 +89,7 @@ class Front extends Pool {
     this._beforeListeners = null;
   }
 
-  manage(front) {
+  async manage(front) {
     if (!front.actorID) {
       throw new Error(
         "Can't manage front without an actor ID.\n" +
@@ -99,6 +99,10 @@ class Front extends Pool {
       );
     }
     super.manage(front);
+
+    if (typeof front.initialize == "function") {
+      await front.initialize();
+    }
 
     // Call listeners registered via `onFront` method
     this._frontListeners.emit(front.typeName, front);
