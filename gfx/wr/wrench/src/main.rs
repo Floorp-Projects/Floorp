@@ -2,42 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate base64;
-extern crate bincode;
-extern crate byteorder;
 #[macro_use]
 extern crate clap;
-#[cfg(target_os = "macos")]
-extern crate core_foundation;
-#[cfg(target_os = "macos")]
-extern crate core_graphics;
-extern crate crossbeam;
-#[cfg(target_os = "windows")]
-extern crate dwrote;
-#[cfg(feature = "env_logger")]
-extern crate env_logger;
-extern crate euclid;
-#[cfg(all(unix, not(target_os = "android")))]
-extern crate font_loader;
-extern crate gleam;
-extern crate glutin;
-extern crate image;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[cfg(target_os = "windows")]
-extern crate mozangle;
-#[cfg(feature = "headless")]
-extern crate osmesa_sys;
-extern crate ron;
 #[macro_use]
 extern crate serde;
-extern crate serde_json;
-extern crate time;
-extern crate webrender;
-extern crate winit;
-extern crate yaml_rust;
 
 mod angle;
 mod binary_frame_reader;
@@ -423,6 +395,17 @@ fn reftest<'a>(
 fn main() {
     #[cfg(feature = "env_logger")]
     env_logger::init();
+
+    #[cfg(target_os = "macos")]
+    {
+        use core_foundation::{self as cf, base::TCFType};
+        let i = cf::bundle::CFBundle::main_bundle().info_dictionary();
+        let mut i = unsafe { i.to_mutable() };
+        i.set(
+            cf::string::CFString::new("NSSupportsAutomaticGraphicsSwitching"),
+            cf::boolean::CFBoolean::true_value().into_CFType(),
+        );
+    }
 
     let args_yaml = load_yaml!("args.yaml");
     let clap = clap::App::from_yaml(args_yaml)
