@@ -57,8 +57,6 @@ in "Search through tabs". -->
 
 <!ENTITY taskManagerCmd.label "Task Manager">
 
-<!ENTITY goOfflineCmd.label "Work Offline">
-
 <!ENTITY menubarCmd.label "Menu Bar">
 <!ENTITY menubarCmd.accesskey "M">
 <!-- LOCALIZATION NOTE: The accessibleLabel is a spoken label that should not

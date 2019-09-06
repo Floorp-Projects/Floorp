@@ -660,7 +660,7 @@
                        oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
         <toolbarbutton id="appMenu-workoffline-button"
                        class="subviewbutton"
-                       label="&goOfflineCmd.label;"
+                       data-l10n-id="menu-file-go-offline"
                        type="checkbox"
                        command="cmd_toggleOfflineStatus"/>
       </vbox>
