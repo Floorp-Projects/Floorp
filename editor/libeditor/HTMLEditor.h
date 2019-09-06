@@ -262,8 +262,8 @@ class HTMLEditor final : public TextEditor,
   nsresult AlignAsAction(const nsAString& aAlignType,
                          nsIPrincipal* aPrincipal = nullptr);
 
-  nsresult RemoveListAsAction(const nsAString& aListType,
-                              nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveListAsAction(
+      const nsAString& aListType, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * MakeOrChangeListAsAction() makes selected hard lines list element(s).
@@ -2315,6 +2315,13 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   DestroyListStructureRecursively(Element& aListElement);
+
+  /**
+   * RemoveListAtSelectionAsSubAction() removes list elements and list item
+   * elements at Selection.  And move contents in them where the removed list
+   * was.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveListAtSelectionAsSubAction();
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(

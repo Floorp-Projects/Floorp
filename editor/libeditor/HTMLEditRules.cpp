@@ -794,17 +794,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return WillRemoveAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetOrClearAlignment:
       return WillAlign(*aInfo.alignType, aCancel, aHandled);
-    case EditSubAction::eRemoveList: {
-      nsresult rv = WillRemoveList(aCancel, aHandled);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
-          NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
-    }
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
       nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
@@ -825,6 +814,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
+    case EditSubAction::eRemoveList:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
       return NS_ERROR_UNEXPECTED;
     default:
@@ -871,6 +861,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
+    case EditSubAction::eRemoveList:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
       return NS_ERROR_UNEXPECTED;
     default:
@@ -4672,34 +4663,36 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   return EditActionHandled();
 }
 
-nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::RemoveListAtSelectionAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(),
+                       "CanHandleHTMLEditSubAction() failed");
+  if (result.Failed() || result.Canceled()) {
+    return result.Rv();
   }
-  // initialize out param
-  *aCancel = false;
-  *aHandled = true;
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eRemoveList, nsIEditor::eNext);
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+  AutoSelectionRestorer restoreSelectionLater(*this);
 
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
   {
-    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
     nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-                arrayOfNodes, EditSubAction::eCreateOrChangeList,
-                HTMLEditor::CollectNonEditableNodes::No);
+        SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+            arrayOfNodes, EditSubAction::eCreateOrChangeList,
+            CollectNonEditableNodes::No);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4708,7 +4701,7 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
   // Remove all non-editable nodes.  Leave them be.
   for (int32_t i = arrayOfNodes.Length() - 1; i >= 0; i--) {
     OwningNonNull<nsINode> testNode = arrayOfNodes[i];
-    if (!HTMLEditorRef().IsEditable(testNode)) {
+    if (!IsEditable(testNode)) {
       arrayOfNodes.RemoveElementAt(i);
     }
   }
@@ -4718,21 +4711,21 @@ nsresult HTMLEditRules::WillRemoveList(bool* aCancel, bool* aHandled) {
     // here's where we actually figure out what to do
     if (HTMLEditUtils::IsListItem(curNode)) {
       // unlist this listitem
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .LiftUpListItemElement(
-                            MOZ_KnownLive(*curNode->AsElement()),
-                            HTMLEditor::LiftUpFromAllParentListElements::Yes);
+      nsresult rv = LiftUpListItemElement(MOZ_KnownLive(*curNode->AsElement()),
+                                          LiftUpFromAllParentListElements::Yes);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (HTMLEditUtils::IsList(curNode)) {
+      continue;
+    }
+    if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .DestroyListStructureRecursively(
-                            MOZ_KnownLive(*curNode->AsElement()));
+      nsresult rv =
+          DestroyListStructureRecursively(MOZ_KnownLive(*curNode->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+      continue;
     }
   }
   return NS_OK;
