@@ -6,7 +6,7 @@
 
 #include "PaintWorkletGlobalScope.h"
 
-#include "mozilla/dom/WorkletPrincipal.h"
+#include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/dom/PaintWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "PaintWorkletImpl.h"
@@ -20,9 +20,9 @@ PaintWorkletGlobalScope::PaintWorkletGlobalScope(PaintWorkletImpl* aImpl)
 bool PaintWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   JS::RealmOptions options;
+  JS::AutoHoldPrincipals principals(aCx, new WorkletPrincipals(mImpl));
   return PaintWorkletGlobalScope_Binding::Wrap(
-      aCx, this, this, options, WorkletPrincipal::GetWorkletPrincipal(), true,
-      aReflector);
+      aCx, this, this, options, principals.get(), true, aReflector);
 }
 
 void PaintWorkletGlobalScope::RegisterPaint(const nsAString& aType,
