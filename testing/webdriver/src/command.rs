@@ -1254,7 +1254,7 @@ mod tests {
         let data = TimeoutsParameters {
             implicit: Some(0u64),
             page_load: Some(2u64),
-            script: Some(Some(9007199254740991u64)),
+            script: Some(Some(9_007_199_254_740_991u64)),
         };
 
         check_deserialize(&json, &data);
