@@ -683,9 +683,16 @@ nsNSSComponent::HasActiveSmartCards(bool* result) {
   AutoSECMODListReadLock secmodLock;
   SECMODModuleList* list = SECMOD_GetDefaultModuleList();
   while (list) {
-    if (SECMOD_HasRemovableSlots(list->module)) {
+    SECMODModule* module = list->module;
+    if (SECMOD_HasRemovableSlots(module)) {
       *result = true;
       return NS_OK;
+    }
+    for (int i = 0; i < module->slotCount; i++) {
+      if (!PK11_IsFriendly(module->slots[i])) {
+        *result = true;
+        return NS_OK;
+      }
     }
     list = list->next;
   }
