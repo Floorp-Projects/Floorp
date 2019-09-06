@@ -2162,7 +2162,9 @@ WebGLContext::GetVRFrame() {
   if (IsContextLost()) return nullptr;
 
   RefPtr<SharedSurfaceTextureClient> sharedSurface = mVRScreen->Front();
-  if (!sharedSurface || !sharedSurface->Surf()) return nullptr;
+  if (!sharedSurface || !sharedSurface->Surf() ||
+      !sharedSurface->Surf()->IsBufferAvailable())
+    return nullptr;
 
   // Make sure that the WebGL buffer is committed to the attached SurfaceTexture
   // on Android.
