@@ -333,6 +333,8 @@ const Constant _consts[] = {
     mkEntry(CKM_SHA512, Mechanism),
     mkEntry(CKM_SHA512_HMAC_GENERAL, Mechanism),
     mkEntry(CKM_SHA512_HMAC, Mechanism),
+    mkEntry(CKM_AES_CMAC, Mechanism),
+    mkEntry(CKM_AES_CMAC_GENERAL, Mechanism),
     mkEntry(CKM_CAST_KEY_GEN, Mechanism),
     mkEntry(CKM_CAST_ECB, Mechanism),
     mkEntry(CKM_CAST_CBC, Mechanism),

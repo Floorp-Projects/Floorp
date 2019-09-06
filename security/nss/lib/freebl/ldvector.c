@@ -10,6 +10,7 @@ extern int FREEBL_InitStubs(void);
 #endif
 
 #include "loader.h"
+#include "cmac.h"
 #include "alghmac.h"
 #include "hmacct.h"
 #include "blapii.h"
@@ -317,10 +318,18 @@ static const struct FREEBLVectorStr vector =
 
       /* End of Version 3.020 */
 
-      ChaCha20_Xor
+      ChaCha20_Xor,
 
       /* End of version 3.021 */
 
+      CMAC_Init,
+      CMAC_Create,
+      CMAC_Begin,
+      CMAC_Update,
+      CMAC_Finish,
+      CMAC_Destroy
+
+      /* End of version 3.022 */
     };
 
 const FREEBLVector*

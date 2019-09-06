@@ -30,6 +30,7 @@
 #include "lowpbe.h" /* We do PBE below */
 #include "pkcs11t.h"
 #include "secoid.h"
+#include "cmac.h"
 #include "alghmac.h"
 #include "softoken.h"
 #include "secasn1.h"
@@ -1986,6 +1987,84 @@ sftk_doHMACInit(SFTKSessionContext *context, HASH_HashType hash,
 }
 
 /*
+ * common CMAC initialization routine
+ */
+static CK_RV
+sftk_doCMACInit(SFTKSessionContext *session, CMACCipher type,
+                SFTKObject *key, CK_ULONG mac_size)
+{
+    SFTKAttribute *keyval;
+    CMACContext *cmacContext;
+    CK_ULONG *intpointer;
+
+    /* Unlike HMAC, CMAC doesn't need to check key sizes as the underlying
+     * block cipher does this for us: block ciphers support only a single
+     * key size per variant.
+     *
+     * To introduce support for a CMAC based on a new block cipher, first add
+     * support for the relevant block cipher to CMAC in the freebl layer. Then
+     * update the switch statement at the end of this function. Also remember
+     * to update the switch statement in NSC_SignInit with the PKCS#11
+     * mechanism constants.
+     */
+
+    keyval = sftk_FindAttribute(key, CKA_VALUE);
+    if (keyval == NULL) {
+        return CKR_KEY_SIZE_RANGE;
+    }
+
+    /* Create the underlying CMACContext and associate it with the
+     * SFTKSessionContext's hashInfo field */
+    cmacContext = CMAC_Create(type,
+                              (const unsigned char *)keyval->attrib.pValue,
+                              keyval->attrib.ulValueLen);
+    sftk_FreeAttribute(keyval);
+
+    if (cmacContext == NULL) {
+        if (PORT_GetError() == SEC_ERROR_INVALID_ARGS) {
+            return CKR_KEY_SIZE_RANGE;
+        }
+
+        return CKR_HOST_MEMORY;
+    }
+    session->hashInfo = cmacContext;
+
+    /* MACs all behave roughly the same. However, CMAC can fail because
+     * the underlying cipher can fail. In practice, this shouldn't occur
+     * because we're not using any chaining modes, letting us safely ignore
+     * the return value. */
+    session->multi = PR_TRUE;
+    session->hashUpdate = (SFTKHash)CMAC_Update;
+    session->end = (SFTKEnd)CMAC_Finish;
+    session->hashdestroy = (SFTKDestroy)CMAC_Destroy;
+
+    intpointer = PORT_New(CK_ULONG);
+    if (intpointer == NULL) {
+        return CKR_HOST_MEMORY;
+    }
+    *intpointer = mac_size;
+    session->cipherInfo = intpointer;
+
+    /* Since we're only "hashing", copy the result from session->end to the
+     * caller using sftk_SignCopy. */
+    session->update = (SFTKCipher)sftk_SignCopy;
+    session->verify = (SFTKVerify)sftk_HMACCmp;
+    session->destroy = (SFTKDestroy)sftk_Space;
+
+    /* Will need to be updated for additional block ciphers in the future. */
+    switch (type) {
+        case CMAC_AES:
+            session->maxLen = AES_BLOCK_SIZE;
+            break;
+        default:
+            PORT_Assert(0);
+            return CKR_KEY_SIZE_RANGE;
+    }
+
+    return CKR_OK;
+}
+
+/*
  *  SSL Macing support. SSL Macs are inited, then update with the base
  * hashing algorithm, then finalized in sign and verify
  */
@@ -2744,7 +2823,7 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
 
         case CKM_SHA_1_HMAC_GENERAL:
             PORT_Assert(pMechanism->pParameter);
-            if (!pMechanism->pParameter) {
+            if (!pMechanism->pParameter || pMechanism->ulParameterLen != sizeof(CK_MAC_GENERAL_PARAMS)) {
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
@@ -2754,7 +2833,17 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
         case CKM_SHA_1_HMAC:
             crv = sftk_doHMACInit(context, HASH_AlgSHA1, key, SHA1_LENGTH);
             break;
-
+        case CKM_AES_CMAC_GENERAL:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter || pMechanism->ulParameterLen != sizeof(CK_MAC_GENERAL_PARAMS)) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
+            crv = sftk_doCMACInit(context, CMAC_AES, key, *(CK_ULONG *)pMechanism->pParameter);
+            break;
+        case CKM_AES_CMAC:
+            crv = sftk_doCMACInit(context, CMAC_AES, key, AES_BLOCK_SIZE);
+            break;
         case CKM_SSL3_MD5_MAC:
             PORT_Assert(pMechanism->pParameter);
             if (!pMechanism->pParameter) {

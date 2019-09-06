@@ -1157,3 +1157,9 @@ PK11_FindRawCertsWithSubject;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.47 { 	# NSS 3.47 release
+;+    global:
+PK11_GetCertsMatchingPrivateKey;
+;+    local:
+;+       *;
+;+};

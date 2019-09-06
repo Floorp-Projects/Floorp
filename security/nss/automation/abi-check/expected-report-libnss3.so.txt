@@ -1,0 +1,4 @@
+1 Added function:
+
+  'function CERTCertList* PK11_GetCertsMatchingPrivateKey(SECKEYPrivateKey*)'    {PK11_GetCertsMatchingPrivateKey@@NSS_3.47}
+

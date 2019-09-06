@@ -104,7 +104,7 @@ endif
 DLL_SUFFIX   = dll
 
 ifdef NS_USE_GCC
-    OS_CFLAGS += -mwindows -mms-bitfields
+    OS_CFLAGS += -mwindows
     _GEN_IMPORT_LIB=-Wl,--out-implib,$(IMPORT_LIBRARY)
     DLLFLAGS  += -mwindows -o $@ -shared -Wl,--export-all-symbols $(if $(IMPORT_LIBRARY),$(_GEN_IMPORT_LIB))
     ifdef BUILD_OPT

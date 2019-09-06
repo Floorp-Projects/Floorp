@@ -27,6 +27,7 @@
         },
         {
           'files': [
+            'cmac.h',
             'alghmac.h',
             'blapi.h',
             'blake2b.h',
