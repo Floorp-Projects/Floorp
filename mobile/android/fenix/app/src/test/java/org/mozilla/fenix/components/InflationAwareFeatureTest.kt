@@ -10,7 +10,6 @@ import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import java.lang.ref.WeakReference
 
 class InflationAwareFeatureTest {
@@ -58,18 +57,14 @@ class InflationAwareFeatureTest {
     }
 
     @Test
-    fun `start does nothing`() {
-        val stub: ViewStub = mock()
-        val inflationFeature: InflationAwareFeature = spy(TestableInflationAwareFeature(stub))
+    fun `start should be delegated to the inner feature`() {
+        val inflationFeature: InflationAwareFeature = spy(TestableInflationAwareFeature(mock()))
         val innerFeature: LifecycleAwareFeature = mock()
-
         inflationFeature.feature = innerFeature
-        inflationFeature.view = WeakReference(mock())
 
         inflationFeature.start()
 
-        verifyNoMoreInteractions(innerFeature)
-        verifyNoMoreInteractions(stub)
+        verify(innerFeature).start()
     }
 
     @Test
