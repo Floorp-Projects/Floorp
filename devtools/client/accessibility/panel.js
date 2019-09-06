@@ -88,6 +88,7 @@ AccessibilityPanel.prototype = {
     this.shouldRefresh = true;
     this.panelWin.gToolbox = this._toolbox;
 
+    await this._toolbox.initInspector();
     await this.startup.initAccessibility();
     if (this.supports.enableDisable) {
       this.picker = new Picker(this);
