@@ -468,7 +468,7 @@ MOZ_ALWAYS_INLINE bool NurseryCellHasStoreBuffer(const void* cell) {
 
 } /* namespace detail */
 
-MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell* cell) {
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const Cell* cell) {
   if (!cell) {
     return false;
   }
@@ -476,6 +476,14 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell* cell) {
   MOZ_ASSERT(location == ChunkLocation::Nursery ||
              location == ChunkLocation::TenuredHeap);
   return location == ChunkLocation::Nursery;
+}
+
+// Allow use before the compiler knows the derivation of JSObject and JSString.
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const JSObject* obj) {
+  return IsInsideNursery(reinterpret_cast<const Cell*>(obj));
+}
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const JSString* str) {
+  return IsInsideNursery(reinterpret_cast<const Cell*>(str));
 }
 
 MOZ_ALWAYS_INLINE bool IsCellPointerValid(const void* cell) {
@@ -513,7 +521,7 @@ static MOZ_ALWAYS_INLINE Zone* GetTenuredGCThingZone(GCCellPtr thing) {
 extern JS_PUBLIC_API Zone* GetNurseryStringZone(JSString* str);
 
 static MOZ_ALWAYS_INLINE Zone* GetStringZone(JSString* str) {
-  if (!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(str))) {
+  if (!js::gc::IsInsideNursery(str)) {
     return js::gc::detail::GetGCThingZone(reinterpret_cast<uintptr_t>(str));
   }
   return GetNurseryStringZone(str);
@@ -613,7 +621,7 @@ static MOZ_ALWAYS_INLINE bool EdgeNeedsSweepUnbarriered(JSObject** objp) {
   // pointers should be updated separately or replaced with
   // JS::Heap<JSObject*> which handles this automatically.
   MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
-  if (IsInsideNursery(reinterpret_cast<Cell*>(*objp))) {
+  if (IsInsideNursery(*objp)) {
     return false;
   }
 
