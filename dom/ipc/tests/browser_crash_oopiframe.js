@@ -55,7 +55,6 @@ add_task(async function() {
     "oop-browser-crashed"
   );
 
-  info("Waiting for oop-browser-crashed event.");
   await eventFiredPromise.then(event => {
     isnot(
       event.browsingContextId,
@@ -70,15 +69,14 @@ add_task(async function() {
     );
   });
 
-  // The BrowsingContext is re-used, but the currentWindowGlobal
-  // might still be getting set up at this point. We poll to wait
-  // until its created and available.
-  await BrowserTestUtils.waitForCondition(() => {
-    return iframeBC.currentWindowGlobal;
-  });
+  info("Wait for a new browsing context to get attached to our oop iframe.");
+  await BrowserTestUtils.waitForCondition(
+    () => rootBC.getChildren()[0] != iframeBC
+  );
 
+  let newIframeBC = rootBC.getChildren()[0];
   let newIframeURI = await SpecialPowers.spawn(
-    iframeBC,
+    newIframeBC,
     [],
     () => content.document.documentURI
   );
