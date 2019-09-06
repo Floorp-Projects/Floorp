@@ -659,7 +659,7 @@ class JSTerm extends Component {
 
       if (
         !isJsTermChangeOnly &&
-        (this.props.autocomplete || this.autocompletePopup.isOpen)
+        (this.props.autocomplete || this.hasAutocompletionSuggestion())
       ) {
         this.autocompleteUpdate();
       }
