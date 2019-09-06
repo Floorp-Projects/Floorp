@@ -41,6 +41,7 @@ class SearchPanel extends Component {
       openSearch: PropTypes.func.isRequired,
       closeSearch: PropTypes.func.isRequired,
       search: PropTypes.func.isRequired,
+      caseSensitive: PropTypes.bool,
       connector: PropTypes.object.isRequired,
       addSearchQuery: PropTypes.func.isRequired,
       query: PropTypes.string.isRequired,
@@ -121,7 +122,7 @@ class SearchPanel extends Component {
    */
   renderValue(props) {
     const { member } = props;
-    const { query } = this.props;
+    const { query, caseSensitive } = this.props;
 
     // Handle only second level (zero based) that displays
     // the search result. Find the query string inside the
@@ -161,7 +162,9 @@ class SearchPanel extends Component {
         return span({ title: object.value }, allMatches);
       }
 
-      const indexStart = object.value.indexOf(query);
+      const indexStart = caseSensitive
+        ? object.value.indexOf(query)
+        : object.value.toLowerCase().indexOf(query.toLowerCase());
       const indexEnd = indexStart + query.length;
 
       // Handles a match in a string
@@ -216,6 +219,7 @@ class SearchPanel extends Component {
 module.exports = connect(
   state => ({
     query: state.search.query,
+    caseSensitive: state.search.caseSensitive,
     results: state.search.results,
     ongoingSearch: state.search.ongoingSearch,
     status: state.search.status,
