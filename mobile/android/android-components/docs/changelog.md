@@ -69,6 +69,9 @@ permalink: /changelog/
 * **support-ktx**
   * Added variant of `Flow.ifChanged()` that takes a mapping function in order to filter items where the mapped value has not changed.
 
+* **feature-pwa**
+  * Adds the ability to create a basic shortcut with a custom label
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)

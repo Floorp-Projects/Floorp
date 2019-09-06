@@ -8,19 +8,34 @@ import android.content.Context
 import androidx.core.content.pm.ShortcutManagerCompat
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.pwa.ext.installableManifest
 
 /**
  * These use cases allow for adding a web app or web site to the homescreen.
  */
 class WebAppUseCases(
     private val applicationContext: Context,
-    sessionManager: SessionManager,
+    private val sessionManager: SessionManager,
     httpClient: Client,
     supportWebApps: Boolean = true
 ) {
-
     fun isPinningSupported() =
         ShortcutManagerCompat.isRequestPinShortcutSupported(applicationContext)
+
+    /**
+     * Checks to see if the current session is a Progressive Web App.
+     */
+    fun isPWA(): Boolean {
+        return sessionManager.selectedSession?.installableManifest() != null
+    }
+
+    private val shortcutManager by lazy {
+        WebAppShortcutManager(
+                applicationContext,
+                httpClient,
+                supportWebApps = supportWebApps
+        )
+    }
 
     /**
      * Let the user add the selected session to the homescreen.
@@ -34,22 +49,20 @@ class WebAppUseCases(
     class AddToHomescreenUseCase internal constructor(
         private val applicationContext: Context,
         private val sessionManager: SessionManager,
-        httpClient: Client,
-        supportWebApps: Boolean
+        private val shortcutManager: WebAppShortcutManager
     ) {
-        private val shortcutManager = WebAppShortcutManager(
-            applicationContext,
-            httpClient,
-            supportWebApps = supportWebApps
-        )
 
-        suspend operator fun invoke() {
+        /**
+         * @param overrideBasicShortcutName (optional) Custom label used if the current session
+         * is NOT a Progressive Web App
+         */
+        suspend operator fun invoke(overrideBasicShortcutName: String? = null) {
             val session = sessionManager.selectedSession ?: return
-            shortcutManager.requestPinShortcut(applicationContext, session)
+            shortcutManager.requestPinShortcut(applicationContext, session, overrideBasicShortcutName)
         }
     }
 
     val addToHomescreen by lazy {
-        AddToHomescreenUseCase(applicationContext, sessionManager, httpClient, supportWebApps)
+        AddToHomescreenUseCase(applicationContext, sessionManager, shortcutManager)
     }
 }
