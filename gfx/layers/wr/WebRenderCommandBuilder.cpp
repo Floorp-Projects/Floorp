@@ -448,14 +448,6 @@ struct DIGroup {
         aData->mRect = transformedRect.Intersect(mClippedImageBounds);
         InvalidateRect(aData->mRect);
 
-        // CGC invariant broken
-        if (!mInvalidRect.Contains(aData->mRect)) {
-          gfxCriticalError()
-              << "CGC-"
-              << "-" << aData->mRect.x << "-" << aData->mRect.y << "-"
-              << aData->mRect.width << "-" << aData->mRect.height << "-ib";
-        }
-
         aData->mInvalid = true;
         aData->mInvalidRegion = true;
       } else {
