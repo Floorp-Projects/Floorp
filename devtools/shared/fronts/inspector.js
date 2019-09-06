@@ -492,7 +492,11 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   // async initialization
   async initialize() {
-    await Promise.all([this._getWalker(), this._getHighlighter()]);
+    await Promise.all([
+      this._getWalker(),
+      this._getHighlighter(),
+      this._getPageStyle(),
+    ]);
   }
 
   async _getWalker() {
@@ -515,6 +519,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   hasHighlighter(type) {
     return this._highlighters.has(type);
+  }
+
+  async _getPageStyle() {
+    this.pageStyle = await super.getPageStyle();
   }
 
   destroy() {
