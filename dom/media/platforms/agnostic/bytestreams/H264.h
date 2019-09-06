@@ -510,6 +510,9 @@ class H264 {
   // point.
   static bool DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
                                 SEIRecoveryData& aDest);
+  // Decode NAL Slice payload and return true if its slice type is I slice or SI
+  // slice.
+  static bool DecodeISlice(const mozilla::MediaByteBuffer* aSlice);
 };
 
 }  // namespace mozilla
