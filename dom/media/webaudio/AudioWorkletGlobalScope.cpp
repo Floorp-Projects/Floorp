@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/WorkletPrincipal.h"
+#include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
@@ -35,9 +35,9 @@ AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
 bool AudioWorkletGlobalScope::WrapGlobalObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   JS::RealmOptions options;
+  JS::AutoHoldPrincipals principals(aCx, new WorkletPrincipals(mImpl));
   return AudioWorkletGlobalScope_Binding::Wrap(
-      aCx, this, this, options, WorkletPrincipal::GetWorkletPrincipal(), true,
-      aReflector);
+      aCx, this, this, options, principals.get(), true, aReflector);
 }
 
 void AudioWorkletGlobalScope::RegisterProcessor(

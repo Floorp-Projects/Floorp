@@ -40,11 +40,6 @@ bool PreserveWrapper(JSContext* aCx, JS::HandleObject aObj) {
   return mozilla::dom::TryPreserveWrapper(aObj);
 }
 
-void DestroyWorkletPrincipals(JSPrincipals* aPrincipals) {
-  MOZ_ASSERT_UNREACHABLE(
-      "Worklet principals refcount should never fall below one");
-}
-
 JSObject* Wrap(JSContext* aCx, JS::HandleObject aExisting,
                JS::HandleObject aObj) {
   if (aExisting) {
@@ -137,7 +132,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
     JSContext* cx = Context();
 
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(cx, DestroyWorkletPrincipals);
+    JS_InitDestroyPrincipalsCallback(cx, WorkletPrincipals::Destroy);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     JS_SetFutexCanWait(cx);
 
