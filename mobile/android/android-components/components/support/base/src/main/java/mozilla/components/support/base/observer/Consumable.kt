@@ -4,9 +4,6 @@
 
 package mozilla.components.support.base.observer
 
-import java.util.Collections
-import java.util.WeakHashMap
-
 typealias ConsumableListener = () -> Unit
 
 /**
@@ -20,7 +17,7 @@ class Consumable<T> private constructor(
     onConsume: ConsumableListener? = null
 ) {
 
-    private val listeners = Collections.newSetFromMap(WeakHashMap<ConsumableListener, Boolean>()).also { listeners ->
+    private val listeners = mutableSetOf<ConsumableListener>().also { listeners ->
         if (onConsume != null) {
             listeners.add(onConsume)
         }
