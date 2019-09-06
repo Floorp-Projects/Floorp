@@ -3,6 +3,40 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "TrackingDBService",
+  "@mozilla.org/tracking-db-service;1",
+  "nsITrackingDBService"
+);
+
+const LOG = {
+  "https://1.example.com": [
+    [Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT, true, 1],
+  ],
+  "https://2.example.com": [
+    [Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT, true, 1],
+  ],
+  "https://3.example.com": [
+    [Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT, true, 2],
+  ],
+  "https://4.example.com": [
+    [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, true, 3],
+  ],
+  "https://5.example.com": [
+    [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, true, 1],
+  ],
+  // Cookie blocked for other reason, then identified as a tracker
+  "https://6.example.com": [
+    [
+      Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL |
+        Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT,
+      true,
+      4,
+    ],
+  ],
+};
+
 requestLongerTimeout(2);
 
 add_task(async function setup() {
@@ -408,4 +442,19 @@ add_task(async function checkTelemetryClickEvents() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// This tests that telemetry is sent when saveEvents is called.
+add_task(async function test_save_telemetry() {
+  // Clear all scalar telemetry.
+  Services.telemetry.clearScalars();
+
+  await TrackingDBService.saveEvents(JSON.stringify(LOG));
+
+  const scalars = Services.telemetry.getSnapshotForScalars("main", false)
+    .parent;
+  is(scalars["contentblocking.trackers_blocked_count"], 6);
+
+  // Use the TrackingDBService API to delete the data.
+  await TrackingDBService.clearAll();
 });
