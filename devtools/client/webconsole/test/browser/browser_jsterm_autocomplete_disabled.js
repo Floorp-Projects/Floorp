@@ -43,4 +43,27 @@ async function performTests_false() {
   EventUtils.synthesizeKey("in");
   await onUpdated;
   ok(popup.getItems().length == 2, "'win' gave a list of suggestions");
+
+  info("Check that the completion text is updated when it was displayed");
+  await setInputValue(hud, "");
+  EventUtils.sendString("deb");
+  let updated = jsterm.once("autocomplete-updated");
+  EventUtils.synthesizeKey(" ", { ctrlKey: true });
+  await updated;
+
+  ok(!popup.isOpen, "popup is not open");
+  is(
+    jsterm.getAutoCompletionText(),
+    "ugger",
+    "completion text has expected value"
+  );
+
+  updated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("u");
+  await updated;
+  is(
+    jsterm.getAutoCompletionText(),
+    "gger",
+    "completion text has expected value"
+  );
 }
