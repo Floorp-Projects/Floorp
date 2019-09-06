@@ -547,6 +547,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   static void FlushApzRepaints(LayersId aLayersId);
 
+  /**
+   * Mark |aLayersId| as having been moved from the compositor that owns this
+   * tree manager to a compositor that doesn't use APZ.
+   * See |mDetachedLayersIds| for more details.
+   */
+  void MarkAsDetached(LayersId aLayersId);
+
   // Assert that the current thread is the sampler thread for this APZCTM.
   void AssertOnSamplerThread();
   // Assert that the current thread is the updater thread for this APZCTM.
@@ -803,6 +810,17 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * IMPORTANT: See the note about lock ordering at the top of this file. */
   mutable mozilla::RecursiveMutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
+
+  /*
+   * A set of LayersIds for which APZCTM should only send empty
+   * MatrixMessages via NotifyLayerTransform().
+   * This is used in cases where a tab has been transferred to a non-APZ
+   * compositor (and thus will not receive MatrixMessages reflecting its new
+   * transforms) and we need to make sure it doesn't get stuck with transforms
+   * from its old tree manager (us).
+   * Acquire mTreeLock before accessing this.
+   */
+  std::unordered_set<LayersId, LayersId::HashFn> mDetachedLayersIds;
 
   /* True if the current hit-testing tree contains an async zoom container
    * node.

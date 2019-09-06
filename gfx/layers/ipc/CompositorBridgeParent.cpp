@@ -1761,6 +1761,11 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     // is APZ-disabled, there will be nothing to update the transforms going
     // forward.)
     if (!mApzUpdater && oldRootController) {
+      // Tell the old APZCTreeManager not to send any more layer transforms
+      // for this layers ids.
+      oldApzUpdater->MarkAsDetached(child);
+
+      // Clear the current transforms.
       nsTArray<MatrixMessage> clear;
       clear.AppendElement(MatrixMessage(Nothing(), child));
       oldRootController->NotifyLayerTransforms(clear);

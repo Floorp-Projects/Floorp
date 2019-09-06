@@ -1230,6 +1230,11 @@ void APZCTreeManager::FlushApzRepaints(LayersId aLayersId) {
   }
 }
 
+void APZCTreeManager::MarkAsDetached(LayersId aLayersId) {
+  RecursiveMutexAutoLock lock(mTreeLock);
+  mDetachedLayersIds.insert(aLayersId);
+}
+
 nsEventStatus APZCTreeManager::ReceiveInputEvent(
     InputData& aEvent, ScrollableLayerGuid* aOutTargetGuid,
     uint64_t* aOutInputBlockId) {
@@ -3303,8 +3308,12 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
             messages.AppendElement(
                 MatrixMessage(Some(LayerToScreenMatrix4x4()), layersId));
           } else if (layersId != parent->GetLayersId()) {
-            messages.AppendElement(
-                MatrixMessage(Some(parent->GetTransformToGecko()), layersId));
+            if (mDetachedLayersIds.find(layersId) != mDetachedLayersIds.end()) {
+              messages.AppendElement(MatrixMessage(Nothing(), layersId));
+            } else {
+              messages.AppendElement(
+                  MatrixMessage(Some(parent->GetTransformToGecko()), layersId));
+            }
           }
         },
         [&](HitTestingTreeNode* aNode) {
