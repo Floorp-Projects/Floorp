@@ -63,6 +63,10 @@ function update(
       return state;
     }
 
+    case "REMOVE_BREAKPOINTS": {
+      return { ...state, breakpoints: {} };
+    }
+
     case "NAVIGATE": {
       return initialBreakpointsState(state.xhrBreakpoints);
     }

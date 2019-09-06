@@ -13,6 +13,8 @@ import {
 } from "../../../utils/test-head";
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
+import { mockPendingBreakpoint } from "../../tests/helpers/breakpoints.js";
+import { makePendingLocationId } from "../../../utils/breakpoint";
 
 function mockClient(positionsResponse = {}) {
   return {
@@ -300,6 +302,48 @@ describe("breakpoints", () => {
     bp2 = selectors.getBreakpoint(getState(), loc2);
     expect(bp1 && bp1.disabled).toBe(false);
     expect(bp2 && bp2.disabled).toBe(false);
+  });
+
+  it("should remove all the breakpoints", async () => {
+    const mockedPendingBreakpoint = mockPendingBreakpoint({ column: 2 });
+    const id = makePendingLocationId(mockedPendingBreakpoint.location);
+    const pendingBreakpoints = { [id]: mockedPendingBreakpoint };
+
+    const { dispatch, getState, cx } = createStore(
+      mockClient({ "5": [1], "6": [2] }),
+      { pendingBreakpoints }
+    );
+
+    const loc1 = {
+      sourceId: "a",
+      line: 5,
+      column: 1,
+      sourceUrl: "http://localhost:8000/examples/a",
+    };
+
+    const loc2 = {
+      sourceId: "b",
+      line: 6,
+      column: 2,
+      sourceUrl: "http://localhost:8000/examples/b",
+    };
+
+    const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    await dispatch(actions.loadSourceText({ cx, source: aSource }));
+
+    const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
+    await dispatch(actions.loadSourceText({ cx, source: bSource }));
+
+    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(cx, loc2));
+
+    await dispatch(actions.removeAllBreakpoints(cx));
+
+    const bps = selectors.getBreakpointsList(getState());
+    const pendingBps = selectors.getPendingBreakpointList(getState());
+
+    expect(bps).toHaveLength(0);
+    expect(pendingBps).toHaveLength(0);
   });
 
   it("should toggle a breakpoint at a location", async () => {
