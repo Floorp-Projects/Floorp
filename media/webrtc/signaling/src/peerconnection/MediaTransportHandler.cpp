@@ -165,6 +165,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   std::map<std::string, Transport> mTransports;
   bool mProxyOnlyIfBehindProxy = false;
   bool mProxyOnly = false;
+  bool mObfuscateHostAddresses = false;
 
   // mDNS Support
   class DNSListener final : public nsIDNSListener {
@@ -657,6 +658,8 @@ void MediaTransportHandlerSTS::StartIceGathering(
           mProxyOnly = true;
         }
 
+        mObfuscateHostAddresses = aObfuscateHostAddresses;
+
         // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
         // needs to have the proper flags set on ice ctx.  For non-e10s,
         // setting those flags happens in StartGathering.  We could probably
@@ -793,7 +796,7 @@ void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
 
         nsresult rv = stream->ParseTrickleCandidate(aCandidate, aUfrag, "");
         if (NS_SUCCEEDED(rv)) {
-          if (tokens.size() > 4) {
+          if (mObfuscateHostAddresses && tokens.size() > 4) {
             mSignaledAddresses.insert(tokens[4]);
           }
         } else {
@@ -1114,6 +1117,7 @@ static void ToRTCIceCandidateStats(
     const std::vector<NrIceCandidate>& candidates,
     dom::RTCStatsType candidateType, const nsString& transportId,
     DOMHighResTimeStamp now, dom::RTCStatsReportInternal* report,
+    bool obfuscateHostAddresses,
     const std::set<std::string>& signaledAddresses) {
   MOZ_ASSERT(report);
   for (const auto& candidate : candidates) {
@@ -1130,7 +1134,8 @@ static void ToRTCIceCandidateStats(
     if (!candidate.mdns_addr.empty()) {
       cand.mAddress.Construct(
           NS_ConvertASCIItoUTF16(candidate.mdns_addr.c_str()));
-    } else if (candidate.type == NrIceCandidate::ICE_PEER_REFLEXIVE &&
+    } else if (obfuscateHostAddresses &&
+               candidate.type == NrIceCandidate::ICE_PEER_REFLEXIVE &&
                signaledAddresses.find(candidate.cand_addr.host) ==
                    signaledAddresses.end()) {
       cand.mAddress.Construct(NS_ConvertASCIItoUTF16("(redacted)"));
@@ -1203,7 +1208,8 @@ void MediaTransportHandlerSTS::GetIceStats(
   std::vector<NrIceCandidate> candidates;
   if (NS_SUCCEEDED(aStream.GetLocalCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates, dom::RTCStatsType::Local_candidate,
-                           transportId, aNow, aReport, mSignaledAddresses);
+                           transportId, aNow, aReport, mObfuscateHostAddresses,
+                           mSignaledAddresses);
     // add the local candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
       aReport->mRawLocalCandidates.Value().AppendElement(
@@ -1214,7 +1220,8 @@ void MediaTransportHandlerSTS::GetIceStats(
 
   if (NS_SUCCEEDED(aStream.GetRemoteCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates, dom::RTCStatsType::Remote_candidate,
-                           transportId, aNow, aReport, mSignaledAddresses);
+                           transportId, aNow, aReport, mObfuscateHostAddresses,
+                           mSignaledAddresses);
     // add the remote candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
       aReport->mRawRemoteCandidates.Value().AppendElement(
