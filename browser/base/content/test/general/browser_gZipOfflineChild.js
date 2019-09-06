@@ -4,7 +4,7 @@
  */
 
 const URL =
-  "http://mochi.test:8888/browser/browser/base/content/test/general/test_offline_gzip.html";
+  "https://example.com/browser/browser/base/content/test/general/test_offline_gzip.html";
 
 registerCleanupFunction(function() {
   // Clean up after ourself
@@ -15,6 +15,8 @@ registerCleanupFunction(function() {
   );
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
+  Services.prefs.clearUserPref("browser.cache.offline.enable");
+  Services.prefs.clearUserPref("browser.cache.offline.storage.enable");
 });
 
 //
@@ -84,6 +86,8 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("offline-apps.allow_by_default", true);
+  Services.prefs.setBoolPref("browser.cache.offline.enable", true);
+  Services.prefs.setBoolPref("browser.cache.offline.storage.enable", true);
 
   // Open a new tab.
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
