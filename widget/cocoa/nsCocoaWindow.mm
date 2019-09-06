@@ -21,6 +21,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
 #include "nsToolkit.h"
+#include "nsTouchBarNativeAPIDefines.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
