@@ -293,6 +293,7 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aListType  Unused.
    */
+  [can_run_script]
   void removeList(in AString aListType);
 
   /**

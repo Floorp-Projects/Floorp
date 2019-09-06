@@ -404,7 +404,8 @@ nsresult RemoveListCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
     return NS_OK;
   }
   // This removes any list type
-  nsresult rv = htmlEditor->RemoveListAsAction(EmptyString(), aPrincipal);
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->RemoveListAsAction(EmptyString(), aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveListAsAction() failed");
   return rv;
 }
