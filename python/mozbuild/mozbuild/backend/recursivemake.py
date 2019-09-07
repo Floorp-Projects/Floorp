@@ -1827,3 +1827,8 @@ class RecursiveMakeBackend(CommonBackend):
         webidls_mk = mozpath.join(bindings_dir, 'webidlsrcs.mk')
         with self._write_file(webidls_mk) as fh:
             mk.dump(fh, removal_guard=False)
+
+        # Add the test directory to the compile graph.
+        self._compile_graph[mozpath.join(
+            mozpath.relpath(bindings_dir, self.environment.topobjdir),
+            'test', 'target-objects')]
