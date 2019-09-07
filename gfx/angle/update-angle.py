@@ -339,6 +339,7 @@ def append_arr(dest, name, vals, indent=0):
     return
 
 REGISTERED_DEFINES = {
+    'ANGLE_CAPTURE_ENABLED': True,
     'ANGLE_EGL_LIBRARY_NAME': False,
     'ANGLE_ENABLE_D3D11': True,
     'ANGLE_ENABLE_D3D9': True,
