@@ -167,7 +167,6 @@ function run_test() {
   httpserver.start(-1);
 
   prefService.setBoolPref("browser.cache.offline.enable", false);
-  prefService.setBoolPref("browser.cache.offline.storage.enable", false);
   prefService.setBoolPref("network.http.rcwn.enabled", false);
 
   nextTest();
