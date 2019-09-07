@@ -551,7 +551,10 @@ def set_defaults(config, tests):
         test.setdefault('virtualization', 'virtual')
         test.setdefault('loopback-audio', False)
         test.setdefault('loopback-video', False)
-        test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
+        if config.params['try_task_config'].get('debian-tests'):
+            test.setdefault('docker-image', {'in-tree': 'debian10-test'})
+        else:
+            test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
         test.setdefault('checkout', False)
         test.setdefault('require-signed-extensions', False)
         test.setdefault('variants', [])

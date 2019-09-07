@@ -310,6 +310,22 @@ class VisualMetricsJobs(TryConfig):
         }
 
 
+class DebianTests(TryConfig):
+
+    arguments = [
+        [['--debian-buster'],
+         {'action': 'store_true',
+          'help': 'Run linux desktop tests on debian image',
+          }],
+    ]
+
+    def try_config(self, debian_buster, **kwargs):
+        if debian_buster:
+            return {
+                'debian-tests': True,
+            }
+
+
 all_templates = {
     'artifact': Artifact,
     'browsertime': Browsertime,
@@ -319,5 +335,6 @@ all_templates = {
     'gecko-profile': GeckoProfile,
     'path': Path,
     'rebuild': Rebuild,
+    'debian-buster': DebianTests,
     'visual-metrics-jobs': VisualMetricsJobs,
 }
