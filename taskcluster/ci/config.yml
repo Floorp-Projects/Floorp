@@ -247,12 +247,12 @@ scriptworker:
             - 'project:releng:signing:cert:nightly-signing'
         'linux-depsigning':
             - 'project:releng:signing:cert:dep-signing'
-        'scriptworker-prov-v1/beetmoverworker-v1':
+        'scriptworker-k8s/gecko-3-beetmover':
             - 'project:releng:beetmover:bucket:release'
             - 'project:releng:beetmover:bucket:nightly'
             - 'project:releng:beetmover:bucket:partner'
             - 'project:releng:beetmover:bucket:maven-production'
-        'scriptworker-prov-v1/beetmoverworker-dev':
+        'scriptworker-k8s/gecko-1-beetmover':
             - 'project:releng:beetmover:bucket:dep'
             - 'project:releng:beetmover:bucket:dep-partner'
             - 'project:releng:beetmover:bucket:maven-staging'
