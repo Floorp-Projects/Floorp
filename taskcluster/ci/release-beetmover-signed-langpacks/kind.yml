@@ -25,8 +25,8 @@ job-template:
     description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
     worker-type:
         by-release-level:
-            production: scriptworker-prov-v1/beetmoverworker-v1
-            staging: scriptworker-prov-v1/beetmoverworker-dev
+            production: scriptworker-k8s/gecko-3-beetmover
+            staging: scriptworker-k8s/gecko-1-beetmover
     run-on-projects: []
     shipping-phase: promote
     attributes:
