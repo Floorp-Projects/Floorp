@@ -49,7 +49,7 @@ add_task(async function block_autoplay_media() {
   info("- open new background tab1 -");
   let tab1 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   BrowserTestUtils.loadURI(tab1.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser, false, PAGE);
 
   info("- should block autoplay media for non-visited tab1 -");
   await check_audio_suspended(
@@ -60,7 +60,7 @@ add_task(async function block_autoplay_media() {
   info("- open new background tab2 -");
   let tab2 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   BrowserTestUtils.loadURI(tab2.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser, false, PAGE);
 
   info("- should block autoplay for non-visited tab2 -");
   await check_audio_suspended(
@@ -111,7 +111,8 @@ add_task(async function block_autoplay_media() {
   info("- open new background tab4 -");
   let tab4 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   BrowserTestUtils.loadURI(tab4.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser, false, PAGE);
+
   info("- should block autoplay for non-visited tab4 -");
   await check_audio_suspended(
     tab4.linkedBrowser,
@@ -127,7 +128,8 @@ add_task(async function block_autoplay_media() {
     "- check that loading a new URI in page clears gesture activation status -"
   );
   BrowserTestUtils.loadURI(tab4.linkedBrowser, PAGE);
-  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser);
+  await BrowserTestUtils.browserLoaded(tab4.linkedBrowser, false, PAGE);
+
   info("- should block autoplay again as gesture activation status cleared -");
   await check_audio_paused(tab4.linkedBrowser, true);
 
