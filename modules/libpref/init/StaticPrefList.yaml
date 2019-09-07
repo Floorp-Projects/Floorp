@@ -2293,6 +2293,12 @@
   value: false
   mirror: always
 
+# Time limit, in milliseconds, for user gesture transient activation.
+- name: dom.user_activation.transient.timeout
+  type: uint32_t
+  value: 5000
+  mirror: always
+
 # Is support for Window.visualViewport enabled?
 - name: dom.visualviewport.enabled
   type: bool
