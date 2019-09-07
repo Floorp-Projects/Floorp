@@ -1659,6 +1659,11 @@ function divergeFromRecording() {
 }
 
 const gRequestHandlers = {
+  repaint() {
+    divergeFromRecording();
+    return RecordReplayControl.repaint();
+  },
+
   /////////////////////////////////////////////////////////
   // Debugger Requests
   /////////////////////////////////////////////////////////
