@@ -16,7 +16,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/LauncherResult.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 

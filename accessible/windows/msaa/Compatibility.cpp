@@ -32,7 +32,7 @@ static const wchar_t* ConsumerStringMap[CONSUMERS_ENUM_LEN + 1] = {
 
 bool Compatibility::IsModuleVersionLessThan(HMODULE aModuleHandle,
                                             unsigned long long aVersion) {
-  WindowsErrorResult<ModuleVersion> version = GetModuleVersion(aModuleHandle);
+  LauncherResult<ModuleVersion> version = GetModuleVersion(aModuleHandle);
   if (version.isErr()) {
     return true;
   }

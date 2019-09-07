@@ -7,7 +7,7 @@
 #ifndef mozilla_SameBinary_h
 #define mozilla_SameBinary_h
 
-#include "mozilla/LauncherResult.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/NativeNt.h"
 #include "nsWindowsHelpers.h"
 
@@ -49,14 +49,8 @@ static inline mozilla::LauncherResult<bool> IsSameBinaryAsParentProcess() {
     return LAUNCHER_ERROR_FROM_LAST();
   }
 
-  mozilla::WindowsErrorResult<bool> isSame =
-      mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe,
-                                           mozilla::PathType::eNtPath);
-  if (isSame.isErr()) {
-    return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(isSame.unwrapErr());
-  }
-
-  return isSame.unwrap();
+  return mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe,
+                                              mozilla::PathType::eNtPath);
 }
 
 }  // namespace mozilla
