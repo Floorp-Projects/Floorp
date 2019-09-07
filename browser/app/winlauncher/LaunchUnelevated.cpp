@@ -8,7 +8,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
-#include "mozilla/LauncherResult.h"
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"

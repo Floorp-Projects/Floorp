@@ -7,7 +7,6 @@
 #ifndef mozilla_LauncherRegistryInfo_h
 #define mozilla_LauncherRegistryInfo_h
 
-#include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"

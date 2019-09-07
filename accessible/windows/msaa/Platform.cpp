@@ -276,7 +276,7 @@ static bool GetInstantiatorExecutable(const DWORD aPid,
 static void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  WindowsErrorResult<ModuleVersion> version = GetModuleVersion(aClientExe);
+  LauncherResult<ModuleVersion> version = GetModuleVersion(aClientExe);
   if (version.isErr()) {
     return;
   }
