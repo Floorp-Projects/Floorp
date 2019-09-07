@@ -20,7 +20,7 @@
 #include "libANGLE/Thread.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/EGLImplFactory.h"
-#include "third_party/trace_event/trace_event.h"
+#include "libANGLE/trace.h"
 
 namespace egl
 {
@@ -131,13 +131,15 @@ Error Surface::destroyImpl(const Display *display)
     return NoError();
 }
 
-void Surface::postSwap(const gl::Context *context)
+void Surface::postSwap(const Display *display)
 {
     if (mRobustResourceInitialization && mSwapBehavior != EGL_BUFFER_PRESERVED)
     {
         mInitState = gl::InitState::MayNeedInit;
-        onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
+        onStateChange(angle::SubjectMessage::SubjectChanged);
     }
+
+    display->onPostSwap();
 }
 
 Error Surface::initialize(const Display *display)
@@ -177,15 +179,18 @@ Error Surface::initialize(const Display *display)
     return NoError();
 }
 
-Error Surface::setIsCurrent(const gl::Context *context, bool isCurrent)
+Error Surface::makeCurrent(const gl::Context *context)
 {
-    if (isCurrent)
-    {
-        mRefCount++;
-        return NoError();
-    }
+    ANGLE_TRY(mImplementation->makeCurrent(context));
 
-    return releaseRef(context->getCurrentDisplay());
+    mRefCount++;
+    return NoError();
+}
+
+Error Surface::unMakeCurrent(const gl::Context *context)
+{
+    ANGLE_TRY(mImplementation->unMakeCurrent(context));
+    return releaseRef(context->getDisplay());
 }
 
 Error Surface::releaseRef(const Display *display)
@@ -228,17 +233,17 @@ EGLint Surface::getType() const
 
 Error Surface::swap(const gl::Context *context)
 {
-    TRACE_EVENT0("gpu.angle", "egl::Surface::swap");
+    ANGLE_TRACE_EVENT0("gpu.angle", "egl::Surface::swap");
 
     ANGLE_TRY(mImplementation->swap(context));
-    postSwap(context);
+    postSwap(context->getDisplay());
     return NoError();
 }
 
 Error Surface::swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects)
 {
     ANGLE_TRY(mImplementation->swapWithDamage(context, rects, n_rects));
-    postSwap(context);
+    postSwap(context->getDisplay());
     return NoError();
 }
 
@@ -435,7 +440,7 @@ Error Surface::releaseTexImageFromTexture(const gl::Context *context)
 {
     ASSERT(mTexture);
     mTexture = nullptr;
-    return releaseRef(context->getCurrentDisplay());
+    return releaseRef(context->getDisplay());
 }
 
 gl::Extents Surface::getAttachmentSize(const gl::ImageIndex & /*target*/) const

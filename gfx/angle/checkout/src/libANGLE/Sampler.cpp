@@ -36,9 +36,10 @@ const std::string &Sampler::getLabel() const
     return mLabel;
 }
 
-void Sampler::setMinFilter(GLenum minFilter)
+void Sampler::setMinFilter(const Context *context, GLenum minFilter)
 {
     mState.setMinFilter(minFilter);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getMinFilter() const
@@ -46,9 +47,10 @@ GLenum Sampler::getMinFilter() const
     return mState.getMinFilter();
 }
 
-void Sampler::setMagFilter(GLenum magFilter)
+void Sampler::setMagFilter(const Context *context, GLenum magFilter)
 {
     mState.setMagFilter(magFilter);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getMagFilter() const
@@ -56,9 +58,10 @@ GLenum Sampler::getMagFilter() const
     return mState.getMagFilter();
 }
 
-void Sampler::setWrapS(GLenum wrapS)
+void Sampler::setWrapS(const Context *context, GLenum wrapS)
 {
     mState.setWrapS(wrapS);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getWrapS() const
@@ -66,9 +69,10 @@ GLenum Sampler::getWrapS() const
     return mState.getWrapS();
 }
 
-void Sampler::setWrapT(GLenum wrapT)
+void Sampler::setWrapT(const Context *context, GLenum wrapT)
 {
     mState.setWrapT(wrapT);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getWrapT() const
@@ -76,9 +80,10 @@ GLenum Sampler::getWrapT() const
     return mState.getWrapT();
 }
 
-void Sampler::setWrapR(GLenum wrapR)
+void Sampler::setWrapR(const Context *context, GLenum wrapR)
 {
     mState.setWrapR(wrapR);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getWrapR() const
@@ -86,9 +91,10 @@ GLenum Sampler::getWrapR() const
     return mState.getWrapR();
 }
 
-void Sampler::setMaxAnisotropy(float maxAnisotropy)
+void Sampler::setMaxAnisotropy(const Context *context, float maxAnisotropy)
 {
     mState.setMaxAnisotropy(maxAnisotropy);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 float Sampler::getMaxAnisotropy() const
@@ -96,9 +102,10 @@ float Sampler::getMaxAnisotropy() const
     return mState.getMaxAnisotropy();
 }
 
-void Sampler::setMinLod(GLfloat minLod)
+void Sampler::setMinLod(const Context *context, GLfloat minLod)
 {
     mState.setMinLod(minLod);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLfloat Sampler::getMinLod() const
@@ -106,9 +113,10 @@ GLfloat Sampler::getMinLod() const
     return mState.getMinLod();
 }
 
-void Sampler::setMaxLod(GLfloat maxLod)
+void Sampler::setMaxLod(const Context *context, GLfloat maxLod)
 {
     mState.setMaxLod(maxLod);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLfloat Sampler::getMaxLod() const
@@ -116,9 +124,10 @@ GLfloat Sampler::getMaxLod() const
     return mState.getMaxLod();
 }
 
-void Sampler::setCompareMode(GLenum compareMode)
+void Sampler::setCompareMode(const Context *context, GLenum compareMode)
 {
     mState.setCompareMode(compareMode);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getCompareMode() const
@@ -126,9 +135,10 @@ GLenum Sampler::getCompareMode() const
     return mState.getCompareMode();
 }
 
-void Sampler::setCompareFunc(GLenum compareFunc)
+void Sampler::setCompareFunc(const Context *context, GLenum compareFunc)
 {
     mState.setCompareFunc(compareFunc);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getCompareFunc() const
@@ -136,9 +146,10 @@ GLenum Sampler::getCompareFunc() const
     return mState.getCompareFunc();
 }
 
-void Sampler::setSRGBDecode(GLenum sRGBDecode)
+void Sampler::setSRGBDecode(const Context *context, GLenum sRGBDecode)
 {
     mState.setSRGBDecode(sRGBDecode);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 GLenum Sampler::getSRGBDecode() const
@@ -146,9 +157,10 @@ GLenum Sampler::getSRGBDecode() const
     return mState.getSRGBDecode();
 }
 
-void Sampler::setBorderColor(const ColorGeneric &color)
+void Sampler::setBorderColor(const Context *context, const ColorGeneric &color)
 {
     mState.setBorderColor(color);
+    onStateChange(angle::SubjectMessage::DirtyBitsFlagged);
 }
 
 const ColorGeneric &Sampler::getBorderColor() const

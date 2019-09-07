@@ -99,6 +99,6 @@ using ColorGeneric = angle::ColorGeneric;
 
 }  // namespace gl
 
-#include "Color.inl"
+#include "Color.inc"
 
 #endif  // COMMON_COLOR_H_
