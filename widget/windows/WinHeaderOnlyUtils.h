@@ -109,10 +109,12 @@ class WindowsError final {
 
   UniqueString AsString() const {
     LPWSTR rawMsgBuf = nullptr;
-    DWORD result = ::FormatMessageW(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr, mHResult, 0, reinterpret_cast<LPWSTR>(&rawMsgBuf), 0, nullptr);
+    constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                            FORMAT_MESSAGE_FROM_SYSTEM |
+                            FORMAT_MESSAGE_IGNORE_INSERTS;
+    DWORD result =
+        ::FormatMessageW(flags, nullptr, mHResult, 0,
+                         reinterpret_cast<LPWSTR>(&rawMsgBuf), 0, nullptr);
     if (!result) {
       return nullptr;
     }
@@ -188,6 +190,96 @@ class WindowsError final {
 template <typename T>
 using WindowsErrorResult = Result<T, WindowsError>;
 
+#if defined(MOZILLA_INTERNAL_API)
+
+template <typename T>
+using LauncherResult = WindowsErrorResult<T>;
+
+using WindowsErrorType = WindowsError;
+
+#else
+
+struct LauncherError {
+  LauncherError(const char* aFile, int aLine, WindowsError aWin32Error)
+      : mFile(aFile), mLine(aLine), mError(aWin32Error) {}
+
+  const char* mFile;
+  int mLine;
+  WindowsError mError;
+
+  bool operator==(const LauncherError& aOther) const {
+    return mError == aOther.mError;
+  }
+
+  bool operator!=(const LauncherError& aOther) const {
+    return mError != aOther.mError;
+  }
+
+  bool operator==(const WindowsError& aOther) const { return mError == aOther; }
+
+  bool operator!=(const WindowsError& aOther) const { return mError != aOther; }
+};
+
+template <typename T>
+using LauncherResult = Result<T, LauncherError>;
+
+using WindowsErrorType = LauncherError;
+
+#endif  // defined(MOZILLA_INTERNAL_API)
+
+using LauncherVoidResult = LauncherResult<Ok>;
+
+#if defined(MOZILLA_INTERNAL_API)
+
+#  define LAUNCHER_ERROR_GENERIC() \
+    ::mozilla::Err(::mozilla::WindowsError::CreateGeneric())
+
+#  define LAUNCHER_ERROR_FROM_WIN32(err) \
+    ::mozilla::Err(::mozilla::WindowsError::FromWin32Error(err))
+
+#  define LAUNCHER_ERROR_FROM_LAST() \
+    ::mozilla::Err(::mozilla::WindowsError::FromLastError())
+
+#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
+    ::mozilla::Err(::mozilla::WindowsError::FromNtStatus(ntstatus))
+
+#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
+    ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
+
+#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) ::mozilla::Err(err)
+
+#else
+
+#  define LAUNCHER_ERROR_GENERIC()           \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::CreateGeneric()))
+
+#  define LAUNCHER_ERROR_FROM_WIN32(err)     \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromWin32Error(err)))
+
+#  define LAUNCHER_ERROR_FROM_LAST()         \
+    ::mozilla::Err(::mozilla::LauncherError( \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromLastError()))
+
+#  define LAUNCHER_ERROR_FROM_NTSTATUS(ntstatus) \
+    ::mozilla::Err(::mozilla::LauncherError(     \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromNtStatus(ntstatus)))
+
+#  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
+    ::mozilla::Err(::mozilla::LauncherError(   \
+        __FILE__, __LINE__, ::mozilla::WindowsError::FromHResult(hresult)))
+
+// This macro wraps the supplied WindowsError with a LauncherError
+#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
+    ::mozilla::Err(::mozilla::LauncherError(__FILE__, __LINE__, err))
+
+#endif  // defined(MOZILLA_INTERNAL_API)
+
+// This macro enables copying of a mozilla::LauncherError from a
+// mozilla::LauncherResult<Foo> into a mozilla::LauncherResult<Bar>
+#define LAUNCHER_ERROR_FROM_RESULT(result) ::mozilla::Err(result.inspectErr())
+
 // How long to wait for a created process to become available for input,
 // to prevent that process's windows being forced to the background.
 // This is used across update, restart, and the launcher.
@@ -240,8 +332,10 @@ enum class PathType {
 
 class FileUniqueId final {
  public:
-  explicit FileUniqueId(const wchar_t* aPath, PathType aPathType) : mId() {
+  explicit FileUniqueId(const wchar_t* aPath, PathType aPathType)
+      : mId(FILE_ID_INFO()) {
     if (!aPath) {
+      mId = LAUNCHER_ERROR_FROM_HRESULT(E_INVALIDARG);
       return;
     }
 
@@ -249,6 +343,7 @@ class FileUniqueId final {
 
     switch (aPathType) {
       default:
+        mId = LAUNCHER_ERROR_FROM_HRESULT(E_INVALIDARG);
         MOZ_ASSERT_UNREACHABLE("Unhandled PathType");
         return;
 
@@ -267,21 +362,20 @@ class FileUniqueId final {
         // We don't need to check |ntHandle| for INVALID_HANDLE_VALUE here,
         // as that value is set by the Win32 layer.
         if (!NT_SUCCESS(status)) {
-          mError = Some(WindowsError::FromNtStatus(status));
+          mId = LAUNCHER_ERROR_FROM_NTSTATUS(status);
           return;
         }
 
         file.own(ntHandle);
+        break;
       }
-
-      break;
 
       case PathType::eDosPath: {
         file.own(::CreateFileW(
             aPath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr));
         if (file == INVALID_HANDLE_VALUE) {
-          mError = Some(WindowsError::FromLastError());
+          mId = LAUNCHER_ERROR_FROM_LAST();
           return;
         }
 
@@ -292,23 +386,20 @@ class FileUniqueId final {
     GetId(file);
   }
 
-  explicit FileUniqueId(const nsAutoHandle& aFile) : mId() { GetId(aFile); }
+  explicit FileUniqueId(const nsAutoHandle& aFile) : mId(FILE_ID_INFO()) {
+    GetId(aFile);
+  }
 
-  FileUniqueId(const FileUniqueId& aOther)
-      : mId(aOther.mId), mError(aOther.mError) {}
+  FileUniqueId(const FileUniqueId& aOther) : mId(aOther.mId) {}
 
   ~FileUniqueId() = default;
 
-  explicit operator bool() const {
-    FILE_ID_INFO zeros = {};
-    return !mError && memcmp(&mId, &zeros, sizeof(FILE_ID_INFO));
-  }
+  bool IsError() const { return mId.isErr(); }
 
-  Maybe<WindowsError> GetError() const { return mError; }
+  const WindowsErrorType& GetError() const { return mId.inspectErr(); }
 
   FileUniqueId& operator=(const FileUniqueId& aOther) {
     mId = aOther.mId;
-    mError = aOther.mError;
     return *this;
   }
 
@@ -316,8 +407,8 @@ class FileUniqueId final {
   FileUniqueId& operator=(FileUniqueId&& aOther) = delete;
 
   bool operator==(const FileUniqueId& aOther) const {
-    return !mError && !aOther.mError &&
-           !memcmp(&mId, &aOther.mId, sizeof(FILE_ID_INFO));
+    return mId.isOk() && aOther.mId.isOk() &&
+           !memcmp(&mId.inspect(), &aOther.mId.inspect(), sizeof(FILE_ID_INFO));
   }
 
   bool operator!=(const FileUniqueId& aOther) const {
@@ -326,9 +417,11 @@ class FileUniqueId final {
 
  private:
   void GetId(const nsAutoHandle& aFile) {
+    FILE_ID_INFO fileIdInfo = {};
     if (IsWin8OrLater()) {
-      if (::GetFileInformationByHandleEx(aFile.get(), FileIdInfo, &mId,
-                                         sizeof(mId))) {
+      if (::GetFileInformationByHandleEx(aFile.get(), FileIdInfo, &fileIdInfo,
+                                         sizeof(fileIdInfo))) {
+        mId = fileIdInfo;
         return;
       }
       // Only NTFS and ReFS support FileIdInfo. So we have to fallback if
@@ -337,35 +430,34 @@ class FileUniqueId final {
 
     BY_HANDLE_FILE_INFORMATION info = {};
     if (!::GetFileInformationByHandle(aFile.get(), &info)) {
-      mError = Some(WindowsError::FromLastError());
+      mId = LAUNCHER_ERROR_FROM_LAST();
       return;
     }
 
-    mId.VolumeSerialNumber = info.dwVolumeSerialNumber;
-    memcpy(&mId.FileId.Identifier[0], &info.nFileIndexLow, sizeof(DWORD));
-    memcpy(&mId.FileId.Identifier[sizeof(DWORD)], &info.nFileIndexHigh,
+    fileIdInfo.VolumeSerialNumber = info.dwVolumeSerialNumber;
+    memcpy(&fileIdInfo.FileId.Identifier[0], &info.nFileIndexLow,
            sizeof(DWORD));
+    memcpy(&fileIdInfo.FileId.Identifier[sizeof(DWORD)], &info.nFileIndexHigh,
+           sizeof(DWORD));
+    mId = fileIdInfo;
   }
 
  private:
-  FILE_ID_INFO mId;
-  Maybe<WindowsError> mError;
+  LauncherResult<FILE_ID_INFO> mId;
 };
 
-inline WindowsErrorResult<bool> DoPathsPointToIdenticalFile(
+inline LauncherResult<bool> DoPathsPointToIdenticalFile(
     const wchar_t* aPath1, const wchar_t* aPath2,
     PathType aPathType1 = PathType::eDosPath,
     PathType aPathType2 = PathType::eDosPath) {
   FileUniqueId id1(aPath1, aPathType1);
-  if (!id1) {
-    Maybe<WindowsError> error = id1.GetError();
-    return Err(error.valueOr(WindowsError::CreateGeneric()));
+  if (id1.IsError()) {
+    return ::mozilla::Err(id1.GetError());
   }
 
   FileUniqueId id2(aPath2, aPathType2);
-  if (!id2) {
-    Maybe<WindowsError> error = id2.GetError();
-    return Err(error.valueOr(WindowsError::CreateGeneric()));
+  if (id2.IsError()) {
+    return ::mozilla::Err(id2.GetError());
   }
 
   return id1 == id2;
@@ -435,8 +527,8 @@ inline UniquePtr<wchar_t[]> GetFullModulePath(HMODULE aModule) {
   // Upon success, retLen *excludes* the null character
   ++retLen;
 
-  // Since we're likely to have a bunch of unused space in buf, let's reallocate
-  // a string to the actual size of the file name.
+  // Since we're likely to have a bunch of unused space in buf, let's
+  // reallocate a string to the actual size of the file name.
   auto result = mozilla::MakeUnique<wchar_t[]>(retLen);
   if (wcscpy_s(result.get(), retLen, buf.get())) {
     return nullptr;
@@ -484,17 +576,17 @@ class ModuleVersion final {
   const uint64_t mVersion;
 };
 
-inline WindowsErrorResult<ModuleVersion> GetModuleVersion(
+inline LauncherResult<ModuleVersion> GetModuleVersion(
     const wchar_t* aModuleFullPath) {
   DWORD verInfoLen = ::GetFileVersionInfoSizeW(aModuleFullPath, nullptr);
   if (!verInfoLen) {
-    return Err(WindowsError::FromLastError());
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   auto verInfoBuf = MakeUnique<BYTE[]>(verInfoLen);
   if (!::GetFileVersionInfoW(aModuleFullPath, 0, verInfoLen,
                              verInfoBuf.get())) {
-    return Err(WindowsError::FromLastError());
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   UINT fixedInfoLen;
@@ -509,25 +601,25 @@ inline WindowsErrorResult<ModuleVersion> GetModuleVersion(
   return ModuleVersion(*fixedInfo);
 }
 
-inline WindowsErrorResult<ModuleVersion> GetModuleVersion(HMODULE aModule) {
+inline LauncherResult<ModuleVersion> GetModuleVersion(HMODULE aModule) {
   UniquePtr<wchar_t[]> fullPath(GetFullModulePath(aModule));
   if (!fullPath) {
-    return Err(WindowsError::CreateGeneric());
+    return LAUNCHER_ERROR_GENERIC();
   }
 
   return GetModuleVersion(fullPath.get());
 }
 
 #if defined(MOZILLA_INTERNAL_API)
-inline WindowsErrorResult<ModuleVersion> GetModuleVersion(nsIFile* aFile) {
+inline LauncherResult<ModuleVersion> GetModuleVersion(nsIFile* aFile) {
   if (!aFile) {
-    return Err(WindowsError::FromHResult(E_INVALIDARG));
+    return LAUNCHER_ERROR_FROM_HRESULT(E_INVALIDARG);
   }
 
   nsAutoString fullPath;
   nsresult rv = aFile->GetPath(fullPath);
   if (NS_FAILED(rv)) {
-    return Err(WindowsError::CreateGeneric());
+    return LAUNCHER_ERROR_GENERIC();
   }
 
   return GetModuleVersion(fullPath.get());

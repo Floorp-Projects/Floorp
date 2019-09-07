@@ -7,7 +7,7 @@
 #ifndef mozilla_WinTokenUtils_h
 #define mozilla_WinTokenUtils_h
 
-#include "mozilla/LauncherResult.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla {
 

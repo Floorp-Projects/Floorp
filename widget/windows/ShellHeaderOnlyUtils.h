@@ -7,7 +7,6 @@
 #ifndef mozilla_ShellHeaderOnlyUtils_h
 #define mozilla_ShellHeaderOnlyUtils_h
 
-#include "mozilla/LauncherResult.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include <objbase.h>

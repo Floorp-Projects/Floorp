@@ -195,7 +195,7 @@ bool LazyInstantiator::IsBlockedInjection() {
       continue;
     }
 
-    WindowsErrorResult<ModuleVersion> version = GetModuleVersion(module);
+    LauncherResult<ModuleVersion> version = GetModuleVersion(module);
     return version.isOk() && blockedDll.IsVersionBlocked(version.unwrap());
   }
 

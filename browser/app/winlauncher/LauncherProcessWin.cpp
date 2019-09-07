@@ -13,7 +13,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/glue/Debug.h"
-#include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
 #include "mozilla/UniquePtr.h"

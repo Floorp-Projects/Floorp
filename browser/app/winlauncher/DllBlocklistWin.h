@@ -9,7 +9,7 @@
 
 #include <windows.h>
 
-#include "mozilla/LauncherResult.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla {
 
