@@ -1315,7 +1315,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // collected but not all.
     const urlMap = {};
     for (const url of this.dbg.findSourceURLs()) {
-      urlMap[url] = 1 + (urlMap[url] || 0);
+      if (url !== "self-hosted") {
+        urlMap[url] = 1 + (urlMap[url] || 0);
+      }
     }
 
     const sources = this.dbg.findSources();
