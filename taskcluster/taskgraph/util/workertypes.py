@@ -19,7 +19,7 @@ WORKER_TYPES = {
     'invalid/always-optimized': ('always-optimized', None),
     'scriptworker-prov-v1/balrog-dev': ('balrog', None),
     'scriptworker-prov-v1/balrogworker-v1': ('balrog', None),
-    'scriptworker-prov-v1/beetmoverworker-v1': ('beetmover', None),
+    'scriptworker-k8s/gecko-3-beetmover': ('beetmover', None),
     'scriptworker-prov-v1/pushapk-v1': ('push-apk', None),
     "scriptworker-prov-v1/signing-linux-v1": ('scriptworker-signing', None),
     "scriptworker-prov-v1/shipit": ('shipit', None),
