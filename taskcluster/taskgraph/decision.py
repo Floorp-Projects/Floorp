@@ -133,6 +133,10 @@ try_task_config_schema = Schema({
     Optional('browsertime'): bool,
     # Keep in sync with JOB_SCHEMA in taskcluster/docker/visual-metrics/run-visual-metrics.py.
     Optional('visual-metrics-jobs'): visual_metrics_jobs_schema,
+    Optional(
+        "debian-tests",
+        description="Run linux desktop tests on debian 10 (buster)."
+        ): bool,
 })
 
 
