@@ -5,9 +5,9 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 |--------------|---------------------------|------------------------------|----------------|-------------|
 | Sprint Start | Sprint Work/String Freeze | Sprint Work                  | Sprint Work    | Sprint Work |
 | Sprint Work  | Sprint Work               | Sprint Work/Soft Code Freeze | Sprint Work/QA | Planning    |
-|              | Release                   |                              |                |             |
+|              | Release to Play Store     |                              |                |             |
 
-## Start of sprint
+## Start of sprint [Monday, 1st week of sprint]
 - [ ] Create an issue in the *upcoming* milestone: "What's New Entry for [release]" to track work for the SUMO page and Google Play release notes.
 
 ## String freeze [Tuesday, 1st week of sprint]
@@ -21,7 +21,7 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 - [ ] Add either `eng:qa:needed` flags on each issue that still needs it.
 - [ ] Make sure the "Final string Import" has already happened.
 
-## Product Integrity
+### Product Integrity
 
 - [ ] Tag first pre-release RC version in Github. For 1.0 the tag would be 1.0.0-rc.1. This will kick off a build of the branch. You can see it in the mouseover of the CI badge of the branch in the commits view.
 
@@ -30,15 +30,15 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 - [ ] Upload the APK from the Taskcluster signing task to the [releases page](https://github.com/mozilla-mobile/fenix/releases).
 - [ ] Create a new PI request in Jira. You can clone [this issue](https://jira.mozilla.com/browse/PI-219).
 
-## During Product Integrity
+### During Product Integrity
 
 - [ ] Check Google Play for new crashes. File issues and triage.
 - [ ] If bugs are considered release blocker then fix them on master and the milestone branch (cherry-pick / uplift)
 - [ ] If needed tag a new RC version (e.g. v1.0-RC2) and follow the submission checklist again.
 
-## Release
+## Release to Google Play Store [Tuesday, 3rd week]
 
-- [ ] Tag the last and released RC version additionally with the tag of the release (v1.0-RC2 -> v1.0)
+- [ ] Tag the last and released RC version additionally with the tag of the release (v1.0-RC2 -> v1.0) (This can be done as soon as there are no more release blockers, does not need to be on Release Day.)
 - [ ] Upload signed APKs to the [release page](https://github.com/mozilla-mobile/fenix/releases)
 - [ ] Create a release request in Bugzilla. You can clone [this issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1571967) and NI someone from release management.
 
