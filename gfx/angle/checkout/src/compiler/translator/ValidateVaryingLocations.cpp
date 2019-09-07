@@ -83,7 +83,7 @@ void ValidateShaderInterface(TDiagnostics *diagnostics,
             const int offsetLocation = location + elementIndex;
             if (locationMap.find(offsetLocation) != locationMap.end())
             {
-                std::stringstream strstr;
+                std::stringstream strstr = sh::InitializeStream<std::stringstream>();
                 strstr << "'" << varying->getName()
                        << "' conflicting location with previously defined '"
                        << locationMap[offsetLocation]->getName() << "'";

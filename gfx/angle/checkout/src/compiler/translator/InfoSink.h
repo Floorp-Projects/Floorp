@@ -41,7 +41,7 @@ class TInfoSinkBase
     template <typename T>
     TInfoSinkBase &operator<<(const T &t)
     {
-        TPersistStringStream stream;
+        TPersistStringStream stream = sh::InitializeStream<TPersistStringStream>();
         stream << t;
         sink.append(stream.str());
         return *this;
@@ -79,7 +79,7 @@ class TInfoSinkBase
         // does not have a fractional part, the default precision format does
         // not write the decimal portion which gets interpreted as integer by
         // the compiler.
-        TPersistStringStream stream;
+        TPersistStringStream stream = sh::InitializeStream<TPersistStringStream>();
         if (fractionalPart(f) == 0.0f)
         {
             stream.precision(1);

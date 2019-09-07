@@ -42,8 +42,9 @@ bool ValidTextureTarget(const Context *context, TextureType type);
 bool ValidTexture2DTarget(const Context *context, TextureType type);
 bool ValidTexture3DTarget(const Context *context, TextureType target);
 bool ValidTextureExternalTarget(const Context *context, TextureType target);
+bool ValidTextureExternalTarget(const Context *context, TextureTarget target);
 bool ValidTexture2DDestinationTarget(const Context *context, TextureTarget target);
-bool ValidTexture3DDestinationTarget(const Context *context, TextureType target);
+bool ValidTexture3DDestinationTarget(const Context *context, TextureTarget target);
 bool ValidTexLevelDestinationTarget(const Context *context, TextureType type);
 bool ValidFramebufferTarget(const Context *context, GLenum target);
 bool ValidMipLevel(const Context *context, TextureType type, GLint level);
@@ -58,15 +59,19 @@ bool ValidCompressedImageSize(const Context *context,
                               GLenum internalFormat,
                               GLint level,
                               GLsizei width,
-                              GLsizei height);
+                              GLsizei height,
+                              GLsizei depth);
 bool ValidCompressedSubImageSize(const Context *context,
                                  GLenum internalFormat,
                                  GLint xoffset,
                                  GLint yoffset,
+                                 GLint zoffset,
                                  GLsizei width,
                                  GLsizei height,
+                                 GLsizei depth,
                                  size_t textureWidth,
-                                 size_t textureHeight);
+                                 size_t textureHeight,
+                                 size_t textureDepth);
 bool ValidImageDataSize(Context *context,
                         TextureType texType,
                         GLsizei width,
@@ -583,7 +588,7 @@ bool ValidateSamplerParameterBase(Context *context,
                                   GLenum pname,
                                   GLsizei bufSize,
                                   bool vectorParams,
-                                  ParamType *params);
+                                  const ParamType *params);
 
 bool ValidateGetInternalFormativBase(Context *context,
                                      GLenum target,
