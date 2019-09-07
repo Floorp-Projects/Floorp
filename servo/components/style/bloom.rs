@@ -13,20 +13,13 @@ use owning_ref::OwningHandle;
 use selectors::bloom::BloomFilter;
 use servo_arc::Arc;
 use smallvec::SmallVec;
-use std::mem::ManuallyDrop;
 
 thread_local! {
     /// Bloom filters are large allocations, so we store them in thread-local storage
     /// such that they can be reused across style traversals. StyleBloom is responsible
     /// for ensuring that the bloom filter is zeroed when it is dropped.
-    ///
-    /// We intentionally leak this from TLS because we don't have the guarantee
-    /// of TLS destructors to run in worker threads.
-    ///
-    /// We could change this once https://github.com/rayon-rs/rayon/issues/688
-    /// is fixed, hopefully.
-    static BLOOM_KEY: ManuallyDrop<Arc<AtomicRefCell<BloomFilter>>> =
-        ManuallyDrop::new(Arc::new_leaked(Default::default()));
+    static BLOOM_KEY: Arc<AtomicRefCell<BloomFilter>> =
+        Arc::new_leaked(AtomicRefCell::new(BloomFilter::new()));
 }
 
 /// A struct that allows us to fast-reject deep descendant selectors avoiding
@@ -135,7 +128,7 @@ impl<E: TElement> StyleBloom<E> {
     // See https://github.com/servo/servo/pull/18420#issuecomment-328769322
     #[inline(never)]
     pub fn new() -> Self {
-        let bloom_arc = BLOOM_KEY.with(|b| Arc::clone(&*b));
+        let bloom_arc = BLOOM_KEY.with(|b| b.clone());
         let filter =
             OwningHandle::new_with_fn(bloom_arc, |x| unsafe { x.as_ref() }.unwrap().borrow_mut());
         debug_assert!(
@@ -143,7 +136,7 @@ impl<E: TElement> StyleBloom<E> {
             "Forgot to zero the bloom filter last time"
         );
         StyleBloom {
-            filter,
+            filter: filter,
             elements: Default::default(),
             pushed_hashes: Default::default(),
         }
