@@ -43,6 +43,7 @@ class TextureGL;
 namespace gl
 {
 class Framebuffer;
+class MemoryObject;
 class Sampler;
 class State;
 class Texture;
@@ -111,11 +112,14 @@ class TextureState final : private angle::NonCopyable
 
     bool isCubeComplete() const;
 
-    ANGLE_INLINE bool compatibleWithSamplerFormat(SamplerFormat format) const
+    ANGLE_INLINE bool compatibleWithSamplerFormat(SamplerFormat format,
+                                                  const SamplerState &samplerState) const
     {
-        if (!mCachedSamplerFormatValid)
+        if (!mCachedSamplerFormatValid ||
+            mCachedSamplerCompareMode != samplerState.getCompareMode())
         {
-            mCachedSamplerFormat      = computeRequiredSamplerFormat();
+            mCachedSamplerFormat      = computeRequiredSamplerFormat(samplerState);
+            mCachedSamplerCompareMode = samplerState.getCompareMode();
             mCachedSamplerFormatValid = true;
         }
         // Incomplete textures are compatible with any sampler format.
@@ -152,7 +156,7 @@ class TextureState final : private angle::NonCopyable
     bool computeSamplerCompleteness(const SamplerState &samplerState, const State &data) const;
     bool computeMipmapCompleteness() const;
     bool computeLevelCompleteness(TextureTarget target, size_t level) const;
-    SamplerFormat computeRequiredSamplerFormat() const;
+    SamplerFormat computeRequiredSamplerFormat(const SamplerState &samplerState) const;
 
     TextureTarget getBaseImageTarget() const;
 
@@ -200,16 +204,14 @@ class TextureState final : private angle::NonCopyable
     InitState mInitState;
 
     mutable SamplerFormat mCachedSamplerFormat;
+    mutable GLenum mCachedSamplerCompareMode;
     mutable bool mCachedSamplerFormatValid;
 };
 
 bool operator==(const TextureState &a, const TextureState &b);
 bool operator!=(const TextureState &a, const TextureState &b);
 
-class Texture final : public RefCountObject,
-                      public egl::ImageSibling,
-                      public LabeledObject,
-                      public angle::ObserverInterface
+class Texture final : public RefCountObject, public egl::ImageSibling, public LabeledObject
 {
   public:
     Texture(rx::GLImplFactory *factory, GLuint id, TextureType type);
@@ -385,6 +387,22 @@ class Texture final : public RefCountObject,
                                         const Extents &size,
                                         bool fixedSampleLocations);
 
+    angle::Result setStorageExternalMemory(Context *context,
+                                           TextureType type,
+                                           GLsizei levels,
+                                           GLenum internalFormat,
+                                           const Extents &size,
+                                           MemoryObject *memoryObject,
+                                           GLuint64 offset);
+
+    angle::Result setImageExternal(Context *context,
+                                   TextureTarget target,
+                                   GLint level,
+                                   GLenum internalFormat,
+                                   const Extents &size,
+                                   GLenum format,
+                                   GLenum type);
+
     angle::Result setEGLImageTarget(Context *context, TextureType type, egl::Image *imageTarget);
 
     angle::Result generateMipmap(Context *context);
@@ -395,7 +413,7 @@ class Texture final : public RefCountObject,
     GLint getMemorySize() const;
     GLint getLevelMemorySize(TextureTarget target, GLint level) const;
 
-    void signalDirtyStorage(const Context *context, InitState initState);
+    void signalDirtyStorage(InitState initState);
 
     bool isSamplerComplete(const Context *context, const Sampler *optionalSampler);
 
@@ -420,6 +438,7 @@ class Texture final : public RefCountObject,
     void onAttach(const Context *context) override;
     void onDetach(const Context *context) override;
     GLuint getId() const override;
+    GLuint getNativeID() const;
 
     // Needed for robust resource init.
     angle::Result ensureInitialized(const Context *context);
@@ -465,9 +484,7 @@ class Texture final : public RefCountObject,
     bool hasAnyDirtyBit() const { return mDirtyBits.any(); }
 
     // ObserverInterface implementation.
-    void onSubjectStateChange(const gl::Context *context,
-                              angle::SubjectIndex index,
-                              angle::SubjectMessage message) override;
+    void onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message) override;
 
   private:
     rx::FramebufferAttachmentObjectImpl *getAttachmentImpl() const override;
@@ -495,7 +512,7 @@ class Texture final : public RefCountObject,
 
     angle::Result handleMipmapGenerationHint(Context *context, int level);
 
-    void signalDirtyState(const Context *context, size_t dirtyBit);
+    void signalDirtyState(size_t dirtyBit);
 
     TextureState mState;
     DirtyBits mDirtyBits;

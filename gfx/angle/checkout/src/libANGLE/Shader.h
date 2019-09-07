@@ -31,6 +31,7 @@ namespace rx
 class GLImplFactory;
 class ShaderImpl;
 class ShaderSh;
+class WaitableCompileEvent;
 }  // namespace rx
 
 namespace angle
@@ -189,6 +190,8 @@ class Shader final : angle::NonCopyable, public LabeledObject
     const std::string &getCompilerResourcesString() const;
 
   private:
+    struct CompilingState;
+
     ~Shader() override;
     static void GetSourceImpl(const std::string &source,
                               GLsizei bufSize,
@@ -208,10 +211,7 @@ class Shader final : angle::NonCopyable, public LabeledObject
 
     // We keep a reference to the translator in order to defer compiles while preserving settings.
     BindingPointer<Compiler> mBoundCompiler;
-    ShCompilerInstance mShCompilerInstance;
-    std::shared_ptr<CompileTask> mCompileTask;
-    std::shared_ptr<angle::WorkerThreadPool> mWorkerPool;
-    std::shared_ptr<angle::WaitableEvent> mCompileEvent;
+    std::unique_ptr<CompilingState> mCompilingState;
     std::string mCompilerResourcesString;
 
     ShaderProgramManager *mResourceManager;

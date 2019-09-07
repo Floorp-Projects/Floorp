@@ -41,7 +41,9 @@ class TDirectiveHandler : public angle::pp::DirectiveHandler, angle::NonCopyable
                          const std::string &name,
                          const std::string &behavior) override;
 
-    void handleVersion(const angle::pp::SourceLocation &loc, int version) override;
+    void handleVersion(const angle::pp::SourceLocation &loc,
+                       int version,
+                       ShShaderSpec spec) override;
 
   private:
     TPragma mPragma;

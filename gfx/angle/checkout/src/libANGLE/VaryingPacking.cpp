@@ -314,10 +314,13 @@ bool VaryingPacking::collectAndPackUserVaryings(gl::InfoLog &infoLog,
                 if (varying->isStruct())
                 {
                     ASSERT(!varying->isArray());
-                    for (const auto &field : varying->fields)
+                    for (GLuint fieldIndex = 0; fieldIndex < varying->fields.size(); ++fieldIndex)
                     {
+                        const sh::ShaderVariable &field = varying->fields[fieldIndex];
+
                         ASSERT(!field.isStruct() && !field.isArray());
-                        mPackedVaryings.emplace_back(field, interpolation, varying->name);
+                        mPackedVaryings.emplace_back(field, interpolation, varying->name,
+                                                     fieldIndex);
                         uniqueFullNames.insert(mPackedVaryings.back().fullName());
                     }
                 }
@@ -354,11 +357,14 @@ bool VaryingPacking::collectAndPackUserVaryings(gl::InfoLog &infoLog,
             }
             if (input->isStruct())
             {
-                const sh::ShaderVariable *field = FindShaderVarField(*input, tfVarying);
+                GLuint fieldIndex = 0;
+                const sh::ShaderVariable *field =
+                    FindShaderVarField(*input, tfVarying, &fieldIndex);
                 if (field != nullptr)
                 {
                     ASSERT(!field->isStruct() && !field->isArray());
-                    mPackedVaryings.emplace_back(*field, input->interpolation, input->name);
+                    mPackedVaryings.emplace_back(*field, input->interpolation, input->name,
+                                                 fieldIndex);
                     mPackedVaryings.back().vertexOnly = true;
                     mPackedVaryings.back().arrayIndex = GL_INVALID_INDEX;
                     uniqueFullNames.insert(tfVarying);
@@ -424,10 +430,5 @@ bool VaryingPacking::packUserVaryings(gl::InfoLog &infoLog,
     std::sort(mRegisterList.begin(), mRegisterList.end());
 
     return true;
-}
-
-const std::vector<std::string> &VaryingPacking::getInactiveVaryingNames() const
-{
-    return mInactiveVaryingNames;
 }
 }  // namespace gl

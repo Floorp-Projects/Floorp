@@ -17,7 +17,7 @@
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 #include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
-#include "third_party/trace_event/trace_event.h"
+#include "libANGLE/trace.h"
 
 // Precompiled shaders
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs.h"
@@ -186,7 +186,7 @@ EGLint SwapChain11::resetOffscreenColorBuffer(DisplayD3D *displayD3D,
 {
     ASSERT(mNeedsOffscreenTexture);
 
-    TRACE_EVENT0("gpu.angle", "SwapChain11::resetOffscreenTexture");
+    ANGLE_TRACE_EVENT0("gpu.angle", "SwapChain11::resetOffscreenTexture");
     ID3D11Device *device = mRenderer->getDevice();
 
     ASSERT(device != nullptr);
@@ -452,7 +452,7 @@ EGLint SwapChain11::resetOffscreenDepthBuffer(DisplayD3D *displayD3D,
 
 EGLint SwapChain11::resize(DisplayD3D *displayD3D, EGLint backbufferWidth, EGLint backbufferHeight)
 {
-    TRACE_EVENT0("gpu.angle", "SwapChain11::resize");
+    ANGLE_TRACE_EVENT0("gpu.angle", "SwapChain11::resize");
     ID3D11Device *device = mRenderer->getDevice();
 
     if (device == nullptr)
@@ -582,7 +582,7 @@ EGLint SwapChain11::reset(DisplayD3D *displayD3D,
         return resize(displayD3D, backbufferWidth, backbufferHeight);
     }
 
-    TRACE_EVENT0("gpu.angle", "SwapChain11::reset");
+    ANGLE_TRACE_EVENT0("gpu.angle", "SwapChain11::reset");
     ID3D11Device *device = mRenderer->getDevice();
 
     if (device == nullptr)
@@ -663,7 +663,7 @@ angle::Result SwapChain11::initPassThroughResources(DisplayD3D *displayD3D)
         return angle::Result::Continue;
     }
 
-    TRACE_EVENT0("gpu.angle", "SwapChain11::initPassThroughResources");
+    ANGLE_TRACE_EVENT0("gpu.angle", "SwapChain11::initPassThroughResources");
     ID3D11Device *device = mRenderer->getDevice();
 
     ASSERT(device != nullptr);

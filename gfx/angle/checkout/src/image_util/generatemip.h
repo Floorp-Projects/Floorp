@@ -29,6 +29,6 @@ inline void GenerateMip(size_t sourceWidth,
 
 }  // namespace angle
 
-#include "generatemip.inl"
+#include "generatemip.inc"
 
 #endif  // IMAGEUTIL_GENERATEMIP_H_

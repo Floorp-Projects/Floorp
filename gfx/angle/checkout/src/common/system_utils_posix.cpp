@@ -11,6 +11,7 @@
 #include <array>
 
 #include <dlfcn.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -247,8 +248,29 @@ class PosixLibrary : public Library
     void *mModule = nullptr;
 };
 
-Library *OpenSharedLibrary(const char *libraryName)
+Library *OpenSharedLibrary(const char *libraryName, SearchType searchType)
 {
     return new PosixLibrary(libraryName);
+}
+
+bool IsDirectory(const char *filename)
+{
+    struct stat st;
+    int result = stat(filename, &st);
+    return result == 0 && ((st.st_mode & S_IFDIR) == S_IFDIR);
+}
+
+bool IsDebuggerAttached()
+{
+    // This could have a fuller implementation.
+    // See https://cs.chromium.org/chromium/src/base/debug/debugger_posix.cc
+    return false;
+}
+
+void BreakDebugger()
+{
+    // This could have a fuller implementation.
+    // See https://cs.chromium.org/chromium/src/base/debug/debugger_posix.cc
+    abort();
 }
 }  // namespace angle
