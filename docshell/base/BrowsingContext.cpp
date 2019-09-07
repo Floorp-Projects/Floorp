@@ -384,6 +384,7 @@ void BrowsingContext::PrepareForProcessChange() {
   MOZ_ASSERT(!mIsDiscarded, "We're already closed?");
 
   mIsInProcess = false;
+  mUserGestureStart = TimeStamp();
 
   // NOTE: For now, clear our nsDocShell reference, as we're primarily in a
   // different process now. This may need to change in the future with
@@ -696,14 +697,30 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
 
 void BrowsingContext::NotifyUserGestureActivation() {
   SetIsActivatedByUserGesture(true);
-
-  // TODO: Bug 1577499 - Implement transient activation flag
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
   SetIsActivatedByUserGesture(false);
+}
 
-  // TODO: Bug 1577499 - Implement transient activation flag
+bool BrowsingContext::HasValidTransientUserGestureActivation() {
+  MOZ_ASSERT(mIsInProcess);
+
+  if (!mIsActivatedByUserGesture) {
+    MOZ_ASSERT(mUserGestureStart.IsNull(),
+               "mUserGestureStart should be null if the document hasn't ever "
+               "been activated by user gesture");
+    return false;
+  }
+
+  MOZ_ASSERT(!mUserGestureStart.IsNull(),
+             "mUserGestureStart shouldn't be null if the document has ever "
+             "been activated by user gesture");
+  TimeDuration timeout = TimeDuration::FromMilliseconds(
+      StaticPrefs::dom_user_activation_transient_timeout());
+
+  return timeout <= TimeDuration() ||
+         (TimeStamp::Now() - mUserGestureStart) <= timeout;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
@@ -1040,10 +1057,18 @@ void BrowsingContext::StartDelayedAutoplayMediaComponents() {
 }
 
 void BrowsingContext::DidSetIsActivatedByUserGesture() {
+  MOZ_ASSERT_IF(!mIsInProcess, mUserGestureStart.IsNull());
   USER_ACTIVATION_LOG(
       "Set user gesture activation %d for %s browsing context 0x%08" PRIx64,
       mIsActivatedByUserGesture, XRE_IsParentProcess() ? "Parent" : "Child",
       Id());
+  if (mIsInProcess) {
+    USER_ACTIVATION_LOG(
+        "Set user gesture start time for %s browsing context 0x%08" PRIx64,
+        XRE_IsParentProcess() ? "Parent" : "Child", Id());
+    mUserGestureStart =
+        mIsActivatedByUserGesture ? TimeStamp::Now() : TimeStamp();
+  }
 }
 
 void BrowsingContext::DidSetMuted() {

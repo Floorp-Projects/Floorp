@@ -818,7 +818,7 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
   }
 
   Document* doc = node->OwnerDoc();
-  if (!doc || doc->HasBeenUserGestureActivated()) {
+  if (!doc) {
     return;
   }
 

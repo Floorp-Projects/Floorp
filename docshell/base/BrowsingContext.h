@@ -279,6 +279,11 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // activation flag of the top level browsing context.
   void NotifyResetUserGestureActivation();
 
+  // Return true if its corresponding document has transient user gesture
+  // activation and the transient user gesture activation haven't yet timed
+  // out.
+  bool HasValidTransientUserGestureActivation();
+
   // Return the window proxy object that corresponds to this browsing context.
   inline JSObject* GetWindowProxy() const { return mWindowProxy; }
   // Set the window proxy object that corresponds to this browsing context.
@@ -551,6 +556,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // This is true if the BrowsingContext was out of process, but is now in
   // process, and might have remote window proxies that need to be cleaned up.
   bool mDanglingRemoteOuterProxies : 1;
+
+  // The start time of user gesture, this is only available if the browsing
+  // context is in process.
+  TimeStamp mUserGestureStart;
 };
 
 /**
