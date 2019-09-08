@@ -132,6 +132,15 @@ ResumeMode DebugAPI::onResumeFrame(JSContext* cx, AbstractFramePtr frame) {
 }
 
 /* static */
+ResumeMode DebugAPI::onNativeCall(JSContext* cx, const CallArgs& args,
+                                  CallReason reason) {
+  if (!cx->realm()->isDebuggee()) {
+    return ResumeMode::Continue;
+  }
+  return slowPathOnNativeCall(cx, args, reason);
+}
+
+/* static */
 ResumeMode DebugAPI::onDebuggerStatement(JSContext* cx,
                                          AbstractFramePtr frame) {
   if (!cx->realm()->isDebuggee()) {
