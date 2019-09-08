@@ -5261,7 +5261,7 @@
 # [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
 - name: layout.css.line-height.normal-as-resolved-value.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Are the width and height attributes on image-like elements mapped to the
