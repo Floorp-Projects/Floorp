@@ -2377,6 +2377,22 @@ class HTMLEditor final : public TextEditor,
                      nsIContent& aEndOutdent,
                      BlockIndentedWith aBlockIndentedWith);
 
+  /**
+   * OutdentAroundSelection() outdents contents around Selection.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * needs to check if the editor is still available even if this returns
+   * NS_OK.
+   *
+   * @return                    The left content is left content of last
+   *                            outdented element.
+   *                            The right content is right content of last
+   *                            outdented element.
+   *                            The middle content is middle content of last
+   *                            outdented element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffFromNodeResult
+  OutdentAroundSelection();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
