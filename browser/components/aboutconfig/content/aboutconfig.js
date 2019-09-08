@@ -295,13 +295,13 @@ class PrefRow {
           this.resetButton,
           "about-config-pref-delete-button"
         );
-        this.resetButton.className = "button-delete";
+        this.resetButton.className = "button-delete ghost-button";
       } else {
         document.l10n.setAttributes(
           this.resetButton,
           "about-config-pref-reset-button"
         );
-        this.resetButton.className = "button-reset";
+        this.resetButton.className = "button-reset ghost-button";
       }
     } else if (this.resetButton) {
       this.resetButton.remove();
