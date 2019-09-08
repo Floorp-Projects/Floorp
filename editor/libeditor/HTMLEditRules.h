@@ -294,22 +294,6 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AfterEditInner();
 
-  /**
-   * OutdentAroundSelection() outdents contents around Selection.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   *
-   * @return                    The left content is left content of last
-   *                            outdented element.
-   *                            The right content is right content of last
-   *                            outdented element.
-   *                            The middle content is middle content of last
-   *                            outdented element.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE SplitRangeOffFromNodeResult OutdentAroundSelection();
-
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
