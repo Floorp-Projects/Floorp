@@ -359,6 +359,12 @@ MethodStatus jit::CanEnterBaselineInterpreterAtBranch(JSContext* cx,
     return Method_CantCompile;
   }
 
+  // JITs do not respect the debugger's OnNativeCall hook, so JIT execution is
+  // disabled if this hook might need to be called.
+  if (cx->insideDebuggerEvaluationWithOnNativeCallHook) {
+    return Method_CantCompile;
+  }
+
   return CanEnterBaselineInterpreter(cx, fp->script());
 }
 
