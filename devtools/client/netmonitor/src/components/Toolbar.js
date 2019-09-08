@@ -520,7 +520,7 @@ class Toolbar extends Component {
             this.renderHarButton()
           ),
           span(
-            { className: "devtools-toolbar" },
+            { className: "devtools-toolbar devtools-input-toolbar" },
             this.renderFilterButtons(requestFilterTypes)
           )
         );
