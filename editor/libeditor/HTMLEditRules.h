@@ -310,34 +310,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE SplitRangeOffFromNodeResult OutdentAroundSelection();
 
-  /**
-   * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and
-   * aEndOfOutdent.  This splits the range off from aBlockElement first.
-   * Then, removes the middle element if aIsBlockIndentedWithCSS is false.
-   * Otherwise, decreases the margin of the middle element.
-   *
-   * @param aBlockElement           A block element which includes both
-   *                                aStartOfOutdent and aEndOfOutdent.
-   * @param aStartOfOutdent         First node which is descendant of
-   *                                aBlockElement will be outdented.
-   * @param aEndOfOutdent           Last node which is descandant of
-   *                                aBlockElement will be outdented.
-   * @param aIsBlockIndentedWithCSS true if aBlockElement is indented with
-   *                                CSS margin property.
-   *                                false if aBlockElement is <blockquote>
-   *                                or something.
-   * @return                        The left content is new created element
-   *                                splitting before aStartOfOutdent.
-   *                                The right content is existing element.
-   *                                The middle content is outdented element
-   *                                if aIsBlockIndentedWithCSS is true.
-   *                                Otherwise, nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE SplitRangeOffFromNodeResult
-  OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
-                     nsIContent& aEndOutdent, bool aIsBlockIndentedWithCSS);
-
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
