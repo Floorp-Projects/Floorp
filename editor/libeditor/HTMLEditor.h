@@ -2440,6 +2440,19 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AlignBlockContentsWithDivElement(
       dom::Element& aBlockElement, const nsAString& aAlignType);
 
+  /**
+   * AlignContentsInAllTableCellsAndListItems() calls
+   * AlignBlockContentsWithDivElement() for aligning contents in every list
+   * item element and table cell element in aElement.
+   *
+   * @param aElement            The node which is or whose descendants should
+   *                            be aligned to aAlignType.
+   * @param aAlignType          New value of `align` attribute of `<div>`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AlignContentsInAllTableCellsAndListItems(dom::Element& aElement,
+                                           const nsAString& aAlignType);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
