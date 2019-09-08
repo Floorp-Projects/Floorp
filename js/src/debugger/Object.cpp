@@ -54,6 +54,7 @@
 #include "vm/Runtime.h"                  // for JSAtomState
 #include "vm/SavedFrame.h"               // for SavedFrame
 #include "vm/Scope.h"                    // for PositionalFormalParameterIter
+#include "vm/SelfHosting.h"              // for GetClonedSelfHostedFunctionName
 #include "vm/Shape.h"                    // for Shape
 #include "vm/Stack.h"                    // for InvokeArgs
 #include "vm/StringType.h"               // for JSAtom, PropertyName
@@ -1412,6 +1413,18 @@ bool DebuggerObject::makeDebuggeeNativeFunctionMethod(JSContext* cx,
 }
 
 /* static */
+bool DebuggerObject::isSameNativeMethod(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  THIS_DEBUGOBJECT(cx, argc, vp, "isSameNative", args, object);
+  if (!args.requireAtLeast(
+          cx, "Debugger.Object.prototype.isSameNative", 1)) {
+    return false;
+  }
+
+  return DebuggerObject::isSameNative(cx, object, args[0], args.rval());
+}
+
+/* static */
 bool DebuggerObject::unsafeDereferenceMethod(JSContext* cx, unsigned argc,
                                              Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "unsafeDereference", args, object);
@@ -1605,6 +1618,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("makeDebuggeeValue", DebuggerObject::makeDebuggeeValueMethod, 1, 0),
     JS_FN("makeDebuggeeNativeFunction",
           DebuggerObject::makeDebuggeeNativeFunctionMethod, 1, 0),
+    JS_FN("isSameNative", DebuggerObject::isSameNativeMethod, 1, 0),
     JS_FN("unsafeDereference", DebuggerObject::unsafeDereferenceMethod, 0, 0),
     JS_FN("unwrap", DebuggerObject::unwrapMethod, 0, 0),
     JS_FN("setInstrumentation", DebuggerObject::setInstrumentationMethod, 2, 0),
@@ -2503,6 +2517,20 @@ bool DebuggerObject::makeDebuggeeValue(JSContext* cx,
   return true;
 }
 
+static JSFunction* EnsureNativeFunction(const Value& value,
+                                        bool allowExtended = true) {
+  if (!value.isObject() || !value.toObject().is<JSFunction>()) {
+    return nullptr;
+  }
+
+  JSFunction* fun = &value.toObject().as<JSFunction>();
+  if (!fun->isNative() || (fun->isExtended() && !allowExtended)) {
+    return nullptr;
+  }
+
+  return fun;
+}
+
 /* static */
 bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
                                                 HandleDebuggerObject object,
@@ -2511,19 +2539,10 @@ bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
-  if (!value.isObject()) {
-    JS_ReportErrorASCII(cx, "Need object");
-    return false;
-  }
-
-  RootedObject obj(cx, &value.toObject());
-  if (!obj->is<JSFunction>()) {
-    JS_ReportErrorASCII(cx, "Need function");
-    return false;
-  }
-
-  RootedFunction fun(cx, &obj->as<JSFunction>());
-  if (!fun->isNative() || fun->isExtended()) {
+  // The logic below doesn't work with extended functions, so do not allow them.
+  RootedFunction fun(cx, EnsureNativeFunction(value,
+                                              /* allowExtended */ false));
+  if (!fun) {
     JS_ReportErrorASCII(cx, "Need native function");
     return false;
   }
@@ -2550,6 +2569,43 @@ bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
   }
 
   result.set(newValue);
+  return true;
+}
+
+static JSAtom* MaybeGetSelfHostedFunctionName(const Value& v) {
+  if (!v.isObject() || !v.toObject().is<JSFunction>()) {
+    return nullptr;
+  }
+
+  JSFunction* fun = &v.toObject().as<JSFunction>();
+  if (!fun->isSelfHostedBuiltin()) {
+    return nullptr;
+  }
+
+  return GetClonedSelfHostedFunctionName(fun);
+}
+
+/* static */
+bool DebuggerObject::isSameNative(JSContext* cx, HandleDebuggerObject object,
+                                  HandleValue value,
+                                  MutableHandleValue result) {
+  RootedValue referentValue(cx, ObjectValue(*object->referent()));
+
+  RootedFunction fun(cx, EnsureNativeFunction(value));
+  if (!fun) {
+    RootedAtom selfHostedName(cx, MaybeGetSelfHostedFunctionName(value));
+    if (!selfHostedName) {
+      JS_ReportErrorASCII(cx, "Need native function");
+      return false;
+    }
+
+    result.setBoolean(
+        selfHostedName == MaybeGetSelfHostedFunctionName(referentValue));
+    return true;
+  }
+
+  RootedFunction referentFun(cx, EnsureNativeFunction(referentValue));
+  result.setBoolean(referentFun && referentFun->native() == fun->native());
   return true;
 }
 
