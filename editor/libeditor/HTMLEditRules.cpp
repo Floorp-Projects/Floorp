@@ -784,24 +784,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(result.Succeeded(),
                            "HandleDeleteSelection() failed");
       return result.Rv();
-    case EditSubAction::eIndent: {
-      EditActionResult result =
-          MOZ_KnownLive(HTMLEditorRef()).HandleIndentAtSelection();
-      *aHandled = result.Handled();
-      *aCancel = result.Canceled();
-      NS_WARNING_ASSERTION(result.Succeeded(),
-                           "HandleIndentAtSelection() failed");
-      return result.Rv();
-    }
-    case EditSubAction::eOutdent: {
-      EditActionResult result =
-          MOZ_KnownLive(HTMLEditorRef()).HandleOutdentAtSelection();
-      *aHandled = result.Handled();
-      *aCancel = result.Canceled();
-      NS_WARNING_ASSERTION(result.Succeeded(),
-                           "HandleOutdentAtSelection() failed");
-      return result.Rv();
-    }
     case EditSubAction::eSetPositionToAbsolute:
       return WillAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetPositionToStatic:
@@ -824,8 +806,10 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
@@ -851,8 +835,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditSubAction::eIndent:
-    case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
       return MOZ_KnownLive(HTMLEditorRef())
           .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
@@ -871,8 +853,10 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
@@ -4940,6 +4924,30 @@ nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
   return rv;
 }
 
+EditActionResult HTMLEditor::IndentAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eIndent, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  result |= HandleIndentAtSelection();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() failed");
+  return result.SetResult(rv);
+}
+
 EditActionResult HTMLEditor::HandleIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -5554,6 +5562,30 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     curList = nullptr;
   }
   return NS_OK;
+}
+
+EditActionResult HTMLEditor::OutdentAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eOutdent, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  result |= HandleOutdentAtSelection();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() failed");
+  return result.SetResult(rv);
 }
 
 EditActionResult HTMLEditor::HandleOutdentAtSelection() {

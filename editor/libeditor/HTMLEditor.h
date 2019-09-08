@@ -2956,15 +2956,14 @@ class HTMLEditor final : public TextEditor,
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   /**
-   * IndentOrOutdentAsSubAction() indents or outdents the content around
-   * Selection.  Callers have to guarantee that there is a placeholder
-   * transaction.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eIndent or
-   *                            EditSubAction::eOutdent.
+   * IndentAsSubAction() indents the content around Selection.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult IndentAsSubAction();
+
+  /**
+   * OutdentAsSubAction() outdents the content around Selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult OutdentAsSubAction();
 
   MOZ_CAN_RUN_SCRIPT
   nsresult LoadHTML(const nsAString& aInputString);
