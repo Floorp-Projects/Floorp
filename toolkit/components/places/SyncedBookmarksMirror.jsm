@@ -1809,7 +1809,8 @@ async function initializeTempMirrorEntities(db) {
          "CHANGES()" returns the number of rows affected by the INSERT above:
          1 if we created the folder, or 0 if the folder already existed. */
       INSERT INTO itemsAdded(guid, isTagging)
-      SELECT b.guid, 1 FROM moz_bookmarks b
+      SELECT b.guid, 1
+      FROM moz_bookmarks b
       JOIN moz_bookmarks p ON p.id = b.parent
       WHERE CHANGES() > 0 AND
             b.title = NEW.tag AND
@@ -1819,7 +1820,15 @@ async function initializeTempMirrorEntities(db) {
          ID creates a tag folder without tagging the URL. */
       INSERT OR IGNORE INTO moz_bookmarks(guid, parent, position, type, fk,
                                           dateAdded, lastModified)
-      SELECT GENERATE_GUID(),
+      SELECT IFNULL((SELECT b.guid FROM moz_bookmarks b
+                     JOIN moz_bookmarks p ON p.id = b.parent
+                     WHERE b.fk = NEW.placeId AND
+                           p.title = NEW.tag AND
+                           p.parent = (SELECT id FROM moz_bookmarks
+                                       WHERE guid = '${
+                                         PlacesUtils.bookmarks.tagsGuid
+                                       }')),
+                    GENERATE_GUID()),
              (SELECT b.id FROM moz_bookmarks b
               JOIN moz_bookmarks p ON p.id = b.parent
               WHERE p.guid = '${PlacesUtils.bookmarks.tagsGuid}' AND
@@ -1838,9 +1847,11 @@ async function initializeTempMirrorEntities(db) {
 
       /* Record an item added notification for the tag entry. */
       INSERT INTO itemsAdded(guid, isTagging)
-      SELECT b.guid, 1 FROM moz_bookmarks b
+      SELECT b.guid, 1
+      FROM moz_bookmarks b
       JOIN moz_bookmarks p ON p.id = b.parent
-      WHERE b.fk = NEW.placeId AND
+      WHERE CHANGES() > 0 AND
+            b.fk = NEW.placeId AND
             p.title = NEW.tag AND
             p.parent = (SELECT id FROM moz_bookmarks
                         WHERE guid = '${PlacesUtils.bookmarks.tagsGuid}');
