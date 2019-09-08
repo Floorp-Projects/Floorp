@@ -45,6 +45,13 @@ extern JSObject* ValueToCallable(JSContext* cx, HandleValue v,
                                  int numToSkip = -1,
                                  MaybeConstruct construct = NO_CONSTRUCT);
 
+// Reasons why a call could be performed, for passing onto the debugger.
+enum class CallReason {
+  Call,
+  Getter,
+  Setter
+};
+
 /*
  * Call or construct arguments that are stored in rooted memory.
  *
@@ -54,7 +61,8 @@ extern JSObject* ValueToCallable(JSContext* cx, HandleValue v,
  *       performed, use |Invoke|.
  */
 extern bool InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
-                                    MaybeConstruct construct);
+                                    MaybeConstruct construct,
+                                    CallReason reason = CallReason::Call);
 
 /*
  * These helpers take care of the infinite-recursion check necessary for
@@ -76,7 +84,8 @@ extern bool CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
 // |rval| is written to *only* after |fval| and |thisv| have been consumed, so
 // |rval| *may* alias either argument.
 extern bool Call(JSContext* cx, HandleValue fval, HandleValue thisv,
-                 const AnyInvokeArgs& args, MutableHandleValue rval);
+                 const AnyInvokeArgs& args, MutableHandleValue rval,
+                 CallReason reason = CallReason::Call);
 
 inline bool Call(JSContext* cx, HandleValue fval, HandleValue thisv,
                  MutableHandleValue rval) {
