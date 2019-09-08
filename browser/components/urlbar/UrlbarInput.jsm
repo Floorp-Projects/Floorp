@@ -825,6 +825,7 @@ class UrlbarInput {
    */
   removeHiddenFocus() {
     this.textbox.classList.remove("hidden-focus");
+    this.startLayoutBreakout();
   }
 
   // Getters and Setters below.
