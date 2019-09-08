@@ -35,8 +35,7 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
 // WorkletImpl
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
-    : mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()),
-      mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
+    : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
       mWorkletLoadInfo(aWindow),
       mTerminated(false) {
   Unused << NS_WARN_IF(

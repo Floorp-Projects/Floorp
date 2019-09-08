@@ -70,7 +70,7 @@ class WorkletImpl {
 
   const WorkletLoadInfo& LoadInfo() const { return mWorkletLoadInfo; }
   const OriginAttributes& OriginAttributesRef() const {
-    return mOriginAttributes;
+    return mPrincipalInfo.get_NullPrincipalInfo().attrs();
   }
   const ipc::PrincipalInfo& PrincipalInfo() const { return mPrincipalInfo; }
 
@@ -80,7 +80,6 @@ class WorkletImpl {
 
   virtual already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() = 0;
 
-  const OriginAttributes mOriginAttributes;
   // Modified only in constructor.
   ipc::PrincipalInfo mPrincipalInfo;
   // Accessed on only worklet parent thread.
