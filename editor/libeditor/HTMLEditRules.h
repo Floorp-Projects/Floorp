@@ -216,21 +216,6 @@ class HTMLEditRules : public TextEditRules {
                                          const nsAString& aAlignType);
 
   /**
-   * AlignBlockContents() sets align attribute of <div> element which is
-   * only child of aNode to aAlignType.  If aNode has 2 or more children or
-   * does not have a <div> element has only child, inserts a <div> element
-   * into aNode and move all children of aNode into the new <div> element.
-   *
-   * @param aNode               The node whose contents should be aligned
-   *                            to aAlignType.
-   * @param aAlignType          New value of align attribute of <div> which
-   *                            is only child of aNode.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignBlockContents(nsINode& aNode,
-                                           const nsAString& aAlignType);
-
-  /**
    * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
    * This creates AutoSelectionRestorer.  Therefore, even if this returns
    * NS_OK, CanHandleEditAction() may return false if the editor is destroyed

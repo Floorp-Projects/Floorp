@@ -2423,6 +2423,23 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult HandleOutdentAtSelection();
 
+  /**
+   * AlignBlockContentsWithDivElement() sets align attribute of <div> element
+   * which is only child of aBlockElement to aAlignType.  If aBlockElement
+   * has 2 or more children or does not have a `<div>` element, inserts a
+   * new `<div>` element into aBlockElement and move all children of
+   * aBlockElement into the new `<div>` element.
+   *
+   * @param aBlockElement       The element node whose contents should be
+   *                            aligned to aAlignType.  This should be
+   *                            an element which can have `<div>` element
+   *                            as its child.
+   * @param aAlignType          New value of align attribute of `<div>`
+   *                            element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AlignBlockContentsWithDivElement(
+      dom::Element& aBlockElement, const nsAString& aAlignType);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
