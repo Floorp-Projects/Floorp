@@ -6607,7 +6607,10 @@ nsresult HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
 
   // Now that we have the list, align their contents as requested
   for (auto& node : nodeArray) {
-    nsresult rv = AlignBlockContents(*node, aAlignType);
+    MOZ_ASSERT(node->IsElement());
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .AlignBlockContentsWithDivElement(
+                          MOZ_KnownLive(*node->AsElement()), aAlignType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6616,67 +6619,68 @@ nsresult HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
   return NS_OK;
 }
 
-nsresult HTMLEditRules::AlignBlockContents(nsINode& aNode,
-                                           const nsAString& aAlignType) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::AlignBlockContentsWithDivElement(
+    Element& aBlockElement, const nsAString& aAlignType) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsCOMPtr<nsIContent> firstChild =
-      HTMLEditorRef().GetFirstEditableChild(aNode);
-  if (!firstChild) {
-    // this cell has no content, nothing to align
+  // XXX I don't understand why we should NOT align non-editable children
+  //     with modifying EDITABLE `<div>` element.
+  nsCOMPtr<nsIContent> firstEditableContent =
+      GetFirstEditableChild(aBlockElement);
+  if (!firstEditableContent) {
+    // This block has no editable content, nothing to align.
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> lastChild = HTMLEditorRef().GetLastEditableChild(aNode);
-  if (firstChild == lastChild && firstChild->IsHTMLElement(nsGkAtoms::div)) {
-    // the cell already has a div containing all of its content: just
-    // act on this div.
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SetAttributeOrEquivalent(MOZ_KnownLive(firstChild->AsElement()),
-                                      nsGkAtoms::align, aAlignType, false);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  // If there is only one editable content and it's a `<div>` element,
+  // just set `align` attribute of it.
+  nsCOMPtr<nsIContent> lastEditableContent =
+      GetLastEditableChild(aBlockElement);
+  if (firstEditableContent == lastEditableContent &&
+      firstEditableContent->IsHTMLElement(nsGkAtoms::div)) {
+    nsresult rv = SetAttributeOrEquivalent(
+        MOZ_KnownLive(firstEditableContent->AsElement()), nsGkAtoms::align,
+        aAlignType, false);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetAttributeOrEquivalent() failed");
+    return rv;
   }
 
-  // else we need to put in a div, set the alignment, and toss in all the
-  // children
-  RefPtr<Element> divElem = MOZ_KnownLive(HTMLEditorRef())
-                                .CreateNodeWithTransaction(
-                                    *nsGkAtoms::div, EditorDOMPoint(&aNode, 0));
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  // Otherwise, we need to insert a `<div>` element to set `align` attribute.
+  // XXX Don't insert the new `<div>` element until we set `align` attribute
+  //     for avoiding running mutation event listeners.
+  RefPtr<Element> divElement = CreateNodeWithTransaction(
+      *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(!divElem)) {
+  if (NS_WARN_IF(!divElement)) {
     return NS_ERROR_FAILURE;
   }
-  // set up the alignment on the div
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
-                                              aAlignType, false);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv =
+      SetAttributeOrEquivalent(divElement, nsGkAtoms::align, aAlignType, false);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  // tuck the children into the end of the active div
-  while (lastChild && (lastChild != divElem)) {
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .MoveNodeWithTransaction(*lastChild, EditorDOMPoint(divElem, 0));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  // XXX This is tricky and does not work with mutation event listeners.
+  //     But I'm not sure what we should do if new content is inserted.
+  //     Anyway, I don't think that we should move editable contents
+  //     over non-editable contents.  Chrome does no do that.
+  while (lastEditableContent && (lastEditableContent != divElement)) {
+    nsresult rv = MoveNodeWithTransaction(*lastEditableContent,
+                                          EditorDOMPoint(divElement, 0));
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    lastChild = HTMLEditorRef().GetLastEditableChild(aNode);
+    lastEditableContent = GetLastEditableChild(aBlockElement);
   }
   return NS_OK;
 }
