@@ -2333,20 +2333,44 @@ class HTMLEditor final : public TextEditor,
   ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin);
 
   /**
-   * IndentAroundSelectionWithCSS() indents around Selection with CSS.
+   * HandleCSSIndentAtSelectionInternal() indents around Selection with CSS.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * need to check if the editor is still available even if this returns
    * NS_OK.
+   * NOTE: Use HandleCSSIndentAtSelection() instead.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult IndentAroundSelectionWithCSS();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleCSSIndentAtSelectionInternal();
 
   /**
-   * IndentAroundSelectionWithHTML() indents around Selection with HTML.
+   * HandleHTMLIndentAtSelectionInternal() indents around Selection with HTML.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * need to check if the editor is still available even if this returns
    * NS_OK.
+   * NOTE: Use HandleHTMLIndentAtSelection() instead.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult IndentAroundSelectionWithHTML();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  HandleHTMLIndentAtSelectionInternal();
+
+  /**
+   * HandleCSSIndentAtSelection() indents around Selection with CSS.
+   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
+   *       want to call this directly, you should check whether you need
+   *       do do something which `HandleIndentAtSelection()` does.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleCSSIndentAtSelection();
+
+  /**
+   * HandleHTMLIndentAtSelection() indents around Selection with HTML.
+   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
+   *       want to call this directly, you should check whether you need
+   *       do do something which `HandleIndentAtSelection()` does.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleHTMLIndentAtSelection();
+
+  /**
+   * HandleIndentAtSelection() indents around Selection with HTML or CSS.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult HandleIndentAtSelection();
 
   /**
    * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and

@@ -784,8 +784,15 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(result.Succeeded(),
                            "HandleDeleteSelection() failed");
       return result.Rv();
-    case EditSubAction::eIndent:
-      return WillIndent(aCancel, aHandled);
+    case EditSubAction::eIndent: {
+      EditActionResult result =
+          MOZ_KnownLive(HTMLEditorRef()).HandleIndentAtSelection();
+      *aHandled = result.Handled();
+      *aCancel = result.Canceled();
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "HandleIndentAtSelection() failed");
+      return result.Rv();
+    }
     case EditSubAction::eOutdent:
       return WillOutdent(aCancel, aHandled);
     case EditSubAction::eSetPositionToAbsolute:
@@ -4926,62 +4933,50 @@ nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
   return rv;
 }
 
-nsresult HTMLEditRules::WillIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (HTMLEditorRef().IsCSSEnabled()) {
-    nsresult rv = WillCSSIndent(aCancel, aHandled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    nsresult rv = WillHTMLIndent(aCancel, aHandled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::WillCSSIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+EditActionResult HTMLEditor::HandleIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
 
-  *aCancel = false;
-  *aHandled = true;
+  if (IsCSSEnabled()) {
+    nsresult rv = HandleCSSIndentAtSelection();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HandleCSSIndentAtSelection() failed");
+    return EditActionHandled(rv);
+  }
+  rv = HandleHTMLIndentAtSelection();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HandleHTMLIndent() failed");
+  return EditActionHandled(rv);
+}
+
+nsresult HTMLEditor::HandleCSSIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  // IndentAroundSelectionWithCSS() creates AutoSelectionRestorer.
+  // HandleCSSIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = MOZ_KnownLive(HTMLEditorRef()).IndentAroundSelectionWithCSS();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = HandleCSSIndentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HandleCSSIndentAtSelectionInternal() failed");
+  return rv;
 }
 
-nsresult HTMLEditor::IndentAroundSelectionWithCSS() {
+nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
@@ -5239,45 +5234,29 @@ nsresult HTMLEditor::IndentAroundSelectionWithCSS() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
-
-  *aCancel = false;
-  *aHandled = true;
+nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  // IndentAroundSelectionWithHTML() creates AutoSelectionRestorer.
+  // HandleHTMLIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = MOZ_KnownLive(HTMLEditorRef()).IndentAroundSelectionWithHTML();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = HandleHTMLIndentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HandleHTMLIndentAtSelectionInternal() failed");
+  return rv;
 }
 
-nsresult HTMLEditor::IndentAroundSelectionWithHTML() {
+nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
