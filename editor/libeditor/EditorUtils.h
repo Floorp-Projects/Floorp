@@ -467,6 +467,7 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
   bool Succeeded() const { return NS_SUCCEEDED(mRv); }
   bool Failed() const { return NS_FAILED(mRv); }
   nsresult Rv() const { return mRv; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
 
   /**
    * GetLeftContent() returns new created node before the part of quarried out.
