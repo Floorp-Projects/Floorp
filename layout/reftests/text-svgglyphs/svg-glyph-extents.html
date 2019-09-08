@@ -19,7 +19,7 @@ body {
     font-size: 10px;
   }
 }
-div {
+#start-animation div {
   display: inline-block;
   height: 100px;
   width: 100px;
@@ -31,6 +31,10 @@ div {
 function setup() {
   var e = document.getElementById("watchme");
   e.addEventListener("animationend", listener);
+
+  // Start the animation after the animationend listener has been subscribed
+  // (See Bug 1543639 Comment 25 for a rationale).
+  document.body.id = "start-animation";
 }
 function listener() {
   document.documentElement.className = "";
