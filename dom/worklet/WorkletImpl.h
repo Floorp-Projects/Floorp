@@ -9,6 +9,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/OriginAttributes.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 class nsPIDOMWindowInner;
 class nsIPrincipal;
@@ -71,6 +72,7 @@ class WorkletImpl {
   const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }
+  const ipc::PrincipalInfo& PrincipalInfo() const { return mPrincipalInfo; }
 
  protected:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
@@ -79,6 +81,8 @@ class WorkletImpl {
   virtual already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() = 0;
 
   const OriginAttributes mOriginAttributes;
+  // Modified only in constructor.
+  ipc::PrincipalInfo mPrincipalInfo;
   // Accessed on only worklet parent thread.
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
