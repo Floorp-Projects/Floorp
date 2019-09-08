@@ -1517,6 +1517,288 @@ bool DebuggerScript::getPredecessorOffsets(JSContext* cx, unsigned argc,
       cx, argc, vp, "getPredecessorOffsets", false);
 }
 
+// Return whether an opcode is considered effectful: it can have direct side
+// effects that can be observed outside of the current frame. Opcodes are not
+// effectful if they only modify the current frame's state, modify objects
+// created by the current frame, or can potentially call other scripts or
+// natives which could have side effects.
+static bool BytecodeIsEffectful(JSOp op) {
+  switch (op) {
+    case JSOP_SETPROP:
+    case JSOP_STRICTSETPROP:
+    case JSOP_SETPROP_SUPER:
+    case JSOP_STRICTSETPROP_SUPER:
+    case JSOP_SETELEM:
+    case JSOP_STRICTSETELEM:
+    case JSOP_SETELEM_SUPER:
+    case JSOP_STRICTSETELEM_SUPER:
+    case JSOP_SETNAME:
+    case JSOP_STRICTSETNAME:
+    case JSOP_SETGNAME:
+    case JSOP_STRICTSETGNAME:
+    case JSOP_DELPROP:
+    case JSOP_STRICTDELPROP:
+    case JSOP_DELELEM:
+    case JSOP_STRICTDELELEM:
+    case JSOP_DELNAME:
+    case JSOP_SETALIASEDVAR:
+    case JSOP_INITHOMEOBJECT:
+    case JSOP_INITALIASEDLEXICAL:
+    case JSOP_SETINTRINSIC:
+    case JSOP_INITGLEXICAL:
+    case JSOP_DEFVAR:
+    case JSOP_DEFLET:
+    case JSOP_DEFCONST:
+    case JSOP_DEFFUN:
+    case JSOP_SETFUNNAME:
+    case JSOP_MUTATEPROTO:
+    case JSOP_DYNAMIC_IMPORT:
+      // Treat async functions as effectful so that microtask checkpoints
+      // won't run.
+    case JSOP_INITIALYIELD:
+    case JSOP_YIELD:
+      return true;
+
+    case JSOP_NOP:
+    case JSOP_NOP_DESTRUCTURING:
+    case JSOP_TRY_DESTRUCTURING:
+    case JSOP_LINENO:
+    case JSOP_JUMPTARGET:
+    case JSOP_LABEL:
+    case JSOP_UNDEFINED:
+    case JSOP_IFNE:
+    case JSOP_IFEQ:
+    case JSOP_RETURN:
+    case JSOP_RETRVAL:
+    case JSOP_AND:
+    case JSOP_OR:
+    case JSOP_TRY:
+    case JSOP_THROW:
+    case JSOP_GOTO:
+    case JSOP_CONDSWITCH:
+    case JSOP_TABLESWITCH:
+    case JSOP_CASE:
+    case JSOP_DEFAULT:
+    case JSOP_BITNOT:
+    case JSOP_BITAND:
+    case JSOP_BITOR:
+    case JSOP_BITXOR:
+    case JSOP_LSH:
+    case JSOP_RSH:
+    case JSOP_URSH:
+    case JSOP_ADD:
+    case JSOP_SUB:
+    case JSOP_MUL:
+    case JSOP_DIV:
+    case JSOP_MOD:
+    case JSOP_POW:
+    case JSOP_POS:
+    case JSOP_TONUMERIC:
+    case JSOP_NEG:
+    case JSOP_INC:
+    case JSOP_DEC:
+    case JSOP_TOSTRING:
+    case JSOP_EQ:
+    case JSOP_NE:
+    case JSOP_STRICTEQ:
+    case JSOP_STRICTNE:
+    case JSOP_LT:
+    case JSOP_LE:
+    case JSOP_GT:
+    case JSOP_GE:
+    case JSOP_DOUBLE:
+    case JSOP_BIGINT:
+    case JSOP_STRING:
+    case JSOP_SYMBOL:
+    case JSOP_ZERO:
+    case JSOP_ONE:
+    case JSOP_NULL:
+    case JSOP_VOID:
+    case JSOP_HOLE:
+    case JSOP_FALSE:
+    case JSOP_TRUE:
+    case JSOP_ARGUMENTS:
+    case JSOP_REST:
+    case JSOP_GETARG:
+    case JSOP_SETARG:
+    case JSOP_GETLOCAL:
+    case JSOP_SETLOCAL:
+    case JSOP_THROWSETCONST:
+    case JSOP_THROWSETALIASEDCONST:
+    case JSOP_THROWSETCALLEE:
+    case JSOP_CHECKLEXICAL:
+    case JSOP_INITLEXICAL:
+    case JSOP_CHECKALIASEDLEXICAL:
+    case JSOP_UNINITIALIZED:
+    case JSOP_POP:
+    case JSOP_POPN:
+    case JSOP_DUPAT:
+    case JSOP_NEWARRAY:
+    case JSOP_NEWARRAY_COPYONWRITE:
+    case JSOP_NEWINIT:
+    case JSOP_NEWOBJECT:
+    case JSOP_INITELEM:
+    case JSOP_INITHIDDENELEM:
+    case JSOP_INITELEM_INC:
+    case JSOP_INITELEM_ARRAY:
+    case JSOP_INITPROP:
+    case JSOP_INITLOCKEDPROP:
+    case JSOP_INITHIDDENPROP:
+    case JSOP_INITPROP_GETTER:
+    case JSOP_INITHIDDENPROP_GETTER:
+    case JSOP_INITPROP_SETTER:
+    case JSOP_INITHIDDENPROP_SETTER:
+    case JSOP_INITELEM_GETTER:
+    case JSOP_INITHIDDENELEM_GETTER:
+    case JSOP_INITELEM_SETTER:
+    case JSOP_INITHIDDENELEM_SETTER:
+    case JSOP_FUNCALL:
+    case JSOP_FUNAPPLY:
+    case JSOP_SPREADCALL:
+    case JSOP_CALL:
+    case JSOP_CALL_IGNORES_RV:
+    case JSOP_CALLITER:
+    case JSOP_NEW:
+    case JSOP_EVAL:
+    case JSOP_STRICTEVAL:
+    case JSOP_INT8:
+    case JSOP_UINT16:
+    case JSOP_GETGNAME:
+    case JSOP_GETNAME:
+    case JSOP_GETINTRINSIC:
+    case JSOP_GETIMPORT:
+    case JSOP_BINDGNAME:
+    case JSOP_BINDNAME:
+    case JSOP_BINDVAR:
+    case JSOP_DUP:
+    case JSOP_DUP2:
+    case JSOP_SWAP:
+    case JSOP_PICK:
+    case JSOP_UNPICK:
+    case JSOP_GETALIASEDVAR:
+    case JSOP_UINT24:
+    case JSOP_RESUMEINDEX:
+    case JSOP_INT32:
+    case JSOP_LOOPHEAD:
+    case JSOP_GETELEM:
+    case JSOP_CALLELEM:
+    case JSOP_LENGTH:
+    case JSOP_NOT:
+    case JSOP_FUNCTIONTHIS:
+    case JSOP_GLOBALTHIS:
+    case JSOP_CALLEE:
+    case JSOP_ENVCALLEE:
+    case JSOP_SUPERBASE:
+    case JSOP_GETPROP_SUPER:
+    case JSOP_GETELEM_SUPER:
+    case JSOP_GETPROP:
+    case JSOP_CALLPROP:
+    case JSOP_REGEXP:
+    case JSOP_CALLSITEOBJ:
+    case JSOP_OBJECT:
+    case JSOP_CLASSCONSTRUCTOR:
+    case JSOP_TYPEOF:
+    case JSOP_TYPEOFEXPR:
+    case JSOP_TOASYNCITER:
+    case JSOP_TOID:
+    case JSOP_ITERNEXT:
+    case JSOP_LAMBDA:
+    case JSOP_LAMBDA_ARROW:
+    case JSOP_PUSHLEXICALENV:
+    case JSOP_POPLEXICALENV:
+    case JSOP_FRESHENLEXICALENV:
+    case JSOP_RECREATELEXICALENV:
+    case JSOP_ITER:
+    case JSOP_MOREITER:
+    case JSOP_ISNOITER:
+    case JSOP_ENDITER:
+    case JSOP_IN:
+    case JSOP_HASOWN:
+    case JSOP_SETRVAL:
+    case JSOP_INSTANCEOF:
+    case JSOP_DEBUGLEAVELEXICALENV:
+    case JSOP_DEBUGGER:
+    case JSOP_GIMPLICITTHIS:
+    case JSOP_IMPLICITTHIS:
+    case JSOP_NEWTARGET:
+    case JSOP_CHECKISOBJ:
+    case JSOP_CHECKISCALLABLE:
+    case JSOP_CHECKOBJCOERCIBLE:
+    case JSOP_DEBUGCHECKSELFHOSTED:
+    case JSOP_IS_CONSTRUCTING:
+    case JSOP_OPTIMIZE_SPREADCALL:
+    case JSOP_IMPORTMETA:
+    case JSOP_LOOPENTRY:
+    case JSOP_INSTRUMENTATION_ACTIVE:
+    case JSOP_INSTRUMENTATION_CALLBACK:
+    case JSOP_INSTRUMENTATION_SCRIPT_ID:
+    case JSOP_ENTERWITH:
+    case JSOP_LEAVEWITH:
+    case JSOP_SPREADNEW:
+    case JSOP_SPREADEVAL:
+    case JSOP_STRICTSPREADEVAL:
+    case JSOP_CHECKCLASSHERITAGE:
+    case JSOP_FUNWITHPROTO:
+    case JSOP_OBJWITHPROTO:
+    case JSOP_BUILTINPROTO:
+    case JSOP_DERIVEDCONSTRUCTOR:
+    case JSOP_CHECKTHIS:
+    case JSOP_CHECKRETURN:
+    case JSOP_CHECKTHISREINIT:
+    case JSOP_SUPERFUN:
+    case JSOP_SPREADSUPERCALL:
+    case JSOP_SUPERCALL:
+    case JSOP_PUSHVARENV:
+    case JSOP_POPVARENV:
+    case JSOP_GETBOUNDNAME:
+    case JSOP_EXCEPTION:
+    case JSOP_ISGENCLOSING:
+    case JSOP_FINALYIELDRVAL:
+    case JSOP_RESUME:
+    case JSOP_AFTERYIELD:
+    case JSOP_AWAIT:
+    case JSOP_TRYSKIPAWAIT:
+    case JSOP_GENERATOR:
+    case JSOP_ASYNCAWAIT:
+    case JSOP_ASYNCRESOLVE:
+    case JSOP_FINALLY:
+    case JSOP_GETRVAL:
+    case JSOP_GOSUB:
+    case JSOP_RETSUB:
+    case JSOP_THROWMSG:
+    case JSOP_FORCEINTERPRETER:
+    case JSOP_UNUSED71:
+    case JSOP_UNUSED149:
+    case JSOP_LIMIT:
+      return false;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Invalid opcode");
+  return false;
+}
+
+/* static */
+bool DebuggerScript::getEffectfulOffsets(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getEffectfulOffsets", args,
+                                   obj, script);
+
+  RootedObject result(cx, NewDenseEmptyArray(cx));
+  if (!result) {
+    return false;
+  }
+  for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
+    if (BytecodeIsEffectful(r.frontOpcode())) {
+      if (!NewbornArrayPush(cx, result, NumberValue(r.frontOffset()))) {
+        return false;
+      }
+    }
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
 /* static */
 bool DebuggerScript::getAllOffsets(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getAllOffsets", args, obj,
@@ -2234,6 +2516,7 @@ const JSFunctionSpec DebuggerScript::methods_[] = {
     JS_FN("getOffsetsCoverage", getOffsetsCoverage, 0, 0),
     JS_FN("getSuccessorOffsets", getSuccessorOffsets, 1, 0),
     JS_FN("getPredecessorOffsets", getPredecessorOffsets, 1, 0),
+    JS_FN("getEffectfulOffsets", getEffectfulOffsets, 1, 0),
     JS_FN("setInstrumentationId", setInstrumentationId, 1, 0),
 
     // The following APIs are deprecated due to their reliance on the
