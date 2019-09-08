@@ -6531,10 +6531,12 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
         // If we don't use CSS, add a content to list element: they have to
         // be inside another list, i.e., >= second level of nesting.
-        // XXX AlignInnerBlocks() handles list item elements and table cells.
-        //     Is it intentional to change alignment of nested other type
-        //     descendants too?
-        rv = AlignInnerBlocks(*curNode, aAlignType);
+        // XXX AlignContentsInAllTableCellsAndListItems() handles only list
+        //     item elements and table cells.  Is it intentional?  Why don't
+        //     we need to align contents in other type blocks?
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .AlignContentsInAllTableCellsAndListItems(
+                     MOZ_KnownLive(*curNode->AsElement()), aAlignType);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -6595,22 +6597,21 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
-                                         const nsAString& aAlignType) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::AlignContentsInAllTableCellsAndListItems(
+    Element& aElement, const nsAString& aAlignType) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Gather list of table cells or list items
-  nsTArray<OwningNonNull<nsINode>> nodeArray;
+  AutoTArray<OwningNonNull<nsINode>, 64> nodeArray;
   TableCellAndListItemFunctor functor;
-  DOMIterator iter(aNode);
+  DOMIterator iter(aElement);
   iter.AppendList(functor, nodeArray);
 
   // Now that we have the list, align their contents as requested
   for (auto& node : nodeArray) {
     MOZ_ASSERT(node->IsElement());
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .AlignBlockContentsWithDivElement(
-                          MOZ_KnownLive(*node->AsElement()), aAlignType);
+    nsresult rv = AlignBlockContentsWithDivElement(
+        MOZ_KnownLive(*node->AsElement()), aAlignType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

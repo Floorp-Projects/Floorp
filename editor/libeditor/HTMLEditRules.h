@@ -204,18 +204,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult DidAbsolutePosition();
 
   /**
-   * AlignInnerBlocks() calls AlignBlockContents() for every list item element
-   * and table cell element in aNode.
-   *
-   * @param aNode               The node whose descendants should be aligned
-   *                            to aAlignType.
-   * @param aAlignType          New value of align attribute of <div>.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignInnerBlocks(nsINode& aNode,
-                                         const nsAString& aAlignType);
-
-  /**
    * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
    * This creates AutoSelectionRestorer.  Therefore, even if this returns
    * NS_OK, CanHandleEditAction() may return false if the editor is destroyed
