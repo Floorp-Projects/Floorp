@@ -19,8 +19,7 @@ namespace js {
 class DebuggerMemory : public NativeObject {
   friend class Debugger;
 
-  static DebuggerMemory* checkThis(JSContext* cx, CallArgs& args,
-                                   const char* fnName);
+  static DebuggerMemory* checkThis(JSContext* cx, CallArgs& args);
 
   Debugger* getDebugger();
 
@@ -34,30 +33,7 @@ class DebuggerMemory : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
 
-  // Accessor properties of Debugger.Memory.prototype.
-
-  static bool setTrackingAllocationSites(JSContext* cx, unsigned argc,
-                                         Value* vp);
-  static bool getTrackingAllocationSites(JSContext* cx, unsigned argc,
-                                         Value* vp);
-  static bool setMaxAllocationsLogLength(JSContext* cx, unsigned argc,
-                                         Value* vp);
-  static bool getMaxAllocationsLogLength(JSContext* cx, unsigned argc,
-                                         Value* vp);
-  static bool setAllocationSamplingProbability(JSContext* cx, unsigned argc,
-                                               Value* vp);
-  static bool getAllocationSamplingProbability(JSContext* cx, unsigned argc,
-                                               Value* vp);
-  static bool getAllocationsLogOverflowed(JSContext* cx, unsigned argc,
-                                          Value* vp);
-
-  static bool getOnGarbageCollection(JSContext* cx, unsigned argc, Value* vp);
-  static bool setOnGarbageCollection(JSContext* cx, unsigned argc, Value* vp);
-
-  // Function properties of Debugger.Memory.prototype.
-
-  static bool takeCensus(JSContext* cx, unsigned argc, Value* vp);
-  static bool drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp);
+  struct CallData;
 };
 
 } /* namespace js */
