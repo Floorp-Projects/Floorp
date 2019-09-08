@@ -793,8 +793,15 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                            "HandleIndentAtSelection() failed");
       return result.Rv();
     }
-    case EditSubAction::eOutdent:
-      return WillOutdent(aCancel, aHandled);
+    case EditSubAction::eOutdent: {
+      EditActionResult result =
+          MOZ_KnownLive(HTMLEditorRef()).HandleOutdentAtSelection();
+      *aHandled = result.Handled();
+      *aCancel = result.Canceled();
+      NS_WARNING_ASSERTION(result.Succeeded(),
+                           "HandleOutdentAtSelection() failed");
+      return result.Rv();
+    }
     case EditSubAction::eSetPositionToAbsolute:
       return WillAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetPositionToStatic:
@@ -5549,51 +5556,47 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel && aHandled);
-  *aCancel = false;
-  *aHandled = true;
+EditActionResult HTMLEditor::HandleOutdentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
-  // OutdentAroundSelection() creates AutoSelectionRestorer.  Therefore,
-  // even if it returns NS_OK, the editor might have been destroyed at
-  // restoring Selection.
+  // HandleOutdentAtSelectionInternal() creates AutoSelectionRestorer.
+  // Therefore, even if it returns NS_OK, the editor might have been destroyed
+  // at restoring Selection.
   SplitRangeOffFromNodeResult outdentResult =
-      MOZ_KnownLive(HTMLEditorRef()).OutdentAroundSelection();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+      HandleOutdentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(outdentResult.Failed())) {
-    return outdentResult.Rv();
+    return EditActionHandled(outdentResult.Rv());
   }
 
   // Make sure selection didn't stick to last piece of content in old bq (only
   // a problem for collapsed selections)
   if (!outdentResult.GetLeftContent() && !outdentResult.GetRightContent()) {
-    return NS_OK;
+    return EditActionHandled();
   }
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
+    return EditActionHandled();
   }
 
   // Push selection past end of left element of last split indented element.
   if (outdentResult.GetLeftContent()) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
-      return NS_OK;
+      return EditActionHandled();
     }
     const RangeBoundary& atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionHandled(NS_ERROR_FAILURE);
     }
     if (atStartOfSelection.Container() == outdentResult.GetLeftContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
@@ -5601,43 +5604,44 @@ nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
       // Selection is inside the left node - push it past it.
       EditorRawDOMPoint afterRememberedLeftBQ(outdentResult.GetLeftContent());
       afterRememberedLeftBQ.AdvanceOffset();
-      IgnoredErrorResult error;
-      SelectionRefPtr()->Collapse(afterRememberedLeftBQ, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      IgnoredErrorResult errorIgnored;
+      SelectionRefPtr()->Collapse(afterRememberedLeftBQ, errorIgnored);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Failed to collapse selection after the left <blockquote>");
+      NS_WARNING_ASSERTION(!errorIgnored.Failed(),
+                           "Selection::Colapsed() failed, but ignored");
     }
   }
   // And pull selection before beginning of right element of last split
   // indented element.
   if (outdentResult.GetRightContent()) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
+      return EditActionHandled();
+    }
     const RangeBoundary& atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionHandled(NS_ERROR_FAILURE);
     }
     if (atStartOfSelection.Container() == outdentResult.GetRightContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
                                     *outdentResult.GetRightContent())) {
       // Selection is inside the right element - push it before it.
       EditorRawDOMPoint atRememberedRightBQ(outdentResult.GetRightContent());
-      IgnoredErrorResult error;
-      SelectionRefPtr()->Collapse(atRememberedRightBQ, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      IgnoredErrorResult errorIgnored;
+      SelectionRefPtr()->Collapse(atRememberedRightBQ, errorIgnored);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Failed to collapse selection after the right <blockquote>");
+      NS_WARNING_ASSERTION(!errorIgnored.Failed(),
+                           "Selection::Colapsed() failed, but ignored");
     }
   }
-  return NS_OK;
+  return EditActionHandled();
 }
 
-SplitRangeOffFromNodeResult HTMLEditor::OutdentAroundSelection() {
+SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);

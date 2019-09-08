@@ -126,16 +126,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
-   * Called before outdenting around Selection.  This method actually tries
-   * to indent the contents.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillOutdent(bool* aCancel, bool* aHandled);
-
-  /**
    * Called before aligning contents around Selection.  This method actually
    * sets align attributes to align contents.
    *

@@ -2402,10 +2402,11 @@ class HTMLEditor final : public TextEditor,
                      BlockIndentedWith aBlockIndentedWith);
 
   /**
-   * OutdentAroundSelection() outdents contents around Selection.
+   * HandleOutdentAtSelectionInternal() outdents contents around Selection.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * needs to check if the editor is still available even if this returns
    * NS_OK.
+   * NOTE: Call `HandleOutdentAtSelection()` instead.
    *
    * @return                    The left content is left content of last
    *                            outdented element.
@@ -2415,7 +2416,12 @@ class HTMLEditor final : public TextEditor,
    *                            outdented element.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffFromNodeResult
-  OutdentAroundSelection();
+  HandleOutdentAtSelectionInternal();
+
+  /**
+   * HandleOutdentAtSelection() outdents contents around Selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult HandleOutdentAtSelection();
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
