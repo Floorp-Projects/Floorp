@@ -5267,7 +5267,7 @@ nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
   // IndentAroundSelectionWithHTML() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = IndentAroundSelectionWithHTML();
+  rv = MOZ_KnownLive(HTMLEditorRef()).IndentAroundSelectionWithHTML();
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -5277,10 +5277,10 @@ nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::IndentAroundSelectionWithHTML() {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+  AutoSelectionRestorer restoreSelectionLater(*this);
 
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate
@@ -5288,15 +5288,14 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
   // whose children are all in the range
 
   AutoTArray<RefPtr<nsRange>, 4> arrayOfRanges;
-  HTMLEditorRef().GetSelectionRangesExtendedToHardLineStartAndEnd(
-      arrayOfRanges, EditSubAction::eIndent);
+  GetSelectionRangesExtendedToHardLineStartAndEnd(arrayOfRanges,
+                                                  EditSubAction::eIndent);
 
   // use these ranges to contruct a list of nodes to act on.
-  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .SplitInlinesAndCollectEditTargetNodes(
-                        arrayOfRanges, arrayOfNodes, EditSubAction::eIndent,
-                        HTMLEditor::CollectNonEditableNodes::Yes);
+  AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
+  nsresult rv = SplitInlinesAndCollectEditTargetNodes(
+      arrayOfRanges, arrayOfNodes, EditSubAction::eIndent,
+      CollectNonEditableNodes::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5304,7 +5303,7 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
-  if (HTMLEditorRef().IsEmptyOneHardLine(arrayOfNodes)) {
+  if (IsEmptyOneHardLine(arrayOfNodes)) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -5317,29 +5316,27 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
 
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                         atStartOfSelection);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                    atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
-    RefPtr<Element> theBlock =
-        MOZ_KnownLive(HTMLEditorRef())
-            .CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                       splitNodeResult.SplitPoint());
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    RefPtr<Element> theBlock = CreateNodeWithTransaction(
+        *nsGkAtoms::blockquote, splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(!theBlock)) {
       return NS_ERROR_FAILURE;
     }
     // remember our new block for postprocessing
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement = theBlock;
+    TopLevelEditSubActionDataRef().mNewBlockElement = theBlock;
     // delete anything that was in the list of nodes
+    // XXX We don't need to remove the nodes from the array for performance.
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
-      rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*curNode);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5352,7 +5349,7 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     restoreSelectionLater.Abort();
     ErrorResult error;
     SelectionRefPtr()->Collapse(atStartOfTheBlock, error);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -5364,8 +5361,7 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
 
   // Ok, now go through all the nodes and put them in a blockquote,
   // or whatever is appropriate.  Wohoo!
-  nsCOMPtr<nsIContent> sibling;
-  nsCOMPtr<Element> curList, curQuote, indentedLI;
+  RefPtr<Element> curList, curQuote, indentedLI;
   for (OwningNonNull<nsINode>& curNode : arrayOfNodes) {
     // Here's where we actually figure out what to do.
     EditorDOMPoint atCurNode(curNode);
@@ -5374,7 +5370,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     }
 
     // Ignore all non-editable nodes.  Leave them be.
-    if (!HTMLEditorRef().IsEditable(curNode)) {
+    // XXX We ignore non-editable nodes here, but not so in the above block.
+    if (!IsEditable(curNode)) {
       continue;
     }
 
@@ -5383,67 +5380,64 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
       // Check for whether we should join a list that follows curNode.
       // We do this if the next element is a list, and the list is of the
       // same type (li/ol) as curNode was a part it.
-      sibling = HTMLEditorRef().GetNextHTMLSibling(curNode);
-      if (sibling && HTMLEditUtils::IsList(sibling) &&
-          atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-              sibling->NodeInfo()->NameAtom() &&
-          atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-              sibling->NodeInfo()->NamespaceID()) {
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
-                                          EditorDOMPoint(sibling, 0));
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+      if (nsIContent* nextEditableSibling = GetNextHTMLSibling(curNode)) {
+        if (HTMLEditUtils::IsList(nextEditableSibling) &&
+            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
+                nextEditableSibling->NodeInfo()->NameAtom() &&
+            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
+                nextEditableSibling->NodeInfo()->NamespaceID()) {
+          rv = MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                       EditorDOMPoint(nextEditableSibling, 0));
+          if (NS_WARN_IF(Destroyed())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          continue;
         }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        continue;
       }
 
       // Check for whether we should join a list that preceeds curNode.
       // We do this if the previous element is a list, and the list is of
       // the same type (li/ol) as curNode was a part of.
-      sibling = HTMLEditorRef().GetPriorHTMLSibling(curNode);
-      if (sibling && HTMLEditUtils::IsList(sibling) &&
-          atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-              sibling->NodeInfo()->NameAtom() &&
-          atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-              sibling->NodeInfo()->NamespaceID()) {
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .MoveNodeToEndWithTransaction(
-                     MOZ_KnownLive(*curNode->AsContent()), *sibling);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+      if (nsCOMPtr<nsIContent> previousEditableSibling =
+              GetPriorHTMLSibling(curNode)) {
+        if (HTMLEditUtils::IsList(previousEditableSibling) &&
+            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
+                previousEditableSibling->NodeInfo()->NameAtom() &&
+            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
+                previousEditableSibling->NodeInfo()->NamespaceID()) {
+          rv = MoveNodeToEndWithTransaction(
+              MOZ_KnownLive(*curNode->AsContent()), *previousEditableSibling);
+          if (NS_WARN_IF(Destroyed())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          continue;
         }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        continue;
       }
 
       // check to see if curList is still appropriate.  Which it is if
       // curNode is still right after it in the same list.
-      sibling = nullptr;
-      if (curList) {
-        sibling = HTMLEditorRef().GetPriorHTMLSibling(curNode);
-      }
-
-      if (!curList || (sibling && sibling != curList)) {
+      nsIContent* previousEditableSibling =
+          curList ? GetPriorHTMLSibling(curNode) : nullptr;
+      if (!curList ||
+          (previousEditableSibling && previousEditableSibling != curList)) {
         nsAtom* containerName =
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .MaybeSplitAncestorsForInsertWithTransaction(
-                    MOZ_KnownLive(*containerName), atCurNode);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
-        curList = MOZ_KnownLive(HTMLEditorRef())
-                      .CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                                 splitNodeResult.SplitPoint());
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        curList = CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
+                                            splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(!curList)) {
@@ -5451,14 +5445,12 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
         }
         // curList is now the correct thing to put curNode in
         // remember our new block for postprocessing
-        HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-            curList;
+        TopLevelEditSubActionDataRef().mNewBlockElement = curList;
       }
       // tuck the node into the end of the active list
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .MoveNodeToEndWithTransaction(
-                   MOZ_KnownLive(*curNode->AsContent()), *curList);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                        *curList);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5478,23 +5470,20 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
     // we only want to indent that li once, we must keep track of the most
     // recent indented list item, and not indent it if we find another node
     // to act on that is still inside the same li.
-    RefPtr<Element> listItem =
-        curNode->IsContent()
-            ? HTMLEditorRef().GetNearestAncestorListItemElement(
-                  *curNode->AsContent())
-            : nullptr;
-    if (listItem) {
+    if (RefPtr<Element> listItem =
+            curNode->IsContent()
+                ? GetNearestAncestorListItemElement(*curNode->AsContent())
+                : nullptr) {
       if (indentedLI == listItem) {
         // already indented this list item
         continue;
       }
       // check to see if curList is still appropriate.  Which it is if
       // curNode is still right after it in the same list.
-      if (curList) {
-        sibling = HTMLEditorRef().GetPriorHTMLSibling(listItem);
-      }
-
-      if (!curList || (sibling && sibling != curList)) {
+      nsIContent* previousEditableSibling =
+          curList ? GetPriorHTMLSibling(listItem) : nullptr;
+      if (!curList ||
+          (previousEditableSibling && previousEditableSibling != curList)) {
         EditorDOMPoint atListItem(listItem);
         if (NS_WARN_IF(!listItem)) {
           return NS_ERROR_FAILURE;
@@ -5503,16 +5492,14 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .MaybeSplitAncestorsForInsertWithTransaction(
-                    MOZ_KnownLive(*containerName), atListItem);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
-        curList = MOZ_KnownLive(HTMLEditorRef())
-                      .CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                                 splitNodeResult.SplitPoint());
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        curList = CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
+                                            splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(!curList)) {
@@ -5520,9 +5507,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
         }
       }
 
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .MoveNodeToEndWithTransaction(*listItem, *curList);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = MoveNodeToEndWithTransaction(*listItem, *curList);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5546,38 +5532,33 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
 
     if (!curQuote) {
       // First, check that our element can contain a blockquote.
-      if (!HTMLEditorRef().CanContainTag(*atCurNode.GetContainer(),
-                                         *nsGkAtoms::blockquote)) {
+      if (!CanContainTag(*atCurNode.GetContainer(), *nsGkAtoms::blockquote)) {
         return NS_OK;  // cancelled
       }
 
       SplitNodeResult splitNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeSplitAncestorsForInsertWithTransaction(
-                  *nsGkAtoms::blockquote, atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                      atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
-      curQuote = MOZ_KnownLive(HTMLEditorRef())
-                     .CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                                splitNodeResult.SplitPoint());
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      curQuote = CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                           splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(!curQuote)) {
         return NS_ERROR_FAILURE;
       }
       // remember our new block for postprocessing
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement =
-          curQuote;
+      TopLevelEditSubActionDataRef().mNewBlockElement = curQuote;
       // curQuote is now the correct thing to put curNode in
     }
 
     // tuck the node into the end of the active blockquote
-    rv = MOZ_KnownLive(HTMLEditorRef())
-             .MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
-                                           *curQuote);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
+                                      *curQuote);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
