@@ -2167,12 +2167,9 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eIndent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = IndentAsSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(), "IndentAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
@@ -2186,41 +2183,9 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eOutdent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditor::IndentOrOutdentAsSubAction(
-    EditSubAction aIndentOrOutdent) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(mRules);
-  MOZ_ASSERT(mPlaceholderBatch);
-
-  MOZ_ASSERT(aIndentOrOutdent == EditSubAction::eIndent ||
-             aIndentOrOutdent == EditSubAction::eOutdent);
-
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  bool cancel, handled;
-  AutoEditSubActionNotifier startToHandleEditSubAction(*this, aIndentOrOutdent,
-                                                       nsIEditor::eNext);
-
-  EditSubActionInfo subActionInfo(aIndentOrOutdent);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  EditActionResult result = OutdentAsSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(), "OutdentAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 // TODO: IMPLEMENT ALIGNMENT!
