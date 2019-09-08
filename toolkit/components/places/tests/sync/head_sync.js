@@ -212,6 +212,9 @@ async function fetchLocalTree(rootGuid) {
     if (node.children) {
       itemInfo.children = node.children.map(bookmarkNodeToInfo);
     }
+    if (node.tags) {
+      itemInfo.tags = node.tags.split(",").sort();
+    }
     return itemInfo;
   }
   let root = await PlacesUtils.promiseBookmarksTree(rootGuid);
