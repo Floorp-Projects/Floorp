@@ -5686,7 +5686,8 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
   nsCOMPtr<nsIContent> rightContentOfLastOutdented;
   nsCOMPtr<Element> curBlockQuote;
   nsCOMPtr<nsIContent> firstBQChild, lastBQChild;
-  bool curBlockQuoteIsIndentedWithCSS = false;
+  HTMLEditor::BlockIndentedWith curBlockIndentedWith =
+      HTMLEditor::BlockIndentedWith::HTML;
   for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
     if (!arrayOfNodes[i]->IsContent()) {
       continue;
@@ -5706,8 +5707,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       // with any curBlockQuote first.
       if (curBlockQuote) {
         SplitRangeOffFromNodeResult outdentResult =
-            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                               curBlockQuoteIsIndentedWithCSS);
+            MOZ_KnownLive(HTMLEditorRef())
+                .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                                    curBlockIndentedWith);
         if (NS_WARN_IF(outdentResult.Failed())) {
           return outdentResult;
         }
@@ -5717,7 +5719,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         curBlockQuote = nullptr;
         firstBQChild = nullptr;
         lastBQChild = nullptr;
-        curBlockQuoteIsIndentedWithCSS = false;
+        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
       }
       rv = MOZ_KnownLive(HTMLEditorRef())
                .RemoveBlockContainerWithTransaction(
@@ -5763,8 +5765,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       // this list item.
       if (curBlockQuote) {
         SplitRangeOffFromNodeResult outdentResult =
-            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                               curBlockQuoteIsIndentedWithCSS);
+            MOZ_KnownLive(HTMLEditorRef())
+                .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                                    curBlockIndentedWith);
         if (NS_WARN_IF(outdentResult.Failed())) {
           return outdentResult;
         }
@@ -5774,7 +5777,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         curBlockQuote = nullptr;
         firstBQChild = nullptr;
         lastBQChild = nullptr;
-        curBlockQuoteIsIndentedWithCSS = false;
+        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
       }
       // XXX `curNode` could become different element since
       //     `OutdentPartOfBlock()` may run mutaiton event listeners.
@@ -5800,8 +5803,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       // let's handle it now.  We need to remove the portion of
       // curBlockQuote that contains [firstBQChild - lastBQChild].
       SplitRangeOffFromNodeResult outdentResult =
-          OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                             curBlockQuoteIsIndentedWithCSS);
+          MOZ_KnownLive(HTMLEditorRef())
+              .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                                  curBlockIndentedWith);
       if (NS_WARN_IF(outdentResult.Failed())) {
         return outdentResult;
       }
@@ -5811,13 +5815,13 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       curBlockQuote = nullptr;
       firstBQChild = nullptr;
       lastBQChild = nullptr;
-      curBlockQuoteIsIndentedWithCSS = false;
+      // curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
       // Fall out and handle curNode
     }
 
     // Are we inside a blockquote?
     OwningNonNull<nsINode> n = curNode;
-    curBlockQuoteIsIndentedWithCSS = false;
+    curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
     // Keep looking up the hierarchy as long as we don't hit the body or the
     // active editing host or a table element (other than an entire table)
     while (!n->IsHTMLElement(nsGkAtoms::body) &&
@@ -5854,7 +5858,7 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         curBlockQuote = n->AsElement();
         firstBQChild = curNode;
         lastBQChild = curNode;
-        curBlockQuoteIsIndentedWithCSS = true;
+        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::CSS;
         break;
       }
     }
@@ -5961,8 +5965,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
 
   // We have a <blockquote> we haven't finished handling.
   SplitRangeOffFromNodeResult outdentResult =
-      OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                         curBlockQuoteIsIndentedWithCSS);
+      MOZ_KnownLive(HTMLEditorRef())
+          .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                              curBlockIndentedWith);
   if (NS_WARN_IF(outdentResult.Failed())) {
     return outdentResult;
   }
@@ -6028,16 +6033,14 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   return SplitRangeOffFromNodeResult(splitAtStartResult, splitAtEndResult);
 }
 
-SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
+SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
     Element& aBlockElement, nsIContent& aStartOfOutdent,
-    nsIContent& aEndOfOutdent, bool aIsBlockIndentedWithCSS) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+    nsIContent& aEndOfOutdent, BlockIndentedWith aBlockIndentedWith) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   SplitRangeOffFromNodeResult splitResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent,
-                                  aEndOfOutdent);
-  if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+      SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent, aEndOfOutdent);
+  if (NS_WARN_IF(splitResult.EditorDestroyed())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
@@ -6045,11 +6048,10 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
     return SplitRangeOffFromNodeResult(NS_ERROR_FAILURE);
   }
 
-  if (!aIsBlockIndentedWithCSS) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .RemoveBlockContainerWithTransaction(MOZ_KnownLive(
-                          *splitResult.GetMiddleContentAsElement()));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (aBlockIndentedWith == BlockIndentedWith::HTML) {
+    nsresult rv = RemoveBlockContainerWithTransaction(
+        MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
+    if (NS_WARN_IF(Destroyed())) {
       return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6060,11 +6062,9 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentPartOfBlock(
   }
 
   if (splitResult.GetMiddleContentAsElement()) {
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .ChangeMarginStart(
-                MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()),
-                HTMLEditor::ChangeMargin::Decrease);
+    nsresult rv = ChangeMarginStart(
+        MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()),
+        ChangeMargin::Decrease);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return SplitRangeOffFromNodeResult(rv);
     }

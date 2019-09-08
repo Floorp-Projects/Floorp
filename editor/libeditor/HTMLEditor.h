@@ -2348,6 +2348,35 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult IndentAroundSelectionWithHTML();
 
+  /**
+   * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and
+   * aEndOfOutdent.  This splits the range off from aBlockElement first.
+   * Then, removes the middle element if aIsBlockIndentedWithCSS is false.
+   * Otherwise, decreases the margin of the middle element.
+   *
+   * @param aBlockElement       A block element which includes both
+   *                            aStartOfOutdent and aEndOfOutdent.
+   * @param aStartOfOutdent     First node which is descendant of
+   *                            aBlockElement will be outdented.
+   * @param aEndOfOutdent       Last node which is descandant of
+   *                            aBlockElement will be outdented.
+   * @param aBlockIndentedWith  `CSS` if aBlockElement is indented with
+   *                            CSS margin property.
+   *                            `HTML` if aBlockElement is `<blockquote>`
+   *                            or something.
+   * @return                    The left content is new created element
+   *                            splitting before aStartOfOutdent.
+   *                            The right content is existing element.
+   *                            The middle content is outdented element
+   *                            if aBlockIndentedWith is `CSS`.
+   *                            Otherwise, nullptr.
+   */
+  enum class BlockIndentedWith { CSS, HTML };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffFromNodeResult
+  OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
+                     nsIContent& aEndOutdent,
+                     BlockIndentedWith aBlockIndentedWith);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
