@@ -1485,6 +1485,301 @@ add_task(async function test_keywords_complex() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(async function test_tags_complex() {
+  let buf = await openMirror("tags_complex");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [
+      {
+        guid: "bookmarkAAA1",
+        title: "A1",
+        url: "http://example.com/a",
+        tags: ["one", "two"],
+      },
+      {
+        guid: "bookmarkAAA2",
+        title: "A2",
+        url: "http://example.com/a",
+        tags: ["one", "two"],
+      },
+      {
+        guid: "bookmarkBBB1",
+        title: "B1",
+        url: "http://example.com/b",
+        tags: ["one"],
+      },
+      {
+        guid: "bookmarkBBB2",
+        title: "B2",
+        url: "http://example.com/b",
+        tags: ["one"],
+      },
+      {
+        guid: "bookmarkCCC1",
+        title: "C1",
+        url: "http://example.com/c",
+        tags: ["two", "three"],
+      },
+      {
+        guid: "bookmarkCCC2",
+        title: "C2",
+        url: "http://example.com/c",
+        tags: ["two", "three"],
+      },
+    ],
+  });
+  await storeRecords(
+    buf,
+    shuffle([
+      {
+        id: "menu",
+        parentid: "places",
+        type: "folder",
+        children: [
+          "bookmarkAAA1",
+          "bookmarkAAA2",
+          "bookmarkBBB1",
+          "bookmarkBBB2",
+          "bookmarkCCC1",
+          "bookmarkCCC2",
+        ],
+      },
+      {
+        id: "bookmarkAAA1",
+        parentid: "menu",
+        type: "bookmark",
+        title: "A",
+        bmkUri: "http://example.com/a",
+        tags: ["one", "two"],
+      },
+      {
+        id: "bookmarkAAA2",
+        parentid: "menu",
+        type: "bookmark",
+        title: "A",
+        bmkUri: "http://example.com/a",
+        tags: ["one", "two"],
+      },
+      {
+        id: "bookmarkBBB1",
+        parentid: "menu",
+        type: "bookmark",
+        title: "B1",
+        bmkUri: "http://example.com/b",
+        tags: ["one"],
+      },
+      {
+        id: "bookmarkBBB2",
+        parentid: "menu",
+        type: "bookmark",
+        title: "B2",
+        bmkUri: "http://example.com/b",
+        tags: ["one"],
+      },
+      {
+        id: "bookmarkCCC1",
+        parentid: "menu",
+        type: "bookmark",
+        title: "C1",
+        bmkUri: "http://example.com/c",
+        tags: ["two", "three"],
+      },
+      {
+        id: "bookmarkCCC2",
+        parentid: "menu",
+        type: "bookmark",
+        title: "C2",
+        bmkUri: "http://example.com/c",
+        tags: ["two", "three"],
+      },
+    ]),
+    { needsMerge: false }
+  );
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Add tags for B locally");
+  PlacesUtils.tagging.tagURI(Services.io.newURI("http://example.com/b"), [
+    "four",
+    "five",
+  ]);
+
+  info("Remove tag from C locally");
+  PlacesUtils.tagging.untagURI(Services.io.newURI("http://example.com/c"), [
+    "two",
+  ]);
+
+  info("Update tags for A remotely");
+  await storeRecords(
+    buf,
+    shuffle([
+      {
+        id: "bookmarkAAA1",
+        parentid: "menu",
+        type: "bookmark",
+        title: "A1",
+        bmkUri: "http://example.com/a",
+        tags: ["one", "two", "four", "six"],
+      },
+      {
+        id: "bookmarkAAA2",
+        parentid: "menu",
+        type: "bookmark",
+        title: "A2",
+        bmkUri: "http://example.com/a",
+        tags: ["one", "two", "four", "six"],
+      },
+    ])
+  );
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+
+  let datesAdded = await promiseManyDatesAdded([
+    "bookmarkBBB1",
+    "bookmarkBBB2",
+    "bookmarkCCC1",
+    "bookmarkCCC2",
+  ]);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    changesToUpload,
+    {
+      bookmarkBBB1: {
+        counter: 2,
+        synced: false,
+        tombstone: false,
+        cleartext: {
+          id: "bookmarkBBB1",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: datesAdded.get("bookmarkBBB1"),
+          bmkUri: "http://example.com/b",
+          title: "B1",
+          tags: ["five", "four", "one"],
+        },
+      },
+      bookmarkBBB2: {
+        counter: 2,
+        synced: false,
+        tombstone: false,
+        cleartext: {
+          id: "bookmarkBBB2",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: datesAdded.get("bookmarkBBB2"),
+          bmkUri: "http://example.com/b",
+          title: "B2",
+          tags: ["five", "four", "one"],
+        },
+      },
+      bookmarkCCC1: {
+        counter: 1,
+        synced: false,
+        tombstone: false,
+        cleartext: {
+          id: "bookmarkCCC1",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: datesAdded.get("bookmarkCCC1"),
+          bmkUri: "http://example.com/c",
+          title: "C1",
+          tags: ["three"],
+        },
+      },
+      bookmarkCCC2: {
+        counter: 1,
+        synced: false,
+        tombstone: false,
+        cleartext: {
+          id: "bookmarkCCC2",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: datesAdded.get("bookmarkCCC2"),
+          bmkUri: "http://example.com/c",
+          title: "C2",
+          tags: ["three"],
+        },
+      },
+    },
+    "Should upload local records with new tags"
+  );
+
+  await assertLocalTree(
+    PlacesUtils.bookmarks.menuGuid,
+    {
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [
+        {
+          guid: "bookmarkAAA1",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 0,
+          title: "A1",
+          url: "http://example.com/a",
+          tags: ["four", "one", "six", "two"],
+        },
+        {
+          guid: "bookmarkAAA2",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 1,
+          title: "A2",
+          url: "http://example.com/a",
+          tags: ["four", "one", "six", "two"],
+        },
+        {
+          guid: "bookmarkBBB1",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 2,
+          title: "B1",
+          url: "http://example.com/b",
+          tags: ["five", "four", "one"],
+        },
+        {
+          guid: "bookmarkBBB2",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 3,
+          title: "B2",
+          url: "http://example.com/b",
+          tags: ["five", "four", "one"],
+        },
+        {
+          guid: "bookmarkCCC1",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 4,
+          title: "C1",
+          url: "http://example.com/c",
+          tags: ["three"],
+        },
+        {
+          guid: "bookmarkCCC2",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 5,
+          title: "C2",
+          url: "http://example.com/c",
+          tags: ["three"],
+        },
+      ],
+    },
+    "Should update local items with new tags"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_tags() {
   let buf = await openMirror("tags");
 
