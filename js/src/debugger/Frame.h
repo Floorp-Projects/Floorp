@@ -149,7 +149,6 @@ class DebuggerFrame : public NativeObject {
                                const FrameIter& iter,
                                HandleNativeObject debugger);
 
-  static MOZ_MUST_USE bool getScript(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool getArguments(JSContext* cx,
                                         HandleDebuggerFrame frame,
                                         MutableHandleDebuggerArguments result);
@@ -181,10 +180,8 @@ class DebuggerFrame : public NativeObject {
       const EvalOptions& options);
 
   MOZ_MUST_USE bool requireLive(JSContext* cx);
-  static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
-                                               const CallArgs& args,
-                                               const char* fnname,
-                                               bool checkLive);
+  static MOZ_MUST_USE DebuggerFrame* check(JSContext* cx, HandleValue thisv,
+                                           bool checkLive);
 
   bool isLive() const;
   OnStepHandler* onStepHandler() const;
@@ -266,34 +263,7 @@ class DebuggerFrame : public NativeObject {
 
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-  static MOZ_MUST_USE bool argumentsGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-  static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool offsetGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool olderGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc,
-                                                Value* vp);
-  static MOZ_MUST_USE bool onStepGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool onStepSetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool onPopGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool onPopSetter(JSContext* cx, unsigned argc, Value* vp);
-
-  static MOZ_MUST_USE bool evalMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc,
-                                                  Value* vp);
+  struct CallData;
 
   Debugger* owner() const;
 

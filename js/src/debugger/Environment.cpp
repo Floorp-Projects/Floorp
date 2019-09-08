@@ -83,8 +83,7 @@ void DebuggerEnvironment::trace(JSTracer* trc) {
 }
 
 static DebuggerEnvironment* DebuggerEnvironment_checkThis(
-    JSContext* cx, const CallArgs& args, const char* fnname,
-    bool requireDebuggee) {
+    JSContext* cx, const CallArgs& args) {
   JSObject* thisobj = RequireObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
@@ -92,7 +91,7 @@ static DebuggerEnvironment* DebuggerEnvironment_checkThis(
   if (thisobj->getClass() != &DebuggerEnvironment::class_) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Environment",
-                              fnname, thisobj->getClass()->name);
+                              "method", thisobj->getClass()->name);
     return nullptr;
   }
 
@@ -103,31 +102,55 @@ static DebuggerEnvironment* DebuggerEnvironment_checkThis(
   if (!nthisobj->getPrivate()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Environment",
-                              fnname, "prototype object");
+                              "method", "prototype object");
     return nullptr;
-  }
-
-  // Forbid access to Debugger.Environment objects that are not debuggee
-  // environments.
-  if (requireDebuggee) {
-    Rooted<Env*> env(cx, static_cast<Env*>(nthisobj->getPrivate()));
-    if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(
-            &env->nonCCWGlobal())) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_NOT_DEBUGGEE,
-                                "Debugger.Environment", "environment");
-      return nullptr;
-    }
   }
 
   return nthisobj;
 }
 
-#define THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, fnname, args, environment) \
-  CallArgs args = CallArgsFromVp(argc, vp);                                \
-  Rooted<DebuggerEnvironment*> environment(                                \
-      cx, DebuggerEnvironment_checkThis(cx, args, fnname, false));         \
-  if (!environment) return false;
+struct MOZ_STACK_CLASS DebuggerEnvironment::CallData {
+  JSContext* cx;
+  const CallArgs& args;
+
+  HandleDebuggerEnvironment environment;
+
+  CallData(JSContext* cx, const CallArgs& args, HandleDebuggerEnvironment env)
+      : cx(cx), args(args), environment(env) {}
+
+  bool typeGetter();
+  bool scopeKindGetter();
+  bool parentGetter();
+  bool objectGetter();
+  bool calleeGetter();
+  bool inspectableGetter();
+  bool optimizedOutGetter();
+
+  bool namesMethod();
+  bool findMethod();
+  bool getVariableMethod();
+  bool setVariableMethod();
+
+  using Method = bool (CallData::*)();
+
+  template <Method MyMethod>
+  static bool ToNative(JSContext* cx, unsigned argc, Value* vp);
+};
+
+template <DebuggerEnvironment::CallData::Method MyMethod>
+/* static */
+bool DebuggerEnvironment::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedDebuggerEnvironment environment(cx,
+      DebuggerEnvironment_checkThis(cx, args));
+  if (!environment) {
+    return false;
+  }
+
+  CallData data(cx, args, environment);
+  return (data.*MyMethod)();
+}
 
 /* static */
 bool DebuggerEnvironment::construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -147,9 +170,7 @@ static bool IsDebugEnvironmentWrapper(Env* env) {
          env->as<DebugEnvironmentProxy>().environment().is<T>();
 }
 
-bool DebuggerEnvironment::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get type", args, environment);
-
+bool DebuggerEnvironment::CallData::typeGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -178,10 +199,7 @@ bool DebuggerEnvironment::typeGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool DebuggerEnvironment::scopeKindGetter(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get scopeKind", args, environment);
-
+bool DebuggerEnvironment::CallData::scopeKindGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -201,11 +219,7 @@ bool DebuggerEnvironment::scopeKindGetter(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::parentGetter(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get type", args, environment);
-
+bool DebuggerEnvironment::CallData::parentGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -219,11 +233,7 @@ bool DebuggerEnvironment::parentGetter(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::objectGetter(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get type", args, environment);
-
+bool DebuggerEnvironment::CallData::objectGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -243,11 +253,7 @@ bool DebuggerEnvironment::objectGetter(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::calleeGetter(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get callee", args, environment);
-
+bool DebuggerEnvironment::CallData::calleeGetter() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -261,29 +267,17 @@ bool DebuggerEnvironment::calleeGetter(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::inspectableGetter(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get inspectable", args, environment);
-
+bool DebuggerEnvironment::CallData::inspectableGetter() {
   args.rval().setBoolean(environment->isDebuggee());
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::optimizedOutGetter(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "get optimizedOut", args,
-                            environment);
-
+bool DebuggerEnvironment::CallData::optimizedOutGetter() {
   args.rval().setBoolean(environment->isOptimized());
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::namesMethod(JSContext* cx, unsigned argc, Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "names", args, environment);
-
+bool DebuggerEnvironment::CallData::namesMethod() {
   if (!environment->requireDebuggee(cx)) {
     return false;
   }
@@ -302,9 +296,7 @@ bool DebuggerEnvironment::namesMethod(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::findMethod(JSContext* cx, unsigned argc, Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "find", args, environment);
+bool DebuggerEnvironment::CallData::findMethod() {
   if (!args.requireAtLeast(cx, "Debugger.Environment.find", 1)) {
     return false;
   }
@@ -327,10 +319,7 @@ bool DebuggerEnvironment::findMethod(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/* static */
-bool DebuggerEnvironment::getVariableMethod(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "getVariable", args, environment);
+bool DebuggerEnvironment::CallData::getVariableMethod() {
   if (!args.requireAtLeast(cx, "Debugger.Environment.getVariable", 1)) {
     return false;
   }
@@ -347,10 +336,7 @@ bool DebuggerEnvironment::getVariableMethod(JSContext* cx, unsigned argc,
   return DebuggerEnvironment::getVariable(cx, environment, id, args.rval());
 }
 
-/* static */
-bool DebuggerEnvironment::setVariableMethod(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  THIS_DEBUGGER_ENVIRONMENT(cx, argc, vp, "setVariable", args, environment);
+bool DebuggerEnvironment::CallData::setVariableMethod() {
   if (!args.requireAtLeast(cx, "Debugger.Environment.setVariable", 2)) {
     return false;
   }
@@ -385,20 +371,20 @@ bool DebuggerEnvironment::requireDebuggee(JSContext* cx) const {
 }
 
 const JSPropertySpec DebuggerEnvironment::properties_[] = {
-    JS_PSG("type", DebuggerEnvironment::typeGetter, 0),
-    JS_PSG("scopeKind", DebuggerEnvironment::scopeKindGetter, 0),
-    JS_PSG("parent", DebuggerEnvironment::parentGetter, 0),
-    JS_PSG("object", DebuggerEnvironment::objectGetter, 0),
-    JS_PSG("callee", DebuggerEnvironment::calleeGetter, 0),
-    JS_PSG("inspectable", DebuggerEnvironment::inspectableGetter, 0),
-    JS_PSG("optimizedOut", DebuggerEnvironment::optimizedOutGetter, 0),
+    JS_DEBUG_PSG("type", typeGetter),
+    JS_DEBUG_PSG("scopeKind", scopeKindGetter),
+    JS_DEBUG_PSG("parent", parentGetter),
+    JS_DEBUG_PSG("object", objectGetter),
+    JS_DEBUG_PSG("callee", calleeGetter),
+    JS_DEBUG_PSG("inspectable", inspectableGetter),
+    JS_DEBUG_PSG("optimizedOut", optimizedOutGetter),
     JS_PS_END};
 
 const JSFunctionSpec DebuggerEnvironment::methods_[] = {
-    JS_FN("names", DebuggerEnvironment::namesMethod, 0, 0),
-    JS_FN("find", DebuggerEnvironment::findMethod, 1, 0),
-    JS_FN("getVariable", DebuggerEnvironment::getVariableMethod, 1, 0),
-    JS_FN("setVariable", DebuggerEnvironment::setVariableMethod, 2, 0),
+    JS_DEBUG_FN("names", namesMethod, 0),
+    JS_DEBUG_FN("find", findMethod, 1),
+    JS_DEBUG_FN("getVariable", getVariableMethod, 1),
+    JS_DEBUG_FN("setVariable", setVariableMethod, 2),
     JS_FS_END};
 
 /* static */

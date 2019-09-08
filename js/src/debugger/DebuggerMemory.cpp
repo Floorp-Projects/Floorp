@@ -69,8 +69,7 @@ bool DebuggerMemory::construct(JSContext* cx, unsigned argc, Value* vp) {
     "Memory", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT)};
 
 /* static */
-DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args,
-                                          const char* fnName) {
+DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args) {
   const Value& thisValue = args.thisv();
 
   if (!thisValue.isObject()) {
@@ -83,7 +82,7 @@ DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args,
   JSObject& thisObject = thisValue.toObject();
   if (!thisObject.is<DebuggerMemory>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INCOMPATIBLE_PROTO, class_.name, fnName,
+                              JSMSG_INCOMPATIBLE_PROTO, class_.name, "method",
                               thisObject.getClass()->name);
     return nullptr;
   }
@@ -96,7 +95,7 @@ DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args,
           .getReservedSlot(JSSLOT_DEBUGGER)
           .isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INCOMPATIBLE_PROTO, class_.name, fnName,
+                              JSMSG_INCOMPATIBLE_PROTO, class_.name, "method",
                               "prototype object");
     return nullptr;
   }
@@ -104,34 +103,58 @@ DebuggerMemory* DebuggerMemory::checkThis(JSContext* cx, CallArgs& args,
   return &thisObject.as<DebuggerMemory>();
 }
 
-/**
- * Get the |DebuggerMemory*| from the current this value and handle any errors
- * that might occur therein.
- *
- * These parameters must already exist when calling this macro:
- * - JSContext* cx
- * - unsigned argc
- * - Value* vp
- * - const char* fnName
- * These parameters will be defined after calling this macro:
- * - CallArgs args
- * - DebuggerMemory* memory (will be non-null)
- */
-#define THIS_DEBUGGER_MEMORY(cx, argc, vp, fnName, args, memory)   \
-  CallArgs args = CallArgsFromVp(argc, vp);                        \
-  Rooted<DebuggerMemory*> memory(cx, checkThis(cx, args, fnName)); \
-  if (!memory) return false
+struct MOZ_STACK_CLASS DebuggerMemory::CallData {
+  JSContext* cx;
+  const CallArgs& args;
 
-static bool undefined(CallArgs& args) {
+  Handle<DebuggerMemory*> memory;
+
+  CallData(JSContext* cx, const CallArgs& args, Handle<DebuggerMemory*> memory)
+      : cx(cx), args(args), memory(memory) {}
+
+  // Accessor properties of Debugger.Memory.prototype.
+
+  bool setTrackingAllocationSites();
+  bool getTrackingAllocationSites();
+  bool setMaxAllocationsLogLength();
+  bool getMaxAllocationsLogLength();
+  bool setAllocationSamplingProbability();
+  bool getAllocationSamplingProbability();
+  bool getAllocationsLogOverflowed();
+  bool getOnGarbageCollection();
+  bool setOnGarbageCollection();
+
+  // Function properties of Debugger.Memory.prototype.
+
+  bool takeCensus();
+  bool drainAllocationsLog();
+
+  using Method = bool (CallData::*)();
+
+  template <Method MyMethod>
+  static bool ToNative(JSContext* cx, unsigned argc, Value* vp);
+};
+
+template <DebuggerMemory::CallData::Method MyMethod>
+/* static */
+bool DebuggerMemory::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<DebuggerMemory*> memory(cx, DebuggerMemory::checkThis(cx, args));
+  if (!memory) {
+    return false;
+  }
+
+  CallData data(cx, args, memory);
+  return (data.*MyMethod)();
+}
+
+static bool undefined(const CallArgs& args) {
   args.rval().setUndefined();
   return true;
 }
 
-/* static */
-bool DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set trackingAllocationSites)", args,
-                       memory);
+bool DebuggerMemory::CallData::setTrackingAllocationSites() {
   if (!args.requireAtLeast(cx, "(set trackingAllocationSites)", 1)) {
     return false;
   }
@@ -157,19 +180,12 @@ bool DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc,
   return undefined(args);
 }
 
-/* static */
-bool DebuggerMemory::getTrackingAllocationSites(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get trackingAllocationSites)", args,
-                       memory);
+bool DebuggerMemory::CallData::getTrackingAllocationSites() {
   args.rval().setBoolean(memory->getDebugger()->trackingAllocationSites);
   return true;
 }
 
-/* static */
-bool DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "drainAllocationsLog", args, memory);
+bool DebuggerMemory::CallData::drainAllocationsLog() {
   Debugger* dbg = memory->getDebugger();
 
   if (!dbg->trackingAllocationSites) {
@@ -252,20 +268,12 @@ bool DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerMemory::getMaxAllocationsLogLength(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get maxAllocationsLogLength)", args,
-                       memory);
+bool DebuggerMemory::CallData::getMaxAllocationsLogLength() {
   args.rval().setInt32(memory->getDebugger()->maxAllocationsLogLength);
   return true;
 }
 
-/* static */
-bool DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set maxAllocationsLogLength)", args,
-                       memory);
+bool DebuggerMemory::CallData::setMaxAllocationsLogLength() {
   if (!args.requireAtLeast(cx, "(set maxAllocationsLogLength)", 1)) {
     return false;
   }
@@ -293,22 +301,12 @@ bool DebuggerMemory::setMaxAllocationsLogLength(JSContext* cx, unsigned argc,
   return true;
 }
 
-/* static */
-bool DebuggerMemory::getAllocationSamplingProbability(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get allocationSamplingProbability)",
-                       args, memory);
+bool DebuggerMemory::CallData::getAllocationSamplingProbability() {
   args.rval().setDouble(memory->getDebugger()->allocationSamplingProbability);
   return true;
 }
 
-/* static */
-bool DebuggerMemory::setAllocationSamplingProbability(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set allocationSamplingProbability)",
-                       args, memory);
+bool DebuggerMemory::CallData::setAllocationSamplingProbability() {
   if (!args.requireAtLeast(cx, "(set allocationSamplingProbability)", 1)) {
     return false;
   }
@@ -344,27 +342,17 @@ bool DebuggerMemory::setAllocationSamplingProbability(JSContext* cx,
   return true;
 }
 
-/* static */
-bool DebuggerMemory::getAllocationsLogOverflowed(JSContext* cx, unsigned argc,
-                                                 Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get allocationsLogOverflowed)", args,
-                       memory);
+bool DebuggerMemory::CallData::getAllocationsLogOverflowed() {
   args.rval().setBoolean(memory->getDebugger()->allocationsLogOverflowed);
   return true;
 }
 
-/* static */
-bool DebuggerMemory::getOnGarbageCollection(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get onGarbageCollection)", args, memory);
+bool DebuggerMemory::CallData::getOnGarbageCollection() {
   return Debugger::getHookImpl(cx, args, *memory->getDebugger(),
                                Debugger::OnGarbageCollection);
 }
 
-/* static */
-bool DebuggerMemory::setOnGarbageCollection(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set onGarbageCollection)", args, memory);
+bool DebuggerMemory::CallData::setOnGarbageCollection() {
   return Debugger::setHookImpl(cx, args, *memory->getDebugger(),
                                Debugger::OnGarbageCollection);
 }
@@ -396,10 +384,7 @@ using JS::ubi::CountTypePtr;
 //
 // 3) We walk the tree of counts and produce JavaScript objects reporting the
 //    accumulated results.
-bool DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp) {
-  THIS_DEBUGGER_MEMORY(cx, argc, vp, "Debugger.Memory.prototype.census", args,
-                       memory);
-
+bool DebuggerMemory::CallData::takeCensus() {
   Census census(cx);
   CountTypePtr rootType;
 
@@ -454,18 +439,18 @@ bool DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp) {
 /* Debugger.Memory property and method tables. */
 
 /* static */ const JSPropertySpec DebuggerMemory::properties[] = {
-    JS_PSGS("trackingAllocationSites", getTrackingAllocationSites,
-            setTrackingAllocationSites, 0),
-    JS_PSGS("maxAllocationsLogLength", getMaxAllocationsLogLength,
-            setMaxAllocationsLogLength, 0),
-    JS_PSGS("allocationSamplingProbability", getAllocationSamplingProbability,
-            setAllocationSamplingProbability, 0),
-    JS_PSG("allocationsLogOverflowed", getAllocationsLogOverflowed, 0),
-
-    JS_PSGS("onGarbageCollection", getOnGarbageCollection,
-            setOnGarbageCollection, 0),
+    JS_DEBUG_PSGS("trackingAllocationSites", getTrackingAllocationSites,
+                  setTrackingAllocationSites),
+    JS_DEBUG_PSGS("maxAllocationsLogLength", getMaxAllocationsLogLength,
+                  setMaxAllocationsLogLength),
+    JS_DEBUG_PSGS("allocationSamplingProbability",
+                  getAllocationSamplingProbability,
+                  setAllocationSamplingProbability),
+    JS_DEBUG_PSG("allocationsLogOverflowed", getAllocationsLogOverflowed),
+    JS_DEBUG_PSGS("onGarbageCollection", getOnGarbageCollection,
+                  setOnGarbageCollection),
     JS_PS_END};
 
 /* static */ const JSFunctionSpec DebuggerMemory::methods[] = {
-    JS_FN("drainAllocationsLog", DebuggerMemory::drainAllocationsLog, 0, 0),
-    JS_FN("takeCensus", takeCensus, 0, 0), JS_FS_END};
+    JS_DEBUG_FN("drainAllocationsLog", drainAllocationsLog, 0),
+    JS_DEBUG_FN("takeCensus", takeCensus, 0), JS_FS_END};
