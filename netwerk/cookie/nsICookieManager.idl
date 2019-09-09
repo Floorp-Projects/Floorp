@@ -241,10 +241,10 @@ interface nsICookieManager : nsISupports
 
   /**
    * Remove all the cookies whose origin attributes matches aPattern and the
-   * host is the root domain of aHost.
+   * host is exactly aHost (without subdomain matching).
    *
-   * @param aHost the host to match the root domain
+   * @param aHost the host to match
    * @param aPattern origin attribute pattern in JSON format
    */
-  void removeCookiesFromRootDomain(in AUTF8String aHost, in AString aPattern);
+  void removeCookiesFromExactHost(in AUTF8String aHost, in AString aPattern);
 };
