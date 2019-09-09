@@ -5,6 +5,7 @@
 package mozilla.components.feature.media.ext
 
 import android.support.v4.media.session.PlaybackStateCompat
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.state.MediaState
 
@@ -21,6 +22,17 @@ internal fun MediaState.getMedia(): List<Media> {
         is MediaState.Playing -> media
         is MediaState.Paused -> media
         else -> emptyList()
+    }
+}
+
+/**
+ * Get the [Session] that caused this [MediaState] (if any).
+ */
+fun MediaState.getSession(): Session? {
+    return when (this) {
+        is MediaState.Playing -> session
+        is MediaState.Paused -> session
+        else -> null
     }
 }
 
@@ -53,16 +65,16 @@ internal fun MediaState.toPlaybackState() =
 /**
  * If this state is [MediaState.Playing] then pause all playing [Media].
  */
-internal fun MediaState.pauseIfPlaying() {
+fun MediaState.pauseIfPlaying() {
     if (this is MediaState.Playing) {
         media.pause()
     }
 }
 
 /**
- * If this state is [MediaState.Paused] then resume playing all paused media.
+ * If this state is [MediaState.Paused] then resume playing all paused [Media].
  */
-internal fun MediaState.playIfPaused() {
+fun MediaState.playIfPaused() {
     if (this is MediaState.Paused) {
         media.play()
     }
