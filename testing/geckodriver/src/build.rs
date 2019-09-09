@@ -38,3 +38,8 @@ impl Into<Value> for BuildInfo {
         Value::String(BuildInfo::version().to_string())
     }
 }
+
+/// Returns build-time information about geckodriver.
+pub fn build_info() -> BuildInfo {
+    BuildInfo {}
+}
