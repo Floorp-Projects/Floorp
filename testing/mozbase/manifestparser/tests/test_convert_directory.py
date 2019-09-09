@@ -43,10 +43,10 @@ class TestDirectoryConversion(unittest.TestCase):
         if directory is None:
             directory = create_realpath_tempdir()
         for i in files:
-            file(os.path.join(directory, i), 'w').write(i)
+            open(os.path.join(directory, i), 'w').write(i)
         subdir = os.path.join(directory, 'subdir')
         os.mkdir(subdir)
-        file(os.path.join(subdir, 'subfile'), 'w').write('baz')
+        open(os.path.join(subdir, 'subfile'), 'w').write('baz')
         return directory
 
     def test_directory_to_manifest(self):
@@ -145,13 +145,13 @@ class TestDirectoryConversion(unittest.TestCase):
         # boilerplate
         tempdir = create_realpath_tempdir()
         for i in range(10):
-            file(os.path.join(tempdir, str(i)), 'w').write(str(i))
+            open(os.path.join(tempdir, str(i)), 'w').write(str(i))
 
         # otherwise empty directory with a manifest file
         newtempdir = create_realpath_tempdir()
         manifest_file = os.path.join(newtempdir, 'manifest.ini')
         manifest_contents = str(convert([tempdir], relative_to=tempdir))
-        with file(manifest_file, 'w') as f:
+        with open(manifest_file, 'w') as f:
             f.write(manifest_contents)
 
         # get the manifest
@@ -169,11 +169,11 @@ class TestDirectoryConversion(unittest.TestCase):
                          ['1', 'manifest.ini'])
 
         # Update that one file and copy all the "tests":
-        file(os.path.join(tempdir, '1'), 'w').write('secret door')
+        open(os.path.join(tempdir, '1'), 'w').write('secret door')
         manifest.update(tempdir)
         self.assertEqual(sorted(os.listdir(newtempdir)),
                          ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'manifest.ini'])
-        self.assertEqual(file(os.path.join(newtempdir, '1')).read().strip(),
+        self.assertEqual(open(os.path.join(newtempdir, '1')).read().strip(),
                          'secret door')
 
         # clean up:

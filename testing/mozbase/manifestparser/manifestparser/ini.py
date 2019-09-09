@@ -7,12 +7,14 @@ from __future__ import absolute_import
 import os
 import sys
 
+from six import string_types
+
 __all__ = ['read_ini', 'combine_fields']
 
 
 class IniParseError(Exception):
     def __init__(self, fp, linenum, msg):
-        if isinstance(fp, basestring):
+        if isinstance(fp, string_types):
             path = fp
         elif hasattr(fp, 'name'):
             path = fp.name
@@ -43,8 +45,8 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     sections = []
     key = value = None
     section_names = set()
-    if isinstance(fp, basestring):
-        fp = file(fp)
+    if isinstance(fp, string_types):
+        fp = open(fp)
 
     # read the lines
     for (linenum, line) in enumerate(fp.read().splitlines(), start=1):

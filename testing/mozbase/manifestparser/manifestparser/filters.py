@@ -15,6 +15,8 @@ import os
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, MutableSequence
 
+from six import string_types
+
 from .expression import (
     parse,
     ParseError,
@@ -354,7 +356,7 @@ class tags(InstanceFilter):
 
     def __init__(self, tags):
         InstanceFilter.__init__(self, tags)
-        if isinstance(tags, basestring):
+        if isinstance(tags, string_types):
             tags = [tags]
         self.tags = tags
 
@@ -377,7 +379,7 @@ class pathprefix(InstanceFilter):
 
     def __init__(self, paths):
         InstanceFilter.__init__(self, paths)
-        if isinstance(paths, basestring):
+        if isinstance(paths, string_types):
             paths = [paths]
         self.paths = paths
 
