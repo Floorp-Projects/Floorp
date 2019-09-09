@@ -460,10 +460,6 @@ of exotic object like an opaque wrapper.
     can be accessed by code in the debuggee without going through a cross
     compartment wrapper.
 
-<code>isSameNative(<i>value</i>)</code>
-:   If <i>value</i> is a native function in the debugger's compartment, return
-    whether the referent is a native function for the same C++ native.
-
 <code>decompile([<i>pretty</i>])</code>
 :   If the referent is a function that is debuggee code, return the
     JavaScript source code for a function definition equivalent to the
