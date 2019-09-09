@@ -1356,7 +1356,8 @@ nsChangeHint nsStylePosition::CalcDifference(
   // It doesn't matter whether we're looking at the old or new visibility
   // struct, since a change between vertical and horizontal writing-mode will
   // cause a reframe.
-  bool isVertical = WritingMode(&aOldStyleVisibility).IsVertical();
+  bool isVertical =
+      aOldStyleVisibility.mWritingMode != NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
   if (isVertical ? widthChanged : heightChanged) {
     hint |= nsChangeHint_ReflowHintsForBSizeChange;
   }
