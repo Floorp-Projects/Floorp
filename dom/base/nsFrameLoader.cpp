@@ -87,6 +87,7 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/SessionStoreListener.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -2585,6 +2586,16 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 
     // Try to get the related content parent from our browser element.
     Tie(openerContentParent, sameTabGroupAs) = GetContentParent(mOwnerContent);
+    // If we have an opener, it may be in the same process as our new child, and
+    // therefore needs to be in the same tab group. The long term solution to
+    // this problem is to get rid of TabGroups entirely. In the short term, the
+    // following hack deals with the specific problem that when a window has an
+    // opener, it asserts that its BrowserChild is bound to the same tab group
+    // as its opener. There are likely other mismatches that it does not handle,
+    // but those will all be fixed by the removal of TabGroups.
+    if (RefPtr<BrowsingContext> openerBC = mBrowsingContext->GetOpener()) {
+      sameTabGroupAs = openerBC->Canonical()->GetCurrentWindowGlobal()->GetBrowserParent();
+    }
   }
 
   uint32_t chromeFlags = 0;
