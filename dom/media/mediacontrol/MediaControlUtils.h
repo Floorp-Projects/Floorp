@@ -63,7 +63,7 @@ const char* ToMediaControlActionsStr(
 
 void NotifyMediaStarted(uint64_t aWindowID) {
   RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc) {
+  if (!bc || bc->IsDiscarded()) {
     return;
   }
   LOG("Notify media started in BC %" PRId64, bc->Id());
@@ -73,7 +73,7 @@ void NotifyMediaStarted(uint64_t aWindowID) {
 
 void NotifyMediaStopped(uint64_t aWindowID) {
   RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc) {
+  if (!bc || bc->IsDiscarded()) {
     return;
   }
   LOG("Notify media stopped in BC %" PRId64, bc->Id());
@@ -83,7 +83,7 @@ void NotifyMediaStopped(uint64_t aWindowID) {
 
 void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible) {
   RefPtr<BrowsingContext> bc = GetBrowingContextByWindowID(aWindowID);
-  if (!bc) {
+  if (!bc || bc->IsDiscarded()) {
     return;
   }
   LOG("Notify media became %s in BC %" PRId64,

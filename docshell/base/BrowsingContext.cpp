@@ -941,7 +941,12 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
                  aSubjectPrincipal, aError);
 }
 
-void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
+nsresult BrowsingContext::Transaction::Commit(
+    BrowsingContext* aBrowsingContext) {
+  if (NS_WARN_IF(aBrowsingContext->IsDiscarded())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!Validate(aBrowsingContext, nullptr)) {
     MOZ_CRASH("Cannot commit invalid BrowsingContext transaction");
   }
@@ -969,7 +974,9 @@ void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
   }
 
   Apply(aBrowsingContext);
+  return NS_OK;
 }
+
 bool BrowsingContext::Transaction::Validate(BrowsingContext* aBrowsingContext,
                                             ContentParent* aSource) {
 #define MOZ_BC_FIELD(name, ...)                                        \
