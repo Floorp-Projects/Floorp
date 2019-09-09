@@ -292,7 +292,7 @@ bool BasePrincipal::Subsumes(nsIPrincipal* aOther,
 
 NS_IMETHODIMP
 BasePrincipal::Equals(nsIPrincipal* aOther, bool* aResult) {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aOther);
 
   *aResult = FastEquals(aOther);
 
@@ -301,7 +301,7 @@ BasePrincipal::Equals(nsIPrincipal* aOther, bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aOther);
 
   *aResult = FastEqualsConsideringDomain(aOther);
 
@@ -310,7 +310,7 @@ BasePrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult) {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aOther);
 
   *aResult = FastSubsumes(aOther);
 
@@ -319,7 +319,7 @@ BasePrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult) {
 
 NS_IMETHODIMP
 BasePrincipal::SubsumesConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aOther);
 
   *aResult = FastSubsumesConsideringDomain(aOther);
 
@@ -329,7 +329,7 @@ BasePrincipal::SubsumesConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
 NS_IMETHODIMP
 BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther,
                                                     bool* aResult) {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aOther);
 
   *aResult = FastSubsumesConsideringDomainIgnoringFPD(aOther);
 
@@ -339,6 +339,8 @@ BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther,
 NS_IMETHODIMP
 BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport,
                             bool aAllowIfInheritsPrincipal) {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   // Check the internal method first, which allows us to quickly approve loads
   // for the System Principal.
   if (MayLoadInternal(aURI)) {
