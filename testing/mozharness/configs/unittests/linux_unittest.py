@@ -13,7 +13,9 @@ ADJUST_MOUSE_AND_SCREEN = False
 # Note: keep these Valgrind .sup file names consistent with those
 # in testing/mochitest/mochitest_options.py.
 VALGRIND_SUPP_DIR = os.path.join(os.getcwd(), "build/tests/mochitest")
-NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/bin/node")
+NODEJS_PATH = None
+if 'MOZ_FETCHES_DIR' in os.environ:
+    NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/bin/node")
 
 VALGRIND_SUPP_CROSS_ARCH = os.path.join(VALGRIND_SUPP_DIR,
                                         "cross-architecture.sup")
