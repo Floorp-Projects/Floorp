@@ -527,6 +527,19 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
+
+    if (aFeature == FEATURE_WEBRENDER) {
+      NS_LossyConvertUTF16toASCII model(mModel);
+      bool isBlocked = !model.Equals("Pixel 2", nsCaseInsensitiveCStringComparator());
+
+      if (isBlocked) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+      }
+      return NS_OK;
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(

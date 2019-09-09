@@ -52,6 +52,8 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "blocked-release-channel-nvidia";
     case FeatureStatus::BlockedReleaseChannelBattery:
       return "blocked-release-channel-battery";
+    case FeatureStatus::BlockedReleaseChannelAndroid:
+      return "blocked-release-channel-android";
     case FeatureStatus::Blacklisted:
       return "blacklisted";
     case FeatureStatus::OptIn:
