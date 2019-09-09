@@ -105,6 +105,7 @@ function checkResults() {
 
     // check if script loaded
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    var imgcontent = testframe.contentWindow.document.getElementById('testimage').dataset.result;
     if (curTest.script_result === "blocked") {
       todo_is(divcontent, curTest.script_result, curTest.script_desc);
     }
@@ -115,10 +116,10 @@ function checkResults() {
     // check if image loaded
     var testimg = testframe.contentWindow.document.getElementById("testimage");
     if (curTest.img_result === "allowed") {
-      ok(testimg.complete, curTest.img_desc);
+      todo_is(imgcontent, curTest.img_result, curTest.img_desc);
     }
     else {
-      ok((testimg.width == 0) && (testimg.height == 0), curTest.img_desc);
+      is(imgcontent, curTest.img_result, curTest.img_desc);
     }
   }
   catch (e) {
