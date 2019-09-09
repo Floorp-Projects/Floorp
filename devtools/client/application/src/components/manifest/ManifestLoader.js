@@ -35,6 +35,14 @@ class ManifestLoader extends PureComponent {
   }
 
   componentDidMount() {
+    this.loadManifestIfNeeded();
+  }
+
+  componentDidUpdate() {
+    this.loadManifestIfNeeded();
+  }
+
+  loadManifestIfNeeded() {
     const { isLoading, hasFetchedManifest } = this.props;
     const shallLoad = !isLoading && !hasFetchedManifest;
     if (shallLoad) {
@@ -70,7 +78,7 @@ class ManifestLoader extends PureComponent {
     const loadingDOM = isLoading
       ? Localized(
           { id: "manifest-loading" },
-          p({ className: "manifest-loader__load" })
+          p({ className: "manifest-loader__load js-manifest-loading" })
         )
       : null;
 
