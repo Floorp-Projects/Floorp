@@ -28,4 +28,8 @@ class AuthCustomTabActivity : CustomTabActivity() {
         val accountManager = components.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
     }
+
+    companion object {
+        const val EXTRA_AUTH_CUSTOM_TAB = "support.customtabs.extra.AUTH"
+    }
 }

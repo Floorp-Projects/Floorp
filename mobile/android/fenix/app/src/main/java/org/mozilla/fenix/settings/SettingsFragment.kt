@@ -201,7 +201,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_privacy_link) -> {
                 requireContext().let { context ->
-                    val intent = SupportUtils.createCustomTabIntent(context, SupportUtils.PRIVACY_NOTICE_URL)
+                    val intent = SupportUtils.createCustomTabIntent(context, SupportUtils.getPrivacyNoticeUrl())
                     startActivity(intent)
                 }
             }

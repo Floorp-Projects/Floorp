@@ -19,7 +19,7 @@ class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(vi
         view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
 
         view.read_button.setOnClickListener {
-            val intent = SupportUtils.createCustomTabIntent(view.context, SupportUtils.PRIVACY_NOTICE_URL)
+            val intent = SupportUtils.createCustomTabIntent(view.context, SupportUtils.getPrivacyNoticeUrl())
             view.context.startActivity(intent)
         }
     }

@@ -6,11 +6,13 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.net.toUri
+import mozilla.components.support.ktx.android.content.appVersionName
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.ext.getColorFromAttr
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
@@ -20,12 +22,8 @@ object SupportUtils {
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
     const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
     const val FENIX_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
-    val PRIVACY_NOTICE_URL: String
-        get() = "https://www.mozilla.org/${getLanguageTag(Locale.getDefault())}/privacy/firefox/"
 
-    enum class SumoTopic(
-        internal val topicStr: String
-    ) {
+    enum class SumoTopic(internal val topicStr: String) {
         HELP("faq-android"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),
@@ -33,38 +31,46 @@ object SupportUtils {
         WHATS_NEW("whats-new-firefox-preview")
     }
 
-    fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {
+    /**
+     * Gets a support page URL for the corresponding topic.
+     */
+    fun getSumoURLForTopic(
+        context: Context,
+        topic: SumoTopic,
+        locale: Locale = Locale.getDefault()
+    ): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
         // Remove the whitespace so a search is not triggered:
-        val appVersion = getAppVersion(context).replace(" ", "")
+        val appVersion = context.appVersionName?.replace(" ", "")
         val osTarget = "Android"
-        val langTag = getLanguageTag(Locale.getDefault())
+        val langTag = getLanguageTag(locale)
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
     }
 
-    // Used when the app version and os are not part of the URL
-    fun getGenericSumoURLForTopic(topic: SumoTopic): String {
+    /**
+     * Gets a support page URL for the corresponding topic.
+     * Used when the app version and os are not part of the URL.
+     */
+    fun getGenericSumoURLForTopic(topic: SumoTopic, locale: Locale = Locale.getDefault()): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
-        val langTag = getLanguageTag(Locale.getDefault())
+        val langTag = getLanguageTag(locale)
         return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
-    fun createCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
-        putExtra(context.getString(R.string.intent_extra_toolbar_color), context.getColorFromAttr(R.attr.foundation))
-        putExtra(context.getString(R.string.intent_extra_session), true)
-        setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
-        data = Uri.parse(url)
-        setPackage(context.packageName)
-    }
+    fun getPrivacyNoticeUrl(locale: Locale = Locale.getDefault()) =
+        "https://www.mozilla.org/${getLanguageTag(locale)}/privacy/firefox/"
 
-    fun createAuthCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
-        putExtra(context.getString(R.string.intent_extra_toolbar_color), context.getColorFromAttr(R.attr.foundation))
-        putExtra(context.getString(R.string.intent_extra_session), true)
-        putExtra(context.getString(R.string.intent_extra_auth), true)
-        setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
-        data = Uri.parse(url)
-        setPackage(context.packageName)
-    }
+    fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
+        .setInstantAppsEnabled(false)
+        .setToolbarColor(context.getColorFromAttr(R.attr.foundation))
+        .build()
+        .intent
+        .setData(url.toUri())
+        .setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
+        .setPackage(context.packageName)
+
+    fun createAuthCustomTabIntent(context: Context, url: String): Intent =
+        createCustomTabIntent(context, url).putExtra(EXTRA_AUTH_CUSTOM_TAB, true)
 
     private fun getEncodedTopicUTF8(topic: String): String {
         try {
@@ -74,20 +80,9 @@ object SupportUtils {
         }
     }
 
-    private fun getAppVersion(context: Context): String {
-        try {
-            return context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            // This should be impossible - we should always be able to get information about ourselves:
-            throw IllegalStateException("Unable find package details for Fenix", e)
-        }
-    }
-
     private fun getLanguageTag(locale: Locale): String {
         val language = locale.language
         val country = locale.country // Can be an empty string.
-        return if (country == "") {
-            language
-        } else "$language-$country"
+        return if (country.isEmpty()) language else "$language-$country"
     }
 }

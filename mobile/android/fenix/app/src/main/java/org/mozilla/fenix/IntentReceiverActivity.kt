@@ -12,6 +12,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
+import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
@@ -62,7 +63,7 @@ class IntentReceiverActivity : Activity() {
     private fun setIntentActivity(intent: Intent) {
         val openToBrowser = when {
             components.utils.customTabIntentProcessor.matches(intent) -> {
-                val activityClass = if (intent.hasExtra(getString(R.string.intent_extra_auth))) {
+                val activityClass = if (intent.hasExtra(EXTRA_AUTH_CUSTOM_TAB)) {
                     AuthCustomTabActivity::class
                 } else {
                     CustomTabActivity::class
