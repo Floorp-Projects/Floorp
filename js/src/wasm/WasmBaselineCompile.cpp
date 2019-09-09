@@ -6713,7 +6713,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitSetOrTeeLocal(uint32_t slot);
 
   void endBlock(ExprType type);
-  void endLoop(ExprType type);
   void endIfThen();
   void endIfThenElse(ExprType type);
 
@@ -8182,28 +8181,6 @@ bool BaseCompiler::emitLoop() {
   return true;
 }
 
-void BaseCompiler::endLoop(ExprType type) {
-  Control& block = controlItem();
-
-  Maybe<AnyReg> r;
-  if (!deadCode_) {
-    r = popJoinRegUnlessVoid(type);
-    // block.bceSafeOnExit need not be updated because it won't be used for
-    // the fallthrough path.
-  }
-
-  fr.popStackOnBlockExit(block.stackHeight, deadCode_);
-  popValueStackTo(block.stackSize);
-
-  // bceSafe_ stays the same along the fallthrough path because branches to
-  // loops branch to the top.
-
-  // Retain the value stored in joinReg by all paths.
-  if (!deadCode_) {
-    pushJoinRegUnlessVoid(r);
-  }
-}
-
 // The bodies of the "then" and "else" arms can be arbitrary sequences
 // of expressions, they push control and increment the nesting and can
 // even be targeted by jumps.  A branch to the "if" block branches to
@@ -8370,7 +8347,8 @@ bool BaseCompiler::emitEnd() {
       endBlock(type);
       break;
     case LabelKind::Loop:
-      endLoop(type);
+      // The end of a loop isn't a branch target, so we can just leave its
+      // results on the stack to be consumed by the outer block.
       break;
     case LabelKind::Then:
       endIfThen();
