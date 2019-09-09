@@ -63,6 +63,10 @@ add_task(async function test_login_item() {
 
       async function test_discard_dialog(exitPoint) {
         editButton.click();
+        await ContentTaskUtils.waitForCondition(
+          () => loginItem.dataset.editing,
+          "Entering edit mode"
+        );
         await Promise.resolve();
 
         usernameInput.value += "-undome";
@@ -102,7 +106,7 @@ add_task(async function test_login_item() {
         );
         is(
           passwordInput.value,
-          login.password,
+          " ".repeat(login.password.length),
           "Password change should be reverted"
         );
         is(
@@ -118,6 +122,10 @@ add_task(async function test_login_item() {
       await test_discard_dialog(cancelButton);
 
       editButton.click();
+      await ContentTaskUtils.waitForCondition(
+        () => loginItem.dataset.editing,
+        "Entering edit mode"
+      );
       await Promise.resolve();
 
       let revealCheckbox = loginItem.shadowRoot.querySelector(
@@ -132,6 +140,8 @@ add_task(async function test_login_item() {
       usernameInput.value += "-saveme";
       passwordInput.value += "-saveme";
 
+      // Cache the value since it will change upon leaving edit mode.
+      let passwordInputValue = passwordInput.value;
       ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
 
       let saveChangesButton = loginItem.shadowRoot.querySelector(
@@ -145,7 +155,7 @@ add_task(async function test_login_item() {
         return (
           updatedLogin &&
           updatedLogin.username == usernameInput.value &&
-          updatedLogin.password == passwordInput.value
+          updatedLogin.password == passwordInputValue
         );
       }, "Waiting for corresponding login in login list to update");
 
@@ -164,6 +174,10 @@ add_task(async function test_login_item() {
       );
 
       editButton.click();
+      await ContentTaskUtils.waitForCondition(
+        () => loginItem.dataset.editing,
+        "Entering edit mode"
+      );
       await Promise.resolve();
 
       ok(loginItem.dataset.editing, "LoginItem should be in 'edit' mode");
