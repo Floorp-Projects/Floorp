@@ -41,6 +41,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void SetOwnerProcessId(uint64_t aProcessId);
 
+  void SetInFlightProcessId(uint64_t aProcessId);
+  uint64_t GetInFlightProcessId() const { return mInFlightProcessId; }
+
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 
   // Called by WindowGlobalParent to register and unregister window globals.
@@ -92,6 +95,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
+
+  // The ID of the former owner process during an ownership change, which may
+  // have in-flight messages that assume it is still the owner.
+  uint64_t mInFlightProcessId = 0;
 
   // All live window globals within this browsing context.
   nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;

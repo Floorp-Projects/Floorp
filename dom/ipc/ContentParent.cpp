@@ -5838,7 +5838,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 bool ContentParent::CheckBrowsingContextOwnership(
     BrowsingContext* aBC, const char* aOperation) const {
   if (!aBC->Canonical()->IsOwnedByProcess(ChildID())) {
-    MOZ_DIAGNOSTIC_ASSERT(false,
+    MOZ_DIAGNOSTIC_ASSERT(ChildID() == aBC->Canonical()->GetInFlightProcessId(),
                           "Attempt to modify a BrowsingContext from a child "
                           "which doesn't own it");
 
