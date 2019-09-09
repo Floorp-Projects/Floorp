@@ -2478,6 +2478,29 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   EnsureHardLineEndsWithLastChildOf(dom::Element& aRemovingContainerElement);
 
+  /**
+   * RemoveAlignFromDescendants() removes align attributes, text-align
+   * properties and <center> elements in aElement.
+   *
+   * @param aElement    Alignment information of the node and/or its
+   *                    descendants will be removed.
+   *                    NOTE: aElement must not be a `<table>` element.
+   * @param aAlignType  New align value to be set only when it's in
+   *                    CSS mode and this method meets <table> or <hr>.
+   *                    XXX This is odd and not clear when you see caller of
+   *                    this method.  Do you have better idea?
+   * @param aEditTarget If `OnlyDescendantsExceptTable`, modifies only
+   *                    descendants of aElement.
+   *                    If `NodeAndDescendantsExceptTable`, modifies `aElement`
+   *                    and its descendants.
+   */
+  enum class EditTarget {
+    OnlyDescendantsExceptTable,
+    NodeAndDescendantsExceptTable
+  };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveAlignFromDescendants(
+      Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
