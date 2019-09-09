@@ -203,7 +203,9 @@ $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: confi
 # export, which ensures it exists before recursing the rust targets, tricking
 # Make into keeping them early.
 $(rust_targets): $(DEPTH)/.cargo/config
+ifndef TEST_MOZBUILD
 export:: $(DEPTH)/.cargo/config
+endif
 
 # When building gtest as part of the build (LINK_GTEST_DURING_COMPILE),
 # force the build system to get to it first, so that it can be linked
