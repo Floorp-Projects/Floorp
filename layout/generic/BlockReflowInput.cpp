@@ -17,6 +17,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "TextOverflow.h"
 
 #ifdef DEBUG
@@ -76,7 +77,20 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   mContainerSize.height =
       aReflowInput.ComputedHeight() + mBorderPadding.TopBottom(wm);
 
-  if ((aBStartMarginRoot && !logicalSkipSides.BStart()) ||
+  // A column-content after the column-span split has a previous non-fluid
+  // continuation, and has its block-start side skipped. However, if this
+  // column-content is the first column in a ColumnSet, we want its first child
+  // to have a chance to apply its block-start margin.
+  //
+  // XXX: We might want to separate two ideas: apply this block's own
+  // block-start margin versus allow this block's first child apply its
+  // block-start margin.
+  const bool isFirstColumnContentInMulticolLine =
+      StaticPrefs::layout_css_column_span_enabled() &&
+      aFrame->Style()->GetPseudoType() == PseudoStyleType::columnContent &&
+      !aFrame->GetPrevInFlow();
+  if ((aBStartMarginRoot &&
+       (!logicalSkipSides.BStart() || isFirstColumnContentInMulticolLine)) ||
       0 != mBorderPadding.BStart(wm)) {
     mFlags.mIsBStartMarginRoot = true;
     mFlags.mShouldApplyBStartMargin = true;
