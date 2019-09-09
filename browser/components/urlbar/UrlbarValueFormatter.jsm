@@ -92,7 +92,10 @@ class UrlbarValueFormatter {
         directionality == this.window.windowUtils.DIRECTION_RTL &&
         url[preDomain.length + domain.length] != "\u200E"
       ) {
+        this.urlbarInput.setAttribute("hasrtldomain", "true");
         this.inputField.scrollLeft = this.inputField.scrollLeftMax;
+      } else {
+        this.urlbarInput.removeAttribute("hasrtldomain");
       }
     });
   }

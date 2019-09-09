@@ -15,7 +15,13 @@ class TestSearchCounts(TelemetryTestCase):
     """Test for SEARCH_COUNTS across sessions."""
 
     def get_default_search_engine(self):
-        """Retrieve the identifier of the default search engine."""
+        """Retrieve the identifier of the default search engine.
+
+        We found that it's required to initialize the search service before
+        attempting to retrieve the default search engine. Not calling init
+        would result in a JavaScript error (see bug 1543960 for more
+        information).
+        """
 
         script = """\
         let [resolve] = arguments;

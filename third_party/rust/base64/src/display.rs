@@ -54,8 +54,9 @@ impl<'a, 'b: 'a> super::chunked_encoder::Sink for FormatterSink<'a, 'b> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::chunked_encoder::tests::{chunked_encode_matches_normal_encode_random,
-                                               SinkTestHelper};
+    use super::super::chunked_encoder::tests::{
+        chunked_encode_matches_normal_encode_random, SinkTestHelper,
+    };
     use super::super::*;
     use super::*;
 

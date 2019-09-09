@@ -7,6 +7,7 @@ const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
+  RESET_MANIFEST,
 } = require("devtools/client/application/src/constants.js");
 
 const {
@@ -131,6 +132,20 @@ add_task(async function() {
   MANIFEST_PROCESSING.forEach(({ source, processed }) => {
     test_manifest_processing(source, processed);
   });
+});
+
+add_task(async function() {
+  info("Test manifest reducer: RESET_MANIFEST action");
+
+  const state = Object.assign(ManifestState(), {
+    isLoading: true,
+    manifest: { identity: [{ key: "name", value: "Foo" }] },
+    errorMessage: "some error",
+  });
+  const action = { type: RESET_MANIFEST };
+  const newState = manifestReducer(state, action);
+
+  deepEqual(newState, ManifestState(), "Manifest has been reset to defaults");
 });
 
 function test_manifest_processing(source, processed) {

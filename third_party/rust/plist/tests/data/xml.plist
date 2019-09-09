@@ -22,5 +22,11 @@
 	<date>1981-05-16T11:32:06Z</date>
 	<key>Blank</key>
 	<string></string>
+    <key>BiggestNumber</key>
+    <integer>18446744073709551615</integer>
+    <key>SmallestNumber</key>
+    <integer>-9223372036854775808</integer>
+    <key>HexademicalNumber</key>
+    <integer>0xDEADBEEF</integer>
 </dict>
 </plist>

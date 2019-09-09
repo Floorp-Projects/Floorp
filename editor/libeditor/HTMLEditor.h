@@ -2333,20 +2333,44 @@ class HTMLEditor final : public TextEditor,
   ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin);
 
   /**
-   * IndentAroundSelectionWithCSS() indents around Selection with CSS.
+   * HandleCSSIndentAtSelectionInternal() indents around Selection with CSS.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * need to check if the editor is still available even if this returns
    * NS_OK.
+   * NOTE: Use HandleCSSIndentAtSelection() instead.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult IndentAroundSelectionWithCSS();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleCSSIndentAtSelectionInternal();
 
   /**
-   * IndentAroundSelectionWithHTML() indents around Selection with HTML.
+   * HandleHTMLIndentAtSelectionInternal() indents around Selection with HTML.
    * This method creates AutoSelectionRestorer.  Therefore, each caller
    * need to check if the editor is still available even if this returns
    * NS_OK.
+   * NOTE: Use HandleHTMLIndentAtSelection() instead.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult IndentAroundSelectionWithHTML();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  HandleHTMLIndentAtSelectionInternal();
+
+  /**
+   * HandleCSSIndentAtSelection() indents around Selection with CSS.
+   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
+   *       want to call this directly, you should check whether you need
+   *       do do something which `HandleIndentAtSelection()` does.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleCSSIndentAtSelection();
+
+  /**
+   * HandleHTMLIndentAtSelection() indents around Selection with HTML.
+   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
+   *       want to call this directly, you should check whether you need
+   *       do do something which `HandleIndentAtSelection()` does.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult HandleHTMLIndentAtSelection();
+
+  /**
+   * HandleIndentAtSelection() indents around Selection with HTML or CSS.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult HandleIndentAtSelection();
 
   /**
    * OutdentPartOfBlock() outdents the nodes between aStartOfOutdent and
@@ -2376,6 +2400,106 @@ class HTMLEditor final : public TextEditor,
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent,
                      BlockIndentedWith aBlockIndentedWith);
+
+  /**
+   * HandleOutdentAtSelectionInternal() outdents contents around Selection.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * needs to check if the editor is still available even if this returns
+   * NS_OK.
+   * NOTE: Call `HandleOutdentAtSelection()` instead.
+   *
+   * @return                    The left content is left content of last
+   *                            outdented element.
+   *                            The right content is right content of last
+   *                            outdented element.
+   *                            The middle content is middle content of last
+   *                            outdented element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffFromNodeResult
+  HandleOutdentAtSelectionInternal();
+
+  /**
+   * HandleOutdentAtSelection() outdents contents around Selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult HandleOutdentAtSelection();
+
+  /**
+   * AlignBlockContentsWithDivElement() sets align attribute of <div> element
+   * which is only child of aBlockElement to aAlignType.  If aBlockElement
+   * has 2 or more children or does not have a `<div>` element, inserts a
+   * new `<div>` element into aBlockElement and move all children of
+   * aBlockElement into the new `<div>` element.
+   *
+   * @param aBlockElement       The element node whose contents should be
+   *                            aligned to aAlignType.  This should be
+   *                            an element which can have `<div>` element
+   *                            as its child.
+   * @param aAlignType          New value of align attribute of `<div>`
+   *                            element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AlignBlockContentsWithDivElement(
+      dom::Element& aBlockElement, const nsAString& aAlignType);
+
+  /**
+   * AlignContentsInAllTableCellsAndListItems() calls
+   * AlignBlockContentsWithDivElement() for aligning contents in every list
+   * item element and table cell element in aElement.
+   *
+   * @param aElement            The node which is or whose descendants should
+   *                            be aligned to aAlignType.
+   * @param aAlignType          New value of `align` attribute of `<div>`.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AlignContentsInAllTableCellsAndListItems(dom::Element& aElement,
+                                           const nsAString& aAlignType);
+
+  /**
+   * MakeTransitionList() detects all the transitions in the array, where a
+   * transition means that adjacent nodes in the array don't have the same
+   * parent.
+   */
+  static void MakeTransitionList(
+      const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+      nsTArray<bool>& aTransitionArray);
+
+  /**
+   * EnsureHardLineBeginsWithFirstChildOf() inserts `<br>` element before
+   * first child of aRemovingContainerElement if it will not be start of a
+   * hard line after removing aRemovingContainerElement.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureHardLineBeginsWithFirstChildOf(dom::Element& aRemovingContainerElement);
+
+  /**
+   * EnsureHardLineEndsWithLastChildOf() inserts `<br>` element after last
+   * child of aRemovingContainerElement if it will not be end of a hard line
+   * after removing aRemovingContainerElement.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureHardLineEndsWithLastChildOf(dom::Element& aRemovingContainerElement);
+
+  /**
+   * RemoveAlignFromDescendants() removes align attributes, text-align
+   * properties and <center> elements in aElement.
+   *
+   * @param aElement    Alignment information of the node and/or its
+   *                    descendants will be removed.
+   *                    NOTE: aElement must not be a `<table>` element.
+   * @param aAlignType  New align value to be set only when it's in
+   *                    CSS mode and this method meets <table> or <hr>.
+   *                    XXX This is odd and not clear when you see caller of
+   *                    this method.  Do you have better idea?
+   * @param aEditTarget If `OnlyDescendantsExceptTable`, modifies only
+   *                    descendants of aElement.
+   *                    If `NodeAndDescendantsExceptTable`, modifies `aElement`
+   *                    and its descendants.
+   */
+  enum class EditTarget {
+    OnlyDescendantsExceptTable,
+    NodeAndDescendantsExceptTable
+  };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveAlignFromDescendants(
+      Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -2910,15 +3034,14 @@ class HTMLEditor final : public TextEditor,
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   /**
-   * IndentOrOutdentAsSubAction() indents or outdents the content around
-   * Selection.  Callers have to guarantee that there is a placeholder
-   * transaction.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eIndent or
-   *                            EditSubAction::eOutdent.
+   * IndentAsSubAction() indents the content around Selection.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult IndentAsSubAction();
+
+  /**
+   * OutdentAsSubAction() outdents the content around Selection.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult OutdentAsSubAction();
 
   MOZ_CAN_RUN_SCRIPT
   nsresult LoadHTML(const nsAString& aInputString);

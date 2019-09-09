@@ -3,6 +3,7 @@ extern crate indexmap;
 extern crate itertools;
 #[macro_use]
 extern crate quickcheck;
+extern crate rand;
 
 extern crate fnv;
 
@@ -11,6 +12,8 @@ use itertools::Itertools;
 
 use quickcheck::Arbitrary;
 use quickcheck::Gen;
+
+use rand::Rng;
 
 use fnv::FnvHasher;
 use std::hash::{BuildHasher, BuildHasherDefault};

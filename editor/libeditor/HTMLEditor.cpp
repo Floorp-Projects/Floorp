@@ -2167,12 +2167,9 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eIndent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = IndentAsSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(), "IndentAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
@@ -2186,110 +2183,9 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  nsresult rv = IndentOrOutdentAsSubAction(EditSubAction::eOutdent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditor::IndentOrOutdentAsSubAction(
-    EditSubAction aIndentOrOutdent) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(mRules);
-  MOZ_ASSERT(mPlaceholderBatch);
-
-  MOZ_ASSERT(aIndentOrOutdent == EditSubAction::eIndent ||
-             aIndentOrOutdent == EditSubAction::eOutdent);
-
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  bool cancel, handled;
-  AutoEditSubActionNotifier startToHandleEditSubAction(*this, aIndentOrOutdent,
-                                                       nsIEditor::eNext);
-
-  EditSubActionInfo subActionInfo(aIndentOrOutdent);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!handled && SelectionRefPtr()->IsCollapsed() &&
-      aIndentOrOutdent == EditSubAction::eIndent) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    EditorDOMPoint atStartOfSelection(firstRange->StartRef());
-    if (NS_WARN_IF(!atStartOfSelection.IsSet()) ||
-        NS_WARN_IF(!atStartOfSelection.GetContainerAsContent())) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Have to find a place to put the blockquote.
-    EditorDOMPoint pointToInsertBlockquote(atStartOfSelection);
-
-    while (!CanContainTag(*pointToInsertBlockquote.GetContainer(),
-                          *nsGkAtoms::blockquote)) {
-      pointToInsertBlockquote.Set(pointToInsertBlockquote.GetContainer());
-      if (NS_WARN_IF(!pointToInsertBlockquote.IsSet()) ||
-          NS_WARN_IF(!pointToInsertBlockquote.GetContainerAsContent())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    if (pointToInsertBlockquote.GetContainer() !=
-        atStartOfSelection.GetContainer()) {
-      // We need to split up to the child of parent.
-      SplitNodeResult splitBlockquoteResult = SplitNodeDeepWithTransaction(
-          MOZ_KnownLive(*pointToInsertBlockquote.GetChild()),
-          atStartOfSelection, SplitAtEdges::eAllowToCreateEmptyContainer);
-      if (NS_WARN_IF(splitBlockquoteResult.Failed())) {
-        return splitBlockquoteResult.Rv();
-      }
-      pointToInsertBlockquote = splitBlockquoteResult.SplitPoint();
-      if (NS_WARN_IF(!pointToInsertBlockquote.IsSet())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    // Create a list and insert it before the right node if we split some
-    // parents of start of selection above, or just start of selection
-    // otherwise.
-    RefPtr<Element> newBQ = CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                                      pointToInsertBlockquote);
-    if (NS_WARN_IF(!newBQ)) {
-      return NS_ERROR_FAILURE;
-    }
-    // put a space in it so layout will draw the list item
-    ErrorResult error;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(newBQ, 0), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-    rv = InsertTextAsSubAction(NS_LITERAL_STRING(" "));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    // Reposition selection to before the space character.
-    firstRange = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
-    }
-    SelectionRefPtr()->Collapse(
-        RawRangeBoundary(firstRange->GetStartContainer(), 0), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-  }
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  EditActionResult result = OutdentAsSubAction();
+  NS_WARNING_ASSERTION(result.Succeeded(), "OutdentAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 // TODO: IMPLEMENT ALIGNMENT!

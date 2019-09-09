@@ -14,7 +14,8 @@
 //!
 //! ## Rust Version
 //!
-//! This version of indexmap requires Rust 1.18 or later.
+//! This version of indexmap requires Rust 1.18 or later, or 1.30+ for
+//! development builds.
 //!
 //! The indexmap 1.x release series will use a carefully considered version
 //! upgrade policy, where in a later 1.x version, we will raise the minimum
@@ -30,6 +31,11 @@ mod mutable_keys;
 
 pub mod set;
 pub mod map;
+
+// Placed after `map` and `set` so new `rayon` methods on the types
+// are documented after the "normal" methods.
+#[cfg(feature = "rayon")]
+mod rayon;
 
 pub use equivalent::Equivalent;
 pub use map::IndexMap;
@@ -77,3 +83,11 @@ impl<K, V> Bucket<K, V> {
     fn muts(&mut self) -> (&mut K, &mut V) { (&mut self.key, &mut self.value) }
 }
 
+trait Entries {
+    type Entry;
+    fn into_entries(self) -> Vec<Self::Entry>;
+    fn as_entries(&self) -> &[Self::Entry];
+    fn as_entries_mut(&mut self) -> &mut [Self::Entry];
+    fn with_entries<F>(&mut self, f: F)
+        where F: FnOnce(&mut [Self::Entry]);
+}

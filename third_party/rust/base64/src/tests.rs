@@ -5,21 +5,22 @@ use *;
 
 use std::str;
 
-use self::rand::distributions::{Distribution, Range};
-use self::rand::{Rng, FromEntropy};
+use self::rand::distributions::{Distribution, Uniform};
+use self::rand::{FromEntropy, Rng};
+use self::rand::seq::SliceRandom;
 
 #[test]
 fn roundtrip_random_config_short() {
     // exercise the slower encode/decode routines that operate on shorter buffers more vigorously
-    roundtrip_random_config(Range::new(0, 50), 10_000);
+    roundtrip_random_config(Uniform::new(0, 50), 10_000);
 }
 
 #[test]
 fn roundtrip_random_config_long() {
-    roundtrip_random_config(Range::new(0, 1000), 10_000);
+    roundtrip_random_config(Uniform::new(0, 1000), 10_000);
 }
 
-pub fn assert_encode_sanity(encoded: &str, config: &Config, input_len: usize) {
+pub fn assert_encode_sanity(encoded: &str, config: Config, input_len: usize) {
     let input_rem = input_len % 3;
     let expected_padding_len = if input_rem > 0 {
         if config.pad {
@@ -31,7 +32,7 @@ pub fn assert_encode_sanity(encoded: &str, config: &Config, input_len: usize) {
         0
     };
 
-    let expected_encoded_len = encoded_size(input_len, &config).unwrap();
+    let expected_encoded_len = encoded_size(input_len, config).unwrap();
 
     assert_eq!(expected_encoded_len, encoded.len());
 
@@ -42,10 +43,7 @@ pub fn assert_encode_sanity(encoded: &str, config: &Config, input_len: usize) {
     let _ = str::from_utf8(encoded.as_bytes()).expect("Base64 should be valid utf8");
 }
 
-fn roundtrip_random_config(
-    input_len_range: Range<usize>,
-    iterations: u32,
-) {
+fn roundtrip_random_config(input_len_range: Uniform<usize>, iterations: u32) {
     let mut input_buf: Vec<u8> = Vec::new();
     let mut encoded_buf = String::new();
     let mut rng = rand::rngs::SmallRng::from_entropy();
@@ -64,7 +62,7 @@ fn roundtrip_random_config(
 
         encode_config_buf(&input_buf, config, &mut encoded_buf);
 
-        assert_encode_sanity(&encoded_buf, &config, input_len);
+        assert_encode_sanity(&encoded_buf, config, input_len);
 
         assert_eq!(input_buf, decode_config(&encoded_buf, config).unwrap());
     }
@@ -76,7 +74,7 @@ pub fn random_config<R: Rng>(rng: &mut R) -> Config {
         CharacterSet::Standard,
         CharacterSet::Crypt,
     ];
-    let charset = *rng.choose(CHARSETS).unwrap();
+    let charset = *CHARSETS.choose(rng).unwrap();
 
     Config::new(charset, rng.gen())
 }

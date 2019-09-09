@@ -18,7 +18,7 @@ different kinds of linters in all of these different places could quickly balloo
    invoke linters.
 
 ``Mozlint`` isn't designed to be used directly by end users. Instead, it can be consumed by things
-like mach, mozreview and taskcluster.
+like mach, phabricator and taskcluster.
 
 .. toctree::
   :caption: Linting User Guide
