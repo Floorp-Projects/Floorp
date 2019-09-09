@@ -2717,13 +2717,6 @@
   value: @IS_ANDROID@
   mirror: always
 
-# This pref should be set to true only in case of regression related to the
-# changes applied in Bug 152591 (to be removed as part of Bug 1537753).
-- name: extensions.cookiesBehavior.overrideOnTopLevel
-  type: bool
-  value: false
-  mirror: always
-
 # This pref governs whether we run webextensions in a separate process (true)
 # or the parent/main process (false)
 - name: extensions.webextensions.remote
