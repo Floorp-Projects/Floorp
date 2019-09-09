@@ -11,6 +11,7 @@ import os
 import sys
 
 from mozbuild.base import MozbuildObject
+from six import string_types
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
@@ -47,6 +48,6 @@ def get_mozharness_status(suite, lines, status, formatter=None, buf=None):
 
 
 def filter_action(actions, lines):
-    if isinstance(actions, basestring):
+    if isinstance(actions, string_types):
         actions = (actions,)
     return filter(lambda x: x['action'] in actions, lines)

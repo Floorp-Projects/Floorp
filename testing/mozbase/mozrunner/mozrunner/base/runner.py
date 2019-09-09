@@ -13,7 +13,7 @@ from abc import ABCMeta, abstractproperty
 
 from mozlog import get_default_logger
 from mozprocess import ProcessHandler
-from six import string_types
+from six import string_types, text_type
 
 try:
     import mozcrash
@@ -23,11 +23,6 @@ from six import reraise
 
 from ..application import DefaultContext
 from ..errors import RunnerNotStartedError
-
-if sys.version_info[0] < 3:
-    unicode_type = unicode
-else:
-    unicode_type = str
 
 
 class BaseRunner(object):
@@ -120,9 +115,9 @@ class BaseRunner(object):
         encoded_env = {}
         for k in self.env:
             v = self.env[k]
-            if isinstance(v, unicode_type):
+            if isinstance(v, text_type):
                 v = v.encode('utf-8')
-            if isinstance(k, unicode_type):
+            if isinstance(k, text_type):
                 k = k.encode('utf-8')
             encoded_env[k] = v
 

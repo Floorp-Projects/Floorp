@@ -2572,7 +2572,7 @@ class ADBDevice(ADBCommand):
             self._logger.debug('get_process_list: %s' % ret)
             return ret
         finally:
-            if adb_process and isinstance(adb_process.stdout_file, file):
+            if adb_process and isinstance(adb_process.stdout_file, io.IOBase):
                 adb_process.stdout_file.close()
 
     def kill(self, pids, sig=None, attempts=3, wait=5,
