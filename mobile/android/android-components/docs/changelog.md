@@ -72,6 +72,9 @@ permalink: /changelog/
 * **feature-pwa**
   * Adds the ability to create a basic shortcut with a custom label
 
+* **support-utils**
+  * `Intent.asForegroundServicePendingIntent(Context)` extension method to create pending intent for the service that will play nicely with background execution limitations introduced in Android O (e.g. foreground service).
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
