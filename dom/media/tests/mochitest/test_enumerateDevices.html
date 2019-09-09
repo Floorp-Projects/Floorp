@@ -42,7 +42,8 @@ var validateDevice = ({kind, label, deviceId, groupId}) => {
 }
 
 runTest(async () => {
-  await pushPrefs(["media.navigator.streams.fake", true]);
+  await pushPrefs(["media.navigator.streams.fake", true],
+                  ["dom.security.featurePolicy.enabled", true]);
 
   // Validate enumerated devices.
 
@@ -98,6 +99,7 @@ runTest(async () => {
   await Promise.all(origins.map(origin => {
     let iframe = document.createElement("iframe");
     iframe.src = origin + path;
+    iframe.allow = "camera;microphone";
     info(iframe.src);
     document.documentElement.appendChild(iframe);
     return new Promise(resolve => iframe.onload = resolve);
@@ -106,9 +108,7 @@ runTest(async () => {
   let [sameOriginDevices, differentOriginDevices] = origins.map(o => devicesMap.get(o));
 
   is(sameOriginDevices.length, devices.length);
-  // Camera and microphone are allowed for documents that are same-origin by
-  // default.
-  is(differentOriginDevices.length, 0);
+  is(differentOriginDevices.length, devices.length);
   [...sameOriginDevices, ...differentOriginDevices].forEach(d => validateDevice(d));
 
   for (let device of sameOriginDevices) {
