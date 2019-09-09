@@ -10,6 +10,7 @@ import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
+import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
@@ -24,6 +25,8 @@ import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoA
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
+import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
+import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
@@ -263,8 +266,16 @@ class Session(
     /**
      * Configuration data in case this session is used for a Custom Tab.
      */
-    var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) { _, _, new ->
+    var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) { _, old, new ->
         notifyObservers { onCustomTabConfigChanged(this@Session, new) }
+
+        // The custom tab config is set to null when we're migrating custom
+        // tabs to regular tabs, so we have to dispatch the corresponding
+        // browser actions to keep the store in sync.
+        if (old != new && new == null) {
+            store?.syncDispatch(RemoveCustomTabAction(id))
+            store?.syncDispatch(AddTabAction(toTabSessionState()))
+        }
     }
 
     /**
