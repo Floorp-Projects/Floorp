@@ -467,7 +467,13 @@ add_task(async function test_download_http_errors() {
     return extension.awaitMessage("done");
   }
 
-  let res = await download(404);
+  let res = await download(204); // No Content
+  equal(res, "SERVER_BAD_CONTENT", "error is correct");
+
+  res = await download(204); // Reset Content
+  equal(res, "SERVER_BAD_CONTENT", "error is correct");
+
+  res = await download(404);
   equal(res, "SERVER_BAD_CONTENT", "error is correct");
 
   res = await download(403);
@@ -476,7 +482,7 @@ add_task(async function test_download_http_errors() {
   res = await download(402);
   equal(res, "SERVER_UNAUTHORIZED", "error is correct");
 
-  res = await download(407);
+  res = await download(407); // Proxy authentication required
   equal(res, "SERVER_UNAUTHORIZED", "error is correct");
 
   res = await download(504);

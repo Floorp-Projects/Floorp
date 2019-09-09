@@ -644,30 +644,42 @@ this.downloads = class extends ExtensionAPI {
           }
 
           function allowHttpStatus(download, status) {
-            if (status < 400) {
-              return true;
-            }
-
             const item = DownloadMap.byDownload.get(download);
             if (item === null) {
               return true;
             }
 
-            if (status === 404) {
-              item.error = "SERVER_BAD_CONTENT";
+            let error = null;
+            switch (status) {
+              case 204: // No Content
+              case 205: // Reset Content
+              case 404: // Not Found
+                error = "SERVER_BAD_CONTENT";
+                break;
+
+              case 403: // Forbidden
+                error = "SERVER_FORBIDDEN";
+                break;
+
+              case 402: // Unauthorized
+              case 407: // Proxy authentication required
+                error = "SERVER_UNAUTHORIZED";
+                break;
+
+              default:
+                if (status >= 400) {
+                  error = "SERVER_FAILED";
+                }
+                break;
+            }
+
+            if (error) {
+              item.error = error;
               return false;
             }
-            if (status === 403) {
-              item.error = "SERVER_FORBIDDEN";
-              return false;
-            }
-            // Unauthorized and proxy authorization required
-            if (status === 402 || status == 407) {
-              item.error = "SERVER_UNAUTHORIZED";
-              return false;
-            }
-            item.error = "SERVER_FAILED";
-            return false;
+
+            // No error, ergo allow the request.
+            return true;
           }
 
           async function createTarget(downloadsDir) {
