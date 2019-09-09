@@ -65,7 +65,6 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/close_tab"
         android:src="@drawable/ic_close"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
