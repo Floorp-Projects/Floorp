@@ -314,7 +314,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   bool mPreformattedBlockBoundary;
 
-  nsString mURL;
   int32_t mHeaderCounter[7]; /* For header-numbering:
                                 Number of previous headers of
                                 the same depth and in the same
