@@ -86,7 +86,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
  private:
   ~nsPlainTextSerializer();
 
-  nsresult GetAttributeValue(nsAtom* aName, nsString& aValueRet);
+  nsresult GetAttributeValue(nsAtom* aName, nsString& aValueRet) const;
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
@@ -98,9 +98,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   //         be preserved according to its style or because it's a `<pre>`
   //         element.
   bool IsElementPreformatted() const;
-  bool IsInOL();
-  bool IsCurrentNodeConverted();
-  bool MustSuppressLeaf();
+  bool IsInOL() const;
+  bool IsCurrentNodeConverted() const;
+  bool MustSuppressLeaf() const;
 
   /**
    * Returns the local name of the element as an atom if the element is an
