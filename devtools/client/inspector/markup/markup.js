@@ -909,6 +909,19 @@ MarkupView.prototype = {
    */
   _onNewSelection: function(nodeFront, reason) {
     const selection = this.inspector.selection;
+    // this will probably leak.
+    // TODO: use resource api listeners?
+    if (nodeFront) {
+      nodeFront.walkerFront.on(
+        "display-change",
+        this._onWalkerNodeStatesChanged
+      );
+      nodeFront.walkerFront.on(
+        "scrollable-change",
+        this._onWalkerNodeStatesChanged
+      );
+      nodeFront.walkerFront.on("mutations", this._mutationObserver);
+    }
 
     if (this.htmlEditor) {
       this.htmlEditor.hide();
@@ -957,7 +970,7 @@ MarkupView.prototype = {
    * Maybe make selected the current node selection's MarkupContainer depending
    * on why the current node got selected.
    */
-  maybeNavigateToNewSelection: function() {
+  maybeNavigateToNewSelection: async function() {
     const { reason, nodeFront } = this.inspector.selection;
 
     // The list of reasons that should lead to navigating to the node.
@@ -979,7 +992,9 @@ MarkupView.prototype = {
     }
 
     if (reasonsToNavigate.includes(reason)) {
-      this.getContainer(this._rootNode).elt.focus();
+      // not sure this is necessary
+      const root = await nodeFront.walkerFront.getRootNode();
+      this.getContainer(root).elt.focus();
       this.navigate(this.getContainer(nodeFront));
     }
   },
@@ -1032,7 +1047,7 @@ MarkupView.prototype = {
 
     switch (node.nodeType) {
       case nodeConstants.ELEMENT_NODE:
-        copyLongHTMLString(this.walker.outerHTML(node));
+        copyLongHTMLString(node.walkerFront.outerHTML(node));
         break;
       case nodeConstants.COMMENT_NODE:
         getLongString(node.getNodeValue()).then(comment => {
@@ -1049,13 +1064,12 @@ MarkupView.prototype = {
    * Copy the innerHTML of the selected Node to the clipboard.
    */
   copyInnerHTML: function() {
+    const nodeFront = this.inspector.selection.nodeFront;
     if (!this.inspector.selection.isNode()) {
       return;
     }
 
-    copyLongHTMLString(
-      this.walker.innerHTML(this.inspector.selection.nodeFront)
-    );
+    copyLongHTMLString(nodeFront.walkerFront.innerHTML(nodeFront));
   },
 
   /**
@@ -1068,9 +1082,10 @@ MarkupView.prototype = {
       return;
     }
 
+    const nodeFront = this.inspector.selection.nodeFront;
     if (type === "uri" || type === "cssresource" || type === "jsresource") {
       // Open link in a new tab.
-      this.inspector.inspectorFront
+      nodeFront.inspectorFront
         .resolveRelativeURL(link, this.inspector.selection.nodeFront)
         .then(url => {
           if (type === "uri") {
@@ -1085,10 +1100,10 @@ MarkupView.prototype = {
         .catch(console.error);
     } else if (type == "idref") {
       // Select the node in the same document.
-      this.walker
-        .document(this.inspector.selection.nodeFront)
+      nodeFront.walkerFront
+        .document(nodeFront)
         .then(doc => {
-          return this.walker
+          return nodeFront.walkerFront
             .querySelector(doc, "#" + CSS.escape(link))
             .then(node => {
               if (!node) {
@@ -1219,14 +1234,14 @@ MarkupView.prototype = {
     const container = this.getContainer(node);
 
     // Retain the node so we can undo this...
-    this.walker
+    node.walkerFront
       .retainNode(node)
       .then(() => {
         const parent = node.parentNode();
         let nextSibling = null;
         this.undo.do(
           () => {
-            this.walker.removeNode(node).then(siblings => {
+            node.walkerFront.removeNode(node).then(siblings => {
               nextSibling = siblings.nextSibling;
               const prevSibling = siblings.previousSibling;
               let focusNode = moveBackward ? prevSibling : nextSibling;
@@ -1262,7 +1277,7 @@ MarkupView.prototype = {
           () => {
             const isValidSibling = nextSibling && !nextSibling.isPseudoElement;
             nextSibling = isValidSibling ? nextSibling : null;
-            this.walker.insertBefore(node, parent, nextSibling);
+            node.walkerFront.insertBefore(node, parent, nextSibling);
           }
         );
       })
@@ -1345,9 +1360,11 @@ MarkupView.prototype = {
 
     let container;
     const { nodeType, isPseudoElement } = node;
-    if (node === this.walker.rootNode) {
+    if (node === node.walkerFront.rootNode) {
       container = new RootContainer(this, node);
       this._elt.appendChild(container.elt);
+    }
+    if (node === this.walker.rootNode) {
       this._rootNode = node;
     } else if (slotted) {
       container = new SlottedNodeContainer(this, node, this.inspector);
@@ -1648,9 +1665,9 @@ MarkupView.prototype = {
     let walkerPromise = null;
 
     if (isOuter) {
-      walkerPromise = this.walker.outerHTML(node);
+      walkerPromise = node.walkerFront.outerHTML(node);
     } else {
-      walkerPromise = this.walker.innerHTML(node);
+      walkerPromise = node.walkerFront.innerHTML(node);
     }
 
     return getLongString(walkerPromise);
@@ -1774,7 +1791,7 @@ MarkupView.prototype = {
     // Changing the outerHTML removes the node which outerHTML was changed.
     // Listen to this removal to reselect the right node afterwards.
     this.reselectOnRemoved(node, "outerhtml");
-    return this.walker.setOuterHTML(node, newValue).catch(() => {
+    return node.walkerFront.setOuterHTML(node, newValue).catch(() => {
       this.cancelReselectOnRemoved();
     });
   },
@@ -1799,10 +1816,10 @@ MarkupView.prototype = {
     return new Promise((resolve, reject) => {
       container.undo.do(
         () => {
-          this.walker.setInnerHTML(node, newValue).then(resolve, reject);
+          node.walkerFront.setInnerHTML(node, newValue).then(resolve, reject);
         },
         () => {
-          this.walker.setInnerHTML(node, oldValue);
+          node.walkerFront.setInnerHTML(node, oldValue);
         }
       );
     });
@@ -1833,7 +1850,7 @@ MarkupView.prototype = {
       container.undo.do(
         () => {
           // eslint-disable-next-line no-unsanitized/method
-          this.walker
+          node.walkerFront
             .insertAdjacentHTML(node, position, value)
             .then(nodeArray => {
               injectedNodes = nodeArray.nodes;
@@ -1842,7 +1859,7 @@ MarkupView.prototype = {
             .then(resolve, reject);
         },
         () => {
-          this.walker.removeNodes(injectedNodes);
+          node.walkerFront.removeNodes(injectedNodes);
         }
       );
     });
