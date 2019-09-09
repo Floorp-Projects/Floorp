@@ -224,6 +224,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
       return !mContent.mValue.IsEmpty() || !mIndentation.mHeader.IsEmpty();
     }
 
+    // @return Combined width of cite quote level and indentation.
+    uint32_t DeterminePrefixWidth() const {
+      // XXX: Should calculate prefixwidth with GetUnicharStringWidth
+      return (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1 : 0) + mIndentation.mWidth;
+    }
+
     Indentation mIndentation;
 
     // The number of '>' characters.
