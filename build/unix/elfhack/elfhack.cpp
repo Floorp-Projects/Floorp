@@ -194,7 +194,7 @@ class ElfRelHackCode_Section : public ElfSection {
 
   ~ElfRelHackCode_Section() { delete elf; }
 
-  void serialize(std::ofstream& file, char ei_class, char ei_data) {
+  void serialize(std::ofstream& file, char ei_class, char ei_data) override {
     // Readjust code offsets
     for (std::vector<ElfSection*>::iterator c = code.begin(); c != code.end();
          ++c)
@@ -217,7 +217,7 @@ class ElfRelHackCode_Section : public ElfSection {
     ElfSection::serialize(file, ei_class, ei_data);
   }
 
-  bool isRelocatable() { return false; }
+  bool isRelocatable() override { return false; }
 
   unsigned int getEntryPoint() { return entry_point; }
 
