@@ -1,5 +1,4 @@
 build/pymake
-browser/components/newtab/logs/
 browser/components/newtab/vendor/
 browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
