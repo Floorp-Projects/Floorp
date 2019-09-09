@@ -173,7 +173,7 @@ struct ParentLoadInfoForwarderArgs
   // tainting value.
   uint32_t tainting;
 
-  
+
   // This flag is used for any browsing context where we should not sniff
   // the content type. E.g if an iframe has the XCTO nosniff header, then
   // that flag is set to true so we skip content sniffing for that browsing
@@ -264,6 +264,7 @@ struct HttpChannelOpenArgs
   bool                        blockAuthPrompt;
   bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
+  bool                        preferCacheLoadOverBypass;
   nsCString                   contentTypeHint;
   uint32_t                    corsMode;
   uint32_t                    redirectMode;

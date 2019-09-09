@@ -102,6 +102,12 @@ interface nsICacheInfoChannel : nsISupports
   attribute boolean allowStaleCacheContent;
 
   /**
+   * Tells the priority for LOAD_CACHE is raised over LOAD_BYPASS_CACHE or
+   * LOAD_BYPASS_LOCAL_CACHE in case those flags are set at the same time.
+   */
+  attribute boolean preferCacheLoadOverBypass;
+
+  /**
    * Calling this method instructs the channel to serve the alternative data
    * if that was previously saved in the cache, otherwise it will serve the
    * real data.

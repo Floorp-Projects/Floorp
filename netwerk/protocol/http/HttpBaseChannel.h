@@ -773,6 +773,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Used to enforce that flag's behavior but not expose it externally.
   uint32_t mAllowStaleCacheContent : 1;
 
+  // If true, we prefer the LOAD_FROM_CACHE flag over LOAD_BYPASS_CACHE or
+  // LOAD_BYPASS_LOCAL_CACHE.
+  uint32_t mPreferCacheLoadOverBypass : 1;
+
   // True iff this request has been calculated in its request context as
   // a non tail request.  We must remove it again when this channel is done.
   uint32_t mAddedAsNonTailRequest : 1;
