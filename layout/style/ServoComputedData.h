@@ -96,6 +96,8 @@ class ServoComputedData {
 
   void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const;
 
+  mozilla::ServoWritingMode WritingMode() const { return writing_mode; }
+
  private:
   mozilla::ServoCustomPropertiesMap custom_properties;
   mozilla::ServoWritingMode writing_mode;
