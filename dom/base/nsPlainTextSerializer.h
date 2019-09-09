@@ -213,9 +213,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     void MaybeReplaceNbsps(int32_t aFlags);
 
     nsString mValue;
-
-    // The width of the line as it will appear on the screen (approx.).
-    uint32_t mWidth = 0;
   };
 
   class CurrentLine {
