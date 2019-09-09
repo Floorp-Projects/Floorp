@@ -169,8 +169,10 @@ void JSString::dumpCharsNoNewline(js::GenericPrinter& out) {
   if (JSLinearString* linear = ensureLinear(nullptr)) {
     AutoCheckCannotGC nogc;
     if (hasLatin1Chars()) {
+      out.put("[Latin 1]");
       dumpChars(linear->latin1Chars(nogc), length(), out);
     } else {
+      out.put("[2 byte]");
       dumpChars(linear->twoByteChars(nogc), length(), out);
     }
   } else {
