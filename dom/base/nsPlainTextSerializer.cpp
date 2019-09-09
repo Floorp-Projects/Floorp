@@ -1161,11 +1161,8 @@ void nsPlainTextSerializer::OutputManager::Flush(CurrentLine& aCurrentLine) {
 }
 
 static bool IsSpaceStuffable(const char16_t* s) {
-  if (s[0] == '>' || s[0] == ' ' || s[0] == kNBSP ||
-      NS_strncmp(s, u"From ", 5) == 0)
-    return true;
-  else
-    return false;
+  return (s[0] == '>' || s[0] == ' ' || s[0] == kNBSP ||
+          NS_strncmp(s, u"From ", 5) == 0);
 }
 
 /**
