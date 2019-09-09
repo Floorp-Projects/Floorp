@@ -17,12 +17,13 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
- *  Tests for verifying basic functionality of browser navigation
+ *  Tests for verifying basic functionality of browser navigation and page related interactions
  *
  *  Including:
  *  - Visiting a URL
  *  - Back and Forward navigation
  *  - Refresh
+ *  - Find in page
  */
 
 class NavigationToolbarTest {
@@ -63,6 +64,7 @@ class NavigationToolbarTest {
         navigationToolbar {
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
+            verifyBackButton()
         }.goBack {
             verifyPageContent(defaultWebPage.content)
         }
@@ -87,6 +89,7 @@ class NavigationToolbarTest {
         navigationToolbar {
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
+            verifyForwardButton()
         }.goForward {
             verifyPageContent(nextWebPage.content)
         }
@@ -104,6 +107,8 @@ class NavigationToolbarTest {
         // Use refresh from the three-dot menu
         navigationToolbar {
         }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyRefreshButton()
         }.refreshPage {
             verifyPageContent("REFRESHED")
         }
@@ -117,5 +122,38 @@ class NavigationToolbarTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             verifyPageContent(defaultWebPage.content)
         }
+    }
+
+    @Test
+    fun findInPageTest() {
+        val loremIpsumWebPage = TestAssetHelper.getLoremIpsumAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loremIpsumWebPage.url) {
+            verifyPageContent(loremIpsumWebPage.content)
+        }
+
+        navigationToolbar {
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyFindInPageButton()
+        }.openFindInPage {
+            verifyFindInPageNextButton()
+            verifyFindInPagePrevButton()
+            verifyFindInPageCloseButton()
+            enterFindInPageQuery("lab")
+            verifyFindNextInPageResult("1/3")
+            verifyFindNextInPageResult("2/3")
+            verifyFindNextInPageResult("3/3")
+            verifyFindPrevInPageResult("1/3")
+            verifyFindPrevInPageResult("3/3")
+            verifyFindPrevInPageResult("2/3")
+            enterFindInPageQuery("in")
+            verifyFindNextInPageResult("3/7")
+            verifyFindNextInPageResult("4/7")
+            verifyFindNextInPageResult("5/7")
+            verifyFindNextInPageResult("6/7")
+            verifyFindNextInPageResult("7/7")
+        }.closeFindInPage { }
     }
 }

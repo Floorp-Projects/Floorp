@@ -35,6 +35,7 @@ class ThreeDotMenuRobot {
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyShareButton() = assertShareButton()
     fun verifySaveCollection() = assertSaveCollectionButton()
+    fun verifyFindInPageButton() = assertFindInPageButton()
 
     class Transition {
 
@@ -95,6 +96,14 @@ class ThreeDotMenuRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {
+            mDevice.wait(Until.findObject(By.text("Find in page")), waitingTime)
+            findInPageButton().click()
+
+            FindInPageRobot().interact()
+            return FindInPageRobot.Transition()
+        }
     }
 }
 private fun threeDotMenuRecyclerViewExists() {
@@ -134,4 +143,8 @@ private fun assertShareButton() = shareButton()
 
 private fun saveCollectionButton() = onView(allOf(withText("Save to collection")))
 private fun assertSaveCollectionButton() = saveCollectionButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun findInPageButton() = onView(allOf(withText("Find in page")))
+private fun assertFindInPageButton() = findInPageButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
