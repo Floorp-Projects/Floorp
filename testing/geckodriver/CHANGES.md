@@ -4,8 +4,8 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-Unreleased
-----------
+0.25.0 (2019-09-06)
+-------------------
 
 ### Added
 
@@ -39,6 +39,13 @@ Unreleased
 
   Thanks to [Nupur Baghel] for this patch.
 
+- macOS and Windows builds are signed
+
+  With this release of geckodriver, executables for macOS and Windows
+  are signed using the same certificate key as Firefox.  This should
+  help in cases where geckodriver previously got misidentified as
+  a virus by antivirus software.
+
 ### Removed
 
 - Dropped support for legacy Selenium web element references
@@ -48,7 +55,7 @@ Unreleased
   clients and clients which are otherwise not compatible with the
   WebDriver standard.
 
-  Thanks to Shivam Singhal for this patch.
+  Thanks to [Shivam Singhal] for this patch.
 
 - Removed `--webdriver-port` command-line option
 
@@ -57,6 +64,17 @@ Unreleased
   prior to Selenium 3.0.0.
 
 ### Changed
+
+- Refactored Marionette serialisation
+
+  Much of geckodriver’s internal plumbing for serialising WebDriver
+  requests to Marionette messages has been refactored to decrease
+  the amount of manual lifting.
+
+  This work should have no visible side-effects for users.
+
+  Thanks to [Nupur Baghel] for working on this throughout her
+  Outreachy internship at Mozilla.
 
 - Improved error messages for incorrect command-line usage
 
@@ -1235,5 +1253,6 @@ and greater.
 [Kriti Singh]: https://github.com/kritisingh1
 [Mike Pennisi]: https://github.com/jugglinmike
 [Nupur Baghel]: https://github.com/nupurbaghel
+[Shivam Singhal]: https://github.com/championshuttler
 [Sven Jost]: https://github/mythsunwind
 [Vlad Filippov]: https://github.com/vladikoff
