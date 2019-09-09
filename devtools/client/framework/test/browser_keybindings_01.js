@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(3);
+
 // Tests that the keybindings for opening and closing the inspector work as expected
 // Can probably make this a shared test that tests all of the tools global keybindings
 const TEST_URL =
@@ -89,6 +91,12 @@ add_task(async function() {
   await onSelectTool;
   await netmonitorShouldBeSelected();
 
+  onSelectTool = gDevTools.once("select-tool-command");
+  const jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
+  jsdebugger.synthesizeKey();
+  await onSelectTool;
+  await jsdebuggerShouldBeSelected();
+
   if (isMac) {
     info("On MacOS, we check the extra inspector shortcut too");
     onSelectTool = gDevTools.once("select-tool-command");
@@ -109,6 +117,10 @@ add_task(async function() {
 
     await toolbox.nodePicker.once("picker-stopped");
     ok(true, "picker-stopped event received, highlighter stopped");
+  }
+
+  function jsdebuggerShouldBeSelected() {
+    is(toolbox.currentToolId, "jsdebugger", "jsdebugger should be selected.");
   }
 
   function webconsoleShouldBeSelected() {
