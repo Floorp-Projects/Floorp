@@ -10,6 +10,7 @@
 #include "WorkletThread.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
@@ -35,7 +36,7 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()),
-      mPrincipal(aPrincipal),
+      mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
       mWorkletLoadInfo(aWindow),
       mTerminated(false) {}
 
