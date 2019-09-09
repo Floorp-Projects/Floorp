@@ -11,10 +11,10 @@ celt_pitch_xcorr_arm-gnu.s: celt/arm/armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S
 # suffix when translating the files that include it.
-celt/arm/armopts-gnu.S: celt/arm/armopts.s $(call mkdir_deps,celt/arm) $(GLOBAL_DEPS)
+celt/arm/armopts-gnu.S: $(srcdir)/celt/arm/armopts.s $(call mkdir_deps,celt/arm) $(GLOBAL_DEPS)
 	$(PERL) $(srcdir)/celt/arm/arm2gnu.pl < $< > $@
 # For all others, we can use an implicit rule
-%-gnu.s: celt/arm/%.s $(GLOBAL_DEPS)
+%-gnu.s: $(srcdir)/celt/arm/%.s $(GLOBAL_DEPS)
 	$(PERL) $(srcdir)/celt/arm/arm2gnu.pl < $< > $@
 
 endif

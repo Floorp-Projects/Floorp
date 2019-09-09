@@ -16,7 +16,7 @@ ifdef GNU_AS
 # one directory with arm assembly currently so enumerate it manually.
 GENERATED_DIRS += libvpx/vpx_dsp/arm
 
-%.asm.S: %.asm $(ASM_OFFSETS) $(call mkdir_deps,libvpx/vpx_dsp/arm)
+libvpx/vpx_dsp/arm/%.asm.S: $(srcdir)/libvpx/vpx_dsp/arm/%.asm $(call mkdir_deps,libvpx/vpx_dsp/arm)
 	$(PERL) $(topsrcdir)/media/libvpx/libvpx/build/make/ads2gas.pl < $< > $@
 
 $(addsuffix .$(OBJ_SUFFIX), idct4x4_add_neon.asm idct8x8_add_neon.asm idct16x16_add_neon.asm): libvpx/vpx_dsp/arm/idct_neon.asm.S
