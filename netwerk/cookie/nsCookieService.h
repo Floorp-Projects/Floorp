@@ -346,7 +346,7 @@ class nsCookieService final : public nsICookieService,
                   bool aBlocked);
 
  protected:
-  nsresult RemoveCookiesFromRootDomain(
+  nsresult RemoveCookiesFromExactHost(
       const nsACString& aHost,
       const mozilla::OriginAttributesPattern& aPattern);
 

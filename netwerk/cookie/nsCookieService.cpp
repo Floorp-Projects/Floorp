@@ -4797,8 +4797,8 @@ nsresult nsCookieService::RemoveCookiesWithOriginAttributes(
 }
 
 NS_IMETHODIMP
-nsCookieService::RemoveCookiesFromRootDomain(const nsACString& aHost,
-                                             const nsAString& aPattern) {
+nsCookieService::RemoveCookiesFromExactHost(const nsACString& aHost,
+                                            const nsAString& aPattern) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   mozilla::OriginAttributesPattern pattern;
@@ -4806,10 +4806,10 @@ nsCookieService::RemoveCookiesFromRootDomain(const nsACString& aHost,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RemoveCookiesFromRootDomain(aHost, pattern);
+  return RemoveCookiesFromExactHost(aHost, pattern);
 }
 
-nsresult nsCookieService::RemoveCookiesFromRootDomain(
+nsresult nsCookieService::RemoveCookiesFromExactHost(
     const nsACString& aHost, const mozilla::OriginAttributesPattern& aPattern) {
   nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
@@ -4850,11 +4850,7 @@ nsresult nsCookieService::RemoveCookiesFromRootDomain(
       nsListIter iter(entry, i - 1);
       RefPtr<nsCookie> cookie = iter.Cookie();
 
-      bool hasRootDomain = false;
-      rv = mTLDService->HasRootDomain(cookie->RawHost(), aHost, &hasRootDomain);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!hasRootDomain) {
+      if (!aHost.Equals(cookie->RawHost())) {
         continue;
       }
 
