@@ -290,22 +290,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult ConfirmSelectionInBody();
 
   /**
-   * AlignBlock() resets align attribute, text-align property, etc first.
-   * Then, aligns contents of aElement on aAlignType.
-   *
-   * @param aElement            The element whose contents will be aligned.
-   * @param aAlignType          Boundary or "center" which contents should be
-   *                            aligned on.
-   * @param aResetAlignOf       Resets align of whether element and its
-   *                            descendants or only descendants.
-   */
-  enum class ResetAlignOf { ElementAndDescendants, OnlyDescendants };
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignBlock(Element& aElement,
-                                   const nsAString& aAlignType,
-                                   ResetAlignOf aResetAlignOf);
-
-  /**
    * DocumentModifiedWorker() is called by DocumentModified() either
    * synchronously or asynchronously.
    */

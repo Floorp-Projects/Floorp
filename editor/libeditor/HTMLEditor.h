@@ -2501,6 +2501,28 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveAlignFromDescendants(
       Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget);
 
+  /**
+   * SetBlockElementAlign() resets `align` attribute, `text-align` property
+   * of descendants of aBlockOrHRElement except `<table>` element descendants.
+   * Then, set `align` attribute or `text-align` property of aBlockOrHRElement.
+   *
+   * @param aBlockOrHRElement   The element whose contents will be aligned.
+   *                            This must be a block element or `<hr>` element.
+   *                            If we're not in CSS mode, this element has
+   *                            to support `align` attribute (i.e.,
+   *                            `HTMLEditUtils::SupportsAlignAttr()` must
+   *                            return true).
+   * @param aAlignType          Boundary or "center" which contents should be
+   *                            aligned on.
+   * @param aEditTarget         If `OnlyDescendantsExceptTable`, modifies only
+   *                            descendants of aBlockOrHRElement.
+   *                            If `NodeAndDescendantsExceptTable`, modifies
+   *                            aBlockOrHRElement and its descendants.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  SetBlockElementAlign(Element& aBlockOrHRElement, const nsAString& aAlignType,
+                       EditTarget aEditTarget);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
