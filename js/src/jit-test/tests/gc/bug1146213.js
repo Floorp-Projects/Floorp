@@ -2,7 +2,7 @@
 setGCCallback({
   action: "majorGC",
 });
-schedulegc(this)
+schedulezone(this)
 gcslice(3)
 var lfGlobal = newGlobal();
 lfGlobal.offThreadCompileScript("");

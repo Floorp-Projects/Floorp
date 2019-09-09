@@ -134,10 +134,6 @@ class FilterBar extends Component {
     return false;
   }
 
-  componentWillUnmount() {
-    this.resizeObserver.disconnect();
-  }
-
   /**
    * Update the boolean state that informs where the filter buttons should be rendered.
    * If the filter buttons are rendered inline with the filter input and the filter
@@ -148,6 +144,14 @@ class FilterBar extends Component {
    */
   maybeUpdateLayout() {
     const { dispatch, displayMode } = this.props;
+
+    // If we don't have the wrapperNode reference, or if the wrapperNode isn't connected
+    // anymore, we disconnect the resize observer (componentWillUnmount is never called
+    // on this component, so we have to do it here).
+    if (!this.wrapperNode || !this.wrapperNode.isConnected) {
+      this.resizeObserver.disconnect();
+      return;
+    }
 
     const filterInput = this.wrapperNode.querySelector(".devtools-searchbox");
     const { width: filterInputWidth } = filterInput.getBoundingClientRect();

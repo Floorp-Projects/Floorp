@@ -3,7 +3,7 @@ s = "";
 gc()
 Function("\
     s.match(r);\
-    schedulegc(__proto__);\
+    schedulezone(__proto__);\
     ({c:schedulegc(2)});\
     s.match(r);\
 ")()

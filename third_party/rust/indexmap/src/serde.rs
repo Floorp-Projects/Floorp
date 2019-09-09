@@ -2,7 +2,8 @@
 extern crate serde;
 
 use self::serde::ser::{Serialize, Serializer, SerializeMap, SerializeSeq};
-use self::serde::de::{Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
+use self::serde::de::{Deserialize, Deserializer, Error, IntoDeserializer, MapAccess, SeqAccess, Visitor};
+use self::serde::de::value::{MapDeserializer, SeqDeserializer};
 
 use std::fmt::{self, Formatter};
 use std::hash::{BuildHasher, Hash};
@@ -66,6 +67,19 @@ impl<'de, K, V, S> Deserialize<'de> for IndexMap<K, V, S>
     }
 }
 
+impl<'de, K, V, S, E> IntoDeserializer<'de, E> for IndexMap<K, V, S>
+    where K: IntoDeserializer<'de, E> + Eq + Hash,
+          V: IntoDeserializer<'de, E>,
+          S: BuildHasher,
+          E: Error,
+{
+    type Deserializer = MapDeserializer<'de, <Self as IntoIterator>::IntoIter, E>;
+
+    fn into_deserializer(self) -> Self::Deserializer {
+        MapDeserializer::new(self.into_iter())
+    }
+}
+
 
 use IndexSet;
 
@@ -119,5 +133,17 @@ impl<'de, T, S> Deserialize<'de> for IndexSet<T, S>
         where D: Deserializer<'de>
     {
         deserializer.deserialize_seq(OrderSetVisitor(PhantomData))
+    }
+}
+
+impl<'de, T, S, E> IntoDeserializer<'de, E> for IndexSet<T, S>
+    where T: IntoDeserializer<'de, E> + Eq + Hash,
+          S: BuildHasher,
+          E: Error,
+{
+    type Deserializer = SeqDeserializer<<Self as IntoIterator>::IntoIter, E>;
+
+    fn into_deserializer(self) -> Self::Deserializer {
+        SeqDeserializer::new(self.into_iter())
     }
 }

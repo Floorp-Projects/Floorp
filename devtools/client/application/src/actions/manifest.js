@@ -9,6 +9,7 @@ const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
+  RESET_MANIFEST,
 } = require("../constants");
 
 function fetchManifest() {
@@ -24,6 +25,11 @@ function fetchManifest() {
   };
 }
 
+function resetManifest() {
+  return { type: RESET_MANIFEST };
+}
+
 module.exports = {
   fetchManifest,
+  resetManifest,
 };

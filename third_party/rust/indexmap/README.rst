@@ -1,11 +1,7 @@
+indexmap
+========
 
-Awesome hash table implementation in just Rust (stable, no unsafe code).
-
-Please read the `API documentation here`__
-
-__ https://docs.rs/indexmap/
-
-|build_status|_ |crates|_
+|build_status|_ |crates|_ |docs|_ |rustc|_
 
 .. |crates| image:: https://img.shields.io/crates/v/indexmap.svg
 .. _crates: https://crates.io/crates/indexmap
@@ -13,12 +9,21 @@ __ https://docs.rs/indexmap/
 .. |build_status| image:: https://travis-ci.org/bluss/indexmap.svg
 .. _build_status: https://travis-ci.org/bluss/indexmap
 
-Crate Name
-==========
+.. |docs| image:: https://docs.rs/indexmap/badge.svg
+.. _docs: https://docs.rs/indexmap
 
-This crate was originally released under the name ``ordermap``, but it was
-renamed (with no change in functionality) to ``indexmap`` to better emphasize
-its features.
+.. |rustc| image:: https://img.shields.io/badge/rust-1.18%2B-orange.svg
+.. _rustc: https://img.shields.io/badge/rust-1.18%2B-orange.svg
+
+A safe, pure-Rust hash table which preserves insertion order.
+
+This crate implements compact map and set data-structures,
+where the iteration order of the keys is independent from their hash or
+value. It preserves insertion order (except after removals), and it
+allows lookup of entries by either hash table key or numerical index.
+
+Note: this crate was originally released under the name ``ordermap``,
+but it was renamed to ``indexmap`` to better reflect its features.
 
 Background
 ==========
@@ -33,7 +38,8 @@ was indexmap, a hash table that has following properties:
 - Fast to iterate.
 - Indexed in compact space.
 - Preserves insertion order **as long** as you don't call ``.remove()``.
-- Uses robin hood hashing just like Rust's libstd ``HashMap``.
+- Uses robin hood hashing just like Rust's libstd ``HashMap`` used to do
+  (before std switched to hashbrown).
 
   - It's the usual backwards shift deletion, but only on the index vector, so
     it's cheaper because it's moving less memory around.
@@ -102,6 +108,33 @@ Ideas that we already did
 
 Recent Changes
 ==============
+
+- 1.1.0
+
+  - Added optional feature `"rayon"` that adds parallel iterator support
+    to `IndexMap` and `IndexSet` using Rayon. This includes all the regular
+    iterators in parallel versions, and parallel sort.
+
+  - Implemented ``Clone`` for ``map::{Iter, Keys, Values}`` and
+    ``set::{Difference, Intersection, Iter, SymmetricDifference, Union}``
+
+  - Implemented ``Debug`` for ``map::{Entry, IntoIter, Iter, Keys, Values}`` and
+    ``set::{Difference, Intersection, IntoIter, Iter, SymmetricDifference, Union}``
+
+  - Serde trait ``IntoDeserializer`` are implemented for ``IndexMap`` and ``IndexSet``.
+
+  - Minimum Rust version requirement increased to Rust 1.30 for development builds.
+
+- 1.0.2
+
+  - The new methods ``IndexMap::insert_full`` and ``IndexSet::insert_full`` are
+    both like ``insert`` with the index included in the return value.
+
+  - The new method ``Entry::and_modify`` can be used to modify occupied
+    entries, matching the new methods of ``std`` maps in Rust 1.26.
+
+  - The new method ``Entry::or_default`` inserts a default value in unoccupied
+    entries, matching the new methods of ``std`` maps in Rust 1.28.
 
 - 1.0.1
 

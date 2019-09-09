@@ -1898,12 +1898,11 @@
       // Make sure the browser is destroyed so it unregisters from observer notifications
       aBrowser.destroy();
       // Only remove the node if we're not rebuilding the frameloader via nsFrameLoaderOwner.
-      if (
-        !Services.prefs.getBoolPref(
-          "fission.rebuild_frameloaders_on_remoteness_change",
-          false
-        )
-      ) {
+      let rebuildFrameLoaders =
+        Services.prefs.getBoolPref(
+          "fission.rebuild_frameloaders_on_remoteness_change"
+        ) || window.docShell.nsILoadContext.useRemoteSubframes;
+      if (!rebuildFrameLoaders) {
         aBrowser.remove();
       }
 
@@ -1948,12 +1947,7 @@
         aBrowser.removeAttribute("remoteType");
       }
 
-      if (
-        !Services.prefs.getBoolPref(
-          "fission.rebuild_frameloaders_on_remoteness_change",
-          false
-        )
-      ) {
+      if (!rebuildFrameLoaders) {
         parent.appendChild(aBrowser);
       } else {
         // This call actually switches out our frameloaders. Do this as late as

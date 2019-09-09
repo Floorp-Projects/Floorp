@@ -1,5 +1,5 @@
 var g1 = newGlobal();
-schedulegc(g1);
+schedulezone(g1);
 gcslice(1);
 function testEq(b) {
     var a = deserialize(serialize(b));

@@ -64,11 +64,6 @@ fn imm64(offset: usize) -> ir::immediates::Imm64 {
     (offset as i64).into()
 }
 
-/// Convert a usize offset into a `Uimm64`.
-fn uimm64(offset: usize) -> ir::immediates::Uimm64 {
-    (offset as u64).into()
-}
-
 /// Initialize a `Signature` from a wasm signature.
 fn init_sig_from_wsig(
     call_conv: CallConv,
@@ -446,28 +441,27 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             ));
         }
 
-        // Get the address of the `TlsData::memoryBase` field.
-        let base_addr = self.get_vmctx_gv(func);
-        // Get the `TlsData::memoryBase` field. We assume this is never modified during execution
-        // of the function.
+        let vcmtx = self.get_vmctx_gv(func);
+
+        let bound = self.static_env.staticMemoryBound as u64;
+        let is_static = bound > 0;
+
+        // Get the `TlsData::memoryBase` field.
         let base = func.create_global_value(ir::GlobalValueData::Load {
-            base: base_addr,
+            base: vcmtx,
             offset: offset32(0),
             global_type: native_pointer_type(),
-            readonly: true,
+            readonly: is_static,
         });
-        let min_size = ir::immediates::Uimm64::new(self.env.min_memory_length() as u64);
-        let guard_size = uimm64(self.static_env.memoryGuardSize);
 
-        let bound = self.static_env.staticMemoryBound;
-        let style = if bound > 0 {
+        let style = if is_static {
             // We have a static heap.
-            let bound = (bound as u64).into();
+            let bound = bound.into();
             ir::HeapStyle::Static { bound }
         } else {
             // Get the `TlsData::boundsCheckLimit` field.
             let bound_gv = func.create_global_value(ir::GlobalValueData::Load {
-                base: base_addr,
+                base: vcmtx,
                 offset: native_pointer_size().into(),
                 global_type: ir::types::I32,
                 readonly: false,
@@ -475,10 +469,13 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
             ir::HeapStyle::Dynamic { bound_gv }
         };
 
+        let min_size = (self.env.min_memory_length() as u64).into();
+        let offset_guard_size = (self.static_env.memoryGuardSize as u64).into();
+
         Ok(func.create_heap(ir::HeapData {
             base,
             min_size,
-            offset_guard_size: guard_size,
+            offset_guard_size,
             style,
             index_type: ir::types::I32,
         }))
@@ -524,9 +521,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
 
         Ok(func.create_table(ir::TableData {
             base_gv,
-            min_size: ir::immediates::Uimm64::new(0),
+            min_size: 0.into(),
             bound_gv,
-            element_size: ir::immediates::Uimm64::new(u64::from(self.pointer_bytes()) * 2),
+            element_size: (u64::from(self.pointer_bytes()) * 2).into(),
             index_type: ir::types::I32,
         }))
     }

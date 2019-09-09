@@ -12,7 +12,7 @@ var g = newGlobal({newCompartment: true});
 var gw = dbg.addDebuggee(g);
 lfOffThreadGlobal = null;
 gc();
-schedulegc(this);
-schedulegc('atoms');
+schedulezone(this);
+schedulezone('atoms');
 gc('zone');
 

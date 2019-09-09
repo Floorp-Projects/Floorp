@@ -33,11 +33,11 @@ fn main() {
     print_decode_table(&url_alphabet, "URL_SAFE_DECODE", 0);
 
     // ./0123456789
-    let crypt_alphabet: Vec<u8> = (b'.'..(b'9'+1))
+    let crypt_alphabet: Vec<u8> = (b'.'..(b'9' + 1))
         // A-Z
-        .chain(b'A'..(b'Z'+1))
+        .chain(b'A'..(b'Z' + 1))
         // a-z
-        .chain(b'a'..(b'z'+1))
+        .chain(b'a'..(b'z' + 1))
         .collect();
     print_encode_table(&crypt_alphabet, "CRYPT_ENCODE", 0);
     print_decode_table(&crypt_alphabet, "CRYPT_DECODE", 0);

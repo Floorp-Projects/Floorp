@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('gcstate' in this)
+// |jit-test| skip-if: !hasFunction["gczeal"]
 // Removing and adding debuggees during an incremental sweep should not confuse
 // the generatorFrames map.
 

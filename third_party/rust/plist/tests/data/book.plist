@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Title</key>
+    <string>Great Expectations</string>
+	<key>Author</key>
+	<string>Charles Dickens</string>
+    <key>Excerpt</key>
+    <string>Whether I should have made out this object so soon, if there had been no fine lady sitting at it, I cannot say. In an armchair, with an elbow resting on the table and her head leaning on that hand, sat the strangest lady I have ever seen, or shall ever see.</string>
+	<key>CopiesSold</key>
+	<integer>123456789</integer>
+</dict>
+</plist>

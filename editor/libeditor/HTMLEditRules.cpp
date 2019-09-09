@@ -784,10 +784,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       NS_WARNING_ASSERTION(result.Succeeded(),
                            "HandleDeleteSelection() failed");
       return result.Rv();
-    case EditSubAction::eIndent:
-      return WillIndent(aCancel, aHandled);
-    case EditSubAction::eOutdent:
-      return WillOutdent(aCancel, aHandled);
     case EditSubAction::eSetPositionToAbsolute:
       return WillAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetPositionToStatic:
@@ -810,8 +806,10 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
@@ -837,8 +835,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditSubAction::eIndent:
-    case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
       return MOZ_KnownLive(HTMLEditorRef())
           .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
@@ -857,8 +853,10 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eCreateOrChangeDefinitionListItem:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eIndent:
     case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eOutdent:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
@@ -4926,62 +4924,74 @@ nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
   return rv;
 }
 
-nsresult HTMLEditRules::WillIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+EditActionResult HTMLEditor::IndentAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (HTMLEditorRef().IsCSSEnabled()) {
-    nsresult rv = WillCSSIndent(aCancel, aHandled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    nsresult rv = WillHTMLIndent(aCancel, aHandled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eIndent, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
   }
-  return NS_OK;
+
+  result |= HandleIndentAtSelection();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() failed");
+  return result.SetResult(rv);
 }
 
-nsresult HTMLEditRules::WillCSSIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+EditActionResult HTMLEditor::HandleIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
+  nsresult rv = WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed, but ignored");
 
-  *aCancel = false;
-  *aHandled = true;
+  if (IsCSSEnabled()) {
+    nsresult rv = HandleCSSIndentAtSelection();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HandleCSSIndentAtSelection() failed");
+    return EditActionHandled(rv);
+  }
+  rv = HandleHTMLIndentAtSelection();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HandleHTMLIndent() failed");
+  return EditActionHandled(rv);
+}
+
+nsresult HTMLEditor::HandleCSSIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  // IndentAroundSelectionWithCSS() creates AutoSelectionRestorer.
+  // HandleCSSIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = MOZ_KnownLive(HTMLEditorRef()).IndentAroundSelectionWithCSS();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = HandleCSSIndentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HandleCSSIndentAtSelectionInternal() failed");
+  return rv;
 }
 
-nsresult HTMLEditor::IndentAroundSelectionWithCSS() {
+nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
@@ -5239,45 +5249,29 @@ nsresult HTMLEditor::IndentAroundSelectionWithCSS() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
-
-  *aCancel = false;
-  *aHandled = true;
+nsresult HTMLEditor::HandleHTMLIndentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  // IndentAroundSelectionWithHTML() creates AutoSelectionRestorer.
+  // HandleHTMLIndentAtSelectionInternal() creates AutoSelectionRestorer.
   // Therefore, even if it returns NS_OK, editor might have been destroyed
   // at restoring Selection.
-  rv = MOZ_KnownLive(HTMLEditorRef()).IndentAroundSelectionWithHTML();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = HandleHTMLIndentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HandleHTMLIndentAtSelectionInternal() failed");
+  return rv;
 }
 
-nsresult HTMLEditor::IndentAroundSelectionWithHTML() {
+nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   AutoSelectionRestorer restoreSelectionLater(*this);
@@ -5570,50 +5564,71 @@ nsresult HTMLEditor::IndentAroundSelectionWithHTML() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel && aHandled);
-  *aCancel = false;
-  *aHandled = true;
+EditActionResult HTMLEditor::OutdentAsSubAction() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  AutoPlaceholderBatch treatAsOneTransaction(*this);
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eOutdent, nsIEditor::eNext);
+
+  EditActionResult result = CanHandleHTMLEditSubAction();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  result |= HandleOutdentAtSelection();
+  if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
+    return result;
+  }
+
+  nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() failed");
+  return result.SetResult(rv);
+}
+
+EditActionResult HTMLEditor::HandleOutdentAtSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
+    nsresult rv = MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return EditActionHandled(rv);
     }
   }
 
-  // OutdentAroundSelection() creates AutoSelectionRestorer.  Therefore,
-  // even if it returns NS_OK, the editor might have been destroyed at
-  // restoring Selection.
-  SplitRangeOffFromNodeResult outdentResult = OutdentAroundSelection();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  // HandleOutdentAtSelectionInternal() creates AutoSelectionRestorer.
+  // Therefore, even if it returns NS_OK, the editor might have been destroyed
+  // at restoring Selection.
+  SplitRangeOffFromNodeResult outdentResult =
+      HandleOutdentAtSelectionInternal();
+  if (NS_WARN_IF(Destroyed())) {
+    return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_WARN_IF(outdentResult.Failed())) {
-    return outdentResult.Rv();
+    return EditActionHandled(outdentResult.Rv());
   }
 
   // Make sure selection didn't stick to last piece of content in old bq (only
   // a problem for collapsed selections)
   if (!outdentResult.GetLeftContent() && !outdentResult.GetRightContent()) {
-    return NS_OK;
+    return EditActionHandled();
   }
 
   if (!SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
+    return EditActionHandled();
   }
 
   // Push selection past end of left element of last split indented element.
   if (outdentResult.GetLeftContent()) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
-      return NS_OK;
+      return EditActionHandled();
     }
     const RangeBoundary& atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionHandled(NS_ERROR_FAILURE);
     }
     if (atStartOfSelection.Container() == outdentResult.GetLeftContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
@@ -5621,110 +5636,101 @@ nsresult HTMLEditRules::WillOutdent(bool* aCancel, bool* aHandled) {
       // Selection is inside the left node - push it past it.
       EditorRawDOMPoint afterRememberedLeftBQ(outdentResult.GetLeftContent());
       afterRememberedLeftBQ.AdvanceOffset();
-      IgnoredErrorResult error;
-      SelectionRefPtr()->Collapse(afterRememberedLeftBQ, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      IgnoredErrorResult errorIgnored;
+      SelectionRefPtr()->Collapse(afterRememberedLeftBQ, errorIgnored);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Failed to collapse selection after the left <blockquote>");
+      NS_WARNING_ASSERTION(!errorIgnored.Failed(),
+                           "Selection::Colapsed() failed, but ignored");
     }
   }
   // And pull selection before beginning of right element of last split
   // indented element.
   if (outdentResult.GetRightContent()) {
     nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
+      return EditActionHandled();
+    }
     const RangeBoundary& atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-      return NS_ERROR_FAILURE;
+      return EditActionHandled(NS_ERROR_FAILURE);
     }
     if (atStartOfSelection.Container() == outdentResult.GetRightContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
                                     *outdentResult.GetRightContent())) {
       // Selection is inside the right element - push it before it.
       EditorRawDOMPoint atRememberedRightBQ(outdentResult.GetRightContent());
-      IgnoredErrorResult error;
-      SelectionRefPtr()->Collapse(atRememberedRightBQ, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      IgnoredErrorResult errorIgnored;
+      SelectionRefPtr()->Collapse(atRememberedRightBQ, errorIgnored);
+      if (NS_WARN_IF(Destroyed())) {
+        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Failed to collapse selection after the right <blockquote>");
+      NS_WARNING_ASSERTION(!errorIgnored.Failed(),
+                           "Selection::Colapsed() failed, but ignored");
     }
   }
-  return NS_OK;
+  return EditActionHandled();
 }
 
-SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
+  AutoSelectionRestorer restoreSelectionLater(*this);
 
-  bool useCSS = HTMLEditorRef().IsCSSEnabled();
+  bool useCSS = IsCSSEnabled();
 
   // Convert the selection ranges into "promoted" selection ranges: this
   // basically just expands the range to include the immediate block parent,
   // and then further expands to include any ancestors whose children are all
   // in the range
   AutoTArray<OwningNonNull<nsINode>, 64> arrayOfNodes;
-  nsresult rv =
-      MOZ_KnownLive(HTMLEditorRef())
-          .SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
-              arrayOfNodes, EditSubAction::eOutdent,
-              HTMLEditor::CollectNonEditableNodes::Yes);
+  nsresult rv = SplitInlinesAndCollectEditTargetNodesInExtendedSelectionRanges(
+      arrayOfNodes, EditSubAction::eOutdent, CollectNonEditableNodes::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return SplitRangeOffFromNodeResult(rv);
   }
 
-  // Okay, now go through all the nodes and remove a level of blockquoting,
-  // or whatever is appropriate.  Wohoo!
-
   nsCOMPtr<nsIContent> leftContentOfLastOutdented;
   nsCOMPtr<nsIContent> middleContentOfLastOutdented;
   nsCOMPtr<nsIContent> rightContentOfLastOutdented;
-  nsCOMPtr<Element> curBlockQuote;
-  nsCOMPtr<nsIContent> firstBQChild, lastBQChild;
-  HTMLEditor::BlockIndentedWith curBlockIndentedWith =
-      HTMLEditor::BlockIndentedWith::HTML;
-  for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
-    if (!arrayOfNodes[i]->IsContent()) {
+  RefPtr<Element> indentedParentElement;
+  nsCOMPtr<nsIContent> firstContentToBeOutdented, lastContentToBeOutdented;
+  BlockIndentedWith indentedParentIndentedWith = BlockIndentedWith::HTML;
+  for (auto& curNode : arrayOfNodes) {
+    if (!curNode->IsContent()) {
       continue;
     }
-    OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
-
+    OwningNonNull<nsIContent> curContent = *curNode->AsContent();
     // Here's where we actually figure out what to do
-    int32_t offset;
-    nsCOMPtr<nsINode> curParent = EditorBase::GetNodeLocation(curNode, &offset);
-    if (!curParent) {
+    EditorDOMPoint atCurContent(curContent);
+    if (!atCurContent.IsSet()) {
       continue;
     }
 
-    // Is it a blockquote?
-    if (curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
-      // If it is a blockquote, remove it.  So we need to finish up dealng
-      // with any curBlockQuote first.
-      if (curBlockQuote) {
-        SplitRangeOffFromNodeResult outdentResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                    curBlockIndentedWith);
+    // If it's a `<blockquote>`, remove it to outdent its children.
+    if (curContent->IsHTMLElement(nsGkAtoms::blockquote)) {
+      // If we've already found an ancestor block element indented, we need to
+      // split it and remove the block element first.
+      if (indentedParentElement) {
+        MOZ_ASSERT(indentedParentElement == curContent);
+        SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
+            *indentedParentElement, *firstContentToBeOutdented,
+            *lastContentToBeOutdented, indentedParentIndentedWith);
         if (NS_WARN_IF(outdentResult.Failed())) {
           return outdentResult;
         }
         leftContentOfLastOutdented = outdentResult.GetLeftContent();
         middleContentOfLastOutdented = outdentResult.GetMiddleContent();
         rightContentOfLastOutdented = outdentResult.GetRightContent();
-        curBlockQuote = nullptr;
-        firstBQChild = nullptr;
-        lastBQChild = nullptr;
-        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
+        indentedParentElement = nullptr;
+        firstContentToBeOutdented = nullptr;
+        lastContentToBeOutdented = nullptr;
+        indentedParentIndentedWith = BlockIndentedWith::HTML;
       }
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .RemoveBlockContainerWithTransaction(
-                   MOZ_KnownLive(*curNode->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = RemoveBlockContainerWithTransaction(
+          MOZ_KnownLive(*curContent->AsElement()));
+      if (NS_WARN_IF(Destroyed())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5733,110 +5739,104 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       continue;
     }
 
-    // Is it a block with a 'margin' property?
-    if (useCSS && HTMLEditor::NodeIsBlockStatic(curNode)) {
-      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+    // If we're using CSS and the node is a block element, check its start
+    // margin whether it's indented with CSS.
+    if (useCSS && HTMLEditor::NodeIsBlockStatic(curContent)) {
+      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curContent);
       nsAutoString value;
-      CSSEditUtils::GetSpecifiedProperty(curNode, marginProperty, value);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      CSSEditUtils::GetSpecifiedProperty(curContent, marginProperty, value);
+      if (NS_WARN_IF(Destroyed())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      float f;
+      float startMargin = 0;
       RefPtr<nsAtom> unit;
-      CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
-      if (f > 0) {
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .ChangeMarginStart(MOZ_KnownLive(*curNode->AsElement()),
-                                   HTMLEditor::ChangeMargin::Decrease);
+      CSSEditUtils::ParseLength(value, &startMargin, getter_AddRefs(unit));
+      // If indented with CSS, we should decrease the start mergin.
+      if (startMargin > 0) {
+        nsresult rv = ChangeMarginStart(MOZ_KnownLive(*curContent->AsElement()),
+                                        ChangeMargin::Decrease);
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "Failed to decrease indentation");
+                             "ChangeMarginStart() failed, but ignored");
         continue;
       }
     }
 
-    // Is it a list item?
-    if (HTMLEditUtils::IsListItem(curNode)) {
+    // If it's a list item, we should treat as that it "indents" its children.
+    if (HTMLEditUtils::IsListItem(curContent)) {
       // If it is a list item, that means we are not outdenting whole list.
-      // So we need to finish up dealing with any curBlockQuote, and then pop
-      // this list item.
-      if (curBlockQuote) {
-        SplitRangeOffFromNodeResult outdentResult =
-            MOZ_KnownLive(HTMLEditorRef())
-                .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                    curBlockIndentedWith);
+      // XXX I don't understand this sentence...  We may meet parent list
+      //     element, no?
+      if (indentedParentElement) {
+        SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
+            *indentedParentElement, *firstContentToBeOutdented,
+            *lastContentToBeOutdented, indentedParentIndentedWith);
         if (NS_WARN_IF(outdentResult.Failed())) {
           return outdentResult;
         }
         leftContentOfLastOutdented = outdentResult.GetLeftContent();
         middleContentOfLastOutdented = outdentResult.GetMiddleContent();
         rightContentOfLastOutdented = outdentResult.GetRightContent();
-        curBlockQuote = nullptr;
-        firstBQChild = nullptr;
-        lastBQChild = nullptr;
-        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
+        indentedParentElement = nullptr;
+        firstContentToBeOutdented = nullptr;
+        lastContentToBeOutdented = nullptr;
+        indentedParentIndentedWith = BlockIndentedWith::HTML;
       }
-      // XXX `curNode` could become different element since
-      //     `OutdentPartOfBlock()` may run mutaiton event listeners.
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .LiftUpListItemElement(
-                   MOZ_KnownLive(*curNode->AsElement()),
-                   HTMLEditor::LiftUpFromAllParentListElements::No);
+      // XXX `curContent` could become different element since
+      //     `OutdentPartOfBlock()` may run mutation event listeners.
+      rv = LiftUpListItemElement(MOZ_KnownLive(*curContent->AsElement()),
+                                 LiftUpFromAllParentListElements::No);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return SplitRangeOffFromNodeResult(rv);
       }
       continue;
     }
 
-    // Do we have a blockquote that we are already committed to removing?
-    if (curBlockQuote) {
-      // If so, is this node a descendant?
-      if (EditorUtils::IsDescendantOf(*curNode, *curBlockQuote)) {
-        lastBQChild = curNode;
-        // Then we don't need to do anything different for this node
+    // If we've found an ancestor block element which indents its children
+    // and the current node is NOT a descendant of it, we should remove it to
+    // outdent its children.  Otherwise, i.e., current node is a descendant of
+    // it, we meet new node which should be outdented when the indented parent
+    // is removed.
+    if (indentedParentElement) {
+      if (EditorUtils::IsDescendantOf(*curContent, *indentedParentElement)) {
+        // Extend the range to be outdented at removing the
+        // indentedParentElement.
+        lastContentToBeOutdented = curContent;
         continue;
       }
-      // Otherwise, we have progressed beyond end of curBlockQuote, so
-      // let's handle it now.  We need to remove the portion of
-      // curBlockQuote that contains [firstBQChild - lastBQChild].
-      SplitRangeOffFromNodeResult outdentResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                  curBlockIndentedWith);
+      SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
+          *indentedParentElement, *firstContentToBeOutdented,
+          *lastContentToBeOutdented, indentedParentIndentedWith);
       if (NS_WARN_IF(outdentResult.Failed())) {
         return outdentResult;
       }
       leftContentOfLastOutdented = outdentResult.GetLeftContent();
       middleContentOfLastOutdented = outdentResult.GetMiddleContent();
       rightContentOfLastOutdented = outdentResult.GetRightContent();
-      curBlockQuote = nullptr;
-      firstBQChild = nullptr;
-      lastBQChild = nullptr;
+      indentedParentElement = nullptr;
+      firstContentToBeOutdented = nullptr;
+      lastContentToBeOutdented = nullptr;
       // curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
-      // Fall out and handle curNode
+
+      // Then, we need to look for next indentedParentElement.
     }
 
-    // Are we inside a blockquote?
-    OwningNonNull<nsINode> n = curNode;
-    curBlockIndentedWith = HTMLEditor::BlockIndentedWith::HTML;
-    // Keep looking up the hierarchy as long as we don't hit the body or the
-    // active editing host or a table element (other than an entire table)
-    while (!n->IsHTMLElement(nsGkAtoms::body) &&
-           HTMLEditorRef().IsDescendantOfEditorRoot(n) &&
-           (n->IsHTMLElement(nsGkAtoms::table) ||
-            !HTMLEditUtils::IsTableElement(n))) {
-      if (!n->GetParentNode()) {
-        break;
-      }
-      n = *n->GetParentNode();
-      if (n->IsHTMLElement(nsGkAtoms::blockquote)) {
-        // If so, remember it and the first node we are taking out of it.
-        curBlockQuote = n->AsElement();
-        firstBQChild = curNode;
-        lastBQChild = curNode;
+    indentedParentIndentedWith = BlockIndentedWith::HTML;
+    RefPtr<Element> editingHost = GetActiveEditingHost();
+    for (nsCOMPtr<nsINode> parentNode = curContent->GetParentNode();
+         parentNode && !parentNode->IsHTMLElement(nsGkAtoms::body) &&
+         parentNode != editingHost &&
+         (parentNode->IsHTMLElement(nsGkAtoms::table) ||
+          !HTMLEditUtils::IsTableElement(parentNode));
+         parentNode = parentNode->GetParentNode()) {
+      // If we reach a `<blockquote>` ancestor, it should be split at next
+      // time at least for outdenting current node.
+      if (parentNode->IsHTMLElement(nsGkAtoms::blockquote)) {
+        indentedParentElement = parentNode->AsElement();
+        firstContentToBeOutdented = curContent;
+        lastContentToBeOutdented = curContent;
         break;
       }
 
@@ -5844,38 +5844,47 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
         continue;
       }
 
-      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+      nsStaticAtom& marginProperty = MarginPropertyAtomForIndent(curContent);
       nsAutoString value;
-      CSSEditUtils::GetSpecifiedProperty(*n, marginProperty, value);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      CSSEditUtils::GetSpecifiedProperty(*parentNode, marginProperty, value);
+      if (NS_WARN_IF(Destroyed())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      float f;
+      // XXX Now, editing host may become different element.  If so, shouldn't
+      //     we stop this handling?
+      float startMargin;
       RefPtr<nsAtom> unit;
-      CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
-      if (f > 0 && !(HTMLEditUtils::IsList(curParent) &&
-                     HTMLEditUtils::IsList(curNode))) {
-        curBlockQuote = n->AsElement();
-        firstBQChild = curNode;
-        lastBQChild = curNode;
-        curBlockIndentedWith = HTMLEditor::BlockIndentedWith::CSS;
+      CSSEditUtils::ParseLength(value, &startMargin, getter_AddRefs(unit));
+      // If we reach a block element which indents its children with start
+      // margin, we should remove it at next time.
+      if (startMargin > 0 &&
+          !(HTMLEditUtils::IsList(atCurContent.GetContainer()) &&
+            HTMLEditUtils::IsList(curContent))) {
+        indentedParentElement = parentNode->AsElement();
+        firstContentToBeOutdented = curContent;
+        lastContentToBeOutdented = curContent;
+        indentedParentIndentedWith = BlockIndentedWith::CSS;
         break;
       }
     }
 
-    if (curBlockQuote) {
+    if (indentedParentElement) {
       continue;
     }
 
-    // Couldn't find enclosing blockquote.
-    if (HTMLEditUtils::IsList(curParent)) {
+    // If we don't have any block elements which indents current node and
+    // both current node and its parent are list element, remove current
+    // node to move all its children to the parent list.
+    // XXX This is buggy.  When both lists' item types are different,
+    //     we create invalid tree.  E.g., `<ul>` may have `<dd>` as its
+    //     list item element.
+    if (HTMLEditUtils::IsList(atCurContent.GetContainer())) {
       // Move node out of list
-      if (HTMLEditUtils::IsList(curNode)) {
+      if (HTMLEditUtils::IsList(curContent)) {
         // Just unwrap this sublist
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RemoveBlockContainerWithTransaction(
-                     MOZ_KnownLive(*curNode->AsElement()));
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        rv = RemoveBlockContainerWithTransaction(
+            MOZ_KnownLive(*curContent->AsElement()));
+        if (NS_WARN_IF(Destroyed())) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5885,48 +5894,56 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
       continue;
     }
 
-    if (HTMLEditUtils::IsList(curNode)) {
-      // node is a list, but parent is non-list: move list items out
-      nsCOMPtr<nsIContent> child = curNode->GetLastChild();
-      while (child) {
-        if (HTMLEditUtils::IsListItem(child)) {
-          rv = MOZ_KnownLive(HTMLEditorRef())
-                   .LiftUpListItemElement(
-                       MOZ_KnownLive(*child->AsElement()),
-                       HTMLEditor::LiftUpFromAllParentListElements::No);
+    // If current content is a list element but its parent is not a list
+    // element, move children to where it is and remove it from the tree.
+    if (HTMLEditUtils::IsList(curContent)) {
+      // XXX If mutation event listener appends new children forever, this
+      //     becomes an infinite loop so that we should set limitation from
+      //     first child count.
+      for (nsCOMPtr<nsIContent> lastChildContent = curContent->GetLastChild();
+           lastChildContent; lastChildContent = curContent->GetLastChild()) {
+        if (HTMLEditUtils::IsListItem(lastChildContent)) {
+          rv = LiftUpListItemElement(
+              MOZ_KnownLive(*lastChildContent->AsElement()),
+              LiftUpFromAllParentListElements::No);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return SplitRangeOffFromNodeResult(rv);
           }
-        } else if (HTMLEditUtils::IsList(child)) {
+          continue;
+        }
+
+        if (HTMLEditUtils::IsList(lastChildContent)) {
           // We have an embedded list, so move it out from under the parent
           // list. Be sure to put it after the parent list because this
           // loop iterates backwards through the parent's list of children.
-          EditorDOMPoint afterCurrentList(curParent, offset + 1);
-          rv = MOZ_KnownLive(HTMLEditorRef())
-                   .MoveNodeWithTransaction(*child, afterCurrentList);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
+          EditorDOMPoint afterCurrentList(atCurContent);
+          DebugOnly<bool> advanced = afterCurrentList.AdvanceOffset();
+          NS_WARNING_ASSERTION(
+              advanced, "Failed to set it to after current list element");
+          rv = MoveNodeWithTransaction(*lastChildContent, afterCurrentList);
+          if (NS_WARN_IF(Destroyed())) {
             return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return SplitRangeOffFromNodeResult(rv);
           }
-        } else {
-          // Delete any non-list items for now
-          rv = MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*child);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return SplitRangeOffFromNodeResult(rv);
-          }
+          continue;
         }
-        child = curNode->GetLastChild();
+
+        // Delete any non-list items for now
+        // XXX Chrome moves it from the list element.  We should follow it.
+        rv = DeleteNodeWithTransaction(*lastChildContent);
+        if (NS_WARN_IF(Destroyed())) {
+          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return SplitRangeOffFromNodeResult(rv);
+        }
       }
       // Delete the now-empty list
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .RemoveBlockContainerWithTransaction(
-                   MOZ_KnownLive(*curNode->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = RemoveBlockContainerWithTransaction(
+          MOZ_KnownLive(*curContent->AsElement()));
+      if (NS_WARN_IF(Destroyed())) {
         return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5936,28 +5953,26 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
     }
 
     if (useCSS) {
-      nsCOMPtr<Element> element;
-      if (curNode->GetAsText()) {
-        // We want to outdent the parent of text nodes
-        element = curNode->GetParentElement();
-      } else if (curNode->IsElement()) {
-        element = curNode->AsElement();
+      RefPtr<Element> element;
+      if (curContent->IsCharacterData()) {
+        // We want to outdent the parent of text nodes etc.
+        element = curContent->GetParentElement();
+      } else if (curContent->IsElement()) {
+        element = curContent->AsElement();
       }
       if (element) {
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .ChangeMarginStart(
-                              *element, HTMLEditor::ChangeMargin::Decrease);
+        nsresult rv = ChangeMarginStart(*element, ChangeMargin::Decrease);
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "Failed to decrease indentation");
+                             "ChangeMarginStart() failed, but ignored");
       }
       continue;
     }
   }
 
-  if (!curBlockQuote) {
+  if (!indentedParentElement) {
     return SplitRangeOffFromNodeResult(leftContentOfLastOutdented,
                                        middleContentOfLastOutdented,
                                        rightContentOfLastOutdented);
@@ -5965,9 +5980,8 @@ SplitRangeOffFromNodeResult HTMLEditRules::OutdentAroundSelection() {
 
   // We have a <blockquote> we haven't finished handling.
   SplitRangeOffFromNodeResult outdentResult =
-      MOZ_KnownLive(HTMLEditorRef())
-          .OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                              curBlockIndentedWith);
+      OutdentPartOfBlock(*indentedParentElement, *firstContentToBeOutdented,
+                         *lastContentToBeOutdented, indentedParentIndentedWith);
   if (NS_WARN_IF(outdentResult.Failed())) {
     return outdentResult;
   }
@@ -6446,8 +6460,8 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
 
-  nsTArray<bool> transitionList;
-  MakeTransitionList(nodeArray, transitionList);
+  AutoTArray<bool, 64> transitionList;
+  HTMLEditor::MakeTransitionList(nodeArray, transitionList);
 
   // Okay, now go through all the nodes and give them an align attrib or put
   // them in a div, or whatever is appropriate.  Woohoo!
@@ -6499,14 +6513,18 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // If it's a list item, or a list inside a list, forget any "current" div,
     // and instead put divs inside the appropriate block (td, li, etc.)
     if (HTMLEditUtils::IsListItem(curNode) || HTMLEditUtils::IsList(curNode)) {
+      Element* listOrListItemElement = curNode->AsElement();
       AutoEditorDOMPointOffsetInvalidator lockChild(atCurNode);
-      rv = RemoveAlignment(*curNode, aAlignType, true);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveAlignFromDescendants(
+                   MOZ_KnownLive(*listOrListItemElement), aAlignType,
+                   HTMLEditor::EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       if (useCSS) {
         HTMLEditorRef().mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-            MOZ_KnownLive(curNode->AsElement()), nullptr, nsGkAtoms::align,
+            MOZ_KnownLive(listOrListItemElement), nullptr, nsGkAtoms::align,
             &aAlignType, false);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
@@ -6517,10 +6535,12 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
         // If we don't use CSS, add a content to list element: they have to
         // be inside another list, i.e., >= second level of nesting.
-        // XXX AlignInnerBlocks() handles list item elements and table cells.
-        //     Is it intentional to change alignment of nested other type
-        //     descendants too?
-        rv = AlignInnerBlocks(*curNode, aAlignType);
+        // XXX AlignContentsInAllTableCellsAndListItems() handles only list
+        //     item elements and table cells.  Is it intentional?  Why don't
+        //     we need to align contents in other type blocks?
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .AlignContentsInAllTableCellsAndListItems(
+                     MOZ_KnownLive(*listOrListItemElement), aAlignType);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -6581,19 +6601,21 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
-                                         const nsAString& aAlignType) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::AlignContentsInAllTableCellsAndListItems(
+    Element& aElement, const nsAString& aAlignType) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Gather list of table cells or list items
-  nsTArray<OwningNonNull<nsINode>> nodeArray;
+  AutoTArray<OwningNonNull<nsINode>, 64> nodeArray;
   TableCellAndListItemFunctor functor;
-  DOMIterator iter(aNode);
+  DOMIterator iter(aElement);
   iter.AppendList(functor, nodeArray);
 
   // Now that we have the list, align their contents as requested
   for (auto& node : nodeArray) {
-    nsresult rv = AlignBlockContents(*node, aAlignType);
+    MOZ_ASSERT(node->IsElement());
+    nsresult rv = AlignBlockContentsWithDivElement(
+        MOZ_KnownLive(*node->AsElement()), aAlignType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6602,67 +6624,68 @@ nsresult HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
   return NS_OK;
 }
 
-nsresult HTMLEditRules::AlignBlockContents(nsINode& aNode,
-                                           const nsAString& aAlignType) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::AlignBlockContentsWithDivElement(
+    Element& aBlockElement, const nsAString& aAlignType) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsCOMPtr<nsIContent> firstChild =
-      HTMLEditorRef().GetFirstEditableChild(aNode);
-  if (!firstChild) {
-    // this cell has no content, nothing to align
+  // XXX I don't understand why we should NOT align non-editable children
+  //     with modifying EDITABLE `<div>` element.
+  nsCOMPtr<nsIContent> firstEditableContent =
+      GetFirstEditableChild(aBlockElement);
+  if (!firstEditableContent) {
+    // This block has no editable content, nothing to align.
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> lastChild = HTMLEditorRef().GetLastEditableChild(aNode);
-  if (firstChild == lastChild && firstChild->IsHTMLElement(nsGkAtoms::div)) {
-    // the cell already has a div containing all of its content: just
-    // act on this div.
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .SetAttributeOrEquivalent(MOZ_KnownLive(firstChild->AsElement()),
-                                      nsGkAtoms::align, aAlignType, false);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  // If there is only one editable content and it's a `<div>` element,
+  // just set `align` attribute of it.
+  nsCOMPtr<nsIContent> lastEditableContent =
+      GetLastEditableChild(aBlockElement);
+  if (firstEditableContent == lastEditableContent &&
+      firstEditableContent->IsHTMLElement(nsGkAtoms::div)) {
+    nsresult rv = SetAttributeOrEquivalent(
+        MOZ_KnownLive(firstEditableContent->AsElement()), nsGkAtoms::align,
+        aAlignType, false);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetAttributeOrEquivalent() failed");
+    return rv;
   }
 
-  // else we need to put in a div, set the alignment, and toss in all the
-  // children
-  RefPtr<Element> divElem = MOZ_KnownLive(HTMLEditorRef())
-                                .CreateNodeWithTransaction(
-                                    *nsGkAtoms::div, EditorDOMPoint(&aNode, 0));
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  // Otherwise, we need to insert a `<div>` element to set `align` attribute.
+  // XXX Don't insert the new `<div>` element until we set `align` attribute
+  //     for avoiding running mutation event listeners.
+  RefPtr<Element> divElement = CreateNodeWithTransaction(
+      *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(!divElem)) {
+  if (NS_WARN_IF(!divElement)) {
     return NS_ERROR_FAILURE;
   }
-  // set up the alignment on the div
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
-                                              aAlignType, false);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv =
+      SetAttributeOrEquivalent(divElement, nsGkAtoms::align, aAlignType, false);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  // tuck the children into the end of the active div
-  while (lastChild && (lastChild != divElem)) {
-    nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .MoveNodeWithTransaction(*lastChild, EditorDOMPoint(divElem, 0));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+  // XXX This is tricky and does not work with mutation event listeners.
+  //     But I'm not sure what we should do if new content is inserted.
+  //     Anyway, I don't think that we should move editable contents
+  //     over non-editable contents.  Chrome does no do that.
+  while (lastEditableContent && (lastEditableContent != divElement)) {
+    nsresult rv = MoveNodeWithTransaction(*lastEditableContent,
+                                          EditorDOMPoint(divElement, 0));
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    lastChild = HTMLEditorRef().GetLastEditableChild(aNode);
+    lastEditableContent = GetLastEditableChild(aBlockElement);
   }
   return NS_OK;
 }
@@ -8037,20 +8060,14 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
   return content;
 }
 
-void HTMLEditRules::MakeTransitionList(
-    nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+// static
+void HTMLEditor::MakeTransitionList(
+    const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
     nsTArray<bool>& aTransitionArray) {
-  nsCOMPtr<nsINode> prevParent;
-
+  nsINode* prevParent = nullptr;
   aTransitionArray.EnsureLengthAtLeast(aNodeArray.Length());
   for (uint32_t i = 0; i < aNodeArray.Length(); i++) {
-    if (aNodeArray[i]->GetParentNode() != prevParent) {
-      // Different parents: transition point
-      aTransitionArray[i] = true;
-    } else {
-      // Same parents: these nodes grew up together
-      aTransitionArray[i] = false;
-    }
+    aTransitionArray[i] = aNodeArray[i]->GetParentNode() != prevParent;
     prevParent = aNodeArray[i]->GetParentNode();
   }
 }
@@ -10569,176 +10586,188 @@ void HTMLEditRules::WillDeleteSelection() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddRangeToChangedRange() failed");
 }
 
-nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
-                                        const nsAString& aAlignType,
-                                        bool aDescendantsOnly) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
+                                                const nsAString& aAlignType,
+                                                EditTarget aEditTarget) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aElement.IsHTMLElement(nsGkAtoms::table));
 
-  if (EditorBase::IsTextNode(&aNode) || HTMLEditUtils::IsTable(&aNode)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsINode> child, tmp;
-  if (aDescendantsOnly) {
-    child = aNode.GetFirstChild();
-  } else {
-    child = &aNode;
-  }
-
-  bool useCSS = HTMLEditorRef().IsCSSEnabled();
+  bool useCSS = IsCSSEnabled();
 
   // Let's remove all alignment hints in the children of aNode; it can
   // be an ALIGN attribute (in case we just remove it) or a CENTER
   // element (here we have to remove the container and keep its
   // children). We break on tables and don't look at their children.
-  while (child) {
-    if (aDescendantsOnly) {
-      // get the next sibling right now because we could have to remove child
-      tmp = child->GetNextSibling();
-    } else {
-      tmp = nullptr;
-    }
+  nsCOMPtr<nsIContent> nextSibling;
+  for (nsIContent* content =
+           aEditTarget == EditTarget::NodeAndDescendantsExceptTable
+               ? &aElement
+               : aElement.GetFirstChild();
+       content; content = nextSibling) {
+    // Get the next sibling before removing content from the DOM tree.
+    // XXX If next sibling is removed from the parent and/or inserted to
+    //     different parent, we will behave unexpectedly.  I think that
+    //     we should create child list and handle it with checking whether
+    //     it's still a child of expected parent.
+    nextSibling = aEditTarget == EditTarget::NodeAndDescendantsExceptTable
+                      ? nullptr
+                      : content->GetNextSibling();
 
-    if (child->IsHTMLElement(nsGkAtoms::center)) {
-      // the current node is a CENTER element
-      // first remove children's alignment
-      nsresult rv = RemoveAlignment(*child, aAlignType, true);
+    if (content->IsHTMLElement(nsGkAtoms::center)) {
+      OwningNonNull<Element> centerElement = *content->AsElement();
+      nsresult rv = RemoveAlignFromDescendants(
+          centerElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      // we may have to insert BRs in first and last position of element's
-      // children if the nodes before/after are not blocks and not BRs
-      rv = MakeSureElemStartsAndEndsOnCR(*child);
+      // We may have to insert a `<br>` element before first child of the
+      // `<center>` element because it should be first element of a hard line
+      // even after removing the `<center>` element.
+      rv = EnsureHardLineBeginsWithFirstChildOf(centerElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      // now remove the CENTER container
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .RemoveContainerWithTransaction(
-                   MOZ_KnownLive(*child->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      // We may have to insert a `<br>` element after last child of the
+      // `<center>` element because it should be last element of a hard line
+      // even after removing the `<center>` element.
+      rv = EnsureHardLineEndsWithLastChildOf(centerElement);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = RemoveContainerWithTransaction(centerElement);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (HTMLEditor::NodeIsBlockStatic(*child) ||
-               child->IsHTMLElement(nsGkAtoms::hr)) {
-      // the current node is a block element
-      if (HTMLEditUtils::SupportsAlignAttr(*child)) {
-        // remove the ALIGN attribute if this element can have it
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .RemoveAttributeWithTransaction(
-                    MOZ_KnownLive(*child->AsElement()), *nsGkAtoms::align);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+      continue;
+    }
+
+    if (!HTMLEditor::NodeIsBlockStatic(*content) &&
+        !content->IsHTMLElement(nsGkAtoms::hr)) {
+      continue;
+    }
+
+    OwningNonNull<Element> blockOrHRElement = *content->AsElement();
+    if (HTMLEditUtils::SupportsAlignAttr(blockOrHRElement)) {
+      nsresult rv =
+          RemoveAttributeWithTransaction(blockOrHRElement, *nsGkAtoms::align);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    if (useCSS) {
+      if (blockOrHRElement->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                                nsGkAtoms::hr)) {
+        nsresult rv = SetAttributeOrEquivalent(
+            blockOrHRElement, nsGkAtoms::align, aAlignType, false);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      } else {
+        nsAutoString dummyCssValue;
+        nsresult rv = mCSSEditUtils->RemoveCSSInlineStyle(
+            blockOrHRElement, nsGkAtoms::textAlign, dummyCssValue);
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
-      if (useCSS) {
-        if (child->IsAnyOfHTMLElements(nsGkAtoms::table, nsGkAtoms::hr)) {
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .SetAttributeOrEquivalent(
-                                MOZ_KnownLive(child->AsElement()),
-                                nsGkAtoms::align, aAlignType, false);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        } else {
-          nsAutoString dummyCssValue;
-          nsresult rv = HTMLEditorRef().mCSSEditUtils->RemoveCSSInlineStyle(
-              *child, nsGkAtoms::textAlign, dummyCssValue);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        }
-      }
-      if (!child->IsHTMLElement(nsGkAtoms::table)) {
-        // unless this is a table, look at children
-        nsresult rv = RemoveAlignment(*child, aAlignType, true);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+    }
+    if (!blockOrHRElement->IsHTMLElement(nsGkAtoms::table)) {
+      // unless this is a table, look at children
+      nsresult rv = RemoveAlignFromDescendants(
+          blockOrHRElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
     }
-    child = tmp;
   }
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
-                                                     bool aStarts) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
+    Element& aRemovingContainerElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsINode* child = aStarts ? HTMLEditorRef().GetFirstEditableChild(aNode)
-                           : HTMLEditorRef().GetLastEditableChild(aNode);
-  if (NS_WARN_IF(!child)) {
+  nsIContent* firstEditableChild =
+      GetFirstEditableChild(aRemovingContainerElement);
+  if (!firstEditableChild) {
     return NS_OK;
   }
 
-  bool foundCR = false;
-  if (HTMLEditor::NodeIsBlockStatic(*child) ||
-      child->IsHTMLElement(nsGkAtoms::br)) {
-    foundCR = true;
-  } else {
-    nsINode* sibling = aStarts ? HTMLEditorRef().GetPriorHTMLSibling(&aNode)
-                               : HTMLEditorRef().GetNextHTMLSibling(&aNode);
-    if (sibling) {
-      if (HTMLEditor::NodeIsBlockStatic(*sibling) ||
-          sibling->IsHTMLElement(nsGkAtoms::br)) {
-        foundCR = true;
-      }
-    } else {
-      foundCR = true;
-    }
+  if (HTMLEditor::NodeIsBlockStatic(*firstEditableChild) ||
+      firstEditableChild->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
   }
-  if (!foundCR) {
-    EditorDOMPoint pointToInsert;
-    if (!aStarts) {
-      pointToInsert.SetToEndOf(&aNode);
-    } else {
-      pointToInsert.Set(&aNode, 0);
-    }
-    RefPtr<Element> brElement =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertBRElementWithTransaction(pointToInsert);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
-    }
+
+  nsIContent* previousEditableContent =
+      GetPriorHTMLSibling(&aRemovingContainerElement);
+  if (!previousEditableContent) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*previousEditableContent) ||
+      previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> brElement = InsertBRElementWithTransaction(
+      EditorDOMPoint(&aRemovingContainerElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(!brElement)) {
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeSureElemStartsAndEndsOnCR(nsINode& aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
+    Element& aRemovingContainerElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsIContent* lastEditableChild =
+      GetLastEditableChild(aRemovingContainerElement);
+  if (!lastEditableChild) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*lastEditableChild) ||
+      lastEditableChild->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  nsIContent* nextEditableContent =
+      GetPriorHTMLSibling(&aRemovingContainerElement);
+  if (!nextEditableContent) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*nextEditableContent) ||
+      nextEditableContent->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> brElement = InsertBRElementWithTransaction(
+      EditorDOMPoint::AtEndOf(aRemovingContainerElement));
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  nsresult rv = MakeSureElemStartsOrEndsOnCR(aNode, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  rv = MakeSureElemStartsOrEndsOnCR(aNode, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(!brElement)) {
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -10754,10 +10783,17 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
     return NS_OK;
   }
 
-  nsresult rv = RemoveAlignment(aElement, aAlignType,
-                                aResetAlignOf == ResetAlignOf::OnlyDescendants);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!aElement.IsHTMLElement(nsGkAtoms::table)) {
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .RemoveAlignFromDescendants(
+                aElement, aAlignType,
+                aResetAlignOf == ResetAlignOf::OnlyDescendants
+                    ? HTMLEditor::EditTarget::OnlyDescendantsExceptTable
+                    : HTMLEditor::EditTarget::NodeAndDescendantsExceptTable);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   if (HTMLEditorRef().IsCSSEnabled()) {
     // Let's use CSS alignment; we use margin-left and margin-right for tables
@@ -10781,9 +10817,9 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
     return NS_OK;
   }
 
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align, aAlignType,
-                                     false);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
+                                              aAlignType, false);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

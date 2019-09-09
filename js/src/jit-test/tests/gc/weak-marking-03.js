@@ -450,7 +450,7 @@ function grayKeyMap() {
 
   // Only mark this zone, to avoid interference from other tests that may have
   // created additional zones.
-  schedulegc(vals);
+  schedulezone(vals);
 
   startgc(100000);
   // getMarks() returns map/key/value

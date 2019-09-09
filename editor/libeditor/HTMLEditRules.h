@@ -87,18 +87,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
 
-  /**
-   * MakeSureElemStartsAndEndsOnCR() inserts <br> element at start (and/or end)
-   * of aNode if neither:
-   * - first (last) editable child of aNode is a block or a <br>,
-   * - previous (next) sibling of aNode is block or a <br>
-   * - nor no previous (next) sibling of aNode.
-   *
-   * @param aNode               The node which may be inserted <br> elements.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
-
   void DidCreateNode(Element& aNewElement);
   void DidInsertNode(nsIContent& aNode);
   void WillDeleteNode(nsINode& aChild);
@@ -124,46 +112,6 @@ class HTMLEditRules : public TextEditRules {
    * necessary.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
-
-  /**
-   * Called before indenting around Selection.  This method actually tries to
-   * indent the contents.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillIndent(bool* aCancel, bool* aHandled);
-
-  /**
-   * Called before indenting around Selection and it's in CSS mode.
-   * This method actually tries to indent the contents.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
-
-  /**
-   * Called before indenting around Selection and it's not in CSS mode.
-   * This method actually tries to indent the contents.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillHTMLIndent(bool* aCancel, bool* aHandled);
-
-  /**
-   * Called before outdenting around Selection.  This method actually tries
-   * to indent the contents.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillOutdent(bool* aCancel, bool* aHandled);
 
   /**
    * Called before aligning contents around Selection.  This method actually
@@ -244,33 +192,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult DidAbsolutePosition();
 
   /**
-   * AlignInnerBlocks() calls AlignBlockContents() for every list item element
-   * and table cell element in aNode.
-   *
-   * @param aNode               The node whose descendants should be aligned
-   *                            to aAlignType.
-   * @param aAlignType          New value of align attribute of <div>.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignInnerBlocks(nsINode& aNode,
-                                         const nsAString& aAlignType);
-
-  /**
-   * AlignBlockContents() sets align attribute of <div> element which is
-   * only child of aNode to aAlignType.  If aNode has 2 or more children or
-   * does not have a <div> element has only child, inserts a <div> element
-   * into aNode and move all children of aNode into the new <div> element.
-   *
-   * @param aNode               The node whose contents should be aligned
-   *                            to aAlignType.
-   * @param aAlignType          New value of align attribute of <div> which
-   *                            is only child of aNode.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignBlockContents(nsINode& aNode,
-                                           const nsAString& aAlignType);
-
-  /**
    * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
    * This creates AutoSelectionRestorer.  Therefore, even if this returns
    * NS_OK, CanHandleEditAction() may return false if the editor is destroyed
@@ -294,33 +215,9 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AfterEditInner();
 
-  /**
-   * OutdentAroundSelection() outdents contents around Selection.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   *
-   * @return                    The left content is left content of last
-   *                            outdented element.
-   *                            The right content is right content of last
-   *                            outdented element.
-   *                            The middle content is middle content of last
-   *                            outdented element.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE SplitRangeOffFromNodeResult OutdentAroundSelection();
-
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-
-  /**
-   * MakeTransitionList() detects all the transitions in the array, where a
-   * transition means that adjacent nodes in the array don't have the same
-   * parent.
-   */
-  void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-                          nsTArray<bool>& aTransitionArray);
 
   /**
    * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
@@ -391,47 +288,6 @@ class HTMLEditRules : public TextEditRules {
    *     and other browsers allow to edit such elements.
    */
   MOZ_MUST_USE nsresult ConfirmSelectionInBody();
-
-  /**
-   * IsEmptyInline: Return true if aNode is an empty inline container
-   */
-  bool IsEmptyInline(nsINode& aNode);
-
-  bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
-
-  /**
-   * RemoveAlignment() removes align attributes, text-align properties and
-   * <center> elements in aNode.
-   *
-   * @param aNode               Alignment information of the node and/or its
-   *                            descendants will be removed.
-   * @param aAlignType          New align value to be set only when it's in
-   *                            CSS mode and this method meets <table> or <hr>.
-   *                            XXX This is odd and not clear when you see
-   *                                caller of this method.  Do you have better
-   *                                idea?
-   * @param aDescendantsOnly    true if align information of aNode itself
-   *                            shouldn't be removed.  Otherwise, false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult RemoveAlignment(nsINode& aNode,
-                                        const nsAString& aAlignType,
-                                        bool aDescendantsOnly);
-
-  /**
-   * MakeSureElemStartsOrEndsOnCR() inserts <br> element at start (end) of
-   * aNode if neither:
-   * - first (last) editable child of aNode is a block or a <br>,
-   * - previous (next) sibling of aNode is block or a <br>
-   * - nor no previous (next) sibling of aNode.
-   *
-   * @param aNode               The node which may be inserted <br> element.
-   * @param aStarts             true for trying to insert <br> to the start.
-   *                            false for trying to insert <br> to the end.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
-                                                     bool aStarts);
 
   /**
    * AlignBlock() resets align attribute, text-align property, etc first.

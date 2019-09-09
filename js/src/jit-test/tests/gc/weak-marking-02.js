@@ -181,7 +181,7 @@ function zone_edges() {
   for (let zonebits = 0; zonebits < 2 ** zones.length; zonebits++) {
     for (let z in zones) {
       if (zonebits & (1 << z))
-        schedulegc(zones[z]);
+        schedulezone(zones[z]);
     }
     startgc(1);
     wm1.set(wm1.get(m.get(m)).others[0], g2.genObj('val2'));
@@ -202,7 +202,7 @@ function zone_edges() {
   for (let zonebits = 0; zonebits < 2 ** zones.length; zonebits++) {
     for (let z in zones) {
       if (zonebits & (1 << z))
-        schedulegc(zones[z]);
+        schedulezone(zones[z]);
     }
     startgc(1);
     wm1.set(wm1.get(m.get(m)).others[0], g2.genObj('val2'));

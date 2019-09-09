@@ -131,7 +131,9 @@ OutputParser.prototype = {
     options.expectShape = name === "clip-path" || name === "shape-outside";
     options.expectFont = name === "font-family";
     options.supportsColor =
-      this.supportsType(name, "color") || this.supportsType(name, "gradient");
+      this.supportsType(name, "color") ||
+      this.supportsType(name, "gradient") ||
+      (name.startsWith("--") && colorUtils.isValidCSSColor(value));
 
     // The filter property is special in that we want to show the
     // swatch even if the value is invalid, because this way the user

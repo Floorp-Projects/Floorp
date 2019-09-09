@@ -639,6 +639,9 @@ class ContentParent final : public PContentParent,
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
  protected:
+  bool CheckBrowsingContextOwnership(BrowsingContext* aBC,
+                                     const char* aOperation) const;
+
   void OnChannelConnected(int32_t pid) override;
 
   void ActorDestroy(ActorDestroyReason why) override;

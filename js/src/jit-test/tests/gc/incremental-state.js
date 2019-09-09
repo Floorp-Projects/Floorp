@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('gcstate' in this)
+// |jit-test| skip-if: !hasFunction["gczeal"]
 
 // Test expected state changes during collection.
 gczeal(0);
