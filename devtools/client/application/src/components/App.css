@@ -12,3 +12,8 @@ a.disabled-link:visited {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.app {
+	display: grid;
+	grid-template-columns: calc(var(--base-unit) * 50) auto;
+}
