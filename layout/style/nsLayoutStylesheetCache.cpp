@@ -361,7 +361,12 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   if (void* p = base::SharedMemory::FindFreeAddressSpace(2 * kOffset)) {
     address = reinterpret_cast<void*>(uintptr_t(p) + kOffset);
   }
-  if (!mSharedMemory->mShm.Map(kSharedMemorySize, address)) {
+
+  bool parentMapped = mSharedMemory->mShm.Map(kSharedMemorySize, address);
+  Telemetry::Accumulate(Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT,
+                        parentMapped);
+
+  if (!parentMapped) {
     // Failed to map at the address we computed for some reason.  Fall back
     // to just allocating at a location of the OS's choosing, and hope that
     // it works in the content process.
@@ -407,7 +412,10 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   // between the Freeze() and Map() call, we can just fall back to keeping our
   // own copy of the UA style sheets in the parent, and still try sending the
   // shared memory to the content processes.
-  mSharedMemory->mShm.Map(kSharedMemorySize, address);
+  bool parentRemapped = mSharedMemory->mShm.Map(kSharedMemorySize, address);
+  Telemetry::Accumulate(
+      Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT_AFTER_FREEZE,
+      parentRemapped);
 
   // Record how must of the shared memory we have used, for memory reporting
   // later.  We round up to the nearest page since the free space at the end
@@ -666,9 +674,14 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
   MOZ_ASSERT(!sSharedMemory, "Shouldn't call this more than once");
 
   RefPtr<Shm> shm = new Shm();
-  if (shm->mShm.SetHandle(aHandle, /* read_only */ true) &&
-      shm->mShm.Map(kSharedMemorySize, reinterpret_cast<void*>(aAddress))) {
-    sSharedMemory = shm.forget();
+  if (shm->mShm.SetHandle(aHandle, /* read_only */ true)) {
+    bool contentMapped =
+        shm->mShm.Map(kSharedMemorySize, reinterpret_cast<void*>(aAddress));
+    Telemetry::Accumulate(Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_CHILD,
+                          contentMapped);
+    if (contentMapped) {
+      sSharedMemory = shm.forget();
+    }
   }
 }
 
