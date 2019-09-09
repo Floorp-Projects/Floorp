@@ -66,14 +66,14 @@ var tests = [
     script_desc: "(test 6) script should be allowed because of valid nonce",
     img_desc: "(test 6) img should be blocked because of default-src http:",
     script_result: "blocked",
-    img_result: "allowed",
+    img_result: "blocked",
     policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:;"
   },
   {
     script_desc: "(test 7) script should be allowed because of invalid nonce",
     img_desc: "(test 7) img should be blocked because of image-src http:",
     script_result: "blocked",
-    img_result: "allowed",
+    img_result: "blocked",
     policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:; img-src http:"
   },
 ];
