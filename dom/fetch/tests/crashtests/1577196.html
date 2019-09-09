@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+
+function test() {
+  const xhr = new XMLHttpRequest();
+  const frame = document.createElement("frame");
+  document.documentElement.appendChild(frame);
+  const win = frame.contentWindow;
+  const div = document.createElement("div");
+  div.insertBefore(frame, div.childNodes[0]);
+  SpecialPowers.forceCC();
+  SpecialPowers.gc();
+  xhr.open("P", "", false);
+  xhr.send();
+  win.fetch(null, {}).then(function(arg14) {});
+}
+
+for (let i = 0; i < 10; i++) {
+  test();
+}
+
+</script>
+</body>
+</html>
