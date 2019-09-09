@@ -3328,12 +3328,12 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
   aLine->SetBreakTypeBefore(breakType);
 
   // See if we should apply the block-start margin. If the block frame being
-  // reflowed is a continuation (non-null prev-in-flow) then we don't
-  // apply its block-start margin because it's not significant unless it has
-  // 'box-decoration-break:clone'.  Otherwise, dig deeper.
+  // reflowed is a continuation, then we don't apply its block-start margin
+  // because it's not significant unless it has 'box-decoration-break:clone'.
+  // Otherwise, dig deeper.
   bool applyBStartMargin = (frame->StyleBorder()->mBoxDecorationBreak ==
                                 StyleBoxDecorationBreak::Clone ||
-                            !frame->GetPrevInFlow()) &&
+                            !frame->GetPrevContinuation()) &&
                            ShouldApplyBStartMargin(aState, aLine, frame);
   if (applyBStartMargin) {
     // The HasClearance setting is only valid if ShouldApplyBStartMargin
