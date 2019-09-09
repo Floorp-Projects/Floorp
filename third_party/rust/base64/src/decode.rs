@@ -1,5 +1,5 @@
 use byteorder::{BigEndian, ByteOrder};
-use {tables, CharacterSet, Config, STANDARD};
+use {tables, Config, STANDARD};
 
 use std::{error, fmt, str};
 
@@ -143,7 +143,7 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(
     let bytes_written;
     {
         let buffer_slice = &mut buffer.as_mut_slice()[starting_output_len..];
-        bytes_written = decode_helper(input_bytes, num_chunks, &config.char_set, buffer_slice)?;
+        bytes_written = decode_helper(input_bytes, num_chunks, config, buffer_slice)?;
     }
 
     buffer.truncate(starting_output_len + bytes_written);
@@ -170,7 +170,7 @@ pub fn decode_config_slice<T: ?Sized + AsRef<[u8]>>(
     decode_helper(
         input_bytes,
         num_chunks(input_bytes),
-        &config.char_set,
+        config,
         output,
     )
 }
@@ -180,7 +180,8 @@ fn num_chunks(input: &[u8]) -> usize {
     input
         .len()
         .checked_add(INPUT_CHUNK_LEN - 1)
-        .expect("Overflow when calculating number of chunks in input") / INPUT_CHUNK_LEN
+        .expect("Overflow when calculating number of chunks in input")
+        / INPUT_CHUNK_LEN
 }
 
 /// Helper to avoid duplicating num_chunks calculation, which is costly on short inputs.
@@ -192,9 +193,10 @@ fn num_chunks(input: &[u8]) -> usize {
 fn decode_helper(
     input: &[u8],
     num_chunks: usize,
-    char_set: &CharacterSet,
+    config: Config,
     output: &mut [u8],
 ) -> Result<usize, DecodeError> {
+    let char_set = config.char_set;
     let decode_table = char_set.decode_table();
 
     let remainder_len = input.len() % INPUT_CHUNK_LEN;
@@ -312,7 +314,7 @@ fn decode_helper(
     }
 
     // always have one more (possibly partial) block of 8 input
-    debug_assert!(input.len() - input_index > 1 || input.len() == 0);
+    debug_assert!(input.len() - input_index > 1 || input.is_empty());
     debug_assert!(input.len() - input_index <= 8);
 
     // Stage 4
@@ -400,9 +402,12 @@ fn decode_helper(
     // if there are bits set outside the bits we care about, last symbol encodes trailing bits that
     // will not be included in the output
     let mask = !0 >> leftover_bits_ready_to_append;
-    if (leftover_bits & mask) != 0 {
+    if !config.decode_allow_trailing_bits && (leftover_bits & mask) != 0 {
         // last morsel is at `morsels_in_leftover` - 1
-        return Err(DecodeError::InvalidLastSymbol(start_of_leftovers + morsels_in_leftover - 1, last_symbol));
+        return Err(DecodeError::InvalidLastSymbol(
+            start_of_leftovers + morsels_in_leftover - 1,
+            last_symbol,
+        ));
     }
 
     let mut leftover_bits_appended_to_buf = 0;
@@ -542,9 +547,8 @@ mod tests {
     use encode::encode_config_buf;
     use tests::{assert_encode_sanity, random_config};
 
-    use self::rand::distributions::{Distribution, Range};
-    use self::rand::{Rng, FromEntropy};
-
+    use self::rand::distributions::{Distribution, Uniform};
+    use self::rand::{FromEntropy, Rng};
 
     #[test]
     fn decode_chunk_precise_writes_only_6_bytes() {
@@ -570,8 +574,8 @@ mod tests {
         let mut decoded_without_prefix = Vec::new();
         let mut prefix = Vec::new();
 
-        let prefix_len_range = Range::new(0, 1000);
-        let input_len_range = Range::new(0, 1000);
+        let prefix_len_range = Uniform::new(0, 1000);
+        let input_len_range = Uniform::new(0, 1000);
 
         let mut rng = rand::rngs::SmallRng::from_entropy();
 
@@ -590,7 +594,7 @@ mod tests {
 
             let config = random_config(&mut rng);
             encode_config_buf(&orig_data, config, &mut encoded_data);
-            assert_encode_sanity(&encoded_data, &config, input_len);
+            assert_encode_sanity(&encoded_data, config, input_len);
 
             let prefix_len = prefix_len_range.sample(&mut rng);
 
@@ -627,7 +631,7 @@ mod tests {
         let mut decode_buf = Vec::new();
         let mut decode_buf_copy: Vec<u8> = Vec::new();
 
-        let input_len_range = Range::new(0, 1000);
+        let input_len_range = Uniform::new(0, 1000);
 
         let mut rng = rand::rngs::SmallRng::from_entropy();
 
@@ -645,7 +649,7 @@ mod tests {
 
             let config = random_config(&mut rng);
             encode_config_buf(&orig_data, config, &mut encoded_data);
-            assert_encode_sanity(&encoded_data, &config, input_len);
+            assert_encode_sanity(&encoded_data, config, input_len);
 
             // fill the buffer with random garbage, long enough to have some room before and after
             for _ in 0..5000 {
@@ -680,7 +684,7 @@ mod tests {
         let mut encoded_data = String::new();
         let mut decode_buf = Vec::new();
 
-        let input_len_range = Range::new(0, 1000);
+        let input_len_range = Uniform::new(0, 1000);
 
         let mut rng = rand::rngs::SmallRng::from_entropy();
 
@@ -697,7 +701,7 @@ mod tests {
 
             let config = random_config(&mut rng);
             encode_config_buf(&orig_data, config, &mut encoded_data);
-            assert_encode_sanity(&encoded_data, &config, input_len);
+            assert_encode_sanity(&encoded_data, config, input_len);
 
             decode_buf.resize(input_len, 0);
 
@@ -712,17 +716,25 @@ mod tests {
 
     #[test]
     fn detect_invalid_last_symbol_two_bytes() {
+        let decode = |input, forgiving| {
+            decode_config(input, STANDARD.decode_allow_trailing_bits(forgiving))
+        };
+
         // example from https://github.com/alicemaz/rust-base64/issues/75
-        assert!(decode("iYU=").is_ok());
+        assert!(decode("iYU=", false).is_ok());
         // trailing 01
-        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'V')), decode("iYV="));
+        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'V')), decode("iYV=", false));
+        assert_eq!(Ok(vec![137, 133]), decode("iYV=", true));
         // trailing 10
-        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'W')), decode("iYW="));
+        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'W')), decode("iYW=", false));
+        assert_eq!(Ok(vec![137, 133]), decode("iYV=", true));
         // trailing 11
-        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'X')), decode("iYX="));
+        assert_eq!(Err(DecodeError::InvalidLastSymbol(2, b'X')), decode("iYX=", false));
+        assert_eq!(Ok(vec![137, 133]), decode("iYV=", true));
 
         // also works when there are 2 quads in the last block
-        assert_eq!(Err(DecodeError::InvalidLastSymbol(6, b'X')), decode("AAAAiYX="));
+        assert_eq!(Err(DecodeError::InvalidLastSymbol(6, b'X')), decode("AAAAiYX=", false));
+        assert_eq!(Ok(vec![0, 0, 0, 137, 133]), decode("AAAAiYX=", true));
     }
 
     #[test]
@@ -739,7 +751,10 @@ mod tests {
         assert_eq!(Err(DecodeError::InvalidLastSymbol(1, b'/')), decode("//=="));
 
         // also works when there are 2 quads in the last block
-        assert_eq!(Err(DecodeError::InvalidLastSymbol(5, b'x')), decode("AAAA/x=="));
+        assert_eq!(
+            Err(DecodeError::InvalidLastSymbol(5, b'x')),
+            decode("AAAA/x==")
+        );
     }
 
     #[test]
@@ -757,7 +772,7 @@ mod tests {
                 v.extend_from_slice(&bytes[..]);
 
                 assert!(base64_to_bytes.insert(b64, v).is_none());
-            };
+            }
         }
 
         // every possible combination of symbols must either decode to 2 bytes or get InvalidLastSymbol
@@ -772,9 +787,13 @@ mod tests {
                     symbols[3] = b'=';
 
                     match base64_to_bytes.get(&symbols[..]) {
-                        Some(bytes) => assert_eq!(Ok(bytes.to_vec()), decode_config(&symbols, STANDARD)),
-                        None => assert_eq!(Err(DecodeError::InvalidLastSymbol(2, s3)),
-                                           decode_config(&symbols[..], STANDARD))
+                        Some(bytes) => {
+                            assert_eq!(Ok(bytes.to_vec()), decode_config(&symbols, STANDARD))
+                        }
+                        None => assert_eq!(
+                            Err(DecodeError::InvalidLastSymbol(2, s3)),
+                            decode_config(&symbols[..], STANDARD)
+                        ),
                     }
                 }
             }
@@ -792,7 +811,7 @@ mod tests {
             v.push(b as u8);
 
             assert!(base64_to_bytes.insert(b64, v).is_none());
-        };
+        }
 
         // every possible combination of symbols must either decode to 1 byte or get InvalidLastSymbol
 
@@ -805,9 +824,13 @@ mod tests {
                 symbols[3] = b'=';
 
                 match base64_to_bytes.get(&symbols[..]) {
-                    Some(bytes) => assert_eq!(Ok(bytes.to_vec()), decode_config(&symbols, STANDARD)),
-                    None => assert_eq!(Err(DecodeError::InvalidLastSymbol(1, s2)),
-                                       decode_config(&symbols[..], STANDARD))
+                    Some(bytes) => {
+                        assert_eq!(Ok(bytes.to_vec()), decode_config(&symbols, STANDARD))
+                    }
+                    None => assert_eq!(
+                        Err(DecodeError::InvalidLastSymbol(1, s2)),
+                        decode_config(&symbols[..], STANDARD)
+                    ),
                 }
             }
         }

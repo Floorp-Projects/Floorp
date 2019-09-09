@@ -1,51 +1,79 @@
-use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::Write;
-use std::io::{BufReader, Read, Seek};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter, Read, Seek, Write},
+    path::Path,
+};
 
-use stream::{Event, Reader, Writer, XmlReader, XmlWriter};
-use {u64_to_usize, Date, Error};
+use crate::{
+    error::{self, Error, ErrorKind, EventKind},
+    stream::{BinaryWriter, Event, IntoEvents, Reader, Writer, XmlReader, XmlWriter},
+    u64_to_usize, Date, Dictionary, Integer, Uid,
+};
 
 /// Represents any plist value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Array(Vec<Value>),
-    Dictionary(BTreeMap<String, Value>),
+    Dictionary(Dictionary),
     Boolean(bool),
     Data(Vec<u8>),
     Date(Date),
     Real(f64),
-    Integer(i64),
+    Integer(Integer),
     String(String),
+    Uid(Uid),
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 impl Value {
     /// Reads a `Value` from a plist file of any encoding.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Value, Error> {
-        let file = File::open(path)?;
+        let file = File::open(path).map_err(error::from_io_without_position)?;
         Value::from_reader(BufReader::new(file))
     }
 
-    /// Reads a `Value` from a seekable byte stream containing a plist file of any encoding.
+    /// Reads a `Value` from a seekable byte stream containing a plist of any encoding.
     pub fn from_reader<R: Read + Seek>(reader: R) -> Result<Value, Error> {
         let reader = Reader::new(reader);
         Value::from_events(reader)
     }
 
-    /// Reads a `Value` from a seekable byte stream containing an XML encoded plist file.
+    /// Reads a `Value` from a seekable byte stream containing an XML encoded plist.
     pub fn from_reader_xml<R: Read>(reader: R) -> Result<Value, Error> {
         let reader = XmlReader::new(reader);
         Value::from_events(reader)
     }
 
-    /// Serializes the given data structure as an XML encoded plist file.
-    pub fn to_writer_xml<W: Write>(&self, writer: W) -> Result<(), Error> {
-        let mut writer = XmlWriter::new(writer);
-        self.to_writer_xml_inner(&mut writer)
+    /// Serializes a `Value` to a file as a binary encoded plist.
+    pub fn to_file_binary<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        let mut file = File::create(path).map_err(error::from_io_without_position)?;
+        self.to_writer_binary(BufWriter::new(&mut file))?;
+        file.sync_all().map_err(error::from_io_without_position)?;
+        Ok(())
     }
 
-    fn to_writer_xml_inner(&self, writer: &mut Writer) -> Result<(), Error> {
+    /// Serializes a `Value` to a file as an XML encoded plist.
+    pub fn to_file_xml<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        let mut file = File::create(path).map_err(error::from_io_without_position)?;
+        self.to_writer_xml(BufWriter::new(&mut file))?;
+        file.sync_all().map_err(error::from_io_without_position)?;
+        Ok(())
+    }
+
+    /// Serializes a `Value` to a byte stream as a binary encoded plist.
+    pub fn to_writer_binary<W: Write>(&self, writer: W) -> Result<(), Error> {
+        let mut writer = BinaryWriter::new(writer);
+        self.to_writer_inner(&mut writer)
+    }
+
+    /// Serializes a `Value` to a byte stream as an XML encoded plist.
+    pub fn to_writer_xml<W: Write>(&self, writer: W) -> Result<(), Error> {
+        let mut writer = XmlWriter::new(writer);
+        self.to_writer_inner(&mut writer)
+    }
+
+    fn to_writer_inner(&self, writer: &mut dyn Writer) -> Result<(), Error> {
         let events = self.clone().into_events();
         for event in events {
             writer.write(&event)?;
@@ -53,7 +81,9 @@ impl Value {
         Ok(())
     }
 
-    /// Creates a `Value` from an event source.
+    /// Builds a single `Value` from an `Event` iterator.
+    /// On success any excess `Event`s will remain in the iterator.
+    #[cfg(feature = "enable_unstable_features_that_may_break_with_minor_version_bumps")]
     pub fn from_events<T>(events: T) -> Result<Value, Error>
     where
         T: IntoIterator<Item = Result<Event, Error>>,
@@ -61,37 +91,26 @@ impl Value {
         Builder::new(events.into_iter()).build()
     }
 
-    /// Converts a `Value` into an `Event` stream.
-    pub fn into_events(self) -> Vec<Event> {
-        let mut events = Vec::new();
-        self.into_events_inner(&mut events);
-        events
+    /// Builds a single `Value` from an `Event` iterator.
+    /// On success any excess `Event`s will remain in the iterator.
+    #[cfg(not(feature = "enable_unstable_features_that_may_break_with_minor_version_bumps"))]
+    pub(crate) fn from_events<T>(events: T) -> Result<Value, Error>
+    where
+        T: IntoIterator<Item = Result<Event, Error>>,
+    {
+        Builder::new(events.into_iter()).build()
     }
 
-    fn into_events_inner(self, events: &mut Vec<Event>) {
-        match self {
-            Value::Array(array) => {
-                events.push(Event::StartArray(Some(array.len() as u64)));
-                for value in array {
-                    value.into_events_inner(events);
-                }
-                events.push(Event::EndArray);
-            }
-            Value::Dictionary(dict) => {
-                events.push(Event::StartDictionary(Some(dict.len() as u64)));
-                for (key, value) in dict {
-                    events.push(Event::StringValue(key));
-                    value.into_events_inner(events);
-                }
-                events.push(Event::EndDictionary);
-            }
-            Value::Boolean(value) => events.push(Event::BooleanValue(value)),
-            Value::Data(value) => events.push(Event::DataValue(value)),
-            Value::Date(value) => events.push(Event::DateValue(value)),
-            Value::Real(value) => events.push(Event::RealValue(value)),
-            Value::Integer(value) => events.push(Event::IntegerValue(value)),
-            Value::String(value) => events.push(Event::StringValue(value)),
-        }
+    /// Converts a `Value` into an `Event` iterator.
+    #[cfg(feature = "enable_unstable_features_that_may_break_with_minor_version_bumps")]
+    pub fn into_events(self) -> IntoEvents {
+        IntoEvents::new(self)
+    }
+
+    /// Converts a `Value` into an `Event` iterator.
+    #[cfg(not(feature = "enable_unstable_features_that_may_break_with_minor_version_bumps"))]
+    pub(crate) fn into_events(self) -> IntoEvents {
+        IntoEvents::new(self)
     }
 
     /// If the `Value` is an Array, returns the associated `Vec`.
@@ -117,9 +136,9 @@ impl Value {
     /// If the `Value` is a Dictionary, returns the associated `BTreeMap`.
     ///
     /// Returns `None` otherwise.
-    pub fn as_dictionary(&self) -> Option<&BTreeMap<String, Value>> {
+    pub fn as_dictionary(&self) -> Option<&Dictionary> {
         match *self {
-            Value::Dictionary(ref map) => Some(map),
+            Value::Dictionary(ref dict) => Some(dict),
             _ => None,
         }
     }
@@ -127,9 +146,9 @@ impl Value {
     /// If the `Value` is a Dictionary, returns the associated mutable `BTreeMap`.
     ///
     /// Returns `None` otherwise.
-    pub fn as_dictionary_mut(&mut self) -> Option<&mut BTreeMap<String, Value>> {
+    pub fn as_dictionary_mut(&mut self) -> Option<&mut Dictionary> {
         match *self {
-            Value::Dictionary(ref mut map) => Some(map),
+            Value::Dictionary(ref mut dict) => Some(dict),
             _ => None,
         }
     }
@@ -187,12 +206,22 @@ impl Value {
         }
     }
 
-    /// If the `Value` is an Integer, returns the associated `i64`.
+    /// If the `Value` is a signed Integer, returns the associated `i64`.
     ///
     /// Returns `None` otherwise.
-    pub fn as_integer(&self) -> Option<i64> {
+    pub fn as_signed_integer(&self) -> Option<i64> {
         match *self {
-            Value::Integer(v) => Some(v),
+            Value::Integer(v) => v.as_signed(),
+            _ => None,
+        }
+    }
+
+    /// If the `Value` is an unsigned Integer, returns the associated `u64`.
+    ///
+    /// Returns `None` otherwise.
+    pub fn as_unsigned_integer(&self) -> Option<u64> {
+        match *self {
+            Value::Integer(v) => v.as_unsigned(),
             _ => None,
         }
     }
@@ -227,8 +256,8 @@ impl From<Vec<Value>> for Value {
     }
 }
 
-impl From<BTreeMap<String, Value>> for Value {
-    fn from(from: BTreeMap<String, Value>) -> Value {
+impl From<Dictionary> for Value {
+    fn from(from: Dictionary) -> Value {
         Value::Dictionary(from)
     }
 }
@@ -271,43 +300,49 @@ impl From<f32> for Value {
 
 impl From<i64> for Value {
     fn from(from: i64) -> Value {
-        Value::Integer(from)
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<i32> for Value {
     fn from(from: i32) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<i16> for Value {
     fn from(from: i16) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<i8> for Value {
     fn from(from: i8) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
+    }
+}
+
+impl From<u64> for Value {
+    fn from(from: u64) -> Value {
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<u32> for Value {
     fn from(from: u32) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<u16> for Value {
     fn from(from: u16) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
     }
 }
 
 impl From<u8> for Value {
     fn from(from: u8) -> Value {
-        Value::Integer(from.into())
+        Value::Integer(Integer::from(from))
     }
 }
 
@@ -325,31 +360,37 @@ impl<'a> From<&'a f32> for Value {
 
 impl<'a> From<&'a i64> for Value {
     fn from(from: &'a i64) -> Value {
-        Value::Integer(*from)
+        Value::Integer(Integer::from(*from))
     }
 }
 
 impl<'a> From<&'a i32> for Value {
     fn from(from: &'a i32) -> Value {
-        Value::Integer((*from).into())
+        Value::Integer(Integer::from(*from))
     }
 }
 
 impl<'a> From<&'a i16> for Value {
     fn from(from: &'a i16) -> Value {
-        Value::Integer((*from).into())
+        Value::Integer(Integer::from(*from))
     }
 }
 
 impl<'a> From<&'a i8> for Value {
     fn from(from: &'a i8) -> Value {
-        Value::Integer((*from).into())
+        Value::Integer(Integer::from(*from))
+    }
+}
+
+impl<'a> From<&'a u64> for Value {
+    fn from(from: &'a u64) -> Value {
+        Value::Integer(Integer::from(*from))
     }
 }
 
 impl<'a> From<&'a u32> for Value {
     fn from(from: &'a u32) -> Value {
-        Value::Integer((*from).into())
+        Value::Integer(Integer::from(*from))
     }
 }
 
@@ -392,14 +433,7 @@ impl<T: Iterator<Item = Result<Event, Error>>> Builder<T> {
 
     fn build(mut self) -> Result<Value, Error> {
         self.bump()?;
-        let plist = self.build_value()?;
-
-        // Ensure the stream has been fully consumed
-        self.bump()?;
-        match self.token {
-            None => Ok(plist),
-            _ => Err(Error::InvalidData),
-        }
+        self.build_value()
     }
 
     fn bump(&mut self) -> Result<(), Error> {
@@ -416,18 +450,22 @@ impl<T: Iterator<Item = Result<Event, Error>>> Builder<T> {
             Some(Event::StartArray(len)) => Ok(Value::Array(self.build_array(len)?)),
             Some(Event::StartDictionary(len)) => Ok(Value::Dictionary(self.build_dict(len)?)),
 
-            Some(Event::BooleanValue(b)) => Ok(Value::Boolean(b)),
-            Some(Event::DataValue(d)) => Ok(Value::Data(d)),
-            Some(Event::DateValue(d)) => Ok(Value::Date(d)),
-            Some(Event::IntegerValue(i)) => Ok(Value::Integer(i)),
-            Some(Event::RealValue(f)) => Ok(Value::Real(f)),
-            Some(Event::StringValue(s)) => Ok(Value::String(s)),
+            Some(Event::Boolean(b)) => Ok(Value::Boolean(b)),
+            Some(Event::Data(d)) => Ok(Value::Data(d)),
+            Some(Event::Date(d)) => Ok(Value::Date(d)),
+            Some(Event::Integer(i)) => Ok(Value::Integer(i)),
+            Some(Event::Real(f)) => Ok(Value::Real(f)),
+            Some(Event::String(s)) => Ok(Value::String(s)),
+            Some(Event::Uid(u)) => Ok(Value::Uid(u)),
 
-            Some(Event::EndArray) => Err(Error::InvalidData),
-            Some(Event::EndDictionary) => Err(Error::InvalidData),
+            Some(event @ Event::EndCollection) => Err(error::unexpected_event_type(
+                EventKind::ValueOrStartCollection,
+                &event,
+            )),
 
-            // The stream should not have ended here
-            None => Err(Error::InvalidData),
+            Some(Event::__Nonexhaustive) => unreachable!(),
+
+            None => Err(ErrorKind::UnexpectedEndOfEventStream.without_position()),
         }
     }
 
@@ -439,7 +477,7 @@ impl<T: Iterator<Item = Result<Event, Error>>> Builder<T> {
 
         loop {
             self.bump()?;
-            if let Some(Event::EndArray) = self.token {
+            if let Some(Event::EndCollection) = self.token {
                 self.token.take();
                 return Ok(values);
             }
@@ -447,21 +485,24 @@ impl<T: Iterator<Item = Result<Event, Error>>> Builder<T> {
         }
     }
 
-    fn build_dict(&mut self, _len: Option<u64>) -> Result<BTreeMap<String, Value>, Error> {
-        let mut values = BTreeMap::new();
+    fn build_dict(&mut self, _len: Option<u64>) -> Result<Dictionary, Error> {
+        let mut dict = Dictionary::new();
 
         loop {
             self.bump()?;
             match self.token.take() {
-                Some(Event::EndDictionary) => return Ok(values),
-                Some(Event::StringValue(s)) => {
+                Some(Event::EndCollection) => return Ok(dict),
+                Some(Event::String(s)) => {
                     self.bump()?;
-                    values.insert(s, self.build_value()?);
+                    dict.insert(s, self.build_value()?);
                 }
-                _ => {
-                    // Only string keys are supported in plists
-                    return Err(Error::InvalidData);
+                Some(event) => {
+                    return Err(error::unexpected_event_type(
+                        EventKind::DictionaryKeyOrEndCollection,
+                        &event,
+                    ))
                 }
+                None => return Err(ErrorKind::UnexpectedEndOfEventStream.without_position()),
             }
         }
     }
@@ -469,12 +510,10 @@ impl<T: Iterator<Item = Result<Event, Error>>> Builder<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
     use std::time::SystemTime;
 
     use super::*;
-    use stream::Event::*;
-    use {Date, Value};
+    use crate::{stream::Event::*, Date, Dictionary, Value};
 
     #[test]
     fn value_accessors() {
@@ -483,7 +522,7 @@ mod tests {
         assert_eq!(array.as_array(), Some(&vec.clone()));
         assert_eq!(array.as_array_mut(), Some(&mut vec.clone()));
 
-        let mut map = BTreeMap::new();
+        let mut map = Dictionary::new();
         map.insert("key1".to_owned(), Value::String("value1".to_owned()));
         let mut dict = Value::Dictionary(map.clone());
         assert_eq!(dict.as_dictionary(), Some(&map.clone()));
@@ -502,7 +541,13 @@ mod tests {
         assert_eq!(Value::Date(date.clone()).as_date(), Some(date));
 
         assert_eq!(Value::Real(0.0).as_real(), Some(0.0));
-        assert_eq!(Value::Integer(1).as_integer(), Some(1));
+        assert_eq!(Value::Integer(1.into()).as_signed_integer(), Some(1));
+        assert_eq!(Value::Integer(1.into()).as_unsigned_integer(), Some(1));
+        assert_eq!(Value::Integer((-1).into()).as_unsigned_integer(), None);
+        assert_eq!(
+            Value::Integer((i64::max_value() as u64 + 1).into()).as_signed_integer(),
+            None
+        );
         assert_eq!(Value::String("2".to_owned()).as_string(), Some("2"));
         assert_eq!(
             Value::String("t".to_owned()).into_string(),
@@ -515,18 +560,18 @@ mod tests {
         // Input
         let events = vec![
             StartDictionary(None),
-            StringValue("Author".to_owned()),
-            StringValue("William Shakespeare".to_owned()),
-            StringValue("Lines".to_owned()),
+            String("Author".to_owned()),
+            String("William Shakespeare".to_owned()),
+            String("Lines".to_owned()),
             StartArray(None),
-            StringValue("It is a tale told by an idiot,".to_owned()),
-            StringValue("Full of sound and fury, signifying nothing.".to_owned()),
-            EndArray,
-            StringValue("Birthdate".to_owned()),
-            IntegerValue(1564),
-            StringValue("Height".to_owned()),
-            RealValue(1.60),
-            EndDictionary,
+            String("It is a tale told by an idiot,".to_owned()),
+            String("Full of sound and fury, signifying nothing.".to_owned()),
+            EndCollection,
+            String("Birthdate".to_owned()),
+            Integer(1564.into()),
+            String("Height".to_owned()),
+            Real(1.60),
+            EndCollection,
         ];
 
         let builder = Builder::new(events.into_iter().map(|e| Ok(e)));
@@ -539,13 +584,13 @@ mod tests {
             "Full of sound and fury, signifying nothing.".to_owned(),
         ));
 
-        let mut dict = BTreeMap::new();
+        let mut dict = Dictionary::new();
         dict.insert(
             "Author".to_owned(),
             Value::String("William Shakespeare".to_owned()),
         );
         dict.insert("Lines".to_owned(), Value::Array(lines));
-        dict.insert("Birthdate".to_owned(), Value::Integer(1564));
+        dict.insert("Birthdate".to_owned(), Value::Integer(1564.into()));
         dict.insert("Height".to_owned(), Value::Real(1.60));
 
         assert_eq!(plist.unwrap(), Value::Dictionary(dict));

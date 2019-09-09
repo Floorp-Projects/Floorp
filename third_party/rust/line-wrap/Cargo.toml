@@ -11,22 +11,19 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "base64"
-version = "0.9.3"
-authors = ["Alice Maz <alice@alicemaz.com>", "Marshall Pierce <marshall@mpierce.org>"]
-description = "encodes and decodes base64 as bytes or utf8"
-documentation = "https://github.com/alicemaz/rust-base64/blob/master/README.md"
+name = "line-wrap"
+version = "0.1.1"
+authors = ["Marshall Pierce <marshall@mpierce.org>"]
+description = "Efficiently insert line separators"
+documentation = "https://docs.rs/line-wrap/"
 readme = "README.md"
-keywords = ["base64", "utf8", "encode", "decode"]
+keywords = ["line-wrap", "line", "wrap"]
 categories = ["encoding"]
-license = "MIT/Apache-2.0"
-repository = "https://github.com/alicemaz/rust-base64"
+license = "Apache-2.0"
+repository = "https://bitbucket.org/marshallpierce/line-wrap-rs/src"
 [profile.bench]
 debug = true
-[dependencies.byteorder]
-version = "1.1.0"
-
 [dependencies.safemem]
 version = "0.3"
 [dev-dependencies.rand]
-version = "0.4"
+version = "0.5.5"

@@ -20,7 +20,9 @@ use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use rand::{weak_rng, Rng};
+use rand::rngs::SmallRng;
+use rand::FromEntropy;
+use rand::seq::SliceRandom;
 
 #[bench]
 fn new_hashmap(b: &mut Bencher) {
@@ -286,8 +288,8 @@ fn shuffled_keys<I>(iter: I) -> Vec<I::Item>
     where I: IntoIterator
 {
     let mut v = Vec::from_iter(iter);
-    let mut rng = weak_rng();
-    rng.shuffle(&mut v);
+    let mut rng = SmallRng::from_entropy();
+    v.shuffle(&mut rng);
     v
 }
 
@@ -533,11 +535,11 @@ fn hashmap_merge_shuffle(b: &mut Bencher) {
     let first_map: HashMap<u64, _> = (0..MERGE).map(|i| (i, ())).collect();
     let second_map: HashMap<u64, _> = (MERGE..MERGE * 2).map(|i| (i, ())).collect();
     let mut v = Vec::new();
-    let mut rng = weak_rng();
+    let mut rng = SmallRng::from_entropy();
     b.iter(|| {
         let mut merged = first_map.clone();
         v.extend(second_map.iter().map(|(&k, &v)| (k, v)));
-        rng.shuffle(&mut v);
+        v.shuffle(&mut rng);
         merged.extend(v.drain(..));
 
         merged
@@ -560,11 +562,11 @@ fn ordermap_merge_shuffle(b: &mut Bencher) {
     let first_map: IndexMap<u64, _> = (0..MERGE).map(|i| (i, ())).collect();
     let second_map: IndexMap<u64, _> = (MERGE..MERGE * 2).map(|i| (i, ())).collect();
     let mut v = Vec::new();
-    let mut rng = weak_rng();
+    let mut rng = SmallRng::from_entropy();
     b.iter(|| {
         let mut merged = first_map.clone();
         v.extend(second_map.iter().map(|(&k, &v)| (k, v)));
-        rng.shuffle(&mut v);
+        v.shuffle(&mut rng);
         merged.extend(v.drain(..));
 
         merged
@@ -575,12 +577,13 @@ fn ordermap_merge_shuffle(b: &mut Bencher) {
 fn remove_ordermap_100_000(b: &mut Bencher) {
     let map = OMAP_100K.clone();
     let mut keys = Vec::from_iter(map.keys().cloned());
-    weak_rng().shuffle(&mut keys);
+    let mut rng = SmallRng::from_entropy();
+    keys.shuffle(&mut rng);
 
     b.iter(|| {
         let mut map = map.clone();
         for key in &keys {
-            map.remove(key).is_some();
+            map.remove(key);
         }
         assert_eq!(map.len(), 0);
         map
