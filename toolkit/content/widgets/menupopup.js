@@ -19,6 +19,10 @@
       this._scrollTimer = 0;
 
       this.addEventListener("popupshowing", event => {
+        if (event.target != this) {
+          return;
+        }
+
         let array = [];
         let width = 0;
         for (
