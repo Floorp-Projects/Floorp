@@ -202,6 +202,7 @@ dependencies = [
  "cranelift-wasm 0.40.0 (git+https://github.com/CraneStation/Cranelift?rev=fc88520b88bcaad4e4a92f28a5e17347af20edbd)",
  "env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "target-lexicon 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
