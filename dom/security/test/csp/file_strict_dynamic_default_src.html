@@ -8,7 +8,13 @@
 <div id="testdiv">blocked</div>
 <script nonce="foo" src="http://mochi.test:8888/tests/dom/security/test/csp/file_strict_dynamic_default_src.js"></script>
 
-<img id="testimage" src="http://mochi.test:8888/tests/image/test/mochitest/blue.png"></img>
+<img id="testimage" src="http://mochi.test:8888/tests/image/test/mochitest/blue.png" data-result="blocked">
+<script>
+let img = document.getElementById("testimage");
+img.addEventListener("load", function() {
+  img.dataset.result = "allowed";
+}, { once: true });
+</script>
 
 </body>
 </html>
