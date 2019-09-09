@@ -10,7 +10,6 @@ SOURCES += [
 ]
 
 EXPORTS += [
-    'CoreLocationLocationProvider.h',
     'nsOSPermissionRequest.h',
 ]
 

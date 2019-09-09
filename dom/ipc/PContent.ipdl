@@ -959,8 +959,6 @@ parent:
     async RemoveGeolocationListener();
     async SetGeolocationHigherAccuracy(bool enable);
 
-   async GetGeoSysPermission() returns (bool isok);
-
     async ConsoleMessage(nsString message);
     async ScriptErrorWithStack(nsString message, nsString sourceName, nsString sourceLine,
                                uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
