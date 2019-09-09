@@ -62,7 +62,7 @@
 <script>
   test(t => {
     t.add_cleanup(_ => { header = null; });
-    assert_header_equals(header, expected);
+    assert_header_equals(header, { "dest": "", "site": "cross-site", "user": "", "mode": "no-cors" });
   }, "Https downgrade script => No headers");
 </script>
 </body>
