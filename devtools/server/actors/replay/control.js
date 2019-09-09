@@ -125,9 +125,6 @@ function ChildProcess(id, recording) {
   // in the process of being scanned by this child.
   this.scannedCheckpoints = new Set();
 
-  // Checkpoints in savedCheckpoints which haven't been sent to the child yet.
-  this.needSaveCheckpoints = [];
-
   // Whether this child has diverged from the recording and cannot run forward.
   this.divergedFromRecording = false;
 
@@ -242,16 +239,26 @@ ChildProcess.prototype = {
   addSavedCheckpoint(checkpoint) {
     dumpv(`AddSavedCheckpoint #${this.id} ${checkpoint}`);
     this.savedCheckpoints.add(checkpoint);
-    if (checkpoint != FirstCheckpointId) {
-      this.needSaveCheckpoints.push(checkpoint);
-    }
   },
 
-  // Get any checkpoints to inform the child that it needs to save.
-  flushNeedSaveCheckpoints() {
-    const rv = this.needSaveCheckpoints;
-    this.needSaveCheckpoints = [];
+  // Get the checkpoints which the child must save in the range [start, end].
+  savedCheckpointsInRange(start, end) {
+    const rv = [];
+    for (let i = start; i <= end; i++) {
+      if (this.savedCheckpoints.has(i)) {
+        rv.push(i);
+      }
+    }
     return rv;
+  },
+
+  // Get the checkpoints which the child must save when running to endpoint.
+  getCheckpointsToSave(endpoint) {
+    assert(endpoint >= this.pausePoint().checkpoint);
+    return this.savedCheckpointsInRange(
+      this.pausePoint().checkpoint + 1,
+      endpoint
+    );
   },
 
   // Get the last saved checkpoint equal to or prior to checkpoint.
@@ -582,7 +589,7 @@ function maybeReachPoint(child, endpoint) {
     contents: {
       kind: "runToPoint",
       endpoint,
-      needSaveCheckpoints: child.flushNeedSaveCheckpoints(),
+      saveCheckpoints: child.getCheckpointsToSave(endpoint.checkpoint),
     },
     onFinished() {},
     destination: endpoint,
@@ -596,9 +603,14 @@ function maybeReachPoint(child, endpoint) {
 
   // Send the child to its most recent saved checkpoint at or before target.
   function restoreCheckpointPriorTo(target) {
-    target = child.lastSavedCheckpoint(target);
+    // We must skip past any snapshots that are after target.
+    const savedCheckpoints = child.savedCheckpointsInRange(
+      target + 1,
+      child.pausePoint().checkpoint
+    );
+    const numSnapshots = savedCheckpoints.length;
     child.sendManifest({
-      contents: { kind: "restoreCheckpoint", target },
+      contents: { kind: "restoreSnapshot", numSnapshots },
       onFinished({ restoredCheckpoint }) {
         assert(restoredCheckpoint);
         child.divergedFromRecording = false;
@@ -725,7 +737,7 @@ async function scanRecording(checkpoint) {
       return {
         kind: "scanRecording",
         endpoint,
-        needSaveCheckpoints: child.flushNeedSaveCheckpoints(),
+        saveCheckpoints: child.getCheckpointsToSave(endpoint),
       };
     },
     onFinished(child, { duration }) {
@@ -1326,7 +1338,7 @@ let gNearbyPoints = [];
 const NumNearbyBreakpointHits = 2;
 
 // How many frame steps are nearby points, on either side of the pause point.
-const NumNearbySteps = 4;
+const NumNearbySteps = 12;
 
 function nextKnownBreakpointHit(point, forward) {
   let checkpoint = getSavedCheckpoint(point.checkpoint);

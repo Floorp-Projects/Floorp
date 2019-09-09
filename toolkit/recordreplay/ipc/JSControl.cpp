@@ -433,7 +433,7 @@ void ManifestStart(const CharBuffer& aContents) {
   DisallowUnhandledDivergeFromRecording();
 }
 
-void BeforeCheckpoint() {
+void HitCheckpoint(size_t aCheckpoint) {
   if (!IsInitialized()) {
     SetupDevtoolsSandbox();
   }
@@ -442,18 +442,8 @@ void BeforeCheckpoint() {
   AutoSafeJSContext cx;
   JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-  if (NS_FAILED(gReplay->BeforeCheckpoint())) {
+  if (NS_FAILED(gReplay->HitCheckpoint(aCheckpoint))) {
     MOZ_CRASH("BeforeCheckpoint");
-  }
-}
-
-void AfterCheckpoint(size_t aCheckpoint, bool aRestoredCheckpoint) {
-  AutoDisallowThreadEvents disallow;
-  AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
-
-  if (NS_FAILED(gReplay->AfterCheckpoint(aCheckpoint, aRestoredCheckpoint))) {
-    MOZ_CRASH("AfterCheckpoint");
   }
 }
 
@@ -655,6 +645,13 @@ static bool RecordReplay_AreThreadEventsDisallowed(JSContext* aCx,
   return true;
 }
 
+static bool RecordReplay_NewSnapshot(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  args.rval().setBoolean(NewSnapshot());
+  return true;
+}
+
 static bool RecordReplay_DivergeFromRecording(JSContext* aCx, unsigned aArgc,
                                               Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -741,8 +738,8 @@ static bool RecordReplay_ResumeExecution(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-static bool RecordReplay_RestoreCheckpoint(JSContext* aCx, unsigned aArgc,
-                                           Value* aVp) {
+static bool RecordReplay_RestoreSnapshot(JSContext* aCx, unsigned aArgc,
+                                         Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   if (!args.get(0).isNumber()) {
@@ -750,13 +747,13 @@ static bool RecordReplay_RestoreCheckpoint(JSContext* aCx, unsigned aArgc,
     return false;
   }
 
-  size_t checkpoint = args.get(0).toNumber();
-  if (!HasSavedCheckpoint(checkpoint)) {
-    JS_ReportErrorASCII(aCx, "Only saved checkpoints can be restored");
+  size_t numSnapshots = args.get(0).toNumber();
+  if (numSnapshots >= NumSnapshots()) {
+    JS_ReportErrorASCII(aCx, "Haven't saved enough checkpoints");
     return false;
   }
 
-  RestoreCheckpointAndResume(checkpoint);
+  RestoreSnapshotAndResume(numSnapshots);
 
   JS_ReportErrorASCII(aCx, "Unreachable!");
   return false;
@@ -812,27 +809,6 @@ static bool RecordReplay_SetMainChild(JSContext* aCx, unsigned aArgc,
   size_t endpoint = RecordingEndpoint();
 
   args.rval().setInt32(endpoint);
-  return true;
-}
-
-static bool RecordReplay_SaveCheckpoint(JSContext* aCx, unsigned aArgc,
-                                        Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  if (!args.get(0).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad checkpoint ID");
-    return false;
-  }
-
-  size_t checkpoint = args.get(0).toNumber();
-  if (checkpoint <= GetLastCheckpoint()) {
-    JS_ReportErrorASCII(aCx, "Can't save checkpoint in the past");
-    return false;
-  }
-
-  SetSaveCheckpoint(checkpoint, true);
-
-  args.rval().setUndefined();
   return true;
 }
 
@@ -1354,6 +1330,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
     JS_FN("childId", RecordReplay_ChildId, 0, 0),
     JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed,
           0, 0),
+    JS_FN("newSnapshot", RecordReplay_NewSnapshot, 0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
     JS_FN("progressCounter", RecordReplay_ProgressCounter, 0, 0),
     JS_FN("advanceProgressCounter", RecordReplay_AdvanceProgressCounter, 0, 0),
@@ -1361,11 +1338,10 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
           RecordReplay_ShouldUpdateProgressCounter, 1, 0),
     JS_FN("manifestFinished", RecordReplay_ManifestFinished, 1, 0),
     JS_FN("resumeExecution", RecordReplay_ResumeExecution, 0, 0),
-    JS_FN("restoreCheckpoint", RecordReplay_RestoreCheckpoint, 1, 0),
+    JS_FN("restoreSnapshot", RecordReplay_RestoreSnapshot, 1, 0),
     JS_FN("currentExecutionTime", RecordReplay_CurrentExecutionTime, 0, 0),
     JS_FN("flushRecording", RecordReplay_FlushRecording, 0, 0),
     JS_FN("setMainChild", RecordReplay_SetMainChild, 0, 0),
-    JS_FN("saveCheckpoint", RecordReplay_SaveCheckpoint, 1, 0),
     JS_FN("getContent", RecordReplay_GetContent, 1, 0),
     JS_FN("repaint", RecordReplay_Repaint, 0, 0),
     JS_FN("memoryUsage", RecordReplay_MemoryUsage, 0, 0),
