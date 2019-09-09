@@ -339,7 +339,7 @@ void DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device) {
 void DarwinGamepadService::ReportChangedCallback(
     void* context, IOReturn result, void* sender, IOHIDReportType report_type,
     uint32_t report_id, uint8_t* report, CFIndex report_length) {
-  if (report_type == kIOHIDReportTypeInput) {
+  if (context && report_type == kIOHIDReportTypeInput) {
     reinterpret_cast<Gamepad*>(context)->ReportChanged(report, report_length);
   }
 }
