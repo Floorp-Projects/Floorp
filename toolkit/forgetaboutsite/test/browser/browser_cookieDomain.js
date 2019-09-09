@@ -1,5 +1,8 @@
-let { ForgetAboutSite } = ChromeUtils.import(
+const { ForgetAboutSite } = ChromeUtils.import(
   "resource://gre/modules/ForgetAboutSite.jsm"
+);
+const { SiteDataTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SiteDataTestUtils.jsm"
 );
 
 function checkCookie(host, originAttributes) {
@@ -17,27 +20,13 @@ function checkCookie(host, originAttributes) {
   return false;
 }
 
-add_task(async _ => {
+add_task(async function test_singleDomain() {
   info("Test single cookie domain");
 
   // Let's clean up all the data.
-  await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
-  });
+  await SiteDataTestUtils.clear();
 
-  // A cookie domain
-  Services.cookies.add(
-    ".example.com",
-    "/test",
-    "foo",
-    "bar",
-    false,
-    false,
-    false,
-    Date.now() + 24000 * 60 * 60,
-    {},
-    Ci.nsICookie.SAMESITE_NONE
-  );
+  SiteDataTestUtils.addToCookies("https://example.com");
 
   // Cleaning up.
   await ForgetAboutSite.removeDataFromDomain("example.com");
@@ -46,5 +35,29 @@ add_task(async _ => {
   ok(!checkCookie("example.com", {}), "No cookies");
 
   // Clean up.
-  await Sanitizer.sanitize(["cookies", "offlineApps"]);
+  await SiteDataTestUtils.clear();
+});
+
+add_task(async function test_subDomain() {
+  info("Test cookies for sub domains");
+
+  // Let's clean up all the data.
+  await SiteDataTestUtils.clear();
+
+  SiteDataTestUtils.addToCookies("https://example.com");
+  SiteDataTestUtils.addToCookies("https://sub.example.com");
+  SiteDataTestUtils.addToCookies("https://sub2.example.com");
+  SiteDataTestUtils.addToCookies("https://sub2.example.com");
+
+  SiteDataTestUtils.addToCookies("https://example.org");
+
+  // Cleaning up.
+  await ForgetAboutSite.removeDataFromDomain("sub.example.com");
+
+  // All good.
+  ok(!checkCookie("example.com", {}), "No cookies for example.com");
+  ok(checkCookie("example.org", {}), "Has cookies for example.org");
+
+  // Clean up.
+  await SiteDataTestUtils.clear();
 });
