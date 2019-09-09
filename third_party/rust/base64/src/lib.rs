@@ -49,17 +49,25 @@
 //!
 //! The `_slice` flavors of encode or decode will panic if the provided output slice is too small,
 
+#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
 #![deny(
-    missing_docs, trivial_casts, trivial_numeric_casts, unused_extern_crates, unused_import_braces,
-    unused_results, variant_size_differences, warnings, unsafe_code
+    missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_results,
+    variant_size_differences,
+    warnings,
+    unsafe_code
 )]
 
 extern crate byteorder;
 
 mod chunked_encoder;
 pub mod display;
-pub mod write;
 mod tables;
+pub mod write;
 
 mod encode;
 pub use encode::{encode, encode_config, encode_config_buf, encode_config_slice};
@@ -88,16 +96,16 @@ pub enum CharacterSet {
 }
 
 impl CharacterSet {
-    fn encode_table(&self) -> &'static [u8; 64] {
-        match *self {
+    fn encode_table(self) -> &'static [u8; 64] {
+        match self {
             CharacterSet::Standard => tables::STANDARD_ENCODE,
             CharacterSet::UrlSafe => tables::URL_SAFE_ENCODE,
             CharacterSet::Crypt => tables::CRYPT_ENCODE,
         }
     }
 
-    fn decode_table(&self) -> &'static [u8; 256] {
-        match *self {
+    fn decode_table(self) -> &'static [u8; 256] {
+        match self {
             CharacterSet::Standard => tables::STANDARD_DECODE,
             CharacterSet::UrlSafe => tables::URL_SAFE_DECODE,
             CharacterSet::Crypt => tables::CRYPT_DECODE,
@@ -112,18 +120,27 @@ pub struct Config {
     char_set: CharacterSet,
     /// True to pad output with `=` characters
     pad: bool,
+    /// True to ignore excess nonzero bits in the last few symbols, otherwise an error is returned.
+    decode_allow_trailing_bits: bool,
 }
 
 impl Config {
     /// Create a new `Config`.
-    pub fn new(
-        char_set: CharacterSet,
-        pad: bool,
-    ) -> Config {
-        Config {
-            char_set,
-            pad,
-        }
+    pub fn new(char_set: CharacterSet, pad: bool) -> Config {
+        Config { char_set, pad, decode_allow_trailing_bits: false }
+    }
+
+    /// Sets whether to pad output with `=` characters.
+    pub fn pad(self, pad: bool) -> Config {
+        Config { pad, ..self }
+    }
+
+    /// Sets whether to emit errors for nonzero trailing bits.
+    ///
+    /// This is useful when implementing
+    /// [forgiving-base64 decode](https://infra.spec.whatwg.org/#forgiving-base64-decode).
+    pub fn decode_allow_trailing_bits(self, allow: bool) -> Config {
+        Config { decode_allow_trailing_bits: allow, ..self }
     }
 }
 
@@ -131,28 +148,33 @@ impl Config {
 pub const STANDARD: Config = Config {
     char_set: CharacterSet::Standard,
     pad: true,
+    decode_allow_trailing_bits: false,
 };
 
 /// Standard character set without padding.
 pub const STANDARD_NO_PAD: Config = Config {
     char_set: CharacterSet::Standard,
     pad: false,
+    decode_allow_trailing_bits: false,
 };
 
 /// URL-safe character set with padding
 pub const URL_SAFE: Config = Config {
     char_set: CharacterSet::UrlSafe,
     pad: true,
+    decode_allow_trailing_bits: false,
 };
 
 /// URL-safe character set without padding
 pub const URL_SAFE_NO_PAD: Config = Config {
     char_set: CharacterSet::UrlSafe,
     pad: false,
+    decode_allow_trailing_bits: false,
 };
 
 /// As per `crypt(3)` requirements
 pub const CRYPT: Config = Config {
     char_set: CharacterSet::Crypt,
     pad: false,
+    decode_allow_trailing_bits: false,
 };

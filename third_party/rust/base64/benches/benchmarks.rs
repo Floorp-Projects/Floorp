@@ -1,348 +1,105 @@
-#![feature(test)]
-
 extern crate base64;
+#[macro_use]
+extern crate criterion;
 extern crate rand;
-extern crate test;
 
 use base64::display;
-use base64::{decode, decode_config_buf, decode_config_slice, encode, encode_config_buf,
-             encode_config_slice, write, Config, STANDARD};
+use base64::{
+    decode, decode_config_buf, decode_config_slice, encode, encode_config_buf, encode_config_slice,
+    write, Config,
+};
 
-use rand::{Rng, FromEntropy};
+use criterion::{black_box, Bencher, Criterion, ParameterizedBenchmark, Throughput};
+use rand::{FromEntropy, Rng};
 use std::io::Write;
-use test::Bencher;
 
-#[bench]
-fn encode_3b(b: &mut Bencher) {
-    do_encode_bench(b, 3)
-}
+const TEST_CONFIG: Config = base64::STANDARD;
 
-#[bench]
-fn encode_3b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3, STANDARD)
-}
-
-#[bench]
-fn encode_3b_slice(b: &mut Bencher) {
-    do_encode_bench_slice(b, 3, STANDARD)
-}
-
-#[bench]
-fn encode_50b(b: &mut Bencher) {
-    do_encode_bench(b, 50)
-}
-
-#[bench]
-fn encode_50b_display(b: &mut Bencher) {
-    do_encode_bench_display(b, 50)
-}
-
-#[bench]
-fn encode_50b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 50, STANDARD)
-}
-
-#[bench]
-fn encode_50b_slice(b: &mut Bencher) {
-    do_encode_bench_slice(b, 50, STANDARD)
-}
-
-#[bench]
-fn encode_100b(b: &mut Bencher) {
-    do_encode_bench(b, 100)
-}
-
-#[bench]
-fn encode_100b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 100, STANDARD)
-}
-
-#[bench]
-fn encode_500b(b: &mut Bencher) {
-    do_encode_bench(b, 500)
-}
-
-#[bench]
-fn encode_500b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 500, STANDARD)
-}
-
-#[bench]
-fn encode_3kib(b: &mut Bencher) {
-    do_encode_bench(b, 3 * 1024)
-}
-
-#[bench]
-fn encode_3kib_display(b: &mut Bencher) {
-    do_encode_bench_display(b, 3 * 1024)
-}
-
-#[bench]
-fn encode_3kib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_3kib_slice(b: &mut Bencher) {
-    do_encode_bench_slice(b, 3 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_3kib_reuse_buf_stream(b: &mut Bencher) {
-    do_encode_bench_stream(b, 3 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_3mib(b: &mut Bencher) {
-    do_encode_bench(b, 3 * 1024 * 1024)
-}
-
-#[bench]
-fn encode_3mib_display(b: &mut Bencher) {
-    do_encode_bench_display(b, 3 * 1024 * 1024)
-}
-
-#[bench]
-fn encode_3mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3 * 1024 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_3mib_slice(b: &mut Bencher) {
-    do_encode_bench_slice(b, 3 * 1024 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_10mib(b: &mut Bencher) {
-    do_encode_bench(b, 10 * 1024 * 1024)
-}
-
-#[bench]
-fn encode_10mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 10 * 1024 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_30mib(b: &mut Bencher) {
-    do_encode_bench(b, 30 * 1024 * 1024)
-}
-
-#[bench]
-fn encode_30mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 30 * 1024 * 1024, STANDARD)
-}
-
-#[bench]
-fn encode_30mib_slice(b: &mut Bencher) {
-    do_encode_bench_slice(b, 30 * 1024 * 1024, STANDARD)
-}
-
-#[bench]
-fn decode_3b(b: &mut Bencher) {
-    do_decode_bench(b, 3)
-}
-
-#[bench]
-fn decode_3b_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 3)
-}
-
-#[bench]
-fn decode_3b_slice(b: &mut Bencher) {
-    do_decode_bench_slice(b, 3)
-}
-
-#[bench]
-fn decode_50b(b: &mut Bencher) {
-    do_decode_bench(b, 50)
-}
-
-#[bench]
-fn decode_50b_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 50)
-}
-
-#[bench]
-fn decode_50b_slice(b: &mut Bencher) {
-    do_decode_bench_slice(b, 50)
-}
-
-#[bench]
-fn decode_100b(b: &mut Bencher) {
-    do_decode_bench(b, 100)
-}
-
-#[bench]
-fn decode_100b_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 100)
-}
-
-#[bench]
-fn decode_500b(b: &mut Bencher) {
-    do_decode_bench(b, 500)
-}
-
-#[bench]
-fn decode_500b_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 500)
-}
-
-#[bench]
-fn decode_3kib(b: &mut Bencher) {
-    do_decode_bench(b, 3 * 1024)
-}
-
-#[bench]
-fn decode_3kib_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 3 * 1024)
-}
-
-#[bench]
-fn decode_3kib_slice(b: &mut Bencher) {
-    do_decode_bench_slice(b, 3 * 1024)
-}
-
-#[bench]
-fn decode_3mib(b: &mut Bencher) {
-    do_decode_bench(b, 3 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_3mib_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 3 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_3mib_slice(b: &mut Bencher) {
-    do_decode_bench_slice(b, 3 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_10mib(b: &mut Bencher) {
-    do_decode_bench(b, 10 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_10mib_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 10 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_30mib(b: &mut Bencher) {
-    do_decode_bench(b, 30 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_30mib_reuse_buf(b: &mut Bencher) {
-    do_decode_bench_reuse_buf(b, 30 * 1024 * 1024)
-}
-
-#[bench]
-fn decode_30mib_slice(b: &mut Bencher) {
-    do_decode_bench_slice(b, 30 * 1024 * 1024)
-}
-
-fn do_decode_bench(b: &mut Bencher, size: usize) {
+fn do_decode_bench(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size * 3 / 4);
     fill(&mut v);
     let encoded = encode(&v);
 
-    b.bytes = encoded.len() as u64;
     b.iter(|| {
         let orig = decode(&encoded);
-        test::black_box(&orig);
+        black_box(&orig);
     });
 }
 
-fn do_decode_bench_reuse_buf(b: &mut Bencher, size: usize) {
+fn do_decode_bench_reuse_buf(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size * 3 / 4);
     fill(&mut v);
     let encoded = encode(&v);
 
     let mut buf = Vec::new();
-    b.bytes = encoded.len() as u64;
     b.iter(|| {
-        decode_config_buf(&encoded, STANDARD, &mut buf).unwrap();
-        test::black_box(&buf);
+        decode_config_buf(&encoded, TEST_CONFIG, &mut buf).unwrap();
+        black_box(&buf);
         buf.clear();
     });
 }
 
-fn do_decode_bench_slice(b: &mut Bencher, size: usize) {
+fn do_decode_bench_slice(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size * 3 / 4);
     fill(&mut v);
     let encoded = encode(&v);
 
     let mut buf = Vec::new();
     buf.resize(size, 0);
-    b.bytes = encoded.len() as u64;
     b.iter(|| {
-        decode_config_slice(&encoded, STANDARD, &mut buf).unwrap();
-        test::black_box(&buf);
+        decode_config_slice(&encoded, TEST_CONFIG, &mut buf).unwrap();
+        black_box(&buf);
     });
 }
 
-fn do_encode_bench(b: &mut Bencher, size: usize) {
+fn do_encode_bench(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
-
-    b.bytes = v.len() as u64;
     b.iter(|| {
         let e = encode(&v);
-        test::black_box(&e);
+        black_box(&e);
     });
 }
 
-fn do_encode_bench_display(b: &mut Bencher, size: usize) {
+fn do_encode_bench_display(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
-
-    b.bytes = v.len() as u64;
     b.iter(|| {
-        let e = format!("{}", display::Base64Display::with_config(&v, STANDARD));
-        test::black_box(&e);
+        let e = format!("{}", display::Base64Display::with_config(&v, TEST_CONFIG));
+        black_box(&e);
     });
 }
 
-fn do_encode_bench_reuse_buf(b: &mut Bencher, size: usize, config: Config) {
+fn do_encode_bench_reuse_buf(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
-
     let mut buf = String::new();
-
-    b.bytes = v.len() as u64;
     b.iter(|| {
-        encode_config_buf(&v, config, &mut buf);
+        encode_config_buf(&v, TEST_CONFIG, &mut buf);
         buf.clear();
     });
 }
 
-fn do_encode_bench_slice(b: &mut Bencher, size: usize, config: Config) {
+fn do_encode_bench_slice(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
-
     let mut buf = Vec::new();
-
-    b.bytes = v.len() as u64;
     // conservative estimate of encoded size
-    buf.resize(size * 2, 0);
+    buf.resize(v.len() * 2, 0);
     b.iter(|| {
-        encode_config_slice(&v, config, &mut buf);
+        encode_config_slice(&v, TEST_CONFIG, &mut buf);
     });
 }
 
-fn do_encode_bench_stream(b: &mut Bencher, size: usize, config: Config) {
+fn do_encode_bench_stream(b: &mut Bencher, &size: &usize) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
-
     let mut buf = Vec::new();
-
-    b.bytes = v.len() as u64;
 
     buf.reserve(size * 2);
     b.iter(|| {
         buf.clear();
-        let mut stream_enc = write::EncoderWriter::new(&mut buf, config);
+        let mut stream_enc = write::EncoderWriter::new(&mut buf, TEST_CONFIG);
         stream_enc.write_all(&v).unwrap();
         stream_enc.flush().unwrap();
     });
@@ -356,3 +113,48 @@ fn fill(v: &mut Vec<u8>) {
         v.push(r.gen::<u8>());
     }
 }
+
+const BYTE_SIZES: [usize; 5] = [3, 50, 100, 500, 3 * 1024];
+
+// Benchmarks over these byte sizes take longer so we will run fewer samples to
+// keep the benchmark runtime reasonable.
+const LARGE_BYTE_SIZES: [usize; 3] = [3 * 1024 * 1024, 10 * 1024 * 1024, 30 * 1024 * 1024];
+
+fn encode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {
+    ParameterizedBenchmark::new("encode", do_encode_bench, byte_sizes.iter().cloned())
+        .warm_up_time(std::time::Duration::from_millis(500))
+        .measurement_time(std::time::Duration::from_secs(3))
+        .throughput(|s| Throughput::Bytes(*s as u32))
+        .with_function("encode_display", do_encode_bench_display)
+        .with_function("encode_reuse_buf", do_encode_bench_reuse_buf)
+        .with_function("encode_slice", do_encode_bench_slice)
+        .with_function("encode_reuse_buf_stream", do_encode_bench_stream)
+}
+
+fn decode_benchmarks(byte_sizes: &[usize]) -> ParameterizedBenchmark<usize> {
+    ParameterizedBenchmark::new("decode", do_decode_bench, byte_sizes.iter().cloned())
+        .warm_up_time(std::time::Duration::from_millis(500))
+        .measurement_time(std::time::Duration::from_secs(3))
+        .throughput(|s| Throughput::Bytes(*s as u32))
+        .with_function("decode_reuse_buf", do_decode_bench_reuse_buf)
+        .with_function("decode_slice", do_decode_bench_slice)
+}
+
+fn bench(c: &mut Criterion) {
+    c.bench("bench_small_input", encode_benchmarks(&BYTE_SIZES[..]));
+
+    c.bench(
+        "bench_large_input",
+        encode_benchmarks(&LARGE_BYTE_SIZES[..]).sample_size(10),
+    );
+
+    c.bench("bench_small_input", decode_benchmarks(&BYTE_SIZES[..]));
+
+    c.bench(
+        "bench_large_input",
+        decode_benchmarks(&LARGE_BYTE_SIZES[..]).sample_size(10),
+    );
+}
+
+criterion_group!(benches, bench);
+criterion_main!(benches);

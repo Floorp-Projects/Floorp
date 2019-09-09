@@ -3,6 +3,9 @@
 
 pub use mutable_keys::MutableKeys;
 
+#[cfg(feature = "rayon")]
+pub use ::rayon::map as rayon;
+
 use std::hash::Hash;
 use std::hash::BuildHasher;
 use std::hash::Hasher;
@@ -19,6 +22,7 @@ use util::{third, ptrdistance, enumerate};
 use equivalent::Equivalent;
 use {
     Bucket,
+    Entries,
     HashValue,
 };
 
@@ -278,6 +282,30 @@ struct OrderMapCore<K, V> {
 #[inline(always)]
 fn desired_pos(mask: usize, hash: HashValue) -> usize {
     hash.0 & mask
+}
+
+impl<K, V, S> Entries for IndexMap<K, V, S> {
+    type Entry = Bucket<K, V>;
+
+    fn into_entries(self) -> Vec<Self::Entry> {
+        self.core.entries
+    }
+
+    fn as_entries(&self) -> &[Self::Entry] {
+        &self.core.entries
+    }
+
+    fn as_entries_mut(&mut self) -> &mut [Self::Entry] {
+        &mut self.core.entries
+    }
+
+    fn with_entries<F>(&mut self, f: F)
+        where F: FnOnce(&mut [Self::Entry])
+    {
+        let side_index = self.core.save_hash_index();
+        f(&mut self.core.entries);
+        self.core.restore_hash_index(side_index);
+    }
 }
 
 /// The number of steps that `current` is forward of the desired position for hash
@@ -552,8 +580,55 @@ impl<'a, K, V> Entry<'a, K, V> {
             Entry::Vacant(ref entry) => entry.index(),
         }
     }
+
+    /// Modifies the entry if it is occupied.
+    pub fn and_modify<F>(self, f: F) -> Self
+        where F: FnOnce(&mut V),
+    {
+        match self {
+            Entry::Occupied(mut o) => {
+                f(o.get_mut());
+                Entry::Occupied(o)
+            }
+            x => x,
+        }
+    }
+
+    /// Inserts a default-constructed value in the entry if it is vacant and returns a mutable
+    /// reference to it. Otherwise a mutable reference to an already existent value is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    pub fn or_default(self) -> &'a mut V
+        where V: Default
+    {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(V::default()),
+        }
+    }
 }
 
+impl<'a, K: 'a + fmt::Debug, V: 'a + fmt::Debug> fmt::Debug for Entry<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Entry::Vacant(ref v) => {
+                f.debug_tuple("Entry")
+                    .field(v)
+                    .finish()
+            }
+            Entry::Occupied(ref o) => {
+                f.debug_tuple("Entry")
+                    .field(o)
+                    .finish()
+            }
+        }
+    }
+}
+
+/// A view into an occupied entry in a `IndexMap`.
+/// It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
 pub struct OccupiedEntry<'a, K: 'a, V: 'a> {
     map: &'a mut OrderMapCore<K, V>,
     key: K,
@@ -599,7 +674,19 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     }
 }
 
+impl<'a, K: 'a + fmt::Debug, V: 'a + fmt::Debug> fmt::Debug for OccupiedEntry<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("OccupiedEntry")
+            .field("key", self.key())
+            .field("value", self.get())
+            .finish()
+    }
+}
 
+/// A view into a vacant entry in a `IndexMap`.
+/// It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
 pub struct VacantEntry<'a, K: 'a, V: 'a> {
     map: &'a mut OrderMapCore<K, V>,
     key: K,
@@ -628,6 +715,14 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
         let old_pos = Pos::with_hash::<Sz>(index, self.hash);
         self.map.insert_phase_2::<Sz>(self.probe, old_pos);
         &mut {self.map}.entries[index].value
+    }
+}
+
+impl<'a, K: 'a + fmt::Debug, V: 'a> fmt::Debug for VacantEntry<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_tuple("VacantEntry")
+            .field(self.key())
+            .finish()
     }
 }
 
@@ -714,6 +809,32 @@ impl<K, V, S> IndexMap<K, V, S>
                     self.core.insert_phase_2::<u32>(probe, old_pos);
                     None
                 }
+            }
+        }
+    }
+
+    /// Insert a key-value pair in the map, and get their index.
+    ///
+    /// If an equivalent key already exists in the map: the key remains and
+    /// retains in its place in the order, its corresponding value is updated
+    /// with `value` and the older value is returned inside `(index, Some(_))`.
+    ///
+    /// If no equivalent key existed in the map: the new key-value pair is
+    /// inserted, last in order, and `(index, None)` is returned.
+    ///
+    /// Computes in **O(1)** time (amortized average).
+    ///
+    /// See also [`entry`](#method.entry) if you you want to insert *or* modify
+    /// or if you need to get the index of the corresponding key-value pair.
+    pub fn insert_full(&mut self, key: K, value: V) -> (usize, Option<V>) {
+        let entry = self.entry(key);
+        let index = entry.index();
+
+        match entry {
+            Entry::Occupied(mut entry) => (index, Some(entry.insert(value))),
+            Entry::Vacant(entry) => {
+                entry.insert(value);
+                (index, None)
             }
         }
     }
@@ -1344,15 +1465,21 @@ impl<K, V> OrderMapCore<K, V> {
     fn sort_by<F>(&mut self, mut compare: F)
         where F: FnMut(&K, &V, &K, &V) -> Ordering,
     {
+        let side_index = self.save_hash_index();
+        self.entries.sort_by(move |ei, ej| compare(&ei.key, &ei.value, &ej.key, &ej.value));
+        self.restore_hash_index(side_index);
+    }
+
+    fn save_hash_index(&mut self) -> Vec<usize> {
         // Temporarily use the hash field in a bucket to store the old index.
         // Save the old hash values in `side_index`.  Then we can sort
         // `self.entries` in place.
-        let mut side_index = Vec::from_iter(enumerate(&mut self.entries).map(|(i, elt)| {
+        Vec::from_iter(enumerate(&mut self.entries).map(|(i, elt)| {
             replace(&mut elt.hash, HashValue(i)).get()
-        }));
+        }))
+    }
 
-        self.entries.sort_by(move |ei, ej| compare(&ei.key, &ei.value, &ej.key, &ej.value));
-
+    fn restore_hash_index(&mut self, mut side_index: Vec<usize>) {
         // Write back the hash values from side_index and fill `side_index` with
         // a mapping from the old to the new index instead.
         for (i, ent) in enumerate(&mut self.entries) {
@@ -1403,6 +1530,13 @@ use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;
 use std::vec::IntoIter as VecIntoIter;
 
+/// An iterator over the keys of a `IndexMap`.
+///
+/// This `struct` is created by the [`keys`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`keys`]: struct.IndexMap.html#method.keys
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct Keys<'a, K: 'a, V: 'a> {
     pub(crate) iter: SliceIter<'a, Bucket<K, V>>,
 }
@@ -1425,6 +1559,28 @@ impl<'a, K, V> ExactSizeIterator for Keys<'a, K, V> {
     }
 }
 
+// FIXME(#26925) Remove in favor of `#[derive(Clone)]`
+impl<'a, K, V> Clone for Keys<'a, K, V> {
+    fn clone(&self) -> Keys<'a, K, V> {
+        Keys { iter: self.iter.clone() }
+    }
+}
+
+impl<'a, K: fmt::Debug, V> fmt::Debug for Keys<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list()
+            .entries(self.clone())
+            .finish()
+    }
+}
+
+/// An iterator over the values of a `IndexMap`.
+///
+/// This `struct` is created by the [`values`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`values`]: struct.IndexMap.html#method.values
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct Values<'a, K: 'a, V: 'a> {
     iter: SliceIter<'a, Bucket<K, V>>,
 }
@@ -1447,6 +1603,28 @@ impl<'a, K, V> ExactSizeIterator for Values<'a, K, V> {
     }
 }
 
+// FIXME(#26925) Remove in favor of `#[derive(Clone)]`
+impl<'a, K, V> Clone for Values<'a, K, V> {
+    fn clone(&self) -> Values<'a, K, V> {
+        Values { iter: self.iter.clone() }
+    }
+}
+
+impl<'a, K, V: fmt::Debug> fmt::Debug for Values<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list()
+            .entries(self.clone())
+            .finish()
+    }
+}
+
+/// A mutable iterator over the values of a `IndexMap`.
+///
+/// This `struct` is created by the [`values_mut`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`values_mut`]: struct.IndexMap.html#method.values_mut
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
     iter: SliceIterMut<'a, Bucket<K, V>>,
 }
@@ -1469,6 +1647,13 @@ impl<'a, K, V> ExactSizeIterator for ValuesMut<'a, K, V> {
     }
 }
 
+/// An iterator over the entries of a `IndexMap`.
+///
+/// This `struct` is created by the [`iter`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`iter`]: struct.IndexMap.html#method.iter
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct Iter<'a, K: 'a, V: 'a> {
     iter: SliceIter<'a, Bucket<K, V>>,
 }
@@ -1491,6 +1676,28 @@ impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {
     }
 }
 
+// FIXME(#26925) Remove in favor of `#[derive(Clone)]`
+impl<'a, K, V> Clone for Iter<'a, K, V> {
+    fn clone(&self) -> Iter<'a, K, V> {
+        Iter { iter: self.iter.clone() }
+    }
+}
+
+impl<'a, K: fmt::Debug, V: fmt::Debug> fmt::Debug for Iter<'a, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list()
+            .entries(self.clone())
+            .finish()
+    }
+}
+
+/// A mutable iterator over the entries of a `IndexMap`.
+///
+/// This `struct` is created by the [`iter_mut`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`iter_mut`]: struct.IndexMap.html#method.iter_mut
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: SliceIterMut<'a, Bucket<K, V>>,
 }
@@ -1513,6 +1720,13 @@ impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {
     }
 }
 
+/// An owning iterator over the entries of a `IndexMap`.
+///
+/// This `struct` is created by the [`into_iter`] method on [`IndexMap`]
+/// (provided by the `IntoIterator` trait). See its documentation for more.
+///
+/// [`into_iter`]: struct.IndexMap.html#method.into_iter
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct IntoIter<K, V> {
     pub(crate) iter: VecIntoIter<Bucket<K, V>>,
 }
@@ -1535,6 +1749,20 @@ impl<K, V> ExactSizeIterator for IntoIter<K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IntoIter<K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let iter = self.iter.as_slice().iter().map(Bucket::refs);
+        f.debug_list().entries(iter).finish()
+    }
+}
+
+/// A draining iterator over the entries of a `IndexMap`.
+///
+/// This `struct` is created by the [`drain`] method on [`IndexMap`]. See its
+/// documentation for more.
+///
+/// [`drain`]: struct.IndexMap.html#method.drain
+/// [`IndexMap`]: struct.IndexMap.html
 pub struct Drain<'a, K, V> where K: 'a, V: 'a {
     pub(crate) iter: ::std::vec::Drain<'a, Bucket<K, V>>
 }
@@ -1749,6 +1977,29 @@ mod tests {
     }
 
     #[test]
+    fn insert_full() {
+        let insert = vec![9, 2, 7, 1, 4, 6, 13];
+        let present = vec![1, 6, 2];
+        let mut map = IndexMap::with_capacity(insert.len());
+
+        for (i, &elt) in enumerate(&insert) {
+            assert_eq!(map.len(), i);
+            let (index, existing) = map.insert_full(elt, elt);
+            assert_eq!(existing, None);
+            assert_eq!(Some(index), map.get_full(&elt).map(|x| x.0));
+            assert_eq!(map.len(), i + 1);
+        }
+
+        let len = map.len();
+        for &elt in &present {
+            let (index, existing) = map.insert_full(elt, elt);
+            assert_eq!(existing, Some(elt));
+            assert_eq!(Some(index), map.get_full(&elt).map(|x| x.0));
+            assert_eq!(map.len(), len);
+        }
+    }
+
+    #[test]
     fn insert_2() {
         let mut map = IndexMap::with_capacity(16);
 
@@ -1937,5 +2188,75 @@ mod tests {
             Entry::Vacant(_) => panic!()
         }
         assert_eq!(e.or_insert("4"), &"2");
+    }
+
+    #[test]
+    fn entry_and_modify() {
+        let mut map = IndexMap::new();
+
+        map.insert(1, "1");
+        map.entry(1).and_modify(|x| *x = "2");
+        assert_eq!(Some(&"2"), map.get(&1));
+
+        map.entry(2).and_modify(|x| *x = "doesn't exist");
+        assert_eq!(None, map.get(&2));
+    }
+
+    #[test]
+    fn entry_or_default() {
+        let mut map = IndexMap::new();
+
+        #[derive(Debug, PartialEq)]
+        enum TestEnum {
+            DefaultValue,
+            NonDefaultValue,
+        }
+
+        impl Default for TestEnum {
+            fn default() -> Self {
+                TestEnum::DefaultValue
+            }
+        }
+
+        map.insert(1, TestEnum::NonDefaultValue);
+        assert_eq!(&mut TestEnum::NonDefaultValue, map.entry(1).or_default());
+
+        assert_eq!(&mut TestEnum::DefaultValue, map.entry(2).or_default());
+    }
+
+    #[test]
+    fn keys() {
+        let vec = vec![(1, 'a'), (2, 'b'), (3, 'c')];
+        let map: IndexMap<_, _> = vec.into_iter().collect();
+        let keys: Vec<_> = map.keys().cloned().collect();
+        assert_eq!(keys.len(), 3);
+        assert!(keys.contains(&1));
+        assert!(keys.contains(&2));
+        assert!(keys.contains(&3));
+    }
+
+    #[test]
+    fn values() {
+        let vec = vec![(1, 'a'), (2, 'b'), (3, 'c')];
+        let map: IndexMap<_, _> = vec.into_iter().collect();
+        let values: Vec<_> = map.values().cloned().collect();
+        assert_eq!(values.len(), 3);
+        assert!(values.contains(&'a'));
+        assert!(values.contains(&'b'));
+        assert!(values.contains(&'c'));
+    }
+
+    #[test]
+    fn values_mut() {
+        let vec = vec![(1, 1), (2, 2), (3, 3)];
+        let mut map: IndexMap<_, _> = vec.into_iter().collect();
+        for value in map.values_mut() {
+            *value = (*value) * 2
+        }
+        let values: Vec<_> = map.values().cloned().collect();
+        assert_eq!(values.len(), 3);
+        assert!(values.contains(&2));
+        assert!(values.contains(&4));
+        assert!(values.contains(&6));
     }
 }

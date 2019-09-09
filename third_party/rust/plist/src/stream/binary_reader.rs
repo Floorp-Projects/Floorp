@@ -1,22 +1,14 @@
-use byteorder::{BigEndian, ReadBytesExt};
-use std::io::{Read, Seek, SeekFrom};
-use std::mem::size_of;
-use std::string::{FromUtf16Error, FromUtf8Error};
+use std::{
+    io::{self, Read, Seek, SeekFrom},
+    mem::size_of,
+};
 
-use stream::Event;
-use {u64_to_usize, Date, Error};
-
-impl From<FromUtf8Error> for Error {
-    fn from(_: FromUtf8Error) -> Error {
-        Error::InvalidData
-    }
-}
-
-impl From<FromUtf16Error> for Error {
-    fn from(_: FromUtf16Error) -> Error {
-        Error::InvalidData
-    }
-}
+use crate::{
+    date::{Date, InfiniteOrNanDate},
+    error::{Error, ErrorKind},
+    stream::Event,
+    u64_to_usize, Uid,
+};
 
 struct StackItem {
     object_ref: u64,
@@ -35,12 +27,41 @@ pub struct BinaryReader<R> {
     stack: Vec<StackItem>,
     object_offsets: Vec<u64>,
     object_on_stack: Vec<bool>,
-    reader: R,
+    reader: PosReader<R>,
     ref_size: u8,
     root_object: u64,
-    // The largest single allocation allowed for this plist.
-    // Equal to the number of bytes in the plist minus the magic number and trailer.
-    max_allocation_bytes: usize,
+    trailer_start_offset: u64,
+}
+
+struct PosReader<R> {
+    reader: R,
+    pos: u64,
+}
+
+impl<R: Read + Seek> PosReader<R> {
+    fn read_all(&mut self, buf: &mut [u8]) -> Result<(), Error> {
+        self.read_exact(buf)
+            .map_err(|err| ErrorKind::Io(err).with_byte_offset(self.pos))?;
+        Ok(())
+    }
+
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64, Error> {
+        self.pos = self
+            .reader
+            .seek(pos)
+            .map_err(|err| ErrorKind::Io(err).with_byte_offset(self.pos))?;
+        Ok(self.pos)
+    }
+}
+
+impl<R: Read> Read for PosReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let count = self.reader.read(buf)?;
+        self.pos
+            .checked_add(count as u64)
+            .expect("file cannot be larger than `u64::max_value()` bytes");
+        Ok(count)
+    }
 }
 
 impl<R: Read + Seek> BinaryReader<R> {
@@ -49,56 +70,58 @@ impl<R: Read + Seek> BinaryReader<R> {
             stack: Vec::new(),
             object_offsets: Vec::new(),
             object_on_stack: Vec::new(),
-            reader,
+            reader: PosReader { reader, pos: 0 },
             ref_size: 0,
             root_object: 0,
-            max_allocation_bytes: 0,
+            trailer_start_offset: 0,
         }
-    }
-
-    fn can_allocate(&self, len: u64, size: usize) -> bool {
-        let byte_len = len.saturating_mul(size as u64);
-        byte_len <= self.max_allocation_bytes as u64
     }
 
     fn allocate_vec<T>(&self, len: u64, size: usize) -> Result<Vec<T>, Error> {
-        if self.can_allocate(len, size) {
-            Ok(Vec::with_capacity(len as usize))
-        } else {
-            Err(Error::InvalidData)
-        }
+        // Check we are not reading past the start of the plist trailer
+        let inner = |len: u64, size: usize| {
+            let byte_len = len.checked_mul(size as u64)?;
+            let end_offset = self.reader.pos.checked_add(byte_len)?;
+            if end_offset <= self.trailer_start_offset {
+                Some(())
+            } else {
+                None
+            }
+        };
+        inner(len, size).ok_or_else(|| self.with_pos(ErrorKind::ObjectOffsetTooLarge))?;
+
+        Ok(Vec::with_capacity(len as usize))
     }
 
     fn read_trailer(&mut self) -> Result<(), Error> {
         self.reader.seek(SeekFrom::Start(0))?;
         let mut magic = [0; 8];
-        self.reader.read_exact(&mut magic)?;
+        self.reader.read_all(&mut magic)?;
         if &magic != b"bplist00" {
-            return Err(Error::InvalidData);
+            return Err(self.with_pos(ErrorKind::InvalidMagic));
         }
+
+        self.trailer_start_offset = self.reader.seek(SeekFrom::End(-32))?;
 
         // Trailer starts with 6 bytes of padding
-        let trailer_start = self.reader.seek(SeekFrom::End(-32 + 6))?;
+        let mut zeros = [0; 6];
+        self.reader.read_all(&mut zeros)?;
 
-        let offset_size = self.reader.read_u8()?;
+        let offset_size = self.read_u8()?;
         match offset_size {
             1 | 2 | 4 | 8 => (),
-            _ => return Err(Error::InvalidData),
+            _ => return Err(self.with_pos(ErrorKind::InvalidTrailerObjectOffsetSize)),
         }
 
-        self.ref_size = self.reader.read_u8()?;
+        self.ref_size = self.read_u8()?;
         match self.ref_size {
             1 | 2 | 4 | 8 => (),
-            _ => return Err(Error::InvalidData),
+            _ => return Err(self.with_pos(ErrorKind::InvalidTrailerObjectReferenceSize)),
         }
 
-        let num_objects = self.reader.read_u64::<BigEndian>()?;
-        self.root_object = self.reader.read_u64::<BigEndian>()?;
-        let offset_table_offset = self.reader.read_u64::<BigEndian>()?;
-
-        // File size minus trailer and header
-        // Truncated to max(usize)
-        self.max_allocation_bytes = trailer_start.saturating_sub(8) as usize;
+        let num_objects = self.read_be_u64()?;
+        self.root_object = self.read_be_u64()?;
+        let offset_table_offset = self.read_be_u64()?;
 
         // Read offset table
         self.reader.seek(SeekFrom::Start(offset_table_offset))?;
@@ -108,53 +131,62 @@ impl<R: Read + Seek> BinaryReader<R> {
         Ok(())
     }
 
+    /// Reads a list of `len` big-endian integers of `size` bytes from the reader.
     fn read_ints(&mut self, len: u64, size: u8) -> Result<Vec<u64>, Error> {
         let mut ints = self.allocate_vec(len, size as usize)?;
         for _ in 0..len {
             match size {
-                1 => ints.push(self.reader.read_u8()?.into()),
-                2 => ints.push(self.reader.read_u16::<BigEndian>()?.into()),
-                4 => ints.push(self.reader.read_u32::<BigEndian>()?.into()),
-                8 => ints.push(self.reader.read_u64::<BigEndian>()?),
-                _ => return Err(Error::InvalidData),
+                1 => ints.push(self.read_u8()?.into()),
+                2 => ints.push(self.read_be_u16()?.into()),
+                4 => ints.push(self.read_be_u32()?.into()),
+                8 => ints.push(self.read_be_u64()?),
+                _ => unreachable!("size is either self.ref_size or offset_size both of which are already validated")
             }
         }
         Ok(ints)
     }
 
+    /// Reads a list of `len` offsets into the object table from the reader.
     fn read_refs(&mut self, len: u64) -> Result<Vec<u64>, Error> {
         let ref_size = self.ref_size;
         self.read_ints(len, ref_size)
     }
 
+    /// Reads a compressed value length from the reader. `len` must contain the low 4 bits of the
+    /// object token.
     fn read_object_len(&mut self, len: u8) -> Result<u64, Error> {
         if (len & 0x0f) == 0x0f {
-            let len_power_of_two = self.reader.read_u8()? & 0x03;
+            let len_power_of_two = self.read_u8()? & 0x03;
             Ok(match len_power_of_two {
-                0 => self.reader.read_u8()?.into(),
-                1 => self.reader.read_u16::<BigEndian>()?.into(),
-                2 => self.reader.read_u32::<BigEndian>()?.into(),
-                3 => self.reader.read_u64::<BigEndian>()?,
-                _ => return Err(Error::InvalidData),
+                0 => self.read_u8()?.into(),
+                1 => self.read_be_u16()?.into(),
+                2 => self.read_be_u32()?.into(),
+                3 => self.read_be_u64()?,
+                _ => return Err(self.with_pos(ErrorKind::InvalidObjectLength)),
             })
         } else {
             Ok(len.into())
         }
     }
 
+    /// Reads `len` bytes from the reader.
     fn read_data(&mut self, len: u64) -> Result<Vec<u8>, Error> {
         let mut data = self.allocate_vec(len, size_of::<u8>())?;
         data.resize(len as usize, 0);
-        self.reader.read_exact(&mut data)?;
+        self.reader.read_all(&mut data)?;
         Ok(data)
     }
 
     fn seek_to_object(&mut self, object_ref: u64) -> Result<u64, Error> {
-        let object_ref = u64_to_usize(object_ref).ok_or(Error::InvalidData)?;
+        let object_ref = u64_to_usize(object_ref)
+            .ok_or_else(|| self.with_pos(ErrorKind::ObjectReferenceTooLarge))?;
         let offset = *self
             .object_offsets
             .get(object_ref)
-            .ok_or(Error::InvalidData)?;
+            .ok_or_else(|| self.with_pos(ErrorKind::ObjectReferenceTooLarge))?;
+        if offset >= self.trailer_start_offset {
+            return Err(self.with_pos(ErrorKind::ObjectOffsetTooLarge));
+        }
         Ok(self.reader.seek(SeekFrom::Start(offset))?)
     }
 
@@ -162,7 +194,7 @@ impl<R: Read + Seek> BinaryReader<R> {
         let object_ref = u64_to_usize(item.object_ref).expect("internal consistency error");
         let is_on_stack = &mut self.object_on_stack[object_ref];
         if *is_on_stack {
-            return Err(Error::InvalidData);
+            return Err(self.with_pos(ErrorKind::RecursiveObject));
         }
         *is_on_stack = true;
         self.stack.push(item);
@@ -195,56 +227,56 @@ impl<R: Read + Seek> BinaryReader<R> {
                 // We're at the end of an array or dict. Pop the top stack item and return.
                 let stack_item = self.pop_stack_item();
                 match stack_item.ty {
-                    StackType::Array => return Ok(Some(Event::EndArray)),
-                    StackType::Dict => return Ok(Some(Event::EndDictionary)),
+                    StackType::Array | StackType::Dict => return Ok(Some(Event::EndCollection)),
                 }
             }
         };
 
         self.seek_to_object(object_ref)?;
 
-        let token = self.reader.read_u8()?;
+        let token = self.read_u8()?;
         let ty = (token & 0xf0) >> 4;
         let size = token & 0x0f;
 
         let result = match (ty, size) {
-            (0x0, 0x00) => return Err(Error::InvalidData), // null
-            (0x0, 0x08) => Some(Event::BooleanValue(false)),
-            (0x0, 0x09) => Some(Event::BooleanValue(true)),
-            (0x0, 0x0f) => return Err(Error::InvalidData), // fill
-            (0x1, 0) => Some(Event::IntegerValue(self.reader.read_u8()?.into())),
-            (0x1, 1) => Some(Event::IntegerValue(
-                self.reader.read_u16::<BigEndian>()?.into(),
-            )),
-            (0x1, 2) => Some(Event::IntegerValue(
-                self.reader.read_u32::<BigEndian>()?.into(),
-            )),
-            (0x1, 3) => Some(Event::IntegerValue(self.reader.read_i64::<BigEndian>()?)),
-            (0x1, 4) => return Err(Error::InvalidData), // 128 bit int
-            (0x1, _) => return Err(Error::InvalidData), // variable length int
-            (0x2, 2) => Some(Event::RealValue(
-                self.reader.read_f32::<BigEndian>()?.into(),
-            )),
-            (0x2, 3) => Some(Event::RealValue(self.reader.read_f64::<BigEndian>()?)),
-            (0x2, _) => return Err(Error::InvalidData), // odd length float
+            (0x0, 0x00) => return Err(self.with_pos(ErrorKind::NullObjectUnimplemented)),
+            (0x0, 0x08) => Some(Event::Boolean(false)),
+            (0x0, 0x09) => Some(Event::Boolean(true)),
+            (0x0, 0x0f) => return Err(self.with_pos(ErrorKind::FillObjectUnimplemented)),
+            (0x1, 0) => Some(Event::Integer(self.read_u8()?.into())),
+            (0x1, 1) => Some(Event::Integer(self.read_be_u16()?.into())),
+            (0x1, 2) => Some(Event::Integer(self.read_be_u32()?.into())),
+            (0x1, 3) => Some(Event::Integer(self.read_be_i64()?.into())),
+            (0x1, 4) => {
+                let value = self.read_be_i128()?;
+                if value < 0 || value > u64::max_value().into() {
+                    return Err(self.with_pos(ErrorKind::IntegerOutOfRange));
+                }
+                Some(Event::Integer((value as u64).into()))
+            }
+            (0x1, _) => return Err(self.with_pos(ErrorKind::UnknownObjectType(token))), // variable length int
+            (0x2, 2) => Some(Event::Real(f32::from_bits(self.read_be_u32()?).into())),
+            (0x2, 3) => Some(Event::Real(f64::from_bits(self.read_be_u64()?))),
+            (0x2, _) => return Err(self.with_pos(ErrorKind::UnknownObjectType(token))), // odd length float
             (0x3, 3) => {
                 // Date. Seconds since 1/1/2001 00:00:00.
-                let secs = self.reader.read_f64::<BigEndian>()?;
-                Some(Event::DateValue(
-                    Date::from_seconds_since_plist_epoch(secs).map_err(|()| Error::InvalidData)?,
-                ))
+                let secs = f64::from_bits(self.read_be_u64()?);
+                let date = Date::from_seconds_since_plist_epoch(secs)
+                    .map_err(|InfiniteOrNanDate| self.with_pos(ErrorKind::InfiniteOrNanDate))?;
+                Some(Event::Date(date))
             }
             (0x4, n) => {
                 // Data
                 let len = self.read_object_len(n)?;
-                Some(Event::DataValue(self.read_data(len)?))
+                Some(Event::Data(self.read_data(len)?))
             }
             (0x5, n) => {
                 // ASCII string
                 let len = self.read_object_len(n)?;
                 let raw = self.read_data(len)?;
-                let string = String::from_utf8(raw)?;
-                Some(Event::StringValue(string))
+                let string = String::from_utf8(raw)
+                    .map_err(|_| self.with_pos(ErrorKind::InvalidUtf8String))?;
+                Some(Event::String(string))
             }
             (0x6, n) => {
                 // UTF-16 string
@@ -252,11 +284,24 @@ impl<R: Read + Seek> BinaryReader<R> {
                 let mut raw_utf16 = self.allocate_vec(len_utf16_codepoints, size_of::<u16>())?;
 
                 for _ in 0..len_utf16_codepoints {
-                    raw_utf16.push(self.reader.read_u16::<BigEndian>()?);
+                    raw_utf16.push(self.read_be_u16()?);
                 }
 
-                let string = String::from_utf16(&raw_utf16)?;
-                Some(Event::StringValue(string))
+                let string = String::from_utf16(&raw_utf16)
+                    .map_err(|_| self.with_pos(ErrorKind::InvalidUtf16String))?;
+                Some(Event::String(string))
+            }
+            (0x8, n) if n < 8 => {
+                // Uid
+                let mut buf = [0; 8];
+                // `len_bytes` is at most 8.
+                let len_bytes = n as usize + 1;
+                // Values are stored in big-endian so we must put the least significant bytes at
+                // the end of the buffer.
+                self.reader.read_all(&mut buf[8 - len_bytes..])?;
+                let value = u64::from_be_bytes(buf);
+
+                Some(Event::Uid(Uid::new(value)))
             }
             (0xa, n) => {
                 // Array
@@ -279,9 +324,13 @@ impl<R: Read + Seek> BinaryReader<R> {
                 let key_refs = self.read_refs(len)?;
                 let value_refs = self.read_refs(len)?;
 
-                let mut child_object_refs = self.allocate_vec(len * 2, self.ref_size as usize)?;
+                let keys_and_values_len = len
+                    .checked_mul(2)
+                    .ok_or_else(|| self.with_pos(ErrorKind::ObjectTooLarge))?;
+                let mut child_object_refs =
+                    self.allocate_vec(keys_and_values_len, self.ref_size as usize)?;
                 let len = key_refs.len();
-                for i in 1..len + 1 {
+                for i in 1..=len {
                     // Reverse so we can pop off the end of the stack in order
                     child_object_refs.push(value_refs[len - i]);
                     child_object_refs.push(key_refs[len - i]);
@@ -295,10 +344,50 @@ impl<R: Read + Seek> BinaryReader<R> {
 
                 Some(Event::StartDictionary(Some(len as u64)))
             }
-            (_, _) => return Err(Error::InvalidData),
+            (_, _) => return Err(self.with_pos(ErrorKind::UnknownObjectType(token))),
         };
 
         Ok(result)
+    }
+
+    fn read_u8(&mut self) -> Result<u8, Error> {
+        let mut buf = [0; 1];
+        self.reader.read_all(&mut buf)?;
+        Ok(buf[0])
+    }
+
+    fn read_be_u16(&mut self) -> Result<u16, Error> {
+        let mut buf = [0; 2];
+        self.reader.read_all(&mut buf)?;
+        Ok(u16::from_be_bytes(buf))
+    }
+
+    fn read_be_u32(&mut self) -> Result<u32, Error> {
+        let mut buf = [0; 4];
+        self.reader.read_all(&mut buf)?;
+        Ok(u32::from_be_bytes(buf))
+    }
+
+    fn read_be_u64(&mut self) -> Result<u64, Error> {
+        let mut buf = [0; 8];
+        self.reader.read_all(&mut buf)?;
+        Ok(u64::from_be_bytes(buf))
+    }
+
+    fn read_be_i64(&mut self) -> Result<i64, Error> {
+        let mut buf = [0; 8];
+        self.reader.read_all(&mut buf)?;
+        Ok(i64::from_be_bytes(buf))
+    }
+
+    fn read_be_i128(&mut self) -> Result<i128, Error> {
+        let mut buf = [0; 16];
+        self.reader.read_all(&mut buf)?;
+        Ok(i128::from_be_bytes(buf))
+    }
+
+    fn with_pos(&self, kind: ErrorKind) -> Error {
+        kind.with_byte_offset(self.reader.pos)
     }
 }
 
@@ -321,37 +410,49 @@ impl<R: Read + Seek> Iterator for BinaryReader<R> {
 #[cfg(test)]
 mod tests {
     use humantime::parse_rfc3339_weak;
-    use std::fs::File;
-    use std::path::Path;
+    use std::{fs::File, path::Path};
 
     use super::*;
-    use stream::Event;
-    use stream::Event::*;
+    use crate::{stream::Event, Uid};
 
     #[test]
     fn streaming_parser() {
+        use crate::stream::Event::*;
+
         let reader = File::open(&Path::new("./tests/data/binary.plist")).unwrap();
         let streaming_parser = BinaryReader::new(reader);
         let events: Vec<Event> = streaming_parser.map(|e| e.unwrap()).collect();
 
         let comparison = &[
-            StartDictionary(Some(6)),
-            StringValue("Lines".to_owned()),
+            StartDictionary(Some(11)),
+            String("Author".into()),
+            String("William Shakespeare".into()),
+            String("Height".into()),
+            Real(1.6),
+            String("Data".into()),
+            Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
+            String("Birthdate".into()),
+            Date(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
+            String("BiggestNumber".into()),
+            Integer(18446744073709551615u64.into()),
+            String("SmallestNumber".into()),
+            Integer((-9223372036854775808i64).into()),
+            String("EmptyArray".into()),
+            StartArray(Some(0)),
+            EndCollection,
+            String("Lines".into()),
             StartArray(Some(2)),
-            StringValue("It is a tale told by an idiot,".to_owned()),
-            StringValue("Full of sound and fury, signifying nothing.".to_owned()),
-            EndArray,
-            StringValue("Death".to_owned()),
-            IntegerValue(1564),
-            StringValue("Height".to_owned()),
-            RealValue(1.60),
-            StringValue("Birthdate".to_owned()),
-            DateValue(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
-            StringValue("Author".to_owned()),
-            StringValue("William Shakespeare".to_owned()),
-            StringValue("Data".to_owned()),
-            DataValue(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
-            EndDictionary,
+            String("It is a tale told by an idiot,".into()),
+            String("Full of sound and fury, signifying nothing.".into()),
+            EndCollection,
+            String("Death".into()),
+            Integer(1564.into()),
+            String("EmptyDictionary".into()),
+            StartDictionary(Some(0)),
+            EndCollection,
+            String("Blank".into()),
+            String("".into()),
+            EndCollection,
         ];
 
         assert_eq!(events, comparison);
@@ -363,14 +464,26 @@ mod tests {
         let streaming_parser = BinaryReader::new(reader);
         let mut events: Vec<Event> = streaming_parser.map(|e| e.unwrap()).collect();
 
-        assert_eq!(events[2], StringValue("\u{2605} or better".to_owned()));
+        assert_eq!(events[2], Event::String("\u{2605} or better".to_owned()));
 
-        let poem = if let StringValue(ref mut poem) = events[4] {
+        let poem = if let Event::String(ref mut poem) = events[4] {
             poem
         } else {
             panic!("not a string")
         };
         assert_eq!(poem.len(), 643);
         assert_eq!(poem.pop().unwrap(), '\u{2605}');
+    }
+
+    #[test]
+    fn nskeyedarchiver_plist() {
+        let reader = File::open(&Path::new("./tests/data/binary_NSKeyedArchiver.plist")).unwrap();
+        let streaming_parser = BinaryReader::new(reader);
+        let events: Vec<Event> = streaming_parser.map(|e| e.unwrap()).collect();
+
+        assert_eq!(events[10], Event::Uid(Uid::new(4)));
+        assert_eq!(events[12], Event::Uid(Uid::new(2)));
+        assert_eq!(events[18], Event::Uid(Uid::new(3)));
+        assert_eq!(events[46], Event::Uid(Uid::new(1)));
     }
 }

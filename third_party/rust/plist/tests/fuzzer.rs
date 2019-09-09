@@ -65,7 +65,7 @@ fn test_fuzzer_data(data: &[u8]) -> Result<Value, Error> {
 }
 
 fn test_fuzzer_data_ok(data: &[u8]) {
-    assert!(test_fuzzer_data(data).is_ok());
+    test_fuzzer_data(data).unwrap();
 }
 
 fn test_fuzzer_data_err(data: &[u8]) {

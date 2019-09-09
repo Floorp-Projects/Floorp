@@ -3,6 +3,10 @@
 
 [![](https://img.shields.io/crates/v/base64.svg)](https://crates.io/crates/base64) [![Docs](https://docs.rs/base64/badge.svg)](https://docs.rs/base64) [![Build](https://travis-ci.org/alicemaz/rust-base64.svg?branch=master)](https://travis-ci.org/alicemaz/rust-base64) [![codecov](https://codecov.io/gh/alicemaz/rust-base64/branch/master/graph/badge.svg)](https://codecov.io/gh/alicemaz/rust-base64)
 
+<a href="https://www.jetbrains.com/?from=rust-base64"><img src="/icon_CLion.svg" height="40px"/></a>
+
+Made with CLion. Thanks to JetBrains for supporting open source!
+
 It's base64. What more could anyone want?
 
 Example
@@ -24,10 +28,10 @@ fn main() {
 
 See the [docs](https://docs.rs/base64) for all the details.
 
-Purpose
+Rust version compatibility
 ---
 
-I have a fondness for small dependency footprints, ecosystems where you can pick and choose what functionality you need, and no more. Unix philosophy sort of thing I guess, many tiny utilities interoperating across a common interface. One time making a Twitter bot, I ran into the need to correctly pluralize arbitrary words. I found on npm a module that did nothing but pluralize words. Nothing else, just a couple of functions. I'd like for this to be that "just a couple of functions."
+The minimum required Rust version is 1.27.2.
 
 Developing
 ---
