@@ -2462,6 +2462,22 @@ class HTMLEditor final : public TextEditor,
       const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsTArray<bool>& aTransitionArray);
 
+  /**
+   * EnsureHardLineBeginsWithFirstChildOf() inserts `<br>` element before
+   * first child of aRemovingContainerElement if it will not be start of a
+   * hard line after removing aRemovingContainerElement.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureHardLineBeginsWithFirstChildOf(dom::Element& aRemovingContainerElement);
+
+  /**
+   * EnsureHardLineEndsWithLastChildOf() inserts `<br>` element after last
+   * child of aRemovingContainerElement if it will not be end of a hard line
+   * after removing aRemovingContainerElement.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureHardLineEndsWithLastChildOf(dom::Element& aRemovingContainerElement);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

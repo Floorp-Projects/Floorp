@@ -87,18 +87,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
 
-  /**
-   * MakeSureElemStartsAndEndsOnCR() inserts <br> element at start (and/or end)
-   * of aNode if neither:
-   * - first (last) editable child of aNode is a block or a <br>,
-   * - previous (next) sibling of aNode is block or a <br>
-   * - nor no previous (next) sibling of aNode.
-   *
-   * @param aNode               The node which may be inserted <br> elements.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
-
   void DidCreateNode(Element& aNewElement);
   void DidInsertNode(nsIContent& aNode);
   void WillDeleteNode(nsINode& aChild);
@@ -326,21 +314,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult RemoveAlignment(nsINode& aNode,
                                         const nsAString& aAlignType,
                                         bool aDescendantsOnly);
-
-  /**
-   * MakeSureElemStartsOrEndsOnCR() inserts <br> element at start (end) of
-   * aNode if neither:
-   * - first (last) editable child of aNode is a block or a <br>,
-   * - previous (next) sibling of aNode is block or a <br>
-   * - nor no previous (next) sibling of aNode.
-   *
-   * @param aNode               The node which may be inserted <br> element.
-   * @param aStarts             true for trying to insert <br> to the start.
-   *                            false for trying to insert <br> to the end.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
-                                                     bool aStarts);
 
   /**
    * AlignBlock() resets align attribute, text-align property, etc first.
