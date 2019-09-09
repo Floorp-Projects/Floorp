@@ -10620,9 +10620,22 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
         return rv;
       }
 
-      // we may have to insert BRs in first and last position of element's
-      // children if the nodes before/after are not blocks and not BRs
-      rv = MakeSureElemStartsAndEndsOnCR(*child);
+      // We may have to insert a `<br>` element before first child of the
+      // `<center>` element because it should be first element of a hard line
+      // even after removing the `<center>` element.
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .EnsureHardLineBeginsWithFirstChildOf(
+                   MOZ_KnownLive(*child->AsElement()));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // We may have to insert a `<br>` element after last child of the
+      // `<center>` element because it should be last element of a hard line
+      // even after removing the `<center>` element.
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .EnsureHardLineEndsWithLastChildOf(
+                   MOZ_KnownLive(*child->AsElement()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10690,68 +10703,76 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
-                                                     bool aStarts) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
+    Element& aRemovingContainerElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsINode* child = aStarts ? HTMLEditorRef().GetFirstEditableChild(aNode)
-                           : HTMLEditorRef().GetLastEditableChild(aNode);
-  if (NS_WARN_IF(!child)) {
+  nsIContent* firstEditableChild =
+      GetFirstEditableChild(aRemovingContainerElement);
+  if (!firstEditableChild) {
     return NS_OK;
   }
 
-  bool foundCR = false;
-  if (HTMLEditor::NodeIsBlockStatic(*child) ||
-      child->IsHTMLElement(nsGkAtoms::br)) {
-    foundCR = true;
-  } else {
-    nsINode* sibling = aStarts ? HTMLEditorRef().GetPriorHTMLSibling(&aNode)
-                               : HTMLEditorRef().GetNextHTMLSibling(&aNode);
-    if (sibling) {
-      if (HTMLEditor::NodeIsBlockStatic(*sibling) ||
-          sibling->IsHTMLElement(nsGkAtoms::br)) {
-        foundCR = true;
-      }
-    } else {
-      foundCR = true;
-    }
+  if (HTMLEditor::NodeIsBlockStatic(*firstEditableChild) ||
+      firstEditableChild->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
   }
-  if (!foundCR) {
-    EditorDOMPoint pointToInsert;
-    if (!aStarts) {
-      pointToInsert.SetToEndOf(&aNode);
-    } else {
-      pointToInsert.Set(&aNode, 0);
-    }
-    RefPtr<Element> brElement =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertBRElementWithTransaction(pointToInsert);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
-    }
+
+  nsIContent* previousEditableContent =
+      GetPriorHTMLSibling(&aRemovingContainerElement);
+  if (!previousEditableContent) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*previousEditableContent) ||
+      previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> brElement = InsertBRElementWithTransaction(
+      EditorDOMPoint(&aRemovingContainerElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(!brElement)) {
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-nsresult HTMLEditRules::MakeSureElemStartsAndEndsOnCR(nsINode& aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
+    Element& aRemovingContainerElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsIContent* lastEditableChild =
+      GetLastEditableChild(aRemovingContainerElement);
+  if (!lastEditableChild) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*lastEditableChild) ||
+      lastEditableChild->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  nsIContent* nextEditableContent =
+      GetPriorHTMLSibling(&aRemovingContainerElement);
+  if (!nextEditableContent) {
+    return NS_OK;
+  }
+
+  if (HTMLEditor::NodeIsBlockStatic(*nextEditableContent) ||
+      nextEditableContent->IsHTMLElement(nsGkAtoms::br)) {
+    return NS_OK;
+  }
+
+  RefPtr<Element> brElement = InsertBRElementWithTransaction(
+      EditorDOMPoint::AtEndOf(aRemovingContainerElement));
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  nsresult rv = MakeSureElemStartsOrEndsOnCR(aNode, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  rv = MakeSureElemStartsOrEndsOnCR(aNode, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(!brElement)) {
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
