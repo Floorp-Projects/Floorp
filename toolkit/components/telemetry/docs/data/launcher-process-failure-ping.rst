@@ -25,6 +25,9 @@ Structure:
       // CPU Architecture. One of the values from the Windows SYSTEM_INFO::wProcessorArchitecture field
       "cpu_arch": <int>,
       "num_logical_cpus": <int>,
+      // True if the process was launched with Administrator privileges
+      // but without User Account Control (= UAC)
+      "is_admin_without_uac": <bool>,
       "memory": {
         // Free space available in the page file, in bytes
         "total_phys": <int>,
@@ -81,4 +84,5 @@ Structure:
 Version History
 ~~~~~~~~~~~~~~~
 
+- Firefox 71: Added ``is_admin_without_uac`` (`bug 1567605 <https://bugzilla.mozilla.org/show_bug.cgi?id=1567605>`_).
 - Firefox 67: Initial release (`bug 1460433 <https://bugzilla.mozilla.org/show_bug.cgi?id=1460433>`_).
