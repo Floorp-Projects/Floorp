@@ -38,7 +38,7 @@ class WebPlatformTestsRunner(object):
         else:
             raise ValueError("Unknown product %s" % kwargs["product"])
         result = wptrunner.start(**kwargs)
-        return int(not result)
+        return int(result)
 
     def update_manifest(self, logger, **kwargs):
         import manifestupdate
