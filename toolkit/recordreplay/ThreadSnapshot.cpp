@@ -19,7 +19,7 @@ namespace recordreplay {
 #define THREAD_STACK_TOP_SIZE 2048
 
 // Information about a thread's state, for use in saving or restoring
-// checkpoints. The contents of this structure are in preserved memory.
+// snapshots. The contents of this structure are in preserved memory.
 struct ThreadState {
   // Whether this thread should update its state when no longer idle. This is
   // only used for non-main threads.
@@ -51,7 +51,7 @@ struct ThreadState {
 
 // For each non-main thread, whether that thread should update its stack and
 // state when it is no longer idle. This also stores restore info for the
-// main thread, which immediately updates its state when restoring checkpoints.
+// main thread, which immediately updates its state when restoring snapshots.
 static ThreadState* gThreadState;
 
 void InitializeThreadSnapshots(size_t aNumThreads) {
@@ -248,7 +248,7 @@ bool ShouldRestoreThreadStack(size_t aId) {
   return gThreadState[aId].mShouldRestore;
 }
 
-bool SaveAllThreads(SavedCheckpoint& aSaved) {
+bool SaveAllThreads(AllSavedThreadStacks& aSaved) {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
   AutoPassThroughThreadEvents pt;  // setjmp may perform system calls.
@@ -266,7 +266,7 @@ bool SaveAllThreads(SavedCheckpoint& aSaved) {
   return true;
 }
 
-void RestoreAllThreads(const SavedCheckpoint& aSaved) {
+void RestoreAllThreads(const AllSavedThreadStacks& aSaved) {
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
   // These will be matched by the Auto* classes in SaveAllThreads().

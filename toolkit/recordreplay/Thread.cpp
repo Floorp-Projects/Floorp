@@ -430,7 +430,7 @@ void Thread::NotifyUnrecordedWait(
   }
 }
 
-bool Thread::MaybeWaitForCheckpointSave(
+bool Thread::MaybeWaitForSnapshot(
     const std::function<void()>& aReleaseCallback) {
   MOZ_RELEASE_ASSERT(!PassThroughEvents());
   if (IsMainThread()) {
