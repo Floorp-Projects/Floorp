@@ -4871,11 +4871,23 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 }
 
 - (BOOL)shouldMinimizeOnTitlebarDoubleClick {
-  NSString* MDAppleMiniaturizeOnDoubleClickKey = @"AppleMiniaturizeOnDoubleClick";
+  // Check the system preferences.
+  // We could also check -[NSWindow _shouldMiniaturizeOnDoubleClick]. It's not clear to me which
+  // approach would be preferable; neither is public API.
   NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-  bool shouldMinimize = [[userDefaults objectForKey:MDAppleMiniaturizeOnDoubleClickKey] boolValue];
 
-  return shouldMinimize;
+  // Pre-10.11:
+  NSString* kAppleMiniaturizeOnDoubleClickKey = @"AppleMiniaturizeOnDoubleClick";
+  id value1 = [userDefaults objectForKey:kAppleMiniaturizeOnDoubleClickKey];
+  if ([value1 isKindOfClass:[NSValue class]] && [value1 boolValue]) {
+    return YES;
+  }
+
+  // 10.11+:
+  NSString* kAppleActionOnDoubleClickKey = @"AppleActionOnDoubleClick";
+  NSString* kMinimizeValue = @"Minimize";
+  id value2 = [userDefaults objectForKey:kAppleActionOnDoubleClickKey];
+  return ([value2 isKindOfClass:[NSString class]] && [value2 isEqualToString:kMinimizeValue]);
 }
 
 #pragma mark -
