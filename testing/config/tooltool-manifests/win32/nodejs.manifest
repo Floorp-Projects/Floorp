@@ -1,9 +1,0 @@
-[
-  {
-    "size": 15066656,
-    "visibility": "internal",
-    "digest": "edf96781042db513700c4a092ef367c05933967b036db9b0f716b75da613a7eaea055d0f60b1e12f6e41a545962cec97a7b78c6b86363ee1ec7a9f42699a5531",
-    "algorithm": "sha512",
-    "filename": "node-win32.exe"
-  }
-]
