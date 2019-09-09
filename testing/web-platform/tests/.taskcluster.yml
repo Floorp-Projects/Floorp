@@ -70,7 +70,7 @@ tasks:
                 owner: ${event.pusher.email}
                 source: ${event.repository.url}
               payload:
-                image: harjgam/web-platform-tests:0.32
+                image: harjgam/web-platform-tests:0.33
                 maxRunTime: 7200
                 artifacts:
                   public/results:
@@ -162,7 +162,7 @@ tasks:
                   owner: ${event.pull_request.user.login}@users.noreply.github.com
                   source: ${event.repository.url}
                 payload:
-                  image: harjgam/web-platform-tests:0.32
+                  image: harjgam/web-platform-tests:0.33
                   maxRunTime: 7200
                   artifacts:
                     public/results:
@@ -328,7 +328,7 @@ tasks:
                   owner: ${event.sender.login}@users.noreply.github.com
                   source: ${event.repository.url}
                 payload:
-                  image: harjgam/web-platform-tests:0.32
+                  image: harjgam/web-platform-tests:0.33
                   maxRunTime: 7200
                   artifacts:
                     public/results:
