@@ -282,6 +282,8 @@ const browsingContextTargetPrototype = {
       logInPage: true,
       // Supports requests related to rewinding.
       canRewind,
+      // Supports watchpoints in the server for Fx71+
+      watchpoints: true,
     };
 
     this._workerTargetActorList = null;
