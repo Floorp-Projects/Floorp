@@ -140,6 +140,10 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
 
   nsWeakPtr channelRef;
 
+  nsCOMPtr<nsIRequestContextService> rcsvc =
+      mozilla::net::RequestContextService::GetOrCreate();
+  uint64_t rcID;
+
   {
     nsCOMPtr<nsIURI> url;
     nsresult rv;
@@ -247,15 +251,14 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
       MOZ_CRASH("SetRequestMethod on gHttpChannel failed.");
     }
 
-    nsCOMPtr<nsIRequestContextService> rcsvc =
-        mozilla::net::RequestContextService::GetOrCreate();
     nsCOMPtr<nsIRequestContext> rc;
     rv = rcsvc->NewRequestContext(getter_AddRefs(rc));
     if (NS_FAILED(rv)) {
       MOZ_CRASH("NewRequestContext failed.");
     }
+    rcID = rc->GetID();
 
-    rv = gHttpChannel->SetRequestContextID(rc->GetID());
+    rv = gHttpChannel->SetRequestContextID(rcID);
     if (NS_FAILED(rv)) {
       MOZ_CRASH("SetRequestContextID on gHttpChannel failed.");
     }
@@ -287,6 +290,7 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
   // Wait for the connection to indicate closed
   SpinEventLoopUntil([&]() -> bool { return gFuzzingConnClosed; });
 
+  rcsvc->RemoveRequestContext(rcID);
   return 0;
 }
 
