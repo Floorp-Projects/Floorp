@@ -270,6 +270,7 @@ html|input[type="color"]::-moz-focus-inner {
 
 *|button:-moz-focusring,
 html|select:-moz-focusring,
+html|input[type="checkbox"]:-moz-focusring,
 html|input[type="color"]:-moz-focusring,
 xul|menulist:-moz-focusring {
   outline: 2px solid var(--in-content-border-active);
