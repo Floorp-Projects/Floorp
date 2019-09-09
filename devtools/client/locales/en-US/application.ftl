@@ -113,13 +113,13 @@ manifest-non-existing = No manifest found to inspect.
 
 # Sidebar navigation item for Manifest sidebar item section
 sidebar-item-manifest = Manifest
-	.alt = Manifest Icon
-	.title = Manifest
+.alt = Manifest Icon
+.title = Manifest
 
 # Sidebar navigation item for Service Workers sidebar item section
 sidebar-item-service-workers = Service Workers
-	.alt = Service Workers Icon
-	.title = Service Workers
+.alt = Service Workers Icon
+.title = Service Workers
 
 # Text for the ALT and TITLE attributes of the warning icon
 icon-warning =
