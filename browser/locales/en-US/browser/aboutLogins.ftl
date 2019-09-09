@@ -65,6 +65,9 @@ about-logins-login-list-empty-search-description = There are no results matching
 login-list-item-title-new-login = New Login
 login-list-item-subtitle-new-login = Enter your login credentials
 login-list-item-subtitle-missing-username = (no username)
+about-logins-list-item-warning-icon = 
+  .alt = Warning icon
+  .title = Breached website
 
 ## Introduction screen
 
