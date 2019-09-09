@@ -941,6 +941,83 @@ preferences:
     record_in_processes:
       - 'main'
 
+webrtc.hostnameobfuscation:
+  disabled_failed:
+    bug_numbers:
+      - 1569250
+    description: >
+      The number of times the connection failed with hostname obfuscation
+      disabled. Hostname obfuscation uses mDNS addresses to prevent browser
+      fingerprinting by using WebRTC to collect local IP addresses.
+    expires: "77"
+    kind: uint
+    notification_emails:
+      - dminor@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  disabled_succeeded:
+    bug_numbers:
+      - 1569250
+    description: >
+      The number of times the connection succeeded with hostname obfuscation
+      disabled. Hostname obfuscation uses mDNS addresses to prevent browser
+      fingerprinting by using WebRTC to collect local IP addresses.
+    expires: "77"
+    kind: uint
+    notification_emails:
+      - dminor@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  enabled_failed:
+    bug_numbers:
+      - 1569250
+    description: >
+      The number of times the connection failed with hostname obfuscation
+      enabled. Hostname obfuscation uses mDNS addresses to prevent browser
+      fingerprinting by using WebRTC to collect local IP addresses.
+    expires: "77"
+    kind: uint
+    notification_emails:
+      - dminor@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  enabled_succeeded:
+    bug_numbers:
+      - 1569250
+    description: >
+      The number of times the connection succeeded with hostname obfuscation
+      enabled. Hostname obfuscation uses mDNS addresses to prevent browser
+      fingerprinting by using WebRTC to collect local IP addresses.
+    expires: "77"
+    kind: uint
+    notification_emails:
+      - dminor@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 webrtc.video:
   recv_codec_used:
     bug_numbers:
