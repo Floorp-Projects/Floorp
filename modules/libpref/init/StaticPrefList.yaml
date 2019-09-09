@@ -1459,6 +1459,12 @@
   value: false
   mirror: always
 
+# Whether or not formData event is enabled.
+- name: dom.formdata.event.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Support @autocomplete values for form autofill feature.
 - name: dom.forms.autocomplete.formautofill
   type: bool
