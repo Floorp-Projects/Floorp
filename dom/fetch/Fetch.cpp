@@ -496,13 +496,16 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
+
+      cookieSettings = mozilla::net::CookieSettings::Create();
+    }
+
+    if (!loadGroup) {
       nsresult rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), principal);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         aRv.Throw(rv);
         return nullptr;
       }
-
-      cookieSettings = mozilla::net::CookieSettings::Create();
     }
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
