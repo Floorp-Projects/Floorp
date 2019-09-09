@@ -249,8 +249,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
 
-  nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
-
   /**
    * ConfirmSelectionInBody() makes sure that Selection is in editor root
    * element typically <body> element (see HTMLEditor::UpdateRootElement())
