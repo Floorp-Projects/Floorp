@@ -5,8 +5,4 @@
 DevToolsModules(
     'PageSwitcher.css',
     'PageSwitcher.js',
-    'Sidebar.css',
-    'Sidebar.js',
-    'SidebarItem.css',
-    'SidebarItem.js'
 )

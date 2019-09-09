@@ -23,9 +23,7 @@
   --list-line-height: 1.25;
 
  /* Global colours */
-  --separator-color: var(--theme-splitter-color);
-  --bg-color: var(--theme-toolbar-background);
-  --highlight-color: var(--theme-toolbar-background-hover);
+  --separator-color: var(--theme-text-color-alt);
 
   /* extra, raw colors */
   --blue-50-a30: rgba(10, 132, 255, 0.3);

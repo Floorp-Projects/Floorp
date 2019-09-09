@@ -15,7 +15,6 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const PageSwitcher = createFactory(require("./routing/PageSwitcher"));
-const Sidebar = createFactory(require("./routing/Sidebar"));
 
 /**
  * This is the main component for the application panel.
@@ -32,7 +31,7 @@ class App extends PureComponent {
 
     return LocalizationProvider(
       { bundles: fluentBundles },
-      main({ className: `app` }, Sidebar({}), PageSwitcher({}))
+      main({ className: `application` }, PageSwitcher({}))
     );
   }
 }

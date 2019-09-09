@@ -3,9 +3,8 @@
 exports[`App renders the expected snapshot 1`] = `
 <LocalizationProvider>
   <main
-    className="app"
+    className="application"
   >
-    <Sidebar />
     <Connect(PageSwitcher) />
   </main>
 </LocalizationProvider>
