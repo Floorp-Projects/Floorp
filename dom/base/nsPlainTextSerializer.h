@@ -97,6 +97,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   void EnsureVerticalSpace(int32_t noOfRows);
 
+  void ConvertToLinesAndOutput(const nsAString& aString);
+
   void Write(const nsAString& aString);
 
   // @return true, iff the elements' whitespace and newline characters have to
