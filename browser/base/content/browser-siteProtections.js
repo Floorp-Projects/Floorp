@@ -1627,8 +1627,6 @@ var gProtectionsHandler = {
       // remain collapsed.
       ToolbarPanelHub.insertProtectionPanelMessage(event);
 
-      this.reorderCategoryItems();
-
       if (!event.target.hasAttribute("toast")) {
         Services.telemetry.recordEvent(
           "security.ui.protectionspopup",
