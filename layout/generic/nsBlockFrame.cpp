@@ -7316,7 +7316,12 @@ void nsBlockFrame::IsMarginRoot(bool* aBStartMarginRoot,
       *aBEndMarginRoot = false;
       return;
     }
+    // Bug 1499281: The following margin root calculation is for legacy
+    // multi-column container. Remove it after removing the column-span
+    // preference.
     if (parent->IsColumnSetFrame()) {
+      MOZ_ASSERT(!StaticPrefs::layout_css_column_span_enabled(),
+                 "Column contents always have BFC set!");
       *aBStartMarginRoot = GetPrevInFlow() == nullptr;
       *aBEndMarginRoot = GetNextInFlow() == nullptr;
       return;
