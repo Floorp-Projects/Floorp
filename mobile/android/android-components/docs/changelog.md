@@ -109,6 +109,9 @@ permalink: /changelog/
 * **browser-session**, **feature-intent**
   * ⚠️ **This is a breaking change**: Moved `Intent` related code from `browser-session` to `feature-intent`.
 
+* **feature-media**
+  * The `Intent` launched from the media notification now has its action set to `MediaFeature.ACTION_SWITCH_TAB`. In addition to that the extra `MediaFeature.EXTRA_TAB_ID` contains the id of the tab the media notification is displayed for.
+
 # 10.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v10.0.1)

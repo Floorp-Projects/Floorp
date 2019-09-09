@@ -5,57 +5,90 @@
 package mozilla.components.feature.media.notification
 
 import android.app.Notification
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.MockMedia
 import mozilla.components.feature.media.R
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class MediaNotificationTest {
+    private lateinit var context: Context
+
+    @Before
+    fun setUp() {
+        context = spy(testContext).also {
+            val packageManager: PackageManager = mock()
+            doReturn(Intent()).`when`(packageManager).getLaunchIntentForPackage(ArgumentMatchers.anyString())
+            doReturn(packageManager).`when`(it).packageManager
+        }
+    }
+
     @Test
     fun `media notification for playing state`() {
         val state = MediaState.Playing(
-            Session("https://www.mozilla.org").apply {
+            Session("https://www.mozilla.org", id = "test-tab").apply {
                 title = "Mozilla"
             },
             listOf(
                 MockMedia(Media.PlaybackState.PLAYING)
             ))
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
 
         assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+
+        shadowOf(notification.contentIntent).savedIntent!!.also { intent ->
+            assertEquals(MediaFeature.ACTION_SWITCH_TAB, intent.action)
+            assertTrue(intent.extras!!.containsKey(MediaFeature.EXTRA_TAB_ID))
+            assertEquals("test-tab", intent.getStringExtra(MediaFeature.EXTRA_TAB_ID))
+        }
     }
 
     @Test
     fun `media notification for paused state`() {
         val state = MediaState.Paused(
-            Session("https://www.mozilla.org").apply {
+            Session("https://www.mozilla.org", id = "test-tab").apply {
                 title = "Mozilla"
             },
             listOf(
                 MockMedia(Media.PlaybackState.PAUSE)
             ))
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
         assertEquals("Mozilla", notification.title)
 
         assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+
+        shadowOf(notification.contentIntent).savedIntent!!.also { intent ->
+            assertEquals(MediaFeature.ACTION_SWITCH_TAB, intent.action)
+            assertTrue(intent.extras!!.containsKey(MediaFeature.EXTRA_TAB_ID))
+            assertEquals("test-tab", intent.getStringExtra(MediaFeature.EXTRA_TAB_ID))
+        }
     }
 
     fun `media notification for none state`() {
@@ -64,10 +97,10 @@ class MediaNotificationTest {
 
         val state = MediaState.None
 
-        MediaNotification(testContext)
+        MediaNotification(context)
             .create(state, mock())
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
             .create(state, mock())
 
         assertEquals("", notification.text)
@@ -82,7 +115,7 @@ class MediaNotificationTest {
                 MockMedia(Media.PlaybackState.PLAYING)
             ))
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
@@ -101,7 +134,7 @@ class MediaNotificationTest {
                     MockMedia(Media.PlaybackState.PLAYING)
                 ))
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
             .create(state, mock())
 
         assertEquals("", notification.text)
@@ -120,7 +153,7 @@ class MediaNotificationTest {
                         MockMedia(Media.PlaybackState.PAUSE)
                 ))
 
-        val notification = MediaNotification(testContext)
+        val notification = MediaNotification(context)
                 .create(state, mock())
 
         assertEquals("", notification.text)

@@ -12,6 +12,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.R
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
@@ -28,9 +29,6 @@ internal class MediaNotification(
     @Suppress("LongMethod")
     fun create(state: MediaState, mediaSession: MediaSessionCompat): Notification {
         val channel = MediaNotificationChannel.ensureChannelExists(context)
-
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
         val data = state.toNotificationData(context)
 
@@ -57,7 +55,7 @@ internal class MediaNotification(
             // We only set a content intent if this media notification is not for an "external app"
             // like a custom tab. Currently we can't route the user to that particular activity:
             // https://github.com/mozilla-mobile/android-components/issues/3986
-            builder.setContentIntent(pendingIntent)
+            builder.setContentIntent(data.contentIntent)
         }
 
         return builder.build()
@@ -65,6 +63,10 @@ internal class MediaNotification(
 }
 
 private fun MediaState.toNotificationData(context: Context): NotificationData {
+    val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
+        it.action = MediaFeature.ACTION_SWITCH_TAB
+    }
+
     return when (this) {
         is MediaState.Playing -> NotificationData(
             title = session.getTitleOrUrl(context),
@@ -79,7 +81,10 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     0,
                     MediaService.pauseIntent(context),
                     0)
-            ).build()
+            ).build(),
+            contentIntent = PendingIntent.getActivity(context, 0, intent?.apply {
+                putExtra(MediaFeature.EXTRA_TAB_ID, session.id)
+            }, 0)
         )
         is MediaState.Paused -> NotificationData(
             title = session.getTitleOrUrl(context),
@@ -94,7 +99,10 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     0,
                     MediaService.playIntent(context),
                     0)
-            ).build()
+            ).build(),
+            contentIntent = PendingIntent.getActivity(context, 0, intent?.apply {
+                putExtra(MediaFeature.EXTRA_TAB_ID, session.id)
+            }, 0)
         )
         // Dummy notification that is only used to satisfy the requirement to ALWAYS call
         // startForeground with a notification.
@@ -119,7 +127,8 @@ private data class NotificationData(
     val description: String = "",
     @DrawableRes val icon: Int = R.drawable.mozac_feature_media_playing,
     val largeIcon: Bitmap? = null,
-    val action: NotificationCompat.Action? = null
+    val action: NotificationCompat.Action? = null,
+    val contentIntent: PendingIntent? = null
 )
 
 private fun MediaState.isForExternalApp(): Boolean {
