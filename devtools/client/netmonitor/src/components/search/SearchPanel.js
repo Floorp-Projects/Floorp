@@ -23,7 +23,7 @@ const LabelCell = createFactory(
 );
 const { SearchProvider } = require("./search-provider");
 const Toolbar = createFactory(require("./Toolbar"));
-
+const StatusBar = createFactory(require("./StatusBar"));
 // There are two levels in the search panel tree hierarchy:
 // 0: Resource - represents the source request object
 // 1: Search Result - represents a match coming from the parent resource
@@ -211,7 +211,8 @@ class SearchPanel extends Component {
       div(
         { className: "search-panel-content", style: { width: "100%" } },
         this.renderTree()
-      )
+      ),
+      StatusBar()
     );
   }
 }

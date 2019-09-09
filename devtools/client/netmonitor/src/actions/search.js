@@ -228,7 +228,7 @@ function stopOngoingSearch() {
 
     if (ongoingSearch && status !== SEARCH_STATUS.DONE) {
       ongoingSearch.cancel();
-      dispatch(updateSearchStatus(SEARCH_STATUS.CANCELLED));
+      dispatch(updateSearchStatus(SEARCH_STATUS.CANCELED));
     }
   };
 }

@@ -12,7 +12,22 @@ function getSearchStatus(state) {
   return state.search.status;
 }
 
+function getSearchResultCount(state) {
+  const results = state.search.results;
+  return (
+    (results.length !== 0
+      ? results.reduce((total, current) => total + current.results.length, 0)
+      : 0) + ""
+  );
+}
+
+function getSearchResourceCount(state) {
+  return state.search.results.length + "";
+}
+
 module.exports = {
   getOngoingSearch,
   getSearchStatus,
+  getSearchResultCount,
+  getSearchResourceCount,
 };
