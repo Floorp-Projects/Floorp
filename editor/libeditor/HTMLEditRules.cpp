@@ -6336,13 +6336,13 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       // The node is a table element, an hr, a paragraph, a div or a section
       // header; in HTML 4, it can directly carry the ALIGN attribute and we
       // don't need to make a div! If we are in CSS mode, all the work is done
-      // in AlignBlock
-      rv = AlignBlock(MOZ_KnownLive(*node->AsElement()), aAlignType,
-                      ResetAlignOf::OnlyDescendants);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      // in SetBlockElementAlign().
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .SetBlockElementAlign(
+                            MOZ_KnownLive(*node->AsElement()), aAlignType,
+                            HTMLEditor::EditTarget::OnlyDescendantsExceptTable);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetBlockElementAlign() failed");
+      return rv;
     }
 
     if (TextEditUtils::IsBreak(node)) {
@@ -6429,7 +6429,10 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // Remember our new block for postprocessing
     HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement = div;
     // Set up the alignment on the div, using HTML or CSS
-    rv = AlignBlock(*div, aAlignType, ResetAlignOf::OnlyDescendants);
+    rv = MOZ_KnownLive(HTMLEditorRef())
+             .SetBlockElementAlign(
+                 *div, aAlignType,
+                 HTMLEditor::EditTarget::OnlyDescendantsExceptTable);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6480,10 +6483,13 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // The node is a table element, an hr, a paragraph, a div or a section
     // header; in HTML 4, it can directly carry the ALIGN attribute and we
     // don't need to nest it, just set the alignment.  In CSS, assign the
-    // corresponding CSS styles in AlignBlock
+    // corresponding CSS styles in SetBlockElementAlign().
     if (HTMLEditUtils::SupportsAlignAttr(*curNode)) {
-      rv = AlignBlock(MOZ_KnownLive(*curNode->AsElement()), aAlignType,
-                      ResetAlignOf::ElementAndDescendants);
+      nsresult rv =
+          MOZ_KnownLive(HTMLEditorRef())
+              .SetBlockElementAlign(
+                  MOZ_KnownLive(*curNode->AsElement()), aAlignType,
+                  HTMLEditor::EditTarget::NodeAndDescendantsExceptTable);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -6579,11 +6585,15 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       // Remember our new block for postprocessing
       HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement = curDiv;
       // Set up the alignment on the div
-      rv = AlignBlock(*curDiv, aAlignType, ResetAlignOf::OnlyDescendants);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .SetBlockElementAlign(
+                   *curDiv, aAlignType,
+                   HTMLEditor::EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to align the <div>");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "SetBlockElementAlign() failed, but ignored");
     }
 
     // Tuck the node into the end of the active div
@@ -10772,61 +10782,31 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
   return NS_OK;
 }
 
-nsresult HTMLEditRules::AlignBlock(Element& aElement,
-                                   const nsAString& aAlignType,
-                                   ResetAlignOf aResetAlignOf) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,
+                                          const nsAString& aAlignType,
+                                          EditTarget aEditTarget) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(HTMLEditor::NodeIsBlockStatic(aBlockOrHRElement) ||
+             aBlockOrHRElement.IsHTMLElement(nsGkAtoms::hr));
+  MOZ_ASSERT(IsCSSEnabled() ||
+             HTMLEditUtils::SupportsAlignAttr(aBlockOrHRElement));
 
-  if (!HTMLEditor::NodeIsBlockStatic(aElement) &&
-      !aElement.IsHTMLElement(nsGkAtoms::hr)) {
-    // We deal only with blocks; early way out
-    return NS_OK;
-  }
-
-  if (!aElement.IsHTMLElement(nsGkAtoms::table)) {
+  if (!aBlockOrHRElement.IsHTMLElement(nsGkAtoms::table)) {
     nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .RemoveAlignFromDescendants(
-                aElement, aAlignType,
-                aResetAlignOf == ResetAlignOf::OnlyDescendants
-                    ? HTMLEditor::EditTarget::OnlyDescendantsExceptTable
-                    : HTMLEditor::EditTarget::NodeAndDescendantsExceptTable);
+        RemoveAlignFromDescendants(aBlockOrHRElement, aAlignType, aEditTarget);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
-  if (HTMLEditorRef().IsCSSEnabled()) {
-    // Let's use CSS alignment; we use margin-left and margin-right for tables
-    // and text-align for other block-level elements
-    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                      .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
-                                                aAlignType, false);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-
-  // HTML case; this code is supposed to be called ONLY if the element
-  // supports the align attribute but we'll never know...
-  if (NS_WARN_IF(!HTMLEditUtils::SupportsAlignAttr(aElement))) {
-    // XXX error?
-    return NS_OK;
-  }
-
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
-                                              aAlignType, false);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  nsresult rv = SetAttributeOrEquivalent(&aBlockOrHRElement, nsGkAtoms::align,
+                                         aAlignType, false);
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "SetAttributeOrEquivalent() failed to set `align` attribute or property");
+  return rv;
 }
 
 nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
