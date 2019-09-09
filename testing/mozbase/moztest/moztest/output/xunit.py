@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import xml.dom.minidom as dom
 
+from six import string_types
+
 from base import Output, count
 from moztest.results import TestResult
 
@@ -17,7 +19,7 @@ class XUnitOutput(Output):
         """ Writes the xUnit formatted results to the given file object """
 
         def _extract_xml(test_result, text='', result='Pass'):
-            if not isinstance(text, basestring):
+            if not isinstance(text, string_types):
                 text = '\n'.join(text)
 
             cls_name = test_result.test_class

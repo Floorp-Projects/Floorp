@@ -6,6 +6,9 @@ from __future__ import absolute_import
 
 import time
 import os
+
+from six import string_types
+
 import mozinfo
 
 
@@ -85,7 +88,7 @@ class TestResult(object):
 
         msg = "Result '%s' not in possible results: %s" %\
               (result_expected, ', '.join(self.POSSIBLE_RESULTS))
-        assert isinstance(name, basestring), "name has to be a string"
+        assert isinstance(name, string_types), "name has to be a string"
         assert result_expected in self.POSSIBLE_RESULTS, msg
 
         self.name = name
@@ -171,7 +174,7 @@ class TestResult(object):
             raise ValueError(msg)
 
         # use lists instead of multiline strings
-        if isinstance(output, basestring):
+        if isinstance(output, string_types):
             output = output.splitlines()
 
         self.time_end = time_end if time_end is not None else time.time()

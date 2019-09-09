@@ -28,10 +28,10 @@ class TestSymlinkConversion(unittest.TestCase):
         if directory is None:
             directory = tempfile.mkdtemp()
         for i in files:
-            file(os.path.join(directory, i), 'w').write(i)
+            open(os.path.join(directory, i), 'w').write(i)
         subdir = os.path.join(directory, 'subdir')
         os.mkdir(subdir)
-        file(os.path.join(subdir, 'subfile'), 'w').write('baz')
+        open(os.path.join(subdir, 'subfile'), 'w').write('baz')
         return directory
 
     def test_relpath(self):

@@ -9,6 +9,7 @@ import time
 import unittest
 
 import mozunit
+from six import integer_types
 
 try:
     import psutil
@@ -150,7 +151,7 @@ class TestResourceMonitor(unittest.TestCase):
         monitor.stop()
 
         v = monitor.min_memory_available()
-        self.assertIsInstance(v, (long, int))
+        self.assertIsInstance(v, integer_types)
 
         v = monitor.max_memory_percent()
         self.assertIsInstance(v, float)

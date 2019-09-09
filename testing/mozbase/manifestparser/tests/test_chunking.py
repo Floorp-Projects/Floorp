@@ -8,6 +8,7 @@ import os
 import random
 
 import mozunit
+from six.moves import range
 
 from manifestparser.filters import (
     chunk_by_dir,
@@ -67,7 +68,7 @@ class ChunkBySlice(TestCase):
         self.run_all_combos(num_tests=10, disabled=[1, 2])
 
         num_tests = 67
-        disabled = list(i for i in xrange(num_tests) if i % 4 == 0)
+        disabled = list(i for i in range(num_tests) if i % 4 == 0)
         self.run_all_combos(num_tests=num_tests, disabled=disabled)
 
     def test_two_times_more_chunks_than_tests(self):
