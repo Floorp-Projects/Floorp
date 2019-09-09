@@ -88,26 +88,7 @@ class DebuggerEnvironment : public NativeObject {
 
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-  static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool scopeKindGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-  static MOZ_MUST_USE bool parentGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool objectGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc,
-                                        Value* vp);
-  static MOZ_MUST_USE bool inspectableGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool optimizedOutGetter(JSContext* cx, unsigned argc,
-                                              Value* vp);
-
-  static MOZ_MUST_USE bool namesMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool findMethod(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool getVariableMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
-  static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc,
-                                             Value* vp);
+  struct CallData;
 };
 
 } /* namespace js */
