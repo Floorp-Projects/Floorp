@@ -1277,7 +1277,7 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
   // arithmetics surprise.
   const uint64_t bitPrefix =
       this->bits >> (this->bitLength - MAX_PREFIX_BIT_LENGTH);
-  MOZ_ASSERT(bitPrefix < uint32_t(-1));
+  MOZ_ASSERT(bitPrefix <= uint32_t(-1));
   return HuffmanLookup(bitPrefix, MAX_PREFIX_BIT_LENGTH);
 }
 
