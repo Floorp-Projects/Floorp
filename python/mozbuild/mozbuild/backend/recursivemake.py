@@ -472,12 +472,19 @@ class RecursiveMakeBackend(CommonBackend):
             if isinstance(obj, GeneratedSources):
                 variables.append('GARBAGE')
                 base = backend_file.objdir
+                cls = ObjDirPath
+                prefix = '!'
             else:
                 base = backend_file.srcdir
+                cls = SourcePath
+                prefix = ''
             for f in sorted(obj.files):
-                f = mozpath.relpath(f, base)
+                p = self._pretty_path(
+                    cls(obj._context, prefix + mozpath.relpath(f, base)),
+                    backend_file,
+                )
                 for var in variables:
-                    backend_file.write('%s += %s\n' % (var, f))
+                    backend_file.write('%s += %s\n' % (var, p))
             self._compile_graph[mozpath.join(
                 backend_file.relobjdir, 'target-objects')]
         elif isinstance(obj, (HostSources, HostGeneratedSources)):
@@ -490,12 +497,19 @@ class RecursiveMakeBackend(CommonBackend):
             if isinstance(obj, HostGeneratedSources):
                 variables.append('GARBAGE')
                 base = backend_file.objdir
+                cls = ObjDirPath
+                prefix = '!'
             else:
                 base = backend_file.srcdir
+                cls = SourcePath
+                prefix = ''
             for f in sorted(obj.files):
-                f = mozpath.relpath(f, base)
+                p = self._pretty_path(
+                    cls(obj._context, prefix + mozpath.relpath(f, base)),
+                    backend_file,
+                )
                 for var in variables:
-                    backend_file.write('%s += %s\n' % (var, f))
+                    backend_file.write('%s += %s\n' % (var, p))
             self._compile_graph[mozpath.join(
                 backend_file.relobjdir, 'host-objects')]
         elif isinstance(obj, VariablePassthru):
@@ -511,6 +525,9 @@ class RecursiveMakeBackend(CommonBackend):
                 elif isinstance(v, bool):
                     if v:
                         backend_file.write('%s := 1\n' % k)
+                elif isinstance(v, Path):
+                    path = self._pretty_path(Path(obj._context, v), backend_file)
+                    backend_file.write('%s := %s\n' % (k, path))
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
         elif isinstance(obj, HostDefines):
@@ -1708,7 +1725,6 @@ class RecursiveMakeBackend(CommonBackend):
             pp.handleLine(b'topsrcdir := @top_srcdir@\n')
             pp.handleLine(b'srcdir := @srcdir@\n')
             pp.handleLine(b'srcdir_rel := @srcdir_rel@\n')
-            pp.handleLine(b'VPATH := @srcdir@\n')
             pp.handleLine(b'relativesrcdir := @relativesrcdir@\n')
             pp.handleLine(b'include $(DEPTH)/config/@autoconfmk@\n')
             if not stub:

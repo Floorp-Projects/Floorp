@@ -16,7 +16,7 @@ MIDL_GENERATED_FILES = \
 # midl targets to avoid timestamp caching issues.
 $(MIDL_GENERATED_FILES): done_gen ;
 
-done_gen: IGeckoCustom.idl
+done_gen: $(srcdir)/IGeckoCustom.idl
 	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -Oicf $(srcdir)/IGeckoCustom.idl
 	touch $@
 

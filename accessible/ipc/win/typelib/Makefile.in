@@ -15,7 +15,7 @@ MIDL_GENERATED_FILES = \
 # midl targets to avoid timestamp caching issues.
 $(MIDL_GENERATED_FILES): done_gen ;
 
-done_gen: Accessible.idl
+done_gen: $(srcdir)/Accessible.idl
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/Accessible.idl
 	touch $@
 
