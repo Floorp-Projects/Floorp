@@ -8,8 +8,8 @@ let nsLoginInfo = new Components.Constructor(
 );
 
 let TEST_LOGIN1 = new nsLoginInfo(
-  "https://example.com/",
-  "https://example.com/",
+  "https://example.com",
+  "https://example.com",
   null,
   "user1",
   "pass1",
@@ -17,8 +17,8 @@ let TEST_LOGIN1 = new nsLoginInfo(
   "password"
 );
 let TEST_LOGIN2 = new nsLoginInfo(
-  "https://2.example.com/",
-  "https://2.example.com/",
+  "https://2.example.com",
+  "https://2.example.com",
   null,
   "user2",
   "pass2",
@@ -27,8 +27,8 @@ let TEST_LOGIN2 = new nsLoginInfo(
 );
 
 let TEST_LOGIN3 = new nsLoginInfo(
-  "https://breached.com/",
-  "https://breached.com/",
+  "https://breached.com",
+  "https://breached.com",
   null,
   "breachedLogin1",
   "pass3",

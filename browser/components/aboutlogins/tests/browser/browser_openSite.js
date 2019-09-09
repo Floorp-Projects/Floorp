@@ -16,7 +16,7 @@ add_task(async function setup() {
 add_task(async function test_launch_login_item() {
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    TEST_LOGIN1.origin
+    TEST_LOGIN1.origin + "/"
   );
 
   let browser = gBrowser.selectedBrowser;
