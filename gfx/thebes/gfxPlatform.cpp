@@ -2875,7 +2875,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     return featureWebRenderQualified;
   }
 
-#ifndef MOZ_WIDGET_ANDROID
   nsAutoString adapterVendorID;
   gfxInfo->GetAdapterVendorID(adapterVendorID);
 
@@ -2942,14 +2941,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
           NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
     }
   }
-#else // !MOZ_WIDGET_ANDROID
-#ifndef NIGHTLY_BUILD
-  featureWebRenderQualified.Disable(
-    FeatureStatus::BlockedReleaseChannelAndroid,
-    "Release channel and Android",
-    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_ANDROID"));
-#endif
-#endif
   return featureWebRenderQualified;
 }
 
