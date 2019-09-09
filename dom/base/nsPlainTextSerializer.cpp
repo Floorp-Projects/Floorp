@@ -1176,10 +1176,7 @@ static bool IsSpaceStuffable(const char16_t* s) {
  */
 void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
                                       int32_t aLineFragmentLength) {
-  const uint32_t prefixwidth =
-      (mCurrentLine.mCiteQuoteLevel > 0 ? mCurrentLine.mCiteQuoteLevel + 1
-                                        : 0) +
-      mCurrentLine.mIndentation.mWidth;
+  const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
 
   if (mLineBreakDue) EnsureVerticalSpace(mFloatingLines);
 
@@ -1233,7 +1230,6 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
     // wrapcolumn is more than 20.
     uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
-    // XXX: Should calculate prefixwidth with GetUnicharStringWidth
     while (mCurrentLine.mContent.mWidth + prefixwidth >
            mWrapColumn + bonuswidth) {
       // We go from the end removing one letter at a time until
