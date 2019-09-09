@@ -27,9 +27,9 @@ void SerializedStackHolder::WriteStack(JSContext* aCx,
   JS_ClearPendingException(aCx);
 }
 
-void SerializedStackHolder::SerializeMainThreadStack(JSContext* aCx,
-                                                     JS::HandleObject aStack) {
-  MOZ_ASSERT(NS_IsMainThread());
+void SerializedStackHolder::SerializeMainThreadOrWorkletStack(
+    JSContext* aCx, JS::HandleObject aStack) {
+  MOZ_ASSERT(!IsCurrentThreadRunningWorker());
   WriteStack(aCx, aStack);
 }
 
@@ -59,7 +59,7 @@ void SerializedStackHolder::SerializeCurrentStack(JSContext* aCx) {
 
   if (stack) {
     if (NS_IsMainThread()) {
-      SerializeMainThreadStack(aCx, stack);
+      SerializeMainThreadOrWorkletStack(aCx, stack);
     } else {
       WorkerPrivate* currentWorker = GetCurrentThreadWorkerPrivate();
       SerializeWorkerStack(aCx, currentWorker, stack);
