@@ -223,6 +223,10 @@ template Element* HTMLEditor::GetInvisibleBRElementAt(
     const EditorDOMPoint& aPoint);
 template Element* HTMLEditor::GetInvisibleBRElementAt(
     const EditorRawDOMPoint& aPoint);
+template nsIContent* HTMLEditor::FindNearEditableContent(
+    const EditorDOMPoint& aPoint, nsIEditor::EDirection aDirection);
+template nsIContent* HTMLEditor::FindNearEditableContent(
+    const EditorRawDOMPoint& aPoint, nsIEditor::EDirection aDirection);
 
 HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
@@ -9850,7 +9854,7 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
 
   // look for a nearby text node.
   // prefer the correct direction.
-  nearNode = FindNearEditableNode(point, aAction);
+  nearNode = HTMLEditorRef().FindNearEditableContent(point, aAction);
   if (!nearNode) {
     return NS_OK;
   }
@@ -9869,25 +9873,21 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
 }
 
 template <typename PT, typename CT>
-nsIContent* HTMLEditRules::FindNearEditableNode(
+nsIContent* HTMLEditor::FindNearEditableContent(
     const EditorDOMPointBase<PT, CT>& aPoint,
     nsIEditor::EDirection aDirection) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aPoint.IsSet())) {
-    return nullptr;
-  }
+  MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  nsIContent* nearNode = nullptr;
+  nsIContent* editableContent = nullptr;
   if (aDirection == nsIEditor::ePrevious) {
-    nearNode = HTMLEditorRef().GetPreviousEditableHTMLNode(aPoint);
-    if (!nearNode) {
+    editableContent = GetPreviousEditableHTMLNode(aPoint);
+    if (!editableContent) {
       return nullptr;  // Not illegal.
     }
   } else {
-    nearNode = HTMLEditorRef().GetNextEditableHTMLNode(aPoint);
-    if (NS_WARN_IF(!nearNode)) {
+    editableContent = GetNextEditableHTMLNode(aPoint);
+    if (NS_WARN_IF(!editableContent)) {
       // Perhaps, illegal because the node pointed by aPoint isn't editable
       // and nobody of previous nodes is editable.
       return nullptr;
@@ -9896,32 +9896,32 @@ nsIContent* HTMLEditRules::FindNearEditableNode(
 
   // scan in the right direction until we find an eligible text node,
   // but don't cross any breaks, images, or table elements.
-  // XXX This comment sounds odd.  |nearNode| may have already crossed breaks
-  //     and/or images.
-  while (nearNode && !(EditorBase::IsTextNode(nearNode) ||
-                       TextEditUtils::IsBreak(nearNode) ||
-                       HTMLEditUtils::IsImage(nearNode))) {
+  // XXX This comment sounds odd.  editableContent may have already crossed
+  //     breaks and/or images if they are non-editable.
+  while (editableContent && !EditorBase::IsTextNode(editableContent) &&
+         !TextEditUtils::IsBreak(editableContent) &&
+         !HTMLEditUtils::IsImage(editableContent)) {
     if (aDirection == nsIEditor::ePrevious) {
-      nearNode = HTMLEditorRef().GetPreviousEditableHTMLNode(*nearNode);
-      if (NS_WARN_IF(!nearNode)) {
+      editableContent = GetPreviousEditableHTMLNode(*editableContent);
+      if (NS_WARN_IF(!editableContent)) {
         return nullptr;
       }
     } else {
-      nearNode = HTMLEditorRef().GetNextEditableHTMLNode(*nearNode);
-      if (NS_WARN_IF(!nearNode)) {
+      editableContent = GetNextEditableHTMLNode(*editableContent);
+      if (NS_WARN_IF(!editableContent)) {
         return nullptr;
       }
     }
   }
 
   // don't cross any table elements
-  if (HTMLEditor::NodesInDifferentTableElements(*nearNode,
+  if (HTMLEditor::NodesInDifferentTableElements(*editableContent,
                                                 *aPoint.GetContainer())) {
     return nullptr;
   }
 
   // otherwise, ok, we have found a good spot to put the selection
-  return nearNode;
+  return editableContent;
 }
 
 // static

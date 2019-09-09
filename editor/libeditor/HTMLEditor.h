@@ -2575,6 +2575,23 @@ class HTMLEditor final : public TextEditor,
    */
   bool StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const;
 
+  /**
+   * FindNearEditableContent() tries to find an editable node near aPoint.
+   *
+   * @param aPoint      The DOM point where to start to search from.
+   * @param aDirection  If nsIEditor::ePrevious is set, this searches an
+   *                    editable node from next nodes.  Otherwise, from
+   *                    previous nodes.
+   * @return            If found, returns non-nullptr.  Otherwise, nullptr.
+   *                    Note that if found node is in different table element,
+   *                    this returns nullptr.
+   *                    And also if aDirection is not nsIEditor::ePrevious,
+   *                    the result may be the node pointed by aPoint.
+   */
+  template <typename PT, typename CT>
+  nsIContent* FindNearEditableContent(const EditorDOMPointBase<PT, CT>& aPoint,
+                                      nsIEditor::EDirection aDirection);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
