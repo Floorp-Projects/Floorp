@@ -10,7 +10,6 @@
 #include "WorkletThread.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
@@ -20,8 +19,11 @@ namespace mozilla {
 // ---------------------------------------------------------------------------
 // WorkletLoadInfo
 
-WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
-    : mInnerWindowID(aWindow->WindowID()) {
+WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow,
+                                 nsIPrincipal* aPrincipal)
+    : mInnerWindowID(aWindow->WindowID()),
+      mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()),
+      mPrincipal(aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
   if (outerWindow) {
@@ -31,21 +33,17 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
   }
 }
 
+WorkletLoadInfo::~WorkletLoadInfo() {
+  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
+}
+
 // ---------------------------------------------------------------------------
 // WorkletImpl
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
-    : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
-      mWorkletLoadInfo(aWindow),
-      mTerminated(false) {
-  Unused << NS_WARN_IF(
-      NS_FAILED(ipc::PrincipalToPrincipalInfo(mPrincipal, &mPrincipalInfo)));
-}
+    : mWorkletLoadInfo(aWindow, aPrincipal), mTerminated(false) {}
 
-WorkletImpl::~WorkletImpl() {
-  MOZ_ASSERT(!mGlobalScope);
-  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
-}
+WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
 
 JSObject* WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -98,7 +96,7 @@ void WorkletImpl::NotifyWorkletFinished() {
     mWorkletThread->Terminate();
     mWorkletThread = nullptr;
   }
-  mPrincipal = nullptr;
+  mWorkletLoadInfo.mPrincipal = nullptr;
 }
 
 nsresult WorkletImpl::SendControlMessage(
