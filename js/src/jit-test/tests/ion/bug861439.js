@@ -5,7 +5,7 @@ try {
         x = (new WeakMap).get(function() {})
     })
     valueOf = (function() {
-        schedulegc(x)
+        schedulezone(x)
     })
     this + ''
     for (v of this) {}
