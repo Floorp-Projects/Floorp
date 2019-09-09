@@ -16,8 +16,8 @@ import android.os.Build
  *
  * @param context an [Intent] to start a service.
  */
-@JvmName("createPendingIntentForLaunchService")
-fun Intent.asPendingIntentForLaunchService(context: Context): PendingIntent =
+@JvmName("createForegroundServicePendingIntent")
+fun Intent.asForegroundServicePendingIntent(context: Context): PendingIntent =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         PendingIntent.getForegroundService(context, 0, this, 0)
     } else {

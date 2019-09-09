@@ -56,9 +56,7 @@ permalink: /changelog/
   * `GlobalSyncableStoreProvider.getStore` is no longer part of the public API.  
 
 * **support-utils**
-  * `Intent.asPendingIntentForLaunchService(Context)` extension method
-  to create pending intent for service that will play nicely with
-  background execution limitations introduced in Android O.
+  * `Intent.asForegroundServicePendingIntent(Context)` extension method to create pending intent for the service that will play nicely with background execution limitations introduced in Android O (e.g. foreground service).
 
 # 11.0.0
 
