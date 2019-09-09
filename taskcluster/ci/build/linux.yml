@@ -1171,7 +1171,7 @@ linux64-aarch64/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            - linux64-clang-aarch64-cross
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
