@@ -76,10 +76,10 @@ add_task(async function() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await ContentTaskUtils.waitForCondition(() => {
-      const noLogins = content.document.querySelector(
+      const hasLogins = content.document.querySelector(
         ".monitor-card.has-logins"
       );
-      return ContentTaskUtils.is_visible(noLogins);
+      return hasLogins && ContentTaskUtils.is_visible(hasLogins);
     }, "Monitor card for user with stored logins is shown.");
 
     const hasLoginsHeaderContent = content.document.querySelector(
@@ -135,10 +135,10 @@ add_task(async function() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await ContentTaskUtils.waitForCondition(() => {
-      const noLogins = content.document.querySelector(
+      const hasLogins = content.document.querySelector(
         ".monitor-card.has-logins"
       );
-      return ContentTaskUtils.is_visible(noLogins);
+      return hasLogins && ContentTaskUtils.is_visible(hasLogins);
     }, "Monitor card for user with stored logins is shown.");
 
     const lockwiseSection = content.document.querySelector(
@@ -200,7 +200,7 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
       const noLogins = content.document.querySelector(
         ".monitor-card.no-logins"
       );
-      return ContentTaskUtils.is_visible(noLogins);
+      return noLogins && ContentTaskUtils.is_visible(noLogins);
     }, "Monitor card for user with no logins is shown.");
 
     const noLoginsHeaderContent = content.document.querySelector(
