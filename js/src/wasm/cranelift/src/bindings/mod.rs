@@ -26,6 +26,8 @@ use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_codegen::isa;
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
 
+use smallvec::SmallVec;
+
 use crate::compile;
 use crate::utils::BasicError;
 
@@ -128,17 +130,17 @@ impl TableDesc {
 pub struct FuncTypeWithId(*const low_level::FuncTypeWithId);
 
 impl FuncTypeWithId {
-    pub fn args<'a>(self) -> WasmResult<Vec<ir::Type>> {
+    pub fn args<'a>(self) -> WasmResult<SmallVec<[ir::Type; 4]>> {
         let num_args = unsafe { low_level::funcType_numArgs(self.0) };
         // The `funcType_args` callback crashes when there are no arguments. Also note that
         // `slice::from_raw_parts()` requires a non-null pointer for empty slices.
         // TODO: We should get all the parts of a signature in a single callback that returns a
         // struct.
         if num_args == 0 {
-            Ok(Vec::new())
+            Ok(SmallVec::new())
         } else {
             let args = unsafe { slice::from_raw_parts(low_level::funcType_args(self.0), num_args) };
-            let mut ret = Vec::new();
+            let mut ret = SmallVec::new();
             for &arg in args {
                 ret.push(valtype_to_type(arg)?);
             }
