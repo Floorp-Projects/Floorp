@@ -91,6 +91,13 @@ void CanonicalBrowsingContext::SetOwnerProcessId(uint64_t aProcessId) {
   mProcessId = aProcessId;
 }
 
+void CanonicalBrowsingContext::SetInFlightProcessId(uint64_t aProcessId) {
+  // We can't handle more than one in-flight process change at a time.
+  MOZ_ASSERT_IF(aProcessId, mInFlightProcessId == 0);
+
+  mInFlightProcessId = aProcessId;
+}
+
 void CanonicalBrowsingContext::GetWindowGlobals(
     nsTArray<RefPtr<WindowGlobalParent>>& aWindows) {
   aWindows.SetCapacity(mWindowGlobals.Count());

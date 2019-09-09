@@ -3,7 +3,7 @@
 var g = newGlobal();
 g.eval("var x = 'some-atom';");
 
-schedulegc(this);
-schedulegc('atoms');
+schedulezone(this);
+schedulezone('atoms');
 gc('zone');
 print(g.x);

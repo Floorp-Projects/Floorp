@@ -12,7 +12,7 @@
 
 [package]
 name = "base64"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Alice Maz <alice@alicemaz.com>", "Marshall Pierce <marshall@mpierce.org>"]
 description = "encodes and decodes base64 as bytes or utf8"
 documentation = "https://github.com/alicemaz/rust-base64/blob/master/README.md"
@@ -23,7 +23,14 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/alicemaz/rust-base64"
 [profile.bench]
 debug = true
+
+[[bench]]
+name = "benchmarks"
+harness = false
 [dependencies.byteorder]
 version = "1.2.6"
+[dev-dependencies.criterion]
+version = "0.2"
+
 [dev-dependencies.rand]
-version = "0.5.5"
+version = "0.6.1"

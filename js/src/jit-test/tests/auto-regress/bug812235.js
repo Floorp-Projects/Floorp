@@ -2,7 +2,7 @@
 // Flags: --ion-eager
 //
 gc()
-schedulegc(this)
+schedulezone(this)
 gcslice(3)
 function f() {
     this["x"] = this["x"] = {}

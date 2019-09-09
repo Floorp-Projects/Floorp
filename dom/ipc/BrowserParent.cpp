@@ -3921,31 +3921,32 @@ void BrowserParent::OnSubFrameCrashed() {
   // Find all same process sub tree nodes and detach them, cache all
   // other nodes in the sub tree.
   mBrowsingContext->PostOrderWalk([&](auto* aContext) {
-    // Post-order means bottom up in our case, which means that all
-    // same-process, i.e. crashing process have already been detached, and
-    // all others should only be cached and torn down regulalarly.
+    // By iterating in reverse we can deal with detach removing the child that
+    // we're currently on
+    for (auto it = aContext->GetChildren().rbegin();
+         it != aContext->GetChildren().rend(); it++) {
+      RefPtr<BrowsingContext> context = *it;
+      if (context->Canonical()->IsOwnedByProcess(processId)) {
+        // Hold a reference to `context` until the response comes back to
+        // ensure it doesn't die while messages relating to this context are
+        // in-flight.
+        auto resolve = [context](bool) {};
+        auto reject = [context](ResponseRejectReason) {};
+        context->Group()->EachOtherParent(manager, [&](auto* aParent) {
+          aParent->SendDetachBrowsingContext(context->Id(), resolve, reject);
+        });
 
+        context->Detach(/* aFromIPC */ true);
+      }
+    }
+
+    // Cache all the children not owned by crashing process. Note that
+    // all remaining children are out of process, which makes it ok to
+    // just cache.
     aContext->Group()->EachOtherParent(manager, [&](auto* aParent) {
       Unused << aParent->SendCacheBrowsingContextChildren(aContext);
     });
     aContext->CacheChildren(/* aFromIPC */ true);
-
-    // We will never detach the root node of the subtree since
-    // we've changed the owner process to be different from
-    // processId.
-    if (aContext->Canonical()->IsOwnedByProcess(processId)) {
-      // Hold a reference to `context` until the response comes back to
-      // ensure it doesn't die while messages relating to this context are
-      // in-flight.
-      RefPtr<BrowsingContext> context = aContext;
-      auto resolve = [context](bool) {};
-      auto reject = [context](ResponseRejectReason) {};
-      aContext->Group()->EachOtherParent(manager, [&](auto* aParent) {
-        aParent->SendDetachBrowsingContext(aContext->Id(), resolve, reject);
-      });
-
-      aContext->Detach(/* aFromIPC */ true);
-    }
   });
 
   MOZ_DIAGNOSTIC_ASSERT(!mBrowsingContext->GetChildren().Length());

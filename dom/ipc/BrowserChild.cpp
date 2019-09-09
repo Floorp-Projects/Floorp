@@ -1057,14 +1057,13 @@ BrowserChild::~BrowserChild() {
   mozilla::DropJSObjects(this);
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvSkipBrowsingContextDetach() {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (!docShell) {
-    return IPC_OK();
+mozilla::ipc::IPCResult BrowserChild::RecvSkipBrowsingContextDetach(
+    SkipBrowsingContextDetachResolver&& aResolve) {
+  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
+    RefPtr<nsDocShell> docshell = nsDocShell::Cast(docShell);
+    docshell->SkipBrowsingContextDetach();
   }
-  RefPtr<nsDocShell> docshell = nsDocShell::Cast(docShell);
-  MOZ_ASSERT(docshell);
-  docshell->SkipBrowsingContextDetach();
+  aResolve(true);
   return IPC_OK();
 }
 

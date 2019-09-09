@@ -8585,7 +8585,25 @@ const char* StateName(State state) {
     GCSTATES(MAKE_CASE)
 #undef MAKE_CASE
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("invalide gc::State enum value");
+  MOZ_CRASH("Invalid gc::State enum value");
+}
+
+const char* StateName(JS::Zone::GCState state) {
+  switch (state) {
+    case JS::Zone::NoGC:
+      return "NoGC";
+    case JS::Zone::MarkBlackOnly:
+      return "MarkBlackOnly";
+    case JS::Zone::MarkBlackAndGray:
+      return "MarkBlackAndGray";
+    case JS::Zone::Sweep:
+      return "Sweep";
+    case JS::Zone::Finished:
+      return "Finished";
+    case JS::Zone::Compact:
+      return "Compact";
+  }
+  MOZ_CRASH("Invalid Zone::GCState enum value");
 }
 
 void AutoAssertEmptyNursery::checkCondition(JSContext* cx) {
