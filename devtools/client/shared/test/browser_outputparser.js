@@ -49,6 +49,7 @@ async function performTest() {
   testParseAngle(doc, parser);
   testParseShape(doc, parser);
   testParseVariable(doc, parser);
+  testParseColorVariable(doc, parser);
   testParseFontFamily(doc, parser);
 
   host.destroy();
@@ -569,6 +570,56 @@ function testParseVariable(doc, parser) {
 
     is(target.innerHTML, test.expected, test.text);
     target.innerHTML = "";
+  }
+}
+
+function testParseColorVariable(doc, parser) {
+  const testCategories = [
+    {
+      desc: "Test for CSS variable defining color",
+      tests: [
+        makeColorTest("--test-var", "lime", [{ name: "lime" }]),
+        makeColorTest("--test-var", "#000", [{ name: "#000" }]),
+      ],
+    },
+    {
+      desc: "Test for CSS variable not defining color",
+      tests: [
+        makeColorTest("--foo", "something", ["something"]),
+        makeColorTest("--bar", "Arial Black", ["Arial Black"]),
+        makeColorTest("--baz", "10vmin", ["10vmin"]),
+      ],
+    },
+    {
+      desc: "Test for non CSS variable defining color",
+      tests: [
+        makeColorTest("non-css-variable", "lime", ["lime"]),
+        makeColorTest("-non-css-variable", "#000", ["#000"]),
+      ],
+    },
+  ];
+
+  for (const category of testCategories) {
+    info(category.desc);
+
+    for (const test of category.tests) {
+      info(test.desc);
+      const target = doc.querySelector("div");
+
+      const frag = parser.parseCssProperty(test.name, test.value, {
+        colorSwatchClass: COLOR_TEST_CLASS,
+      });
+
+      target.appendChild(frag);
+
+      is(
+        target.innerHTML,
+        test.expected,
+        `The parsed result for '${test.name}: ${test.value}' is correct`
+      );
+
+      target.innerHTML = "";
+    }
   }
 }
 
