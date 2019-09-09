@@ -8,7 +8,7 @@ exports[`ManifestLoader renders a message when it is loading 1`] = `
     id="manifest-loading"
   >
     <p
-      className="manifest-loader__load"
+      className="manifest-loader__load js-manifest-loading"
     />
   </Localized>
 </aside>
