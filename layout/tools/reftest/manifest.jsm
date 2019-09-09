@@ -442,6 +442,8 @@ function BuildConditionSandbox(aURL) {
     sandbox.contentSameGfxBackendAsCanvas = contentBackend == canvasBackend
                                             || (contentBackend == "none" && canvasBackend == "cairo");
 
+    sandbox.remoteCanvas = prefs.getBoolPref("gfx.canvas.remote") && sandbox.d2d && sandbox.gpuProcess;
+
     sandbox.layersGPUAccelerated =
       g.windowUtils.layerManagerType != "Basic";
     sandbox.d3d11 =
