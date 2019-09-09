@@ -6460,8 +6460,8 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
 
-  nsTArray<bool> transitionList;
-  MakeTransitionList(nodeArray, transitionList);
+  AutoTArray<bool, 64> transitionList;
+  HTMLEditor::MakeTransitionList(nodeArray, transitionList);
 
   // Okay, now go through all the nodes and give them an align attrib or put
   // them in a div, or whatever is appropriate.  Woohoo!
@@ -8056,20 +8056,14 @@ nsIContent* HTMLEditor::GetMostAncestorInlineElement(nsINode& aNode) const {
   return content;
 }
 
-void HTMLEditRules::MakeTransitionList(
-    nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+// static
+void HTMLEditor::MakeTransitionList(
+    const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
     nsTArray<bool>& aTransitionArray) {
-  nsCOMPtr<nsINode> prevParent;
-
+  nsINode* prevParent = nullptr;
   aTransitionArray.EnsureLengthAtLeast(aNodeArray.Length());
   for (uint32_t i = 0; i < aNodeArray.Length(); i++) {
-    if (aNodeArray[i]->GetParentNode() != prevParent) {
-      // Different parents: transition point
-      aTransitionArray[i] = true;
-    } else {
-      // Same parents: these nodes grew up together
-      aTransitionArray[i] = false;
-    }
+    aTransitionArray[i] = aNodeArray[i]->GetParentNode() != prevParent;
     prevParent = aNodeArray[i]->GetParentNode();
   }
 }

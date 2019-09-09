@@ -2453,6 +2453,15 @@ class HTMLEditor final : public TextEditor,
   AlignContentsInAllTableCellsAndListItems(dom::Element& aElement,
                                            const nsAString& aAlignType);
 
+  /**
+   * MakeTransitionList() detects all the transitions in the array, where a
+   * transition means that adjacent nodes in the array don't have the same
+   * parent.
+   */
+  static void MakeTransitionList(
+      const nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+      nsTArray<bool>& aTransitionArray);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
