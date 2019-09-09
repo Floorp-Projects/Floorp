@@ -164,22 +164,20 @@ ol {
   color: var(--in-content-deemphasized-text);
 }
 
-.login-list-item.breached {
-  padding-inline-end: 48px;
-  background-image: url("chrome://global/skin/icons/warning.svg");
-  background-position: right 24px center;
-  background-repeat: no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--red-90);
+:not(.breached) > .list-item-warning-icon {
+  display: none;
 }
 
-.login-list-item.breached:dir(rtl) {
-  background-position: left 24px center;
+.breached > .list-item-warning-icon {
+  -moz-context-properties: fill;
+  fill: var(--red-90);
+  min-width: 16px;
+  margin-inline-start: 12px;
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
   @media (prefers-color-scheme: dark) {
-    .login-list-item.breached {
+    .breached > .list-item-warning-icon {
       fill: var(--red-60);
     }
   }
