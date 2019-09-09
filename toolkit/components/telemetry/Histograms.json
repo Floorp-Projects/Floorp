@@ -10118,6 +10118,28 @@
     "n_values": 8,
     "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
   },
+  "WEBRTC_HOSTNAME_OBFUSCATION_ENABLED_ICE_DURATION": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["dminor@mozilla.com"],
+    "expires_in_version": "77",
+    "kind": "exponential",
+    "high": 600,
+    "n_buckets": 100,
+    "bug_numbers": [1569250],
+    "description": "The length of time (in seconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is enabled."
+  },
+  "WEBRTC_HOSTNAME_OBFUSCATION_DISABLED_ICE_DURATION": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["dminor@mozilla.com"],
+    "expires_in_version": "77",
+    "kind": "exponential",
+    "high": 600,
+    "n_buckets": 100,
+    "bug_numbers": [1569250],
+    "description": "The length of time (in seconds) for the ICE state to transition from checking to connected or failed when hostname obfuscation is disabled."
+  },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
