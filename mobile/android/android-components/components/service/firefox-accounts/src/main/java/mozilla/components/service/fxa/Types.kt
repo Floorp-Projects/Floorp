@@ -23,12 +23,13 @@ import mozilla.components.concept.sync.SyncAuthInfo
  * Converts a raw 'action' string into an [AuthType] instance.
  * Actions come to us from FxA during an OAuth login, either over the WebChannel or via the redirect URL.
  */
-fun String.toAuthType(): AuthType {
+fun String?.toAuthType(): AuthType {
     return when (this) {
         "signin" -> AuthType.Signin
         "signup" -> AuthType.Signup
         "pairing" -> AuthType.Pairing
-        // We want to gracefully handle 'actions' we don't know about.
+        // We want to gracefully handle an 'action' we don't know about.
+        // This also covers the `null` case.
         else -> AuthType.OtherExternal(this)
     }
 }

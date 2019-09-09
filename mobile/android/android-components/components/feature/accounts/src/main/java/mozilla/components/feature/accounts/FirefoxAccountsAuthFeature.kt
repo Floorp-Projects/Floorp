@@ -68,7 +68,7 @@ class FirefoxAccountsAuthFeature(
                 val code = parsedUri.getQueryParameter("code")
 
                 if (code != null) {
-                    val authType = parsedUri.getQueryParameter("action")!!.toAuthType()
+                    val authType = parsedUri.getQueryParameter("action").toAuthType()
                     val state = parsedUri.getQueryParameter("state") as String
 
                     // Notify the state machine about our success.
