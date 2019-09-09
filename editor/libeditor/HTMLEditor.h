@@ -259,8 +259,8 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult SetParagraphFormatAsAction(
       const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal = nullptr);
 
-  nsresult AlignAsAction(const nsAString& aAlignType,
-                         nsIPrincipal* aPrincipal = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult AlignAsAction(const nsAString& aAlignType,
+                                            nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult RemoveListAsAction(
       const nsAString& aListType, nsIPrincipal* aPrincipal = nullptr);
@@ -2522,6 +2522,52 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   SetBlockElementAlign(Element& aBlockOrHRElement, const nsAString& aAlignType,
                        EditTarget aEditTarget);
+
+  /**
+   * AlignContentsAtSelectionWithEmptyDivElement() inserts new `<div>` element
+   * at `Selection` to align selected contents.  This returns as "handled"
+   * if this modifies `Selection` so that callers shouldn't modify `Selection`
+   * in such case especially when using AutoSelectionRestorer.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  AlignContentsAtSelectionWithEmptyDivElement(const nsAString& aAlignType);
+
+  /**
+   * AlignNodesAndDescendants() make contents of nodes in aArrayOfNodes and
+   * their descendants aligned to aAlignType.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AlignNodesAndDescendants(nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes,
+                           const nsAString& aAlignType);
+
+  /**
+   * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
+   * This creates AutoSelectionRestorer.  Therefore, even if this returns
+   * NS_OK, we might have been destroyed.  So, every caller needs to check if
+   * Destroyed() returns false before modifying the DOM tree or changing
+   * Selection.
+   * NOTE: Call AlignAsSubAction() instead.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AlignContentsAtSelection(const nsAString& aAlignType);
+
+  /**
+   * AlignAsSubAction() handles "align" command with `Selection`.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  AlignAsSubAction(const nsAString& aAlignType);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
