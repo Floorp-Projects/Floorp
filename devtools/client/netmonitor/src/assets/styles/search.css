@@ -10,6 +10,7 @@
 
 .search-panel .search-panel-content {
   width: 100%;
+  height: 100%;
   overflow: auto;
 }
 
@@ -109,4 +110,38 @@ button.case-sensitive-btn {
   width: 25px;
   height: 20px;
   border-radius: 2px;
+}
+
+.search-panel .devtools-toolbar {
+  max-height: 26px;
+}
+
+.search-panel .status-bar-label {
+  min-height: 24px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+  overflow: hidden;
+  min-width: 85px;
+}
+
+.search-panel .img.loader {
+  mask-image: url(resource://devtools/client/debugger/images/loader.svg);
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+  animation: search-loader-rotate 0.5s linear infinite;
+  background-color: var(--theme-selection-background);
+  display: inline-block;
+  top: 4px;
+  position: relative;
+}
+
+@keyframes search-loader-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

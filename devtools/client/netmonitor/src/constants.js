@@ -59,7 +59,7 @@ const actionTypes = {
 const SEARCH_STATUS = {
   INITIAL: "INITIAL",
   FETCHING: "FETCHING",
-  CANCELLED: "CANCELLED",
+  CANCELED: "CANCELED",
   DONE: "DONE",
   ERROR: "ERROR",
 };
