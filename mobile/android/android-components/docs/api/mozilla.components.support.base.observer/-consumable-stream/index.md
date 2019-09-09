@@ -2,7 +2,7 @@
 
 # ConsumableStream
 
-`class ConsumableStream<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L107)
+`class ConsumableStream<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L104)
 
 A generic wrapper for a stream of values that can be consumed. Values will
 be consumed first in, first out.

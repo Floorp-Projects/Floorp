@@ -2,7 +2,7 @@
 
 # Consumable
 
-`class Consumable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L18)
+`class Consumable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L15)
 
 A generic wrapper for values that can get consumed.
 

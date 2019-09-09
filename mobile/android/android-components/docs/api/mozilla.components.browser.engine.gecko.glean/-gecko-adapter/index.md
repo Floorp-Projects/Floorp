@@ -24,4 +24,5 @@ providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
 
 | Name | Summary |
 |---|---|
+| [onHistogram](on-histogram.md) | `fun onHistogram(metric: <ERROR CLASS><`[`LongArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long-array/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTelemetryReceived](on-telemetry-received.md) | `fun onTelemetryReceived(metric: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

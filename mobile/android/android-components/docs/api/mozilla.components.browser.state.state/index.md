@@ -12,6 +12,7 @@
 | [CustomTabConfig](-custom-tab-config/index.md) | `data class CustomTabConfig`<br>Holds configuration data for a Custom Tab. |
 | [CustomTabMenuItem](-custom-tab-menu-item/index.md) | `data class CustomTabMenuItem` |
 | [CustomTabSessionState](-custom-tab-session-state/index.md) | `data class CustomTabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a Custom Tab. |
+| [EngineState](-engine-state/index.md) | `data class EngineState`<br>Value type that holds the browser engine state of a session. |
 | [SecurityInfoState](-security-info-state/index.md) | `data class SecurityInfoState`<br>A value type holding security information for a Session. |
 | [SessionState](-session-state/index.md) | `interface SessionState`<br>Interface for states that contain a [ContentState](-content-state/index.md) and can be accessed via an [id](-session-state/id.md). |
 | [TabSessionState](-tab-session-state/index.md) | `data class TabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a tab (private or normal). |

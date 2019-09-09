@@ -2,7 +2,7 @@
 
 # onConsume
 
-`@Synchronized fun onConsume(listener: `[`ConsumableListener`](../-consumable-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L79)
+`@Synchronized fun onConsume(listener: `[`ConsumableListener`](../-consumable-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L76)
 
 Adds a listener to be invoked when this [Consumable](index.md) is consumed.
 

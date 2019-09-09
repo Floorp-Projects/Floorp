@@ -2,7 +2,7 @@
 
 # SessionManager
 
-`class SessionManager : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L24)
+`class SessionManager : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L27)
 
 This class provides access to a centralized registry of all active sessions.
 
@@ -10,6 +10,7 @@ This class provides access to a centralized registry of all active sessions.
 
 | Name | Summary |
 |---|---|
+| [EngineSessionLinker](-engine-session-linker/index.md) | `class EngineSessionLinker`<br>This class only exists for migrating from browser-session to browser-state. We need a way to dispatch the corresponding browser actions when an engine session is linked and unlinked. |
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe the session manager. |
 | [Snapshot](-snapshot/index.md) | `data class Snapshot` |
 
@@ -17,7 +18,7 @@ This class provides access to a centralized registry of all active sessions.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`? = null, delegate: `[`LegacySessionManager`](../-legacy-session-manager/index.md)` = LegacySessionManager(engine))`<br>This class provides access to a centralized registry of all active sessions. |
+| [&lt;init&gt;](-init-.md) | `SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`? = null, delegate: `[`LegacySessionManager`](../-legacy-session-manager/index.md)` = LegacySessionManager(engine, EngineSessionLinker(store)))`<br>This class provides access to a centralized registry of all active sessions. |
 
 ### Properties
 

@@ -2,7 +2,7 @@
 
 # AddToHomescreenUseCase
 
-`class AddToHomescreenUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L34)
+`class AddToHomescreenUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L49)
 
 Let the user add the selected session to the homescreen.
 
@@ -16,4 +16,4 @@ Otherwise, the pinned shortcut will act like a simple bookmark for the site.
 
 | Name | Summary |
 |---|---|
-| [invoke](invoke.md) | `operator suspend fun invoke(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [invoke](invoke.md) | `operator suspend fun invoke(overrideBasicShortcutName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
