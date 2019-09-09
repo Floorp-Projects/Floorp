@@ -421,7 +421,8 @@ class GCRuntime {
   bool areGrayBitsValid() const { return grayBitsValid; }
   void setGrayBitsInvalid() { grayBitsValid = false; }
 
-  mozilla::TimeStamp lastGCTime() const { return lastGCTime_; }
+  mozilla::TimeStamp lastGCStartTime() const { return lastGCStartTime_; }
+  mozilla::TimeStamp lastGCEndTime() const { return lastGCEndTime_; }
 
   bool majorGCRequested() const {
     return majorGCTriggerReason != JS::GCReason::NO_REASON;
@@ -779,7 +780,9 @@ class GCRuntime {
 
  private:
   UnprotectedData<bool> chunkAllocationSinceLastGC;
-  MainThreadData<mozilla::TimeStamp> lastGCTime_;
+
+  MainThreadData<mozilla::TimeStamp> lastGCStartTime_;
+  MainThreadData<mozilla::TimeStamp> lastGCEndTime_;
 
   /*
    * JSGC_MODE

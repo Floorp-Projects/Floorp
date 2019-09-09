@@ -997,8 +997,8 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   startingMajorGCNumber = gc.majorGCCount();
   startingSliceNumber = gc.gcNumber();
 
-  if (gc.lastGCTime()) {
-    timeSinceLastGC = currentTime - gc.lastGCTime();
+  if (gc.lastGCEndTime()) {
+    timeSinceLastGC = currentTime - gc.lastGCEndTime();
   }
 }
 
