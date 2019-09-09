@@ -913,6 +913,11 @@ Result<Completion> js::DebuggerGenericEval(
     env = newEnv;
   }
 
+  // Note whether we are in an evaluation that might invoke the OnNativeCall
+  // hook, so that the JITs will be disabled.
+  AutoNoteDebuggerEvaluationWithOnNativeCallHook noteEvaluation(
+      cx, dbg->observesNativeCalls() ? dbg : nullptr);
+
   // Run the code and produce the completion value.
   LeaveDebuggeeNoExecute nnx(cx);
   RootedValue rval(cx);

@@ -463,6 +463,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     OnExceptionUnwind,
     OnNewScript,
     OnEnterFrame,
+    OnNativeCall,
     OnNewGlobalObject,
     OnNewPromise,
     OnPromiseSettled,
@@ -851,6 +852,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static bool setOnNewScript(JSContext* cx, unsigned argc, Value* vp);
   static bool getOnEnterFrame(JSContext* cx, unsigned argc, Value* vp);
   static bool setOnEnterFrame(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnNativeCall(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnNativeCall(JSContext* cx, unsigned argc, Value* vp);
   static bool getOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp);
   static bool setOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp);
   static bool getOnNewPromise(JSContext* cx, unsigned argc, Value* vp);
@@ -940,6 +943,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   // execution.
   IsObserving observesCoverage() const;
 
+  // Whether the Debugger instance needs to observe native call invocations.
+  IsObserving observesNativeCalls() const;
+
  private:
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfFrame(
       JSContext* cx, AbstractFramePtr frame);
@@ -968,6 +974,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   ResumeMode fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
   ResumeMode fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
   ResumeMode fireEnterFrame(JSContext* cx, MutableHandleValue vp);
+  ResumeMode fireNativeCall(JSContext* cx, const CallArgs& args,
+                            CallReason reason, MutableHandleValue vp);
   ResumeMode fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global,
                                  MutableHandleValue vp);
   ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise,

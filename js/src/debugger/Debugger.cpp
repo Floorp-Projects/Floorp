@@ -842,6 +842,40 @@ ResumeMode DebugAPI::slowPathOnResumeFrame(JSContext* cx,
   return slowPathOnEnterFrame(cx, frame);
 }
 
+/* static */
+ResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
+                                          CallReason reason) {
+  RootedValue rval(cx);
+  ResumeMode resumeMode = Debugger::dispatchHook(
+      cx,
+      [cx](Debugger* dbg) -> bool {
+        return dbg == cx->insideDebuggerEvaluationWithOnNativeCallHook &&
+          dbg->getHook(Debugger::OnNativeCall);
+      },
+      [&](Debugger* dbg) -> ResumeMode {
+        return dbg->fireNativeCall(cx, args, reason, &rval);
+      });
+
+  switch (resumeMode) {
+    case ResumeMode::Continue:
+      break;
+
+    case ResumeMode::Throw:
+      cx->setPendingExceptionAndCaptureStack(rval);
+      break;
+
+    case ResumeMode::Terminate:
+      cx->clearPendingException();
+      break;
+
+    case ResumeMode::Return:
+      args.rval().set(rval);
+      break;
+  }
+
+  return resumeMode;
+}
+
 /*
  * RAII class to mark a generator as "running" temporarily while running
  * debugger code.
@@ -1755,7 +1789,7 @@ ResumeMode Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success,
 
   RootedValue thisv(cx);
   Maybe<HandleValue> maybeThisv;
-  if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
+  if (frame && !GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
     ar.reset();
     return ResumeMode::Terminate;
   }
@@ -2156,6 +2190,44 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 
   return processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(),
                               vp);
+}
+
+ResumeMode Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
+                                    CallReason reason, MutableHandleValue vp) {
+  RootedObject hook(cx, getHook(OnNativeCall));
+  MOZ_ASSERT(hook);
+  MOZ_ASSERT(hook->isCallable());
+
+  Maybe<AutoRealm> ar;
+  ar.emplace(cx, object);
+
+  RootedValue fval(cx, ObjectValue(*hook));
+  RootedValue calleeval(cx, args.calleev());
+  if (!wrapDebuggeeValue(cx, &calleeval)) {
+    return reportUncaughtException(ar);
+  }
+
+  JSAtom* reasonAtom = nullptr;
+  switch (reason) {
+    case CallReason::Call:
+      reasonAtom = cx->names().call;
+      break;
+    case CallReason::Getter:
+      reasonAtom = cx->names().get;
+      break;
+    case CallReason::Setter:
+      reasonAtom = cx->names().set;
+      break;
+  }
+  cx->markAtom(reasonAtom);
+
+  RootedValue reasonval(cx, StringValue(reasonAtom));
+
+  RootedValue rv(cx);
+  bool ok = js::Call(cx, fval, object, calleeval, reasonval, &rv);
+
+  AbstractFramePtr frame;
+  return processHandlerResult(ar, ok, rv, frame, nullptr, vp);
 }
 
 void Debugger::fireNewScript(JSContext* cx,
@@ -3316,6 +3388,13 @@ Debugger::IsObserving Debugger::observesCoverage() const {
   return NotObserving;
 }
 
+Debugger::IsObserving Debugger::observesNativeCalls() const {
+  if (getHook(Debugger::OnNativeCall)) {
+    return Observing;
+  }
+  return NotObserving;
+}
+
 // Toggle whether this Debugger's debuggees observe all execution. This is
 // called when a hook that observes all execution is set or unset. See
 // hookObservesAllExecution.
@@ -4037,6 +4116,18 @@ bool Debugger::getOnEnterFrame(JSContext* cx, unsigned argc, Value* vp) {
 bool Debugger::setOnEnterFrame(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGGER(cx, argc, vp, "(set onEnterFrame)", args, dbg);
   return setHookImpl(cx, args, *dbg, OnEnterFrame);
+}
+
+/* static */
+bool Debugger::getOnNativeCall(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGGER(cx, argc, vp, "(get onNativeCall)", args, dbg);
+  return getHookImpl(cx, args, *dbg, OnNativeCall);
+}
+
+/* static */
+bool Debugger::setOnNativeCall(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGGER(cx, argc, vp, "(set onNativeCall)", args, dbg);
+  return setHookImpl(cx, args, *dbg, OnNativeCall);
 }
 
 /* static */
@@ -6041,6 +6132,8 @@ const JSPropertySpec Debugger::properties[] = {
             Debugger::setOnPromiseSettled, 0),
     JS_PSGS("onEnterFrame", Debugger::getOnEnterFrame,
             Debugger::setOnEnterFrame, 0),
+    JS_PSGS("onNativeCall", Debugger::getOnNativeCall,
+            Debugger::setOnNativeCall, 0),
     JS_PSGS("onNewGlobalObject", Debugger::getOnNewGlobalObject,
             Debugger::setOnNewGlobalObject, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
