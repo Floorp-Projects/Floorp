@@ -17,6 +17,7 @@ RUN apt-get update && \
       curl \
       git \
       opam \
+      jq \
       libsqlite3-dev \
       autoconf \
       automake \

@@ -49,6 +49,8 @@ from ..util.workertypes import get_worker_type
 
 RUN_TASK = os.path.join(GECKO, 'taskcluster', 'scripts', 'run-task')
 
+SCCACHE_GCS_PROJECT = 'sccache-3'
+
 
 @memoize
 def _run_task_suffix():
@@ -538,7 +540,13 @@ def build_docker_worker_payload(config, task, task_def):
                 trust_domain=config.graph_config['trust-domain'],
                 level=config.params['level'])
         )
+        task_def['scopes'].append(
+            'auth:gcp:access-token:{project}/tc-l{level}*'.format(
+                project=SCCACHE_GCS_PROJECT,
+                level=config.params['level'])
+        )
         worker['env']['USE_SCCACHE'] = '1'
+        worker['env']['SCCACHE_GCS_PROJECT'] = SCCACHE_GCS_PROJECT
         # Disable sccache idle shutdown.
         worker['env']['SCCACHE_IDLE_TIMEOUT'] = '0'
     else:
@@ -801,6 +809,7 @@ def build_generic_worker_payload(config, task, task_def):
                 level=config.params['level'])
         )
         env['USE_SCCACHE'] = '1'
+        worker['env']['SCCACHE_GCS_PROJECT'] = SCCACHE_GCS_PROJECT
         # Disable sccache idle shutdown.
         env['SCCACHE_IDLE_TIMEOUT'] = '0'
     else:

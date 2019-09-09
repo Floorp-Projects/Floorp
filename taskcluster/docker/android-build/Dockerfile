@@ -19,6 +19,7 @@ RUN apt-get update && \
       curl \
       file \
       gnupg \
+      jq \
       less \
       openssh-client \
       procps \
