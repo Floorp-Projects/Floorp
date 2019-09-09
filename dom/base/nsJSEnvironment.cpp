@@ -65,7 +65,6 @@
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/SystemGroup.h"
 #include "nsRefreshDriver.h"
@@ -2615,32 +2614,6 @@ void mozilla::dom::ShutdownJSEnvironment() {
 
   sShuttingDown = true;
   sDidShutdown = true;
-}
-
-AsyncErrorReporter::AsyncErrorReporter(xpc::ErrorReport* aReport)
-    : Runnable("dom::AsyncErrorReporter"), mReport(aReport) {}
-
-void AsyncErrorReporter::SerializeStack(JSContext* aCx,
-                                        JS::Handle<JSObject*> aStack) {
-  mStackHolder = MakeUnique<SerializedStackHolder>();
-  mStackHolder->SerializeMainThreadOrWorkletStack(aCx, aStack);
-}
-
-NS_IMETHODIMP AsyncErrorReporter::Run() {
-  AutoJSAPI jsapi;
-  DebugOnly<bool> ok = jsapi.Init(xpc::UnprivilegedJunkScope());
-  MOZ_ASSERT(ok, "Problem with junk scope?");
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stack(cx);
-  JS::Rooted<JSObject*> stackGlobal(cx);
-  if (mStackHolder) {
-    stack = mStackHolder->ReadStack(cx);
-    if (stack) {
-      stackGlobal = JS::CurrentGlobalOrNull(cx);
-    }
-  }
-  mReport->LogToConsoleWithStack(stack, stackGlobal);
-  return NS_OK;
 }
 
 // A fast-array class for JS.  This class supports both nsIJSScriptArray and
