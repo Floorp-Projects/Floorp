@@ -463,7 +463,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     OnExceptionUnwind,
     OnNewScript,
     OnEnterFrame,
-    OnNativeCall,
     OnNewGlobalObject,
     OnNewPromise,
     OnPromiseSettled,
@@ -841,17 +840,62 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   template <typename F>
   void forEachWeakMap(const F& f);
 
-  static MOZ_MUST_USE bool getHookImpl(JSContext* cx, const CallArgs& args,
+  static MOZ_MUST_USE bool getHookImpl(JSContext* cx, CallArgs& args,
                                        Debugger& dbg, Hook which);
-  static MOZ_MUST_USE bool setHookImpl(JSContext* cx, const CallArgs& args,
+  static MOZ_MUST_USE bool setHookImpl(JSContext* cx, CallArgs& args,
                                        Debugger& dbg, Hook which);
 
+  static bool getOnDebuggerStatement(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnDebuggerStatement(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnExceptionUnwind(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnExceptionUnwind(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnNewScript(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnNewScript(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnEnterFrame(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnEnterFrame(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnNewPromise(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnNewPromise(JSContext* cx, unsigned argc, Value* vp);
+  static bool getOnPromiseSettled(JSContext* cx, unsigned argc, Value* vp);
+  static bool setOnPromiseSettled(JSContext* cx, unsigned argc, Value* vp);
+  static bool getUncaughtExceptionHook(JSContext* cx, unsigned argc, Value* vp);
+  static bool setUncaughtExceptionHook(JSContext* cx, unsigned argc, Value* vp);
+  static bool getAllowUnobservedAsmJS(JSContext* cx, unsigned argc, Value* vp);
+  static bool setAllowUnobservedAsmJS(JSContext* cx, unsigned argc, Value* vp);
+  static bool getCollectCoverageInfo(JSContext* cx, unsigned argc, Value* vp);
+  static bool setCollectCoverageInfo(JSContext* cx, unsigned argc, Value* vp);
+  static bool getMemory(JSContext* cx, unsigned argc, Value* vp);
+  static bool addDebuggee(JSContext* cx, unsigned argc, Value* vp);
+  static bool addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp);
+  static bool removeDebuggee(JSContext* cx, unsigned argc, Value* vp);
+  static bool removeAllDebuggees(JSContext* cx, unsigned argc, Value* vp);
+  static bool hasDebuggee(JSContext* cx, unsigned argc, Value* vp);
+  static bool getDebuggees(JSContext* cx, unsigned argc, Value* vp);
+  static bool getNewestFrame(JSContext* cx, unsigned argc, Value* vp);
+  static bool clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp);
+  static bool findScripts(JSContext* cx, unsigned argc, Value* vp);
+  static bool findSources(JSContext* cx, unsigned argc, Value* vp);
+  static bool findObjects(JSContext* cx, unsigned argc, Value* vp);
+  static bool findAllGlobals(JSContext* cx, unsigned argc, Value* vp);
+  static bool findSourceURLs(JSContext* cx, unsigned argc, Value* vp);
+  static bool makeGlobalObjectReference(JSContext* cx, unsigned argc,
+                                        Value* vp);
+  static bool setupTraceLoggerScriptCalls(JSContext* cx, unsigned argc,
+                                          Value* vp);
+  static bool drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc,
+                                          Value* vp);
+  static bool startTraceLogger(JSContext* cx, unsigned argc, Value* vp);
+  static bool endTraceLogger(JSContext* cx, unsigned argc, Value* vp);
   static bool isCompilableUnit(JSContext* cx, unsigned argc, Value* vp);
   static bool recordReplayProcessKind(JSContext* cx, unsigned argc, Value* vp);
+#ifdef NIGHTLY_BUILD
+  static bool setupTraceLogger(JSContext* cx, unsigned argc, Value* vp);
+  static bool drainTraceLogger(JSContext* cx, unsigned argc, Value* vp);
+#endif
+  static bool adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp);
+  static bool adoptSource(JSContext* cx, unsigned argc, Value* vp);
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
-
-  struct CallData;
-
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
@@ -898,9 +942,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   // execution.
   IsObserving observesCoverage() const;
 
-  // Whether the Debugger instance needs to observe native call invocations.
-  IsObserving observesNativeCalls() const;
-
  private:
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfFrame(
       JSContext* cx, AbstractFramePtr frame);
@@ -929,8 +970,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   ResumeMode fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
   ResumeMode fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
   ResumeMode fireEnterFrame(JSContext* cx, MutableHandleValue vp);
-  ResumeMode fireNativeCall(JSContext* cx, const CallArgs& args,
-                            CallReason reason, MutableHandleValue vp);
   ResumeMode fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global,
                                  MutableHandleValue vp);
   ResumeMode firePromiseHook(JSContext* cx, Hook hook, HandleObject promise,
@@ -1414,16 +1453,6 @@ Result<Completion> DebuggerGenericEval(
 
 bool ParseResumptionValue(JSContext* cx, HandleValue rval,
                           ResumeMode& resumeMode, MutableHandleValue vp);
-
-#define JS_DEBUG_PSG(Name, Getter)                        \
-  JS_PSG(Name, CallData::ToNative<&CallData::Getter>, 0)
-
-#define JS_DEBUG_PSGS(Name, Getter, Setter)               \
-  JS_PSGS(Name, CallData::ToNative<&CallData::Getter>,  \
-          CallData::ToNative<&CallData::Setter>, 0)
-
-#define JS_DEBUG_FN(Name, Method, NumArgs)                \
-  JS_FN(Name, CallData::ToNative<&CallData::Method>, NumArgs, 0)
 
 } /* namespace js */
 

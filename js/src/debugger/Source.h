@@ -43,10 +43,28 @@ class DebuggerSource : public NativeObject {
   NativeObject* getReferentRawObject() const;
   DebuggerSourceReferent getReferent() const;
 
-  static DebuggerSource* check(JSContext* cx, HandleValue v);
-  static bool construct(JSContext* cx, unsigned argc, Value* vp);
+  static DebuggerSource* check(JSContext* cx, HandleValue v,
+                               const char* fnname);
+  template <typename ReferentT>
+  static DebuggerSource* checkThis(JSContext* cx, const CallArgs& args,
+                                   const char* fnname, const char* refname);
 
-  struct CallData;
+  // JS methods
+  static bool construct(JSContext* cx, unsigned argc, Value* vp);
+  static bool getText(JSContext* cx, unsigned argc, Value* vp);
+  static bool getBinary(JSContext* cx, unsigned argc, Value* vp);
+  static bool getURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getStartLine(JSContext* cx, unsigned argc, Value* vp);
+  static bool getId(JSContext* cx, unsigned argc, Value* vp);
+  static bool getDisplayURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getElement(JSContext* cx, unsigned argc, Value* vp);
+  static bool getElementProperty(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionScript(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionOffset(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionType(JSContext* cx, unsigned argc, Value* vp);
+  static bool setSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool reparse(JSContext* cx, unsigned argc, Value* vp);
 
  private:
   static const JSClassOps classOps_;

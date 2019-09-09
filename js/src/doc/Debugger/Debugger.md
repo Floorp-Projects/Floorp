@@ -162,24 +162,6 @@ compartment.
     SpiderMonkey only calls `onEnterFrame` to report
     [visible][vf], non-`"debugger"` frames.
 
-<code>onNativeCall(<i>callee</i>, <i>reason</i>)</code>
-:   A call to a native function is being made from a debuggee realm.
-    <i>callee</i> is a [`Debugger.Object`] for the function being called, and
-    <i>reason</i> is a string describing the reason the call was made, and
-    has one of the following values:
-
-    `get`: The native is the getter for a property which is being accessed.
-    `set`: The native is the setter for a property being written to.
-    `call`: Any call not fitting into the above categories.
-
-    This method should return a [resumption value][rv] specifying how the
-    debuggee's execution should proceed.
-
-    SpiderMonkey only calls `onNativeCall` hooks when execution is inside a
-    debugger evaluation associated with the debugger that has the `onNativeCall`
-    hook.  Such evaluation methods include `Debugger.Object.executeInGlobal`,
-    `Debugger.Frame.eval`, and associated methods.
-
 <code>onExceptionUnwind(<i>frame</i>, <i>value</i>)</code>
 :   The exception <i>value</i> has been thrown, and has propagated to
     <i>frame</i>; <i>frame</i> is the youngest remaining stack frame, and is a
