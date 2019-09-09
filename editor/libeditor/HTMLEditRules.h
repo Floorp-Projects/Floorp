@@ -290,32 +290,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult ConfirmSelectionInBody();
 
   /**
-   * IsEmptyInline: Return true if aNode is an empty inline container
-   */
-  bool IsEmptyInline(nsINode& aNode);
-
-  bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
-
-  /**
-   * RemoveAlignment() removes align attributes, text-align properties and
-   * <center> elements in aNode.
-   *
-   * @param aNode               Alignment information of the node and/or its
-   *                            descendants will be removed.
-   * @param aAlignType          New align value to be set only when it's in
-   *                            CSS mode and this method meets <table> or <hr>.
-   *                            XXX This is odd and not clear when you see
-   *                                caller of this method.  Do you have better
-   *                                idea?
-   * @param aDescendantsOnly    true if align information of aNode itself
-   *                            shouldn't be removed.  Otherwise, false.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult RemoveAlignment(nsINode& aNode,
-                                        const nsAString& aAlignType,
-                                        bool aDescendantsOnly);
-
-  /**
    * AlignBlock() resets align attribute, text-align property, etc first.
    * Then, aligns contents of aElement on aAlignType.
    *

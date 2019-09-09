@@ -6513,14 +6513,18 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // If it's a list item, or a list inside a list, forget any "current" div,
     // and instead put divs inside the appropriate block (td, li, etc.)
     if (HTMLEditUtils::IsListItem(curNode) || HTMLEditUtils::IsList(curNode)) {
+      Element* listOrListItemElement = curNode->AsElement();
       AutoEditorDOMPointOffsetInvalidator lockChild(atCurNode);
-      rv = RemoveAlignment(*curNode, aAlignType, true);
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .RemoveAlignFromDescendants(
+                   MOZ_KnownLive(*listOrListItemElement), aAlignType,
+                   HTMLEditor::EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       if (useCSS) {
         HTMLEditorRef().mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-            MOZ_KnownLive(curNode->AsElement()), nullptr, nsGkAtoms::align,
+            MOZ_KnownLive(listOrListItemElement), nullptr, nsGkAtoms::align,
             &aAlignType, false);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
@@ -6536,7 +6540,7 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
         //     we need to align contents in other type blocks?
         rv = MOZ_KnownLive(HTMLEditorRef())
                  .AlignContentsInAllTableCellsAndListItems(
-                     MOZ_KnownLive(*curNode->AsElement()), aAlignType);
+                     MOZ_KnownLive(*listOrListItemElement), aAlignType);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -10582,40 +10586,37 @@ void HTMLEditRules::WillDeleteSelection() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddRangeToChangedRange() failed");
 }
 
-nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
-                                        const nsAString& aAlignType,
-                                        bool aDescendantsOnly) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
+                                                const nsAString& aAlignType,
+                                                EditTarget aEditTarget) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aElement.IsHTMLElement(nsGkAtoms::table));
 
-  if (EditorBase::IsTextNode(&aNode) || HTMLEditUtils::IsTable(&aNode)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsINode> child, tmp;
-  if (aDescendantsOnly) {
-    child = aNode.GetFirstChild();
-  } else {
-    child = &aNode;
-  }
-
-  bool useCSS = HTMLEditorRef().IsCSSEnabled();
+  bool useCSS = IsCSSEnabled();
 
   // Let's remove all alignment hints in the children of aNode; it can
   // be an ALIGN attribute (in case we just remove it) or a CENTER
   // element (here we have to remove the container and keep its
   // children). We break on tables and don't look at their children.
-  while (child) {
-    if (aDescendantsOnly) {
-      // get the next sibling right now because we could have to remove child
-      tmp = child->GetNextSibling();
-    } else {
-      tmp = nullptr;
-    }
+  nsCOMPtr<nsIContent> nextSibling;
+  for (nsIContent* content =
+           aEditTarget == EditTarget::NodeAndDescendantsExceptTable
+               ? &aElement
+               : aElement.GetFirstChild();
+       content; content = nextSibling) {
+    // Get the next sibling before removing content from the DOM tree.
+    // XXX If next sibling is removed from the parent and/or inserted to
+    //     different parent, we will behave unexpectedly.  I think that
+    //     we should create child list and handle it with checking whether
+    //     it's still a child of expected parent.
+    nextSibling = aEditTarget == EditTarget::NodeAndDescendantsExceptTable
+                      ? nullptr
+                      : content->GetNextSibling();
 
-    if (child->IsHTMLElement(nsGkAtoms::center)) {
-      // the current node is a CENTER element
-      // first remove children's alignment
-      nsresult rv = RemoveAlignment(*child, aAlignType, true);
+    if (content->IsHTMLElement(nsGkAtoms::center)) {
+      OwningNonNull<Element> centerElement = *content->AsElement();
+      nsresult rv = RemoveAlignFromDescendants(
+          centerElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10623,9 +10624,7 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
       // We may have to insert a `<br>` element before first child of the
       // `<center>` element because it should be first element of a hard line
       // even after removing the `<center>` element.
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .EnsureHardLineBeginsWithFirstChildOf(
-                   MOZ_KnownLive(*child->AsElement()));
+      rv = EnsureHardLineBeginsWithFirstChildOf(centerElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10633,72 +10632,68 @@ nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,
       // We may have to insert a `<br>` element after last child of the
       // `<center>` element because it should be last element of a hard line
       // even after removing the `<center>` element.
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .EnsureHardLineEndsWithLastChildOf(
-                   MOZ_KnownLive(*child->AsElement()));
+      rv = EnsureHardLineEndsWithLastChildOf(centerElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      // now remove the CENTER container
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .RemoveContainerWithTransaction(
-                   MOZ_KnownLive(*child->AsElement()));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = RemoveContainerWithTransaction(centerElement);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (HTMLEditor::NodeIsBlockStatic(*child) ||
-               child->IsHTMLElement(nsGkAtoms::hr)) {
-      // the current node is a block element
-      if (HTMLEditUtils::SupportsAlignAttr(*child)) {
-        // remove the ALIGN attribute if this element can have it
-        nsresult rv =
-            MOZ_KnownLive(HTMLEditorRef())
-                .RemoveAttributeWithTransaction(
-                    MOZ_KnownLive(*child->AsElement()), *nsGkAtoms::align);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+      continue;
+    }
+
+    if (!HTMLEditor::NodeIsBlockStatic(*content) &&
+        !content->IsHTMLElement(nsGkAtoms::hr)) {
+      continue;
+    }
+
+    OwningNonNull<Element> blockOrHRElement = *content->AsElement();
+    if (HTMLEditUtils::SupportsAlignAttr(blockOrHRElement)) {
+      nsresult rv =
+          RemoveAttributeWithTransaction(blockOrHRElement, *nsGkAtoms::align);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    if (useCSS) {
+      if (blockOrHRElement->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                                nsGkAtoms::hr)) {
+        nsresult rv = SetAttributeOrEquivalent(
+            blockOrHRElement, nsGkAtoms::align, aAlignType, false);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      } else {
+        nsAutoString dummyCssValue;
+        nsresult rv = mCSSEditUtils->RemoveCSSInlineStyle(
+            blockOrHRElement, nsGkAtoms::textAlign, dummyCssValue);
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
-      if (useCSS) {
-        if (child->IsAnyOfHTMLElements(nsGkAtoms::table, nsGkAtoms::hr)) {
-          nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                            .SetAttributeOrEquivalent(
-                                MOZ_KnownLive(child->AsElement()),
-                                nsGkAtoms::align, aAlignType, false);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        } else {
-          nsAutoString dummyCssValue;
-          nsresult rv = HTMLEditorRef().mCSSEditUtils->RemoveCSSInlineStyle(
-              *child, nsGkAtoms::textAlign, dummyCssValue);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        }
-      }
-      if (!child->IsHTMLElement(nsGkAtoms::table)) {
-        // unless this is a table, look at children
-        nsresult rv = RemoveAlignment(*child, aAlignType, true);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+    }
+    if (!blockOrHRElement->IsHTMLElement(nsGkAtoms::table)) {
+      // unless this is a table, look at children
+      nsresult rv = RemoveAlignFromDescendants(
+          blockOrHRElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
     }
-    child = tmp;
   }
   return NS_OK;
 }
@@ -10788,10 +10783,17 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
     return NS_OK;
   }
 
-  nsresult rv = RemoveAlignment(aElement, aAlignType,
-                                aResetAlignOf == ResetAlignOf::OnlyDescendants);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!aElement.IsHTMLElement(nsGkAtoms::table)) {
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .RemoveAlignFromDescendants(
+                aElement, aAlignType,
+                aResetAlignOf == ResetAlignOf::OnlyDescendants
+                    ? HTMLEditor::EditTarget::OnlyDescendantsExceptTable
+                    : HTMLEditor::EditTarget::NodeAndDescendantsExceptTable);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   if (HTMLEditorRef().IsCSSEnabled()) {
     // Let's use CSS alignment; we use margin-left and margin-right for tables
@@ -10815,9 +10817,9 @@ nsresult HTMLEditRules::AlignBlock(Element& aElement,
     return NS_OK;
   }
 
-  rv = MOZ_KnownLive(HTMLEditorRef())
-           .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align, aAlignType,
-                                     false);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
+                                              aAlignType, false);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
