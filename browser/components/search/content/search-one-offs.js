@@ -21,7 +21,7 @@ class SearchOneOffs {
       <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
         <label class="searchbar-oneoffheader-search" value="&searchWithDesc.label;"/>
       </hbox>
-      <hbox class="search-panel-one-offs"/>
+      <hbox class="search-panel-one-offs" role="group"/>
       <vbox class="search-add-engines"/>
       <hbox class="search-one-offs-spacer"/>
       <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
