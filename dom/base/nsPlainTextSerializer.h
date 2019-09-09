@@ -91,7 +91,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
 
-  void Output(nsString& aString);
   void Write(const nsAString& aString);
 
   // @return true, iff the elements' whitespace and newline characters have to
@@ -327,9 +326,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
   AutoTArray<bool, 8> mIsInCiteBlockquote;
-
-  // Non-owning.
-  nsAString* mOutput;
 
   // The tag stack: the stack of tags we're operating on, so we can nest.
   // The stack only ever points to static atoms, so they don't need to be
