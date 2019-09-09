@@ -812,10 +812,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mBufferScreenRect = lockedScreenRect;
   }
 
-  if (mWholeWindowBufferDamage || mRenderingCacheMode != CACHE_ALL) {
-    // We can lock/commit entire buffer direcly.
-    mDrawToWaylandBufferDirectly = true;
-  }
+  mDrawToWaylandBufferDirectly =
+      (mWholeWindowBufferDamage || mRenderingCacheMode != CACHE_ALL);
 
   if (mDrawToWaylandBufferDirectly) {
     // If there's any pending image commit scratch them as we're going
@@ -825,20 +823,6 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(
         /* aCanSwitchBuffer */ mWholeWindowBufferDamage);
     if (dt) {
-      // TODO: Try to set clip regions according to given area provided by
-      // compositor, not sure it has any effect. Also disable when drawing
-      // without any cache to speed up rendering.
-      if (!mWholeWindowBufferDamage && mRenderingCacheMode != CACHE_NONE) {
-        uint32_t numRects = aRegion.GetNumRects();
-        if (numRects != 1) {
-          AutoTArray<IntRect, 32> rects;
-          rects.SetCapacity(numRects);
-          for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-            rects.AppendElement(iter.Get().ToUnknownRect());
-          }
-          dt->PushDeviceSpaceClipRects(rects.Elements(), rects.Length());
-        }
-      }
       return dt.forget();
     }
   }
