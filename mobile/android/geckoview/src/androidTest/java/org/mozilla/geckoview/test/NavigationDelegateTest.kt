@@ -21,6 +21,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
+import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
 import org.junit.After
@@ -1207,6 +1208,63 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun loadUriHeader() {
+        val headers = mapOf<String, String>("Header1" to "Value", "Header2" to "Value1, Value2")
+
+        sessionRule.session.loadUri("$TEST_ENDPOINT/anything", headers)
+        sessionRule.session.waitForPageStop()
+
+        val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
+        val body = JSONObject(content)
+
+        MatcherAssert.assertThat("Headers should match", body.getJSONObject("headers")
+                .getString("Header1"), equalTo("Value"))
+        MatcherAssert.assertThat("Headers should match", body.getJSONObject("headers")
+                .getString("Header2"), equalTo("Value1, Value2"))
+    }
+
+    @Test fun loadUriHeaderBadOverrides() {
+        val headers = mapOf<String?, String?>(
+                null to "BadNull",
+                "Connection" to "BadConnection",
+                "Host" to "BadHost",
+                "ValueLess1" to "",
+                "ValueLess2" to null,
+                "ValueLess3" to " ",
+                "ValueLess4" to "\t")
+
+        sessionRule.session.loadUri("$TEST_ENDPOINT/anything", headers)
+        sessionRule.session.waitForPageStop()
+
+        val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
+        val body = JSONObject(content)
+        val headersJSON = body.getJSONObject("headers")
+
+        headersJSON.keys().forEach { key ->
+            MatcherAssert.assertThat( "No value field should be empty or null",
+                    headersJSON.optString(key), not(isEmptyOrNullString()))
+            MatcherAssert.assertThat( "No value field should be only whitespace",
+                    headersJSON.getString(key).trim(), not(isEmptyOrNullString()))
+            MatcherAssert.assertThat( "BadNull should not exist as a header value",
+                    headersJSON.getString(key), not("BadNull"))
+        }
+
+        MatcherAssert.assertThat("Headers should not match", headersJSON
+                .getString("Connection"), not("BadConnection"))
+        MatcherAssert.assertThat("Headers should not match", headersJSON
+                .getString("Host"), not("BadHost"))
+
+        // As per RFC7230 all request headers must have a field value (Except Host, which we filter)
+        // RFC7230 makes RFC2616 obsolete but 2616 allowed empty field values.
+        MatcherAssert.assertThat("Header with no field value should not be included",
+                !headersJSON.has("ValueLess1"))
+        MatcherAssert.assertThat("Header with no field value should not be included",
+                !headersJSON.has("ValueLess2"))
+        MatcherAssert.assertThat("Header with no field value should not be included",
+                !headersJSON.has("ValueLess3"))
+        MatcherAssert.assertThat("Header with no field value should not be included",
+                !headersJSON.has("ValueLess4"))
+    }
 
     @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {

@@ -20,12 +20,15 @@ exclude: true
   `onTelemetryReceived` has been renamed to [`onHistogram`][71.4], and
   [`Metric`][71.5] now takes a type parameter.
   ([bug 1576730]({{bugzilla}}1576730))
+- Added overloads of [`GeckoSession.loadUri()`][71.6] that accept a map of 
+  additional HTTP request headers.
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.3]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onStringScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.4]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onHistogram-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.5]: {{javadoc_uri}}/RuntimeTelemetry.Metric.html
+[71.6]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-java.io.File-java.util.Map-
 
 ## v70
 - Added API for session context assignment
@@ -348,4 +351,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c35dda98b313f389d0bb297a1226c801035f7c77
+[api-version]: ccc454a846e5d3c22667842aecbbdef182524f94
