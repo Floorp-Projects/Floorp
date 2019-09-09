@@ -1026,10 +1026,17 @@ class SystemEngineViewTest {
         val strictPolicy = TrackingProtectionPolicy.strict()
         val resources = testContext.resources
         val recommendedCategories = setOf(
-            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL
+                UrlMatcher.ADVERTISING,
+                UrlMatcher.ANALYTICS,
+                UrlMatcher.SOCIAL,
+                UrlMatcher.CRYPTOMINING
         )
         val strictCategories = setOf(
-            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL
+            UrlMatcher.ADVERTISING,
+                UrlMatcher.ANALYTICS,
+                UrlMatcher.SOCIAL,
+                UrlMatcher.FINGERPRINTING,
+                UrlMatcher.CRYPTOMINING
         )
 
         var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, recommendedPolicy)

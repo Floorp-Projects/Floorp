@@ -731,7 +731,9 @@ class SystemEngineView @JvmOverloads constructor(
                 UrlMatcher.ADVERTISING to TrackingProtectionPolicy.TrackingCategory.AD,
                 UrlMatcher.ANALYTICS to TrackingProtectionPolicy.TrackingCategory.ANALYTICS,
                 UrlMatcher.CONTENT to TrackingProtectionPolicy.TrackingCategory.CONTENT,
-                UrlMatcher.SOCIAL to TrackingProtectionPolicy.TrackingCategory.SOCIAL
+                UrlMatcher.SOCIAL to TrackingProtectionPolicy.TrackingCategory.SOCIAL,
+                UrlMatcher.CRYPTOMINING to TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING,
+                UrlMatcher.FINGERPRINTING to TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
         )
 
         private fun String?.toTrackingProtectionCategories(): List<TrackingProtectionPolicy.TrackingCategory> {
