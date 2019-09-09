@@ -4,8 +4,8 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-0.25.0 (2019-09-06)
--------------------
+0.25.0 (2019-09-09, `6c6cc9f9343c`)
+-----------------------------------
 
 ### Added
 
