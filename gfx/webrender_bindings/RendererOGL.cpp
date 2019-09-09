@@ -120,10 +120,8 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
-  auto size = mCompositor->GetBufferSize();
-
   if (mNativeLayerForEntireWindow) {
-    gfx::IntRect bounds(gfx::IntPoint(0, 0), size.ToUnknownSize());
+    gfx::IntRect bounds({}, mCompositor->GetBufferSize().ToUnknownSize());
     mNativeLayerForEntireWindow->SetRect(bounds);
 #ifdef XP_MACOSX
     mNativeLayerForEntireWindow->SetOpaqueRegion(
@@ -140,6 +138,8 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   }
 
   wr_renderer_update(mRenderer);
+
+  auto size = mCompositor->GetBufferSize();
 
   if (!wr_renderer_render(mRenderer, size.width, size.height, aHadSlowFrame,
                           aOutStats)) {
