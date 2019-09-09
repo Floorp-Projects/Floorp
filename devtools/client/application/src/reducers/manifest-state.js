@@ -10,6 +10,7 @@ const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
+  RESET_MANIFEST,
 } = require("../constants");
 
 function _processRawManifestIcons(rawIcons) {
@@ -120,6 +121,10 @@ function manifestReducer(state = ManifestState(), action) {
         isLoading: false,
         manifest: manifest ? _processRawManifest(manifest) : null,
       });
+
+    case RESET_MANIFEST:
+      const defaultState = ManifestState();
+      return defaultState;
 
     default:
       return state;

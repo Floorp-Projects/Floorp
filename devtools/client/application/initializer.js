@@ -44,6 +44,7 @@ const App = createFactory(require("./src/components/App"));
  */
 window.Application = {
   async bootstrap({ toolbox, panel }) {
+    this.handleOnNavigate = this.handleOnNavigate.bind(this);
     this.updateWorkers = this.updateWorkers.bind(this);
     this.updateDomain = this.updateDomain.bind(this);
     this.updateCanDebugWorkers = this.updateCanDebugWorkers.bind(this);
@@ -60,7 +61,7 @@ window.Application = {
 
     this.workersListener = new WorkersListener(this.client.mainRoot);
     this.workersListener.addListener(this.updateWorkers);
-    this.toolbox.target.on("navigate", this.updateDomain);
+    this.toolbox.target.on("navigate", this.handleOnNavigate);
     addDebugServiceWorkersListener(this.updateCanDebugWorkers);
 
     // start up updates for the initial state
@@ -76,6 +77,11 @@ window.Application = {
       fluentBundles: l10n.getBundles(),
     });
     render(Provider({ store: this.store }, app), this.mount);
+  },
+
+  handleOnNavigate() {
+    this.updateDomain();
+    this.actions.resetManifest();
   },
 
   async updateWorkers() {
