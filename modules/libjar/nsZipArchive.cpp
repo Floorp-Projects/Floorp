@@ -341,9 +341,9 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
       static char* env = PR_GetEnv("MOZ_JAR_LOG_FILE");
       if (env) {
         zipLog.Init(env);
-        // We only log accesses in jar/zip archives within the NS_GRE_DIR
+        // We only log accesses in jar/zip archives within the gre directory
         // and/or the APK on Android. For the former, we log the archive path
-        // relative to NS_GRE_DIR, and for the latter, the nested-archive
+        // relative to the gre dir, and for the latter, the nested-archive
         // path within the APK. This makes the path match the path of the
         // archives relative to the packaged dist/$APP_NAME directory in a
         // build.
@@ -359,8 +359,8 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle* aZipHandle, PRFileDesc* aFd) {
           nsCOMPtr<nsIFile> dir = aZipHandle->mFile.GetBaseFile();
           nsCOMPtr<nsIFile> gre_dir;
           nsAutoCString path;
-          if (NS_SUCCEEDED(nsDirectoryService::gService->Get(
-                  NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(gre_dir)))) {
+          if (NS_SUCCEEDED(nsDirectoryService::gService->GetCurrentProcessDirectory(
+                  getter_AddRefs(gre_dir)))) {
             nsAutoCString leaf;
             nsCOMPtr<nsIFile> parent;
             while (NS_SUCCEEDED(dir->GetNativeLeafName(leaf)) &&
