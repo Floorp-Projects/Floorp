@@ -155,8 +155,10 @@
 
 #ifdef ANDROID
 #define IS_ANDROID true
+#define IS_NOT_ANDROID false
 #else
 #define IS_ANDROID false
+#define IS_NOT_ANDROID true
 #endif
 
 #---------------------------------------------------------------------------
@@ -410,20 +412,12 @@
 
 - name: apz.keyboard.enabled
   type: bool
-#if !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: once
 
 - name: apz.keyboard.passive-listeners
   type: RelaxedAtomicBool
-#ifdef MOZ_WIDGET_ANDROID
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: apz.max_tap_time
@@ -1356,11 +1350,7 @@
 
 - name: dom.enable_window_print
   type: bool
-#ifdef ANDROID
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: dom.element.transform-getters.enabled
@@ -1779,11 +1769,7 @@
 # Network Information API
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_ANDROID@
   mirror: always
 
 # Is support for Window.paintWorklet enabled?
@@ -2152,11 +2138,7 @@
 # Enable Storage API for all platforms except Android.
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # Should we abort LocalStorage requests when a sync message from parent is
@@ -2506,11 +2488,7 @@
 # W3C draft pointer events
 - name: dom.w3c_pointer_events.enabled
   type: RelaxedAtomicBool
-#ifdef ANDROID
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 #ifdef XP_WIN
@@ -2557,11 +2535,7 @@
 
 - name: dom.webkitBlink.dirPicker.enabled
   type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # NOTE: This preference is used in unit tests. If it is removed or its default
@@ -2580,11 +2554,7 @@
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool
-#if !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # Whether the WebMIDI API is enabled
@@ -3915,15 +3885,11 @@
 # appropriate pref is set.
 - name: javascript.options.gc_on_memory_pressure
   type: bool
-#ifdef ANDROID
   # Disable the JS engine's GC on memory pressure, since we do one in the
   # mobile browser (bug 669346).
   # XXX: this value possibly should be changed, or the pref removed entirely.
   #      See bug 1450787.
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: javascript.options.mem.log
@@ -6903,11 +6869,7 @@
 # No way to enable on Android, Bug 1552602
 - name: security.webauth.u2f
   type: bool
-#if defined(MOZ_WIDGET_ANDROID)
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # Block scripts with _some_ wrong MIME types such as image/, video/ or text/csv
@@ -7199,11 +7161,7 @@
 
 - name: webgl.default-antialias
   type: RelaxedAtomicBool
-#ifdef MOZ_WIDGET_ANDROID
-  value: false
-#else
-  value: true
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: webgl.default-low-power
