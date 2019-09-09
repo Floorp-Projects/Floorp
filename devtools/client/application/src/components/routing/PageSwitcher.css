@@ -9,7 +9,7 @@
 
 .app-page {
   min-height: 100vh;
-  padding: 0 2rem;
+  padding: calc(var(--base-unit) * 2) calc(var(--base-unit) * 6);
   display: grid;
   user-select: none;
 }
