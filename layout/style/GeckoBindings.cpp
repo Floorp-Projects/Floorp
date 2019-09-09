@@ -153,6 +153,10 @@ const Element* Gecko_GetMarkerPseudo(const Element* aElement) {
   return nsLayoutUtils::GetMarkerPseudo(aElement);
 }
 
+bool Gecko_IsInAnonymousSubtree(const Element* aElement) {
+  return aElement->IsInAnonymousSubtree();
+}
+
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
     const Element* aElement) {
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
