@@ -206,6 +206,7 @@ HttpBaseChannel::HttpBaseChannel()
       mResponseCouldBeSynthesized(false),
       mBlockAuthPrompt(false),
       mAllowStaleCacheContent(false),
+      mPreferCacheLoadOverBypass(false),
       mAddedAsNonTailRequest(false),
       mAsyncOpenWaitingForStreamLength(false),
       mUpgradableToSecure(true),
