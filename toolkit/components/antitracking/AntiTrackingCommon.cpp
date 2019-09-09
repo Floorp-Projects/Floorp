@@ -178,20 +178,8 @@ uint32_t CheckCookiePermissionForPrincipal(nsICookieSettings* aCookieSettings,
   return cookiePermission;
 }
 
-int32_t CookiesBehavior(Document* aTopLevelDocument,
-                        Document* a3rdPartyDocument) {
-  MOZ_ASSERT(aTopLevelDocument);
+int32_t CookiesBehavior(Document* a3rdPartyDocument) {
   MOZ_ASSERT(a3rdPartyDocument);
-
-  // Override the cookiebehavior to accept if the top level document has
-  // an extension principal (if the static pref has been set to true
-  // to force the old behavior here, See Bug 1525917).
-  // This block (and the static pref) should be removed as part of
-  // Bug 1537753.
-  if (StaticPrefs::extensions_cookiesBehavior_overrideOnTopLevel() &&
-      BasePrincipal::Cast(aTopLevelDocument->NodePrincipal())->AddonPolicy()) {
-    return nsICookieService::BEHAVIOR_ACCEPT;
-  }
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 and Bug 1525917 for rationale).
@@ -202,22 +190,9 @@ int32_t CookiesBehavior(Document* aTopLevelDocument,
   return a3rdPartyDocument->CookieSettings()->GetCookieBehavior();
 }
 
-int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
-                        nsIPrincipal* aTopLevelPrincipal,
-                        nsIURI* a3rdPartyURI) {
+int32_t CookiesBehavior(nsILoadInfo* aLoadInfo, nsIURI* a3rdPartyURI) {
   MOZ_ASSERT(aLoadInfo);
-  MOZ_ASSERT(aTopLevelPrincipal);
   MOZ_ASSERT(a3rdPartyURI);
-
-  // Override the cookiebehavior to accept if the top level principal is
-  // an extension principal (if the static pref has been turned to true
-  // to force the old behavior here, See Bug 1525917).
-  // This block (and the static pref) should be removed as part of
-  // Bug 1537753.
-  if (StaticPrefs::extensions_cookiesBehavior_overrideOnTopLevel() &&
-      BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
-    return nsICookieService::BEHAVIOR_ACCEPT;
-  }
 
   // WebExtensions 3rd party URI always get BEHAVIOR_ACCEPT as cookieBehavior,
   // this is semantically equivalent to the principal having a AddonPolicy().
@@ -1368,7 +1343,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     // For out-of-process top frames, we need to be able to access three things
     // from the top BrowsingContext in order to be able to port this code to
     // Fission successfully:
-    //   * The principal of the top BrowsingContext.
     //   * The CookieSettings of the top BrowsingContext.
     //   * The HasStorageAccessGranted() API on BrowsingContext.
     // For now, if we face an out-of-process top frame, instead of failing here,
@@ -1399,14 +1373,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  Document* toplevelDocument = topInnerWindow->GetExtantDoc();
-  if (!toplevelDocument) {
-    LOG(("No top level document."));
-    return false;
-  }
-
-  MOZ_ASSERT(toplevelDocument);
-
   uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
       document->CookieSettings(), document->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
@@ -1425,7 +1391,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(toplevelDocument, document);
+  int32_t behavior = CookiesBehavior(document);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
@@ -1664,7 +1630,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  int32_t behavior = CookiesBehavior(loadInfo, toplevelPrincipal, channelURI);
+  int32_t behavior = CookiesBehavior(loadInfo, channelURI);
   if (behavior == nsICookieService::BEHAVIOR_ACCEPT) {
     LOG(("The cookie behavior pref mandates accepting all cookies!"));
     return true;
