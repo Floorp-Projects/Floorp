@@ -18,13 +18,7 @@
 using namespace mozilla;
 
 #ifdef DEBUG
-#  undef NOISY_MAX_ELEMENT_SIZE
-#  undef REALLY_NOISY_MAX_ELEMENT_SIZE
-#  undef NOISY_BLOCK_DIR_MARGINS
-#else
-#  undef NOISY_MAX_ELEMENT_SIZE
-#  undef REALLY_NOISY_MAX_ELEMENT_SIZE
-#  undef NOISY_BLOCK_DIR_MARGINS
+#  include "nsBlockDebugFlags.h"  // For NOISY_BLOCK_DIR_MARGINS
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
@@ -63,7 +57,7 @@ bool nsBlockReflowContext::ComputeCollapsedBStartMargin(
   // since it doesn't need to be done by the top-level (non-recursive)
   // caller.
 
-#ifdef NOISY_BLOCKDIR_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
   aRI.mFrame->ListTag(stdout);
   printf(": %d => %d\n", aRI.ComputedLogicalMargin().BStart(wm),
          aMargin->get());
@@ -210,7 +204,7 @@ done:
     *aBlockIsEmpty = aRI.mFrame->IsEmpty();
   }
 
-#ifdef NOISY_BLOCKDIR_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
   aRI.mFrame->ListTag(stdout);
   printf(": => %d\n", aMargin->get());
 #endif
@@ -235,7 +229,7 @@ void nsBlockReflowContext::ReflowBlock(
   if (aApplyBStartMargin) {
     mBStartMargin = aPrevMargin;
 
-#ifdef NOISY_BLOCKDIR_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
     mOuterReflowInput.mFrame->ListTag(stdout);
     printf(": reflowing ");
     mFrame->ListTag(stdout);
@@ -380,7 +374,7 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
     // already applied.
     aBEndMarginResult.Include(mBStartMargin);
 
-#ifdef NOISY_BLOCKDIR_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
     printf("  ");
     mOuterReflowInput.mFrame->ListTag(stdout);
     printf(": ");
