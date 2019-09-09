@@ -89,7 +89,7 @@ add_task(async function test_set_login() {
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
   is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when not editing");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value.length, TEST_LOGIN_1.password.length, "password mask text should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
@@ -126,6 +126,7 @@ add_task(async function test_set_login() {
 
   usernameInput.placeholder = "dummy placeholder";
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  await asyncElementRendered();
   is(
     document.l10n.getAttributes(usernameInput).id,
     null,
@@ -159,6 +160,7 @@ add_task(async function test_edit_login() {
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   usernameInput.placeholder = "dummy placeholder";
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  await asyncElementRendered();
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
@@ -199,6 +201,7 @@ add_task(async function test_edit_login() {
 add_task(async function test_edit_login_cancel() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   gLoginItem.shadowRoot.querySelector(".edit-button").click();
+  await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
   is(!!gLoginItem.dataset.isNewLogin, false,
@@ -231,6 +234,8 @@ add_task(async function test_reveal_password_change_selected_login() {
 
   let editButton = gLoginItem.shadowRoot.querySelector(".edit-button");
   editButton.click();
+  await asyncElementRendered();
+
   ok(revealCheckbox.checked, "reveal-checkbox should remain checked when entering 'edit' mode");
   gLoginItem.shadowRoot.querySelector(".cancel-button").click();
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked after canceling 'edit' mode");
@@ -307,7 +312,7 @@ add_task(async function test_different_login_modified() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(TEST_LOGIN_1.password.length), "password length should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -321,7 +326,7 @@ add_task(async function test_different_login_removed() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, TEST_LOGIN_1.origin, "origin should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(TEST_LOGIN_1.password.length), "password length should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -335,7 +340,7 @@ add_task(async function test_login_modified() {
 
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, modifiedLogin.origin, "origin should be updated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, modifiedLogin.username, "username should be updated");
-  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, modifiedLogin.password, "password should be updated");
+  is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, " ".repeat(modifiedLogin.password.length), "password length should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, modifiedLogin.timeCreated, "time-created should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, modifiedLogin.timePasswordChanged, "time-changed should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, modifiedLogin.timeLastUsed, "time-used should be updated");

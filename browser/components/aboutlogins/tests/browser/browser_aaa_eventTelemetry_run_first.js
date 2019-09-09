@@ -79,7 +79,7 @@ add_task(async function test_telemetry_events() {
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    TEST_LOGIN2.origin
+    TEST_LOGIN2.origin + "/"
   );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
