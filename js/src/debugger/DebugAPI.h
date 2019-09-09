@@ -8,6 +8,7 @@
 #define debugger_DebugAPI_h
 
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 
 namespace js {
@@ -204,6 +205,9 @@ class DebugAPI {
    */
   static inline ResumeMode onResumeFrame(JSContext* cx, AbstractFramePtr frame);
 
+  static inline ResumeMode onNativeCall(JSContext* cx, const CallArgs& args,
+                                        CallReason reason);
+
   /*
    * Announce to the debugger a |debugger;| statement on has been
    * encountered on the youngest JS frame on |cx|. Call whatever hooks have
@@ -368,6 +372,8 @@ class DebugAPI {
   static ResumeMode slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame);
   static ResumeMode slowPathOnResumeFrame(JSContext* cx,
                                           AbstractFramePtr frame);
+  static ResumeMode slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
+                                         CallReason reason);
   static ResumeMode slowPathOnDebuggerStatement(JSContext* cx,
                                                 AbstractFramePtr frame);
   static ResumeMode slowPathOnExceptionUnwind(JSContext* cx,
