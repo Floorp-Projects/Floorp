@@ -27,6 +27,7 @@ RUN apt-get update && \
       gawk \
       gcc-multilib \
       gnupg \
+      jq \
       libc6-dev \
       nasm \
       openjdk-8-jdk-headless \
