@@ -1342,9 +1342,7 @@ static bool IsSignatureSeparator(const nsAString& aString) {
  * specified. Strips ending spaces from the line if it isn't preformatted.
  */
 void nsPlainTextSerializer::EndLine(bool aSoftLineBreak, bool aBreakBySpace) {
-  uint32_t currentlinelength = mCurrentLine.mContent.mValue.Length();
-
-  if (aSoftLineBreak && 0 == currentlinelength) {
+  if (aSoftLineBreak && mCurrentLine.mContent.mValue.IsEmpty()) {
     // No meaning
     return;
   }
