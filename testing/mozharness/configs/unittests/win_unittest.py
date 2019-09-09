@@ -285,7 +285,5 @@ config = {
                              },
     "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest",
-    "download_nodejs": False,
     "nodejs_path": NODEJS_PATH,
-    "nodejs_tooltool_manifest_path": "config/tooltool-manifests/win32/nodejs.manifest",
 }
