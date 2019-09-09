@@ -271,7 +271,7 @@ linux64-base-toolchains/debug:
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
-        max-run-time: 5400
+        max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
             FORCE_GCC: '1'
@@ -341,7 +341,7 @@ linux64-base-toolchains-clang/debug:
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains-clang
     run:
