@@ -2569,6 +2569,12 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   AlignAsSubAction(const nsAString& aAlignType);
 
+  /**
+   * StartOrEndOfSelectionRangesIsIn() returns true if start or end of one
+   * of selection ranges is in aContent.
+   */
+  bool StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

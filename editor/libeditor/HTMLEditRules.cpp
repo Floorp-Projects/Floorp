@@ -10017,14 +10017,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
           // These node types are candidates if selection is not in them.  If
           // it is one of these, don't delete if selection inside.  This is so
           // we can create empty headings, etc., for the user to type into.
-          bool isSelectionEndInNode;
-          rv = SelectionEndpointInNode(node, &isSelectionEndInNode);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          if (!isSelectionEndInNode) {
-            isCandidate = true;
-          }
+          isCandidate = !HTMLEditorRef().StartOrEndOfSelectionRangesIsIn(
+              *node->AsContent());
         }
       }
 
@@ -10098,25 +10092,18 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+bool HTMLEditor::StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  NS_ENSURE_TRUE(aNode && aResult, NS_ERROR_NULL_POINTER);
-
-  *aResult = false;
-
-  uint32_t rangeCount = SelectionRefPtr()->RangeCount();
-  for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-    RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(rangeIdx);
+  for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); ++i) {
+    nsRange* range = SelectionRefPtr()->GetRangeAt(i);
     nsINode* startContainer = range->GetStartContainer();
     if (startContainer) {
-      if (aNode == startContainer) {
-        *aResult = true;
-        return NS_OK;
+      if (&aContent == startContainer) {
+        return true;
       }
-      if (EditorUtils::IsDescendantOf(*startContainer, *aNode)) {
-        *aResult = true;
-        return NS_OK;
+      if (EditorUtils::IsDescendantOf(*startContainer, aContent)) {
+        return true;
       }
     }
     nsINode* endContainer = range->GetEndContainer();
@@ -10124,17 +10111,15 @@ nsresult HTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult) {
       continue;
     }
     if (endContainer) {
-      if (aNode == endContainer) {
-        *aResult = true;
-        return NS_OK;
+      if (&aContent == endContainer) {
+        return true;
       }
-      if (EditorUtils::IsDescendantOf(*endContainer, *aNode)) {
-        *aResult = true;
-        return NS_OK;
+      if (EditorUtils::IsDescendantOf(*endContainer, aContent)) {
+        return true;
       }
     }
   }
-  return NS_OK;
+  return false;
 }
 
 nsresult HTMLEditor::LiftUpListItemElement(
