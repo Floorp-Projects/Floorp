@@ -9,51 +9,64 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO"; then
 
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then
-        if test -n "${TASKCLUSTER_WORKER_GROUP}"; then
-            # TASKCLUSTER_WORKER_GROUP is just the region now, so
-            # stick an extra character on to make the already-convoluted logic
-            # here simpler.
-            availability_zone="${TASKCLUSTER_WORKER_GROUP}x"
-        elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
-            # gcp availability_zone is of the form <region>-<letter> where region is e.g. us-west2, and az is us-west2-a
-            gcp_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/computeMetadata/v1beta1/instance/zone || true)
-            availability_zone=${gcp_zone##*/}
-        else
-            # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
-            # ec2 availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
-            availability_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
+        if test -n "$TASKCLUSTER_WORKER_LOCATION" -a -x "$(command -v jq)"; then
+            cloud=$(echo $TASKCLUSTER_WORKER_LOCATION | jq .cloud | tr -d \")
+            case $cloud in
+                aws|google)
+                    availability_zone=$(echo $TASKCLUSTER_WORKER_LOCATION | jq .availabilityZone | tr -d \")
+                    region=$(echo $TASKCLUSTER_WORKER_LOCATION | jq .region | tr -d \")
+                    ;;
+            esac
+        fi
+        if test -z "$availability_zone" -o -z "$region"; then
+            if test -n "${TASKCLUSTER_WORKER_GROUP}"; then
+                # TASKCLUSTER_WORKER_GROUP is just the region now, so
+                # stick an extra character on to make the already-convoluted logic
+                # here simpler.
+                availability_zone="${TASKCLUSTER_WORKER_GROUP}x"
+            elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+                # gcp availability_zone is of the form <region>-<letter> where region is e.g. us-west2, and az is us-west2-a
+                gcp_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/computeMetadata/v1beta1/instance/zone || true)
+                availability_zone=${gcp_zone##*/}
+            else
+                # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
+                # ec2 availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
+                availability_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
+            fi
         fi
         if test -z "$availability_zone" -o "$availability_zone" = "not-ec2"; then
             availability_zone=not-ec2
+        elif test -n "$cloud"; then
+            case $cloud in
+            google)
+                bucket=sccache-l${MOZ_SCM_LEVEL}-${region}
+                ;;
+            aws)
+                bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
+                ;;
+            esac
         elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
             # gcp region is az with last two letters trimmed
-            region=${availability_zone::${#availability_zone}-2}
-            case "${GECKO_HEAD_REPOSITORY}" in
-            *hg.mozilla.org/try*)
-                bucket=taskcluster-level-1-sccache-${region}
-                ;;
-            *hg.mozilla.org/integration/autoland*|*hg.mozilla.org/integration/mozilla-inbound*)
-                bucket=taskcluster-level-3-sccache-${region}
-                ;;
-            esac
+            if test -z "$region"; then
+                region=${availability_zone::${#availability_zone}-2}
+            fi
+            bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
         else
             # ec2 region is az with last letter trimmed
-            region=${availability_zone%?}
-            # set S3 bucket according to tree (level)
-            case "${GECKO_HEAD_REPOSITORY}" in
-            *hg.mozilla.org/try*)
-                bucket=taskcluster-level-1-sccache-${region}
-                ;;
-            *hg.mozilla.org/integration/autoland*|*hg.mozilla.org/integration/mozilla-inbound*)
-                bucket=taskcluster-level-3-sccache-${region}
-                ;;
-            esac
+            if test -z "$region"; then
+                region=${availability_zone%?}
+            fi
+            bucket=taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${region}
         fi
     fi
 fi
 
 if test -n "$bucket"; then
-    if [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+    if test "$cloud" = "google"; then
+        mk_add_options "export SCCACHE_GCS_BUCKET=$bucket"
+        mk_add_options "export SCCACHE_GCS_RW_MODE=READ_WRITE"
+        mk_add_options "export SCCACHE_GCS_CREDENTIALS_URL=http://taskcluster/auth/v1/gcp/credentials/$SCCACHE_GCS_PROJECT/sccache-l${MOZ_SCM_LEVEL}-${region}@$SCCACHE_GCS_PROJECT.iam.gserviceaccount.com"
+    elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
         mk_add_options "export SCCACHE_GCS_BUCKET=$bucket"
     else
         mk_add_options "export SCCACHE_BUCKET=$bucket"
