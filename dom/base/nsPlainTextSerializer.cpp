@@ -113,8 +113,6 @@ void nsPlainTextSerializer::CurrentLineContent::MaybeReplaceNbsps(
 
 void nsPlainTextSerializer::CurrentLine::ResetContentAndIndentationHeader() {
   mContent.mValue.Truncate();
-  mContent.mWidth = 0;
-
   mIndentation.mHeader.Truncate();
 }
 
@@ -1191,17 +1189,6 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
       ) {
         // Space stuffing a la RFC 2646 (format=flowed).
         mCurrentLine.mContent.mValue.Append(char16_t(' '));
-
-        if (MayWrap()) {
-          mCurrentLine.mContent.mWidth += GetUnicharWidth(' ');
-#ifdef DEBUG_wrapping
-          NS_ASSERTION(
-              GetUnicharStringWidth(mCurrentLine.mContent.mValue.get(),
-                                    mCurrentLine.mContent.mValue.Length()) ==
-                  (int32_t)mCurrentLine.mContent.mWidth,
-              "mCurrentLine.mContent.mWidth and reality out of sync!");
-#endif
-        }
       }
     }
     mEmptyLines = -1;
@@ -1210,14 +1197,10 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
   mCurrentLine.mContent.mValue.Append(aLineFragment, aLineFragmentLength);
 
   if (MayWrap()) {
-    mCurrentLine.mContent.mWidth +=
-        GetUnicharStringWidth(aLineFragment, aLineFragmentLength);
-#ifdef DEBUG_wrapping
-    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.mContent.mValue.get(),
-                                       mCurrentLine.mContent.mValue.Length()) ==
-                     (int32_t)mCurrentLine.mContent.mWidth,
-                 "mCurrentLine.mContent.mWidth and reality out of sync!");
-#endif
+    // The width of the line as it will appear on the screen (approx.).
+    uint32_t currentLineContentWidth = GetUnicharStringWidth(
+      mCurrentLine.mContent.mValue.get(),
+      mCurrentLine.mContent.mValue.Length());
 
     linelength = mCurrentLine.mContent.mValue.Length();
 
@@ -1227,12 +1210,12 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
     // wrapcolumn is more than 20.
     uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
-    while (mCurrentLine.mContent.mWidth + prefixwidth >
+    while (currentLineContentWidth + prefixwidth >
            mWrapColumn + bonuswidth) {
       // We go from the end removing one letter at a time until
       // we have a reasonable width
       int32_t goodSpace = mCurrentLine.mContent.mValue.Length();
-      uint32_t width = mCurrentLine.mContent.mWidth;
+      uint32_t width = currentLineContentWidth;
       while (goodSpace > 0 && (width + prefixwidth > mWrapColumn)) {
         goodSpace--;
         width -= GetUnicharWidth(mCurrentLine.mContent.mValue[goodSpace]);
@@ -1329,7 +1312,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
           }
         }
         mCurrentLine.mContent.mValue.Append(restOfLine);
-        mCurrentLine.mContent.mWidth =
+        currentLineContentWidth =
             GetUnicharStringWidth(mCurrentLine.mContent.mValue.get(),
                                   mCurrentLine.mContent.mValue.Length());
         linelength = mCurrentLine.mContent.mValue.Length();
