@@ -252,6 +252,9 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
         "Can't do formatted and preformatted output at the same time!");
   }
 #endif
+  MOZ_ASSERT(!(aFlags & nsIDocumentEncoder::OutputFormatDelSp) ||
+             (aFlags & nsIDocumentEncoder::OutputFormatFlowed));
+
   *aNeedsPreformatScanning = true;
   mSettings.Init(aFlags);
   mOutputManager.emplace(mSettings.GetFlags(), aOutput);
@@ -1403,10 +1406,11 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
     // If breaker character is ASCII space with RFC 3676 support (delsp=yes),
     // add twice space.
     if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatDelSp) &&
-        aBreakBySpace)
+        aBreakBySpace) {
       mCurrentLine.mContent.mValue.AppendLiteral("  ");
-    else
+    } else {
       mCurrentLine.mContent.mValue.Append(char16_t(' '));
+    }
   }
 
   if (aSoftlinebreak) {
@@ -1450,10 +1454,9 @@ void nsPlainTextSerializer::CurrentLine::CreateQuotesAndIndent(
     }
     if (!mContent.mValue.IsEmpty()) {
       /* Better don't output a space here, if the line is empty,
-         in case a receiving f=f-aware UA thinks, this were a flowed line,
-         which it isn't - it's just empty.
-         (Flowed lines may be joined with the following one,
-         so the empty line may be lost completely.) */
+         in case a receiving format=flowed-aware UA thinks, this were a flowed
+         line, which it isn't - it's just empty. (Flowed lines may be joined
+         with the following one, so the empty line may be lost completely.) */
       quotes.Append(char16_t(' '));
     }
     aResult = quotes;
