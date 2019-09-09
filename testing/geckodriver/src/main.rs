@@ -235,7 +235,7 @@ fn main() {
 }
 
 fn make_app<'a, 'b>() -> App<'a, 'b> {
-    App::new(format!("geckodriver {}", build::BuildInfo))
+    App::new(format!("geckodriver {}", build::build_info()))
         .about("WebDriver implementation for Firefox")
         .arg(
             Arg::with_name("webdriver_host")
@@ -327,7 +327,7 @@ fn print_help(app: &mut App) {
 }
 
 fn print_version() {
-    println!("geckodriver {}", build::BuildInfo);
+    println!("geckodriver {}", build::build_info());
     println!();
     println!("The source code of this program is available from");
     println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
