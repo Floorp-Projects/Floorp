@@ -45,6 +45,7 @@ const {
   CSSRule,
   pointPrecedes,
   pointEquals,
+  pointArrayIncludes,
   findClosestPoint,
 } = sandbox;
 
@@ -897,6 +898,18 @@ const gNewDebuggerStatements = [];
 // Whether to pause on debugger statements when running forward.
 let gPauseOnDebuggerStatement = false;
 
+function ensureRunToPointPositionHandlers({ endpoint, snapshotPoints }) {
+  if (gLastCheckpoint == endpoint.checkpoint) {
+    assert(endpoint.position);
+    ensurePositionHandler(endpoint.position);
+  }
+  snapshotPoints.forEach(snapshot => {
+    if (gLastCheckpoint == snapshot.checkpoint && snapshot.position) {
+      ensurePositionHandler(snapshot.position);
+    }
+  });
+}
+
 // Handlers that run when a manifest is first received. This must be specified
 // for all manifests.
 const gManifestStartHandlers = {
@@ -913,11 +926,12 @@ const gManifestStartHandlers = {
     throwError("Unreachable!");
   },
 
-  runToPoint() {
+  runToPoint(manifest) {
+    ensureRunToPointPositionHandlers(manifest);
     RecordReplayControl.resumeExecution();
   },
 
-  scanRecording(manifest) {
+  scanRecording() {
     RecordReplayControl.resumeExecution();
   },
 
@@ -953,7 +967,9 @@ const gManifestStartHandlers = {
     for (const request of requests) {
       processRequest(request);
     }
-    RecordReplayControl.manifestFinished();
+    RecordReplayControl.manifestFinished({
+      divergedFromRecording: gDivergedFromRecording,
+    });
   },
 
   getPauseData() {
@@ -1071,9 +1087,9 @@ const gManifestFinishedAfterCheckpointHandlers = {
     finishResume(point);
   },
 
-  runToPoint({ endpoint, saveCheckpoints }, point) {
+  runToPoint({ endpoint, snapshotPoints }, point) {
     assert(endpoint.checkpoint >= point.checkpoint);
-    if (saveCheckpoints.includes(point.checkpoint) && !newSnapshot(point)) {
+    if (pointArrayIncludes(snapshotPoints, point) && !newSnapshot(point)) {
       return;
     }
     if (!endpoint.position && point.checkpoint == endpoint.checkpoint) {
@@ -1081,12 +1097,12 @@ const gManifestFinishedAfterCheckpointHandlers = {
     }
   },
 
-  scanRecording({ endpoint, saveCheckpoints }, point) {
+  scanRecording({ endpoint, snapshotPoints }, point) {
     stopScanningAllScripts();
-    if (saveCheckpoints.includes(point.checkpoint) && !newSnapshot(point)) {
+    if (pointArrayIncludes(snapshotPoints, point) && !newSnapshot(point)) {
       return;
     }
-    if (point.checkpoint == endpoint) {
+    if (point.checkpoint == endpoint.checkpoint) {
       const duration =
         RecordReplayControl.currentExecutionTime() - gManifestStartTime;
       RecordReplayControl.manifestFinished({
@@ -1105,19 +1121,15 @@ const gManifestFinishedAfterCheckpointHandlers = {
 // one is able to prepare to execute. These handlers must therefore not finish
 // the current manifest.
 const gManifestPrepareAfterCheckpointHandlers = {
-  runToPoint({ endpoint }, point) {
-    if (point.checkpoint == endpoint.checkpoint) {
-      assert(endpoint.position);
-      ensurePositionHandler(endpoint.position);
-    }
-  },
+  runToPoint: ensureRunToPointPositionHandlers,
 
-  scanRecording() {
+  scanRecording({ endpoint }) {
+    assert(!endpoint.position);
     startScanningAllScripts();
   },
 };
 
-function processManifestAfterCheckpoint(point, restoredCheckpoint) {
+function processManifestAfterCheckpoint(point, restoredSnapshot) {
   if (gManifestFinishedAfterCheckpointHandlers[gManifest.kind]) {
     gManifestFinishedAfterCheckpointHandlers[gManifest.kind](gManifest, point);
   }
@@ -1147,7 +1159,13 @@ const gManifestPositionHandlers = {
     finishResume(point);
   },
 
-  runToPoint({ endpoint }, point) {
+  runToPoint({ endpoint, snapshotPoints }, point) {
+    if (pointArrayIncludes(snapshotPoints, point)) {
+      clearPositionHandlers();
+      if (newSnapshot(point)) {
+        ensureRunToPointPositionHandlers({ endpoint, snapshotPoints });
+      }
+    }
     if (pointEquals(point, endpoint)) {
       clearPositionHandlers();
       RecordReplayControl.manifestFinished({ point });
@@ -1183,7 +1201,7 @@ function newSnapshot(point) {
 
   // After rewinding gManifest won't be correct, so we always mark the current
   // manifest as finished and rely on the middleman to give us a new one.
-  RecordReplayControl.manifestFinished({ restoredCheckpoint: true, point });
+  RecordReplayControl.manifestFinished({ restoredSnapshot: true, point });
 
   return false;
 }

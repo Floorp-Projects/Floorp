@@ -607,7 +607,9 @@ ReplayDebugger.prototype = {
     if (rv) {
       return rv;
     }
-    return this._addScript(this._sendRequest({ type: "getScript", id }));
+    return this._addScript(
+      this._sendRequestMainChild({ type: "getScript", id })
+    );
   },
 
   _addScript(data) {
