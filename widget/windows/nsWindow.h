@@ -690,6 +690,7 @@ class nsWindow final : public nsWindowBase {
   static void InitMouseWheelScrollData();
 
   double mSizeConstraintsScale;  // scale in effect when setting constraints
+  int32_t mMaxTextureSize;
 
   // Pointer events processing and management
   WinPointerEvents mPointerEvents;
