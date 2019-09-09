@@ -3,9 +3,9 @@
 var g1 = newGlobal();
 var g2 = newGlobal();
 
-schedulegc(g1);
-schedulegc(g2);
+schedulezone(g1);
+schedulezone(g2);
 gcslice(0); // Start IGC, but don't mark anything.
-schedulegc(g1);
+schedulezone(g1);
 gcslice(1);
 gcslice();

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('gcstate' in this)
+// |jit-test| skip-if: !hasFunction["gczeal"]
 
 // Check that incoming CCW edges are marked gray in a zone GC if the
 // source is gray.
@@ -30,7 +30,7 @@ assertEq(getMarks()[0], "gray");
 
 // If a barrier marks the gray wrapper black after the start of the
 // GC, the target ends up black.
-schedulegc(this);
+schedulezone(this);
 startgc(1);
 assertEq(getMarks()[0], "unmarked");
 g.eval(`grayRoot()`); // Barrier marks gray roots black.
@@ -44,7 +44,7 @@ assertEq(getMarks()[0], "gray");
 // If a barrier marks the gray wrapper black after the target has
 // already been marked gray, the target ends up black.
 gczeal(25); // Yield during gray marking.
-schedulegc(this);
+schedulezone(this);
 startgc(1);
 assertEq(getMarks()[0], "gray");
 g.eval(`grayRoot()`); // Barrier marks gray roots black.

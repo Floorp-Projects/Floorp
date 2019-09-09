@@ -38,6 +38,7 @@
 #  include "irregexp/RegExpParser.h"
 #endif
 #include "gc/Heap.h"
+#include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
@@ -1191,23 +1192,9 @@ static bool ScheduleGC(JSContext* cx, unsigned argc, Value* vp) {
   } else if (args[0].isNumber()) {
     /* Schedule a GC to happen after |arg| allocations. */
     JS_ScheduleGC(cx, std::max(int(args[0].toNumber()), 0));
-  } else if (args[0].isObject()) {
-    /* Ensure that |zone| is collected during the next GC. */
-    Zone* zone = UncheckedUnwrap(&args[0].toObject())->zone();
-    PrepareZoneForGC(zone);
-  } else if (args[0].isString()) {
-    /* This allows us to schedule the atoms zone for GC. */
-    Zone* zone = args[0].toString()->zoneFromAnyThread();
-    if (!CurrentThreadCanAccessZone(zone)) {
-      RootedObject callee(cx, &args.callee());
-      ReportUsageErrorASCII(cx, callee, "Specified zone not accessible for GC");
-      return false;
-    }
-    PrepareZoneForGC(zone);
   } else {
     RootedObject callee(cx, &args.callee());
-    ReportUsageErrorASCII(cx, callee,
-                          "Bad argument - expecting number, object or string");
+    ReportUsageErrorASCII(cx, callee, "Bad argument - expecting number");
     return false;
   }
 
@@ -1265,19 +1252,6 @@ static bool VerifyPostBarriers(JSContext* cx, unsigned argc, Value* vp) {
   }
   args.rval().setUndefined();
   return true;
-}
-
-static bool GCState(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (args.length() != 0) {
-    RootedObject callee(cx, &args.callee());
-    ReportUsageErrorASCII(cx, callee, "Too many arguments");
-    return false;
-  }
-
-  const char* state = StateName(cx->runtime()->gc.state());
-  return ReturnStringCopy(cx, args, state);
 }
 
 static bool CurrentGC(JSContext* cx, unsigned argc, Value* vp) {
@@ -1377,6 +1351,66 @@ static bool DumpGCArenaInfo(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #endif /* JS_GC_ZEAL */
+
+static bool GCState(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() > 1) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Too many arguments");
+    return false;
+  }
+
+  const char* state;
+
+  if (args.length() == 1) {
+    if (!args[0].isObject()) {
+      RootedObject callee(cx, &args.callee());
+      ReportUsageErrorASCII(cx, callee, "Expected object");
+      return false;
+    }
+
+    JSObject* obj = UncheckedUnwrap(&args[0].toObject());
+    state = gc::StateName(obj->zone()->gcState());
+  } else {
+    state = gc::StateName(cx->runtime()->gc.state());
+  }
+
+  return ReturnStringCopy(cx, args, state);
+}
+
+static bool ScheduleZoneForGC(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Expecting a single argument");
+    return false;
+  }
+
+  if (args[0].isObject()) {
+    // Ensure that |zone| is collected during the next GC.
+    Zone* zone = UncheckedUnwrap(&args[0].toObject())->zone();
+    PrepareZoneForGC(zone);
+  } else if (args[0].isString()) {
+    // This allows us to schedule the atoms zone for GC.
+    Zone* zone = args[0].toString()->zoneFromAnyThread();
+    if (!CurrentThreadCanAccessZone(zone)) {
+      RootedObject callee(cx, &args.callee());
+      ReportUsageErrorASCII(cx, callee, "Specified zone not accessible for GC");
+      return false;
+    }
+    PrepareZoneForGC(zone);
+  } else {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee,
+                          "Bad argument - expecting object or string");
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
 
 static bool StartGC(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -6237,10 +6271,8 @@ gc::ZealModeHelpText),
 "  collection that may be happening."),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
-"schedulegc([num | obj | string])",
+"schedulegc([num])",
 "  If num is given, schedule a GC after num allocations.\n"
-"  If obj is given, schedule a GC of obj's zone.\n"
-"  If string is given, schedule a GC of the string's zone if possible.\n"
 "  Returns the number of allocations before the next trigger."),
 
     JS_FN_HELP("selectforgc", SelectForGC, 0, 0,
@@ -6254,10 +6286,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("verifypostbarriers", VerifyPostBarriers, 0, 0,
 "verifypostbarriers()",
 "  Does nothing (the post-write barrier verifier has been remove)."),
-
-    JS_FN_HELP("gcstate", GCState, 0, 0,
-"gcstate()",
-"  Report the global GC state."),
 
     JS_FN_HELP("currentgc", CurrentGC, 0, 0,
 "currentgc()",
@@ -6274,11 +6302,21 @@ gc::ZealModeHelpText),
 "  in arenas.\n"),
 #endif
 
+    JS_FN_HELP("gcstate", GCState, 0, 0,
+"gcstate([obj])",
+"  Report the global GC state, or the GC state for the zone containing |obj|."),
+
+    JS_FN_HELP("schedulezone", ScheduleZoneForGC, 1, 0,
+"schedulezone([obj | string])",
+"  If obj is given, schedule a GC of obj's zone.\n"
+"  If string is given, schedule a GC of the string's zone if possible."),
+
     JS_FN_HELP("startgc", StartGC, 1, 0,
 "startgc([n [, 'shrinking']])",
 "  Start an incremental GC and run a slice that processes about n objects.\n"
 "  If 'shrinking' is passesd as the optional second argument, perform a\n"
-"  shrinking GC rather than a normal GC."),
+"  shrinking GC rather than a normal GC. If no zones have been selected with\n"
+"  schedulegc(), a full GC will be performed."),
 
     JS_FN_HELP("finishgc", FinishGC, 0, 0,
 "finishgc()",

@@ -56,7 +56,7 @@ function varying(mapColor, keyColor, delegateColor, order, where) {
   vals.m = vals.key = vals.val = null;
 
   if (delegateColor == 'uncollected')
-    schedulegc({});
+    schedulezone({});
   startgc(100000);
   print('  ' + getMarks().join("/"));
   gcslice(100000);
