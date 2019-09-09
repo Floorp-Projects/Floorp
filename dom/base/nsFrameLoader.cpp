@@ -3425,7 +3425,29 @@ void nsFrameLoader::SkipBrowsingContextDetach() {
   if (IsRemoteFrame()) {
     // OOP Browser - Go directly over Browser Parent
     if (auto* browserParent = GetBrowserParent()) {
-      Unused << browserParent->SendSkipBrowsingContextDetach();
+      RefPtr<BrowsingContext> bc(GetBrowsingContext());
+      // We're going to be synchronously changing the owner of the
+      // BrowsingContext in the parent process while the current owner may still
+      // have in-flight requests which only the owner is allowed to make. Those
+      // requests will typically trigger assertions if they come from a child
+      // other than the owner.
+      //
+      // To work around this, we record the previous owner at the start of the
+      // process switch, and clear it when we've received a reply from the
+      // child, treating ownership mismatches as warnings in the interim.
+      //
+      // In the future, this sort of issue will probably need to be handled
+      // using ownership epochs, which should be more both flexible and
+      // resilient. For the moment, though, the surrounding process switch code
+      // is enough in flux that we're better off with a workable interim
+      // solution.
+      bc->Canonical()->SetInFlightProcessId(
+          browserParent->Manager()->ChildID());
+      browserParent->SendSkipBrowsingContextDetach(
+          [bc](bool aSuccess) { bc->Canonical()->SetInFlightProcessId(0); },
+          [bc](mozilla::ipc::ResponseRejectReason aReason) {
+            bc->Canonical()->SetInFlightProcessId(0);
+          });
     }
     // OOP IFrame - Through Browser Bridge Parent, set on browser child
     else if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
