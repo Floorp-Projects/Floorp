@@ -62,7 +62,7 @@ bool Post(const string& url, const string& payload) {
   }
 
   if (!IsValidDestination(host)) {
-    PINGSENDER_LOG("ERROR: Invalid destination host\n");
+    PINGSENDER_LOG("ERROR: Invalid destination host '%s'\n", host.c_str());
     return false;
   }
 
