@@ -429,23 +429,12 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool CallJSNative(JSContext* cx, Native native,
-                                    CallReason reason,
                                     const CallArgs& args) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   AutoTraceLog traceLog(logger, TraceLogger_Call);
 
   if (!CheckRecursionLimit(cx)) {
     return false;
-  }
-
-  switch (DebugAPI::onNativeCall(cx, args, reason)) {
-    case ResumeMode::Continue:
-      break;
-    case ResumeMode::Throw:
-    case ResumeMode::Terminate:
-      return false;
-    case ResumeMode::Return:
-      return true;
   }
 
 #ifdef DEBUG
@@ -471,7 +460,7 @@ MOZ_ALWAYS_INLINE bool CallJSNativeConstructor(JSContext* cx, Native native,
 #endif
 
   MOZ_ASSERT(args.thisv().isMagic());
-  if (!CallJSNative(cx, native, CallReason::Call, args)) {
+  if (!CallJSNative(cx, native, args)) {
     return false;
   }
 
@@ -502,8 +491,7 @@ MOZ_ALWAYS_INLINE bool CallJSNativeConstructor(JSContext* cx, Native native,
  *       this step already!
  */
 bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
-                                 MaybeConstruct construct,
-                                 CallReason reason) {
+                                 MaybeConstruct construct) {
   MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
   MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
 
@@ -528,7 +516,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
     JSNative call = args.callee().callHook();
     MOZ_ASSERT(call, "isCallable without a callHook?");
 
-    return CallJSNative(cx, call, reason, args);
+    return CallJSNative(cx, call, args);
   }
 
   /* Invoke native functions. */
@@ -548,20 +536,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
         native = jitInfo->ignoresReturnValueMethod;
       }
     }
-    return CallJSNative(cx, native, reason, args);
-  }
-
-  // Self-hosted builtins are considered native by the onNativeCall hook.
-  if (fun->isSelfHostedBuiltin()) {
-    switch (DebugAPI::onNativeCall(cx, args, reason)) {
-      case ResumeMode::Continue:
-        break;
-      case ResumeMode::Throw:
-      case ResumeMode::Terminate:
-        return false;
-      case ResumeMode::Return:
-        return true;
-    }
+    return CallJSNative(cx, native, args);
   }
 
   if (!JSFunction::getOrCreateScript(cx, fun)) {
@@ -595,8 +570,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   return ok;
 }
 
-static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
-                         CallReason reason = CallReason::Call) {
+static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args) {
   MOZ_ASSERT(args.array() + args.length() == args.end(),
              "must pass calling arguments to a calling attempt");
 
@@ -617,7 +591,7 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
     }
   }
 
-  return InternalCallOrConstruct(cx, args, NO_CONSTRUCT, reason);
+  return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
 }
 
 bool js::CallFromStack(JSContext* cx, const CallArgs& args) {
@@ -627,14 +601,13 @@ bool js::CallFromStack(JSContext* cx, const CallArgs& args) {
 // ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
 // 7.3.12 Call.
 bool js::Call(JSContext* cx, HandleValue fval, HandleValue thisv,
-              const AnyInvokeArgs& args, MutableHandleValue rval,
-              CallReason reason) {
+              const AnyInvokeArgs& args, MutableHandleValue rval) {
   // Explicitly qualify these methods to bypass AnyInvokeArgs's deliberate
   // shadowing.
   args.CallArgs::setCallee(fval);
   args.CallArgs::setThis(thisv);
 
-  if (!InternalCall(cx, args, reason)) {
+  if (!InternalCall(cx, args)) {
     return false;
   }
 
@@ -758,7 +731,7 @@ bool js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter,
 
   FixedInvokeArgs<0> args(cx);
 
-  return Call(cx, getter, thisv, args, rval, CallReason::Getter);
+  return Call(cx, getter, thisv, args, rval);
 }
 
 bool js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
@@ -772,7 +745,7 @@ bool js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
   args[0].set(v);
 
   RootedValue ignored(cx);
-  return Call(cx, setter, thisv, args, &ignored, CallReason::Setter);
+  return Call(cx, setter, thisv, args, &ignored);
 }
 
 bool js::ExecuteKernel(JSContext* cx, HandleScript script,
@@ -3093,13 +3066,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       JSFunction* maybeFun;
       bool isFunction = IsFunctionObject(args.calleev(), &maybeFun);
 
-      // Use the slow path if the callee is not an interpreted function, if we
-      // have to throw an exception, or if we might have to invoke the
-      // OnNativeCall hook for a self-hosted builtin.
+      // Use the slow path if the callee is not an interpreted function or if we
+      // have to throw an exception.
       if (!isFunction || !maybeFun->isInterpreted() ||
           (construct && !maybeFun->isConstructor()) ||
-          (!construct && maybeFun->isClassConstructor()) ||
-          cx->insideDebuggerEvaluationWithOnNativeCallHook) {
+          (!construct && maybeFun->isClassConstructor())) {
         if (construct) {
           if (!ConstructFromStack(cx, args)) {
             goto error;
