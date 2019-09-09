@@ -570,7 +570,7 @@ class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable {
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-        mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
+        mConsole->GetOrCreateSandbox(cx, mWorkletImpl->Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -818,7 +818,7 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable {
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-        mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
+        mConsole->GetOrCreateSandbox(cx, mWorkletImpl->Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -1445,7 +1445,7 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   } else if (WorkletThread::IsOnWorkletThread()) {
     nsCOMPtr<WorkletGlobalScope> global = do_QueryInterface(mGlobal);
     MOZ_ASSERT(global);
-    oa = global->Impl()->LoadInfo().OriginAttributesRef();
+    oa = global->Impl()->OriginAttributesRef();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
