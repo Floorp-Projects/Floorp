@@ -213,8 +213,12 @@ add_task(async function test_populated_list() {
 add_task(async function test_breach_indicator() {
   gLoginList.updateBreaches(TEST_BREACHES_MAP);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
+  let warningIcon = loginListItems[0].querySelector(".list-item-warning-icon");
+  let hiddenWarningIcon = loginListItems[1].querySelector(".list-item-warning-icon");
   ok(loginListItems[0].classList.contains("breached"), "The first login should have the .breached class.");
+  ok(!isHidden(warningIcon), "The warning icon for a breached login should not be hidden.");
   ok(!loginListItems[1].classList.contains("breached"), "The second login should not have the .breached class");
+  ok(isHidden(hiddenWarningIcon), "The warning icon for a login without an associated breach should be hidden.");
 });
 
 add_task(async function test_filtered_list() {
