@@ -571,6 +571,8 @@ class PLDHashTable {
   class Iterator {
    public:
     explicit Iterator(PLDHashTable* aTable);
+    struct EndIteratorTag {};
+    Iterator(PLDHashTable* aTable, EndIteratorTag aTag);
     Iterator(Iterator&& aOther);
     ~Iterator();
 
@@ -591,6 +593,13 @@ class PLDHashTable {
     // must not be called on that entry afterwards.
     void Remove();
 
+    bool operator==(const Iterator& aOther) const {
+      MOZ_ASSERT(mTable == aOther.mTable);
+      return mNexts == aOther.mNexts;
+    }
+
+    Iterator Clone() const { return {*this}; }
+
    protected:
     PLDHashTable* mTable;  // Main table pointer.
 
@@ -607,7 +616,7 @@ class PLDHashTable {
     void MoveToNextLiveEntry();
 
     Iterator() = delete;
-    Iterator(const Iterator&) = delete;
+    Iterator(const Iterator&);
     Iterator& operator=(const Iterator&) = delete;
     Iterator& operator=(const Iterator&&) = delete;
   };
