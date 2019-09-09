@@ -479,12 +479,17 @@ package org.mozilla.geckoview {
     method @AnyThread public void loadData(@NonNull byte[], @Nullable String);
     method @AnyThread public void loadString(@NonNull String, @Nullable String);
     method @AnyThread public void loadUri(@NonNull String);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable Map<String,String>);
     method @AnyThread public void loadUri(@NonNull String, int);
     method @AnyThread public void loadUri(@NonNull String, @Nullable String, int);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable String, int, @Nullable Map<String,String>);
     method @AnyThread public void loadUri(@NonNull String, @Nullable GeckoSession, int);
+    method @AnyThread public void loadUri(@NonNull String, @Nullable GeckoSession, int, @Nullable Map<String,String>);
     method @AnyThread public void loadUri(@NonNull Uri);
+    method @AnyThread public void loadUri(@NonNull Uri, @Nullable Map<String,String>);
     method @AnyThread public void loadUri(@NonNull Uri, int);
     method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int);
+    method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int, @Nullable Map<String,String>);
     method @UiThread public void open(@NonNull GeckoRuntime);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
