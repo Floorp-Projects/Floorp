@@ -109,7 +109,7 @@ reftest:
             macosx101.*-64(-ccov|-qr)/debug: 6
             windows.*/opt: 2
             windows.*/debug: 4
-            windows10-64-ccov/debug: 6
+            windows10-64-ccov/debug: 9
             default: 8
     e10s: true
     max-run-time:
