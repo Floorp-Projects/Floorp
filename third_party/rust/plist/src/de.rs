@@ -1,26 +1,28 @@
 use serde::de;
-use std::fmt::Display;
-use std::fs::File;
-use std::io::{BufReader, Read, Seek};
-use std::iter::Peekable;
-use std::path::Path;
+use std::{
+    fmt::Display,
+    fs::File,
+    io::{BufReader, Read, Seek},
+    iter::Peekable,
+    mem,
+    path::Path,
+};
 
-use stream::{self, Event};
-use {u64_to_usize, Error};
+use crate::{
+    error::{self, Error, ErrorKind, EventKind},
+    stream::{self, Event},
+    u64_to_usize,
+};
 
 macro_rules! expect {
-    ($next:expr, $pat:pat) => {
+    ($next:expr, $kind:expr) => {
         match $next {
-            Some(Ok(v @ $pat)) => v,
-            None => return Err(Error::UnexpectedEof),
-            _ => return Err(event_mismatch_error()),
-        }
-    };
-    ($next:expr, $pat:pat => $save:expr) => {
-        match $next {
-            Some(Ok($pat)) => $save,
-            None => return Err(Error::UnexpectedEof),
-            _ => return Err(event_mismatch_error()),
+            Some(Ok(ref event)) if EventKind::of_event(event) != $kind => {
+                return Err(error::unexpected_event_type($kind, event))?;
+            }
+            Some(Ok(event)) => event,
+            Some(Err(err)) => return Err(err),
+            None => return Err(ErrorKind::UnexpectedEndOfEventStream.without_position()),
         }
     };
 }
@@ -28,21 +30,24 @@ macro_rules! expect {
 macro_rules! try_next {
     ($next:expr) => {
         match $next {
-            Some(Ok(v)) => v,
-            Some(Err(_)) => return Err(event_mismatch_error()),
-            None => return Err(Error::UnexpectedEof),
+            Some(Ok(event)) => event,
+            Some(Err(err)) => return Err(err)?,
+            None => return Err(ErrorKind::UnexpectedEndOfEventStream.without_position())?,
         }
     };
 }
 
-fn event_mismatch_error() -> Error {
-    Error::InvalidData
-}
-
+#[doc(hidden)]
 impl de::Error for Error {
     fn custom<T: Display>(msg: T) -> Self {
-        Error::Serde(msg.to_string())
+        ErrorKind::Serde(msg.to_string()).without_position()
     }
+}
+
+enum OptionMode {
+    Root,
+    StructField,
+    Explicit,
 }
 
 /// A structure that deserializes plist event streams into Rust values.
@@ -51,6 +56,7 @@ where
     I: IntoIterator<Item = Result<Event, Error>>,
 {
     events: Peekable<<I as IntoIterator>::IntoIter>,
+    option_mode: OptionMode,
 }
 
 impl<I> Deserializer<I>
@@ -60,7 +66,19 @@ where
     pub fn new(iter: I) -> Deserializer<I> {
         Deserializer {
             events: iter.into_iter().peekable(),
+            option_mode: OptionMode::Root,
         }
+    }
+
+    fn with_option_mode<T, F: FnOnce(&mut Deserializer<I>) -> Result<T, Error>>(
+        &mut self,
+        option_mode: OptionMode,
+        f: F,
+    ) -> Result<T, Error> {
+        let prev_option_mode = mem::replace(&mut self.option_mode, option_mode);
+        let ret = f(&mut *self);
+        self.option_mode = prev_option_mode;
+        ret
     }
 }
 
@@ -70,7 +88,7 @@ where
 {
     type Error = Error;
 
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
@@ -78,26 +96,37 @@ where
             Event::StartArray(len) => {
                 let len = len.and_then(u64_to_usize);
                 let ret = visitor.visit_seq(MapAndSeqAccess::new(self, false, len))?;
-                expect!(self.events.next(), Event::EndArray);
+                expect!(self.events.next(), EventKind::EndCollection);
                 Ok(ret)
             }
-            Event::EndArray => Err(event_mismatch_error()),
-
             Event::StartDictionary(len) => {
                 let len = len.and_then(u64_to_usize);
                 let ret = visitor.visit_map(MapAndSeqAccess::new(self, false, len))?;
-                expect!(self.events.next(), Event::EndDictionary);
+                expect!(self.events.next(), EventKind::EndCollection);
                 Ok(ret)
             }
-            Event::EndDictionary => Err(event_mismatch_error()),
+            event @ Event::EndCollection => Err(error::unexpected_event_type(
+                EventKind::ValueOrStartCollection,
+                &event,
+            )),
 
-            Event::BooleanValue(v) => visitor.visit_bool(v),
-            Event::DataValue(v) => visitor.visit_byte_buf(v),
-            Event::DateValue(v) => visitor.visit_string(v.to_rfc3339()),
-            Event::IntegerValue(v) if v.is_positive() => visitor.visit_u64(v as u64),
-            Event::IntegerValue(v) => visitor.visit_i64(v as i64),
-            Event::RealValue(v) => visitor.visit_f64(v),
-            Event::StringValue(v) => visitor.visit_string(v),
+            Event::Boolean(v) => visitor.visit_bool(v),
+            Event::Data(v) => visitor.visit_byte_buf(v),
+            Event::Date(v) => visitor.visit_string(v.to_rfc3339()),
+            Event::Integer(v) => {
+                if let Some(v) = v.as_unsigned() {
+                    visitor.visit_u64(v)
+                } else if let Some(v) = v.as_signed() {
+                    visitor.visit_i64(v)
+                } else {
+                    unreachable!()
+                }
+            }
+            Event::Real(v) => visitor.visit_f64(v),
+            Event::String(v) => visitor.visit_string(v),
+            Event::Uid(v) => visitor.visit_u64(v.get()),
+
+            Event::__Nonexhaustive => unreachable!(),
         }
     }
 
@@ -107,39 +136,54 @@ where
         tuple_struct tuple ignored_any identifier
     }
 
-    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
-        expect!(self.events.next(), Event::StringValue(_));
+        expect!(self.events.next(), EventKind::String);
         visitor.visit_unit()
     }
 
-    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
-        expect!(self.events.next(), Event::StartDictionary(_));
-
-        let ret = match try_next!(self.events.next()) {
-            Event::StringValue(ref s) if &s[..] == "None" => {
-                expect!(self.events.next(), Event::StringValue(_));
-                visitor.visit_none::<Self::Error>()?
+        match self.option_mode {
+            OptionMode::Root => {
+                if self.events.peek().is_none() {
+                    visitor.visit_none::<Error>()
+                } else {
+                    self.with_option_mode(OptionMode::Explicit, |this| visitor.visit_some(this))
+                }
             }
-            Event::StringValue(ref s) if &s[..] == "Some" => visitor.visit_some(&mut *self)?,
-            _ => return Err(event_mismatch_error()),
-        };
+            OptionMode::StructField => {
+                // None struct values are ignored so if we're here the value must be Some.
+                self.with_option_mode(OptionMode::Explicit, |this| Ok(visitor.visit_some(this)?))
+            }
+            OptionMode::Explicit => {
+                expect!(self.events.next(), EventKind::StartDictionary);
 
-        expect!(self.events.next(), Event::EndDictionary);
+                let ret = match try_next!(self.events.next()) {
+                    Event::String(ref s) if &s[..] == "None" => {
+                        expect!(self.events.next(), EventKind::String);
+                        visitor.visit_none::<Error>()?
+                    }
+                    Event::String(ref s) if &s[..] == "Some" => visitor.visit_some(&mut *self)?,
+                    event => return Err(error::unexpected_event_type(EventKind::String, &event))?,
+                };
 
-        Ok(ret)
+                expect!(self.events.next(), EventKind::EndCollection);
+
+                Ok(ret)
+            }
+        }
     }
 
     fn deserialize_newtype_struct<V>(
         self,
         _name: &'static str,
         visitor: V,
-    ) -> Result<V::Value, Self::Error>
+    ) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
@@ -151,13 +195,13 @@ where
         _name: &'static str,
         _fields: &'static [&'static str],
         visitor: V,
-    ) -> Result<V::Value, Self::Error>
+    ) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
-        expect!(self.events.next(), Event::StartDictionary(_));
+        expect!(self.events.next(), EventKind::StartDictionary);
         let ret = visitor.visit_map(MapAndSeqAccess::new(self, true, None))?;
-        expect!(self.events.next(), Event::EndDictionary);
+        expect!(self.events.next(), EventKind::EndCollection);
         Ok(ret)
     }
 
@@ -166,13 +210,13 @@ where
         _enum: &'static str,
         _variants: &'static [&'static str],
         visitor: V,
-    ) -> Result<V::Value, Self::Error>
+    ) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
-        expect!(self.events.next(), Event::StartDictionary(_));
+        expect!(self.events.next(), EventKind::StartDictionary);
         let ret = visitor.visit_enum(&mut *self)?;
-        expect!(self.events.next(), Event::EndDictionary);
+        expect!(self.events.next(), EventKind::EndCollection);
         Ok(ret)
     }
 }
@@ -184,7 +228,7 @@ where
     type Error = Error;
     type Variant = Self;
 
-    fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self), Self::Error>
+    fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self), Error>
     where
         V: de::DeserializeSeed<'de>,
     {
@@ -198,111 +242,34 @@ where
 {
     type Error = Error;
 
-    fn unit_variant(self) -> Result<(), Self::Error> {
-        <() as de::Deserialize>::deserialize(self)
+    fn unit_variant(self) -> Result<(), Error> {
+        de::Deserialize::deserialize(self)
     }
 
-    fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value, Self::Error>
+    fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value, Error>
     where
         T: de::DeserializeSeed<'de>,
     {
         seed.deserialize(self)
     }
 
-    fn tuple_variant<V>(self, len: usize, visitor: V) -> Result<V::Value, Self::Error>
+    fn tuple_variant<V>(self, len: usize, visitor: V) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
-        <Self as de::Deserializer>::deserialize_tuple(self, len, visitor)
+        de::Deserializer::deserialize_tuple(self, len, visitor)
     }
 
     fn struct_variant<V>(
         self,
         fields: &'static [&'static str],
         visitor: V,
-    ) -> Result<V::Value, Self::Error>
+    ) -> Result<V::Value, Error>
     where
         V: de::Visitor<'de>,
     {
         let name = "";
-        <Self as de::Deserializer>::deserialize_struct(self, name, fields, visitor)
-    }
-}
-
-pub struct StructValueDeserializer<'a, I: 'a>
-where
-    I: IntoIterator<Item = Result<Event, Error>>,
-{
-    de: &'a mut Deserializer<I>,
-}
-
-impl<'de, 'a, I> de::Deserializer<'de> for StructValueDeserializer<'a, I>
-where
-    I: IntoIterator<Item = Result<Event, Error>>,
-{
-    type Error = Error;
-
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        self.de.deserialize_any(visitor)
-    }
-
-    forward_to_deserialize_any! {
-        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string
-        seq bytes byte_buf map unit_struct
-        tuple_struct tuple ignored_any identifier
-    }
-
-    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        self.de.deserialize_unit(visitor)
-    }
-
-    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        // None struct values are ignored so if we're here the value must be Some.
-        visitor.visit_some(self.de)
-    }
-
-    fn deserialize_newtype_struct<V>(
-        self,
-        name: &'static str,
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        self.de.deserialize_newtype_struct(name, visitor)
-    }
-
-    fn deserialize_struct<V>(
-        self,
-        name: &'static str,
-        fields: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        self.de.deserialize_struct(name, fields, visitor)
-    }
-
-    fn deserialize_enum<V>(
-        self,
-        enum_: &'static str,
-        variants: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value, Self::Error>
-    where
-        V: de::Visitor<'de>,
-    {
-        self.de.deserialize_enum(enum_, variants, visitor)
+        de::Deserializer::deserialize_struct(self, name, fields, visitor)
     }
 }
 
@@ -338,16 +305,18 @@ where
 {
     type Error = Error;
 
-    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Error>
     where
         T: de::DeserializeSeed<'de>,
     {
-        if let Some(&Ok(Event::EndArray)) = self.de.events.peek() {
+        if let Some(&Ok(Event::EndCollection)) = self.de.events.peek() {
             return Ok(None);
         }
 
         self.remaining = self.remaining.map(|r| r.saturating_sub(1));
-        seed.deserialize(&mut *self.de).map(Some)
+        self.de
+            .with_option_mode(OptionMode::Explicit, |this| seed.deserialize(this))
+            .map(Some)
     }
 
     fn size_hint(&self) -> Option<usize> {
@@ -361,27 +330,31 @@ where
 {
     type Error = Error;
 
-    fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
+    fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>
     where
         K: de::DeserializeSeed<'de>,
     {
-        if let Some(&Ok(Event::EndDictionary)) = self.de.events.peek() {
+        if let Some(&Ok(Event::EndCollection)) = self.de.events.peek() {
             return Ok(None);
         }
 
         self.remaining = self.remaining.map(|r| r.saturating_sub(1));
-        seed.deserialize(&mut *self.de).map(Some)
+        self.de
+            .with_option_mode(OptionMode::Explicit, |this| seed.deserialize(this))
+            .map(Some)
     }
 
-    fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Self::Error>
+    fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Error>
     where
         V: de::DeserializeSeed<'de>,
     {
-        if self.is_struct {
-            seed.deserialize(StructValueDeserializer { de: &mut *self.de })
+        let option_mode = if self.is_struct {
+            OptionMode::StructField
         } else {
-            seed.deserialize(&mut *self.de)
-        }
+            OptionMode::Explicit
+        };
+        self.de
+            .with_option_mode(option_mode, |this| Ok(seed.deserialize(this)?))
     }
 
     fn size_hint(&self) -> Option<usize> {
@@ -391,18 +364,18 @@ where
 
 /// Deserializes an instance of type `T` from a plist file of any encoding.
 pub fn from_file<P: AsRef<Path>, T: de::DeserializeOwned>(path: P) -> Result<T, Error> {
-    let file = File::open(path)?;
+    let file = File::open(path).map_err(error::from_io_without_position)?;
     from_reader(BufReader::new(file))
 }
 
-/// Deserializes an instance of type `T` from a seekable byte stream containing a plist file of any encoding.
+/// Deserializes an instance of type `T` from a seekable byte stream containing a plist of any encoding.
 pub fn from_reader<R: Read + Seek, T: de::DeserializeOwned>(reader: R) -> Result<T, Error> {
     let reader = stream::Reader::new(reader);
     let mut de = Deserializer::new(reader);
     de::Deserialize::deserialize(&mut de)
 }
 
-/// Deserializes an instance of type `T` from a byte stream containing an XML encoded plist file.
+/// Deserializes an instance of type `T` from a byte stream containing an XML encoded plist.
 pub fn from_reader_xml<R: Read, T: de::DeserializeOwned>(reader: R) -> Result<T, Error> {
     let reader = stream::XmlReader::new(reader);
     let mut de = Deserializer::new(reader);

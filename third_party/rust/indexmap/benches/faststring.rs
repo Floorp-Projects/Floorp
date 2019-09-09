@@ -12,7 +12,8 @@ use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use rand::{weak_rng, Rng};
+use rand::thread_rng;
+use rand::seq::SliceRandom;
 
 use std::hash::{Hash, Hasher};
 
@@ -68,8 +69,8 @@ fn shuffled_keys<I>(iter: I) -> Vec<I::Item>
     where I: IntoIterator
 {
     let mut v = Vec::from_iter(iter);
-    let mut rng = weak_rng();
-    rng.shuffle(&mut v);
+    let mut rng = thread_rng();
+    v.shuffle(&mut rng);
     v
 }
 
