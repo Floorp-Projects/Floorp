@@ -53,12 +53,12 @@ class DecoderBenchmark final {
                                     const nsACString& aKey);
   ~DecoderBenchmark() = default;
 
-  // Keep the last ParsedFrames and DroppedFrames from FrameStatistics.
+  // Keep the last TotalFrames and DroppedFrames from FrameStatistics.
   // FrameStatistics keep an ever-increasing counter across the entire video and
   // even when there are resolution changes. This code is called whenever there
   // is a resolution change and we need to calculate the benchmark since the
   // last call.
-  uint64_t mLastParsedFrames = 0;
+  uint64_t mLastTotalFrames = 0;
   uint64_t mLastDroppedFrames = 0;
 };
 

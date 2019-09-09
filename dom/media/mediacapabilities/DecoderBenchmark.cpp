@@ -13,27 +13,27 @@ namespace mozilla {
 void DecoderBenchmark::StoreScore(const nsACString& aDecoderName,
                                   const nsACString& aKey,
                                   RefPtr<FrameStatistics> aStats) {
-  uint64_t parsedFrames = aStats->GetParsedFrames();
+  uint64_t totalFrames = aStats->GetTotalFrames();
   uint64_t droppedFrames = aStats->GetDroppedFrames();
 
-  MOZ_ASSERT(droppedFrames <= parsedFrames);
-  MOZ_ASSERT(parsedFrames >= mLastParsedFrames);
+  MOZ_ASSERT(droppedFrames <= totalFrames);
+  MOZ_ASSERT(totalFrames >= mLastTotalFrames);
   MOZ_ASSERT(droppedFrames >= mLastDroppedFrames);
 
-  uint64_t diffParsedFrames = parsedFrames - mLastParsedFrames;
+  uint64_t diffTotalFrames = totalFrames - mLastTotalFrames;
   uint64_t diffDroppedFrames = droppedFrames - mLastDroppedFrames;
 
   /* Update now in case the method returns at the if check bellow. */
-  mLastParsedFrames = parsedFrames;
+  mLastTotalFrames = totalFrames;
   mLastDroppedFrames = droppedFrames;
 
   /* A minimum number of 10 frames is required to store the score. */
-  if (diffParsedFrames < 10) {
+  if (diffTotalFrames < 10) {
     return;
   }
 
   int32_t percentage =
-      100 - 100 * float(diffDroppedFrames) / float(diffParsedFrames);
+      100 - 100 * float(diffDroppedFrames) / float(diffTotalFrames);
 
   MOZ_ASSERT(percentage >= 0);
 
