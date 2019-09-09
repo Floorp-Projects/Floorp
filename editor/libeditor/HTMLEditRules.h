@@ -232,14 +232,6 @@ class HTMLEditRules : public TextEditRules {
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
   /**
-   * MakeTransitionList() detects all the transitions in the array, where a
-   * transition means that adjacent nodes in the array don't have the same
-   * parent.
-   */
-  void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-                          nsTArray<bool>& aTransitionArray);
-
-  /**
    * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
    * <br> element into empty list item or table cell elements between
    * aStartRef and aEndRef.
