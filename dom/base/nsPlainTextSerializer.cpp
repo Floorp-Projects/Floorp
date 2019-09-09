@@ -1163,6 +1163,135 @@ static bool IsSpaceStuffable(const char16_t* s) {
           NS_strncmp(s, u"From ", 5) == 0);
 }
 
+void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
+  if (!MayWrap()) {
+    return;
+  }
+
+  const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
+  int32_t linelength = mCurrentLine.mContent.mValue.Length();
+
+  // The width of the line as it will appear on the screen (approx.).
+  uint32_t currentLineContentWidth =
+      GetUnicharStringWidth(mCurrentLine.mContent.mValue.get(),
+                            mCurrentLine.mContent.mValue.Length());
+
+  // Yes, wrap!
+  // The "+4" is to avoid wrap lines that only would be a couple
+  // of letters too long. We give this bonus only if the
+  // wrapcolumn is more than 20.
+  uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
+
+  while (currentLineContentWidth + prefixwidth > mWrapColumn + bonuswidth) {
+    // We go from the end removing one letter at a time until
+    // we have a reasonable width
+    int32_t goodSpace = mCurrentLine.mContent.mValue.Length();
+    uint32_t width = currentLineContentWidth;
+    while (goodSpace > 0 && (width + prefixwidth > mWrapColumn)) {
+      goodSpace--;
+      width -= GetUnicharWidth(mCurrentLine.mContent.mValue[goodSpace]);
+    }
+
+    goodSpace++;
+
+    if (mLineBreaker) {
+      goodSpace =
+          mLineBreaker->Prev(mCurrentLine.mContent.mValue.get(),
+                             mCurrentLine.mContent.mValue.Length(), goodSpace);
+      if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
+          nsCRT::IsAsciiSpace(
+              mCurrentLine.mContent.mValue.CharAt(goodSpace - 1))) {
+        --goodSpace;  // adjust the position since line breaker returns a
+                      // position next to space
+      }
+    } else {
+      // In this case we don't want strings, especially CJK-ones, to be split.
+      // See
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+      // information.
+
+      if (mCurrentLine.mContent.mValue.IsEmpty() || mWrapColumn < prefixwidth) {
+        goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
+      } else {
+        goodSpace = std::min(mWrapColumn - prefixwidth,
+                             mCurrentLine.mContent.mValue.Length() - 1);
+        while (goodSpace >= 0 &&
+               !nsCRT::IsAsciiSpace(
+                   mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
+          goodSpace--;
+        }
+      }
+    }
+
+    nsAutoString restOfLine;
+    if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
+      // If we didn't find a good place to break, accept long line and
+      // try to find another place to break
+      goodSpace =
+          (prefixwidth > mWrapColumn + 1) ? 1 : mWrapColumn - prefixwidth + 1;
+      if (mLineBreaker) {
+        if ((uint32_t)goodSpace < mCurrentLine.mContent.mValue.Length())
+          goodSpace = mLineBreaker->Next(mCurrentLine.mContent.mValue.get(),
+                                         mCurrentLine.mContent.mValue.Length(),
+                                         goodSpace);
+        if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
+          goodSpace = mCurrentLine.mContent.mValue.Length();
+      } else {
+        // In this case we don't want strings, especially CJK-ones, to be
+        // split. See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+        // information.
+        goodSpace = (prefixwidth > mWrapColumn) ? 1 : mWrapColumn - prefixwidth;
+        while (goodSpace < linelength &&
+               !nsCRT::IsAsciiSpace(
+                   mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
+          goodSpace++;
+        }
+      }
+    }
+
+    if ((goodSpace < linelength) && (goodSpace > 0)) {
+      // Found a place to break
+
+      // -1 (trim a char at the break position)
+      // only if the line break was a space.
+      if (nsCRT::IsAsciiSpace(mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
+        mCurrentLine.mContent.mValue.Right(restOfLine,
+                                           linelength - goodSpace - 1);
+      } else {
+        mCurrentLine.mContent.mValue.Right(restOfLine, linelength - goodSpace);
+      }
+      // if breaker was U+0020, it has to consider for delsp=yes support
+      const bool breakBySpace =
+          mCurrentLine.mContent.mValue.CharAt(goodSpace) == ' ';
+      mCurrentLine.mContent.mValue.Truncate(goodSpace);
+      EndLine(true, breakBySpace);
+      mCurrentLine.mContent.mValue.Truncate();
+      // Space stuff new line?
+      if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
+        if (!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get()) &&
+            mCurrentLine.mCiteQuoteLevel ==
+                0  // We space-stuff quoted lines anyway
+        ) {
+          // Space stuffing a la RFC 2646 (format=flowed).
+          mCurrentLine.mContent.mValue.Append(char16_t(' '));
+          // XXX doesn't seem to work correctly for ' '
+        }
+      }
+      mCurrentLine.mContent.mValue.Append(restOfLine);
+      currentLineContentWidth =
+          GetUnicharStringWidth(mCurrentLine.mContent.mValue.get(),
+                                mCurrentLine.mContent.mValue.Length());
+      linelength = mCurrentLine.mContent.mValue.Length();
+      mEmptyLines = -1;
+    } else {
+      // Nothing to do. Hopefully we get more data later
+      // to use for a place to break line
+      break;
+    }
+  }
+}
+
 /**
  * This function adds a piece of text to the current stored line. If we are
  * wrapping text and the stored line will become too long, a suitable
@@ -1171,14 +1300,10 @@ static bool IsSpaceStuffable(const char16_t* s) {
  */
 void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
                                       int32_t aLineFragmentLength) {
-  const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
-
   if (mLineBreakDue) EnsureVerticalSpace(mFloatingLines);
 
-  int32_t linelength = mCurrentLine.mContent.mValue.Length();
-  if (0 == linelength) {
+  if (mCurrentLine.mContent.mValue.IsEmpty()) {
     if (0 == aLineFragmentLength) {
-      // Nothing at all. Are you kidding me?
       return;
     }
 
@@ -1196,134 +1321,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
 
   mCurrentLine.mContent.mValue.Append(aLineFragment, aLineFragmentLength);
 
-  if (MayWrap()) {
-    // The width of the line as it will appear on the screen (approx.).
-    uint32_t currentLineContentWidth = GetUnicharStringWidth(
-      mCurrentLine.mContent.mValue.get(),
-      mCurrentLine.mContent.mValue.Length());
-
-    linelength = mCurrentLine.mContent.mValue.Length();
-
-    // Yes, wrap!
-    // The "+4" is to avoid wrap lines that only would be a couple
-    // of letters too long. We give this bonus only if the
-    // wrapcolumn is more than 20.
-    uint32_t bonuswidth = (mWrapColumn > 20) ? 4 : 0;
-
-    while (currentLineContentWidth + prefixwidth >
-           mWrapColumn + bonuswidth) {
-      // We go from the end removing one letter at a time until
-      // we have a reasonable width
-      int32_t goodSpace = mCurrentLine.mContent.mValue.Length();
-      uint32_t width = currentLineContentWidth;
-      while (goodSpace > 0 && (width + prefixwidth > mWrapColumn)) {
-        goodSpace--;
-        width -= GetUnicharWidth(mCurrentLine.mContent.mValue[goodSpace]);
-      }
-
-      goodSpace++;
-
-      if (mLineBreaker) {
-        goodSpace = mLineBreaker->Prev(mCurrentLine.mContent.mValue.get(),
-                                       mCurrentLine.mContent.mValue.Length(),
-                                       goodSpace);
-        if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
-            nsCRT::IsAsciiSpace(
-                mCurrentLine.mContent.mValue.CharAt(goodSpace - 1))) {
-          --goodSpace;  // adjust the position since line breaker returns a
-                        // position next to space
-        }
-      } else {
-        // In this case we don't want strings, especially CJK-ones, to be split.
-        // See
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
-        // information.
-
-        if (mCurrentLine.mContent.mValue.IsEmpty() ||
-            mWrapColumn < prefixwidth) {
-          goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
-        } else {
-          goodSpace = std::min(mWrapColumn - prefixwidth,
-                               mCurrentLine.mContent.mValue.Length() - 1);
-          while (goodSpace >= 0 &&
-                 !nsCRT::IsAsciiSpace(
-                     mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
-            goodSpace--;
-          }
-        }
-      }
-
-      nsAutoString restOfLine;
-      if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-        // If we didn't find a good place to break, accept long line and
-        // try to find another place to break
-        goodSpace =
-            (prefixwidth > mWrapColumn + 1) ? 1 : mWrapColumn - prefixwidth + 1;
-        if (mLineBreaker) {
-          if ((uint32_t)goodSpace < mCurrentLine.mContent.mValue.Length())
-            goodSpace = mLineBreaker->Next(
-                mCurrentLine.mContent.mValue.get(),
-                mCurrentLine.mContent.mValue.Length(), goodSpace);
-          if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
-            goodSpace = mCurrentLine.mContent.mValue.Length();
-        } else {
-          // In this case we don't want strings, especially CJK-ones, to be
-          // split. See
-          // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
-          // information.
-          goodSpace =
-              (prefixwidth > mWrapColumn) ? 1 : mWrapColumn - prefixwidth;
-          while (goodSpace < linelength &&
-                 !nsCRT::IsAsciiSpace(
-                     mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
-            goodSpace++;
-          }
-        }
-      }
-
-      if ((goodSpace < linelength) && (goodSpace > 0)) {
-        // Found a place to break
-
-        // -1 (trim a char at the break position)
-        // only if the line break was a space.
-        if (nsCRT::IsAsciiSpace(
-                mCurrentLine.mContent.mValue.CharAt(goodSpace))) {
-          mCurrentLine.mContent.mValue.Right(restOfLine,
-                                             linelength - goodSpace - 1);
-        } else {
-          mCurrentLine.mContent.mValue.Right(restOfLine,
-                                             linelength - goodSpace);
-        }
-        // if breaker was U+0020, it has to consider for delsp=yes support
-        const bool breakBySpace =
-            mCurrentLine.mContent.mValue.CharAt(goodSpace) == ' ';
-        mCurrentLine.mContent.mValue.Truncate(goodSpace);
-        EndLine(true, breakBySpace);
-        mCurrentLine.mContent.mValue.Truncate();
-        // Space stuff new line?
-        if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
-          if (!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get()) &&
-              mCurrentLine.mCiteQuoteLevel ==
-                  0  // We space-stuff quoted lines anyway
-          ) {
-            // Space stuffing a la RFC 2646 (format=flowed).
-            mCurrentLine.mContent.mValue.Append(char16_t(' '));
-            // XXX doesn't seem to work correctly for ' '
-          }
-        }
-        mCurrentLine.mContent.mValue.Append(restOfLine);
-        currentLineContentWidth =
-            GetUnicharStringWidth(mCurrentLine.mContent.mValue.get(),
-                                  mCurrentLine.mContent.mValue.Length());
-        linelength = mCurrentLine.mContent.mValue.Length();
-        mEmptyLines = -1;
-      } else {
-        // Nothing to do. Hopefully we get more data later
-        // to use for a place to break line
-        break;
-      }
-    }
-  }
+  MaybeWrapAndOutputCompleteLines();
 }
 
 // The signature separator (RFC 2646).

@@ -89,6 +89,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   nsresult GetAttributeValue(nsAtom* aName, nsString& aValueRet) const;
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
 
+  void MaybeWrapAndOutputCompleteLines();
+
   // @param aSoftLineBreak A soft line break is a space followed by a linebreak
   // (cf. https://www.ietf.org/rfc/rfc3676.txt, section 4.2).
   void EndLine(bool aSoftLineBreak, bool aBreakBySpace = false);
