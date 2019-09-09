@@ -1211,8 +1211,6 @@ class GeneratedFile(ContextDerived):
             '.inc',
             '.py',
             '.rs',
-            'node.stub',  # To avoid VPATH issues with installing node files:
-                          # https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
             # We need to compile Java to generate JNI wrappers for native code
             # compilation to consume.
             'android_apks',
