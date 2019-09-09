@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["ZoomParent"];
 
 class ZoomParent extends JSWindowActorParent {
   receiveMessage(message) {
-    let browser = this.browsingContext.embedderElement;
+    let browser = this.browsingContext.top.embedderElement;
     if (!browser) {
       return;
     }
