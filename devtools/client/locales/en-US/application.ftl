@@ -111,12 +111,23 @@ manifest-loaded-error = There was an error while loading the manifest:
 # Text displayed when the page has no manifest available
 manifest-non-existing = No manifest found to inspect.
 
+# Sidebar navigation item for Manifest sidebar item section
+sidebar-item-manifest = Manifest
+	.alt = Manifest Icon
+	.title = Manifest
+
+# Sidebar navigation item for Service Workers sidebar item section
+sidebar-item-service-workers = Service Workers
+	.alt = Service Workers Icon
+	.title = Service Workers
+
 # Text for the ALT and TITLE attributes of the warning icon
 icon-warning =
-  .alt = Warning icon
-  .title = Warning
+.alt = Warning icon
+.title = Warning
 
 # Text for the ALT and TITLE attributes of the error icon
 icon-error =
-  .alt = Error icon
-  .title = Error
+.alt = Error icon
+.title = Error
+
