@@ -872,7 +872,8 @@ var snapshotFormatters = {
             "resource://gre/modules/kvstore.jsm"
           );
           let currProfDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-          let path = currProfDir.path + "/mediacapabilities";
+          currProfDir.append("mediacapabilities");
+          let path = currProfDir.path;
 
           function enumerateDatabase(name) {
             KeyValueService.getOrCreate(path, name)
