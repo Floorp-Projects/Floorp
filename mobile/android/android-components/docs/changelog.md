@@ -71,6 +71,9 @@ permalink: /changelog/
 
 * **feature-pwa**
   * Adds the ability to create a basic shortcut with a custom label
+  
+* **browser-engine-gecko-nightly**
+  * Adds support for exposing Gecko scalars through the Glean SDK. See [bug 1579365](https://bugzilla.mozilla.org/show_bug.cgi?id=1579365) for details.
 
 # 11.0.0
 
