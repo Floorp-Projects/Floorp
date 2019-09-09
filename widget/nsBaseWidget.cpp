@@ -138,7 +138,7 @@ namespace widget {
 
 void IMENotification::SelectionChangeDataBase::SetWritingMode(
     const WritingMode& aWritingMode) {
-  mWritingMode = aWritingMode.mWritingMode;
+  mWritingMode = aWritingMode.mWritingMode.bits;
 }
 
 WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {

@@ -1005,12 +1005,12 @@ struct ParamTraits<mozilla::WritingMode> {
   typedef mozilla::WritingMode paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mWritingMode);
+    WriteParam(aMsg, aParam.mWritingMode.bits);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mWritingMode);
+    return ReadParam(aMsg, aIter, &aResult->mWritingMode.bits);
   }
 };
 
