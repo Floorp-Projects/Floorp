@@ -1391,6 +1391,11 @@ void SurfaceCache::Initialize() {
   uint64_t surfaceCacheMaxSizeKB =
       StaticPrefs::image_mem_surfacecache_max_size_kb_AtStartup();
 
+  if (sizeof(uintptr_t) <= 4) {
+    // Limit surface cache to 1 GB if our address space is 32 bit.
+    surfaceCacheMaxSizeKB = 1024 * 1024;
+  }
+
   // A knob determining the actual size of the surface cache. Currently the
   // cache is (size of main memory) / (surface cache size factor) KB
   // or (surface cache max size) KB, whichever is smaller. The formula
