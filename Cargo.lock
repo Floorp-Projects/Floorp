@@ -1189,7 +1189,7 @@ dependencies = [
  "serde_derive 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.40.1",
+ "webdriver 0.40.2",
  "zip 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -3577,7 +3577,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "webdriver"
-version = "0.40.1"
+version = "0.40.2"
 dependencies = [
  "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cookie 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
