@@ -1026,7 +1026,7 @@ child:
      */
     async GetContentBlockingLog() returns(IPCStream ipcStream, bool success);
 
-    async SkipBrowsingContextDetach();
+    async SkipBrowsingContextDetach() returns (bool success);
 parent:
     /** Records a history visit. */
     async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,
