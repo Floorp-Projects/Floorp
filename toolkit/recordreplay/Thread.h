@@ -49,7 +49,7 @@ namespace recordreplay {
 //    thread attempts to take a recorded lock and blocks in Lock::Wait.
 //    For other threads (any thread which has diverged from the recording,
 //    or JS helper threads even when no recording divergence has occurred),
-//    NotifyUnrecordedWait and MaybeWaitForCheckpointSave are used to enter
+//    NotifyUnrecordedWait and MaybeWaitForSnapshot are used to enter
 //    this state when the thread performs a blocking operation.
 //
 // 4. Once all recorded threads are idle, the main thread is able to record
@@ -285,15 +285,13 @@ class Thread {
   // main thread is already waiting for other threads to become idle.
   //
   // The callback should poke the thread so that it is no longer blocked on the
-  // resource. The thread must call MaybeWaitForCheckpointSave before blocking
-  // again.
+  // resource. The thread must call MaybeWaitForSnapshot before blocking again.
   //
-  // MaybeWaitForCheckpointSave takes a callback to release any resources
-  // before the thread begins idling. The return value is whether this callback
-  // was invoked.
+  // MaybeWaitForSnapshot takes a callback to release any resources before the
+  // thread begins idling. The return value is whether this callback was
+  // invoked.
   void NotifyUnrecordedWait(const std::function<void()>& aNotifyCallback);
-  bool MaybeWaitForCheckpointSave(
-      const std::function<void()>& aReleaseCallback);
+  bool MaybeWaitForSnapshot(const std::function<void()>& aReleaseCallback);
 
   // Wait for all other threads to enter the idle state necessary for saving
   // or restoring a checkpoint. This may only be called on the main thread.

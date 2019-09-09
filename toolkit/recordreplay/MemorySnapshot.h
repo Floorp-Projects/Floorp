@@ -15,21 +15,20 @@ namespace recordreplay {
 
 // Memory Snapshots Overview.
 //
-// As described in ProcessRewind.h, some subset of the checkpoints which are
-// reached during execution are saved, so that their state can be restored
-// later. Memory snapshots are used to save and restore the contents of all
-// heap memory: everything except thread stacks (see ThreadSnapshot.h for
-// saving and restoring these) and untracked memory (which is not saved or
-// restored, see ProcessRecordReplay.h).
+// As described in ProcessRewind.h, periodically snapshots are saved so that
+// their state can be restored later. Memory snapshots are used to save and
+// restore the contents of all heap memory: everything except thread stacks
+// (see ThreadSnapshot.h for saving and restoring these) and untracked memory
+// (which is not saved or restored, see ProcessRecordReplay.h).
 //
 // Each memory snapshot is a diff of the heap memory contents compared to the
 // next one. See MemorySnapshot.cpp for how diffs are represented and computed.
 //
 // Rewinding must restore the exact contents of heap memory that existed when
-// the target checkpoint was reached. Because of this, memory that is allocated
-// at a point when a checkpoint is saved will never actually be returned to the
-// system. We instead keep a set of free blocks that are unused at the current
-// point of execution and are available to satisfy new allocations.
+// the target snapshot was reached. Because of this, memory that is allocated
+// after a point when a snapshot has been saved will never actually be returned
+// to the system. We instead keep a set of free blocks that are unused at the
+// current point of execution and are available to satisfy new allocations.
 
 // Make sure that a block of memory in a fixed allocation is already allocated.
 void CheckFixedMemory(void* aAddress, size_t aSize);
@@ -47,12 +46,12 @@ void* AllocateMemoryTryAddress(void* aAddress, size_t aSize, MemoryKind aKind);
 void RegisterAllocatedMemory(void* aBaseAddress, size_t aSize,
                              MemoryKind aKind);
 
-// Exclude a region of memory from snapshots, before the first checkpoint has
-// been reached.
+// Exclude a region of memory from snapshots, before the first snapshot has
+// been taken.
 void AddInitialUntrackedMemoryRegion(uint8_t* aBase, size_t aSize);
 
 // Return whether a range of memory is in a tracked region. This excludes
-// memory that was allocated after the last checkpoint and is not write
+// memory that was allocated after the last snapshot and is not write
 // protected.
 bool MemoryRangeIsTracked(void* aAddress, size_t aSize);
 
@@ -62,22 +61,17 @@ void InitializeMemorySnapshots();
 // Take the first heap memory snapshot.
 void TakeFirstMemorySnapshot();
 
-// Take a differential heap memory snapshot compared to the last one,
-// associated with the last saved checkpoint.
+// Take a differential heap memory snapshot compared to the last one.
 void TakeDiffMemorySnapshot();
 
-// Restore all heap memory to its state when the most recent checkpoint was
-// saved. This requires no checkpoints to have been saved after this one.
-void RestoreMemoryToLastSavedCheckpoint();
+// Restore all heap memory to its state when the most recent snapshot was
+// taken.
+void RestoreMemoryToLastSnapshot();
 
-// Restore all heap memory to its state at a checkpoint where a complete diff
-// was saved vs. the following saved checkpoint. This requires that no
-// tracked heap memory has been changed since the last saved checkpoint.
-void RestoreMemoryToLastSavedDiffCheckpoint();
-
-// Erase all information from the last diff snapshot taken, so that tracked
-// heap memory changes are with respect to the previous checkpoint.
-void EraseLastSavedDiffMemorySnapshot();
+// Restore all heap memory to its state at a snapshot where a complete diff
+// was saved vs. the following snapshot. This requires that no tracked heap
+// memory has been changed since the last snapshot.
+void RestoreMemoryToLastDiffSnapshot();
 
 // Set whether to allow changes to tracked heap memory at this point. If such
 // changes occur when they are not allowed then the process will crash.

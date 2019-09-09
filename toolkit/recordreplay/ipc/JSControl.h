@@ -68,14 +68,8 @@ void AfterSaveRecording();
 // The following hooks are used in the recording/replaying process to
 // call methods defined by the JS sandbox.
 
-// Called when running forward, immediately before hitting a normal or
-// temporary checkpoint.
-void BeforeCheckpoint();
-
-// Called immediately after hitting a normal or temporary checkpoint, either
-// when running forward or immediately after rewinding. aRestoredCheckpoint is
-// true if we just rewound.
-void AfterCheckpoint(size_t aCheckpoint, bool aRestoredCheckpoint);
+// Called when running forward and a normal checkpoint was reached.
+void HitCheckpoint(size_t aCheckpoint);
 
 // Called when a child crashes, returning whether the crash was recovered from.
 bool RecoverFromCrash(parent::ChildProcessInfo* aChild);

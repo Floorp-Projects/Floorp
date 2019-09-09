@@ -29,15 +29,13 @@ namespace recordreplay {
 // Checkpoints form a basis for identifying a particular point in execution,
 // and in allowing replaying processes to rewind themselves.
 //
-// A subset of checkpoints are saved: the contents of each thread's stack is
-// copied, along with enough information to restore the contents of heap memory
-// at the checkpoint.
+// In a replaying process, snapshots can be taken that retain enough information
+// to restore the contents of heap memory and thread stacks at the point the
+// snapshot was taken. Snapshots are usually taken when certain checkpoints are
+// reached, but they can be taken at other points as well.
 //
-// Saved checkpoints are in part represented as diffs vs the following
-// saved checkpoint. This requires some different handling for the most recent
-// saved checkpoint (whose diff has not been computed) and earlier saved
-// checkpoints. See MemorySnapshot.h and Thread.h for more on how saved
-// checkpoints are represented.
+// See MemorySnapshot.h and ThreadSnapshot.h for information on how snapshots
+// are represented.
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,18 +44,13 @@ namespace recordreplay {
 // 1. While performing the replay, execution proceeds until the main thread
 //    hits either a breakpoint or a checkpoint.
 //
-// 2. The main thread then calls a hook (JS::replay::hooks.hitBreakpointReplay
-//    or gAfterCheckpointHook), which may decide to pause the main thread and
-//    give it a callback to invoke using PauseMainThreadAndInvokeCallback.
+// 2. Control then enters the logic in devtools/server/actors/replay/replay.js,
+//    which may decide to pause the main thread.
 //
-// 3. Now that the main thread is paused, the replay message loop thread
-//    (see ChildIPC.h) can give it additional callbacks to invoke using
-//    PauseMainThreadAndInvokeCallback.
-//
-// 4. These callbacks can inspect the paused state, diverge from the recording
+// 3. The replay logic can inspect the process state, diverge from the recording
 //    by calling DivergeFromRecording, and eventually can unpause the main
 //    thread and allow execution to resume by calling ResumeExecution
-//    (if DivergeFromRecording was not called) or RestoreCheckpointAndResume.
+//    (if DivergeFromRecording was not called) or RestoreSnapshotAndResume.
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,7 +66,7 @@ namespace recordreplay {
 // passed through, but other events that require interacting with the system
 // will trigger an unhandled divergence from the recording via
 // EnsureNotDivergedFromRecording, causing the process to rewind to the most
-// recent saved checkpoint. The debugger will recognize this rewind and play
+// recent snapshot. The debugger will recognize this rewind and play
 // back in a way that restores the state when DivergeFromRecording() was
 // called, but without performing the later operation that triggered the
 // rewind.
@@ -86,11 +79,8 @@ static const size_t FirstCheckpointId = 1;
 // Initialize state needed for rewinding.
 void InitializeRewindState();
 
-// Set whether this process should save a particular checkpoint.
-void SetSaveCheckpoint(size_t aCheckpoint, bool aSave);
-
 // Invoke a callback on the main thread, and pause it until ResumeExecution or
-// RestoreCheckpointAndResume are called. When the main thread is not paused,
+// RestoreSnapshotAndResume are called. When the main thread is not paused,
 // this must be called on the main thread itself. When the main thread is
 // already paused, this may be called from any thread.
 void PauseMainThreadAndInvokeCallback(const std::function<void()>& aCallback);
@@ -103,49 +93,45 @@ bool MainThreadShouldPause();
 // longer needs to pause.
 void PauseMainThreadAndServiceCallbacks();
 
-// Return whether any checkpoints have been saved.
-bool HasSavedAnyCheckpoint();
-
-// Return whether a specific checkpoint has been saved.
-bool HasSavedCheckpoint(size_t aCheckpoint);
+// Return how many snapshots have been taken.
+size_t NumSnapshots();
 
 // Get the ID of the most recently encountered checkpoint.
 size_t GetLastCheckpoint();
 
-// Get the ID of the most recent saved checkpoint.
-size_t GetLastSavedCheckpoint();
-
-// When paused at a breakpoint or at a checkpoint, restore a checkpoint that
-// was saved earlier and resume execution.
-void RestoreCheckpointAndResume(size_t aCheckpoint);
+// When paused at a breakpoint or at a checkpoint, restore a snapshot that
+// was saved earlier. aNumSnapshots is the number of snapshots to skip over
+// when restoring.
+void RestoreSnapshotAndResume(size_t aNumSnapshots);
 
 // When paused at a breakpoint or at a checkpoint, unpause and proceed with
 // execution.
 void ResumeExecution();
 
 // Allow execution after this point to diverge from the recording. Execution
-// will remain diverged until an earlier checkpoint is restored.
+// will remain diverged until an earlier snapshot is restored.
 //
 // If an unhandled divergence occurs (see the 'Recording Divergence' comment
-// in ProcessRewind.h) then the process rewinds to the most recent saved
-// checkpoint.
+// in ProcessRewind.h) then the process rewinds to the most recent snapshot.
 void DivergeFromRecording();
 
 // After a call to DivergeFromRecording(), this may be called to prevent future
-// unhandled divergence from causing earlier checkpoints to be restored
+// unhandled divergence from causing earlier snapshots to be restored
 // (the process will immediately crash instead). This state lasts until a new
 // call to DivergeFromRecording, or to an explicit restore of an earlier
-// checkpoint.
+// snapshot.
 void DisallowUnhandledDivergeFromRecording();
 
 // Make sure that execution has not diverged from the recording after a call to
-// DivergeFromRecording, by rewinding to the last saved checkpoint if so.
+// DivergeFromRecording, by rewinding to the last snapshot if so.
 void EnsureNotDivergedFromRecording();
 
-// Note a checkpoint at the current execution position. This checkpoint will be
-// saved if it was instructed to do so via a manifest. This method returns true
-// if the checkpoint was just saved, and false if it was just restored.
-bool NewCheckpoint();
+// Note a checkpoint at the current execution position.
+void NewCheckpoint();
+
+// Create a new snapshot that can be restored later. This method returns true
+// if the snapshot was just taken, and false if it was just restored.
+bool NewSnapshot();
 
 }  // namespace recordreplay
 }  // namespace mozilla

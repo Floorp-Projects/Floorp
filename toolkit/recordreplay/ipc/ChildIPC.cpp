@@ -493,8 +493,7 @@ static void PaintFromMainThread() {
 
   if (IsMainChild() && gDrawTargetBuffer) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
-    gChannel->SendMessage(
-        PaintMessage(GetLastCheckpoint(), gPaintWidth, gPaintHeight));
+    gChannel->SendMessage(PaintMessage(gPaintWidth, gPaintHeight));
   }
 }
 
