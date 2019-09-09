@@ -50,6 +50,31 @@ static bool IsAmbiguousDOMWordSeprator(char16_t ch) {
           IsConditionalPunctuation(ch));
 }
 
+// IsDOMWordSeparator
+//
+//    Determines if the given character should be considered as a DOM Word
+//    separator. Basically, this is whitespace, although it could also have
+//    certain punctuation that we know ALWAYS breaks words. This is important.
+//    For example, we can't have any punctuation that could appear in a URL
+//    or email address in this, because those need to always fit into a single
+//    DOM word.
+
+static bool IsDOMWordSeparator(char16_t ch) {
+  // simple spaces
+  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') return true;
+
+  // complex spaces - check only if char isn't ASCII (uncommon)
+  if (ch >= 0xA0 && (ch == 0x00A0 ||  // NO-BREAK SPACE
+                     ch == 0x2002 ||  // EN SPACE
+                     ch == 0x2003 ||  // EM SPACE
+                     ch == 0x2009 ||  // THIN SPACE
+                     ch == 0x3000))   // IDEOGRAPHIC SPACE
+    return true;
+
+  // otherwise not a space
+  return false;
+}
+
 // mozInlineSpellWordUtil::Init
 
 nsresult mozInlineSpellWordUtil::Init(TextEditor* aTextEditor) {
@@ -359,16 +384,14 @@ enum CharClass {
 };
 
 // Encapsulates DOM-word to real-word splitting
+template <class T>
 struct MOZ_STACK_CLASS WordSplitState {
-  mozInlineSpellWordUtil* mWordUtil;
-  const nsDependentSubstring mDOMWordText;
+  const T& mDOMWordText;
   int32_t mDOMWordOffset;
   CharClass mCurCharClass;
 
-  WordSplitState(mozInlineSpellWordUtil* aWordUtil, const nsString& aString,
-                 int32_t aStart, int32_t aLen)
-      : mWordUtil(aWordUtil),
-        mDOMWordText(aString, aStart, aLen),
+  explicit WordSplitState(const T& aString)
+      : mDOMWordText(aString),
         mDOMWordOffset(0),
         mCurCharClass(CHAR_CLASS_END_OF_INPUT) {}
 
@@ -381,18 +404,23 @@ struct MOZ_STACK_CLASS WordSplitState {
   // current position, and returns their length, or 0 if not found. This allows
   // arbitrary word breaking rules to be used for these special entities, as
   // long as they can not contain whitespace.
-  bool IsSpecialWord();
+  bool IsSpecialWord() const;
 
   // Similar to IsSpecialWord except that this takes a split word as
   // input. This checks for things that do not require special word-breaking
   // rules.
-  bool ShouldSkipWord(int32_t aStart, int32_t aLength);
+  bool ShouldSkipWord(int32_t aStart, int32_t aLength) const;
+
+  // Checks to see if there's a DOM word separator before aBeforeOffset within
+  // it. This function does not modify aSeparatorOffset when it returns false.
+  bool GetDOMWordSeparatorOffset(int32_t aOffset,
+                                 int32_t* aSeparatorOffset) const;
 };
 
 // WordSplitState::ClassifyCharacter
-
-CharClass WordSplitState::ClassifyCharacter(int32_t aIndex,
-                                            bool aRecurse) const {
+template <class T>
+CharClass WordSplitState<T>::ClassifyCharacter(int32_t aIndex,
+                                               bool aRecurse) const {
   NS_ASSERTION(aIndex >= 0 && aIndex <= int32_t(mDOMWordText.Length()),
                "Index out of range");
   if (aIndex == int32_t(mDOMWordText.Length())) return CHAR_CLASS_SEPARATOR;
@@ -472,8 +500,8 @@ CharClass WordSplitState::ClassifyCharacter(int32_t aIndex,
 }
 
 // WordSplitState::Advance
-
-void WordSplitState::Advance() {
+template <class T>
+void WordSplitState<T>::Advance() {
   NS_ASSERTION(mDOMWordOffset >= 0, "Negative word index");
   NS_ASSERTION(mDOMWordOffset < (int32_t)mDOMWordText.Length(),
                "Length beyond end");
@@ -486,20 +514,20 @@ void WordSplitState::Advance() {
 }
 
 // WordSplitState::AdvanceThroughSeparators
-
-void WordSplitState::AdvanceThroughSeparators() {
+template <class T>
+void WordSplitState<T>::AdvanceThroughSeparators() {
   while (mCurCharClass == CHAR_CLASS_SEPARATOR) Advance();
 }
 
 // WordSplitState::AdvanceThroughWord
-
-void WordSplitState::AdvanceThroughWord() {
+template <class T>
+void WordSplitState<T>::AdvanceThroughWord() {
   while (mCurCharClass == CHAR_CLASS_WORD) Advance();
 }
 
 // WordSplitState::IsSpecialWord
-
-bool WordSplitState::IsSpecialWord() {
+template <class T>
+bool WordSplitState<T>::IsSpecialWord() const {
   // Search for email addresses. We simply define these as any sequence of
   // characters with an '@' character in the middle. The DOM word is already
   // split on whitepace, so we know that everything to the end is the address
@@ -555,8 +583,8 @@ bool WordSplitState::IsSpecialWord() {
 }
 
 // WordSplitState::ShouldSkipWord
-
-bool WordSplitState::ShouldSkipWord(int32_t aStart, int32_t aLength) {
+template <class T>
+bool WordSplitState<T>::ShouldSkipWord(int32_t aStart, int32_t aLength) const {
   int32_t last = aStart + aLength;
 
   // check to see if the word contains a digit
@@ -570,30 +598,27 @@ bool WordSplitState::ShouldSkipWord(int32_t aStart, int32_t aLength) {
   return false;
 }
 
-/*********** DOM text extraction ************/
-
-// IsDOMWordSeparator
-//
-//    Determines if the given character should be considered as a DOM Word
-//    separator. Basically, this is whitespace, although it could also have
-//    certain punctuation that we know ALWAYS breaks words. This is important.
-//    For example, we can't have any punctuation that could appear in a URL
-//    or email address in this, because those need to always fit into a single
-//    DOM word.
-
-static bool IsDOMWordSeparator(char16_t ch) {
-  // simple spaces
-  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') return true;
-
-  // complex spaces - check only if char isn't ASCII (uncommon)
-  if (ch >= 0xA0 && (ch == 0x00A0 ||  // NO-BREAK SPACE
-                     ch == 0x2002 ||  // EN SPACE
-                     ch == 0x2003 ||  // EM SPACE
-                     ch == 0x2009 ||  // THIN SPACE
-                     ch == 0x3000))   // IDEOGRAPHIC SPACE
-    return true;
-
-  // otherwise not a space
+template <class T>
+bool WordSplitState<T>::GetDOMWordSeparatorOffset(
+    int32_t aOffset, int32_t* aSeparatorOffset) const {
+  for (int32_t i = aOffset - 1; i >= 0; --i) {
+    if (IsDOMWordSeparator(mDOMWordText[i]) ||
+        (!IsAmbiguousDOMWordSeprator(mDOMWordText[i]) &&
+         ClassifyCharacter(i, true) == CHAR_CLASS_SEPARATOR)) {
+      // Be greedy, find as many separators as we can
+      for (int32_t j = i - 1; j >= 0; --j) {
+        if (IsDOMWordSeparator(mDOMWordText[j]) ||
+            (!IsAmbiguousDOMWordSeprator(mDOMWordText[j]) &&
+             ClassifyCharacter(j, true) == CHAR_CLASS_SEPARATOR)) {
+          i = j;
+        } else {
+          break;
+        }
+      }
+      *aSeparatorOffset = i;
+      return true;
+    }
+  }
   return false;
 }
 
@@ -606,7 +631,7 @@ static inline bool IsBRElement(nsINode* aNode) {
  * aBeforeOffset within it. This function does not modify aSeparatorOffset when
  * it returns false.
  *
- * @param aNode the TextNode to check.
+ * @param aContent the TextNode to check.
  * @param aBeforeOffset the offset in the TextNode before which we will search
  *        for the DOM separator. You can pass INT32_MAX to search the entire
  *        length of the string.
@@ -614,38 +639,22 @@ static inline bool IsBRElement(nsINode* aNode) {
  *        encounters. Will not be written to if no separator is found.
  * @returns True if it found a separator.
  */
-static bool TextNodeContainsDOMWordSeparator(nsINode* aNode,
+static bool TextNodeContainsDOMWordSeparator(nsIContent* aContent,
                                              int32_t aBeforeOffset,
                                              int32_t* aSeparatorOffset) {
-  // aNode is actually an nsIContent, since it's eTEXT
-  nsIContent* content = static_cast<nsIContent*>(aNode);
-  const nsTextFragment* textFragment = content->GetText();
+  const nsTextFragment* textFragment = aContent->GetText();
   NS_ASSERTION(textFragment, "Where is our text?");
-  nsString text;
   int32_t end = std::min(aBeforeOffset, int32_t(textFragment->GetLength()));
-  bool ok = textFragment->AppendTo(text, 0, end, mozilla::fallible);
-  if (!ok) return false;
 
-  WordSplitState state(nullptr, text, 0, end);
-  for (int32_t i = end - 1; i >= 0; --i) {
-    if (IsDOMWordSeparator(textFragment->CharAt(i)) ||
-        (!IsAmbiguousDOMWordSeprator(textFragment->CharAt(i)) &&
-         state.ClassifyCharacter(i, true) == CHAR_CLASS_SEPARATOR)) {
-      // Be greedy, find as many separators as we can
-      for (int32_t j = i - 1; j >= 0; --j) {
-        if (IsDOMWordSeparator(textFragment->CharAt(j)) ||
-            (!IsAmbiguousDOMWordSeprator(textFragment->CharAt(j)) &&
-             state.ClassifyCharacter(j, true) == CHAR_CLASS_SEPARATOR)) {
-          i = j;
-        } else {
-          break;
-        }
-      }
-      *aSeparatorOffset = i;
-      return true;
-    }
+  if (textFragment->Is2b()) {
+    nsDependentSubstring targetText(textFragment->Get2b(), end);
+    WordSplitState<nsDependentSubstring> state(targetText);
+    return state.GetDOMWordSeparatorOffset(end, aSeparatorOffset);
   }
-  return false;
+
+  nsDependentCSubstring targetText(textFragment->Get1b(), end);
+  WordSplitState<nsDependentCSubstring> state(targetText);
+  return state.GetDOMWordSeparatorOffset(end, aSeparatorOffset);
 }
 
 /**
@@ -665,7 +674,7 @@ static bool ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
 
   if (!IsSpellCheckingTextNode(aNode)) return false;
 
-  return TextNodeContainsDOMWordSeparator(aNode, aBeforeOffset,
+  return TextNodeContainsDOMWordSeparator(aNode->AsContent(), aBeforeOffset,
                                           aSeparatorOffset);
 }
 
@@ -732,7 +741,7 @@ void mozInlineSpellWordUtil::BuildSoftText() {
           // kept at the original starting node if no previous text nodes exist.
           if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
                                         &newOffset)) {
-            nsINode* prevNode = node->GetPreviousSibling();
+            nsIContent* prevNode = node->GetPreviousSibling();
             while (prevNode && IsSpellCheckingTextNode(prevNode)) {
               mSoftBegin.mNode = prevNode;
               if (TextNodeContainsDOMWordSeparator(prevNode, INT32_MAX,
@@ -1010,7 +1019,8 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
 // mozInlineSpellWordUtil::SplitDOMWord
 
 nsresult mozInlineSpellWordUtil::SplitDOMWord(int32_t aStart, int32_t aEnd) {
-  WordSplitState state(this, mSoftText, aStart, aEnd - aStart);
+  nsDependentSubstring targetText(mSoftText, aStart, aEnd - aStart);
+  WordSplitState<nsDependentSubstring> state(targetText);
   state.mCurCharClass = state.ClassifyCharacter(0, true);
 
   state.AdvanceThroughSeparators();
