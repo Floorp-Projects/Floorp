@@ -1563,14 +1563,6 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
   if (BlockServerCertChangeForSpdy(socketInfo, serverCert) != SECSuccess)
     return SECFailure;
 
-  nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
-      NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, socketInfo));
-  if (sslSocketControl && sslSocketControl->GetBypassAuthentication()) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("[%p] Bypass Auth in AuthCertificateHook\n", fd));
-    return SECSuccess;
-  }
-
   bool onSTSThread;
   nsresult nrv;
   nsCOMPtr<nsIEventTarget> sts =

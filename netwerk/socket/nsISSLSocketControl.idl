@@ -149,16 +149,10 @@ interface nsISSLSocketControl : nsISupports {
      */
     [infallible] readonly attribute boolean clientCertSent;
 
-    /**
-     * bypassAuthentication is true if the server certificate checks are
-     * not be enforced. This is to enable non-secure transport over TLS.
-     */
-    [infallible] readonly attribute boolean bypassAuthentication;
-
     /*
      * failedVerification is true if any enforced certificate checks have failed.
-     * Connections that have not yet tried to verify, have verifications bypassed,
-     * or are using acceptable exceptions will all return false.
+     * Connections that have not yet tried to verify, or are using acceptable
+     * exceptions will all return false.
      */
     [infallible] readonly attribute boolean failedVerification;
 
