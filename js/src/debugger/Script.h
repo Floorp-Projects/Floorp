@@ -81,6 +81,7 @@ class DebuggerScript : public NativeObject {
   static bool getOffsetLocation(JSContext* cx, unsigned argc, Value* vp);
   static bool getSuccessorOffsets(JSContext* cx, unsigned argc, Value* vp);
   static bool getPredecessorOffsets(JSContext* cx, unsigned argc, Value* vp);
+  static bool getEffectfulOffsets(JSContext* cx, unsigned argc, Value* vp);
   static bool getAllOffsets(JSContext* cx, unsigned argc, Value* vp);
   static bool getAllColumnOffsets(JSContext* cx, unsigned argc, Value* vp);
   static bool getLineOffsets(JSContext* cx, unsigned argc, Value* vp);
