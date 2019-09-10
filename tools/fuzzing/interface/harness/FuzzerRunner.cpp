@@ -27,16 +27,9 @@ int FuzzerRunner::Run(int* argc, char*** argv) {
   const char* fuzzerEnv = getenv("FUZZER");
 
   if (!fuzzerEnv) {
-    fuzzerEnv = getenv("LIBFUZZER");
-    if (fuzzerEnv) {
-      fprintf(stderr,
-              "Fuzzer Interface: Warning: \
-        Using deprecated LIBFUZZER variable, use FUZZER instead\n");
-    } else {
-      fprintf(stderr,
-              "Must specify fuzzing target in FUZZER environment variable\n");
-      return 1;
-    }
+    fprintf(stderr,
+            "Must specify fuzzing target in FUZZER environment variable\n");
+    return 1;
   }
 
   std::string moduleNameStr(fuzzerEnv);
