@@ -328,7 +328,7 @@ option('--disable-gtest-in-build',
 def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
     if not enable_tests or not enabled:
         return None
-    if (automation and build_project in ('browser', 'mobile/android') and
+    if (automation and build_project in ('browser', 'comm/mail', 'mobile/android') and
         not ((pgo and target.os == 'WINNT') or (target.os == 'Android' and target.cpu != 'x86_64'))):
         return True
 
