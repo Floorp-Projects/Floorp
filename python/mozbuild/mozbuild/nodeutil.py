@@ -13,6 +13,7 @@ from distutils.version import (
 
 from mozboot.util import get_state_dir
 from mozfile import which
+from six import PY3
 
 NODE_MIN_VERSION = StrictVersion("8.11.0")
 NPM_MIN_VERSION = StrictVersion("5.6.0")
@@ -60,12 +61,14 @@ def check_executable_version(exe, wrap_call_with_node=False):
     if wrap_call_with_node and platform.system() != "Windows":
         binary, _ = find_node_executable()
         if binary:
-            out = subprocess.check_output([binary, exe, "--version"]).lstrip('v').rstrip()
+            out = subprocess.check_output([binary, exe, "--version"],
+                                          universal_newlines=PY3).lstrip('v').rstrip()
 
     # If we can't find node, or we don't need to wrap it, fallback to calling
     # direct.
     if not out:
-        out = subprocess.check_output([exe, "--version"]).lstrip('v').rstrip()
+        out = subprocess.check_output([exe, "--version"],
+                                      universal_newlines=PY3).lstrip('v').rstrip()
     return StrictVersion(out)
 
 
