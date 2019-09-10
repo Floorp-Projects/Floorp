@@ -585,8 +585,6 @@
         "transitionend",
         "popuphiding",
         "popuphidden",
-        "dragexit",
-        "dragend",
       ];
       for (let event_name of event_names) {
         this.addEventListener(event_name, ev => this[`on_${event_name}`](ev));
