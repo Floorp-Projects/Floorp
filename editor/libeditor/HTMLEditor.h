@@ -2603,6 +2603,14 @@ class HTMLEditor final : public TextEditor,
   AdjustCaretPositionAndEnsurePaddingBRElement(
       nsIEditor::EDirection aDirectionAndAmount);
 
+  /**
+   * EnsureSelectionInBodyOrDocumentElement() collapse `Selection` to the
+   * primary `<body>` element or document element when `Selection` crosses
+   * `<body>` element's boundary.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureSelectionInBodyOrDocumentElement();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
