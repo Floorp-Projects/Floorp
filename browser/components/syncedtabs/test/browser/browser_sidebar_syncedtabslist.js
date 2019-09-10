@@ -1,5 +1,10 @@
 "use strict";
 
+const { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+
 const FIXTURE = [
   {
     id: "7cqCr77ptzX3",
@@ -70,26 +75,15 @@ const FIXTURE = [
   },
 ];
 
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
-);
-
 function setupSyncedTabsStubs({
-  signedInUser = { verified: true },
-  loginFailed = false,
+  uiState = { status: UIState.STATUS_SIGNED_IN, syncEnabled: true },
   isConfiguredToSyncTabs = true,
   hasSyncedThisSession = true,
   tabClients = Cu.cloneInto(FIXTURE, {}),
 } = {}) {
-  sinon
-    .stub(
-      SidebarUI.browser.contentWindow.syncedTabsDeckComponent,
-      "_getSignedInUser"
-    )
-    .resolves(signedInUser);
+  sinon.stub(UIState, "get").returns(uiState);
   sinon.stub(SyncedTabs._internal, "getTabClients").resolves(tabClients);
   sinon.stub(SyncedTabs._internal, "syncTabs").resolves();
-  sinon.stub(SyncedTabs._internal, "loginFailed").value(loginFailed);
   sinon
     .stub(SyncedTabs._internal, "isConfiguredToSyncTabs")
     .value(isConfiguredToSyncTabs);
@@ -262,32 +256,13 @@ add_task(async function testSyncedTabsSidebarStatus() {
   Assert.ok(syncedTabsDeckComponent, "component exists");
 
   setupSyncedTabsStubs({
-    signedInUser: Promise.reject("Test error"),
-    loginFailed: false,
+    uiState: { status: UIState.STATUS_NOT_CONFIGURED },
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     tabClients: [],
   });
   await syncedTabsDeckComponent.updatePanel();
-
   let selectedPanel = syncedTabsDeckComponent.container.querySelector(
-    ".sync-state.selected"
-  );
-  Assert.ok(
-    selectedPanel.classList.contains("notAuthedInfo"),
-    "not-authed panel is selected on auth error"
-  );
-  sinon.restore();
-
-  setupSyncedTabsStubs({
-    signedInUser: null,
-    loginFailed: false,
-    isConfiguredToSyncTabs: false,
-    hasSyncedThisSession: false,
-    tabClients: [],
-  });
-  await syncedTabsDeckComponent.updatePanel();
-  selectedPanel = syncedTabsDeckComponent.container.querySelector(
     ".sync-state.selected"
   );
   Assert.ok(
@@ -297,8 +272,7 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: false },
-    loginFailed: false,
+    uiState: { status: UIState.STATUS_NOT_VERIFIED },
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     tabClients: [],
@@ -314,8 +288,23 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: true },
-    loginFailed: true,
+    uiState: { status: UIState.STATUS_SIGNED_IN, syncEnabled: false },
+    isConfiguredToSyncTabs: false,
+    hasSyncedThisSession: false,
+    tabClients: [],
+  });
+  await syncedTabsDeckComponent.updatePanel();
+  selectedPanel = syncedTabsDeckComponent.container.querySelector(
+    ".sync-state.selected"
+  );
+  Assert.ok(
+    selectedPanel.classList.contains("syncDisabled"),
+    "sync disabled panel is selected"
+  );
+  sinon.restore();
+
+  setupSyncedTabsStubs({
+    uiState: { status: UIState.STATUS_LOGIN_FAILED },
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     tabClients: [],
@@ -331,8 +320,6 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: true },
-    loginFailed: false,
     isConfiguredToSyncTabs: false,
     hasSyncedThisSession: false,
     tabClients: [],
@@ -348,8 +335,6 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: true },
-    loginFailed: false,
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: false,
     tabClients: [],
@@ -365,8 +350,6 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: true },
-    loginFailed: false,
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
     tabClients: [],
@@ -382,8 +365,6 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.restore();
 
   setupSyncedTabsStubs({
-    signedInUser: { verified: true },
-    loginFailed: false,
     isConfiguredToSyncTabs: true,
     hasSyncedThisSession: true,
     tabClients: [{ id: "mock" }],
