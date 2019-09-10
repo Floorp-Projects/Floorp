@@ -6855,6 +6855,12 @@
   value: true
   mirror: always
 
+# Navigate-to CSP 3 directive
+- name: security.csp.enableNavigateTo
+  type: bool 
+  value: false
+  mirror: always
+
 # No way to enable on Android, Bug 1552602
 - name: security.webauth.u2f
   type: bool
