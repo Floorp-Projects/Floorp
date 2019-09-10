@@ -18,6 +18,7 @@ let { SyncedTabsDeckStore } = ChromeUtils.import(
 let { TabListView } = ChromeUtils.import(
   "resource:///modules/syncedtabs/TabListView.js"
 );
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 add_task(async function testInitUninit() {
   let deckStore = new SyncedTabsDeckStore();
@@ -144,27 +145,15 @@ add_task(async function testObserver() {
   Assert.ok(listStore.getData.called, "gets list data");
   Assert.ok(component.updatePanel.calledTwice, "triggers panel update");
 
-  Services.obs.notifyObservers(null, FxAccountsCommon.ONLOGIN_NOTIFICATION);
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
   Assert.ok(
-    component.observe.calledWith(null, FxAccountsCommon.ONLOGIN_NOTIFICATION),
-    "component is notified of login"
+    component.observe.calledWith(null, UIState.ON_UPDATE),
+    "component is notified of FxA/Sync UI Update"
   );
   Assert.equal(
     component.updatePanel.callCount,
     3,
-    "triggers panel update again"
-  );
-
-  Services.obs.notifyObservers(null, "weave:service:login:change");
-
-  Assert.ok(
-    component.observe.calledWith(null, "weave:service:login:change"),
-    "component is notified of login change"
-  );
-  Assert.equal(
-    component.updatePanel.callCount,
-    4,
     "triggers panel update again"
   );
 
@@ -189,9 +178,6 @@ add_task(async function testPanelStatus() {
   let deckStore = new SyncedTabsDeckStore();
   let listStore = new SyncedTabsListStore();
   let listComponent = {};
-  let fxAccounts = {
-    getSignedInUser() {},
-  };
   let SyncedTabsMock = {
     getTabClients() {},
   };
@@ -199,31 +185,37 @@ add_task(async function testPanelStatus() {
   sinon.stub(listStore, "getData");
 
   let component = new SyncedTabsDeckComponent({
-    fxAccounts,
     deckStore,
     listComponent,
     SyncedTabs: SyncedTabsMock,
   });
 
-  let account = null;
-  sinon
-    .stub(fxAccounts, "getSignedInUser")
-    .callsFake(() => Promise.resolve(account));
+  sinon.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_CONFIGURED });
   let result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
+  UIState.get.restore();
 
-  account = { verified: false };
-
+  sinon.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.UNVERIFIED);
+  UIState.get.restore();
 
-  account = { verified: true };
-
-  SyncedTabsMock.loginFailed = true;
+  sinon.stub(UIState, "get").returns({ status: UIState.STATUS_LOGIN_FAILED });
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.LOGIN_FAILED);
-  SyncedTabsMock.loginFailed = false;
+  UIState.get.restore();
 
+  sinon
+    .stub(UIState, "get")
+    .returns({ status: UIState.STATUS_SIGNED_IN, syncEnabled: false });
+  SyncedTabsMock.isConfiguredToSyncTabs = true;
+  result = await component.getPanelStatus();
+  Assert.equal(result, component.PANELS.SYNC_DISABLED);
+  UIState.get.restore();
+
+  sinon
+    .stub(UIState, "get")
+    .returns({ status: UIState.STATUS_SIGNED_IN, syncEnabled: true });
   SyncedTabsMock.isConfiguredToSyncTabs = false;
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_DISABLED);
@@ -246,13 +238,6 @@ add_task(async function testPanelStatus() {
   clients = ["mock-client"];
   result = await component.getPanelStatus();
   Assert.equal(result, component.PANELS.TABS_CONTAINER);
-
-  fxAccounts.getSignedInUser.restore();
-  sinon
-    .stub(fxAccounts, "getSignedInUser")
-    .callsFake(() => Promise.reject("err"));
-  result = await component.getPanelStatus();
-  Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
   sinon
     .stub(component, "getPanelStatus")

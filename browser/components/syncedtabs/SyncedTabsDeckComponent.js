@@ -27,6 +27,7 @@ const { TabListView } = ChromeUtils.import(
 let { getChromeWindow } = ChromeUtils.import(
   "resource:///modules/syncedtabs/util.js"
 );
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
@@ -48,7 +49,6 @@ var EXPORTED_SYMBOLS = ["SyncedTabsDeckComponent"];
 function SyncedTabsDeckComponent({
   window,
   SyncedTabs,
-  fxAccounts,
   deckStore,
   listStore,
   listComponent,
@@ -57,7 +57,6 @@ function SyncedTabsDeckComponent({
 }) {
   this._window = window;
   this._SyncedTabs = SyncedTabs;
-  this._fxAccounts = fxAccounts;
   this._DeckView = DeckView || SyncedTabsDeckView;
   // used to stub during tests
   this._getChromeWindow = getChromeWindowMock || getChromeWindow;
@@ -84,6 +83,7 @@ SyncedTabsDeckComponent.prototype = {
     TABS_FETCHING: "tabs-fetching",
     LOGIN_FAILED: "reauth",
     NOT_AUTHED_INFO: "notAuthedInfo",
+    SYNC_DISABLED: "syncDisabled",
     SINGLE_DEVICE_INFO: "singleDeviceInfo",
     TABS_DISABLED: "tabs-disabled",
     UNVERIFIED: "unverified",
@@ -95,13 +95,7 @@ SyncedTabsDeckComponent.prototype = {
 
   init() {
     Services.obs.addObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
-    Services.obs.addObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
-    Services.obs.addObserver(this, "weave:service:login:change");
-    // If the Sync service is not ready, in init() > updatePanel() we will
-    // show a blank screen. If tab syncing is disabled, we will not get any other
-    // ui-refreshing notifications! We listen to :ready in order to check again
-    // if this engine is disabled and refresh the UI one last time.
-    Services.obs.addObserver(this, "weave:service:ready");
+    Services.obs.addObserver(this, UIState.ON_UPDATE);
 
     // Add app locale change support for HTML sidebar
     Services.obs.addObserver(this, "intl:app-locales-changed");
@@ -128,9 +122,7 @@ SyncedTabsDeckComponent.prototype = {
 
   uninit() {
     Services.obs.removeObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
-    Services.obs.removeObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
-    Services.obs.removeObserver(this, "weave:service:login:change");
-    Services.obs.removeObserver(this, "weave:service:ready");
+    Services.obs.removeObserver(this, UIState.ON_UPDATE);
     Services.obs.removeObserver(this, "intl:app-locales-changed");
     Services.prefs.removeObserver("intl.uidirection", this);
     this._deckView.destroy();
@@ -142,11 +134,7 @@ SyncedTabsDeckComponent.prototype = {
         this._syncedTabsListStore.getData();
         this.updatePanel();
         break;
-      case "weave:service:ready":
-        Services.obs.removeObserver(this, "weave:service:ready");
-      // Intended fallthrough.
-      case FxAccountsCommon.ONLOGIN_NOTIFICATION:
-      case "weave:service:login:change":
+      case UIState.ON_UPDATE:
         this.updatePanel();
         break;
       case "intl:app-locales-changed":
@@ -162,41 +150,32 @@ SyncedTabsDeckComponent.prototype = {
     }
   },
 
-  // There's no good way to mock fxAccounts in browser tests where it's already
-  // been instantiated, so we have this method for stubbing.
-  _getSignedInUser() {
-    return this._fxAccounts.getSignedInUser();
-  },
-
-  getPanelStatus() {
-    return this._getSignedInUser()
-      .then(user => {
-        if (!user) {
-          return this.PANELS.NOT_AUTHED_INFO;
-        }
-        if (this._SyncedTabs.loginFailed) {
-          return this.PANELS.LOGIN_FAILED;
-        }
-        if (!user.verified) {
-          return this.PANELS.UNVERIFIED;
-        }
-        if (!this._SyncedTabs.isConfiguredToSyncTabs) {
-          return this.PANELS.TABS_DISABLED;
-        }
-        if (!this._SyncedTabs.hasSyncedThisSession) {
-          return this.PANELS.TABS_FETCHING;
-        }
-        return this._SyncedTabs.getTabClients().then(clients => {
-          if (clients.length) {
-            return this.PANELS.TABS_CONTAINER;
-          }
-          return this.PANELS.SINGLE_DEVICE_INFO;
-        });
-      })
-      .catch(err => {
-        Cu.reportError(err);
+  async getPanelStatus() {
+    try {
+      const state = UIState.get();
+      const { status } = state;
+      if (status == UIState.STATUS_NOT_CONFIGURED) {
         return this.PANELS.NOT_AUTHED_INFO;
-      });
+      } else if (status == UIState.STATUS_LOGIN_FAILED) {
+        return this.PANELS.LOGIN_FAILED;
+      } else if (status == UIState.STATUS_NOT_VERIFIED) {
+        return this.PANELS.UNVERIFIED;
+      } else if (!state.syncEnabled) {
+        return this.PANELS.SYNC_DISABLED;
+      } else if (!this._SyncedTabs.isConfiguredToSyncTabs) {
+        return this.PANELS.TABS_DISABLED;
+      } else if (!this._SyncedTabs.hasSyncedThisSession) {
+        return this.PANELS.TABS_FETCHING;
+      }
+      const clients = await this._SyncedTabs.getTabClients();
+      if (clients.length) {
+        return this.PANELS.TABS_CONTAINER;
+      }
+      return this.PANELS.SINGLE_DEVICE_INFO;
+    } catch (err) {
+      Cu.reportError(err);
+      return this.PANELS.NOT_AUTHED_INFO;
+    }
   },
 
   updateDir() {

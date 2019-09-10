@@ -4,7 +4,7 @@
 
 synced-tabs-sidebar-title = Synced Tabs
 synced-tabs-sidebar-noclients-subtitle = Want to see your tabs from other devices here?
-synced-tabs-sidebar-notsignedin = Sign in to view a list of tabs from your other devices.
+synced-tabs-sidebar-intro = View a list of tabs from your other devices.
 synced-tabs-sidebar-unverified = Your account needs to be verified.
 synced-tabs-sidebar-notabs = No open tabs
 synced-tabs-sidebar-openprefs = Open { -sync-brand-short-name } Preferences
@@ -37,3 +37,4 @@ synced-tabs-context-manage-devices =
     .label = Manage Devices…
     .accesskey = D
 fxa-sign-in = Sign in to { -sync-brand-short-name }
+turn-on-sync = Turn on { -sync-brand-short-name }
