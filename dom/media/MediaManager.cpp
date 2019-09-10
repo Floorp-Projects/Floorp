@@ -956,7 +956,8 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   auto type = GetMediaSource();
   uint64_t distance = 0;
   if (!aConstraintSets.IsEmpty()) {
-    if (type == MediaSourceEnum::Camera ||
+    if (aIsChrome /* For the screen/window sharing preview */ ||
+        type == MediaSourceEnum::Camera ||
         type == MediaSourceEnum::Microphone) {
       distance += uint64_t(MediaConstraintsHelper::FitnessDistance(
                       Some(id), aConstraintSets[0]->mDeviceId)) +
