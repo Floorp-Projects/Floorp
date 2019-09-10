@@ -199,8 +199,8 @@ pub extern crate api;
 extern crate webrender_build;
 
 #[doc(hidden)]
-pub use crate::device::{build_shader_strings, UploadMethod, VertexUsageHint};
-pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver};
+pub use crate::device::{build_shader_strings, UploadMethod, VertexUsageHint, get_gl_target};
+pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver, FormatDesc};
 pub use crate::device::Device;
 pub use crate::frame_builder::ChasePrimitive;
 pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
