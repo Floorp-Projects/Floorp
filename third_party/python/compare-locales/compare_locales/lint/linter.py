@@ -24,7 +24,7 @@ class L10nLinter(object):
 
     def lint_file(self, path, ref, extra_tests):
         file_parser = parser.getParser(path)
-        if os.path.isfile(ref):
+        if ref is not None and os.path.isfile(ref):
             file_parser.readFile(ref)
             reference = file_parser.parse()
         else:
@@ -99,7 +99,10 @@ class EntityLinter(object):
             for tp, pos, msg, cat in self.checker.check(
                 current_entity, current_entity
             ):
-                lineno, col = current_entity.value_position(pos)
+                if isinstance(pos, checks.EntityPos):
+                    lineno, col = current_entity.position(pos)
+                else:
+                    lineno, col = current_entity.value_position(pos)
                 yield {
                     'lineno': lineno,
                     'column': col,

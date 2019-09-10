@@ -296,6 +296,10 @@ class FluentChecker(Checker):
         return l10n_data.messages
 
     def check(self, refEnt, l10nEnt):
+        for encoding_trouble in super(
+            FluentChecker, self
+        ).check(refEnt, l10nEnt):
+            yield encoding_trouble
         l10n_entry = l10nEnt.entry
         if isinstance(l10n_entry, ftl.Message):
             ref_entry = refEnt.entry
