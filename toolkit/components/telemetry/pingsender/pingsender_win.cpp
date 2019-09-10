@@ -61,11 +61,6 @@ bool Post(const string& url, const string& payload) {
     return false;
   }
 
-  if (!IsValidDestination(host)) {
-    PINGSENDER_LOG("ERROR: Invalid destination host '%s'\n", host.c_str());
-    return false;
-  }
-
   ScopedHInternet internet(InternetOpen(kUserAgent,
                                         INTERNET_OPEN_TYPE_PRECONFIG,
                                         /* lpszProxyName */ NULL,
