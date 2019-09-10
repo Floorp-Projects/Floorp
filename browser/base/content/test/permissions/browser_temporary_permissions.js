@@ -67,6 +67,19 @@ add_task(async function testTempPermissionSubframes() {
       "popupshown"
     );
 
+    await new Promise(r => {
+      SpecialPowers.pushPrefEnv(
+        {
+          set: [
+            ["dom.security.featurePolicy.enabled", true],
+            ["dom.security.featurePolicy.header.enabled", true],
+            ["dom.security.featurePolicy.webidl.enabled", true],
+          ],
+        },
+        r
+      );
+    });
+
     // Request a permission.
     await ContentTask.spawn(browser, uri.host, async function(host0) {
       // FIXME(Fission): The load event fires before cross-origin iframes have

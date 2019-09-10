@@ -33,7 +33,7 @@ static FeatureMap sSupportedFeatures[] = {
     {"camera", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"encrypted-media", FeaturePolicyUtils::FeaturePolicyValue::eAll},
     {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eAll},
-    {"geolocation", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    {"geolocation", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"payment", FeaturePolicyUtils::FeaturePolicyValue::eAll},

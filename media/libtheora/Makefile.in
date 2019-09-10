@@ -12,10 +12,10 @@ armloop-gnu.s: armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S
 # suffix when translating the files that include it.
-armopts-gnu.S: lib/arm/armopts.s
+armopts-gnu.S: $(srcdir)/lib/arm/armopts.s
 	$(PERL) $(srcdir)/lib/arm/arm2gnu.pl < $< > $@
 # For all others, we can use an implicit rule
-%-gnu.s: lib/arm/%.s
+%-gnu.s: $(srcdir)/lib/arm/%.s
 	$(PERL) $(srcdir)/lib/arm/arm2gnu.pl < $< > $@
 
 endif

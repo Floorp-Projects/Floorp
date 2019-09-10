@@ -876,8 +876,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
                 if self.query_minidump_stackwalk():
                     env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
-                if self.query_nodejs():
-                    env['MOZ_NODE_PATH'] = self.nodejs_path
+                if self.config['nodejs_path']:
+                    env['MOZ_NODE_PATH'] = self.config['nodejs_path']
                 env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
                 env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
                 env['RUST_BACKTRACE'] = 'full'

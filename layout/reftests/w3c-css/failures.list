@@ -1,7 +1,9 @@
 # LIST OF REFTEST FAILURES FROM IMPORTS
 #
 # The syntax of this file is as follows:
-#    1) All lines marked with a '#' are comments.
+#    1) All lines marked with a '#' are comments. Comments can also be written
+#       at the end of the line, which are copied to the auto-generated
+#       received/reftest.list.
 #    2) A failure is denoted by <failure-type>* (as described in
 #       layout/tools/reftest/README.txt) and a path pattern starting
 #       with module. E.g.:
@@ -219,9 +221,9 @@ fuzzy(0-135,0-530) css-multicol/multicol-containing-001.xht
 fuzzy(0-215,0-241) css-multicol/multicol-containing-002.xht
 fuzzy(0-87,0-180) css-multicol/multicol-count-001.xht
 fails-if(!OSX) random-if(OSX) css-multicol/multicol-count-002.xht
-css-multicol/multicol-count-computed-003.xht
-fuzzy-if(winWidget||OSX||gtkWidget,0-112,0-861) css-multicol/multicol-count-computed-004.xht
-css-multicol/multicol-count-computed-005.xht
+fails-if(geckoview) css-multicol/multicol-count-computed-003.xht # Bug 1558509 for GV
+fuzzy-if(winWidget||OSX||gtkWidget,0-112,0-861) fails-if(geckoview) css-multicol/multicol-count-computed-004.xht # Bug 1558509 for GV
+fails-if(geckoview) css-multicol/multicol-count-computed-005.xht # Bug 1558509 for GV
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-count-negative-001.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-count-negative-002.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-count-non-integer-001.xht
@@ -235,7 +237,7 @@ fuzzy(0-255,0-329) css-multicol/multicol-gap-001.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-gap-002.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-gap-003.xht
 fuzzy(0-107,0-1823) css-multicol/multicol-gap-fraction-001.xht
-fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-1048) css-multicol/multicol-gap-large-001.xht
+fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-1048) fails-if(geckoview) css-multicol/multicol-gap-large-001.xht # Bug 1558509 for GV
 fuzzy(0-225,0-920) css-multicol/multicol-gap-large-002.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-gap-negative-001.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-height-block-child-001.xht
@@ -283,11 +285,11 @@ pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-000.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-001.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-002.xht
 pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) css-multicol/multicol-span-all-003.xht
-pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-001.xht
-pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-002.xht
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) css-multicol/multicol-span-all-margin-001.xht # Bug 1558509 for GV
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) css-multicol/multicol-span-all-margin-002.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-all-margin-bottom-001.xht
-pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-nested-001.xht
-pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-all-margin-nested-002.xht
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) css-multicol/multicol-span-all-margin-nested-001.xht # Bug 1558509 for GV
+pref(layout.css.column-span.enabled,true) fails-if(geckoview) css-multicol/multicol-span-all-margin-nested-002.xht # Bug 1558509 for GV
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-nested-firstchild-001.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-float-001.xht
 pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-none-001.xht

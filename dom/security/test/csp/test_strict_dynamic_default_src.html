@@ -66,14 +66,14 @@ var tests = [
     script_desc: "(test 6) script should be allowed because of valid nonce",
     img_desc: "(test 6) img should be blocked because of default-src http:",
     script_result: "blocked",
-    img_result: "allowed",
+    img_result: "blocked",
     policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:;"
   },
   {
     script_desc: "(test 7) script should be allowed because of invalid nonce",
     img_desc: "(test 7) img should be blocked because of image-src http:",
     script_result: "blocked",
-    img_result: "allowed",
+    img_result: "blocked",
     policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:; img-src http:"
   },
 ];
@@ -105,6 +105,7 @@ function checkResults() {
 
     // check if script loaded
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    var imgcontent = testframe.contentWindow.document.getElementById('testimage').dataset.result;
     if (curTest.script_result === "blocked") {
       todo_is(divcontent, curTest.script_result, curTest.script_desc);
     }
@@ -115,10 +116,10 @@ function checkResults() {
     // check if image loaded
     var testimg = testframe.contentWindow.document.getElementById("testimage");
     if (curTest.img_result === "allowed") {
-      ok(testimg.complete, curTest.img_desc);
+      todo_is(imgcontent, curTest.img_result, curTest.img_desc);
     }
     else {
-      ok((testimg.width == 0) && (testimg.height == 0), curTest.img_desc);
+      is(imgcontent, curTest.img_result, curTest.img_desc);
     }
   }
   catch (e) {

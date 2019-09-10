@@ -7,7 +7,7 @@
 include $(topsrcdir)/config/config.mk
 
 ifeq (WINNT,$(OS_TARGET))
-mozglue.def: mozglue.def.in $(GLOBAL_DEPS)
+mozglue.def: $(srcdir)/mozglue.def.in $(GLOBAL_DEPS)
 	$(call py_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
 
 GARBAGE += mozglue.def
@@ -16,7 +16,7 @@ GARBAGE += mozglue.def
 # (this dependency should really be just for mozglue.dll, not other targets)
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
-EXTRA_DEPS += mozglue.dll.manifest
+EXTRA_DEPS += $(srcdir)/mozglue.dll.manifest
 endif
 
 include $(topsrcdir)/mozglue/build/replace_malloc.mk

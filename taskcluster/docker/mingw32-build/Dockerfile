@@ -24,6 +24,7 @@ RUN apt-get update && \
       gawk \
       g++-multilib \
       gnupg \
+      jq \
       libucl1 \
       patch \
       p7zip-full \

@@ -25,6 +25,7 @@ RUN apt-get update && \
       gawk \
       gcc-multilib \
       gnupg \
+      jq \
       libbz2-dev \
       libcurl4-openssl-dev \
       libssl-dev \
