@@ -294,6 +294,10 @@ export default class LoginItem extends HTMLElement {
           classList.contains("copy-username-button")
         ) {
           let copyButton = event.currentTarget;
+          let otherCopyButton =
+            copyButton == this._copyPasswordButton
+              ? this._copyUsernameButton
+              : this._copyPasswordButton;
           if (copyButton.dataset.copyLoginProperty == "password") {
             let masterPasswordAuth = await new Promise(resolve => {
               window.AboutLoginsUtils.promptForMasterPassword(resolve);
@@ -314,6 +318,10 @@ export default class LoginItem extends HTMLElement {
               detail: propertyToCopy,
             })
           );
+          otherCopyButton.disabled = false;
+          delete otherCopyButton.dataset.copied;
+          clearTimeout(this._copyUsernameTimeoutId);
+          clearTimeout(this._copyPasswordTimeoutId);
           let timeoutId = setTimeout(() => {
             copyButton.disabled = false;
             delete copyButton.dataset.copied;
