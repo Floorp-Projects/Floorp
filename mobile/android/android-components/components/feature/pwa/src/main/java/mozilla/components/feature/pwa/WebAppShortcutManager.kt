@@ -61,7 +61,7 @@ class WebAppShortcutManager(
      * Request to create a new shortcut on the home screen.
      * @param context The current context.
      * @param session The session to create the shortcut for.
-     * @param overrideShortcutName (optional) The name of the shortcut
+     * @param overrideShortcutName (optional) The name of the shortcut. Ignored for PWAs.
      */
     suspend fun requestPinShortcut(
         context: Context,
