@@ -1843,52 +1843,38 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
+  auto getPropertyValue = [&](nsCSSPropertyID aID) {
+    RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
+    nsAutoString string;
+    Servo_GetPropertyValue(mComputedStyle, aID, &string);
+    value->SetString(string);
+    return value.forget();
+  };
+
   const nsStyleTextReset* textReset = StyleTextReset();
-
-  bool isInitialStyle =
-      textReset->mTextDecorationStyle == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-  const mozilla::StyleColor& color = textReset->mTextDecorationColor;
-
-  RefPtr<nsROCSSPrimitiveValue> textDecorationLine = new nsROCSSPrimitiveValue;
-
-  {
-    nsAutoString decorationLine;
-    Servo_GetPropertyValue(mComputedStyle, eCSSProperty_text_decoration_line,
-                           &decorationLine);
-    textDecorationLine->SetString(decorationLine);
-  }
-
-  if (isInitialStyle && color.IsCurrentColor()) {
-    return textDecorationLine.forget();
-  }
-
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
-  valueList->AppendCSSValue(textDecorationLine.forget());
-  if (!isInitialStyle) {
-    valueList->AppendCSSValue(DoGetTextDecorationStyle());
+  if (textReset->mTextDecorationLine != StyleTextDecorationLine_NONE) {
+    valueList->AppendCSSValue(
+        getPropertyValue(eCSSProperty_text_decoration_line));
   }
-  if (!color.IsCurrentColor()) {
-    valueList->AppendCSSValue(DoGetTextDecorationColor());
+
+  if (textReset->mTextDecorationStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+    valueList->AppendCSSValue(
+        getPropertyValue(eCSSProperty_text_decoration_style));
+  }
+
+  // The resolved color shouldn't be currentColor, so we always serialize it.
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
+  valueList->AppendCSSValue(val.forget());
+
+  if (!textReset->mTextDecorationThickness.IsAuto()) {
+    valueList->AppendCSSValue(
+        getPropertyValue(eCSSProperty_text_decoration_thickness));
   }
 
   return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationColor() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationStyle() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(StyleTextReset()->mTextDecorationStyle,
-                                     nsCSSProps::kTextDecorationStyleKTable));
-
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {

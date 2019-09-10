@@ -37,7 +37,8 @@ add_task(async function() {
 
   function queryApplies(q) {
     style.setAttribute("media", q);
-    return bodyComputedStyled.getPropertyValue("text-decoration") == "underline";
+    return bodyComputedStyled.getPropertyValue("text-decoration-line") ==
+           "underline";
   }
 
   function shouldApply(q) {

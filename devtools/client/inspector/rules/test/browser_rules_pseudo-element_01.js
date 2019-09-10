@@ -119,7 +119,7 @@ async function testTopLeft(inspector, view) {
     "Added property should have been used."
   );
   is(
-    await getComputedStyleProperty(id, null, "text-decoration"),
+    await getComputedStyleProperty(id, null, "text-decoration-line"),
     "none",
     "Added property should not apply to element"
   );
@@ -145,7 +145,7 @@ async function testTopLeft(inspector, view) {
     "Added property should have been used."
   );
   is(
-    await getComputedStyleProperty(id, null, "text-decoration"),
+    await getComputedStyleProperty(id, null, "text-decoration-line"),
     "none",
     "Added property should not apply to element"
   );

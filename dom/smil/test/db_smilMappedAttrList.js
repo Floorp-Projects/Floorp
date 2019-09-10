@@ -60,7 +60,11 @@ var gMappedAttrList = {
   // SKIP 'kerning' property: animatable but not supported by Mozilla
   letter_spacing: new AdditiveAttribute("letter-spacing", "XML", "text"),
   text_anchor: new NonAdditiveAttribute("text-anchor", "XML", "text"),
-  text_decoration: new NonAdditiveAttribute("text-decoration", "XML", "text"),
+  text_decoration_line: new NonAdditiveAttribute(
+    "text-decoration-line",
+    "XML",
+    "text"
+  ),
   unicode_bidi: new NonAnimatableAttribute("unicode-bidi", "XML", "text"),
   word_spacing: new AdditiveAttribute("word-spacing", "XML", "text"),
 

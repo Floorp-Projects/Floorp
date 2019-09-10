@@ -78,7 +78,7 @@ var innerRuleInfo = [
   ["#test { text-decoration: underline; }",
    function(aApplied, aParent, aException) {
      return !aException &&
-            window.getComputedStyle(test).textDecoration ==
+            window.getComputedStyle(test).textDecorationLine ==
                (aApplied ? "underline" : "none");
    }],
   ["@page { margin: 4cm; }",

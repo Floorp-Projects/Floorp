@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=544834
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
 
-  :-moz-any(#display, #display2) { text-decoration: underline }
+  :-moz-any(#display, #display2) { text-decoration-line: underline }
   p:-moz-any([foo], [bar]) { z-index: 17 }
 
   </style>
@@ -30,13 +30,13 @@ function run()
 {
   var p = document.getElementById("display");
   var cs = getComputedStyle(p, "");
-  is(cs.textDecoration, "underline", "should match first rule");
+  is(cs.textDecorationLine, "underline", "should match first rule");
   is(cs.zIndex, "auto", "should not match second rule");
   p.removeAttribute("id");
-  is(cs.textDecoration, "none", "should not match first rule");
+  is(cs.textDecorationLine, "none", "should not match first rule");
   is(cs.zIndex, "auto", "should not match second rule");
   p.setAttribute("foo", "v");
-  is(cs.textDecoration, "none", "should not match first rule");
+  is(cs.textDecorationLine, "none", "should not match first rule");
   is(cs.zIndex, "17", "should match second rule");
   SimpleTest.finish();
 }
