@@ -51,8 +51,8 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   }
 
   ~SourceSurfaceCanvasRecording() {
-    mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(RecordedRemoveSurfaceAlias(this));
+    ReleaseOnMainThread(std::move(mRecorder), this, std::move(mRecordedSurface),
+                        std::move(mCanvasChild));
   }
 
   gfx::SurfaceType GetType() const final { return mRecordedSurface->GetType(); }
@@ -64,11 +64,40 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   }
 
   already_AddRefed<gfx::DataSourceSurface> GetDataSurface() final {
-    if (!mDataSourceSurface) {
+    EnsureDataSurfaceOnMainThread();
+    return do_AddRef(mDataSourceSurface);
+  }
+
+ protected:
+  void GuaranteePersistance() final { EnsureDataSurfaceOnMainThread(); }
+
+ private:
+  void EnsureDataSurfaceOnMainThread() {
+    // The data can only be retrieved on the main thread.
+    if (!mDataSourceSurface && NS_IsMainThread()) {
       mDataSourceSurface = mCanvasChild->GetDataSurface(mRecordedSurface);
     }
+  }
 
-    return do_AddRef(mDataSourceSurface);
+  // Used to ensure that clean-up that requires it is done on the main thread.
+  static void ReleaseOnMainThread(RefPtr<CanvasDrawEventRecorder> aRecorder,
+                                  ReferencePtr aSurfaceAlias,
+                                  RefPtr<gfx::SourceSurface> aAliasedSurface,
+                                  RefPtr<CanvasChild> aCanvasChild) {
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(NewRunnableFunction(
+          "SourceSurfaceCanvasRecording::ReleaseOnMainThread",
+          SourceSurfaceCanvasRecording::ReleaseOnMainThread,
+          std::move(aRecorder), aSurfaceAlias, std::move(aAliasedSurface),
+          std::move(aCanvasChild)));
+      return;
+    }
+
+    aRecorder->RemoveStoredObject(aSurfaceAlias);
+    aRecorder->RecordEvent(RecordedRemoveSurfaceAlias(aSurfaceAlias));
+    aAliasedSurface = nullptr;
+    aCanvasChild = nullptr;
+    aRecorder = nullptr;
   }
 
   RefPtr<gfx::SourceSurface> mRecordedSurface;
@@ -191,7 +220,7 @@ void CanvasChild::RecordEvent(const gfx::RecordedEvent& aEvent) {
 
 already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     const gfx::SourceSurface* aSurface) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
 
   if (!mRecorder) {

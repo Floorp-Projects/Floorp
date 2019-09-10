@@ -374,8 +374,8 @@ RecordedGetDataForSurface::RecordedGetDataForSurface(S& aStream)
 class RecordedAddSurfaceAlias final
     : public RecordedEventDerived<RecordedAddSurfaceAlias> {
  public:
-  RecordedAddSurfaceAlias(const gfx::SourceSurface* aSurfaceAlias,
-                          const gfx::SourceSurface* aActualSurface)
+  RecordedAddSurfaceAlias(ReferencePtr aSurfaceAlias,
+                          const RefPtr<gfx::SourceSurface>& aActualSurface)
       : RecordedEventDerived(ADD_SURFACE_ALIAS),
         mSurfaceAlias(aSurfaceAlias),
         mActualSurface(aActualSurface) {}
@@ -423,7 +423,7 @@ RecordedAddSurfaceAlias::RecordedAddSurfaceAlias(S& aStream)
 class RecordedRemoveSurfaceAlias final
     : public RecordedEventDerived<RecordedRemoveSurfaceAlias> {
  public:
-  explicit RecordedRemoveSurfaceAlias(const gfx::SourceSurface* aSurfaceAlias)
+  explicit RecordedRemoveSurfaceAlias(ReferencePtr aSurfaceAlias)
       : RecordedEventDerived(REMOVE_SURFACE_ALIAS),
         mSurfaceAlias(aSurfaceAlias) {}
 
