@@ -132,36 +132,6 @@ configuration object with the users locale. For example:
 Will report either ``us`` or ``gb`` as the ``webExtensionLocale``
 depending on the user.
 
-Experiments
------------
-
-We can run experiments by giving sections within ``appliesTo`` a
-``cohort`` value, the Search Service can then optionally pass in a
-matching ``cohort`` value to match those sections.
-
-Sections which have a ``cohort`` will not be used unless a matching
-``cohort`` has been passed in, for example:
-
-.. code-block:: js
-
-    "engine1": {
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
-      "appliesTo": [{
-        "included": {
-          "everywhere": true
-        },
-        "cohort": "nov-16",
-        "webExtensionId": "webext-experimental",
-      }, {
-        "included": {
-          "everywhere": true
-        },
-        "webExtensionId": "webext-gb",
-        "webExtensionVersion": "1.2"
-      }]
-    }
-
 Engine Defaults
 ---------------
 
