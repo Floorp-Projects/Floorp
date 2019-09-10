@@ -13975,79 +13975,85 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     case OpenCursorParams::TObjectStoreOpenCursorParams: {
       const ObjectStoreOpenCursorParams& params =
           aParams.get_ObjectStoreOpenCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      objectStoreMetadata =
+          GetMetadataForObjectStoreId(params.commonParams().objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+      if (aTrustParams && NS_WARN_IF(!VerifyRequestParams(
+                              params.commonParams().optionalKeyRange()))) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      direction = params.direction();
+      direction = params.commonParams().direction();
       break;
     }
 
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
       const ObjectStoreOpenKeyCursorParams& params =
           aParams.get_ObjectStoreOpenKeyCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      objectStoreMetadata =
+          GetMetadataForObjectStoreId(params.commonParams().objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+      if (aTrustParams && NS_WARN_IF(!VerifyRequestParams(
+                              params.commonParams().optionalKeyRange()))) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      direction = params.direction();
+      direction = params.commonParams().direction();
       break;
     }
 
     case OpenCursorParams::TIndexOpenCursorParams: {
       const IndexOpenCursorParams& params = aParams.get_IndexOpenCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      objectStoreMetadata = GetMetadataForObjectStoreId(
+          params.commonIndexParams().commonParams().objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      indexMetadata = GetMetadataForIndexId(
+          objectStoreMetadata, params.commonIndexParams().indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
       if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+          NS_WARN_IF(!VerifyRequestParams(
+              params.commonIndexParams().commonParams().optionalKeyRange()))) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      direction = params.direction();
+      direction = params.commonIndexParams().commonParams().direction();
       break;
     }
 
     case OpenCursorParams::TIndexOpenKeyCursorParams: {
       const IndexOpenKeyCursorParams& params =
           aParams.get_IndexOpenKeyCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      objectStoreMetadata = GetMetadataForObjectStoreId(
+          params.commonIndexParams().commonParams().objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      indexMetadata = GetMetadataForIndexId(
+          objectStoreMetadata, params.commonIndexParams().indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
       if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+          NS_WARN_IF(!VerifyRequestParams(
+              params.commonIndexParams().commonParams().optionalKeyRange()))) {
         ASSERT_UNLESS_FUZZING();
         return nullptr;
       }
-      direction = params.direction();
+      direction = params.commonIndexParams().commonParams().direction();
       break;
     }
 
@@ -15037,13 +15043,21 @@ bool Cursor::Start(const OpenCursorParams& aParams) {
 
   const Maybe<SerializedKeyRange>& optionalKeyRange =
       mType == OpenCursorParams::TObjectStoreOpenCursorParams
-          ? aParams.get_ObjectStoreOpenCursorParams().optionalKeyRange()
+          ? aParams.get_ObjectStoreOpenCursorParams()
+                .commonParams()
+                .optionalKeyRange()
           : mType == OpenCursorParams::TObjectStoreOpenKeyCursorParams
                 ? aParams.get_ObjectStoreOpenKeyCursorParams()
+                      .commonParams()
                       .optionalKeyRange()
                 : mType == OpenCursorParams::TIndexOpenCursorParams
-                      ? aParams.get_IndexOpenCursorParams().optionalKeyRange()
+                      ? aParams.get_IndexOpenCursorParams()
+                            .commonIndexParams()
+                            .commonParams()
+                            .optionalKeyRange()
                       : aParams.get_IndexOpenKeyCursorParams()
+                            .commonIndexParams()
+                            .commonParams()
                             .optionalKeyRange();
 
   RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
