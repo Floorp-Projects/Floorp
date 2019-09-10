@@ -144,9 +144,9 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue) {
   }
 
   PR_SetEnv(newData.get());
-  if (entry->GetData()) {
-    free(entry->GetData());
+  if (entry->mData) {
+    free(entry->mData);
   }
-  entry->SetData(newData.release());
+  entry->mData = newData.release();
   return NS_OK;
 }
