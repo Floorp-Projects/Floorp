@@ -42,6 +42,17 @@ describe("Error - Simple error", () => {
 
     expect(renderedComponent.text()).toEqual("Error");
   });
+
+  it("renders with error type and preview message when in short mode", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stubs.get("MultilineStackError"),
+        mode: MODE.SHORT
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();    
+  });
 });
 
 describe("Error - Multi line stack error", () => {
