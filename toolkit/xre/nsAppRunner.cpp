@@ -3757,20 +3757,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
 #ifdef FUZZING
   if (PR_GetEnv("FUZZER")) {
-    // Enable headless mode and assert that it worked, since gfxPlatform
-    // uses a static bool set after the first call to `IsHeadless`.
-    PR_SetEnv("MOZ_HEADLESS=1");
-    MOZ_ASSERT(gfxPlatform::IsHeadless());
-
     *aExitFlag = true;
     return mozilla::fuzzerRunner->Run(&gArgc, &gArgv);
   }
 #endif
 
   if (PR_GetEnv("MOZ_RUN_GTEST")) {
-    PR_SetEnv("MOZ_HEADLESS=1");
-    MOZ_ASSERT(gfxPlatform::IsHeadless());
-
     int result;
 #ifdef XP_WIN
     UseParentConsole();
