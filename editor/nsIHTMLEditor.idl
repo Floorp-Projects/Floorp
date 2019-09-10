@@ -307,6 +307,7 @@ interface nsIHTMLEditor : nsISupports
    * Document me!
    *
    */
+  [can_run_script]
   void  align(in AString aAlign);
 
   /**
