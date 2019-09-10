@@ -524,12 +524,6 @@ constexpr const TSymbolUniqueId BuiltInId::texture2DLodEXT_Sampler2D1_Float2_Flo
 constexpr const TSymbolUniqueId BuiltInId::texture2DProjLodEXT_Sampler2D1_Float3_Float1;
 constexpr const TSymbolUniqueId BuiltInId::texture2DProjLodEXT_Sampler2D1_Float4_Float1;
 constexpr const TSymbolUniqueId BuiltInId::textureCubeLodEXT_SamplerCube1_Float3_Float1;
-constexpr const TSymbolUniqueId BuiltInId::texture3D_Sampler3D1_Float3;
-constexpr const TSymbolUniqueId BuiltInId::texture3D_Sampler3D1_Float3_Float1;
-constexpr const TSymbolUniqueId BuiltInId::texture3DProj_Sampler3D1_Float4;
-constexpr const TSymbolUniqueId BuiltInId::texture3DProj_Sampler3D1_Float4_Float1;
-constexpr const TSymbolUniqueId BuiltInId::texture3DLod_Sampler3D1_Float3_Float1;
-constexpr const TSymbolUniqueId BuiltInId::texture3DProjLod_Sampler3D1_Float4_Float1;
 constexpr const TSymbolUniqueId BuiltInId::texture2DLod_Sampler2D1_Float2_Float1;
 constexpr const TSymbolUniqueId BuiltInId::texture2DProjLod_Sampler2D1_Float3_Float1;
 constexpr const TSymbolUniqueId BuiltInId::texture2DProjLod_Sampler2D1_Float4_Float1;
@@ -978,8 +972,6 @@ constexpr const TSymbolUniqueId BuiltInId::gl_ViewportIndex;
 constexpr const TSymbolUniqueId BuiltInId::gl_LayerVS;
 constexpr const TSymbolUniqueId BuiltInId::gl_DrawID;
 constexpr const TSymbolUniqueId BuiltInId::gl_DrawIDESSL1;
-constexpr const TSymbolUniqueId BuiltInId::gl_BaseVertex;
-constexpr const TSymbolUniqueId BuiltInId::gl_BaseInstance;
 constexpr const TSymbolUniqueId BuiltInId::gl_NumWorkGroups;
 constexpr const TSymbolUniqueId BuiltInId::gl_WorkGroupSize;
 constexpr const TSymbolUniqueId BuiltInId::gl_WorkGroupID;
@@ -997,7 +989,7 @@ constexpr const TSymbolUniqueId BuiltInId::gl_PositionGS;
 constexpr const TSymbolUniqueId BuiltInId::gl_ViewID_OVR;
 constexpr const TSymbolUniqueId BuiltInId::gl_ViewID_OVRESSL1;
 
-const int TSymbolTable::kLastBuiltInId = 1033;
+const int TSymbolTable::kLastBuiltInId = 1025;
 
 namespace BuiltInName
 {
@@ -1084,8 +1076,6 @@ constexpr const ImmutableString frexp("frexp");
 constexpr const ImmutableString frexp_3B3C("frexp(3B3C");
 constexpr const ImmutableString fwidth("fwidth");
 constexpr const ImmutableString fwidthExt("fwidth");
-constexpr const ImmutableString gl_BaseInstance("gl_BaseInstance");
-constexpr const ImmutableString gl_BaseVertex("gl_BaseVertex");
 constexpr const ImmutableString gl_DepthRange("gl_DepthRange");
 constexpr const ImmutableString gl_DepthRangeParameters("gl_DepthRangeParameters");
 constexpr const ImmutableString gl_DrawID("gl_DrawID");
@@ -1283,12 +1273,6 @@ constexpr const ImmutableString texture2DProjLod_0H2B0B("texture2DProjLod(0H2B0B
 constexpr const ImmutableString texture2DProj_0H2B0B("texture2DProj(0H2B0B");
 constexpr const ImmutableString texture2DRect("texture2DRect");
 constexpr const ImmutableString texture2DRectProj("texture2DRectProj");
-constexpr const ImmutableString texture3D("texture3D");
-constexpr const ImmutableString texture3DLod("texture3DLod");
-constexpr const ImmutableString texture3DProj("texture3DProj");
-constexpr const ImmutableString texture3DProjLod("texture3DProjLod");
-constexpr const ImmutableString texture3DProj_0I3B0B("texture3DProj(0I3B0B");
-constexpr const ImmutableString texture3D_0I2B0B("texture3D(0I2B0B");
 constexpr const ImmutableString textureCube("textureCube");
 constexpr const ImmutableString textureCubeGradEXT("textureCubeGradEXT");
 constexpr const ImmutableString textureCubeGradEXT_0J2B2B2B("textureCubeGradEXT(0J2B2B2B");
@@ -1472,18 +1456,6 @@ constexpr const ImmutableString yuv_2_rgb("yuv_2_rgb");
 namespace BuiltInVariable
 {
 
-constexpr const TVariable kVar_gl_BaseInstance(
-    BuiltInId::gl_BaseInstance,
-    BuiltInName::gl_BaseInstance,
-    SymbolType::BuiltIn,
-    TExtension::ANGLE_base_vertex_base_instance,
-    StaticType::Get<EbtInt, EbpHigh, EvqBaseInstance, 1, 1>());
-constexpr const TVariable kVar_gl_BaseVertex(
-    BuiltInId::gl_BaseVertex,
-    BuiltInName::gl_BaseVertex,
-    SymbolType::BuiltIn,
-    TExtension::ANGLE_base_vertex_base_instance,
-    StaticType::Get<EbtInt, EbpHigh, EvqBaseVertex, 1, 1>());
 constexpr const TVariable kVar_gl_DrawID(BuiltInId::gl_DrawID,
                                          BuiltInName::gl_DrawID,
                                          SymbolType::BuiltIn,
@@ -1631,13 +1603,13 @@ constexpr const TVariable kVar_gl_ViewID_OVR(
     BuiltInId::gl_ViewID_OVR,
     BuiltInName::gl_ViewID_OVR,
     SymbolType::BuiltIn,
-    TExtension::UNDEFINED,
+    TExtension::OVR_multiview2,
     StaticType::Get<EbtUInt, EbpHigh, EvqViewIDOVR, 1, 1>());
 constexpr const TVariable kVar_gl_ViewID_OVRESSL1(
     BuiltInId::gl_ViewID_OVRESSL1,
     BuiltInName::gl_ViewID_OVR,
     SymbolType::BuiltIn,
-    TExtension::UNDEFINED,
+    TExtension::OVR_multiview2,
     StaticType::Get<EbtInt, EbpHigh, EvqViewIDOVR, 1, 1>());
 constexpr const TVariable kVar_gl_ViewportIndex(
     BuiltInId::gl_ViewportIndex,
@@ -2071,16 +2043,6 @@ constexpr const TVariable kVar_pt_o_3D(BuiltInId::pt_o_3D,
                                        SymbolType::BuiltIn,
                                        TExtension::UNDEFINED,
                                        StaticType::Get<EbtUInt, EbpUndefined, EvqOut, 4, 1>());
-
-const TVariable *gl_BaseInstance()
-{
-    return &kVar_gl_BaseInstance;
-}
-
-const TVariable *gl_BaseVertex()
-{
-    return &kVar_gl_BaseVertex;
-}
 
 const TVariable *gl_DrawID()
 {
@@ -2758,7 +2720,6 @@ constexpr const UnmangledBuiltIn EXT_YUV_target(TExtension::EXT_YUV_target);
 constexpr const UnmangledBuiltIn EXT_geometry_shader(TExtension::EXT_geometry_shader);
 constexpr const UnmangledBuiltIn EXT_shader_texture_lod(TExtension::EXT_shader_texture_lod);
 constexpr const UnmangledBuiltIn OES_standard_derivatives(TExtension::OES_standard_derivatives);
-constexpr const UnmangledBuiltIn OES_texture_3D(TExtension::OES_texture_3D);
 constexpr const UnmangledBuiltIn UNDEFINED(TExtension::UNDEFINED);
 
 }  // namespace UnmangledBuiltIns
@@ -7274,60 +7235,6 @@ constexpr const TFunction kFunction_textureCubeLodEXT_0J2B0B(
     StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
     EOpCallBuiltInFunction,
     false);
-constexpr const TFunction kFunction_texture3D_0I2B(
-    BuiltInId::texture3D_Sampler3D1_Float3,
-    BuiltInName::texture3D,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I2B0B2C,
-    2,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
-constexpr const TFunction kFunction_texture3D_0I2B0B(
-    BuiltInId::texture3D_Sampler3D1_Float3_Float1,
-    BuiltInName::texture3D,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I2B0B2C,
-    3,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
-constexpr const TFunction kFunction_texture3DProj_0I3B(
-    BuiltInId::texture3DProj_Sampler3D1_Float4,
-    BuiltInName::texture3DProj,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I3B2C0B,
-    2,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
-constexpr const TFunction kFunction_texture3DProj_0I3B0B(
-    BuiltInId::texture3DProj_Sampler3D1_Float4_Float1,
-    BuiltInName::texture3DProj,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I3B0B2C,
-    3,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
-constexpr const TFunction kFunction_texture3DLod_0I2B0B(
-    BuiltInId::texture3DLod_Sampler3D1_Float3_Float1,
-    BuiltInName::texture3DLod,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I2B0B2C,
-    3,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
-constexpr const TFunction kFunction_texture3DProjLod_0I3B0B(
-    BuiltInId::texture3DProjLod_Sampler3D1_Float4_Float1,
-    BuiltInName::texture3DProjLod,
-    TExtension::OES_texture_3D,
-    BuiltInParameters::p0I3B0B2C,
-    3,
-    StaticType::Get<EbtFloat, EbpUndefined, EvqGlobal, 4, 1>(),
-    EOpCallBuiltInFunction,
-    false);
 constexpr const TFunction kFunction_texture2DLod_0H1B0B(
     BuiltInId::texture2DLod_Sampler2D1_Float2_Float1,
     BuiltInName::texture2DLod,
@@ -7440,7 +7347,7 @@ constexpr const TFunction kFunction_texture_0Y2B(
     BuiltInId::texture_USamplerCube1_Float3,
     BuiltInName::texture,
     TExtension::UNDEFINED,
-    BuiltInParameters::p0Y2B2B2B,
+    BuiltInParameters::p0Y2B0B,
     2,
     StaticType::Get<EbtUInt, EbpUndefined, EvqGlobal, 4, 1>(),
     EOpCallBuiltInFunction,
@@ -9717,7 +9624,7 @@ constexpr const TFunction kFunction_textureGather_0Y2B(
     BuiltInId::textureGather_USamplerCube1_Float3,
     BuiltInName::textureGather,
     TExtension::UNDEFINED,
-    BuiltInParameters::p0Y2B2B2B,
+    BuiltInParameters::p0Y2B0B,
     2,
     StaticType::Get<EbtUInt, EbpUndefined, EvqGlobal, 4, 1>(),
     EOpCallBuiltInFunction,
@@ -16899,30 +16806,7 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                 }
             }
         }
-        if ((mShaderType == GL_VERTEX_SHADER) && (mResources.ANGLE_base_vertex_base_instance))
-        {
-            switch (nameHash)
-            {
-                case 0x7e695e00u:
-                {
-                    if (name == BuiltInName::gl_BaseVertex)
-                    {
-                        return &BuiltInVariable::kVar_gl_BaseVertex;
-                    }
-                    break;
-                }
-                case 0x7e785b75u:
-                {
-                    if (name == BuiltInName::gl_BaseInstance)
-                    {
-                        return &BuiltInVariable::kVar_gl_BaseInstance;
-                    }
-                    break;
-                }
-            }
-        }
-        if ((mResources.OVR_multiview || mResources.OVR_multiview2) &&
-            mShaderType != GL_COMPUTE_SHADER)
+        if (mResources.OVR_multiview2 && mShaderType != GL_COMPUTE_SHADER)
         {
             switch (nameHash)
             {
@@ -17213,23 +17097,6 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                     }
                     break;
                 }
-                case 0x12764e24u:
-                {
-                    if (name.beginsWith(BuiltInName::texture3D))
-                    {
-                        ASSERT(name.length() == 14);
-                        return &BuiltInFunction::kFunction_texture3D_0I2B;
-                    }
-                    break;
-                }
-                case 0x12810dc6u:
-                {
-                    if (name == BuiltInName::texture3D_0I2B0B)
-                    {
-                        return &BuiltInFunction::kFunction_texture3D_0I2B0B;
-                    }
-                    break;
-                }
                 case 0x12846ba6u:
                 {
                     if (name.beginsWith(BuiltInName::texture2D))
@@ -17245,24 +17112,6 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                     {
                         ASSERT(name.length() == 18);
                         return &BuiltInFunction::kFunction_textureCube_0J2B0B;
-                    }
-                    break;
-                }
-                case 0x189e8416u:
-                {
-                    if (name.beginsWith(BuiltInName::texture3DLod))
-                    {
-                        ASSERT(name.length() == 19);
-                        return &BuiltInFunction::kFunction_texture3DLod_0I2B0B;
-                    }
-                    break;
-                }
-                case 0x1a93312fu:
-                {
-                    if (name.beginsWith(BuiltInName::texture3DProj))
-                    {
-                        ASSERT(name.length() == 18);
-                        return &BuiltInFunction::kFunction_texture3DProj_0I3B;
                     }
                     break;
                 }
@@ -17283,28 +17132,11 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                     }
                     break;
                 }
-                case 0x1aa7eecdu:
-                {
-                    if (name == BuiltInName::texture3DProj_0I3B0B)
-                    {
-                        return &BuiltInFunction::kFunction_texture3DProj_0I3B0B;
-                    }
-                    break;
-                }
                 case 0x1eb43b6cu:
                 {
                     if (name == BuiltInName::texture2DLodEXT_0H1B0B)
                     {
                         return &BuiltInFunction::kFunction_texture2DLodEXT_0H1B0B;
-                    }
-                    break;
-                }
-                case 0x20b9ceecu:
-                {
-                    if (name.beginsWith(BuiltInName::texture3DProjLod))
-                    {
-                        ASSERT(name.length() == 23);
-                        return &BuiltInFunction::kFunction_texture3DProjLod_0I3B0B;
                     }
                     break;
                 }
@@ -17464,8 +17296,7 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                 }
             }
         }
-        if ((mResources.OVR_multiview || mResources.OVR_multiview2) &&
-            mShaderType != GL_COMPUTE_SHADER)
+        if (mResources.OVR_multiview2 && mShaderType != GL_COMPUTE_SHADER)
         {
             switch (nameHash)
             {
@@ -20501,43 +20332,11 @@ const UnmangledBuiltIn *TSymbolTable::getUnmangledBuiltInForShaderVersion(
                     }
                     break;
                 }
-                case 0x7e4db1c8u:
-                {
-                    if (name == BuiltInName::texture3D)
-                    {
-                        return &UnmangledBuiltIns::OES_texture_3D;
-                    }
-                    break;
-                }
-                case 0x7e63c1d1u:
-                {
-                    if (name == BuiltInName::texture3DLod)
-                    {
-                        return &UnmangledBuiltIns::OES_texture_3D;
-                    }
-                    break;
-                }
-                case 0x7e687e40u:
-                {
-                    if (name == BuiltInName::texture3DProj)
-                    {
-                        return &UnmangledBuiltIns::OES_texture_3D;
-                    }
-                    break;
-                }
                 case 0x7e7b843eu:
                 {
                     if (name == BuiltInName::texture2DLodEXT)
                     {
                         return &UnmangledBuiltIns::EXT_shader_texture_lod;
-                    }
-                    break;
-                }
-                case 0x7e85692eu:
-                {
-                    if (name == BuiltInName::texture3DProjLod)
-                    {
-                        return &UnmangledBuiltIns::OES_texture_3D;
                     }
                     break;
                 }

@@ -171,7 +171,7 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
 
         InitResult result = INITDAG_SUCCESS;
 
-        std::stringstream errorStream = sh::InitializeStream<std::stringstream>();
+        std::stringstream errorStream;
 
         while (!functionsToProcess.empty())
         {

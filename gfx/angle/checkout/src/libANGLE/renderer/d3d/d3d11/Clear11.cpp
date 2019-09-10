@@ -19,7 +19,7 @@
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
-#include "libANGLE/trace.h"
+#include "third_party/trace_event/trace_event.h"
 
 // Precompiled shaders
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/clear11_fl9vs.h"
@@ -234,7 +234,7 @@ angle::Result Clear11::ensureResourcesInitialized(const gl::Context *context)
         return angle::Result::Continue;
     }
 
-    ANGLE_TRACE_EVENT0("gpu.angle", "Clear11::ensureResourcesInitialized");
+    TRACE_EVENT0("gpu.angle", "Clear11::ensureResourcesInitialized");
 
     static_assert((sizeof(RtvDsvClearInfo<float>) == sizeof(RtvDsvClearInfo<int>)),
                   "Size of rx::RtvDsvClearInfo<float> is not equal to rx::RtvDsvClearInfo<int>");
@@ -551,7 +551,7 @@ angle::Result Clear11::clearFramebuffer(const gl::Context *context,
                 // We shouldn't reach here if deviceContext1 is unavailable.
                 ASSERT(deviceContext1);
                 deviceContext1->ClearView(framebufferRTV.get(), clearValues, &scissorRect, 1);
-                if (mRenderer->getFeatures().callClearTwice.enabled)
+                if (mRenderer->getWorkarounds().callClearTwice)
                 {
                     deviceContext1->ClearView(framebufferRTV.get(), clearValues, &scissorRect, 1);
                 }
@@ -559,7 +559,7 @@ angle::Result Clear11::clearFramebuffer(const gl::Context *context,
             else
             {
                 deviceContext->ClearRenderTargetView(framebufferRTV.get(), clearValues);
-                if (mRenderer->getFeatures().callClearTwice.enabled)
+                if (mRenderer->getWorkarounds().callClearTwice)
                 {
                     deviceContext->ClearRenderTargetView(framebufferRTV.get(), clearValues);
                 }

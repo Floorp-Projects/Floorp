@@ -385,9 +385,8 @@ void ResourcesHLSL::outputAtomicCounterBuffer(TInfoSinkBase &out,
                                               const int binding,
                                               const unsigned int registerIndex)
 {
-    // Atomic counter memory access is not incoherent
-    out << "uniform globallycoherent RWByteAddressBuffer "
-        << getAtomicCounterNameForBinding(binding) << " : register(u" << registerIndex << ");\n";
+    out << "uniform RWByteAddressBuffer " << getAtomicCounterNameForBinding(binding)
+        << " : register(u" << registerIndex << ");\n";
 }
 
 void ResourcesHLSL::uniformsHeader(TInfoSinkBase &out,
@@ -592,8 +591,7 @@ void ResourcesHLSL::imageMetadataUniforms(TInfoSinkBase &out, unsigned int regIn
         out << "    struct ImageMetadata\n"
                "    {\n"
                "        int layer;\n"
-               "        uint level;\n"
-               "        int2 padding;\n"
+               "        int3 padding;\n"
                "    };\n";
 
         if (mReadonlyImageCount > 0)

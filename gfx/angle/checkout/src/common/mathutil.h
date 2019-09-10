@@ -187,13 +187,9 @@ inline unsigned short float32ToFloat16(float fp32)
     unsigned int sign  = (fp32i & 0x80000000) >> 16;
     unsigned int abs   = fp32i & 0x7FFFFFFF;
 
-    if (abs > 0x7F800000)
-    {  // NaN
-        return 0x7FFF;
-    }
-    else if (abs > 0x47FFEFFF)
-    {  // Infinity
-        return static_cast<uint16_t>(sign | 0x7C00);
+    if (abs > 0x47FFEFFF)  // Infinity
+    {
+        return static_cast<unsigned short>(sign | 0x7FFF);
     }
     else if (abs < 0x38800000)  // Denormal
     {
@@ -1248,30 +1244,16 @@ angle::CheckedNumeric<T> CheckedRoundUp(const T value, const T alignment)
     return roundUp(checkedValue, checkedAlignment);
 }
 
-inline constexpr unsigned int UnsignedCeilDivide(unsigned int value, unsigned int divisor)
+inline unsigned int UnsignedCeilDivide(unsigned int value, unsigned int divisor)
 {
     unsigned int divided = value / divisor;
     return (divided + ((value % divisor == 0) ? 0 : 1));
 }
 
-#if defined(__has_builtin)
-#    define ANGLE_HAS_BUILTIN(x) __has_builtin(x)
-#else
-#    define ANGLE_HAS_BUILTIN(x) 0
-#endif
-
 #if defined(_MSC_VER)
 
 #    define ANGLE_ROTL(x, y) _rotl(x, y)
-#    define ANGLE_ROTL64(x, y) _rotl64(x, y)
 #    define ANGLE_ROTR16(x, y) _rotr16(x, y)
-
-#elif defined(__clang__) && ANGLE_HAS_BUILTIN(__builtin_rotateleft32) && \
-    ANGLE_HAS_BUILTIN(__builtin_rotateleft64) && ANGLE_HAS_BUILTIN(__builtin_rotateright16)
-
-#    define ANGLE_ROTL(x, y) __builtin_rotateleft32(x, y)
-#    define ANGLE_ROTL64(x, y) __builtin_rotateleft64(x, y)
-#    define ANGLE_ROTR16(x, y) __builtin_rotateright16(x, y)
 
 #else
 
@@ -1280,18 +1262,12 @@ inline uint32_t RotL(uint32_t x, int8_t r)
     return (x << r) | (x >> (32 - r));
 }
 
-inline uint64_t RotL64(uint64_t x, int8_t r)
-{
-    return (x << r) | (x >> (64 - r));
-}
-
 inline uint16_t RotR16(uint16_t x, int8_t r)
 {
     return (x >> r) | (x << (16 - r));
 }
 
 #    define ANGLE_ROTL(x, y) ::rx::RotL(x, y)
-#    define ANGLE_ROTL64(x, y) ::rx::RotL64(x, y)
 #    define ANGLE_ROTR16(x, y) ::rx::RotR16(x, y)
 
 #endif  // namespace rx

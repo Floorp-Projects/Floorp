@@ -125,15 +125,6 @@ inline const char *AllocatePoolCharArray(const char *str, size_t strLength)
     return buffer;
 }
 
-// Initialize a new stream which must be imbued with the classic locale
-template <typename T>
-T InitializeStream()
-{
-    T stream;
-    stream.imbue(std::locale::classic());
-    return stream;
-}
-
 }  // namespace sh
 
 namespace std

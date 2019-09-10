@@ -34,6 +34,6 @@ void CopyBGRA8ToRGBA8(const uint8_t *source, uint8_t *dest);
 
 }  // namespace angle
 
-#include "copyimage.inc"
+#include "copyimage.inl"
 
 #endif  // IMAGEUTIL_COPYIMAGE_H_

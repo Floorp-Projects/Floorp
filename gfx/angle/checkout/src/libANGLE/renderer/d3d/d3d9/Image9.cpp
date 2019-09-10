@@ -780,7 +780,7 @@ angle::Result Image9::copyFromFramebuffer(const gl::Context *context,
                                           const gl::Rectangle &sourceArea,
                                           const gl::Framebuffer *source)
 {
-    const gl::FramebufferAttachment *srcAttachment = source->getReadColorAttachment();
+    const gl::FramebufferAttachment *srcAttachment = source->getReadColorbuffer();
     ASSERT(srcAttachment);
 
     RenderTargetD3D *renderTarget = nullptr;

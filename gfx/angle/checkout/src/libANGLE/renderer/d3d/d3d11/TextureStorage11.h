@@ -92,7 +92,6 @@ class TextureStorage11 : public TextureStorage
                           GLenum type,
                           const gl::PixelUnpackState &unpack,
                           const uint8_t *pixelData) override;
-    void invalidateTextures() override;
 
     virtual angle::Result getSRVForSampler(const gl::Context *context,
                                            const gl::TextureState &textureState,

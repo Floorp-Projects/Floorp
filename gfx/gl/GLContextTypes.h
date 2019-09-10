@@ -29,7 +29,7 @@ struct GLFormats {
   GLenum stencil = 0;
 };
 
-enum class CreateContextFlags : uint16_t {
+enum class CreateContextFlags : uint8_t {
   NONE = 0,
   REQUIRE_COMPAT_PROFILE = 1 << 0,
   // Force the use of hardware backed GL, don't allow software implementations.
@@ -41,9 +41,10 @@ enum class CreateContextFlags : uint16_t {
 
   NO_VALIDATION = 1 << 4,
   PREFER_ROBUSTNESS = 1 << 5,
+
   HIGH_POWER = 1 << 6,
+
   PROVOKING_VERTEX_DONT_CARE = 1 << 7,
-  PREFER_EXACT_VERSION = 1 << 8,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

@@ -64,12 +64,6 @@ class Context9 : public ContextD3D
     // Path object creation
     std::vector<PathImpl *> createPaths(GLsizei) override;
 
-    // Memory object creation.
-    MemoryObjectImpl *createMemoryObject() override;
-
-    // Semaphore creation.
-    SemaphoreImpl *createSemaphore() override;
-
     // Flush and finish.
     angle::Result flush(const gl::Context *context) override;
     angle::Result finish(const gl::Context *context) override;
@@ -112,7 +106,7 @@ class Context9 : public ContextD3D
                                        const void *indirect) override;
 
     // Device loss
-    gl::GraphicsResetStatus getResetStatus() override;
+    GLenum getResetStatus() override;
 
     // Vendor and description strings.
     std::string getVendorString() const override;

@@ -15,16 +15,6 @@ SurfaceImpl::SurfaceImpl(const egl::SurfaceState &state) : mState(state) {}
 
 SurfaceImpl::~SurfaceImpl() {}
 
-egl::Error SurfaceImpl::makeCurrent(const gl::Context *context)
-{
-    return egl::NoError();
-}
-
-egl::Error SurfaceImpl::unMakeCurrent(const gl::Context *context)
-{
-    return egl::NoError();
-}
-
 egl::Error SurfaceImpl::swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects)
 {
     UNREACHABLE();

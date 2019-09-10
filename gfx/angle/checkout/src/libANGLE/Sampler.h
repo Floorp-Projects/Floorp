@@ -35,40 +35,40 @@ class Sampler final : public RefCountObject, public LabeledObject, public angle:
     void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
-    void setMinFilter(const Context *context, GLenum minFilter);
+    void setMinFilter(GLenum minFilter);
     GLenum getMinFilter() const;
 
-    void setMagFilter(const Context *context, GLenum magFilter);
+    void setMagFilter(GLenum magFilter);
     GLenum getMagFilter() const;
 
-    void setWrapS(const Context *context, GLenum wrapS);
+    void setWrapS(GLenum wrapS);
     GLenum getWrapS() const;
 
-    void setWrapT(const Context *context, GLenum wrapT);
+    void setWrapT(GLenum wrapT);
     GLenum getWrapT() const;
 
-    void setWrapR(const Context *context, GLenum wrapR);
+    void setWrapR(GLenum wrapR);
     GLenum getWrapR() const;
 
-    void setMaxAnisotropy(const Context *context, float maxAnisotropy);
+    void setMaxAnisotropy(float maxAnisotropy);
     float getMaxAnisotropy() const;
 
-    void setMinLod(const Context *context, GLfloat minLod);
+    void setMinLod(GLfloat minLod);
     GLfloat getMinLod() const;
 
-    void setMaxLod(const Context *context, GLfloat maxLod);
+    void setMaxLod(GLfloat maxLod);
     GLfloat getMaxLod() const;
 
-    void setCompareMode(const Context *context, GLenum compareMode);
+    void setCompareMode(GLenum compareMode);
     GLenum getCompareMode() const;
 
-    void setCompareFunc(const Context *context, GLenum compareFunc);
+    void setCompareFunc(GLenum compareFunc);
     GLenum getCompareFunc() const;
 
-    void setSRGBDecode(const Context *context, GLenum sRGBDecode);
+    void setSRGBDecode(GLenum sRGBDecode);
     GLenum getSRGBDecode() const;
 
-    void setBorderColor(const Context *context, const ColorGeneric &color);
+    void setBorderColor(const ColorGeneric &color);
     const ColorGeneric &getBorderColor() const;
 
     const SamplerState &getSamplerState() const;

@@ -95,9 +95,6 @@ bool CheckContextLost(const GLContext* gl);
 #define LOCAL_GL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB  0x00000002
 #define LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB          0x00000004
 
-// EGL_ANGLE_create_context_backwards_compatible
-#define LOCAL_EGL_CONTEXT_OPENGL_BACKWARDS_COMPATIBLE_ANGLE 0x3483
-
 // clang-format on
 
 #endif

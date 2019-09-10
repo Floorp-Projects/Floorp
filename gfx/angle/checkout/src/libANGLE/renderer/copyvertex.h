@@ -24,34 +24,40 @@ template <typename T,
           size_t inputComponentCount,
           size_t outputComponentCount,
           uint32_t alphaDefaultValueBits>
-void CopyNativeVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
-
-template <size_t inputComponentCount, size_t outputComponentCount>
-void Copy8SintTo16SintVertexData(const uint8_t *input,
+inline void CopyNativeVertexData(const uint8_t *input,
                                  size_t stride,
                                  size_t count,
                                  uint8_t *output);
 
+template <size_t inputComponentCount, size_t outputComponentCount>
+inline void Copy8SintTo16SintVertexData(const uint8_t *input,
+                                        size_t stride,
+                                        size_t count,
+                                        uint8_t *output);
+
 template <size_t componentCount>
-void Copy8SnormTo16SnormVertexData(const uint8_t *input,
-                                   size_t stride,
-                                   size_t count,
-                                   uint8_t *output);
+inline void Copy8SnormTo16SnormVertexData(const uint8_t *input,
+                                          size_t stride,
+                                          size_t count,
+                                          uint8_t *output);
 
 template <size_t inputComponentCount, size_t outputComponentCount>
-void Copy32FixedTo32FVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
+inline void Copy32FixedTo32FVertexData(const uint8_t *input,
+                                       size_t stride,
+                                       size_t count,
+                                       uint8_t *output);
 
 template <typename T, size_t inputComponentCount, size_t outputComponentCount, bool normalized>
-void CopyTo32FVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
+inline void CopyTo32FVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
 
 template <bool isSigned, bool normalized, bool toFloat>
-void CopyXYZ10W2ToXYZW32FVertexData(const uint8_t *input,
-                                    size_t stride,
-                                    size_t count,
-                                    uint8_t *output);
+inline void CopyXYZ10W2ToXYZW32FVertexData(const uint8_t *input,
+                                           size_t stride,
+                                           size_t count,
+                                           uint8_t *output);
 
 }  // namespace rx
 
-#include "copyvertex.inc.h"
+#include "copyvertex.inc"
 
 #endif  // LIBANGLE_RENDERER_COPYVERTEX_H_

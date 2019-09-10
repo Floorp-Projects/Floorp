@@ -10,7 +10,7 @@ DEFINES['DYNAMIC_ANNOTATIONS_ENABLED'] = '1'
 #DEFINES['FULL_SAFE_BROWSING'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = 'NTDDI_WIN10_RS2'
+DEFINES['NTDDI_VERSION'] = '0x0A000003'
 #DEFINES['PSAPI_VERSION'] = '2'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
@@ -44,6 +44,7 @@ LOCAL_INCLUDES += [
 
 #CXXFLAGS += [
 #    '/bigobj',
+#    '/d2FastFail',
 #    '/D__DATE__=',
 #    '/D__TIME__=',
 #    '/D__TIMESTAMP__=',
@@ -101,7 +102,6 @@ LOCAL_INCLUDES += [
 #    '/we4244',
 #    '/we4456',
 #    '/we4458',
-#    '/we4715',
 #    '/we4800',
 #    '/we4838',
 #    '/WX',

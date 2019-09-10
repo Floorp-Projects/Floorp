@@ -193,11 +193,7 @@ bool RunApp(const std::vector<const char *> &args,
     {
         startInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     }
-
-    if (stderrOut || stdoutOut)
-    {
-        startInfo.dwFlags |= STARTF_USESTDHANDLES;
-    }
+    startInfo.dwFlags |= STARTF_USESTDHANDLES;
 
     // Create the child process.
     PROCESS_INFORMATION processInfo = {};
@@ -245,21 +241,13 @@ bool RunApp(const std::vector<const char *> &args,
 class Win32Library : public Library
 {
   public:
-    Win32Library(const char *libraryName, SearchType searchType)
+    Win32Library(const char *libraryName)
     {
         char buffer[MAX_PATH];
         int ret = snprintf(buffer, MAX_PATH, "%s.%s", libraryName, GetSharedLibraryExtension());
         if (ret > 0 && ret < MAX_PATH)
         {
-            switch (searchType)
-            {
-                case SearchType::ApplicationDir:
-                    mModule = LoadLibraryA(buffer);
-                    break;
-                case SearchType::SystemDir:
-                    mModule = LoadLibraryExA(buffer, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-                    break;
-            }
+            mModule = LoadLibraryA(buffer);
         }
     }
 
@@ -287,32 +275,8 @@ class Win32Library : public Library
     HMODULE mModule = nullptr;
 };
 
-Library *OpenSharedLibrary(const char *libraryName, SearchType searchType)
+Library *OpenSharedLibrary(const char *libraryName)
 {
-    return new Win32Library(libraryName, searchType);
-}
-
-bool IsDirectory(const char *filename)
-{
-    WIN32_FILE_ATTRIBUTE_DATA fileInformation;
-
-    BOOL result = GetFileAttributesExA(filename, GetFileExInfoStandard, &fileInformation);
-    if (result)
-    {
-        DWORD attribs = fileInformation.dwFileAttributes;
-        return (attribs != INVALID_FILE_ATTRIBUTES) && ((attribs & FILE_ATTRIBUTE_DIRECTORY) > 0);
-    }
-
-    return false;
-}
-
-bool IsDebuggerAttached()
-{
-    return !!::IsDebuggerPresent();
-}
-
-void BreakDebugger()
-{
-    __debugbreak();
+    return new Win32Library(libraryName);
 }
 }  // namespace angle

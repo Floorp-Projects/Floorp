@@ -32,7 +32,6 @@ struct Extents;
 struct Offset;
 struct Rectangle;
 class Framebuffer;
-class MemoryObject;
 struct PixelUnpackState;
 class TextureState;
 }  // namespace gl
@@ -148,21 +147,6 @@ class TextureImpl : public FramebufferAttachmentObjectImpl, public angle::Subjec
                                                 const gl::Extents &size,
                                                 bool fixedSampleLocations) = 0;
 
-    virtual angle::Result setStorageExternalMemory(const gl::Context *context,
-                                                   gl::TextureType type,
-                                                   size_t levels,
-                                                   GLenum internalFormat,
-                                                   const gl::Extents &size,
-                                                   gl::MemoryObject *memoryObject,
-                                                   GLuint64 offset) = 0;
-
-    virtual angle::Result setImageExternal(const gl::Context *context,
-                                           const gl::ImageIndex &index,
-                                           GLenum internalFormat,
-                                           const gl::Extents &size,
-                                           GLenum format,
-                                           GLenum type);
-
     virtual angle::Result setEGLImageTarget(const gl::Context *context,
                                             gl::TextureType type,
                                             egl::Image *image) = 0;
@@ -182,8 +166,6 @@ class TextureImpl : public FramebufferAttachmentObjectImpl, public angle::Subjec
     // Override if accurate native memory size information is available
     virtual GLint getMemorySize() const;
     virtual GLint getLevelMemorySize(gl::TextureTarget target, GLint level);
-
-    virtual GLint getNativeID() const;
 
     virtual angle::Result syncState(const gl::Context *context,
                                     const gl::Texture::DirtyBits &dirtyBits) = 0;

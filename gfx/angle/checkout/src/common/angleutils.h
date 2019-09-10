@@ -324,10 +324,4 @@ std::string ToString(const T &value)
 #    define ANGLE_NO_DISCARD
 #endif  // __has_cpp_attribute(nodiscard)
 
-#if __has_cpp_attribute(maybe_unused)
-#    define ANGLE_MAYBE_UNUSED [[maybe_unused]]
-#else
-#    define ANGLE_MAYBE_UNUSED
-#endif  // __has_cpp_attribute(maybe_unused)
-
 #endif  // COMMON_ANGLEUTILS_H_

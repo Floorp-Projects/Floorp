@@ -22,47 +22,29 @@ class EGLImplFactory;
 class EGLSyncImpl;
 }  // namespace rx
 
-namespace gl
-{
-class Context;
-}  // namespace gl
-
 namespace egl
 {
-class Sync final : public angle::RefCountObject<Display, angle::Result>, public LabeledObject
+class Sync final : public angle::RefCountObject<Display, angle::Result>
 {
   public:
     Sync(rx::EGLImplFactory *factory, EGLenum type, const AttributeMap &attribs);
     ~Sync() override;
 
-    void setLabel(EGLLabelKHR label) override;
-    EGLLabelKHR getLabel() const override;
-
     void onDestroy(const Display *display) override;
 
-    Error initialize(const Display *display, const gl::Context *context);
-    Error clientWait(const Display *display,
-                     const gl::Context *context,
-                     EGLint flags,
-                     EGLTime timeout,
-                     EGLint *outResult);
-    Error serverWait(const Display *display, const gl::Context *context, EGLint flags);
+    Error initialize(const Display *display);
+    Error clientWait(const Display *display, EGLint flags, EGLTime timeout, EGLint *outResult);
+    Error serverWait(const Display *display, EGLint flags);
     Error getStatus(const Display *display, EGLint *outStatus) const;
-
-    Error dupNativeFenceFD(const Display *display, EGLint *result) const;
 
     EGLenum getType() const { return mType; }
     EGLint getCondition() const { return mCondition; }
-    EGLint getNativeFenceFD() const { return mNativeFenceFD; }
 
   private:
     std::unique_ptr<rx::EGLSyncImpl> mFence;
 
-    EGLLabelKHR mLabel;
-
     EGLenum mType;
     static constexpr EGLint mCondition = EGL_SYNC_PRIOR_COMMANDS_COMPLETE_KHR;
-    EGLint mNativeFenceFD;
 };
 
 }  // namespace egl

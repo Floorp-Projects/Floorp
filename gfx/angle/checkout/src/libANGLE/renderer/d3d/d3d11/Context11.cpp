@@ -141,7 +141,7 @@ CompilerImpl *Context11::createCompiler()
 
 ShaderImpl *Context11::createShader(const gl::ShaderState &data)
 {
-    return new ShaderD3D(data, mRenderer->getFeatures(), mRenderer->getNativeExtensions());
+    return new ShaderD3D(data, mRenderer->getWorkarounds(), mRenderer->getNativeExtensions());
 }
 
 ProgramImpl *Context11::createProgram(const gl::ProgramState &data)
@@ -229,18 +229,6 @@ ProgramPipelineImpl *Context11::createProgramPipeline(const gl::ProgramPipelineS
 std::vector<PathImpl *> Context11::createPaths(GLsizei)
 {
     return std::vector<PathImpl *>();
-}
-
-MemoryObjectImpl *Context11::createMemoryObject()
-{
-    UNREACHABLE();
-    return nullptr;
-}
-
-SemaphoreImpl *Context11::createSemaphore()
-{
-    UNREACHABLE();
-    return nullptr;
 }
 
 angle::Result Context11::flush(const gl::Context *context)
@@ -396,7 +384,7 @@ angle::Result Context11::drawElementsIndirect(const gl::Context *context,
     }
 }
 
-gl::GraphicsResetStatus Context11::getResetStatus()
+GLenum Context11::getResetStatus()
 {
     return mRenderer->getResetStatus();
 }

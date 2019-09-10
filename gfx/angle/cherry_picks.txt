@@ -1,34 +1,4 @@
-commit 7d5a10ac34cac9f629d0080302f1a754e902c66e
-Author: Miko Mynttinen <mikokm@gmail.com>
-Date:   Thu Sep 5 18:04:32 2019 +0200
-
-    Do not override symbol visibility attribute on non-windows builds
-
-commit 0f5a52939b91442075a787523fcf394bdccd4d54
-Author: Miko Mynttinen <mikokm@gmail.com>
-Date:   Tue Sep 3 18:54:54 2019 +0200
-
-    Disable debug layers
-
-commit fea78b079b9e778e240b06a0b8deadf57fe6d75a
-Author: Miko Mynttinen <mikokm@gmail.com>
-Date:   Tue Sep 3 20:04:28 2019 +0200
-
-    Fix MinGW include
-
-commit 811d7beadb57fdd4c999d0702fb48085b770c078
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Wed Mar 27 13:52:04 2019 -0700
-
-    Don't clamp in glBlendColor if context supports renderable [half-]float.
-    
-    Add test for glBlendColor >1.0, skipped on D3D9 since it's unsupportable
-    there.
-    
-    Bug: angleproject:3323
-    Change-Id: I3fcf867dae96bdadf8a0183269d8f27b659d0baf
-
-commit ea4db0f4e0c1b70dbe6e204e6afe77b23b8ea256
+commit 21dccd386996a40e5e52a1d1c4f1eb9abc66adf0
 Author: Glenn Watson <39062770+gw3583@users.noreply.github.com>
 Date:   Fri Aug 2 07:11:16 2019 +1000
 
@@ -42,27 +12,191 @@ Date:   Fri Aug 2 07:11:16 2019 +1000
     bug is occurring in the most recent driver that is currently
     available (15.40.42.5063, released 19th Mar 2019).
 
+commit b0a9c45400d23281c67059980f7a39cc4285e5f9
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Mon Apr 8 16:26:50 2019 -0400
+
+    Fix glCopyTexSubImage3D.
+    
+    Two bugs were present in our implementation. We were using the y offset
+    for z in ensureSubImageInitialized. And for our D3D back-end we were
+    potentially reading from the wrong image index.
+    
+    Bug: chromium:947342
+    Change-Id: If39671a911e08fcc641b9ba6f5910e3a2c16eb5d
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1558671
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Jonah Ryan-Davis <jonahr@google.com>
+
+commit ee49c7b031eaab9d9df23fa7fbc2fb5875397622
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Jun 5 17:32:32 2019 -0700
+
+    Use execv instead of execve w/ environ.
+    
+    Some platforms don't want us messing with environ, and these seem to be
+    equivalent.
+    
+    Bug: angleproject:3506
+    Change-Id: I66804e8accc30421c1cd32c0eda750500e3ecb60
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1646887
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Reviewed-by: Shahbaz Youssefi <syoussefi@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
+commit 1d5494fc3e856d4d722e266d2b2075debac5146f
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Apr 25 14:57:26 2019 -0700
+
+    Emit OVR_multiview2 on ESSL/GLSL outputs.
+    
+    Add ARB_shader_viewport_layer_array support to
+    SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER.
+    
+    Bug: angleproject:3404
+    Change-Id: Ia89517d0cc92400ce47c9118e8c1abf8285aec41
+
+commit 5814bb88b10ef903abcf297f2de72619d853b4e9
+Author: Lee Salzman <lsalzman@mozilla.com>
+Date:   Tue Apr 30 23:42:31 2019 -0400
+
+    add support for EXT_blend_func_extended to D3D11
+    
+    Change-Id: Id66868851a490d0a68a7e76280720825c4844a45
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1591192
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+    Reviewed-by: Shahbaz Youssefi <syoussefi@chromium.org>
+
+commit f2915830eaf4b2970c37d4baecf0dc8030c85dba
+Author: Jan Beich <jbeich@FreeBSD.org>
+Date:   Tue Apr 23 16:25:18 2019 -0700
+
+    `environ` needs to be declared for (at least) FreeBSD.
+    
+    Declaring it unconditionally seems to build fine on all other platforms.
+    
+    Change-Id: I4c587d6ec47989f0d22588aca8883c4ef68f91c8
+
+commit 95eb4bfbc4a349b6c1274527dc3245212e5075e5
+Author: Mingyu Hu <mihu@microsoft.com>
+Date:   Tue Mar 12 14:27:40 2019 -0700
+
+    GL_ANGLE_multiview has been renamed to GL_OVR_multiview2.
+    
+    changes include:
+    1) GL_OVR_multiview to GL_OVR_multiview2 extension directive change
+    2) Removal of all references to side by side. We no longer support multiple views in a single 2DTexture. Only 2DTextureArray's are supported
+    3) WebGL 2 (ES3) is required for multiview
+    
+    Bug: angleproject:3341
+    Change-Id: Ie0c1d21d7610f8feebdb2e4d01c6947f57e69328
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1552023
+    Commit-Queue: Rafael Cintron <rafael.cintron@microsoft.com>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+
+commit 11fe1e4ce42be6e5136621b15ec163e0bbc0b7be
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Fri Apr 12 10:36:00 2019 -0400
+
+    Ensure deleteTexture preserves correct texture cache.
+    
+    Also adds a test contributed by jgilbert@mozilla.com.
+    
+    Bug: angleproject:3375
+    Change-Id: Ibd52daa074bf53b2b213193ccf5a612705a89c67
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1565052
+    Reviewed-by: Jonah Ryan-Davis <jonahr@google.com>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
+commit 086cbef353aa02994e6b7ace617d06e43ecd40bf
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Mar 27 13:52:04 2019 -0700
+
+    Don't clamp in glBlendColor if context supports renderable [half-]float.
+    
+    Add test for glBlendColor >1.0, skipped on D3D9 since it's unsupportable
+    there.
+    
+    Bug: angleproject:3323
+    Change-Id: I3fcf867dae96bdadf8a0183269d8f27b659d0baf
+
+commit befbf6a3d3174d27e975a616d8bbdb90d805caa7
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Mon Apr 1 16:33:11 2019 -0400
+
+    Windows SDK includes need to be lowercase for MinGW builds.
+    
+    Bug: angleproject:3336
+    Change-Id: If2075b3ed2fe0be95ab2ec9cd0398afef691dee8
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1548433
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
+commit 41ec3fab29e097be566490530590bc97ce235ab6
+Author: Jacek Caban <jacek@codeweavers.com>
+Date:   Thu Mar 28 13:13:00 2019 -0700
+
+    Correct case for includes.
+    
+    This is needed for building on MinGW.
+    
+    Bug: angleproject:3330
+    Change-Id: I4a7e7d6f6e14be7e1ba67d3ceb45b11d00585119
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1544749
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
+commit d32c6df18996d8bb03dc09ba95dd469e8940dcde
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Mar 28 17:49:38 2019 -0700
+
+    Combine SizedFloatRGBA[Renderbuffer,TextureAttachment]Support.
+    
+    Bug: angleproject:3332
+    Change-Id: Ia937727062d3296af9691a95d296c89b8e9476ac
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1544779
+    Reviewed-by: Yuly Novikov <ynovikov@chromium.org>
+    Commit-Queue: Yuly Novikov <ynovikov@chromium.org>
+
+commit cffbdc2fafd558f843c5c3217c9037e7991d9f8a
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Mar 27 13:36:32 2019 -0700
+
+    Add support to CHROMIUM_color_buffer_rgba for creating RGBA32F renderbuffers on ES2.
+    
+    This is desired for implementing WEBGL_color_buffer_float support on
+    WebGL1 on ANGLE's ES2 driver, for Firefox.
+    
+    Bug: angleproject:3322
+    Change-Id: I599f86db62402333d3ef9235956c63e667f1513d
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1541722
+    Reviewed-by: Kenneth Russell <kbr@chromium.org>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Kenneth Russell <kbr@chromium.org>
+
+commit ad5a21320c011cacda9ca4b0f48e1c779427e511
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Fri Mar 15 22:52:14 2019 -0700
+
+    Add missing includes to libGLESv2.gni.
+    
+    Change-Id: I87bfa6d84feaf8f64d6934566123f8c205d8e222
+
 Cherries picked
 ================================================================================
-Merge base from: origin/chromium/3865
+Merge base from: origin/chromium/3729
 
-commit 08b97da894b278c10e70b6888ac65e3972a13b31
-Author: Shahbaz Youssefi <syoussefi@chromium.org>
-Date:   Tue Jul 23 12:07:13 2019 -0400
+commit 9512a0ef062ac941cc8f3b84cfba25365ff7c65a
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Wed Mar 27 15:24:12 2019 -0400
 
-    Vulkan: Fix staging buffer alignment for pixel sizes > 4
+    Update texure cache after teleting bound texture.
     
-    Previously, all non-compressed formats were satisfied with a 4-byte
-    alignment.  The introduction of float formats changes this.
+    The texture cache could become out of sync. And we could end up
+    dereferencing an invalid pointer.
     
-    This change calculates the necessary alignment using the same code path
-    as compressed formats.
-    
-    Also fixes RGB9E5's pixelByte being calculated as 3 instead of 4.
-    
-    Bug: angleproject:3731
-    Change-Id: I6abfd1c294e7f863eb99d2468eaac09e5d714039
-    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1715205
-    Reviewed-by: Mohan Maiya <m.maiya@samsung.com>
+    Bug: chromium:943538
+    Change-Id: I6a99a04e80fc551b6177e25b7bee09c6ae226340
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1558957
     Reviewed-by: Jamie Madill <jmadill@chromium.org>
-    Commit-Queue: Shahbaz Youssefi <syoussefi@chromium.org>

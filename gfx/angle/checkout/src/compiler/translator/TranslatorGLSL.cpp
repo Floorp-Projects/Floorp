@@ -194,9 +194,11 @@ void TranslatorGLSL::translate(TIntermBlock *root,
         }
     }
 
-    if (getShaderType() == GL_COMPUTE_SHADER)
+    if (getShaderType() == GL_COMPUTE_SHADER && isComputeShaderLocalSizeDeclared())
     {
-        EmitWorkGroupSizeGLSL(*this, sink);
+        const sh::WorkGroupSize &localSize = getComputeShaderLocalSize();
+        sink << "layout (local_size_x=" << localSize[0] << ", local_size_y=" << localSize[1]
+             << ", local_size_z=" << localSize[2] << ") in;\n";
     }
 
     if (getShaderType() == GL_GEOMETRY_SHADER_EXT)
@@ -275,8 +277,7 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions 
             }
         }
 
-        const bool isMultiview =
-            (iter.first == TExtension::OVR_multiview) || (iter.first == TExtension::OVR_multiview2);
+        const bool isMultiview = (iter.first == TExtension::OVR_multiview2);
         if (isMultiview)
         {
             EmitMultiviewGLSL(*this, compileOptions, iter.second, sink);
