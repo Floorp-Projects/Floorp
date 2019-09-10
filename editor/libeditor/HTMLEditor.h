@@ -2620,6 +2620,19 @@ class HTMLEditor final : public TextEditor,
   InsertBRElementToEmptyListItemsAndTableCellsInRange(
       const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
 
+  /**
+   * RemoveEmptyNodesIn() removes all empty nodes in aRange.  However, if
+   * mail-cite node has only a `<br>` element, the node will be removed
+   * but <br> element is moved to where the mail-cite node was.
+   * XXX This method is expensive if aRange is too wide and may remove
+   *     unexpected empty element, e.g., it was created by JS, but we haven't
+   *     touched it.  Cannot we remove this method and make guarantee that
+   *     empty nodes won't be created?
+   *
+   * @param aRange      Must be positioned.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveEmptyNodesIn(nsRange& aRange);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

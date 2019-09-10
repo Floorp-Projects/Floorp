@@ -201,19 +201,6 @@ class HTMLEditRules : public TextEditRules {
   void CheckInterlinePosition();
 
   /**
-   * RemoveEmptyNodesInChangedRange() removes all empty nodes in
-   * TopLevelEditSubActionData::mChangedRange.  However, if mail-cite node has
-   * only a <br> element, the node will be removed but <br> element is moved
-   * to where the mail-cite node was.
-   * XXX This method is expensive if TopLevelEditSubActionData::mChangedRange
-   *     is too wide and may remove unexpected empty element, e.g., it was
-   *     created by JS, but we haven't touched it.  Cannot we remove this
-   *     method and make guarantee that empty nodes won't be created?
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
-
-  /**
    * DocumentModifiedWorker() is called by DocumentModified() either
    * synchronously or asynchronously.
    */
