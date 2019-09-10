@@ -55,7 +55,10 @@ job-defaults:
                         default: beta
                 release.*: release
                 esr.*: esr
-                default: null
+                default:
+                    by-project:
+                        try: nightly-try
+                        default: null
     fetches:
         toolchain:
             - android-gradle-dependencies
