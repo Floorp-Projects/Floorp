@@ -19,6 +19,7 @@
 #include "mozilla/StaticPrefs_device.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DeviceLightEvent.h"
 #include "mozilla/dom/DeviceOrientationEvent.h"
 #include "mozilla/dom/DeviceProximityEvent.h"
@@ -202,10 +203,16 @@ static bool WindowCannotReceiveSensorEvent(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  // Check to see if this window is a cross-origin iframe
-  nsCOMPtr<nsPIDOMWindowOuter> top = aWindow->GetInProcessScriptableTop();
+  // Check to see if this window is a cross-origin iframe:
+
+  auto topBC = aWindow->GetBrowsingContext()->Top();
+  if (!topBC->IsInProcess()) {
+    return true;
+  }
+
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
-  nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
+  nsCOMPtr<nsIScriptObjectPrincipal> topSop =
+      do_QueryInterface(topBC->GetDOMWindow());
   if (!sop || !topSop) {
     return true;
   }
