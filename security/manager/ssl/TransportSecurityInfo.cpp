@@ -48,6 +48,7 @@ TransportSecurityInfo::TransportSecurityInfo()
           nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE),
       mKeaGroup(),
       mSignatureSchemeName(),
+      mIsDelegatedCredential(false),
       mIsDomainMismatch(false),
       mIsNotValidAtThisTime(false),
       mIsUntrusted(false),
@@ -192,7 +193,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older
   // serialization.
-  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("1").get());
+  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("2").get());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -242,6 +243,10 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
 
   rv = NS_WriteOptionalCompoundObject(aStream, mFailedCertChain,
                                       NS_GET_IID(nsIX509CertList), true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = aStream->WriteBoolean(mIsDelegatedCredential);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -446,7 +451,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // moved from nsISSLStatus
-  if (!serVersion.EqualsASCII("1")) {
+  if (!serVersion.EqualsASCII("1") && !serVersion.EqualsASCII("2")) {
     // nsISSLStatus may be present
     rv = ReadSSLStatus(aStream);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -543,6 +548,16 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
   mFailedCertChain = do_QueryInterface(failedCertChainSupports);
 
+  // mIsDelegatedCredential added in bug 1562773
+  if (serVersion.EqualsASCII("2")) {
+    rv = aStream->ReadBoolean(&mIsDelegatedCredential);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -570,6 +585,7 @@ void TransportSecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   WriteParam(aMsg, mSignatureSchemeName);
   WriteParam(aMsg, mSucceededCertChain);
   WriteParam(aMsg, mFailedCertChain);
+  WriteParam(aMsg, mIsDelegatedCredential);
 }
 
 bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
@@ -594,7 +610,8 @@ bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
       !ReadParam(aMsg, aIter, &mKeaGroup) ||
       !ReadParam(aMsg, aIter, &mSignatureSchemeName) ||
       !ReadParam(aMsg, aIter, &mSucceededCertChain) ||
-      !ReadParam(aMsg, aIter, &mFailedCertChain)) {
+      !ReadParam(aMsg, aIter, &mFailedCertChain) ||
+      !ReadParam(aMsg, aIter, &mIsDelegatedCredential)) {
     return false;
   }
 
@@ -964,6 +981,16 @@ TransportSecurityInfo::GetIsExtendedValidation(bool* aIsEV) {
   }
 
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetIsDelegatedCredential(bool* aIsDelegCred) {
+  NS_ENSURE_ARG_POINTER(aIsDelegCred);
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsDelegCred = mIsDelegatedCredential;
+  return NS_OK;
 }
 
 }  // namespace psm
