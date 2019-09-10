@@ -145,43 +145,26 @@ nsresult nsNSSCertificateDB::FindCertByDBKey(const nsACString& aDBKey,
 }
 
 SECStatus collect_certs(void* arg, SECItem** certs, int numcerts) {
-  CERTDERCerts* collectArgs;
-  SECItem* cert;
-  SECStatus rv;
-
-  collectArgs = (CERTDERCerts*)arg;
-
-  collectArgs->numcerts = numcerts;
-  collectArgs->rawCerts = (SECItem*)PORT_ArenaZAlloc(
-      collectArgs->arena, sizeof(SECItem) * numcerts);
-  if (!collectArgs->rawCerts) return (SECFailure);
-
-  cert = collectArgs->rawCerts;
+  nsTArray<nsTArray<uint8_t>>* certsArray =
+      reinterpret_cast<nsTArray<nsTArray<uint8_t>>*>(arg);
 
   while (numcerts--) {
-    rv = SECITEM_CopyItem(collectArgs->arena, cert, *certs);
-    if (rv == SECFailure) return (SECFailure);
-    cert++;
+    nsTArray<uint8_t> certArray;
+    SECItem* cert = *certs;
+    certArray.AppendElements(cert->data, cert->len);
+    certsArray->AppendElement(std::move(certArray));
     certs++;
   }
-
   return (SECSuccess);
 }
 
-CERTDERCerts* nsNSSCertificateDB::getCertsFromPackage(
-    const UniquePLArenaPool& arena, uint8_t* data, uint32_t length) {
-  CERTDERCerts* collectArgs = PORT_ArenaZNew(arena.get(), CERTDERCerts);
-  if (!collectArgs) {
-    return nullptr;
-  }
-
-  collectArgs->arena = arena.get();
+nsresult nsNSSCertificateDB::getCertsFromPackage(
+    nsTArray<nsTArray<uint8_t>>& collectArgs, uint8_t* data, uint32_t length) {
   if (CERT_DecodeCertPackage(BitwiseCast<char*, uint8_t*>(data), length,
-                             collect_certs, collectArgs) != SECSuccess) {
-    return nullptr;
+                             collect_certs, &collectArgs) != SECSuccess) {
+    return NS_ERROR_FAILURE;
   }
-
-  return collectArgs;
+  return NS_OK;
 }
 
 // When using the sql-backed softoken, trust settings are authenticated using a
@@ -424,14 +407,11 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
     return NS_ERROR_FAILURE;
   }
 
-  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!arena) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsTArray<nsTArray<uint8_t>> certsArray;
 
-  CERTDERCerts* certCollection = getCertsFromPackage(arena, data, length);
-  if (!certCollection) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = getCertsFromPackage(certsArray, data, length);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIMutableArray> array = nsArrayBase::Create();
@@ -440,10 +420,9 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
   }
 
   // Now let's create some certs to work with
-  for (int i = 0; i < certCollection->numcerts; i++) {
-    SECItem* currItem = &certCollection->rawCerts[i];
+  for (nsTArray<uint8_t>& certDER : certsArray) {
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-        BitwiseCast<char*, unsigned char*>(currItem->data), currItem->len);
+        BitwiseCast<char*, uint8_t*>(certDER.Elements()), certDER.Length());
     if (!cert) {
       return NS_ERROR_FAILURE;
     }
@@ -459,50 +438,26 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
 /**
  * Decodes a given array of DER-encoded certificates into temporary storage.
  *
- * @param numcerts
- *        Size of the |certs| array.
  * @param certs
- *        Pointer to array of certs to decode.
+ *        Array in which the decoded certificates are stored as arrays of
+ *        unsigned chars.
  * @param temporaryCerts
  *        List of decoded certificates.
  */
 static nsresult ImportCertsIntoTempStorage(
-    int numcerts, SECItem* certs,
+    nsTArray<nsTArray<uint8_t>>& certs,
     /*out*/ const UniqueCERTCertList& temporaryCerts) {
-  NS_ENSURE_ARG_MIN(numcerts, 1);
-  NS_ENSURE_ARG_POINTER(certs);
   NS_ENSURE_ARG_POINTER(temporaryCerts);
 
-  // CERT_ImportCerts() expects an array of *pointers* to SECItems, so we have
-  // to convert |certs| to such a format first.
-  SECItem** ptrArray =
-      static_cast<SECItem**>(PORT_Alloc(sizeof(SECItem*) * numcerts));
-  if (!ptrArray) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  for (nsTArray<uint8_t>& certDER : certs) {
+    CERTCertificate* certificate;
+    SECItem certItem;
+    certItem.len = certDER.Length();
+    certItem.data = certDER.Elements();
+    certificate = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &certItem,
+                                          nullptr, false, true);
 
-  for (int i = 0; i < numcerts; i++) {
-    ptrArray[i] = &certs[i];
-  }
-
-  CERTCertificate** importedCerts = nullptr;
-  SECStatus srv = CERT_ImportCerts(CERT_GetDefaultCertDB(),
-                                   certUsageAnyCA,  // this argument is ignored
-                                   numcerts, ptrArray, &importedCerts, false,
-                                   false,  // this argument is ignored
-                                   nullptr);
-  PORT_Free(ptrArray);
-  ptrArray = nullptr;
-  if (srv != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
-  for (int i = 0; i < numcerts; i++) {
-    if (!importedCerts[i]) {
-      continue;
-    }
-
-    UniqueCERTCertificate cert(CERT_DupCertificate(importedCerts[i]));
+    UniqueCERTCertificate cert(certificate);
     if (!cert) {
       continue;
     }
@@ -513,22 +468,17 @@ static nsresult ImportCertsIntoTempStorage(
     }
   }
 
-  CERT_DestroyCertArray(importedCerts, numcerts);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
                                            nsIInterfaceRequestor* ctx) {
-  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!arena) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsTArray<nsTArray<uint8_t>> certsArray;
 
-  CERTDERCerts* certCollection = getCertsFromPackage(arena, data, length);
-  if (!certCollection) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = getCertsFromPackage(certsArray, data, length);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   UniqueCERTCertList temporaryCerts(CERT_NewCertList());
@@ -536,8 +486,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = ImportCertsIntoTempStorage(
-      certCollection->numcerts, certCollection->rawCerts, temporaryCerts);
+  rv = ImportCertsIntoTempStorage(certsArray, temporaryCerts);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -545,14 +494,14 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
   return ImportCertsIntoPermanentStorage(temporaryCerts);
 }
 
-nsresult nsNSSCertificateDB::ImportCACerts(int numCACerts, SECItem* caCerts,
+nsresult nsNSSCertificateDB::ImportCACerts(nsTArray<nsTArray<uint8_t>>& caCerts,
                                            nsIInterfaceRequestor* ctx) {
   UniqueCERTCertList temporaryCerts(CERT_NewCertList());
   if (!temporaryCerts) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = ImportCertsIntoTempStorage(numCACerts, caCerts, temporaryCerts);
+  nsresult rv = ImportCertsIntoTempStorage(caCerts, temporaryCerts);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -597,18 +546,24 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!arena) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsTArray<nsTArray<uint8_t>> certsArray;
+
+  nsresult rv = getCertsFromPackage(certsArray, data, length);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  CERTDERCerts* collectArgs = getCertsFromPackage(arena, data, length);
-  if (!collectArgs) {
-    return NS_ERROR_FAILURE;
+  SECItem certItem;
+
+  if (certsArray.IsEmpty()) {
+    return NS_OK;
   }
+
+  certItem.len = certsArray.ElementAt(0).Length();
+  certItem.data = certsArray.ElementAt(0).Elements();
 
   UniqueCERTCertificate cert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), collectArgs->rawCerts, nullptr, false, true));
+      CERT_GetDefaultCertDB(), &certItem, nullptr, false, true));
   if (!cert) {
     return NS_ERROR_FAILURE;
   }
@@ -641,11 +596,10 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
     DisplayCertificateAlert(ctx, "UserCertImported", certToShow);
   }
 
-  nsresult rv = NS_OK;
-  int numCACerts = collectArgs->numcerts - 1;
-  if (numCACerts) {
-    SECItem* caCerts = collectArgs->rawCerts + 1;
-    rv = ImportCACerts(numCACerts, caCerts, ctx);
+  rv = NS_OK;
+  if (!certsArray.IsEmpty()) {
+    certsArray.RemoveElementAt(0);
+    rv = ImportCACerts(certsArray, ctx);
   }
 
   nsCOMPtr<nsIObserverService> observerService =
