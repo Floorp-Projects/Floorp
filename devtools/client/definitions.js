@@ -224,7 +224,11 @@ Tools.jsdebugger = {
   label: l10n("ToolboxDebugger.label"),
   panelLabel: l10n("ToolboxDebugger.panelLabel"),
   get tooltip() {
-    return l10n("ToolboxDebugger.tooltip3");
+    return l10n(
+      "ToolboxDebugger.tooltip4",
+      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+        l10n("jsdebugger.commandkey")
+    );
   },
   inMenu: true,
   isTargetSupported: function() {

@@ -6,6 +6,10 @@ import sys
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 BINARY_PATH = os.path.join(ABS_WORK_DIR, "firefox", "firefox.exe")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.zip")
+NODEJS_PATH = None
+if 'MOZ_FETCHES_DIR' in os.environ:
+    NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/node.exe")
+
 XPCSHELL_NAME = 'xpcshell.exe'
 EXE_SUFFIX = '.exe'
 DISABLE_SCREEN_SAVER = False
@@ -283,7 +287,5 @@ config = {
                              },
     "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest",
-    "download_nodejs": True,
-    "nodejs_path": "node-win32.exe",
-    "nodejs_tooltool_manifest_path": "config/tooltool-manifests/win32/nodejs.manifest",
+    "nodejs_path": NODEJS_PATH,
 }

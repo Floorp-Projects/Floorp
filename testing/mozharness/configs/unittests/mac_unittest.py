@@ -2,6 +2,10 @@ import os
 
 # OS Specifics
 INSTALLER_PATH = os.path.join(os.getcwd(), "installer.dmg")
+NODEJS_PATH = None
+if 'MOZ_FETCHES_DIR' in os.environ:
+    NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/bin/node")
+
 XPCSHELL_NAME = 'xpcshell'
 EXE_SUFFIX = ''
 DISABLE_SCREEN_SAVER = False
@@ -211,7 +215,5 @@ config = {
     "minidump_stackwalk_path": "macosx64-minidump_stackwalk",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/macosx64/releng.manifest",
     "tooltool_cache": "/builds/tooltool_cache",
-    "download_nodejs": True,
-    "nodejs_path": "node-osx/bin/node",
-    "nodejs_tooltool_manifest_path": "config/tooltool-manifests/macosx64/nodejs.manifest",
+    "nodejs_path": NODEJS_PATH,
 }

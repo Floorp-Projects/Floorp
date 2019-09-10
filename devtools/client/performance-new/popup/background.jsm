@@ -37,6 +37,10 @@ loader.lazyRequireGetter(
 // a string key based off of the debug name and breakpad id.
 const PROFILER_STATE_PREF = "devtools.performance.popup";
 const DEFAULT_WINDOW_LENGTH = 20; // 20sec
+const DEFAULT_INTERVAL = 1; // 1ms
+const DEFAULT_BUFFER_SIZE = 10000000; // 90MB
+const DEFAULT_THREADS = "GeckoMain,Compositor";
+const DEFAULT_STACKWALK_FEATURE = true;
 
 // This Map caches the symbols from the shared libraries.
 const symbolCache = new Map();
@@ -47,7 +51,20 @@ const primeSymbolStore = libs => {
   }
 };
 
-const state = intializeState();
+const state = initializeState();
+
+const forTestsOnly = {
+  DEFAULT_BUFFER_SIZE,
+  DEFAULT_STACKWALK_FEATURE,
+  initializeState,
+  adjustState,
+  getState() {
+    return state;
+  },
+  revertPrefs() {
+    Services.prefs.clearUserPref(PROFILER_STATE_PREF);
+  },
+};
 
 function adjustState(newState) {
   // Deep clone the object, since this can be called through popup.xhtml,
@@ -320,12 +337,7 @@ function setRecordingPreferencesOnBrowser(settings) {
   );
 }
 
-function intializeState() {
-  const storedState = getStoredStateOrNull();
-  if (storedState) {
-    return storedState;
-  }
-
+function initializeState() {
   const features = {
     java: false,
     js: true,
@@ -335,7 +347,7 @@ function intializeState() {
     responsiveness: true,
     screenshots: false,
     seqstyle: false,
-    stackwalk: true,
+    stackwalk: DEFAULT_STACKWALK_FEATURE,
     tasktracer: false,
     trackopts: false,
     jstracer: false,
@@ -348,14 +360,47 @@ function intializeState() {
     features.java = true;
   }
 
+  const storedState = getStoredStateOrNull();
+
+  if (storedState && storedState.features) {
+    const storedFeatures = storedState.features;
+    // Validate the stored state. It's possible a feature was added or removed
+    // since the profiler was last run.
+    for (const key of Object.keys(features)) {
+      features[key] =
+        key in storedFeatures ? Boolean(storedFeatures[key]) : features[key];
+    }
+  }
+
+  // This function is created inline to make it easy to validate
+  // the stored state using the captured storedState value.
+  function validateStoredState(key, type, defaultValue) {
+    if (!storedState) {
+      return defaultValue;
+    }
+    const storedValue = storedState[key];
+    return typeof storedValue === type ? storedValue : defaultValue;
+  }
+
   return {
-    isRunning: false,
+    // These values are stale, and need to be re-generated.
+    isRunning: Services.profiler.IsActive(),
     settingsOpen: false,
-    buffersize: 10000000, // 90MB
-    windowLength: DEFAULT_WINDOW_LENGTH,
-    interval: 1,
     features,
-    threads: "GeckoMain,Compositor",
+
+    // Look these up from stored state.
+    buffersize: validateStoredState(
+      "buffersize",
+      "number",
+      DEFAULT_BUFFER_SIZE
+    ),
+    windowLength: validateStoredState(
+      "windowLength",
+      "number",
+      DEFAULT_WINDOW_LENGTH
+    ),
+    interval: validateStoredState("interval", "number", DEFAULT_INTERVAL),
+    threads: validateStoredState("threads", "string", DEFAULT_THREADS),
   };
 }
 
@@ -377,4 +422,5 @@ var EXPORTED_SYMBOLS = [
   "platform",
   "getRecordingPreferencesFromBrowser",
   "setRecordingPreferencesOnBrowser",
+  "forTestsOnly",
 ];

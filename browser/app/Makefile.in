@@ -31,7 +31,7 @@ ifeq ($(OS_ARCH),WINNT)
 # (this dependency should really be just for firefox.exe, not other targets)
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
-EXTRA_DEPS += firefox.exe.manifest
+EXTRA_DEPS += $(srcdir)/firefox.exe.manifest
 endif
 
 PROGRAMS_DEST = $(DIST)/bin

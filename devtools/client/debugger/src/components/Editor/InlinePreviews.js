@@ -43,26 +43,27 @@ class InlinePreviews extends Component<Props> {
       return null;
     }
 
-    return (
-      <div>
-        {Object.keys(previews).map((line: string) => {
-          const lineNum: number = parseInt(line, 10);
-          const numColumnBreakpoints = columnBreakpoints.filter(
-            bp => bp.location.line === lineNum + 1
-          ).length;
+    let inlinePreviewRows;
+    editor.codeMirror.operation(() => {
+      inlinePreviewRows = Object.keys(previews).map((line: string) => {
+        const lineNum: number = parseInt(line, 10);
+        const numColumnBreakpoints = columnBreakpoints.filter(
+          bp => bp.location.line === lineNum + 1
+        ).length;
 
-          return (
-            <InlinePreviewRow
-              editor={editor}
-              key={line}
-              line={lineNum}
-              previews={previews[line]}
-              numColumnBreakpoints={numColumnBreakpoints}
-            />
-          );
-        })}
-      </div>
-    );
+        return (
+          <InlinePreviewRow
+            editor={editor}
+            key={line}
+            line={lineNum}
+            previews={previews[line]}
+            numColumnBreakpoints={numColumnBreakpoints}
+          />
+        );
+      });
+    });
+
+    return <div>{inlinePreviewRows}</div>;
   }
 }
 

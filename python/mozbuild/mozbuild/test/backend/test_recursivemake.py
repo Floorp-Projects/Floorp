@@ -227,7 +227,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'topsrcdir := %s' % env.topsrcdir,
             'srcdir := %s' % env.topsrcdir,
             'srcdir_rel := %s' % mozpath.relpath(env.topsrcdir, env.topobjdir),
-            'VPATH := %s' % env.topsrcdir,
             'relativesrcdir := .',
             'include $(DEPTH)/config/autoconf.mk',
             '',
@@ -244,7 +243,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
-        self.assertEqual(len(lines), 11)
+        self.assertEqual(len(lines), 10)
 
         self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
 
@@ -319,13 +318,13 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = {
             'RCFILE': [
-                'RCFILE := foo.rc',
+                'RCFILE := $(srcdir)/foo.rc',
             ],
             'RESFILE': [
                 'RESFILE := bar.res',
             ],
             'RCINCLUDE': [
-                'RCINCLUDE := bar.rc',
+                'RCINCLUDE := $(srcdir)/bar.rc',
             ],
             'EXTRA_DEPS': [
                 'EXTRA_DEPS += %s' % mozpath.join(mozpath.relpath(env.topsrcdir,
@@ -351,28 +350,28 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = {
             'ASFILES': [
-                'ASFILES += bar.s',
-                'ASFILES += foo.asm',
+                'ASFILES += $(srcdir)/bar.s',
+                'ASFILES += $(srcdir)/foo.asm',
             ],
             'CMMSRCS': [
-                'CMMSRCS += bar.mm',
-                'CMMSRCS += foo.mm',
+                'CMMSRCS += $(srcdir)/bar.mm',
+                'CMMSRCS += $(srcdir)/foo.mm',
             ],
             'CSRCS': [
-                'CSRCS += bar.c',
-                'CSRCS += foo.c',
+                'CSRCS += $(srcdir)/bar.c',
+                'CSRCS += $(srcdir)/foo.c',
             ],
             'HOST_CPPSRCS': [
-                'HOST_CPPSRCS += bar.cpp',
-                'HOST_CPPSRCS += foo.cpp',
+                'HOST_CPPSRCS += $(srcdir)/bar.cpp',
+                'HOST_CPPSRCS += $(srcdir)/foo.cpp',
             ],
             'HOST_CSRCS': [
-                'HOST_CSRCS += bar.c',
-                'HOST_CSRCS += foo.c',
+                'HOST_CSRCS += $(srcdir)/bar.c',
+                'HOST_CSRCS += $(srcdir)/foo.c',
             ],
             'SSRCS': [
-                'SSRCS += baz.S',
-                'SSRCS += foo.S',
+                'SSRCS += $(srcdir)/baz.S',
+                'SSRCS += $(srcdir)/foo.S',
             ],
         }
 
