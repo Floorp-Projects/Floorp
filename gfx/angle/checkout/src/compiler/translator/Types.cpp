@@ -756,7 +756,7 @@ void TType::createSamplerSymbols(const ImmutableString &namePrefix,
             elementType.toArrayElementType();
             for (unsigned int arrayIndex = 0u; arrayIndex < getOutermostArraySize(); ++arrayIndex)
             {
-                std::stringstream elementName = sh::InitializeStream<std::stringstream>();
+                std::stringstream elementName;
                 elementName << namePrefix << "_" << arrayIndex;
                 TStringStream elementApiName;
                 elementApiName << apiNamePrefix << "[" << arrayIndex << "]";

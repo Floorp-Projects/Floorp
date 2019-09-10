@@ -269,8 +269,6 @@ static_assert(ToGLenum(PrimitiveMode::TrianglesAdjacency) == GL_TRIANGLES_ADJACE
 static_assert(ToGLenum(PrimitiveMode::TriangleStripAdjacency) == GL_TRIANGLE_STRIP_ADJACENCY,
               "PrimitiveMode violation");
 
-std::ostream &operator<<(std::ostream &os, PrimitiveMode value);
-
 enum class DrawElementsType : size_t
 {
     UnsignedByte  = 0,
@@ -312,8 +310,6 @@ constexpr GLenum ToGLenum(DrawElementsType from)
 ANGLE_VALIDATE_PACKED_ENUM(DrawElementsType, UnsignedByte, GL_UNSIGNED_BYTE);
 ANGLE_VALIDATE_PACKED_ENUM(DrawElementsType, UnsignedShort, GL_UNSIGNED_SHORT);
 ANGLE_VALIDATE_PACKED_ENUM(DrawElementsType, UnsignedInt, GL_UNSIGNED_INT);
-
-std::ostream &operator<<(std::ostream &os, DrawElementsType value);
 
 enum class VertexAttribType
 {
@@ -371,8 +367,6 @@ ANGLE_VALIDATE_PACKED_ENUM(VertexAttribType, HalfFloat, GL_HALF_FLOAT);
 ANGLE_VALIDATE_PACKED_ENUM(VertexAttribType, Fixed, GL_FIXED);
 ANGLE_VALIDATE_PACKED_ENUM(VertexAttribType, Int2101010, GL_INT_2_10_10_10_REV);
 ANGLE_VALIDATE_PACKED_ENUM(VertexAttribType, UnsignedInt2101010, GL_UNSIGNED_INT_2_10_10_10_REV);
-
-std::ostream &operator<<(std::ostream &os, VertexAttribType value);
 }  // namespace gl
 
 namespace egl

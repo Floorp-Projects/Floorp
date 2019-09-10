@@ -358,7 +358,10 @@ void StateManager9::syncState(const gl::State &state, const gl::State::DirtyBits
                 }
                 break;
             case gl::State::DIRTY_BIT_DEPTH_RANGE:
-                mDirtyBits.set(DIRTY_BIT_VIEWPORT);
+                if (state.getNearPlane() != mCurNear || state.getFarPlane() != mCurFar)
+                {
+                    mDirtyBits.set(DIRTY_BIT_VIEWPORT);
+                }
                 break;
             case gl::State::DIRTY_BIT_VIEWPORT:
                 if (state.getViewport() != mCurViewport)
@@ -826,7 +829,7 @@ void StateManager9::setColorMask(const gl::Framebuffer *framebuffer,
 {
     // Set the color mask
 
-    const auto *attachment = framebuffer->getFirstColorAttachment();
+    const auto *attachment = framebuffer->getFirstColorbuffer();
     const auto &format     = attachment ? attachment->getFormat() : gl::Format::Invalid();
 
     DWORD colorMask = gl_d3d9::ConvertColorMask(

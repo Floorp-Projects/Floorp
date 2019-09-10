@@ -12,13 +12,11 @@
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Fence.h"
-#include "libANGLE/MemoryObject.h"
 #include "libANGLE/Path.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/ProgramPipeline.h"
 #include "libANGLE/Renderbuffer.h"
 #include "libANGLE/Sampler.h"
-#include "libANGLE/Semaphore.h"
 #include "libANGLE/Shader.h"
 #include "libANGLE/Texture.h"
 #include "libANGLE/renderer/ContextImpl.h"
@@ -237,7 +235,7 @@ GLuint TextureManager::createTexture()
     return AllocateEmptyObject(&mHandleAllocator, &mObjectMap);
 }
 
-void TextureManager::signalAllTexturesDirty() const
+void TextureManager::signalAllTexturesDirty(const Context *context) const
 {
     for (const auto &texture : mObjectMap)
     {
@@ -245,7 +243,7 @@ void TextureManager::signalAllTexturesDirty() const
         {
             // We don't know if the Texture needs init, but that's ok, since it will only force
             // a re-check, and will not initialize the pixels if it's not needed.
-            texture.second->signalDirtyStorage(InitState::MayNeedInit);
+            texture.second->signalDirtyStorage(context, InitState::MayNeedInit);
         }
     }
 }
@@ -440,13 +438,13 @@ void FramebufferManager::setDefaultFramebuffer(Framebuffer *framebuffer)
     mObjectMap.assign(0, framebuffer);
 }
 
-void FramebufferManager::invalidateFramebufferComplenessCache() const
+void FramebufferManager::invalidateFramebufferComplenessCache(const Context *context) const
 {
     for (const auto &framebuffer : mObjectMap)
     {
         if (framebuffer.second)
         {
-            framebuffer.second->invalidateCompletenessCache();
+            framebuffer.second->invalidateCompletenessCache(context);
         }
     }
 }
@@ -476,104 +474,6 @@ GLuint ProgramPipelineManager::createProgramPipeline()
 ProgramPipeline *ProgramPipelineManager::getProgramPipeline(GLuint handle) const
 {
     return mObjectMap.query(handle);
-}
-
-// MemoryObjectManager Implementation.
-
-MemoryObjectManager::MemoryObjectManager() {}
-
-MemoryObjectManager::~MemoryObjectManager()
-{
-    ASSERT(mMemoryObjects.empty());
-}
-
-void MemoryObjectManager::reset(const Context *context)
-{
-    while (!mMemoryObjects.empty())
-    {
-        deleteMemoryObject(context, mMemoryObjects.begin()->first);
-    }
-    mMemoryObjects.clear();
-}
-
-GLuint MemoryObjectManager::createMemoryObject(rx::GLImplFactory *factory)
-{
-    GLuint handle              = mHandleAllocator.allocate();
-    MemoryObject *memoryObject = new MemoryObject(factory, handle);
-    memoryObject->addRef();
-    mMemoryObjects.assign(handle, memoryObject);
-    return handle;
-}
-
-void MemoryObjectManager::deleteMemoryObject(const Context *context, GLuint handle)
-{
-    MemoryObject *memoryObject = nullptr;
-    if (!mMemoryObjects.erase(handle, &memoryObject))
-    {
-        return;
-    }
-
-    // Requires an explicit this-> because of C++ template rules.
-    this->mHandleAllocator.release(handle);
-
-    if (memoryObject)
-    {
-        memoryObject->release(context);
-    }
-}
-
-MemoryObject *MemoryObjectManager::getMemoryObject(GLuint handle) const
-{
-    return mMemoryObjects.query(handle);
-}
-
-// SemaphoreManager Implementation.
-
-SemaphoreManager::SemaphoreManager() {}
-
-SemaphoreManager::~SemaphoreManager()
-{
-    ASSERT(mSemaphores.empty());
-}
-
-void SemaphoreManager::reset(const Context *context)
-{
-    while (!mSemaphores.empty())
-    {
-        deleteSemaphore(context, mSemaphores.begin()->first);
-    }
-    mSemaphores.clear();
-}
-
-GLuint SemaphoreManager::createSemaphore(rx::GLImplFactory *factory)
-{
-    GLuint handle        = mHandleAllocator.allocate();
-    Semaphore *semaphore = new Semaphore(factory, handle);
-    semaphore->addRef();
-    mSemaphores.assign(handle, semaphore);
-    return handle;
-}
-
-void SemaphoreManager::deleteSemaphore(const Context *context, GLuint handle)
-{
-    Semaphore *semaphore = nullptr;
-    if (!mSemaphores.erase(handle, &semaphore))
-    {
-        return;
-    }
-
-    // Requires an explicit this-> because of C++ template rules.
-    this->mHandleAllocator.release(handle);
-
-    if (semaphore)
-    {
-        semaphore->release(context);
-    }
-}
-
-Semaphore *SemaphoreManager::getSemaphore(GLuint handle) const
-{
-    return mSemaphores.query(handle);
 }
 
 }  // namespace gl

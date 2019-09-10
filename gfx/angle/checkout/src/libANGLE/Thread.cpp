@@ -11,7 +11,6 @@
 #include "libANGLE/Context.h"
 #include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/ErrorStrings.h"
 
 namespace egl
 {
@@ -100,7 +99,7 @@ gl::Context *Thread::getValidContext() const
 {
     if (mContext && mContext->isContextLost())
     {
-        mContext->handleError(GL_OUT_OF_MEMORY, gl::err::kContextLost, __FILE__, ANGLE_FUNCTION,
+        mContext->handleError(GL_OUT_OF_MEMORY, "Context has been lost.", __FILE__, ANGLE_FUNCTION,
                               __LINE__);
         return nullptr;
     }
@@ -108,11 +107,11 @@ gl::Context *Thread::getValidContext() const
     return mContext;
 }
 
-Display *Thread::getDisplay() const
+Display *Thread::getCurrentDisplay() const
 {
     if (mContext)
     {
-        return mContext->getDisplay();
+        return mContext->getCurrentDisplay();
     }
     return nullptr;
 }

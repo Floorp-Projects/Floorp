@@ -38,8 +38,6 @@ TextureType TextureTargetToType(TextureTarget target)
             return TextureType::_2DMultisampleArray;
         case TextureTarget::_3D:
             return TextureType::_3D;
-        case TextureTarget::InvalidEnum:
-            return TextureType::InvalidEnum;
         default:
             UNREACHABLE();
             return TextureType::InvalidEnum;
@@ -170,114 +168,6 @@ bool IsMultisampled(gl::TextureType type)
     }
 }
 
-std::ostream &operator<<(std::ostream &os, PrimitiveMode value)
-{
-    switch (value)
-    {
-        case PrimitiveMode::LineLoop:
-            os << "GL_LINE_LOOP";
-            break;
-        case PrimitiveMode::Lines:
-            os << "GL_LINES";
-            break;
-        case PrimitiveMode::LinesAdjacency:
-            os << "GL_LINES_ADJACENCY";
-            break;
-        case PrimitiveMode::LineStrip:
-            os << "GL_LINE_STRIP";
-            break;
-        case PrimitiveMode::LineStripAdjacency:
-            os << "GL_LINE_STRIP_ADJANCENCY";
-            break;
-        case PrimitiveMode::Points:
-            os << "GL_POINTS";
-            break;
-        case PrimitiveMode::TriangleFan:
-            os << "GL_TRIANGLE_FAN";
-            break;
-        case PrimitiveMode::Triangles:
-            os << "GL_TRIANGLES";
-            break;
-        case PrimitiveMode::TrianglesAdjacency:
-            os << "GL_TRIANGLES_ADJANCENCY";
-            break;
-        case PrimitiveMode::TriangleStrip:
-            os << "GL_TRIANGLE_STRIP";
-            break;
-        case PrimitiveMode::TriangleStripAdjacency:
-            os << "GL_TRIANGLE_STRIP_ADJACENCY";
-            break;
-        default:
-            os << "GL_INVALID_ENUM";
-            break;
-    }
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, DrawElementsType value)
-{
-    switch (value)
-    {
-        case DrawElementsType::UnsignedByte:
-            os << "GL_UNSIGNED_BYTE";
-            break;
-        case DrawElementsType::UnsignedShort:
-            os << "GL_UNSIGNED_SHORT";
-            break;
-        case DrawElementsType::UnsignedInt:
-            os << "GL_UNSIGNED_INT";
-            break;
-        default:
-            os << "GL_INVALID_ENUM";
-            break;
-    }
-
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, VertexAttribType value)
-{
-    switch (value)
-    {
-        case VertexAttribType::Byte:
-            os << "GL_UNSIGNED_BYTE";
-            break;
-        case VertexAttribType::Fixed:
-            os << "GL_FIXED";
-            break;
-        case VertexAttribType::Float:
-            os << "GL_FLOAT";
-            break;
-        case VertexAttribType::HalfFloat:
-            os << "GL_HALF_FLOAT";
-            break;
-        case VertexAttribType::Int:
-            os << "GL_INT";
-            break;
-        case VertexAttribType::Int2101010:
-            os << "GL_INT_10_10_10_2";
-            break;
-        case VertexAttribType::Short:
-            os << "GL_SHORT";
-            break;
-        case VertexAttribType::UnsignedByte:
-            os << "GL_UNSIGNED_BYTE";
-            break;
-        case VertexAttribType::UnsignedInt:
-            os << "GL_UNSIGNED_INT";
-            break;
-        case VertexAttribType::UnsignedInt2101010:
-            os << "GL_UNSIGNED_INT_10_10_10_2";
-            break;
-        case VertexAttribType::UnsignedShort:
-            os << "GL_UNSIGNED_SHORT";
-            break;
-        default:
-            os << "GL_INVALID_ENUM";
-            break;
-    }
-    return os;
-}
 }  // namespace gl
 
 namespace egl

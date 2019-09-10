@@ -26,8 +26,8 @@
 #include "compiler/translator/tree_ops/ClampPointSize.h"
 #include "compiler/translator/tree_ops/DeclareAndInitBuiltinsForInstancedMultiview.h"
 #include "compiler/translator/tree_ops/DeferGlobalInitializers.h"
+#include "compiler/translator/tree_ops/EmulateGLDrawID.h"
 #include "compiler/translator/tree_ops/EmulateGLFragColorBroadcast.h"
-#include "compiler/translator/tree_ops/EmulateMultiDrawShaderBuiltins.h"
 #include "compiler/translator/tree_ops/EmulatePrecision.h"
 #include "compiler/translator/tree_ops/FoldExpressions.h"
 #include "compiler/translator/tree_ops/InitializeVariables.h"
@@ -49,7 +49,6 @@
 #include "compiler/translator/tree_ops/VectorizeVectorScalarArithmetic.h"
 #include "compiler/translator/tree_util/BuiltIn_autogen.h"
 #include "compiler/translator/tree_util/IntermNodePatternMatcher.h"
-#include "compiler/translator/tree_util/ReplaceShadowingVariables.h"
 #include "compiler/translator/util.h"
 #include "third_party/compiler/ArrayBoundsClamper.h"
 
@@ -69,7 +68,7 @@ void DumpFuzzerCase(char const *const *shaderStrings,
 {
     static int fileIndex = 0;
 
-    std::ostringstream o = sh::InitializeStream<std::ostringstream>();
+    std::ostringstream o;
     o << "corpus/" << fileIndex++ << ".sample";
     std::string s = o.str();
 
@@ -121,7 +120,8 @@ bool RemoveInvariant(sh::GLenum shaderType,
                      ShShaderOutput outputType,
                      ShCompileOptions compileOptions)
 {
-    if (shaderType == GL_FRAGMENT_SHADER && IsGLSL420OrNewer(outputType))
+    if ((compileOptions & SH_DONT_REMOVE_INVARIANT_FOR_FRAGMENT_INPUT) == 0 &&
+        shaderType == GL_FRAGMENT_SHADER && IsGLSL420OrNewer(outputType))
         return true;
 
     if ((compileOptions & SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3) != 0 &&
@@ -216,8 +216,6 @@ int MapSpecToShaderVersion(ShShaderSpec spec)
         case SH_GLES3_1_SPEC:
         case SH_WEBGL3_SPEC:
             return 310;
-        case SH_GL3_3_SPEC:
-            return 330;
         default:
             UNREACHABLE();
             return 0;
@@ -358,17 +356,6 @@ TIntermBlock *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         }
     }
 
-    const bool glBaseVertexBaseInstanceSupported =
-        (compileOptions & SH_EMULATE_GL_BASE_VERTEX_BASE_INSTANCE) != 0u;
-    if (!glBaseVertexBaseInstanceSupported)
-    {
-        auto it = mExtensionBehavior.find(TExtension::ANGLE_base_vertex_base_instance);
-        if (it != mExtensionBehavior.end())
-        {
-            mExtensionBehavior.erase(it);
-        }
-    }
-
     // First string is path of source file if flag is set. The actual source follows.
     size_t firstSource = 0;
     if (compileOptions & SH_SOURCE_PATH)
@@ -378,8 +365,7 @@ TIntermBlock *TCompiler::compileTreeImpl(const char *const shaderStrings[],
     }
 
     TParseContext parseContext(mSymbolTable, mExtensionBehavior, mShaderType, mShaderSpec,
-                               compileOptions, !IsDesktopGLSpec(mShaderSpec), &mDiagnostics,
-                               getResources());
+                               compileOptions, true, &mDiagnostics, getResources());
 
     parseContext.setFragmentPrecisionHighOnESSL1(mResources.FragmentPrecisionHigh == 1);
 
@@ -552,10 +538,6 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
             return false;
         }
     }
-    if (IsSpecWithFunctionBodyNewScope(mShaderSpec, mShaderVersion))
-    {
-        ReplaceShadowingVariables(root, &mSymbolTable);
-    }
 
     if (mShaderVersion >= 310 && !ValidateVaryingLocations(root, &mDiagnostics, mShaderType))
     {
@@ -583,8 +565,7 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
     }
 
     if ((compileOptions & SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW) &&
-        (parseContext.isExtensionEnabled(TExtension::OVR_multiview2) ||
-         parseContext.isExtensionEnabled(TExtension::OVR_multiview)) &&
+        parseContext.isExtensionEnabled(TExtension::OVR_multiview2) &&
         getShaderType() != GL_COMPUTE_SHADER)
     {
         DeclareAndInitBuiltinsForInstancedMultiview(root, mNumViews, mShaderType, compileOptions,
@@ -645,26 +626,10 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
     if (mShaderType == GL_VERTEX_SHADER &&
         IsExtensionEnabled(mExtensionBehavior, TExtension::ANGLE_multi_draw))
     {
-        if ((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0u)
+        if ((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0)
         {
             EmulateGLDrawID(root, &mSymbolTable, &mUniforms,
                             shouldCollectVariables(compileOptions));
-            if (!ValidateAST(root, &mDiagnostics, mValidateASTOptions))
-            {
-                return false;
-            }
-        }
-    }
-
-    if (mShaderType == GL_VERTEX_SHADER &&
-        IsExtensionEnabled(mExtensionBehavior, TExtension::ANGLE_base_vertex_base_instance))
-    {
-        if ((compileOptions & SH_EMULATE_GL_BASE_VERTEX_BASE_INSTANCE) != 0u)
-        {
-            EmulateGLBaseVertex(root, &mSymbolTable, &mUniforms,
-                                shouldCollectVariables(compileOptions));
-            EmulateGLBaseInstance(root, &mSymbolTable, &mUniforms,
-                                  shouldCollectVariables(compileOptions));
             if (!ValidateAST(root, &mDiagnostics, mValidateASTOptions))
             {
                 return false;
@@ -934,35 +899,17 @@ bool TCompiler::compile(const char *const shaderStrings[],
             translate(root, compileOptions, &perfDiagnostics);
         }
 
-        if (mShaderType == GL_VERTEX_SHADER)
+        if (mShaderType == GL_VERTEX_SHADER &&
+            IsExtensionEnabled(mExtensionBehavior, TExtension::ANGLE_multi_draw))
         {
-            bool lookForDrawID =
-                IsExtensionEnabled(mExtensionBehavior, TExtension::ANGLE_multi_draw) &&
-                ((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0u);
-            bool lookForBaseVertexBaseInstance =
-                IsExtensionEnabled(mExtensionBehavior,
-                                   TExtension::ANGLE_base_vertex_base_instance) &&
-                ((compileOptions & SH_EMULATE_GL_BASE_VERTEX_BASE_INSTANCE) != 0u);
-
-            if (lookForDrawID || lookForBaseVertexBaseInstance)
+            if ((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0)
             {
                 for (auto &uniform : mUniforms)
                 {
-                    if (lookForDrawID && uniform.name == "angle_DrawID" &&
-                        uniform.mappedName == "angle_DrawID")
+                    if (uniform.name == "angle_DrawID" && uniform.mappedName == "angle_DrawID")
                     {
                         uniform.name = "gl_DrawID";
-                    }
-                    else if (lookForBaseVertexBaseInstance && uniform.name == "angle_BaseVertex" &&
-                             uniform.mappedName == "angle_BaseVertex")
-                    {
-                        uniform.name = "gl_BaseVertex";
-                    }
-                    else if (lookForBaseVertexBaseInstance &&
-                             uniform.name == "angle_BaseInstance" &&
-                             uniform.mappedName == "angle_BaseInstance")
-                    {
-                        uniform.name = "gl_BaseInstance";
+                        break;
                     }
                 }
             }
@@ -993,7 +940,7 @@ bool TCompiler::initBuiltInSymbolTable(const ShBuiltInResources &resources)
 
 void TCompiler::setResourceString()
 {
-    std::ostringstream strstream = sh::InitializeStream<std::ostringstream>();
+    std::ostringstream strstream;
 
     // clang-format off
     strstream << ":MaxVertexAttribs:" << mResources.MaxVertexAttribs
@@ -1021,10 +968,8 @@ void TCompiler::setResourceString()
         << ":NV_shader_framebuffer_fetch:" << mResources.NV_shader_framebuffer_fetch
         << ":ARM_shader_framebuffer_fetch:" << mResources.ARM_shader_framebuffer_fetch
         << ":OVR_multiview2:" << mResources.OVR_multiview2
-        << ":OVR_multiview:" << mResources.OVR_multiview
         << ":EXT_YUV_target:" << mResources.EXT_YUV_target
         << ":EXT_geometry_shader:" << mResources.EXT_geometry_shader
-        << ":OES_texture_3D:" << mResources.OES_texture_3D
         << ":MaxVertexOutputVectors:" << mResources.MaxVertexOutputVectors
         << ":MaxFragmentInputVectors:" << mResources.MaxFragmentInputVectors
         << ":MinProgramTexelOffset:" << mResources.MinProgramTexelOffset
@@ -1034,7 +979,6 @@ void TCompiler::setResourceString()
         << ":NV_draw_buffers:" << mResources.NV_draw_buffers
         << ":WEBGL_debug_shader_precision:" << mResources.WEBGL_debug_shader_precision
         << ":ANGLE_multi_draw:" << mResources.ANGLE_multi_draw
-        << ":ANGLE_base_vertex_base_instance:" << mResources.ANGLE_base_vertex_base_instance
         << ":MinProgramTextureGatherOffset:" << mResources.MinProgramTextureGatherOffset
         << ":MaxProgramTextureGatherOffset:" << mResources.MaxProgramTextureGatherOffset
         << ":MaxImageUnits:" << mResources.MaxImageUnits
@@ -1163,7 +1107,7 @@ bool TCompiler::checkCallDepth()
         if (depth >= mResources.MaxCallStackDepth)
         {
             // Trace back the function chain to have a meaningful info log.
-            std::stringstream errorStream = sh::InitializeStream<std::stringstream>();
+            std::stringstream errorStream;
             errorStream << "Call stack too deep (larger than " << mResources.MaxCallStackDepth
                         << ") with the following call chain: "
                         << record.node->getFunction()->name();
@@ -1427,16 +1371,6 @@ bool TCompiler::isVaryingDefined(const char *varyingName)
     }
 
     return false;
-}
-
-void EmitWorkGroupSizeGLSL(const TCompiler &compiler, TInfoSinkBase &sink)
-{
-    if (compiler.isComputeShaderLocalSizeDeclared())
-    {
-        const sh::WorkGroupSize &localSize = compiler.getComputeShaderLocalSize();
-        sink << "layout (local_size_x=" << localSize[0] << ", local_size_y=" << localSize[1]
-             << ", local_size_z=" << localSize[2] << ") in;\n";
-    }
 }
 
 void EmitMultiviewGLSL(const TCompiler &compiler,

@@ -18,11 +18,7 @@ namespace egl
 {
 
 Sync::Sync(rx::EGLImplFactory *factory, EGLenum type, const AttributeMap &attribs)
-    : mFence(factory->createSync(attribs)),
-      mLabel(nullptr),
-      mType(type),
-      mNativeFenceFD(
-          attribs.getAsInt(EGL_SYNC_NATIVE_FENCE_FD_ANDROID, EGL_NO_NATIVE_FENCE_FD_ANDROID))
+    : mFence(factory->createSync(attribs)), mType(type)
 {}
 
 void Sync::onDestroy(const Display *display)
@@ -34,43 +30,24 @@ void Sync::onDestroy(const Display *display)
 
 Sync::~Sync() {}
 
-Error Sync::initialize(const Display *display, const gl::Context *context)
+Error Sync::initialize(const Display *display)
 {
-    return mFence->initialize(display, context, mType);
+    return mFence->initialize(display, mType);
 }
 
-void Sync::setLabel(EGLLabelKHR label)
+Error Sync::clientWait(const Display *display, EGLint flags, EGLTime timeout, EGLint *outResult)
 {
-    mLabel = label;
+    return mFence->clientWait(display, flags, timeout, outResult);
 }
 
-EGLLabelKHR Sync::getLabel() const
+Error Sync::serverWait(const Display *display, EGLint flags)
 {
-    return mLabel;
-}
-
-Error Sync::clientWait(const Display *display,
-                       const gl::Context *context,
-                       EGLint flags,
-                       EGLTime timeout,
-                       EGLint *outResult)
-{
-    return mFence->clientWait(display, context, flags, timeout, outResult);
-}
-
-Error Sync::serverWait(const Display *display, const gl::Context *context, EGLint flags)
-{
-    return mFence->serverWait(display, context, flags);
+    return mFence->serverWait(display, flags);
 }
 
 Error Sync::getStatus(const Display *display, EGLint *outStatus) const
 {
     return mFence->getStatus(display, outStatus);
-}
-
-Error Sync::dupNativeFenceFD(const Display *display, EGLint *result) const
-{
-    return mFence->dupNativeFenceFD(display, result);
 }
 
 }  // namespace egl

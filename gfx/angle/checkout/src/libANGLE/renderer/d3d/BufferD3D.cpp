@@ -54,16 +54,16 @@ void BufferD3D::updateD3DBufferUsage(const gl::Context *context, gl::BufferUsage
         case gl::BufferUsage::StaticCopy:
         case gl::BufferUsage::StaticDraw:
         case gl::BufferUsage::StaticRead:
-        case gl::BufferUsage::DynamicCopy:
-        case gl::BufferUsage::DynamicRead:
-        case gl::BufferUsage::StreamCopy:
-        case gl::BufferUsage::StreamRead:
             mUsage = D3DBufferUsage::STATIC;
             initializeStaticData(context);
             break;
 
+        case gl::BufferUsage::DynamicCopy:
         case gl::BufferUsage::DynamicDraw:
+        case gl::BufferUsage::DynamicRead:
+        case gl::BufferUsage::StreamCopy:
         case gl::BufferUsage::StreamDraw:
+        case gl::BufferUsage::StreamRead:
             mUsage = D3DBufferUsage::DYNAMIC;
             break;
         default:

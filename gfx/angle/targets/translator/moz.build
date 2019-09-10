@@ -13,7 +13,7 @@ DEFINES['DYNAMIC_ANNOTATIONS_ENABLED'] = '1'
 #DEFINES['FULL_SAFE_BROWSING'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = 'NTDDI_WIN10_RS2'
+DEFINES['NTDDI_VERSION'] = '0x0A000003'
 #DEFINES['PSAPI_VERSION'] = '2'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
@@ -47,6 +47,7 @@ LOCAL_INCLUDES += [
 
 #CXXFLAGS += [
 #    '/bigobj',
+#    '/d2FastFail',
 #    '/D__DATE__=',
 #    '/D__TIME__=',
 #    '/D__TIMESTAMP__=',
@@ -105,7 +106,6 @@ LOCAL_INCLUDES += [
 #    '/we4244',
 #    '/we4456',
 #    '/we4458',
-#    '/we4715',
 #    '/we4800',
 #    '/we4838',
 #    '/WX',
@@ -176,8 +176,8 @@ SOURCES += [
     '../../checkout/src/compiler/translator/tree_ops/ClampPointSize.cpp',
     '../../checkout/src/compiler/translator/tree_ops/DeclareAndInitBuiltinsForInstancedMultiview.cpp',
     '../../checkout/src/compiler/translator/tree_ops/DeferGlobalInitializers.cpp',
+    '../../checkout/src/compiler/translator/tree_ops/EmulateGLDrawID.cpp',
     '../../checkout/src/compiler/translator/tree_ops/EmulateGLFragColorBroadcast.cpp',
-    '../../checkout/src/compiler/translator/tree_ops/EmulateMultiDrawShaderBuiltins.cpp',
     '../../checkout/src/compiler/translator/tree_ops/EmulatePrecision.cpp',
     '../../checkout/src/compiler/translator/tree_ops/ExpandIntegerPowExpressions.cpp',
     '../../checkout/src/compiler/translator/tree_ops/FoldExpressions.cpp',
@@ -193,9 +193,7 @@ SOURCES += [
     '../../checkout/src/compiler/translator/tree_ops/RemovePow.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RemoveSwitchFallThrough.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RemoveUnreferencedVariables.cpp',
-    '../../checkout/src/compiler/translator/tree_ops/RewriteAtomicCounters.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RewriteAtomicFunctionExpressions.cpp',
-    '../../checkout/src/compiler/translator/tree_ops/RewriteDfdy.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RewriteDoWhile.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RewriteElseBlocks.cpp',
     '../../checkout/src/compiler/translator/tree_ops/RewriteExpressionsWithShaderStorageBlock.cpp',
@@ -216,13 +214,11 @@ SOURCES += [
     '../../checkout/src/compiler/translator/tree_ops/UseInterfaceBlockFields.cpp',
     '../../checkout/src/compiler/translator/tree_ops/VectorizeVectorScalarArithmetic.cpp',
     '../../checkout/src/compiler/translator/tree_ops/WrapSwitchStatementsInBlocks.cpp',
-    '../../checkout/src/compiler/translator/tree_util/FindFunction.cpp',
     '../../checkout/src/compiler/translator/tree_util/FindMain.cpp',
     '../../checkout/src/compiler/translator/tree_util/FindSymbolNode.cpp',
     '../../checkout/src/compiler/translator/tree_util/IntermNode_util.cpp',
     '../../checkout/src/compiler/translator/tree_util/IntermNodePatternMatcher.cpp',
     '../../checkout/src/compiler/translator/tree_util/IntermTraverse.cpp',
-    '../../checkout/src/compiler/translator/tree_util/ReplaceShadowingVariables.cpp',
     '../../checkout/src/compiler/translator/tree_util/ReplaceVariable.cpp',
     '../../checkout/src/compiler/translator/tree_util/RunAtTheEndOfShader.cpp',
     '../../checkout/src/compiler/translator/Types.cpp',

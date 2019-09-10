@@ -20,7 +20,6 @@
 
 namespace sh
 {
-class BlockLayoutEncoder;
 struct BlockMemberInfo;
 struct InterfaceBlock;
 struct ShaderVariable;
@@ -108,8 +107,7 @@ class InterfaceBlockLinker : angle::NonCopyable
                     const GetBlockMemberInfoFunc &getMemberInfo) const;
 
   protected:
-    InterfaceBlockLinker(std::vector<InterfaceBlock> *blocksOut,
-                         std::vector<std::string> *unusedInterfaceBlocksOut);
+    InterfaceBlockLinker(std::vector<InterfaceBlock> *blocksOut);
     void defineInterfaceBlock(const GetBlockSizeFunc &getBlockSize,
                               const GetBlockMemberInfoFunc &getMemberInfo,
                               const sh::InterfaceBlock &interfaceBlock,
@@ -120,7 +118,6 @@ class InterfaceBlockLinker : angle::NonCopyable
     ShaderMap<const std::vector<sh::InterfaceBlock> *> mShaderBlocks;
 
     std::vector<InterfaceBlock> *mBlocksOut;
-    std::vector<std::string> *mUnusedInterfaceBlocksOut;
 
     virtual sh::ShaderVariableVisitor *getVisitor(const GetBlockMemberInfoFunc &getMemberInfo,
                                                   const std::string &namePrefix,
@@ -133,8 +130,7 @@ class UniformBlockLinker final : public InterfaceBlockLinker
 {
   public:
     UniformBlockLinker(std::vector<InterfaceBlock> *blocksOut,
-                       std::vector<LinkedUniform> *uniformsOut,
-                       std::vector<std::string> *unusedInterfaceBlocksOut);
+                       std::vector<LinkedUniform> *uniformsOut);
     ~UniformBlockLinker() override;
 
   private:
@@ -153,8 +149,7 @@ class ShaderStorageBlockLinker final : public InterfaceBlockLinker
 {
   public:
     ShaderStorageBlockLinker(std::vector<InterfaceBlock> *blocksOut,
-                             std::vector<BufferVariable> *bufferVariablesOut,
-                             std::vector<std::string> *unusedInterfaceBlocksOut);
+                             std::vector<BufferVariable> *bufferVariablesOut);
     ~ShaderStorageBlockLinker() override;
 
   private:
@@ -212,34 +207,6 @@ struct ProgramLinkedResources
     ShaderStorageBlockLinker shaderStorageBlockLinker;
     AtomicCounterBufferLinker atomicCounterBufferLinker;
     std::vector<UnusedUniform> unusedUniforms;
-    std::vector<std::string> unusedInterfaceBlocks;
-};
-
-class CustomBlockLayoutEncoderFactory : angle::NonCopyable
-{
-  public:
-    virtual ~CustomBlockLayoutEncoderFactory() {}
-
-    virtual sh::BlockLayoutEncoder *makeEncoder() = 0;
-};
-
-// Used by the backends in Program*::linkResources to parse interface blocks and provide
-// information to ProgramLinkedResources' linkers.
-class ProgramLinkedResourcesLinker final : angle::NonCopyable
-{
-  public:
-    ProgramLinkedResourcesLinker(CustomBlockLayoutEncoderFactory *customEncoderFactory)
-        : mCustomEncoderFactory(customEncoderFactory)
-    {}
-
-    void linkResources(const ProgramState &programState,
-                       const ProgramLinkedResources &resources) const;
-
-  private:
-    void getAtomicCounterBufferSizeMap(const ProgramState &programState,
-                                       std::map<int, unsigned int> &sizeMapOut) const;
-
-    CustomBlockLayoutEncoderFactory *mCustomEncoderFactory;
 };
 
 }  // namespace gl

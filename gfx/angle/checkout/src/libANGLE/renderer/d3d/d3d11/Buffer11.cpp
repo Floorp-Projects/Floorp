@@ -391,7 +391,7 @@ angle::Result Buffer11::setSubData(const gl::Context *context,
             // TODO(jmadill): Use Context caps.
             if (offset == 0 && size >= mSize &&
                 size <= static_cast<UINT>(mRenderer->getNativeCaps().maxUniformBlockSize) &&
-                !mRenderer->getFeatures().useSystemMemoryForConstantBuffers.enabled)
+                !mRenderer->getWorkarounds().useSystemMemoryForConstantBuffers)
             {
                 ANGLE_TRY(getBufferStorage(context, BUFFER_USAGE_UNIFORM, &writeBuffer));
             }
@@ -557,7 +557,16 @@ angle::Result Buffer11::unmap(const gl::Context *context, GLboolean *result)
 
 angle::Result Buffer11::markTransformFeedbackUsage(const gl::Context *context)
 {
-    ANGLE_TRY(markBufferUsage(context, BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK));
+    BufferStorage *transformFeedbackStorage = nullptr;
+    ANGLE_TRY(getBufferStorage(context, BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK,
+                               &transformFeedbackStorage));
+
+    if (transformFeedbackStorage)
+    {
+        onStorageUpdate(transformFeedbackStorage);
+    }
+
+    invalidateStaticData(context);
     return angle::Result::Continue;
 }
 
@@ -605,7 +614,7 @@ angle::Result Buffer11::checkForDeallocation(const gl::Context *context, BufferU
 bool Buffer11::canDeallocateSystemMemory() const
 {
     // Must keep system memory on Intel.
-    if (mRenderer->getFeatures().useSystemMemoryForConstantBuffers.enabled)
+    if (mRenderer->getWorkarounds().useSystemMemoryForConstantBuffers)
     {
         return false;
     }
@@ -617,20 +626,6 @@ bool Buffer11::canDeallocateSystemMemory() const
 void Buffer11::markBufferUsage(BufferUsage usage)
 {
     mIdleness[usage] = 0;
-}
-
-angle::Result Buffer11::markBufferUsage(const gl::Context *context, BufferUsage usage)
-{
-    BufferStorage *bufferStorage = nullptr;
-    ANGLE_TRY(getBufferStorage(context, usage, &bufferStorage));
-
-    if (bufferStorage)
-    {
-        onStorageUpdate(bufferStorage);
-    }
-
-    invalidateStaticData(context);
-    return angle::Result::Continue;
 }
 
 angle::Result Buffer11::garbageCollection(const gl::Context *context, BufferUsage currentUsage)
@@ -701,12 +696,6 @@ angle::Result Buffer11::getConstantBufferRange(const gl::Context *context,
     return angle::Result::Continue;
 }
 
-angle::Result Buffer11::markRawBufferUsage(const gl::Context *context)
-{
-    ANGLE_TRY(markBufferUsage(context, BUFFER_USAGE_RAW_UAV));
-    return angle::Result::Continue;
-}
-
 angle::Result Buffer11::getRawUAVRange(const gl::Context *context,
                                        GLintptr offset,
                                        GLsizeiptr size,
@@ -714,6 +703,14 @@ angle::Result Buffer11::getRawUAVRange(const gl::Context *context,
 {
     NativeStorage *nativeStorage = nullptr;
     ANGLE_TRY(getBufferStorage(context, BUFFER_USAGE_RAW_UAV, &nativeStorage));
+
+    BufferStorage *latestBuffer = nullptr;
+    ANGLE_TRY(getLatestBufferStorage(context, &latestBuffer));
+    // As UAVs could have been updated by the shader, they hold the latest version of the data.
+    if (latestBuffer != nativeStorage)
+    {
+        onStorageUpdate(nativeStorage);
+    }
 
     return nativeStorage->getRawUAV(context, static_cast<unsigned int>(offset),
                                     static_cast<unsigned int>(size), uavOut);
@@ -952,13 +949,13 @@ bool Buffer11::supportsDirectBinding() const
 void Buffer11::initializeStaticData(const gl::Context *context)
 {
     BufferD3D::initializeStaticData(context);
-    onStateChange(angle::SubjectMessage::SubjectChanged);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 }
 
 void Buffer11::invalidateStaticData(const gl::Context *context)
 {
     BufferD3D::invalidateStaticData(context);
-    onStateChange(angle::SubjectMessage::SubjectChanged);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 }
 
 void Buffer11::onCopyStorage(BufferStorage *dest, BufferStorage *source)
@@ -1151,7 +1148,7 @@ angle::Result Buffer11::NativeStorage::resize(const gl::Context *context,
     // Notify that the storage has changed.
     if (mOnStorageChanged)
     {
-        mOnStorageChanged->onStateChange(angle::SubjectMessage::SubjectChanged);
+        mOnStorageChanged->onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
     }
 
     return angle::Result::Continue;

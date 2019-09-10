@@ -13,7 +13,6 @@
 #include "common/PackedEnums.h"
 #include "common/angleutils.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/renderer/Format.h"
 
 #include <GLES2/gl2.h>
 
@@ -173,8 +172,11 @@ class StaticVertexBufferInterface : public VertexBufferInterface
         void set(const gl::VertexAttribute &attrib, const gl::VertexBinding &binding);
 
       private:
-        angle::FormatID formatID;
+        gl::VertexAttribType type;
+        GLuint size;
         GLuint stride;
+        bool normalized;
+        bool pureInteger;
         size_t offset;
     };
 

@@ -482,13 +482,8 @@ bool WebGLContext::CreateAndInitGL(
 
   if (IsWebGL2()) {
     flags |= gl::CreateContextFlags::PREFER_ES3;
-  } else {
-    // Request and prefer ES2 context for WebGL1.
-    flags |= gl::CreateContextFlags::PREFER_EXACT_VERSION;
-
-    if (!StaticPrefs::webgl_1_allow_core_profiles()) {
-      flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
-    }
+  } else if (!StaticPrefs::webgl_1_allow_core_profiles()) {
+    flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
 
   {

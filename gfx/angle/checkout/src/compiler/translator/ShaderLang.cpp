@@ -199,15 +199,12 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->EXT_shader_framebuffer_fetch             = 0;
     resources->NV_shader_framebuffer_fetch              = 0;
     resources->ARM_shader_framebuffer_fetch             = 0;
-    resources->OVR_multiview                            = 0;
     resources->OVR_multiview2                           = 0;
     resources->EXT_YUV_target                           = 0;
     resources->EXT_geometry_shader                      = 0;
     resources->OES_texture_storage_multisample_2d_array = 0;
-    resources->OES_texture_3D                           = 0;
     resources->ANGLE_texture_multisample                = 0;
     resources->ANGLE_multi_draw                         = 0;
-    resources->ANGLE_base_vertex_base_instance          = 0;
 
     resources->NV_draw_buffers = 0;
 

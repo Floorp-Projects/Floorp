@@ -69,21 +69,6 @@ const std::vector<OffsetBindingPointer<Buffer>> &TransformFeedbackState::getInde
     return mIndexedBuffers;
 }
 
-GLsizeiptr TransformFeedbackState::getPrimitivesDrawn() const
-{
-    switch (mPrimitiveMode)
-    {
-        case gl::PrimitiveMode::Points:
-            return mVerticesDrawn;
-        case gl::PrimitiveMode::Lines:
-            return mVerticesDrawn / 2;
-        case gl::PrimitiveMode::Triangles:
-            return mVerticesDrawn / 3;
-        default:
-            return 0;
-    }
-}
-
 TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps)
     : RefCountObject(id),
       mState(caps.maxTransformFeedbackSeparateAttributes),
@@ -214,7 +199,7 @@ void TransformFeedback::onVerticesDrawn(const Context *context, GLsizei count, G
     {
         if (buffer.get() != nullptr)
         {
-            buffer->onTransformFeedback();
+            buffer->onTransformFeedback(context);
         }
     }
 }
@@ -304,7 +289,12 @@ bool TransformFeedback::buffersBoundForOtherUse() const
     return false;
 }
 
-rx::TransformFeedbackImpl *TransformFeedback::getImplementation() const
+rx::TransformFeedbackImpl *TransformFeedback::getImplementation()
+{
+    return mImplementation;
+}
+
+const rx::TransformFeedbackImpl *TransformFeedback::getImplementation() const
 {
     return mImplementation;
 }

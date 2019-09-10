@@ -64,7 +64,7 @@ class FixedVector final
 
     bool empty() const;
     size_type size() const;
-    static constexpr size_type max_size();
+    size_type max_size() const;
 
     void clear();
 
@@ -233,7 +233,7 @@ typename FixedVector<T, N, Storage>::size_type FixedVector<T, N, Storage>::size(
 }
 
 template <class T, size_t N, class Storage>
-constexpr typename FixedVector<T, N, Storage>::size_type FixedVector<T, N, Storage>::max_size()
+typename FixedVector<T, N, Storage>::size_type FixedVector<T, N, Storage>::max_size() const
 {
     return N;
 }

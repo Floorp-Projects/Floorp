@@ -74,7 +74,7 @@ gl::Version GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel);
 void GenerateCaps(ID3D11Device *device,
                   ID3D11DeviceContext *deviceContext,
                   const Renderer11DeviceCaps &renderer11DeviceCaps,
-                  const angle::FeaturesD3D &features,
+                  const angle::WorkaroundsD3D &workarounds,
                   gl::Caps *caps,
                   gl::TextureCapsMap *textureCapsMap,
                   gl::Extensions *extensions,
@@ -305,9 +305,8 @@ void SetBufferData(ID3D11DeviceContext *context, ID3D11Buffer *constantBuffer, c
     }
 }
 
-void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
-                        const DXGI_ADAPTER_DESC &adapterDesc,
-                        angle::FeaturesD3D *features);
+angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps,
+                                          const DXGI_ADAPTER_DESC &adapterDesc);
 
 enum ReservedConstantBufferSlot
 {
@@ -392,7 +391,6 @@ class TextureHelper11 : public Resource11Base<ID3D11Resource, std::shared_ptr, G
     void set(ResourceT *object, const d3d11::Format &format)
     {
         ASSERT(!valid());
-
         mFormatSet     = &format;
         mData->object  = object;
         mData->manager = nullptr;

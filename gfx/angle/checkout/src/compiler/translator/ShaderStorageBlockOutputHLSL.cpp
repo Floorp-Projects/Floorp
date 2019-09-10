@@ -634,11 +634,6 @@ bool ShaderStorageBlockOutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
             break;
         }
         case EOpIndexDirectInterfaceBlock:
-            if (!IsInShaderStorageBlock(node->getLeft()))
-            {
-                return mOutputHLSL->visitBinary(visit, node);
-            }
-
             if (visit == InVisit)
             {
                 ASSERT(IsInShaderStorageBlock(node->getLeft()));

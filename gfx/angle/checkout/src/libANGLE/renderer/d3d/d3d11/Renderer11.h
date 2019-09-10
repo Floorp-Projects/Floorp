@@ -143,7 +143,6 @@ class Renderer11 : public RendererD3D
                                  IUnknown *d3dTexture,
                                  EGLint *width,
                                  EGLint *height,
-                                 EGLint *samples,
                                  const angle::Format **angleFormat) const override;
     egl::Error validateShareHandle(const egl::Config *config,
                                    HANDLE shareHandle,
@@ -250,10 +249,6 @@ class Renderer11 : public RendererD3D
 
     // Image operations
     ImageD3D *createImage() override;
-    ExternalImageSiblingImpl *createExternalImageSibling(const gl::Context *context,
-                                                         EGLenum target,
-                                                         EGLClientBuffer buffer,
-                                                         const egl::AttributeMap &attribs) override;
     angle::Result generateMipmap(const gl::Context *context,
                                  ImageD3D *dest,
                                  ImageD3D *source) override;
@@ -427,7 +422,6 @@ class Renderer11 : public RendererD3D
                                          angle::MemoryBuffer **bufferOut);
 
     gl::Version getMaxSupportedESVersion() const override;
-    gl::Version getMaxConformantESVersion() const override;
 
     angle::Result dispatchCompute(const gl::Context *context,
                                   GLuint numGroupsX,
@@ -511,7 +505,7 @@ class Renderer11 : public RendererD3D
                       gl::Extensions *outExtensions,
                       gl::Limitations *outLimitations) const override;
 
-    void initializeFeatures(angle::FeaturesD3D *features) const override;
+    angle::WorkaroundsD3D generateWorkarounds() const override;
 
     angle::Result drawLineLoop(const gl::Context *context,
                                GLuint count,
@@ -555,8 +549,6 @@ class Renderer11 : public RendererD3D
 
     d3d11::ANGLED3D11DeviceType getDeviceType() const;
 
-    // Make sure that the raw buffer is the latest buffer.
-    angle::Result markRawBufferUsage(const gl::Context *context);
     angle::Result markTransformFeedbackUsage(const gl::Context *context);
     angle::Result drawWithGeometryShaderAndTransformFeedback(Context11 *context11,
                                                              gl::PrimitiveMode mode,
@@ -613,7 +605,7 @@ class Renderer11 : public RendererD3D
 
     angle::ScratchBuffer mScratchMemoryBuffer;
 
-    DebugAnnotator11 mAnnotator;
+    gl::DebugAnnotator *mAnnotator;
 
     mutable Optional<bool> mSupportsShareHandles;
     ResourceManager11 mResourceManager11;

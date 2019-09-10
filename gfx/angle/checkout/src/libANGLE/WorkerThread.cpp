@@ -24,13 +24,6 @@ namespace angle
 WaitableEvent::WaitableEvent()  = default;
 WaitableEvent::~WaitableEvent() = default;
 
-void WaitableEventDone::wait() {}
-
-bool WaitableEventDone::isReady()
-{
-    return true;
-}
-
 WorkerThreadPool::WorkerThreadPool()  = default;
 WorkerThreadPool::~WorkerThreadPool() = default;
 
@@ -224,19 +217,6 @@ std::shared_ptr<WorkerThreadPool> WorkerThreadPool::Create(bool multithreaded)
             static_cast<WorkerThreadPool *>(new SingleThreadedWorkerPool()));
     }
     return pool;
-}
-
-// static
-std::shared_ptr<WaitableEvent> WorkerThreadPool::PostWorkerTask(
-    std::shared_ptr<WorkerThreadPool> pool,
-    std::shared_ptr<Closure> task)
-{
-    std::shared_ptr<WaitableEvent> event = pool->postWorkerTask(task);
-    if (event.get())
-    {
-        event->setWorkerThreadPool(pool);
-    }
-    return event;
 }
 
 }  // namespace angle

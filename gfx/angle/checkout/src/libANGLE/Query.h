@@ -47,7 +47,8 @@ class Query final : public RefCountObject, public LabeledObject
 
     QueryType getType() const;
 
-    rx::QueryImpl *getImplementation() const;
+    rx::QueryImpl *getImplementation();
+    const rx::QueryImpl *getImplementation() const;
 
   private:
     rx::QueryImpl *mQuery;

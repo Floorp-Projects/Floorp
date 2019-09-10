@@ -48,7 +48,7 @@ class Thread : public LabeledObject
     Surface *getCurrentReadSurface() const;
     gl::Context *getContext() const;
     gl::Context *getValidContext() const;
-    Display *getDisplay() const;
+    Display *getCurrentDisplay() const;
 
   private:
     EGLLabelKHR mLabel;

@@ -174,7 +174,7 @@ std::string RoundingHelperWriterGLSL::getTypeString(const char *glslType)
 
 std::string RoundingHelperWriterESSL::getTypeString(const char *glslType)
 {
-    std::stringstream typeStrStr = sh::InitializeStream<std::stringstream>();
+    std::stringstream typeStrStr;
     typeStrStr << "highp " << glslType;
     return typeStrStr.str();
 }
@@ -257,7 +257,7 @@ void RoundingHelperWriterGLSL::writeFloatRoundingHelpers(TInfoSinkBase &sink)
 void RoundingHelperWriterGLSL::writeVectorRoundingHelpers(TInfoSinkBase &sink,
                                                           const unsigned int size)
 {
-    std::stringstream vecTypeStrStr = sh::InitializeStream<std::stringstream>();
+    std::stringstream vecTypeStrStr;
     vecTypeStrStr << "vec" << size;
     std::string vecType = getTypeString(vecTypeStrStr.str().c_str());
 
@@ -287,7 +287,7 @@ void RoundingHelperWriterGLSL::writeMatrixRoundingHelper(TInfoSinkBase &sink,
                                                          const unsigned int rows,
                                                          const char *functionName)
 {
-    std::stringstream matTypeStrStr = sh::InitializeStream<std::stringstream>();
+    std::stringstream matTypeStrStr;
     matTypeStrStr << "mat" << columns;
     if (rows != columns)
     {
@@ -379,7 +379,7 @@ void RoundingHelperWriterHLSL::writeFloatRoundingHelpers(TInfoSinkBase &sink)
 void RoundingHelperWriterHLSL::writeVectorRoundingHelpers(TInfoSinkBase &sink,
                                                           const unsigned int size)
 {
-    std::stringstream vecTypeStrStr = sh::InitializeStream<std::stringstream>();
+    std::stringstream vecTypeStrStr;
     vecTypeStrStr << "float" << size;
     std::string vecType = vecTypeStrStr.str();
 
@@ -409,7 +409,7 @@ void RoundingHelperWriterHLSL::writeMatrixRoundingHelper(TInfoSinkBase &sink,
                                                          const unsigned int rows,
                                                          const char *functionName)
 {
-    std::stringstream matTypeStrStr = sh::InitializeStream<std::stringstream>();
+    std::stringstream matTypeStrStr;
     matTypeStrStr << "float" << columns << "x" << rows;
     std::string matType = matTypeStrStr.str();
 
@@ -744,7 +744,7 @@ TIntermAggregate *EmulatePrecision::createCompoundAssignmentFunctionCallNode(TIn
                                                                              TIntermTyped *right,
                                                                              const char *opNameStr)
 {
-    std::stringstream strstr = sh::InitializeStream<std::stringstream>();
+    std::stringstream strstr;
     if (left->getPrecision() == EbpMedium)
         strstr << "angle_compound_" << opNameStr << "_frm";
     else
