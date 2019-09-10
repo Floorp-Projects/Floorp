@@ -7526,10 +7526,28 @@ class Cursor final : public PBackgroundIDBCursorParent {
   nsCString mContinuePrimaryKeyQuery;
   nsCString mLocale;
 
-  Key mKey;
-  Key mObjectKey;
-  Key mRangeKey;
-  Key mSortKey;
+  // TODO: Apply the renamings suggested below, and also change related
+  // identifiers (e.g. local variables) and literals.
+
+  Key mKey;  ///< The current key, i.e. the key representing the cursor's
+             ///< position (https://w3c.github.io/IndexedDB/#cursor-position).
+             ///<
+             ///< TODO: Rename this to mPosition
+  Key mObjectKey;  ///< The key representing the cursor's object store position
+  ///< (https://w3c.github.io/IndexedDB/#cursor-object-store-position).
+  ///<
+  ///< TODO: Rename this to mObjectStorePosition
+  Key mRangeKey;  ///< If the cursor is based on a key range, the bound in the
+                  ///< direction of iteration (e.g. the upper bound in case of
+                  ///< mDirection == NEXT). If the cursor is based on a key, it
+                  ///< is unset. If mLocale is set, this was converted to
+                  ///< mLocale.
+                  ///<
+                  ///< TODO: Rename this to mLocaleAwareRangeBound
+  Key mSortKey;   ///< If mLocale is set, this is mKey converted to mLocale.
+                  ///< Otherwise, it is unset.
+                  ///<
+                  ///< TODO: Rename this to mLocaleAwarePosition
 
   CursorOpBase* mCurrentlyRunningOp;
 
