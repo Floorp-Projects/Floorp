@@ -4,7 +4,7 @@
 
 `CONTENT` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L197)
 
-Blocks content trackers.
+Blocks content trackers from the content-track-digest256 list.
 May cause issues with some web sites.
 
 ### Inherited Properties
