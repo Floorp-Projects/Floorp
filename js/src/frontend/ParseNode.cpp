@@ -375,9 +375,10 @@ void LexicalScopeNode::dumpImpl(GenericPrinter& out, int indent) {
 }
 #endif
 
-TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink)
-    : gcThing(gcThing), traceLink(traceLink) {
-  MOZ_ASSERT(gcThing->isTenured());
+TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink,
+                             NodeType type)
+    : gcThing(gcThing), traceLink(traceLink), type_(type) {
+  MOZ_ASSERT_IF(gcThing, gcThing->isTenured());
 }
 
 BigIntBox* TraceListNode::asBigIntBox() {
@@ -390,22 +391,16 @@ ObjectBox* TraceListNode::asObjectBox() {
   return static_cast<ObjectBox*>(this);
 }
 
-BigIntBox::BigIntBox(BigInt* bi, TraceListNode* traceLink)
-    : TraceListNode(bi, traceLink) {}
+BigIntBox::BigIntBox(JS::BigInt* bi, TraceListNode* traceLink)
+    : TraceListNode(bi, traceLink, TraceListNode::NodeType::BigInt) {}
 
-ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
-    : TraceListNode(obj, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT(!object()->is<JSFunction>());
-}
-
-ObjectBox::ObjectBox(JSFunction* function, TraceListNode* traceLink)
-    : TraceListNode(function, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT(object()->is<JSFunction>());
-  MOZ_ASSERT(asFunctionBox()->function() == function);
-}
+ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink,
+                     TraceListNode::NodeType type)
+    : TraceListNode(obj, traceLink, type), emitLink(nullptr) {}
 
 FunctionBox* ObjectBox::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
+
   return static_cast<FunctionBox*>(this);
 }
 
