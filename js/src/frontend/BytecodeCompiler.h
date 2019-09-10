@@ -111,7 +111,7 @@ class ParseNode;
 #if defined(JS_BUILD_BINAST)
 
 JSScript* CompileGlobalBinASTScript(
-    JSContext* cx, LifoAlloc& alloc, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const uint8_t* src, size_t len,
     ScriptSourceObject** sourceObjectOut = nullptr);
 

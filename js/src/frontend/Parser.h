@@ -185,6 +185,7 @@
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
+#include "frontend/ParseInfo.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
@@ -244,7 +245,7 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
  public:
   enum class Kind { Parser, BinASTParser };
 
-  ParserSharedBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+  ParserSharedBase(JSContext* cx, ParseInfo& parserInfo,
                    ScriptSourceObject* sourceObject, Kind kind);
   ~ParserSharedBase();
 
@@ -253,7 +254,8 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
 
   LifoAlloc& alloc_;
 
-  LifoAlloc::Mark tempPoolMark_;
+  // Information for parsing with a lifetime longer than the parser itself.
+  ParseInfo& compileInfo_;
 
   // list of parsed objects and BigInts for GC tracing
   TraceListNode* traceListHead_;
@@ -319,7 +321,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   /* ParseGoal */ uint8_t parseGoal_ : 1;
 
-  FunctionTreeHolder treeHolder_;
+  FunctionTreeHolder& treeHolder_;
 
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
@@ -357,10 +359,9 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, LifoAlloc& alloc,
-             const JS::ReadOnlyCompileOptions& options, bool foldConstants,
-             UsedNameTracker& usedNames, ScriptSourceObject* sourceObject,
-             ParseGoal parseGoal);
+  ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+             bool foldConstants, ParseInfo& parseInfo,
+             ScriptSourceObject* sourceObject, ParseGoal parseGoal);
   ~ParserBase();
 
   bool checkOptions();
@@ -525,23 +526,21 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
-                   const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, UsedNameTracker& usedNames,
+  PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                   bool foldConstants, ParseInfo& parserInfo,
                    LazyScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject, ParseGoal parseGoal,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
-                   const JS::ReadOnlyCompileOptions& options,
-                   bool foldConstants, UsedNameTracker& usedNames,
+  PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                   bool foldConstants, ParseInfo& parserInfo,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
                    LazyScript* lazyOuterFunction,
                    ScriptSourceObject* sourceObject, ParseGoal parseGoal)
       : PerHandlerParser(
-            cx, alloc, options, foldConstants, usedNames, lazyOuterFunction,
+            cx, options, foldConstants, parserInfo, lazyOuterFunction,
             sourceObject, parseGoal,
             // JSOPTION_EXTRA_WARNINGS adds extra warnings not
             // generated when functions are parsed lazily.
@@ -1000,11 +999,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, LifoAlloc& alloc,
-                const JS::ReadOnlyCompileOptions& options, const Unit* units,
-                size_t length, bool foldConstants, UsedNameTracker& usedNames,
-                SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction,
-                ScriptSourceObject* sourceObject, ParseGoal parseGoal);
+  GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+                const Unit* units, size_t length, bool foldConstants,
+                ParseInfo& parserInfo, SyntaxParser* syntaxParser,
+                LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
+                ParseGoal parseGoal);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);

@@ -142,8 +142,7 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
   return true;
 }
 
-ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
-                                   UsedNameTracker& usedNames,
+ParserSharedBase::ParserSharedBase(JSContext* cx, ParseInfo& parserInfo,
                                    ScriptSourceObject* sourceObject, Kind kind)
     : JS::AutoGCRooter(
           cx,
@@ -155,34 +154,24 @@ ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
 #endif
           ),
       cx_(cx),
-      alloc_(alloc),
+      alloc_(parserInfo.allocScope.alloc()),
+      compileInfo_(parserInfo),
       traceListHead_(nullptr),
       pc_(nullptr),
-      usedNames_(usedNames),
+      usedNames_(parserInfo.usedNames),
       sourceObject_(cx, sourceObject),
       keepAtoms_(cx) {
   cx->frontendCollectionPool().addActiveCompilation();
-  tempPoolMark_ = alloc_.mark();
 }
 
 ParserSharedBase::~ParserSharedBase() {
-  alloc_.release(tempPoolMark_);
-
-  /*
-   * The parser can allocate enormous amounts of memory for large functions.
-   * Eagerly free the memory now (which otherwise won't be freed until the
-   * next GC) to avoid unnecessary OOMs.
-   */
-  alloc_.freeAllIfHugeAndUnused();
-
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
 
-ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
-                       const ReadOnlyCompileOptions& options,
-                       bool foldConstants, UsedNameTracker& usedNames,
+ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
+                       bool foldConstants, ParseInfo& parseInfo,
                        ScriptSourceObject* sourceObject, ParseGoal parseGoal)
-    : ParserSharedBase(cx, alloc, usedNames, sourceObject,
+    : ParserSharedBase(cx, parseInfo, sourceObject,
                        ParserSharedBase::Kind::Parser),
       anyChars(cx, options, this),
       ss(nullptr),
@@ -194,7 +183,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       awaitHandling_(AwaitIsName),
       inParametersOfAsyncFunction_(false),
       parseGoal_(uint8_t(parseGoal)),
-      treeHolder_(cx, FunctionTreeHolder::Mode::Eager) {
+      treeHolder_(parseInfo.treeHolder) {
 }
 
 bool ParserBase::checkOptions() {
@@ -209,23 +198,22 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-    bool foldConstants, UsedNameTracker& usedNames,
-    LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
-    ParseGoal parseGoal, void* internalSyntaxParser)
-    : ParserBase(cx, alloc, options, foldConstants, usedNames, sourceObject,
+    JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
+    ParseInfo& parserInfo, LazyScript* lazyOuterFunction,
+    ScriptSourceObject* sourceObject, ParseGoal parseGoal,
+    void* internalSyntaxParser)
+    : ParserBase(cx, options, foldConstants, parserInfo, sourceObject,
                  parseGoal),
-      handler_(cx, alloc, lazyOuterFunction),
+      handler_(cx, parserInfo.allocScope.alloc(), lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-    const Unit* units, size_t length, bool foldConstants,
-    UsedNameTracker& usedNames, SyntaxParser* syntaxParser,
-    LazyScript* lazyOuterFunction, ScriptSourceObject* sourceObject,
-    ParseGoal parseGoal)
-    : Base(cx, alloc, options, foldConstants, usedNames, syntaxParser,
+    JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
+    size_t length, bool foldConstants, ParseInfo& parserInfo,
+    SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction,
+    ScriptSourceObject* sourceObject, ParseGoal parseGoal)
+    : Base(cx, options, foldConstants, parserInfo, syntaxParser,
            lazyOuterFunction, sourceObject, parseGoal),
       tokenStream(cx, options, units, length) {}
 
@@ -2871,10 +2859,6 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     }
     funbox->initWithEnclosingParseContext(pc_, fcd, kind);
 
-    // set syntaxParser's current parent to link tree and ensure tree
-    // continuity.
-    syntaxParser->getTreeHolder().setCurrentParent(
-        this->getTreeHolder().getCurrentParent());
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
             SyntaxParseHandler::NodeGeneric, pc_, funbox, inHandling,
