@@ -256,7 +256,11 @@ static nsresult XPCOMGlueLoad(const char* aXPCOMFile,
     cursor = xpcomDir;
   }
 
-  if (getenv("MOZ_RUN_GTEST")) {
+  if (getenv("MOZ_RUN_GTEST")
+#  ifdef FUZZING
+      || getenv("FUZZER")
+#  endif
+  ) {
     strcat(xpcomDir, ".gtest");
   }
 

@@ -207,7 +207,7 @@ static int do_main(int argc, char* argv[], char* envp[]) {
 #endif
 
 #ifdef LIBFUZZER
-  if (getenv("LIBFUZZER"))
+  if (getenv("FUZZER"))
     gBootstrap->XRE_LibFuzzerSetDriver(fuzzer::FuzzerDriver);
 #endif
 
