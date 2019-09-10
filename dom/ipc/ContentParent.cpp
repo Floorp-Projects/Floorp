@@ -4572,8 +4572,14 @@ bool ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) {
 
 mozilla::ipc::IPCResult ContentParent::RecvSetOfflinePermission(
     const Principal& aPrincipal) {
-  nsIPrincipal* principal = aPrincipal;
-  nsContentUtils::MaybeAllowOfflineAppByDefault(principal);
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+      components::OfflineCacheUpdate::Service();
+  if (!updateService) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsresult rv = updateService->AllowOfflineApp(aPrincipal);
+  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
+
   return IPC_OK();
 }
 

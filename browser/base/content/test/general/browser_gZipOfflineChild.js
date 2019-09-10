@@ -14,7 +14,6 @@ registerCleanupFunction(function() {
     {}
   );
   Services.perms.removeFromPrincipal(principal, "offline-app");
-  Services.prefs.clearUserPref("offline-apps.allow_by_default");
 });
 
 //
@@ -82,8 +81,6 @@ function contentTask() {
 
 function test() {
   waitForExplicitFinish();
-
-  Services.prefs.setBoolPref("offline-apps.allow_by_default", true);
 
   // Open a new tab.
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);

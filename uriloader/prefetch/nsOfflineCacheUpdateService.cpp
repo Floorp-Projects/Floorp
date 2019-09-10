@@ -525,7 +525,6 @@ nsOfflineCacheUpdateService::Observe(nsISupports* aSubject, const char* aTopic,
 //-----------------------------------------------------------------------------
 
 static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
-                                           nsIPrefBranch* aPrefBranch,
                                            bool pinned, bool* aAllowed) {
   *aAllowed = false;
 
@@ -575,35 +574,30 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
     *aAllowed = true;
   }
 
-  // offline-apps.allow_by_default is now effective at the cache selection
-  // algorithm code (nsContentSink).
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::OfflineAppAllowed(nsIPrincipal* aPrincipal,
-                                               nsIPrefBranch* aPrefBranch,
                                                bool* aAllowed) {
-  return OfflineAppPermForPrincipal(aPrincipal, aPrefBranch, false, aAllowed);
+  return OfflineAppPermForPrincipal(aPrincipal, false, aAllowed);
 }
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI* aURI,
-                                                     nsIPrefBranch* aPrefBranch,
                                                      bool* aAllowed) {
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
       BasePrincipal::CreateContentPrincipal(aURI, attrs);
-  return OfflineAppPermForPrincipal(principal, aPrefBranch, false, aAllowed);
+  return OfflineAppPermForPrincipal(principal, false, aAllowed);
 }
 
 nsresult nsOfflineCacheUpdateService::OfflineAppPinnedForURI(
-    nsIURI* aDocumentURI, nsIPrefBranch* aPrefBranch, bool* aPinned) {
+    nsIURI* aDocumentURI, bool* aPinned) {
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
       BasePrincipal::CreateContentPrincipal(aDocumentURI, attrs);
-  return OfflineAppPermForPrincipal(principal, aPrefBranch, true, aPinned);
+  return OfflineAppPermForPrincipal(principal, true, aPinned);
 }
 
 NS_IMETHODIMP
