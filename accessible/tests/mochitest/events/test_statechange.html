@@ -21,6 +21,27 @@
     // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
+    function openNode(aIDDetails, aIDSummary, aIsOpen) {
+      this.DOMNode = getNode(aIDDetails);
+
+      this.eventSeq = [
+        new expandedStateChecker(aIsOpen, getNode(aIDSummary)),
+      ];
+
+      this.invoke = function expandNode_invoke() {
+        if (aIsOpen) {
+          this.DOMNode.setAttribute("open", "");
+        } else {
+          this.DOMNode.removeAttribute("open");
+        }
+
+      };
+
+      this.getID = function expandNode_getID() {
+        return prettyName(aIDDetails) + " Open changed to '" + aIsOpen + "'";
+      };
+    }
+
     function makeEditableDoc(aDocNode, aIsEnabled) {
       this.DOMNode = aDocNode;
 
@@ -174,6 +195,16 @@
     function doTests() {
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
 
+      // Test opening details objects
+      gQueue.push(new openNode("detailsOpen", "summaryOpen", true));
+      gQueue.push(new openNode("detailsOpen", "summaryOpen", false));
+      gQueue.push(new openNode("detailsOpen1", "summaryOpen1", true));
+      gQueue.push(new openNode("detailsOpen2", "summaryOpen2", true));
+      gQueue.push(new openNode("detailsOpen3", "summaryOpen3", true));
+      gQueue.push(new openNode("detailsOpen4", "summaryOpen4", true));
+      gQueue.push(new openNode("detailsOpen5", "summaryOpen5", true));
+      gQueue.push(new openNode("detailsOpen6", "summaryOpen6", true));
+
       // Test delayed editable state change
       var doc = document.getElementById("iframe").contentDocument;
       gQueue.push(new makeEditableDoc(doc));
@@ -212,7 +243,24 @@
     addA11yLoadEvent(doTests);
   </script>
 </head>
-
+<style>
+  details.openBefore::before{
+    content: "before detail content: ";
+    background: blue;
+  }
+  summary.openBefore::before{
+    content: "before summary content: ";
+    background: green;
+  }
+  details.openAfter::after{
+    content: " :after detail content";
+    background: blue;
+  }
+  summary.openAfter::after{
+    content: " :after summary content";
+    background: green;
+  }
+</style>
 <body>
 
   <a target="_blank"
@@ -245,6 +293,16 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
+  <!-- open -->
+  <details id="detailsOpen"><summary id="summaryOpen">open</summary>details can be opened</details>
+  <details id="detailsOpen1">order doesn't matter<summary id="summaryOpen1">open</summary></details>
+  <details id="detailsOpen2"><div>additional elements don't matter</div><summary id="summaryOpen2">open</summary></details>
+  <details id="detailsOpen3" class="openBefore"><summary id="summaryOpen3">summary</summary>content</details>
+  <details id="detailsOpen4" class="openAfter"><summary id="summaryOpen4">summary</summary>content</details>
+  <details id="detailsOpen5"><summary id="summaryOpen5" class="openBefore">summary</summary>content</details>
+  <details id="detailsOpen6"><summary id="summaryOpen6" class="openAfter">summary</summary>content</details>
+
 
   <div id="testContainer">
     <iframe id="iframe"></iframe>

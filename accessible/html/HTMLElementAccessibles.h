@@ -94,6 +94,11 @@ class HTMLSummaryAccessible : public HyperTextAccessibleWrap {
 
   HTMLSummaryAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
+  // Check that the given Accessible belongs to a details frame.
+  // If so, find and return the accessible for the detail frame's
+  // main summary.
+  static HTMLSummaryAccessible* FromDetails(Accessible* aDetails);
+
   // Accessible
   virtual uint64_t NativeState() const override;
 
