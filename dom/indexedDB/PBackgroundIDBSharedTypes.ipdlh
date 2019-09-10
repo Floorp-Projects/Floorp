@@ -124,36 +124,43 @@ struct ObjectStoreSpec
   IndexMetadata[] indexes;
 };
 
-struct ObjectStoreOpenCursorParams
+struct CommonOpenCursorParams
 {
   int64_t objectStoreId;
   SerializedKeyRange? optionalKeyRange;
   Direction direction;
+};
+
+struct ObjectStoreOpenCursorParams
+{
+  CommonOpenCursorParams commonParams;
 };
 
 struct ObjectStoreOpenKeyCursorParams
 {
-  int64_t objectStoreId;
-  SerializedKeyRange? optionalKeyRange;
-  Direction direction;
+  CommonOpenCursorParams commonParams;
+};
+
+struct CommonIndexOpenCursorParams
+{
+  CommonOpenCursorParams commonParams;
+  int64_t indexId;
 };
 
 struct IndexOpenCursorParams
 {
-  int64_t objectStoreId;
-  int64_t indexId;
-  SerializedKeyRange? optionalKeyRange;
-  Direction direction;
+  CommonIndexOpenCursorParams commonIndexParams;
 };
 
 struct IndexOpenKeyCursorParams
 {
-  int64_t objectStoreId;
-  int64_t indexId;
-  SerializedKeyRange? optionalKeyRange;
-  Direction direction;
+  CommonIndexOpenCursorParams commonIndexParams;
 };
 
+// TODO: Actually, using a union here is not very nice, unless IPDL supported
+// struct inheritance. Alternatively, if IPDL supported enums, we could merge
+// the subtypes into one. Using a plain integer for discriminating the
+// subtypes would be too error-prone.
 union OpenCursorParams
 {
   ObjectStoreOpenCursorParams;

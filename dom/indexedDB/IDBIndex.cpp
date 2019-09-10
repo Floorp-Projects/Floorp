@@ -458,18 +458,22 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
   OpenCursorParams params;
   if (aKeysOnly) {
     IndexOpenKeyCursorParams openParams;
-    openParams.objectStoreId() = objectStoreId;
-    openParams.indexId() = indexId;
-    openParams.optionalKeyRange() = std::move(optionalKeyRange);
-    openParams.direction() = direction;
+    openParams.commonIndexParams().commonParams().objectStoreId() =
+        objectStoreId;
+    openParams.commonIndexParams().indexId() = indexId;
+    openParams.commonIndexParams().commonParams().optionalKeyRange() =
+        std::move(optionalKeyRange);
+    openParams.commonIndexParams().commonParams().direction() = direction;
 
     params = std::move(openParams);
   } else {
     IndexOpenCursorParams openParams;
-    openParams.objectStoreId() = objectStoreId;
-    openParams.indexId() = indexId;
-    openParams.optionalKeyRange() = std::move(optionalKeyRange);
-    openParams.direction() = direction;
+    openParams.commonIndexParams().commonParams().objectStoreId() =
+        objectStoreId;
+    openParams.commonIndexParams().indexId() = indexId;
+    openParams.commonIndexParams().commonParams().optionalKeyRange() =
+        std::move(optionalKeyRange);
+    openParams.commonIndexParams().commonParams().direction() = direction;
 
     params = std::move(openParams);
   }
