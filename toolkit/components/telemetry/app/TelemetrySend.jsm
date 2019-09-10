@@ -315,17 +315,14 @@ var TelemetrySend = {
    * @param {String} aUrl The telemetry server URL
    * @param {String} aPingFilePath The path to the file holding the ping
    *        contents, if if sent successfully the pingsender will delete it.
-   * @param {callback} observer A function called with parameters
-            (subject, topic, data) and a topic of "process-finished" or
-            "process-failed" after pingsender completion.
    *
    * @throws NS_ERROR_FAILURE if we couldn't find or run the pingsender
    *         executable.
    * @throws NS_ERROR_NOT_IMPLEMENTED on Android as the pingsender is not
    *         available.
    */
-  testRunPingSender(url, pingPath, observer) {
-    return TelemetrySendImpl.runPingSender(url, pingPath, observer);
+  testRunPingSender(url, pingPath) {
+    TelemetrySendImpl.runPingSender(url, pingPath);
   },
 };
 
@@ -1556,7 +1553,7 @@ var TelemetrySendImpl = {
     };
   },
 
-  runPingSender(url, pingPath, observer) {
+  runPingSender(url, pingPath) {
     if (AppConstants.platform === "android") {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -1573,6 +1570,6 @@ var TelemetrySendImpl = {
     process.init(exe);
     process.startHidden = true;
     process.noShell = true;
-    process.runAsync([url, pingPath], 2, observer);
+    process.run(/* blocking */ false, [url, pingPath], 2);
   },
 };
