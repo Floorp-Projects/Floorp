@@ -21,8 +21,6 @@
 namespace angle
 {
 
-class WorkerThreadPool;
-
 // A callback function with no return value and no arguments.
 class Closure
 {
@@ -43,7 +41,6 @@ class WaitableEvent : angle::NonCopyable
 
     // Peeks whether the event is ready. If ready, wait() will not block.
     virtual bool isReady() = 0;
-    void setWorkerThreadPool(std::shared_ptr<WorkerThreadPool> pool) { mPool = pool; }
 
     template <size_t Count>
     static void WaitMany(std::array<std::shared_ptr<WaitableEvent>, Count> *waitables)
@@ -54,17 +51,6 @@ class WaitableEvent : angle::NonCopyable
             (*waitables)[index]->wait();
         }
     }
-
-  private:
-    std::shared_ptr<WorkerThreadPool> mPool;
-};
-
-// A dummy waitable event.
-class WaitableEventDone final : public WaitableEvent
-{
-  public:
-    void wait() override;
-    bool isReady() override;
 };
 
 // Request WorkerThreads from the WorkerThreadPool. Each pool can keep worker threads around so
@@ -76,17 +62,14 @@ class WorkerThreadPool : angle::NonCopyable
     virtual ~WorkerThreadPool();
 
     static std::shared_ptr<WorkerThreadPool> Create(bool multithreaded);
-    static std::shared_ptr<WaitableEvent> PostWorkerTask(std::shared_ptr<WorkerThreadPool> pool,
-                                                         std::shared_ptr<Closure> task);
+
+    // Returns an event to wait on for the task to finish.
+    // If the pool fails to create the task, returns null.
+    virtual std::shared_ptr<WaitableEvent> postWorkerTask(std::shared_ptr<Closure> task) = 0;
 
     virtual void setMaxThreads(size_t maxThreads) = 0;
 
     virtual bool isAsync() = 0;
-
-  private:
-    // Returns an event to wait on for the task to finish.
-    // If the pool fails to create the task, returns null.
-    virtual std::shared_ptr<WaitableEvent> postWorkerTask(std::shared_ptr<Closure> task) = 0;
 };
 
 }  // namespace angle

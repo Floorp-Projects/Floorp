@@ -21,8 +21,7 @@
 #        define ANGLE_PLATFORM_EXPORT __declspec(dllexport)
 #    endif
 #elif defined(__GNUC__) || defined(__clang__)
-// (miko): This visibility setting conflicts with the Firefox build system.
-// #    define ANGLE_PLATFORM_EXPORT __attribute__((visibility("default")))
+#    define ANGLE_PLATFORM_EXPORT __attribute__((visibility("default")))
 #endif
 #if !defined(ANGLE_PLATFORM_EXPORT)
 #    define ANGLE_PLATFORM_EXPORT
@@ -36,7 +35,7 @@
 
 namespace angle
 {
-struct FeaturesD3D;
+struct WorkaroundsD3D;
 struct FeaturesVk;
 using TraceEventHandle = uint64_t;
 using EGLDisplayType   = void *;
@@ -216,14 +215,15 @@ inline void DefaultHistogramBoolean(PlatformMethods *platform, const char *name,
 
 // Allows us to programatically override ANGLE's default workarounds for testing purposes.
 using OverrideWorkaroundsD3DFunc = void (*)(PlatformMethods *platform,
-                                            angle::FeaturesD3D *featuresD3D);
+                                            angle::WorkaroundsD3D *workaroundsD3D);
 inline void DefaultOverrideWorkaroundsD3D(PlatformMethods *platform,
-                                          angle::FeaturesD3D *featuresD3D)
+                                          angle::WorkaroundsD3D *workaroundsD3D)
 {}
 
 using OverrideFeaturesVkFunc = void (*)(PlatformMethods *platform,
-                                        angle::FeaturesVk *featuresVulkan);
-inline void DefaultOverrideFeaturesVk(PlatformMethods *platform, angle::FeaturesVk *featuresVulkan)
+                                        angle::FeaturesVk *workaroundsVulkan);
+inline void DefaultOverrideFeaturesVk(PlatformMethods *platform,
+                                      angle::FeaturesVk *workaroundsVulkan)
 {}
 
 // Callback on a successful program link with the program binary. Can be used to store

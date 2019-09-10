@@ -68,7 +68,6 @@ class StateManager9 final : angle::NonCopyable
     int getRenderTargetWidth() const { return mRenderTargetBounds.width; }
     int getRenderTargetHeight() const { return mRenderTargetBounds.height; }
 
-    void setAllDirtyBits() { mDirtyBits.set(); }
     void resetDirtyBits() { mDirtyBits.reset(); }
 
   private:

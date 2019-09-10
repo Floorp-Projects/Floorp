@@ -58,7 +58,7 @@ struct GLTypeToGLenum<GLfloat>
     static constexpr GLenum value = GL_FLOAT;
 };
 
-GLint CastMaskValue(GLuint value);
+GLint CastMaskValue(const Context *context, GLuint value);
 
 template <typename QueryT, typename InternalT>
 QueryT CastFromGLintStateValue(GLenum pname, InternalT value);

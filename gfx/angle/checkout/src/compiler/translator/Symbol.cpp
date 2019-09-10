@@ -115,7 +115,7 @@ void TStructure::createSamplerSymbols(const char *namePrefix,
         const TType *fieldType = field->type();
         if (IsSampler(fieldType->getBasicType()) || fieldType->isStructureContainingSamplers())
         {
-            std::stringstream fieldName = sh::InitializeStream<std::stringstream>();
+            std::stringstream fieldName;
             fieldName << namePrefix << "_" << field->name();
             TString fieldApiName = apiNamePrefix + ".";
             fieldApiName += field->name().data();

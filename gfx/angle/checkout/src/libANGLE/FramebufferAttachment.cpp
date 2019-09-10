@@ -178,6 +178,12 @@ GLuint FramebufferAttachment::id() const
     return mResource->getId();
 }
 
+const ImageIndex &FramebufferAttachment::getTextureImageIndex() const
+{
+    ASSERT(type() == GL_TEXTURE);
+    return mTarget.textureIndex();
+}
+
 TextureTarget FramebufferAttachment::cubeMapFace() const
 {
     ASSERT(mType == GL_TEXTURE);

@@ -8,7 +8,6 @@
 #define COMPILER_PREPROCESSOR_DIRECTIVEHANDLERBASE_H_
 
 #include <string>
-#include "GLSLANG/ShaderLang.h"
 
 namespace angle
 {
@@ -39,7 +38,7 @@ class DirectiveHandler
                                  const std::string &name,
                                  const std::string &behavior) = 0;
 
-    virtual void handleVersion(const SourceLocation &loc, int version, ShShaderSpec spec) = 0;
+    virtual void handleVersion(const SourceLocation &loc, int version) = 0;
 };
 
 }  // namespace pp

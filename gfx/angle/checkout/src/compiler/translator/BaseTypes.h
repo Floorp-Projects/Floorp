@@ -622,9 +622,6 @@ enum TQualifier
 
     EvqDrawID,  // ANGLE_multi_draw
 
-    EvqBaseVertex,    // ANGLE_base_vertex_base_instance
-    EvqBaseInstance,  // ANGLE_base_vertex_base_instance
-
     // built-ins read by fragment shader
     EvqFragCoord,
     EvqFrontFacing,
@@ -691,11 +688,6 @@ enum TQualifier
 inline bool IsQualifierUnspecified(TQualifier qualifier)
 {
     return (qualifier == EvqTemporary || qualifier == EvqGlobal);
-}
-
-inline bool IsStorageBuffer(TQualifier qualifier)
-{
-    return qualifier == EvqBuffer;
 }
 
 enum TLayoutImageInternalFormat
@@ -915,8 +907,6 @@ inline const char *getQualifierString(TQualifier q)
     case EvqPosition:               return "Position";
     case EvqPointSize:              return "PointSize";
     case EvqDrawID:                 return "DrawID";
-    case EvqBaseVertex:             return "BaseVertex";
-    case EvqBaseInstance:           return "BaseInstance";
     case EvqFragCoord:              return "FragCoord";
     case EvqFrontFacing:            return "FrontFacing";
     case EvqPointCoord:             return "PointCoord";

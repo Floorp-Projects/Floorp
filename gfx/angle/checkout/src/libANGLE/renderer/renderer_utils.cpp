@@ -14,12 +14,9 @@
 
 #include "libANGLE/AttributeMap.h"
 #include "libANGLE/Context.h"
-#include "libANGLE/Display.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/ContextImpl.h"
 #include "libANGLE/renderer/Format.h"
-
-#include "platform/Feature.h"
 
 #include <string.h>
 #include "common/utilities.h"
@@ -101,109 +98,65 @@ void WriteFloatColor(const gl::ColorF &color,
     colorWriteFunction(reinterpret_cast<const uint8_t *>(&color), destPixelData);
 }
 
-template <int cols, int rows, bool IsColumnMajor>
-inline int GetFlattenedIndex(int col, int row)
+template <typename T, int cols, int rows>
+bool TransposeExpandMatrix(T *target, const GLfloat *value)
 {
-    if (IsColumnMajor)
-    {
-        return col * rows + row;
-    }
-    else
-    {
-        return row * cols + col;
-    }
-}
+    constexpr int targetWidth  = 4;
+    constexpr int targetHeight = rows;
+    constexpr int srcWidth     = rows;
+    constexpr int srcHeight    = cols;
 
-template <typename T,
-          bool IsSrcColumnMajor,
-          int colsSrc,
-          int rowsSrc,
-          bool IsDstColumnMajor,
-          int colsDst,
-          int rowsDst>
-bool ExpandMatrix(T *target, const GLfloat *value)
-{
-    static_assert(colsSrc <= colsDst && rowsSrc <= rowsDst, "Can only expand!");
+    constexpr int copyWidth  = std::min(targetHeight, srcWidth);
+    constexpr int copyHeight = std::min(targetWidth, srcHeight);
 
-    constexpr int kDstFlatSize = colsDst * rowsDst;
-    T staging[kDstFlatSize]    = {0};
+    T staging[targetWidth * targetHeight] = {0};
 
-    for (int r = 0; r < rowsSrc; r++)
+    for (int x = 0; x < copyWidth; x++)
     {
-        for (int c = 0; c < colsSrc; c++)
+        for (int y = 0; y < copyHeight; y++)
         {
-            int srcIndex = GetFlattenedIndex<colsSrc, rowsSrc, IsSrcColumnMajor>(c, r);
-            int dstIndex = GetFlattenedIndex<colsDst, rowsDst, IsDstColumnMajor>(c, r);
-
-            staging[dstIndex] = static_cast<T>(value[srcIndex]);
+            staging[x * targetWidth + y] = static_cast<T>(value[y * srcWidth + x]);
         }
     }
 
-    if (memcmp(target, staging, kDstFlatSize * sizeof(T)) == 0)
+    if (memcmp(target, staging, targetWidth * targetHeight * sizeof(T)) == 0)
     {
         return false;
     }
 
-    memcpy(target, staging, kDstFlatSize * sizeof(T));
+    memcpy(target, staging, targetWidth * targetHeight * sizeof(T));
     return true;
 }
 
-template <bool IsSrcColumMajor,
-          int colsSrc,
-          int rowsSrc,
-          bool IsDstColumnMajor,
-          int colsDst,
-          int rowsDst>
-bool SetFloatUniformMatrix(unsigned int arrayElementOffset,
-                           unsigned int elementCount,
-                           GLsizei countIn,
-                           const GLfloat *value,
-                           uint8_t *targetData)
+template <typename T, int cols, int rows>
+bool ExpandMatrix(T *target, const GLfloat *value)
 {
-    unsigned int count =
-        std::min(elementCount - arrayElementOffset, static_cast<unsigned int>(countIn));
+    constexpr int kTargetWidth  = 4;
+    constexpr int kTargetHeight = rows;
+    constexpr int kSrcWidth     = cols;
+    constexpr int kSrcHeight    = rows;
 
-    const unsigned int targetMatrixStride = colsDst * rowsDst;
-    GLfloat *target                       = reinterpret_cast<GLfloat *>(
-        targetData + arrayElementOffset * sizeof(GLfloat) * targetMatrixStride);
+    constexpr int kCopyWidth  = std::min(kTargetWidth, kSrcWidth);
+    constexpr int kCopyHeight = std::min(kTargetHeight, kSrcHeight);
 
-    bool dirty = false;
+    T staging[kTargetWidth * kTargetHeight] = {0};
 
-    for (unsigned int i = 0; i < count; i++)
+    for (int y = 0; y < kCopyHeight; y++)
     {
-        dirty = ExpandMatrix<GLfloat, IsSrcColumMajor, colsSrc, rowsSrc, IsDstColumnMajor, colsDst,
-                             rowsDst>(target, value) ||
-                dirty;
-
-        target += targetMatrixStride;
-        value += colsSrc * rowsSrc;
+        for (int x = 0; x < kCopyWidth; x++)
+        {
+            staging[y * kTargetWidth + x] = static_cast<T>(value[y * kSrcWidth + x]);
+        }
     }
 
-    return dirty;
-}
-
-bool SetFloatUniformMatrixFast(unsigned int arrayElementOffset,
-                               unsigned int elementCount,
-                               GLsizei countIn,
-                               size_t matrixSize,
-                               const GLfloat *value,
-                               uint8_t *targetData)
-{
-    const unsigned int count =
-        std::min(elementCount - arrayElementOffset, static_cast<unsigned int>(countIn));
-
-    const uint8_t *valueData = reinterpret_cast<const uint8_t *>(value);
-    targetData               = targetData + arrayElementOffset * matrixSize;
-
-    if (memcmp(targetData, valueData, matrixSize * count) == 0)
+    if (memcmp(target, staging, kTargetWidth * kTargetHeight * sizeof(T)) == 0)
     {
         return false;
     }
 
-    memcpy(targetData, valueData, matrixSize * count);
+    memcpy(target, staging, kTargetWidth * kTargetHeight * sizeof(T));
     return true;
 }
-
 }  // anonymous namespace
 
 PackPixelsParams::PackPixelsParams()
@@ -320,9 +273,6 @@ PixelCopyFunction FastCopyFunctionMap::get(angle::FormatID formatID) const
 
 bool ShouldUseDebugLayers(const egl::AttributeMap &attribs)
 {
-    // (miko): Disabling debug layers fixes flakiness with debug builds.
-    return false;
-
     EGLAttrib debugSetting =
         attribs.get(EGL_PLATFORM_ANGLE_DEBUG_LAYERS_ENABLED_ANGLE, EGL_DONT_CARE);
 
@@ -521,161 +471,54 @@ angle::Result IncompleteTextureSet::getIncompleteTexture(
     return angle::Result::Continue;
 }
 
-#define ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(api, cols, rows) \
-    template bool SetFloatUniformMatrix##api<cols, rows>::Run(     \
-        unsigned int, unsigned int, GLsizei, GLboolean, const GLfloat *, uint8_t *)
+#define ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(cols, rows)                            \
+    template bool SetFloatUniformMatrix<cols, rows>(unsigned int, unsigned int, GLsizei, \
+                                                    GLboolean, const GLfloat *, uint8_t *)
 
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 2, 2);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 3, 3);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 2, 3);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 3, 2);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 4, 2);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(GLSL, 4, 3);
-
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 2, 2);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 3, 3);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 2, 3);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 3, 2);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 2, 4);
-ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(HLSL, 3, 4);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(2, 2);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(3, 3);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(4, 4);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(2, 3);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(3, 2);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(2, 4);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(4, 2);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(3, 4);
+ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC(4, 3);
 
 #undef ANGLE_INSTANTIATE_SET_UNIFORM_MATRIX_FUNC
 
-#define ANGLE_SPECIALIZATION_ROWS_SET_UNIFORM_MATRIX_FUNC(api, cols, rows)                      \
-    template bool SetFloatUniformMatrix##api<cols, 4>::Run(unsigned int, unsigned int, GLsizei, \
-                                                           GLboolean, const GLfloat *, uint8_t *)
-
-template <int cols>
-struct SetFloatUniformMatrixGLSL<cols, 4>
-{
-    static bool Run(unsigned int arrayElementOffset,
-                    unsigned int elementCount,
-                    GLsizei countIn,
-                    GLboolean transpose,
-                    const GLfloat *value,
-                    uint8_t *targetData);
-};
-
-ANGLE_SPECIALIZATION_ROWS_SET_UNIFORM_MATRIX_FUNC(GLSL, 2, 4);
-ANGLE_SPECIALIZATION_ROWS_SET_UNIFORM_MATRIX_FUNC(GLSL, 3, 4);
-ANGLE_SPECIALIZATION_ROWS_SET_UNIFORM_MATRIX_FUNC(GLSL, 4, 4);
-
-#undef ANGLE_SPECIALIZATION_ROWS_SET_UNIFORM_MATRIX_FUNC
-
-#define ANGLE_SPECIALIZATION_COLS_SET_UNIFORM_MATRIX_FUNC(api, cols, rows)                      \
-    template bool SetFloatUniformMatrix##api<4, rows>::Run(unsigned int, unsigned int, GLsizei, \
-                                                           GLboolean, const GLfloat *, uint8_t *)
-
-template <int rows>
-struct SetFloatUniformMatrixHLSL<4, rows>
-{
-    static bool Run(unsigned int arrayElementOffset,
-                    unsigned int elementCount,
-                    GLsizei countIn,
-                    GLboolean transpose,
-                    const GLfloat *value,
-                    uint8_t *targetData);
-};
-
-ANGLE_SPECIALIZATION_COLS_SET_UNIFORM_MATRIX_FUNC(HLSL, 4, 2);
-ANGLE_SPECIALIZATION_COLS_SET_UNIFORM_MATRIX_FUNC(HLSL, 4, 3);
-ANGLE_SPECIALIZATION_COLS_SET_UNIFORM_MATRIX_FUNC(HLSL, 4, 4);
-
-#undef ANGLE_SPECIALIZATION_COLS_SET_UNIFORM_MATRIX_FUNC
-
-template <int cols>
-bool SetFloatUniformMatrixGLSL<cols, 4>::Run(unsigned int arrayElementOffset,
-                                             unsigned int elementCount,
-                                             GLsizei countIn,
-                                             GLboolean transpose,
-                                             const GLfloat *value,
-                                             uint8_t *targetData)
-{
-    const bool isSrcColumnMajor = !transpose;
-    if (isSrcColumnMajor)
-    {
-        // Both src and dst matrixs are has same layout,
-        // a single memcpy updates all the matrices
-        constexpr size_t srcMatrixSize = sizeof(GLfloat) * cols * 4;
-        return SetFloatUniformMatrixFast(arrayElementOffset, elementCount, countIn, srcMatrixSize,
-                                         value, targetData);
-    }
-    else
-    {
-        // fallback to general cases
-        return SetFloatUniformMatrix<false, cols, 4, true, cols, 4>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
-    }
-}
-
 template <int cols, int rows>
-bool SetFloatUniformMatrixGLSL<cols, rows>::Run(unsigned int arrayElementOffset,
-                                                unsigned int elementCount,
-                                                GLsizei countIn,
-                                                GLboolean transpose,
-                                                const GLfloat *value,
-                                                uint8_t *targetData)
+bool SetFloatUniformMatrix(unsigned int arrayElementOffset,
+                           unsigned int elementCount,
+                           GLsizei countIn,
+                           GLboolean transpose,
+                           const GLfloat *value,
+                           uint8_t *targetData)
 {
-    const bool isSrcColumnMajor = !transpose;
-    // GLSL expects matrix uniforms to be column-major, and each column is padded to 4 rows.
-    if (isSrcColumnMajor)
-    {
-        return SetFloatUniformMatrix<true, cols, rows, true, cols, 4>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
-    }
-    else
-    {
-        return SetFloatUniformMatrix<false, cols, rows, true, cols, 4>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
-    }
-}
+    unsigned int count =
+        std::min(elementCount - arrayElementOffset, static_cast<unsigned int>(countIn));
 
-template <int rows>
-bool SetFloatUniformMatrixHLSL<4, rows>::Run(unsigned int arrayElementOffset,
-                                             unsigned int elementCount,
-                                             GLsizei countIn,
-                                             GLboolean transpose,
-                                             const GLfloat *value,
-                                             uint8_t *targetData)
-{
-    const bool isSrcColumnMajor = !transpose;
-    if (!isSrcColumnMajor)
-    {
-        // Both src and dst matrixs are has same layout,
-        // a single memcpy updates all the matrices
-        constexpr size_t srcMatrixSize = sizeof(GLfloat) * 4 * rows;
-        return SetFloatUniformMatrixFast(arrayElementOffset, elementCount, countIn, srcMatrixSize,
-                                         value, targetData);
-    }
-    else
-    {
-        // fallback to general cases
-        return SetFloatUniformMatrix<true, 4, rows, false, 4, rows>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
-    }
-}
+    const unsigned int targetMatrixStride = (4 * rows);
+    GLfloat *target                       = reinterpret_cast<GLfloat *>(
+        targetData + arrayElementOffset * sizeof(GLfloat) * targetMatrixStride);
 
-template <int cols, int rows>
-bool SetFloatUniformMatrixHLSL<cols, rows>::Run(unsigned int arrayElementOffset,
-                                                unsigned int elementCount,
-                                                GLsizei countIn,
-                                                GLboolean transpose,
-                                                const GLfloat *value,
-                                                uint8_t *targetData)
-{
-    const bool isSrcColumnMajor = !transpose;
-    // Internally store matrices as row-major to accomodate HLSL matrix indexing.  Each row is
-    // padded to 4 columns.
-    if (!isSrcColumnMajor)
+    bool dirty = false;
+
+    for (unsigned int i = 0; i < count; i++)
     {
-        return SetFloatUniformMatrix<false, cols, rows, false, 4, rows>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
+        if (transpose == GL_FALSE)
+        {
+            dirty = ExpandMatrix<GLfloat, cols, rows>(target, value) || dirty;
+        }
+        else
+        {
+            dirty = TransposeExpandMatrix<GLfloat, cols, rows>(target, value) || dirty;
+        }
+        target += targetMatrixStride;
+        value += cols * rows;
     }
-    else
-    {
-        return SetFloatUniformMatrix<true, cols, rows, false, 4, rows>(
-            arrayElementOffset, elementCount, countIn, value, targetData);
-    }
+
+    return dirty;
 }
 
 template void GetMatrixUniform<GLint>(GLenum, GLint *, const GLint *, bool);
@@ -764,40 +607,5 @@ angle::Result GetVertexRangeInfo(const gl::Context *context,
         *vertexCountOut = vertexOrIndexCount;
     }
     return angle::Result::Continue;
-}
-
-gl::Rectangle ClipRectToScissor(const gl::State &glState, const gl::Rectangle &rect, bool invertY)
-{
-    if (glState.isScissorTestEnabled())
-    {
-        gl::Rectangle clippedRect;
-        if (!gl::ClipRectangle(glState.getScissor(), rect, &clippedRect))
-        {
-            return gl::Rectangle();
-        }
-
-        if (invertY)
-        {
-            clippedRect.y = rect.height - clippedRect.y - clippedRect.height;
-        }
-
-        return clippedRect;
-    }
-
-    // If the scissor test isn't enabled, assume it has infinite size.  Its intersection with the
-    // rect would be the rect itself.
-    //
-    // Note that on Vulkan, returning this (as opposed to a fixed max-int-sized rect) could lead to
-    // unnecessary pipeline creations if two otherwise identical pipelines are used on framebuffers
-    // with different sizes.  If such usage is observed in an application, we should investigate
-    // possible optimizations.
-    return rect;
-}
-
-void OverrideFeaturesWithDisplayState(angle::FeatureSetBase *features,
-                                      const egl::DisplayState &state)
-{
-    features->overrideFeatures(state.featureOverridesEnabled, true);
-    features->overrideFeatures(state.featureOverridesDisabled, false);
 }
 }  // namespace rx

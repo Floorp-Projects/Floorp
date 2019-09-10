@@ -110,7 +110,7 @@ bool ValidateMultiDrawElementsInstancedANGLE(Context *context,
                                              GLsizei drawcount);
 
 // GL_ANGLE_provoking_vertex
-bool ValidateProvokingVertexANGLE(Context *context, ProvokingVertexConvention modePacked);
+bool ValidateProvokingVertexANGLE(Context *context, ProvokingVertex modePacked);
 
 // GL_ANGLE_request_extension
 bool ValidateRequestExtensionANGLE(Context *context, const GLchar *name);
@@ -249,7 +249,7 @@ bool ValidateTexSubImage2DRobustANGLE(Context *context,
                                       GLsizei bufSize,
                                       const void *pixels);
 bool ValidateTexImage3DRobustANGLE(Context *context,
-                                   TextureTarget targetPacked,
+                                   TextureType targetPacked,
                                    GLint level,
                                    GLint internalformat,
                                    GLsizei width,
@@ -261,7 +261,7 @@ bool ValidateTexImage3DRobustANGLE(Context *context,
                                    GLsizei bufSize,
                                    const void *pixels);
 bool ValidateTexSubImage3DRobustANGLE(Context *context,
-                                      TextureTarget targetPacked,
+                                      TextureType targetPacked,
                                       GLint level,
                                       GLint xoffset,
                                       GLint yoffset,
@@ -295,7 +295,7 @@ bool ValidateCompressedTexSubImage2DRobustANGLE(Context *context,
                                                 GLsizei dataSize,
                                                 const GLvoid *data);
 bool ValidateCompressedTexImage3DRobustANGLE(Context *context,
-                                             TextureTarget targetPacked,
+                                             TextureType targetPacked,
                                              GLint level,
                                              GLenum internalformat,
                                              GLsizei width,
@@ -306,7 +306,7 @@ bool ValidateCompressedTexImage3DRobustANGLE(Context *context,
                                              GLsizei dataSize,
                                              const GLvoid *data);
 bool ValidateCompressedTexSubImage3DRobustANGLE(Context *context,
-                                                TextureTarget targetPacked,
+                                                TextureType targetPacked,
                                                 GLint level,
                                                 GLint xoffset,
                                                 GLint yoffset,
@@ -550,18 +550,6 @@ bool ValidateGetQueryObjectui64vRobustANGLE(Context *context,
                                             GLsizei *length,
                                             GLuint64 *params);
 
-// GL_ANGLE_texture_external_update
-bool ValidateTexImage2DExternalANGLE(Context *context,
-                                     TextureTarget targetPacked,
-                                     GLint level,
-                                     GLint internalformat,
-                                     GLsizei width,
-                                     GLsizei height,
-                                     GLint border,
-                                     GLenum format,
-                                     GLenum type);
-bool ValidateInvalidateTextureANGLE(Context *context, TextureType targetPacked);
-
 // GL_ANGLE_texture_multisample
 bool ValidateTexStorage2DMultisampleANGLE(Context *context,
                                           TextureType targetPacked,
@@ -631,11 +619,6 @@ bool ValidateCopySubTextureCHROMIUM(Context *context,
 bool ValidateCoverageModulationCHROMIUM(Context *context, GLenum components);
 bool ValidateMatrixLoadfCHROMIUM(Context *context, GLenum matrixMode, const GLfloat *matrix);
 bool ValidateMatrixLoadIdentityCHROMIUM(Context *context, GLenum matrixMode);
-
-// GL_CHROMIUM_lose_context
-bool ValidateLoseContextCHROMIUM(Context *context,
-                                 GraphicsResetStatus currentPacked,
-                                 GraphicsResetStatus otherPacked);
 
 // GL_CHROMIUM_path_rendering
 bool ValidateGenPathsCHROMIUM(Context *context, GLsizei range);
@@ -810,69 +793,6 @@ bool ValidateMapBufferRangeEXT(Context *context,
                                GLsizeiptr length,
                                GLbitfield access);
 
-// GL_EXT_memory_object
-bool ValidateBufferStorageMemEXT(Context *context,
-                                 TextureType targetPacked,
-                                 GLsizeiptr size,
-                                 GLuint memory,
-                                 GLuint64 offset);
-bool ValidateCreateMemoryObjectsEXT(Context *context, GLsizei n, GLuint *memoryObjects);
-bool ValidateDeleteMemoryObjectsEXT(Context *context, GLsizei n, const GLuint *memoryObjects);
-bool ValidateGetMemoryObjectParameterivEXT(Context *context,
-                                           GLuint memoryObject,
-                                           GLenum pname,
-                                           GLint *params);
-bool ValidateGetUnsignedBytevEXT(Context *context, GLenum pname, GLubyte *data);
-bool ValidateGetUnsignedBytei_vEXT(Context *context, GLenum target, GLuint index, GLubyte *data);
-bool ValidateIsMemoryObjectEXT(Context *context, GLuint memoryObject);
-bool ValidateMemoryObjectParameterivEXT(Context *context,
-                                        GLuint memoryObject,
-                                        GLenum pname,
-                                        const GLint *params);
-bool ValidateTexStorageMem2DEXT(Context *context,
-                                TextureType targetPacked,
-                                GLsizei levels,
-                                GLenum internalFormat,
-                                GLsizei width,
-                                GLsizei height,
-                                GLuint memory,
-                                GLuint64 offset);
-bool ValidateTexStorageMem2DMultisampleEXT(Context *context,
-                                           TextureType targetPacked,
-                                           GLsizei samples,
-                                           GLenum internalFormat,
-                                           GLsizei width,
-                                           GLsizei height,
-                                           GLboolean fixedSampleLocations,
-                                           GLuint memory,
-                                           GLuint64 offset);
-bool ValidateTexStorageMem3DEXT(Context *context,
-                                TextureType targetPacked,
-                                GLsizei levels,
-                                GLenum internalFormat,
-                                GLsizei width,
-                                GLsizei height,
-                                GLsizei depth,
-                                GLuint memory,
-                                GLuint64 offset);
-bool ValidateTexStorageMem3DMultisampleEXT(Context *context,
-                                           TextureType targetPacked,
-                                           GLsizei samples,
-                                           GLenum internalFormat,
-                                           GLsizei width,
-                                           GLsizei height,
-                                           GLsizei depth,
-                                           GLboolean fixedSampleLocations,
-                                           GLuint memory,
-                                           GLuint64 offset);
-
-// GL_EXT_memory_object_fd
-bool ValidateImportMemoryFdEXT(Context *context,
-                               GLuint memory,
-                               GLuint64 size,
-                               HandleType handleTypePacked,
-                               GLint fd);
-
 // GL_EXT_occlusion_query_boolean
 
 // GL_EXT_robustness
@@ -896,39 +816,6 @@ bool ValidateReadnPixelsEXT(Context *context,
                             GLenum type,
                             GLsizei bufSize,
                             void *data);
-
-// GL_EXT_semaphore
-bool ValidateDeleteSemaphoresEXT(Context *context, GLsizei n, const GLuint *semaphores);
-bool ValidateGenSemaphoresEXT(Context *context, GLsizei n, GLuint *semaphores);
-bool ValidateGetSemaphoreParameterui64vEXT(Context *context,
-                                           GLuint semaphore,
-                                           GLenum pname,
-                                           GLuint64 *params);
-bool ValidateIsSemaphoreEXT(Context *context, GLuint semaphore);
-bool ValidateSemaphoreParameterui64vEXT(Context *context,
-                                        GLuint semaphore,
-                                        GLenum pname,
-                                        const GLuint64 *params);
-bool ValidateSignalSemaphoreEXT(Context *context,
-                                GLuint semaphore,
-                                GLuint numBufferBarriers,
-                                const GLuint *buffers,
-                                GLuint numTextureBarriers,
-                                const GLuint *textures,
-                                const GLenum *dstLayouts);
-bool ValidateWaitSemaphoreEXT(Context *context,
-                              GLuint semaphore,
-                              GLuint numBufferBarriers,
-                              const GLuint *buffers,
-                              GLuint numTextureBarriers,
-                              const GLuint *textures,
-                              const GLenum *srcLayouts);
-
-// GL_EXT_semaphore_fd
-bool ValidateImportSemaphoreFdEXT(Context *context,
-                                  GLuint semaphore,
-                                  HandleType handleTypePacked,
-                                  GLint fd);
 
 // GL_EXT_texture_storage
 bool ValidateTexStorage1DEXT(Context *context,
@@ -1130,70 +1017,6 @@ bool ValidatePointSizePointerOES(Context *context,
 
 // GL_OES_query_matrix
 bool ValidateQueryMatrixxOES(Context *context, GLfixed *mantissa, GLint *exponent);
-
-// GL_OES_texture_3D
-bool ValidateCompressedTexImage3DOES(Context *context,
-                                     TextureTarget targetPacked,
-                                     GLint level,
-                                     GLenum internalformat,
-                                     GLsizei width,
-                                     GLsizei height,
-                                     GLsizei depth,
-                                     GLint border,
-                                     GLsizei imageSize,
-                                     const void *data);
-bool ValidateCompressedTexSubImage3DOES(Context *context,
-                                        TextureTarget targetPacked,
-                                        GLint level,
-                                        GLint xoffset,
-                                        GLint yoffset,
-                                        GLint zoffset,
-                                        GLsizei width,
-                                        GLsizei height,
-                                        GLsizei depth,
-                                        GLenum format,
-                                        GLsizei imageSize,
-                                        const void *data);
-bool ValidateCopyTexSubImage3DOES(Context *context,
-                                  TextureTarget targetPacked,
-                                  GLint level,
-                                  GLint xoffset,
-                                  GLint yoffset,
-                                  GLint zoffset,
-                                  GLint x,
-                                  GLint y,
-                                  GLsizei width,
-                                  GLsizei height);
-bool ValidateFramebufferTexture3DOES(Context *context,
-                                     GLenum target,
-                                     GLenum attachment,
-                                     TextureTarget textargetPacked,
-                                     GLuint texture,
-                                     GLint level,
-                                     GLint zoffset);
-bool ValidateTexImage3DOES(Context *context,
-                           TextureTarget targetPacked,
-                           GLint level,
-                           GLenum internalformat,
-                           GLsizei width,
-                           GLsizei height,
-                           GLsizei depth,
-                           GLint border,
-                           GLenum format,
-                           GLenum type,
-                           const void *pixels);
-bool ValidateTexSubImage3DOES(Context *context,
-                              TextureTarget targetPacked,
-                              GLint level,
-                              GLint xoffset,
-                              GLint yoffset,
-                              GLint zoffset,
-                              GLsizei width,
-                              GLsizei height,
-                              GLsizei depth,
-                              GLenum format,
-                              GLenum type,
-                              const void *pixels);
 
 // GL_OES_texture_border_clamp
 bool ValidateGetSamplerParameterIivOES(Context *context,

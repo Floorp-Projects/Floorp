@@ -10,12 +10,6 @@
 
 #include "libANGLE/renderer/driver_utils.h"
 
-#include "common/platform.h"
-
-#if defined(ANGLE_PLATFORM_ANDROID)
-#    include <sys/system_properties.h>
-#endif
-
 namespace rx
 {
 // Intel
@@ -133,62 +127,11 @@ const char *GetVendorString(uint32_t vendorId)
             return "Intel";
         case VENDOR_ID_QUALCOMM:
             return "Qualcomm";
-        case VENDOR_ID_ARM:
-            return "ARM";
         default:
             // TODO(jmadill): More vendor IDs.
             ASSERT(vendorId == 0xba5eba11);  // Mock vendor ID used for tests.
             return "Unknown";
     }
 }
-
-int GetAndroidSDKVersion()
-{
-#if defined(ANGLE_PLATFORM_ANDROID)
-    char apiVersion[PROP_VALUE_MAX];
-    int length = __system_property_get("ro.build.version.sdk", apiVersion);
-    if (length == 0)
-    {
-        return 0;
-    }
-    return atoi(apiVersion);
-#else
-    return 0;
-#endif
-}
-
-OSVersion::OSVersion() {}
-OSVersion::OSVersion(int major, int minor, int patch)
-    : majorVersion(major), minorVersion(minor), patchVersion(patch)
-{}
-
-bool operator==(const OSVersion &a, const OSVersion &b)
-{
-    return std::tie(a.majorVersion, a.minorVersion, a.patchVersion) ==
-           std::tie(b.majorVersion, b.minorVersion, b.patchVersion);
-}
-bool operator!=(const OSVersion &a, const OSVersion &b)
-{
-    return std::tie(a.majorVersion, a.minorVersion, a.patchVersion) !=
-           std::tie(b.majorVersion, b.minorVersion, b.patchVersion);
-}
-bool operator<(const OSVersion &a, const OSVersion &b)
-{
-    return std::tie(a.majorVersion, a.minorVersion, a.patchVersion) <
-           std::tie(b.majorVersion, b.minorVersion, b.patchVersion);
-}
-bool operator>=(const OSVersion &a, const OSVersion &b)
-{
-    return std::tie(a.majorVersion, a.minorVersion, a.patchVersion) >=
-           std::tie(b.majorVersion, b.minorVersion, b.patchVersion);
-}
-
-#if !defined(ANGLE_PLATFORM_APPLE)
-OSVersion GetMacOSVersion()
-{
-    // Return a default version
-    return OSVersion(0, 0, 0);
-}
-#endif
 
 }  // namespace rx

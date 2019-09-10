@@ -329,7 +329,6 @@ class TType
     void realize();
 
     bool isSampler() const { return IsSampler(type); }
-    bool isAtomicCounter() const { return IsAtomicCounter(type); }
 
   private:
     void invalidateMangledName();

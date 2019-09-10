@@ -11,7 +11,6 @@
 
 #include "common/mathutil.h"
 #include "common/utilities.h"
-#include "compiler/translator/Common.h"
 
 namespace sh
 {
@@ -133,7 +132,7 @@ void TraverseArrayOfArraysVariable(const ShaderVariable &variable,
 
 std::string CollapseNameStack(const std::vector<std::string> &nameStack)
 {
-    std::stringstream strstr = sh::InitializeStream<std::stringstream>();
+    std::stringstream strstr;
     for (const std::string &part : nameStack)
     {
         strstr << part;
@@ -416,7 +415,7 @@ void VariableNameVisitor::exitArray(const ShaderVariable &arrayVar)
 void VariableNameVisitor::enterArrayElement(const ShaderVariable &arrayVar,
                                             unsigned int arrayElement)
 {
-    std::stringstream strstr = sh::InitializeStream<std::stringstream>();
+    std::stringstream strstr;
     strstr << "[" << arrayElement << "]";
     std::string elementString = strstr.str();
     mNameStack.push_back(elementString);

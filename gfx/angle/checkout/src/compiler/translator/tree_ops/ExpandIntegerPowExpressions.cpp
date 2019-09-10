@@ -79,6 +79,7 @@ bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
         return true;
     }
 
+    ASSERT(constantExponent->getBasicType() == EbtFloat);
     float exponentValue = constantExponent->getConstantValue()->getFConst();
 
     // Test 2: exponentValue is in the problematic range.
