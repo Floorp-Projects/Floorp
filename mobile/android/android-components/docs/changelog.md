@@ -72,6 +72,9 @@ permalink: /changelog/
 * **feature-pwa**
   * Adds the ability to create a basic shortcut with a custom label
 
+* **browser-menu**
+   * Adds the ability to create a BrowserMenuImageSwitch, a BrowserMenuSwitch with icon
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)
