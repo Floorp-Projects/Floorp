@@ -9,9 +9,10 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -34,8 +35,15 @@ class ThreeDotMenuRobot {
     fun verifyRefreshButton() = assertRefreshButton()
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyShareButton() = assertShareButton()
+    fun clickShareButton() {
+        shareButton().click()
+        mDevice.wait(Until.findObject(By.text("SHARE A LINK")), waitingTime)
+    }
     fun verifySaveCollection() = assertSaveCollectionButton()
     fun verifyFindInPageButton() = assertFindInPageButton()
+    fun verifyShareDialogTitle() = assertShareDialogTitle()
+    fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
+    fun verifyShareALinkTitle() = assertShareALinkTitle()
 
     class Transition {
 
@@ -106,6 +114,7 @@ class ThreeDotMenuRobot {
         }
     }
 }
+
 private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
@@ -137,7 +146,7 @@ private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs")))
 private fun assertCloseAllTabsButton() = closeAllTabsButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun shareButton() = onView(allOf(withText("Share tabs")))
+private fun shareButton() = onView(allOf(withText("Share")))
 private fun assertShareButton() = shareButton()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
@@ -147,4 +156,13 @@ private fun assertSaveCollectionButton() = saveCollectionButton()
 
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
 private fun assertFindInPageButton() = findInPageButton()
+private fun ShareDialogTitle() = onView(allOf(withText("Send and Share"), withResourceName("closeButton")))
+private fun assertShareDialogTitle() = ShareDialogTitle()
     .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun SendToDeviceTitle() = onView(allOf(withText("SEND TO DEVICE"), withResourceName("accountHeaderText")))
+private fun assertSendToDeviceTitle() = SendToDeviceTitle()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun ShareALinkTitle() = onView(allOf(withText("SHARE A LINK"), withResourceName("link_header")))
+private fun assertShareALinkTitle() = ShareALinkTitle()
