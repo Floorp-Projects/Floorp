@@ -6,6 +6,7 @@
 
 GeckoSimplePrograms([
     'BadCertAndPinningServer',
+    'DelegatedCredentialsServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
     'SanctionsTestServer',
