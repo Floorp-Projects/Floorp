@@ -453,9 +453,6 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   BrowsingContext* FindWithNameInSubtree(const nsAString& aName,
                                          BrowsingContext& aRequestingContext);
 
-  // Removes the context from its group and sets mIsDetached to true.
-  void Unregister();
-
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
   // Update the window proxy object that corresponds to this browsing context.
