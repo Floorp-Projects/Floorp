@@ -74,8 +74,8 @@ describe("ObjectInspector - entries", () => {
     );
 
     await waitForLoadedProperties(store, [
-      "Symbol(root/<entries>/0)",
-      "Symbol(root/<entries>/1)",
+      "root◦<entries>◦0",
+      "root◦<entries>◦1",
     ]);
 
     wrapper.update();

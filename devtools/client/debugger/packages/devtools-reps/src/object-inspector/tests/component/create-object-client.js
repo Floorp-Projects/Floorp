@@ -49,7 +49,10 @@ describe("createObjectClient", () => {
 
   it("is called with the expected object for entries node", () => {
     const grip = Symbol();
-    const mapStubNode = createNode({ name: "map", contents: { value: grip } });
+    const mapStubNode = createNode({
+      name: "map",
+      contents: { value: grip },
+    });
     const entriesNode = makeNodesForEntries(mapStubNode);
 
     const { client } = mount({
