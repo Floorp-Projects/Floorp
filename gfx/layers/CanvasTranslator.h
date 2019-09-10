@@ -196,7 +196,7 @@ class CanvasTranslator final : public gfx::InlineTranslator {
       gfx::ReferencePtr aSurface);
 
  private:
-  CanvasTranslator(); 
+  CanvasTranslator();
 
   void AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
                             TextureData* atextureData);
