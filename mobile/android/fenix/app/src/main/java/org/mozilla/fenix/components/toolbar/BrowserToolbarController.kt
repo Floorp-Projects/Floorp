@@ -110,7 +110,14 @@ class DefaultBrowserToolbarController(
             )
             ToolbarMenu.Item.AddToHomeScreen -> {
                 MainScope().launch {
-                    context.components.useCases.webAppUseCases.addToHomescreen()
+                    with(context.components.useCases.webAppUseCases) {
+                        if (isPWA()) {
+                            addToHomescreen()
+                        } else {
+                            val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateShortcutFragment()
+                            navController.navigate(directions)
+                        }
+                    }
                 }
             }
             ToolbarMenu.Item.Share -> {

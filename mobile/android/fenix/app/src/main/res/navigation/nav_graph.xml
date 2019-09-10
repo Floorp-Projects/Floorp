@@ -185,6 +185,9 @@
             android:id="@+id/action_browserFragment_to_createCollectionFragment"
             app:destination="@id/createCollectionFragment" />
         <action
+                android:id="@+id/action_browserFragment_to_createShortcutFragment"
+                app:destination="@id/createShortcutFragment" />
+        <action
             android:id="@+id/action_browserFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
         <action
@@ -469,6 +472,11 @@
         android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
         android:label="fragment_create_collection"
         tools:layout="@layout/fragment_create_collection" />
+    <dialog
+            android:id="@+id/createShortcutFragment"
+            android:name="org.mozilla.fenix.shortcut.CreateShortcutFragment"
+            android:label="fragment_create_shortcut"
+            tools:layout="@layout/fragment_create_shortcut" />
     <dialog
         android:id="@+id/shareFragment"
         android:name="org.mozilla.fenix.share.ShareFragment"
