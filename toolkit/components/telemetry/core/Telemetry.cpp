@@ -561,13 +561,13 @@ bool TelemetryImpl::ReflectSQL(const SlowSQLEntryType* entry, const Stat* stat,
 
 bool TelemetryImpl::ReflectMainThreadSQL(SlowSQLEntryType* entry, JSContext* cx,
                                          JS::Handle<JSObject*> obj) {
-  return ReflectSQL(entry, &entry->GetModifiableData()->mainThread, cx, obj);
+  return ReflectSQL(entry, &entry->mData.mainThread, cx, obj);
 }
 
 bool TelemetryImpl::ReflectOtherThreadsSQL(SlowSQLEntryType* entry,
                                            JSContext* cx,
                                            JS::Handle<JSObject*> obj) {
-  return ReflectSQL(entry, &entry->GetModifiableData()->otherThreads, cx, obj);
+  return ReflectSQL(entry, &entry->mData.otherThreads, cx, obj);
 }
 
 bool TelemetryImpl::AddSQLInfo(JSContext* cx, JS::Handle<JSObject*> rootObj,
@@ -1262,18 +1262,18 @@ void TelemetryImpl::StoreSlowSQL(const nsACString& sql, uint32_t delay,
   if (!entry) {
     entry = slowSQLMap->PutEntry(sql);
     if (MOZ_UNLIKELY(!entry)) return;
-    entry->GetModifiableData()->mainThread.hitCount = 0;
-    entry->GetModifiableData()->mainThread.totalTime = 0;
-    entry->GetModifiableData()->otherThreads.hitCount = 0;
-    entry->GetModifiableData()->otherThreads.totalTime = 0;
+    entry->mData.mainThread.hitCount = 0;
+    entry->mData.mainThread.totalTime = 0;
+    entry->mData.otherThreads.hitCount = 0;
+    entry->mData.otherThreads.totalTime = 0;
   }
 
   if (NS_IsMainThread()) {
-    entry->GetModifiableData()->mainThread.hitCount++;
-    entry->GetModifiableData()->mainThread.totalTime += delay;
+    entry->mData.mainThread.hitCount++;
+    entry->mData.mainThread.totalTime += delay;
   } else {
-    entry->GetModifiableData()->otherThreads.hitCount++;
-    entry->GetModifiableData()->otherThreads.totalTime += delay;
+    entry->mData.otherThreads.hitCount++;
+    entry->mData.otherThreads.totalTime += delay;
   }
 }
 

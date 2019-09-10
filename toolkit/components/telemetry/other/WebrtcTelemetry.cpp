@@ -20,9 +20,9 @@ void WebrtcTelemetry::RecordIceCandidateMask(const uint32_t iceCandidateBitmask,
   }
 
   if (success) {
-    entry->GetModifiableData()->webrtc.successCount++;
+    entry->mData.webrtc.successCount++;
   } else {
-    entry->GetModifiableData()->webrtc.failureCount++;
+    entry->mData.webrtc.failureCount++;
   }
 }
 
@@ -55,7 +55,7 @@ bool ReflectIceEntry(const WebrtcTelemetry::WebrtcIceCandidateType* entry,
 
 bool ReflectIceWebrtc(WebrtcTelemetry::WebrtcIceCandidateType* entry,
                       JSContext* cx, JS::Handle<JSObject*> obj) {
-  return ReflectIceEntry(entry, &entry->GetData().webrtc, cx, obj);
+  return ReflectIceEntry(entry, &entry->mData.webrtc, cx, obj);
 }
 
 bool WebrtcTelemetry::AddIceInfo(JSContext* cx, JS::Handle<JSObject*> iceObj) {

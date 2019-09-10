@@ -729,36 +729,6 @@ PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   }
 }
 
-PLDHashTable::Iterator::Iterator(PLDHashTable* aTable, EndIteratorTag aTag)
-    : mTable(aTable),
-      mCurrent(mTable->mEntryStore.SlotForIndex(0, mTable->mEntrySize,
-                                                mTable->Capacity())),
-      mNexts(mTable->EntryCount()),
-      mNextsLimit(mTable->EntryCount()),
-      mHaveRemoved(false),
-      mEntrySize(aTable->mEntrySize) {
-#ifdef DEBUG
-  mTable->mChecker.StartReadOp();
-#endif
-
-  MOZ_ASSERT(Done());
-}
-
-PLDHashTable::Iterator::Iterator(const Iterator& aOther)
-    : mTable(aOther.mTable),
-      mCurrent(aOther.mCurrent),
-      mNexts(aOther.mNexts),
-      mNextsLimit(aOther.mNextsLimit),
-      mHaveRemoved(aOther.mHaveRemoved),
-      mEntrySize(aOther.mEntrySize) {
-  // TODO: Is this necessary?
-  MOZ_ASSERT(!mHaveRemoved);
-
-#ifdef DEBUG
-  mTable->mChecker.StartReadOp();
-#endif
-}
-
 PLDHashTable::Iterator::~Iterator() {
   if (mTable) {
     if (mHaveRemoved) {

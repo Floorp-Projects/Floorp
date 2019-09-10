@@ -1409,7 +1409,7 @@ nsresult internal_GetEnumByScalarName(const StaticMutexAutoLock& lock,
   if (!entry) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aId = entry->GetData();
+  *aId = entry->mData;
   return NS_OK;
 }
 
@@ -1921,7 +1921,7 @@ void internal_RegisterScalars(const StaticMutexAutoLock& lock,
       // Change the scalar to expired if needed.
       if (scalarInfo.mDynamicExpiration && !scalarInfo.builtin) {
         DynamicScalarInfo& scalarData =
-            (*gDynamicScalarInfo)[existingKey->GetData().id];
+            (*gDynamicScalarInfo)[existingKey->mData.id];
         scalarData.mDynamicExpiration = true;
       }
       continue;
@@ -1930,7 +1930,7 @@ void internal_RegisterScalars(const StaticMutexAutoLock& lock,
     gDynamicScalarInfo->AppendElement(scalarInfo);
     uint32_t scalarId = gDynamicScalarInfo->Length() - 1;
     CharPtrEntryType* entry = gScalarNameIDMap.PutEntry(scalarInfo.name());
-    entry->SetData(ScalarKey{scalarId, true});
+    entry->mData = ScalarKey{scalarId, true};
   }
 }
 
@@ -2415,7 +2415,7 @@ void TelemetryScalar::InitializeGlobalState(bool aCanRecordBase,
       static_cast<uint32_t>(mozilla::Telemetry::ScalarID::ScalarCount);
   for (uint32_t i = 0; i < scalarCount; i++) {
     CharPtrEntryType* entry = gScalarNameIDMap.PutEntry(gScalars[i].name());
-    entry->SetData(ScalarKey{i, false});
+    entry->mData = ScalarKey{i, false};
   }
 
   // To summarize dynamic events we need a dynamic scalar.

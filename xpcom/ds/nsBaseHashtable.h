@@ -23,19 +23,10 @@ class nsBaseHashtable;  // forward declaration
 template <class KeyClass, class DataType>
 class nsBaseHashtableET : public KeyClass {
  public:
-  const DataType& GetData() const { return mData; }
-  DataType* GetModifiableData() { return &mData; }
-  template <typename U>
-  void SetData(U&& aData) {
-    mData = std::forward<U>(aData);
-  }
-
- private:
   DataType mData;
   friend class nsTHashtable<nsBaseHashtableET<KeyClass, DataType>>;
-  template <typename KeyClassX, typename DataTypeX, typename UserDataTypeX>
-  friend class nsBaseHashtable;
 
+ private:
   typedef typename KeyClass::KeyType KeyType;
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
 
@@ -395,91 +386,6 @@ class nsBaseHashtable
   Iterator ConstIter() const {
     return Iterator(const_cast<nsBaseHashtable*>(this));
   }
-
-  // STL-style iterators to allow the use in range-based for loops, e.g.
-  template <typename T>
-  class base_iterator
-      : public std::iterator<std::forward_iterator_tag, T, int32_t> {
-   public:
-    using typename std::iterator<std::forward_iterator_tag, T,
-                                 int32_t>::value_type;
-    using typename std::iterator<std::forward_iterator_tag, T,
-                                 int32_t>::difference_type;
-
-    using iterator_type = base_iterator;
-    using const_iterator_type = base_iterator<const T>;
-
-    using EndIteratorTag = PLDHashTable::Iterator::EndIteratorTag;
-
-    base_iterator(base_iterator&& aOther) = default;
-
-    base_iterator& operator=(base_iterator&& aOther) {
-      // User-defined because the move assignment operator is deleted in
-      // PLDHashtable::Iterator.
-      return operator=(static_cast<const base_iterator&>(aOther));
-    }
-
-    base_iterator(const base_iterator& aOther)
-        : mIterator{aOther.mIterator.Clone()} {}
-    base_iterator& operator=(const base_iterator& aOther) {
-      // Since PLDHashTable::Iterator has no assignment operator, we destroy and
-      // recreate mIterator.
-      mIterator.~Iterator();
-      new (&mIterator) PLDHashTable::Iterator(aOther.mIterator.Clone());
-      return *this;
-    }
-
-    explicit base_iterator(PLDHashTable::Iterator aFrom)
-        : mIterator{std::move(aFrom)} {}
-
-    explicit base_iterator(const nsBaseHashtable* aTable)
-        : mIterator{&const_cast<nsBaseHashtable*>(aTable)->mTable} {}
-
-    base_iterator(const nsBaseHashtable* aTable, EndIteratorTag aTag)
-        : mIterator{&const_cast<nsBaseHashtable*>(aTable)->mTable, aTag} {}
-
-    bool operator==(const iterator_type& aRhs) const {
-      return mIterator == aRhs.mIterator;
-    }
-    bool operator!=(const iterator_type& aRhs) const {
-      return !(*this == aRhs);
-    }
-
-    value_type* operator->() const {
-      return static_cast<value_type*>(mIterator.Get());
-    }
-    value_type& operator*() const {
-      return *static_cast<value_type*>(mIterator.Get());
-    }
-
-    iterator_type& operator++() {
-      mIterator.Next();
-      return *this;
-    }
-    iterator_type operator++(int) {
-      iterator_type it = *this;
-      ++*this;
-      return it;
-    }
-
-    operator const_iterator_type() const {
-      return const_iterator_type{mIterator.Clone()};
-    }
-
-   private:
-    PLDHashTable::Iterator mIterator;
-  };
-  using const_iterator = base_iterator<const EntryType>;
-  using iterator = base_iterator<EntryType>;
-
-  iterator begin() { return iterator{this}; }
-  const_iterator begin() const { return const_iterator{this}; }
-  const_iterator cbegin() const { return begin(); }
-  iterator end() { return iterator{this, typename iterator::EndIteratorTag{}}; }
-  const_iterator end() const {
-    return const_iterator{this, typename const_iterator::EndIteratorTag{}};
-  }
-  const_iterator cend() const { return end(); }
 
   /**
    * reset the hashtable, removing all entries

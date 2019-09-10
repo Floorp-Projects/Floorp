@@ -96,7 +96,7 @@ bool nsRefPtrHashtable<KeyClass, PtrType>::Get(KeyType aKey,
 
   if (ent) {
     if (aRefPtr) {
-      *aRefPtr = ent->GetData();
+      *aRefPtr = ent->mData;
 
       NS_IF_ADDREF(*aRefPtr);
     }
@@ -121,7 +121,7 @@ already_AddRefed<PtrType> nsRefPtrHashtable<KeyClass, PtrType>::Get(
     return nullptr;
   }
 
-  RefPtr<PtrType> copy = ent->GetData();
+  RefPtr<PtrType> copy = ent->mData;
   return copy.forget();
 }
 
@@ -135,7 +135,7 @@ PtrType* nsRefPtrHashtable<KeyClass, PtrType>::GetWeak(KeyType aKey,
       *aFound = true;
     }
 
-    return ent->GetData();
+    return ent->mData;
   }
 
   // Key does not exist, return nullptr and set aFound to false
@@ -164,7 +164,7 @@ bool nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
     return false;
   }
 
-  ent->SetData(aData);
+  ent->mData = aData;
 
   return true;
 }
@@ -176,7 +176,7 @@ bool nsRefPtrHashtable<KeyClass, PtrType>::Remove(KeyType aKey,
 
   if (ent) {
     if (aRefPtr) {
-      ent->GetModifiableData()->forget(aRefPtr);
+      ent->mData.forget(aRefPtr);
     }
     this->RemoveEntry(ent);
     return true;
