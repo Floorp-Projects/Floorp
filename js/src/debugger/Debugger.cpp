@@ -3908,7 +3908,7 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
         continue;
       }
 
-      if (SweepZonesInSameGroup(debuggerZone, debuggeeZone)) {
+      if (!SweepZonesInSameGroup(debuggerZone, debuggeeZone)) {
         return false;
       }
     }
