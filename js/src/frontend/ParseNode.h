@@ -2173,15 +2173,18 @@ class TraceListNode {
   friend class ParserSharedBase;
 
  protected:
+  enum NodeType { Object, BigInt, Function, LastNodeType };
+
   js::gc::Cell* gcThing;
   TraceListNode* traceLink;
+  NodeType type_;
 
-  TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink);
-  explicit TraceListNode(TraceListNode* traceLink)
-      : gcThing(nullptr), traceLink(traceLink) {}
+  TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink, NodeType type);
 
-  bool isBigIntBox() const { return gcThing->is<BigInt>(); }
-  bool isObjectBox() const { return gcThing->is<JSObject>(); }
+  bool isBigIntBox() const { return type_ == NodeType::BigInt; }
+  bool isObjectBox() const {
+    return type_ == NodeType::Object || type_ == NodeType::Function;
+  }
 
   BigIntBox* asBigIntBox();
   ObjectBox* asObjectBox();
@@ -2194,8 +2197,8 @@ class TraceListNode {
 
 class BigIntBox : public TraceListNode {
  public:
-  BigIntBox(BigInt* bi, TraceListNode* link);
-  BigInt* value() const { return gcThing->as<BigInt>(); }
+  BigIntBox(JS::BigInt* bi, TraceListNode* link);
+  JS::BigInt* value() const { return gcThing->as<JS::BigInt>(); }
 };
 
 class ObjectBox : public TraceListNode {
@@ -2203,18 +2206,17 @@ class ObjectBox : public TraceListNode {
   friend struct GCThingList;
   ObjectBox* emitLink;
 
-  ObjectBox(JSFunction* function, TraceListNode* link);
+  ObjectBox(JSObject* obj, TraceListNode* link, TraceListNode::NodeType type);
 
  public:
-  ObjectBox(JSObject* obj, TraceListNode* link);
-  explicit ObjectBox(TraceListNode* link)
-      : TraceListNode(link), emitLink(nullptr) {}
+  ObjectBox(JSObject* obj, TraceListNode* link)
+      : ObjectBox(obj, link, TraceListNode::NodeType::Object) {}
 
   bool hasObject() const { return gcThing != nullptr; }
 
   JSObject* object() const { return gcThing->as<JSObject>(); }
 
-  bool isFunctionBox() const { return object()->is<JSFunction>(); }
+  bool isFunctionBox() const { return type_ == NodeType::Function; }
   FunctionBox* asFunctionBox();
 };
 
