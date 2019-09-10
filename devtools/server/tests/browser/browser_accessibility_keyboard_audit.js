@@ -164,6 +164,18 @@ add_task(async function() {
       "#owned_listbox",
       null,
     ],
+    [
+      "Mouse interactive, label that contains form element (linked)",
+      "#label-1",
+      null,
+    ],
+    ["Mouse interactive label for external element (linked)", "#label-2", null],
+    ["Not interactive unlinked label", "#label-3", null],
+    [
+      "Not interactive unlinked label with folloing form element",
+      "#label-4",
+      null,
+    ],
   ];
 
   for (const [description, selector, expected] of tests) {
