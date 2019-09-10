@@ -13,7 +13,7 @@
 
 #include "mozilla/dom/Document.h"
 
-#if defined(DEBUG) && !defined(ANDROID)
+#if defined(DEBUG)
 /* static */
 void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // We want to get to a point where all about: pages ship with a CSP. This
@@ -65,16 +65,19 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // This allowlist contains about: pages that are permanently allowed to
   // render without a CSP applied.
   static nsLiteralCString sAllowedAboutPagesWithNoCSP[] = {
-      // about:blank is a special about page -> no CSP
-      NS_LITERAL_CSTRING("about:blank"),
-      // about:srcdoc is a special about page -> no CSP
-      NS_LITERAL_CSTRING("about:srcdoc"),
-      // about:sync-log displays plain text only -> no CSP
-      NS_LITERAL_CSTRING("about:sync-log"),
-      // about:printpreview displays plain text only -> no CSP
-      NS_LITERAL_CSTRING("about:printpreview"),
-      // Bug 1497200: Apply Meta CSP to about:downloads
-      NS_LITERAL_CSTRING("about:downloads"),
+    // about:blank is a special about page -> no CSP
+    NS_LITERAL_CSTRING("about:blank"),
+    // about:srcdoc is a special about page -> no CSP
+    NS_LITERAL_CSTRING("about:srcdoc"),
+    // about:sync-log displays plain text only -> no CSP
+    NS_LITERAL_CSTRING("about:sync-log"),
+    // about:printpreview displays plain text only -> no CSP
+    NS_LITERAL_CSTRING("about:printpreview"),
+    // Bug 1497200: Apply Meta CSP to about:downloads
+    NS_LITERAL_CSTRING("about:downloads"),
+#  if defined(ANDROID)
+    NS_LITERAL_CSTRING("about:config"),
+#  endif
   };
 
   for (const nsLiteralCString& allowlistEntry : sAllowedAboutPagesWithNoCSP) {

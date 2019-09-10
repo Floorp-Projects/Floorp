@@ -17,7 +17,7 @@ class Document;
 
 class nsContentSecurityUtils {
  public:
-#if defined(DEBUG) && !defined(ANDROID)
+#if defined(DEBUG)
   static void AssertAboutPageHasCSP(Document* aDocument);
 #endif
 };

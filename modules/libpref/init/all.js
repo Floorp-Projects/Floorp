@@ -2253,7 +2253,7 @@ pref("security.directory",              "");
 pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
-#if defined(DEBUG) && !defined(ANDROID)
+#if defined(DEBUG)
   // For testing purposes only: Flipping this pref to true allows
   // to skip the assertion that every about page ships with a CSP.
   pref("csp.skip_about_page_has_csp_assert", false);
