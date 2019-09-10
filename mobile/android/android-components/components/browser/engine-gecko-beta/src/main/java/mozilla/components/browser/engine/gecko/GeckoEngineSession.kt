@@ -172,7 +172,20 @@ class GeckoEngineSession(
         } else {
             policy.useForRegularSessions
         }
-        geckoSession.settings.useTrackingProtection = enabled
+        /**
+         * As described on https://bugzilla.mozilla.org/show_bug.cgi?id=1579264,useTrackingProtection
+         * is a misleading setting. When is set to true is blocking content (scripts/sub-resources).
+         * Instead of just turn on/off tracking protection. Until, this issue is fixed consumers need
+         * a way to indicate, if they want to block content or not, this is why we use
+         * [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES].
+         */
+        val shouldBlockContent =
+            policy.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+
+        if (!enabled) {
+            disableTrackingProtectionOnGecko()
+        }
+        geckoSession.settings.useTrackingProtection = shouldBlockContent
         notifyObservers { onTrackerBlockingEnabledChange(enabled) }
     }
 
@@ -180,8 +193,17 @@ class GeckoEngineSession(
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        geckoSession.settings.useTrackingProtection = false
+        disableTrackingProtectionOnGecko()
         notifyObservers { onTrackerBlockingEnabledChange(false) }
+    }
+
+    // To fully disable tracking protection we need to change the different tracking protection
+    // variables to none.
+    private fun disableTrackingProtectionOnGecko() {
+        geckoSession.settings.useTrackingProtection = false
+        runtime.settings.contentBlocking.setAntiTracking(ContentBlocking.AntiTracking.NONE)
+        runtime.settings.contentBlocking.cookieBehavior = ContentBlocking.CookieBehavior.ACCEPT_ALL
+        runtime.settings.contentBlocking.setStrictSocialTrackingProtection(false)
     }
 
     /**

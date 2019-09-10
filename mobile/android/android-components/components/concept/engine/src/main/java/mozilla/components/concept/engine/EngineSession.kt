@@ -176,22 +176,22 @@ abstract class EngineSession(
             NONE(0),
 
             /**
-             * Blocks advertisement trackers.
+             * Blocks advertisement trackers from the ads-track-digest256 list.
              */
             AD(1 shl 1),
 
             /**
-             * Blocks analytics trackers.
+             * Blocks analytics trackers from the analytics-track-digest256 list.
              */
             ANALYTICS(1 shl 2),
 
             /**
-             * Blocks social trackers.
+             * Blocks social trackers from the social-track-digest256 list.
              */
             SOCIAL(1 shl 3),
 
             /**
-             * Blocks content trackers.
+             * Blocks content trackers from the content-track-digest256 list.
              * May cause issues with some web sites.
              */
             CONTENT(1 shl 4),
@@ -209,13 +209,23 @@ abstract class EngineSession(
              */
             FINGERPRINTING(1 shl 7),
 
-            RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id),
+            /**
+             * Blocks social trackers from the social-tracking-protection-digest256 list.
+             */
+            MOZILLA_SOCIAL(1 shl 8),
 
             /**
-             * Combining the [RECOMMENDED] categories plus [CRYPTOMINING],
-             * [FINGERPRINTING] and [CONTENT].
+             * Blocks content like scripts and sub-resources.
              */
-            STRICT(RECOMMENDED.id + CRYPTOMINING.id + FINGERPRINTING.id + CONTENT.id)
+            SCRIPTS_AND_SUB_RESOURCES(1 shl 9999),
+
+            RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
+                CRYPTOMINING.id + FINGERPRINTING.id),
+
+            /**
+             * Combining the [RECOMMENDED] categories plus [CRYPTOMINING] and [FINGERPRINTING].
+             */
+            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id)
         }
 
         companion object {
@@ -234,7 +244,8 @@ abstract class EngineSession(
              */
             fun strict() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.STRICT),
-                cookiePolicy = ACCEPT_NON_TRACKERS
+                cookiePolicy = ACCEPT_NON_TRACKERS,
+                strictSocialTrackingProtection = true
             )
 
             /**
@@ -244,7 +255,8 @@ abstract class EngineSession(
              */
             fun recommended() = TrackingProtectionPolicyForSessionTypes(
                 trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
-                cookiePolicy = ACCEPT_NON_TRACKERS
+                cookiePolicy = ACCEPT_NON_TRACKERS,
+                strictSocialTrackingProtection = false
             )
 
             fun select(
@@ -276,6 +288,12 @@ abstract class EngineSession(
     /**
      * Subtype of [TrackingProtectionPolicy] to control the type of session this policy
      * should be applied to. By default, a policy will be applied to all sessions.
+     *  @param trackingCategory a list of tracking categories to apply.
+     *  @param cookiePolicy indicate how cookies should behave for this policy.
+     *  @param strictSocialTrackingProtection indicate  if content should be blocked from the
+     *  social-tracking-protection-digest256 list, when given a null value,
+     *  it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT]
+     *  is set.
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
         trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),

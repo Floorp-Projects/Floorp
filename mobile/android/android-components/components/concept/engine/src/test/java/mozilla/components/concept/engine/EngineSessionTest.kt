@@ -688,8 +688,8 @@ class EngineSessionTest {
         assertTrue(recommendedPolicy.contains(TrackingCategory.SOCIAL))
         assertTrue(recommendedPolicy.contains(TrackingCategory.TEST))
 
-        assertFalse(recommendedPolicy.contains(TrackingCategory.FINGERPRINTING))
-        assertFalse(recommendedPolicy.contains(TrackingCategory.CRYPTOMINING))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.FINGERPRINTING))
+        assertTrue(recommendedPolicy.contains(TrackingCategory.CRYPTOMINING))
         assertFalse(recommendedPolicy.contains(TrackingCategory.CONTENT))
 
         val strictPolicy = TrackingProtectionPolicy.strict()
@@ -701,7 +701,7 @@ class EngineSessionTest {
         assertTrue(strictPolicy.contains(TrackingCategory.TEST))
         assertTrue(strictPolicy.contains(TrackingCategory.FINGERPRINTING))
         assertTrue(strictPolicy.contains(TrackingCategory.CRYPTOMINING))
-        assertTrue(strictPolicy.contains(TrackingCategory.CONTENT))
+        assertFalse(strictPolicy.contains(TrackingCategory.CONTENT))
     }
 }
 
