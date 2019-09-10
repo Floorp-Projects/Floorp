@@ -1967,8 +1967,6 @@ this.DownloadCopySaver.prototype = {
    * Implements "DownloadSaver.execute".
    */
   async execute(aSetProgressBytesFn, aSetPropertiesFn) {
-    let copySaver = this;
-
     this._canceled = false;
 
     let download = this.download;
@@ -2017,6 +2015,8 @@ this.DownloadCopySaver.prototype = {
 
     // Create the object that will save the file in a background thread.
     let backgroundFileSaver = new BackgroundFileSaverStreamListener();
+    backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
+
     try {
       // When the operation completes, reflect the status in the promise
       // returned by this download execution function.
@@ -2042,54 +2042,12 @@ this.DownloadCopySaver.prototype = {
         },
       };
 
-      // Create a channel from the source, and listen to progress
-      // notifications.
-      let channel = NetUtil.newChannel({
-        uri: download.source.url,
-        loadUsingSystemPrincipal: true,
-        contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
-      });
-      if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
-        channel.setPrivate(download.source.isPrivate);
-      }
-      if (
-        channel instanceof Ci.nsIHttpChannel &&
-        download.source.referrerInfo
-      ) {
-        channel.referrerInfo = download.source.referrerInfo;
-        // Stored computed referrerInfo;
-        download.source.referrerInfo = channel.referrerInfo;
-      }
-
-      // This makes the channel be corretly throttled during page loads
-      // and also prevents its caching.
-      if (channel instanceof Ci.nsIHttpChannelInternal) {
-        channel.channelIsForDownload = true;
-      }
-
       // If we have data that we can use to resume the download from where
       // it stopped, try to use it.
       let resumeAttempted = false;
       let resumeFromBytes = 0;
-      if (
-        channel instanceof Ci.nsIResumableChannel &&
-        this.entityID &&
-        partFilePath &&
-        keepPartialData
-      ) {
-        try {
-          let stat = await OS.File.stat(partFilePath);
-          channel.resumeAt(stat.size, this.entityID);
-          resumeAttempted = true;
-          resumeFromBytes = stat.size;
-        } catch (ex) {
-          if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
-            throw ex;
-          }
-        }
-      }
 
-      channel.notificationCallbacks = {
+      const notificationCallbacks = {
         QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]),
         getInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink]),
         onProgress: function DCSE_onProgress(
@@ -2110,50 +2068,46 @@ this.DownloadCopySaver.prototype = {
         onStatus() {},
       };
 
-      // If the callback was set, handle it now before opening the channel.
-      if (download.source.adjustChannel) {
-        await download.source.adjustChannel(channel);
-      }
-
-      // Open the channel, directing output to the background file saver.
-      backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
-      channel.asyncOpen({
+      const streamListener = {
         onStartRequest: function(aRequest) {
           backgroundFileSaver.onStartRequest(aRequest);
 
-          // Check if the request's response has been blocked by Windows
-          // Parental Controls with an HTTP 450 error code.
-          if (
-            aRequest instanceof Ci.nsIHttpChannel &&
-            aRequest.responseStatus == 450
-          ) {
-            // Set a flag that can be retrieved later when handling the
-            // cancellation so that the proper error can be thrown.
-            this.download._blockedByParentalControls = true;
-            aRequest.cancel(Cr.NS_BINDING_ABORTED);
-            return;
+          if (aRequest instanceof Ci.nsIHttpChannel) {
+            // Check if the request's response has been blocked by Windows
+            // Parental Controls with an HTTP 450 error code.
+            if (aRequest.responseStatus == 450) {
+              // Set a flag that can be retrieved later when handling the
+              // cancellation so that the proper error can be thrown.
+              this.download._blockedByParentalControls = true;
+              aRequest.cancel(Cr.NS_BINDING_ABORTED);
+              return;
+            }
+
+            // Check back with the initiator if we should allow a certain
+            // HTTP code. By default, we'll just save error pages too,
+            // however a consumer down the line, such as the WebExtensions
+            // downloads API might want to handle this differently.
+            if (
+              download.source.allowHttpStatus &&
+              !download.source.allowHttpStatus(
+                download,
+                aRequest.responseStatus
+              )
+            ) {
+              aRequest.cancel(Cr.NS_BINDING_ABORTED);
+              return;
+            }
           }
 
-          // Check back with the initiator if we should allow a certain
-          // HTTP code. By default, we'll just save error pages too,
-          // however a consumer down the line, such as the WebExtensions
-          // downloads API might want to handle this differently.
-          if (
-            download.source.allowHttpStatus &&
-            aRequest instanceof Ci.nsIHttpChannel &&
-            !download.source.allowHttpStatus(download, aRequest.responseStatus)
-          ) {
-            aRequest.cancel(Cr.NS_BINDING_ABORTED);
-            return;
-          }
+          if (aRequest instanceof Ci.nsIChannel) {
+            aSetPropertiesFn({ contentType: aRequest.contentType });
 
-          aSetPropertiesFn({ contentType: channel.contentType });
-
-          // Ensure we report the value of "Content-Length", if available,
-          // even if the download doesn't generate any progress events
-          // later.
-          if (channel.contentLength >= 0) {
-            aSetProgressBytesFn(0, channel.contentLength);
+            // Ensure we report the value of "Content-Length", if available,
+            // even if the download doesn't generate any progress events
+            // later.
+            if (aRequest.contentLength >= 0) {
+              aSetProgressBytesFn(0, aRequest.contentLength);
+            }
           }
 
           // If the URL we are downloading from includes a file extension
@@ -2161,15 +2115,15 @@ this.DownloadCopySaver.prototype = {
           // with a "gzip" encoding, we should save the file in its encoded
           // form.  In all other cases, we decode the body while saving.
           if (
-            channel instanceof Ci.nsIEncodedChannel &&
-            channel.contentEncodings
+            aRequest instanceof Ci.nsIEncodedChannel &&
+            aRequest.contentEncodings
           ) {
-            let uri = channel.URI;
+            let uri = aRequest.URI;
             if (uri instanceof Ci.nsIURL && uri.fileExtension) {
               // Only the first, outermost encoding is considered.
-              let encoding = channel.contentEncodings.getNext();
+              let encoding = aRequest.contentEncodings.getNext();
               if (encoding) {
-                channel.applyConversion = gExternalHelperAppService.applyDecodingForExtension(
+                aRequest.applyConversion = gExternalHelperAppService.applyDecodingForExtension(
                   uri.fileExtension,
                   encoding
                 );
@@ -2221,7 +2175,7 @@ this.DownloadCopySaver.prototype = {
               false
             );
           }
-        }.bind(copySaver),
+        }.bind(this),
 
         onStopRequest(aRequest, aStatusCode) {
           try {
@@ -2244,7 +2198,71 @@ this.DownloadCopySaver.prototype = {
             aCount
           );
         },
-      });
+      };
+
+      // Wrap the channel creation, to prevent the listener code from
+      // accidentally using the wrong channel.
+      // The channel that is created here is not necessarily the same channel
+      // that will eventually perform the actual download.
+      // When a HTTP redirect happens, the http backend will create a new
+      // channel, this initial channel will be abandoned, and its properties
+      // will either return incorrect data, or worse, will throw exceptions
+      // upon access.
+      const open = async () => {
+        // Create a channel from the source, and listen to progress
+        // notifications.
+        const channel = NetUtil.newChannel({
+          uri: download.source.url,
+          loadUsingSystemPrincipal: true,
+          contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
+        });
+        if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
+          channel.setPrivate(download.source.isPrivate);
+        }
+        if (
+          channel instanceof Ci.nsIHttpChannel &&
+          download.source.referrerInfo
+        ) {
+          channel.referrerInfo = download.source.referrerInfo;
+          // Stored computed referrerInfo;
+          download.source.referrerInfo = channel.referrerInfo;
+        }
+
+        // This makes the channel be corretly throttled during page loads
+        // and also prevents its caching.
+        if (channel instanceof Ci.nsIHttpChannelInternal) {
+          channel.channelIsForDownload = true;
+        }
+
+        if (
+          channel instanceof Ci.nsIResumableChannel &&
+          this.entityID &&
+          partFilePath &&
+          keepPartialData
+        ) {
+          try {
+            let stat = await OS.File.stat(partFilePath);
+            channel.resumeAt(stat.size, this.entityID);
+            resumeAttempted = true;
+            resumeFromBytes = stat.size;
+          } catch (ex) {
+            if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+              throw ex;
+            }
+          }
+        }
+
+        channel.notificationCallbacks = notificationCallbacks;
+
+        // If the callback was set, handle it now before opening the channel.
+        if (download.source.adjustChannel) {
+          await download.source.adjustChannel(channel);
+        }
+        channel.asyncOpen(streamListener);
+      };
+
+      // Kick off the download, creating and opening the channel.
+      await open();
 
       // We should check if we have been canceled in the meantime, after
       // all the previous asynchronous operations have been executed and
