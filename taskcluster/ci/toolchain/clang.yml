@@ -145,7 +145,7 @@ linux64-clang-8-aarch64-cross:
             - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
         resources:
             - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
-        toolchain-alias: linux64-aarch64-cross
+        toolchain-alias: linux64-clang-aarch64-cross
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:

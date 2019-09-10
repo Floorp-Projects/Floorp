@@ -72,6 +72,7 @@ const moduleMapping = {
   asyncStoreHelper: "devtools/client/shared/async-store-helper",
   asyncStorage: "devtools/shared/async-storage",
   PluralForm: "devtools/shared/plural-form",
+  DevToolsUtils: "devtools/shared/DevToolsUtils",
 };
 
 /*

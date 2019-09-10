@@ -2205,28 +2205,9 @@ nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSetOrClearAlignment, nsIEditor::eNext);
-
-  bool cancel, handled;
-
-  // Find out if the selection is collapsed:
-  EditSubActionInfo subActionInfo(EditSubAction::eSetOrClearAlignment);
-  subActionInfo.alignType = &aAlignType;
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
+  EditActionResult result = AlignAsSubAction(aAlignType);
+  NS_WARNING_ASSERTION(result.Succeeded(), "AlignAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(result.Rv());
 }
 
 Element* HTMLEditor::GetElementOrParentByTagName(const nsAtom& aTagName,

@@ -5,7 +5,7 @@
 // @flow
 
 import type { SourceContent } from "../types";
-import { saveAs } from "devtools-modules";
+import { DevToolsUtils } from "devtools-modules";
 
 /**
  * Utils for utils, by utils
@@ -62,5 +62,5 @@ export function downloadFile(content: SourceContent, fileName: string) {
   }
 
   const data = new TextEncoder().encode(content.value);
-  saveAs(window, data, fileName);
+  DevToolsUtils.saveAs(window, data, fileName);
 }

@@ -148,7 +148,7 @@ input[type="url"][readOnly]:hover:active {
   display: block;
   font-size: smaller;
   color: var(--in-content-deemphasized-text);
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 :host([data-editing]) .detail-cell input:not([readOnly]):not([type="checkbox"]) {
