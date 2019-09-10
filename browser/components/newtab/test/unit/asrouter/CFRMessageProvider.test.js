@@ -11,8 +11,8 @@ const REGULAR_IDS = [
 ];
 
 describe("CFRMessageProvider", () => {
-  it("should have a total of 4 messages", () => {
-    assert.lengthOf(messages, 4);
+  it("should have a total of 5 messages", () => {
+    assert.lengthOf(messages, 5);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
@@ -31,13 +31,13 @@ describe("CFRMessageProvider", () => {
       // Ensure that the CFR messages that are recommending an addon have this targeting.
       // In the future when we can do targeting based on category, this test will change.
       // See bug 1494778 and 1497653
-      if (message.id !== "PIN_TAB") {
+      if (!message.content.layout) {
         assert.include(message.targeting, `(xpinstallEnabled == true)`);
       }
     }
   });
   it("should restrict all messages to `en` locale for now (PIN TAB is handled separately)", () => {
-    for (const message of messages.filter(m => m.id !== "PIN_TAB")) {
+    for (const message of messages.filter(m => !m.content.layout)) {
       assert.include(message.targeting, `localeLanguageCode == "en"`);
     }
   });

@@ -514,11 +514,13 @@ class _ASRouter {
     if (TARGETING_PREFERENCES.includes(prefName)) {
       // Notify all tabs of messages that have become invalid after pref change
       const invalidMessages = [];
+      const context = this._getMessagesContext();
+
       for (const msg of this._getUnblockedMessages()) {
         if (!msg.targeting) {
           continue;
         }
-        const isMatch = await ASRouterTargeting.isMatch(msg.targeting);
+        const isMatch = await ASRouterTargeting.isMatch(msg.targeting, context);
         if (!isMatch) {
           invalidMessages.push(msg.id);
         }

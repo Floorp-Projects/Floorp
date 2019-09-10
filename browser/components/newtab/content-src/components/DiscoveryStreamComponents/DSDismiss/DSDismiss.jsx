@@ -56,10 +56,10 @@ export class DSDismiss extends React.PureComponent {
   }
 
   render() {
-    let className = "ds-dismiss";
-    if (this.state.hovering) {
-      className += " hovering";
-    }
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
+
     return (
       <div className={className}>
         {this.props.children}
