@@ -25,7 +25,7 @@ Steps for distributing a build as an sccache-dist client
 Start by following the instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-client
 to configure your sccache distributed client. Ignore the note about custom
 toolchains if you're distributing compilation from linux.
-sccache 0.2.10 or above is recommended, and the auth section of your config
+sccache 0.2.11 or above is recommended, and the auth section of your config
 must read::
 
     [dist.auth]
@@ -90,8 +90,14 @@ similar.
 
 * The instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-build-server
   should contain everything else required to configure and run the server.
+
   *NOTE* Port 10500 will be used by convention for builders in offices.
-  Please use port 10500 in the `public_addr` section of your builder config.
+  Please use port 10500 in the ``public_addr`` section of your builder config.
+
+  As when configuring a client, the scheduler url to use is:
+  ``https://sccache1.corpdmz.<OFFICE>.mozilla.com``, where <OFFICE> is an
+  office abbreviation found
+  `here <https://docs.google.com/spreadsheets/d/1alscUTcfFyu3L0vs_S_cGi9JxF4uPrfsmwJko9annWE/edit#gid=0>`_.
 
 
 Common questions/considerations
