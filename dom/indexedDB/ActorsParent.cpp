@@ -7507,9 +7507,9 @@ class Cursor final : public PBackgroundIDBCursorParent {
   typedef OpenCursorParams::Type Type;
 
  private:
-  RefPtr<TransactionBase> mTransaction;
-  RefPtr<Database> mDatabase;
-  RefPtr<FileManager> mFileManager;
+  const RefPtr<TransactionBase> mTransaction;
+  const RefPtr<Database> mDatabase;
+  const RefPtr<FileManager> mFileManager;
   PBackgroundParent* mBackgroundParent;
 
   // These should only be touched on the PBackground thread to check whether the
@@ -7524,7 +7524,7 @@ class Cursor final : public PBackgroundIDBCursorParent {
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   nsCString mContinuePrimaryKeyQuery;
-  nsCString mLocale;
+  const nsCString mLocale;
 
   // TODO: Apply the renamings suggested below, and also change related
   // identifiers (e.g. local variables) and literals.
@@ -7558,15 +7558,17 @@ class Cursor final : public PBackgroundIDBCursorParent {
   const bool mIsSameProcessActor;
   bool mActorDestroyed;
 
+  struct ConstructFromTransactionBase {};
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Cursor)
 
- private:
-  // Only created by TransactionBase.
-  Cursor(TransactionBase* aTransaction, Type aType,
-         FullObjectStoreMetadata* aObjectStoreMetadata,
-         FullIndexMetadata* aIndexMetadata, Direction aDirection);
+  Cursor(RefPtr<TransactionBase> aTransaction, Type aType,
+         RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+         RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
+         ConstructFromTransactionBase aConstructionTag);
 
+ private:
   // Reference counted.
   ~Cursor() override { MOZ_ASSERT(mActorDestroyed); }
 
@@ -9178,6 +9180,10 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
   return id;
 }
 
+constexpr bool IsKeyCursor(const Cursor::Type aType) {
+  return aType == OpenCursorParams::TObjectStoreOpenKeyCursorParams ||
+         aType == OpenCursorParams::TIndexOpenKeyCursorParams;
+}
 }  // namespace
 
 /*******************************************************************************
@@ -14054,11 +14060,11 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     return nullptr;
   }
 
-  RefPtr<Cursor> actor =
-      new Cursor(this, type, objectStoreMetadata, indexMetadata, direction);
-
-  // Transfer ownership to IPDL.
-  return actor.forget().take();
+  // Create Cursor and transfer ownership to IPDL.
+  return MakeAndAddRef<Cursor>(this, type, std::move(objectStoreMetadata),
+                               std::move(indexMetadata), direction,
+                               Cursor::ConstructFromTransactionBase{})
+      .take();
 }
 
 bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* aActor,
@@ -14866,45 +14872,41 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
  * Cursor
  ******************************************************************************/
 
-Cursor::Cursor(TransactionBase* aTransaction, Type aType,
-               FullObjectStoreMetadata* aObjectStoreMetadata,
-               FullIndexMetadata* aIndexMetadata, Direction aDirection)
-    : mTransaction(aTransaction),
-      mBackgroundParent(nullptr),
-      mObjectStoreMetadata(aObjectStoreMetadata),
-      mIndexMetadata(aIndexMetadata),
-      mObjectStoreId(aObjectStoreMetadata->mCommonMetadata.id()),
-      mIndexId(aIndexMetadata ? aIndexMetadata->mCommonMetadata.id() : 0),
+Cursor::Cursor(RefPtr<TransactionBase> aTransaction, Type aType,
+               RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+               RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
+               ConstructFromTransactionBase /*aConstructionTag*/)
+    : mTransaction(std::move(aTransaction)),
+      mDatabase(!IsKeyCursor(aType) ? mTransaction->GetDatabase() : nullptr),
+      mFileManager(!IsKeyCursor(aType) ? mDatabase->GetFileManager() : nullptr),
+      mBackgroundParent(
+          !IsKeyCursor(aType) ? mTransaction->GetBackgroundParent() : nullptr),
+      mObjectStoreMetadata(std::move(aObjectStoreMetadata)),
+      mIndexMetadata(std::move(aIndexMetadata)),
+      mObjectStoreId(mObjectStoreMetadata->mCommonMetadata.id()),
+      mIndexId(mIndexMetadata ? mIndexMetadata->mCommonMetadata.id() : 0),
+      mLocale(mIndexMetadata ? mIndexMetadata->mCommonMetadata.locale()
+                             : EmptyCString()),
       mCurrentlyRunningOp(nullptr),
       mType(aType),
       mDirection(aDirection),
-      mUniqueIndex(aIndexMetadata ? aIndexMetadata->mCommonMetadata.unique()
+      mUniqueIndex(mIndexMetadata ? mIndexMetadata->mCommonMetadata.unique()
                                   : false),
       mIsSameProcessActor(!BackgroundParent::IsOtherProcessActor(
-          aTransaction->GetBackgroundParent())),
+          mTransaction->GetBackgroundParent())),
       mActorDestroyed(false) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(aType != OpenCursorParams::T__None);
-  MOZ_ASSERT(aObjectStoreMetadata);
-  MOZ_ASSERT_IF(aType == OpenCursorParams::TIndexOpenCursorParams ||
-                    aType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                aIndexMetadata);
+  MOZ_ASSERT(mTransaction);
+  MOZ_ASSERT(mType != OpenCursorParams::T__None);
+  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
+                    mType == OpenCursorParams::TIndexOpenKeyCursorParams,
+                mIndexMetadata);
 
-  if (mType == OpenCursorParams::TObjectStoreOpenCursorParams ||
-      mType == OpenCursorParams::TIndexOpenCursorParams) {
-    mDatabase = aTransaction->GetDatabase();
+  if (!IsKeyCursor(aType)) {
     MOZ_ASSERT(mDatabase);
-
-    mFileManager = mDatabase->GetFileManager();
     MOZ_ASSERT(mFileManager);
-
-    mBackgroundParent = aTransaction->GetBackgroundParent();
     MOZ_ASSERT(mBackgroundParent);
-  }
-
-  if (aIndexMetadata) {
-    mLocale = aIndexMetadata->mCommonMetadata.locale();
   }
 
   static_assert(
