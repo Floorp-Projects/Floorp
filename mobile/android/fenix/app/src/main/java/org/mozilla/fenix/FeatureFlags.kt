@@ -47,4 +47,9 @@ object FeatureFlags {
      * setting screen for cookies, cached images and files, and site permissions.
      */
     val granularDataDeletion = nightly or debug
+
+    /**
+     * Gives option in Settings to Delete Browsing Data on new menu option Quit
+     */
+    val deleteDataOnQuit = nightly or debug
 }

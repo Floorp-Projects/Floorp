@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +30,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
+import org.mozilla.fenix.utils.deleteAndQuit
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
@@ -50,7 +52,8 @@ class DefaultBrowserToolbarController(
     private val viewModel: CreateCollectionViewModel,
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>,
+    private val scope: LifecycleCoroutineScope
 ) : BrowserToolbarController {
 
     override fun handleToolbarPaste(text: String) {
@@ -176,6 +179,7 @@ class DefaultBrowserToolbarController(
                 // Close this activity since it is no longer displaying any session
                 (context as Activity).finish()
             }
+            ToolbarMenu.Item.Quit -> context.deleteAndQuit(scope)
         }
     }
 
@@ -204,6 +208,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
             ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
+            ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
         }
 
         context.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

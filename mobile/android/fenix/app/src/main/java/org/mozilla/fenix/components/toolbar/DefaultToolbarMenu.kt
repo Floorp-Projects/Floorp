@@ -17,6 +17,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.Settings
 
 class DefaultToolbarMenu(
     private val context: Context,
@@ -199,6 +200,18 @@ class DefaultToolbarMenu(
                     ThemeManager.resolveAttribute(R.attr.primaryText, context)
                 ) {
                     onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
+                }
+            )
+        }
+
+        if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) {
+            items.add(
+                BrowserMenuImageText(
+                    context.getString(R.string.delete_browsing_data_on_quit_action),
+                    R.drawable.ic_exit,
+                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ) {
+                    onItemTapped.invoke(ToolbarMenu.Item.Quit)
                 }
             )
         }

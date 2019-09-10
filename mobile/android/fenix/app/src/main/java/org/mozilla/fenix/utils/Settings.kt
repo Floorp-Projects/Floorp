@@ -27,6 +27,7 @@ import java.security.InvalidParameterException
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
+@Suppress("LargeClass")
 class Settings private constructor(
     context: Context,
     private val isCrashReportEnabledInBuild: Boolean
@@ -168,6 +169,44 @@ class Settings private constructor(
         true
     )
 
+    var shouldDeleteBrowsingDataOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit),
+        default = false
+    )
+
+    var deleteTabsOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_open_tabs_on_quit),
+        default = false
+    )
+
+    var deleteHistoryOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_browsing_history_on_quit),
+        default = false
+    )
+
+    var deleteCookiesOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_cookies_on_quit),
+        default = false
+    )
+
+    var deleteCacheOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_caches_on_quit),
+        default = false
+    )
+
+    var deletePermissionsOnQuit by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_delete_permissions_on_quit),
+        default = false
+    )
+
+    fun shouldDeleteAnyDataOnQuit(): Boolean {
+        return deleteCacheOnQuit ||
+                deleteCookiesOnQuit ||
+                deleteHistoryOnQuit ||
+                deletePermissionsOnQuit ||
+                deleteTabsOnQuit
+    }
+
     val themeSettingString: String
         get() = when {
             shouldFollowDeviceTheme -> appContext.getString(R.string.preference_follow_device_theme)
@@ -265,7 +304,10 @@ class Settings private constructor(
     )
 
     private val numTimesPrivateModeOpened: Int
-        get() = preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_private_mode_opened), 0)
+        get() = preferences.getInt(
+            appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
+            0
+        )
 
     val showPrivateModeContextualFeatureRecommender: Boolean
         get() {
@@ -275,7 +317,7 @@ class Settings private constructor(
 
             val showCondition =
                 (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_INSTALLED && focusInstalled) ||
-                (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
+                        (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
 
             if (showCondition && !showedPrivateModeContextualFeatureRecommender) {
                 showedPrivateModeContextualFeatureRecommender = true

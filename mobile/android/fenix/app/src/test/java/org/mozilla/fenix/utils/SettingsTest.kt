@@ -55,6 +55,51 @@ class SettingsTest {
     }
 
     @Test
+    fun clearDataOnQuit() {
+        // When just created
+        // Then
+        assertFalse(settings.shouldDeleteBrowsingDataOnQuit)
+
+        // When
+        settings.shouldDeleteBrowsingDataOnQuit = true
+
+        // Then
+        assertTrue(settings.shouldDeleteBrowsingDataOnQuit)
+
+        // When
+        settings.shouldDeleteBrowsingDataOnQuit = false
+
+        // Then
+        assertFalse(settings.shouldDeleteBrowsingDataOnQuit)
+    }
+
+    @Test
+    fun clearAnyDataOnQuit() {
+        // When just created
+        // Then
+        assertFalse(settings.shouldDeleteAnyDataOnQuit())
+
+        // When
+        settings.deleteTabsOnQuit = true
+
+        // Then
+        assertTrue(settings.shouldDeleteAnyDataOnQuit())
+
+        // When
+        settings.deletePermissionsOnQuit = true
+
+        // Then
+        assertTrue(settings.shouldDeleteAnyDataOnQuit())
+
+        // When
+        settings.deletePermissionsOnQuit = false
+        settings.deleteTabsOnQuit = false
+
+        // Then
+        assertFalse(settings.shouldDeleteAnyDataOnQuit())
+    }
+
+    @Test
     fun defaultSearchEngineName() {
         // When just created
         // Then

@@ -25,6 +25,7 @@ interface ToolbarMenu {
         object OpenInFenix : Item()
         object SaveToCollection : Item()
         object AddToHomeScreen : Item()
+        object Quit : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

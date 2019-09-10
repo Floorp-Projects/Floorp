@@ -34,12 +34,19 @@ class DefaultDeleteBrowsingDataController(
     }
 
     override suspend fun deleteBrowsingData() {
-        withContext(coroutineContext) {
-            if (FeatureFlags.granularDataDeletion) {
-                context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
-            } else {
+        if (FeatureFlags.granularDataDeletion) {
+            deleteHistoryAndDOMStorages()
+        } else {
+            withContext(coroutineContext) {
                 context.components.core.engine.clearData(Engine.BrowsingData.all())
             }
+            context.components.core.historyStorage.deleteEverything()
+        }
+    }
+
+    suspend fun deleteHistoryAndDOMStorages() {
+        withContext(coroutineContext) {
+            context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
         }
         context.components.core.historyStorage.deleteEverything()
     }

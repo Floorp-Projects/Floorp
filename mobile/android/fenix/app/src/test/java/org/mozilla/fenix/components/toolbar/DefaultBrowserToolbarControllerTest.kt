@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.content.Context
 import android.content.Intent
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import io.mockk.Runs
 import io.mockk.every
@@ -14,13 +16,18 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
@@ -40,10 +47,13 @@ import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
+import org.mozilla.fenix.utils.deleteAndQuit
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 class DefaultBrowserToolbarControllerTest {
+
+    private val mainThreadSurrogate = newSingleThreadContext("UI thread")
 
     private var context: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
@@ -56,14 +66,18 @@ class DefaultBrowserToolbarControllerTest {
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> = mockk(relaxed = true)
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> =
+        mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
+    private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
 
     private lateinit var controller: DefaultBrowserToolbarController
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(mainThreadSurrogate)
+
         controller = DefaultBrowserToolbarController(
             context = context,
             navController = navController,
@@ -74,13 +88,19 @@ class DefaultBrowserToolbarControllerTest {
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            bottomSheetBehavior = bottomSheetBehavior
+            bottomSheetBehavior = bottomSheetBehavior,
+            scope = scope
         )
 
         mockkStatic(
             "org.mozilla.fenix.ext.SessionKt"
         )
         every { any<Session>().toTab(any()) } returns currentSessionAsTab
+
+        mockkStatic(
+            "org.mozilla.fenix.utils.DeleteAndQuitKt"
+        )
+        every { any<Context>().deleteAndQuit(any()) } just Runs
 
         every { context.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
@@ -115,6 +135,12 @@ class DefaultBrowserToolbarControllerTest {
             currentSession.searchTerms = ""
             sessionUseCases.loadUrl(pastedText)
         }
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain() // reset main dispatcher to the original Main dispatcher
+        mainThreadSurrogate.close()
     }
 
     @Test
@@ -208,7 +234,8 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarRequestDesktopOnPress() {
-        val requestDesktopSiteUseCase: SessionUseCases.RequestDesktopSiteUseCase = mockk(relaxed = true)
+        val requestDesktopSiteUseCase: SessionUseCases.RequestDesktopSiteUseCase =
+            mockk(relaxed = true)
         val item = ToolbarMenu.Item.RequestDesktop(true)
 
         every { sessionUseCases.requestDesktopSite } returns requestDesktopSiteUseCase
@@ -226,7 +253,8 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarRequestDesktopOffPress() {
-        val requestDesktopSiteUseCase: SessionUseCases.RequestDesktopSiteUseCase = mockk(relaxed = true)
+        val requestDesktopSiteUseCase: SessionUseCases.RequestDesktopSiteUseCase =
+            mockk(relaxed = true)
         val item = ToolbarMenu.Item.RequestDesktop(false)
 
         every { sessionUseCases.requestDesktopSite } returns requestDesktopSiteUseCase
@@ -309,7 +337,12 @@ class DefaultBrowserToolbarControllerTest {
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.REPORT_SITE_ISSUE)) }
         verify {
             // Hardcoded URL because this function modifies the URL with an apply
-            addTabUseCase.invoke(String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, "https://mozilla.org"))
+            addTabUseCase.invoke(
+                String.format(
+                    BrowserFragment.REPORT_SITE_ISSUE_URL,
+                    "https://mozilla.org"
+                )
+            )
         }
     }
 
@@ -386,7 +419,8 @@ class DefaultBrowserToolbarControllerTest {
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            bottomSheetBehavior = bottomSheetBehavior
+            bottomSheetBehavior = bottomSheetBehavior,
+            scope = scope
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)
@@ -403,5 +437,14 @@ class DefaultBrowserToolbarControllerTest {
         verify { sessionManager.select(currentSession) }
         verify { context.startActivity(openInFenixIntent) }
         verify { context.finish() }
+    }
+
+    @Test
+    fun handleToolbarQuitPress() {
+        val item = ToolbarMenu.Item.Quit
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { context.deleteAndQuit(scope) }
     }
 }

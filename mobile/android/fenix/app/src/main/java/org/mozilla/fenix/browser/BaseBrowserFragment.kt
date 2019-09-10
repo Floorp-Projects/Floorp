@@ -171,7 +171,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     action = Intent.ACTION_VIEW
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 },
-                bottomSheetBehavior = QuickActionSheetBehavior.from(nestedScrollQuickAction)
+                bottomSheetBehavior = QuickActionSheetBehavior.from(nestedScrollQuickAction),
+                scope = lifecycleScope
             )
 
             browserInteractor =

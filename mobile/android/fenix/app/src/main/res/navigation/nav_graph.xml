@@ -110,7 +110,7 @@
             android:name="pastedText"
             android:defaultValue="@null"
             app:argType="string"
-            app:nullable="true"/>
+            app:nullable="true" />
     </fragment>
 
     <fragment
@@ -253,7 +253,7 @@
             app:argType="string" />
         <action
             android:id="@+id/action_bookmarkFragment_to_browserFragment"
-            app:destination="@id/browserFragment"/>
+            app:destination="@id/browserFragment" />
         <action
             android:id="@+id/action_bookmarkFragment_self"
             app:destination="@id/bookmarkFragment" />
@@ -359,6 +359,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_accountProblemFragment"
             app:destination="@id/accountProblemFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_deleteBrowsingDataOnQuitFragment"
+            app:destination="@id/deleteBrowsingDataOnQuitFragment" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -407,7 +410,7 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="@string/preferences_sync"></fragment>
+        android:label="@string/preferences_sync" />
 
     <fragment
         android:id="@+id/aboutFragment"
@@ -566,4 +569,8 @@
             android:name="strictMode"
             app:argType="boolean" />
     </fragment>
+    <fragment
+        android:id="@+id/deleteBrowsingDataOnQuitFragment"
+        android:name="org.mozilla.fenix.settings.DeleteBrowsingDataOnQuitFragment"
+        android:label="DeleteBrowsingDataOnQuitFragment" />
 </navigation>

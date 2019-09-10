@@ -76,11 +76,12 @@
         <td>event</td>
         <td>A browser menu item was tapped</td>
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708">link</a></td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996">link</a></td>
         <td>
             <table>
                 <tr><td>item</td><td>A string containing the name of the item the user tapped. These items include:
 Settings, Library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
-Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button</td></tr>
+Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button, Quit</td></tr>
             </table>
         </td>
         <td>2020-03-01</td>

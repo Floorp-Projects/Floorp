@@ -78,11 +78,12 @@ events:
         description: >
           A string containing the name of the item the user tapped. These items include:
           Settings, Library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
-          Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button
+          Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button, Quit
     bugs:
     - 1024
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
+    - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"

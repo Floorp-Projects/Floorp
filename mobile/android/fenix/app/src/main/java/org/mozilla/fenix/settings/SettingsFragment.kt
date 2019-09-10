@@ -29,6 +29,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -40,6 +41,7 @@ import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_add_private_browsing_shortcut
 import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_delete_browsing_data
+import org.mozilla.fenix.R.string.pref_key_delete_browsing_data_on_quit_preference
 import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
@@ -97,6 +99,14 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         if (SDK_INT <= Build.VERSION_CODES.M) {
             findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))?.apply {
                 isVisible = false
+            }
+        }
+
+        if (FeatureFlags.deleteDataOnQuit) {
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit_preference)
+            )?.apply {
+                isVisible = true
             }
         }
     }
@@ -202,6 +212,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_delete_browsing_data) -> {
                 navigateToDeleteBrowsingData()
+            }
+            resources.getString(pref_key_delete_browsing_data_on_quit_preference) -> {
+                navigateToDeleteBrowsingDataOnQuit()
             }
             resources.getString(pref_key_theme) -> {
                 navigateToThemeSettings()
@@ -332,6 +345,12 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun navigateToDeleteBrowsingData() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToDeleteBrowsingDataOnQuit() {
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
