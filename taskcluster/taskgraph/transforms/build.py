@@ -82,6 +82,7 @@ def update_channel(config, jobs):
             resolve_keyed_by(
                 job, key, item_name=job['name'],
                 **{
+                    'project': config.params['project'],
                     'release-type': config.params['release_type'],
                 }
             )

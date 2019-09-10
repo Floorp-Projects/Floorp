@@ -66,7 +66,8 @@ def resolve_keys(config, jobs):
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
-        attributes = dep_job.attributes
+        attributes = copy_attributes_from_dependent_job(dep_job)
+        attributes.update(job.get('attributes', {}))
 
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'BM-gv')
@@ -87,9 +88,6 @@ def make_task_description(config, jobs):
 
         dependencies = deepcopy(dep_job.dependencies)
         dependencies[dep_job.kind] = dep_job.label
-
-        attributes = copy_attributes_from_dependent_job(dep_job)
-        attributes.update(job.get('attributes', {}))
 
         if job.get('locale'):
             attributes['locale'] = job['locale']
