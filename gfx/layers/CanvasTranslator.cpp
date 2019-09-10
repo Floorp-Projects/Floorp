@@ -50,35 +50,32 @@ static TextureData* CreateTextureData(TextureType aTextureType,
 }
 
 /* static */
-UniquePtr<CanvasTranslator> CanvasTranslator::Create(
+UniquePtr<CanvasTranslator> CanvasTranslator::Create() {
+  return UniquePtr<CanvasTranslator>(new CanvasTranslator());
+}
+
+CanvasTranslator::CanvasTranslator() : gfx::InlineTranslator() {}
+
+CanvasTranslator::~CanvasTranslator() {
+  if (mReferenceTextureData) {
+    mReferenceTextureData->Unlock();
+  }
+}
+
+bool CanvasTranslator::Init(
     const TextureType& aTextureType,
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
     const CrossProcessSemaphoreHandle& aWriterSem,
     UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices) {
-  TextureData* textureData = CreateTextureData(aTextureType, gfx::IntSize(1, 1),
-                                               gfx::SurfaceFormat::B8G8R8A8);
-  textureData->Lock(OpenMode::OPEN_READ_WRITE);
-  RefPtr<gfx::DrawTarget> dt = textureData->BorrowDrawTarget();
-  return UniquePtr<CanvasTranslator>(
-      new CanvasTranslator(aTextureType, textureData, dt, aReadHandle,
-                           aReaderSem, aWriterSem, std::move(aReaderServices)));
+  mTextureType = aTextureType;
+  mReferenceTextureData.reset(CreateTextureData(
+      aTextureType, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8A8));
+  mReferenceTextureData->Lock(OpenMode::OPEN_READ_WRITE);
+  mBaseDT = mReferenceTextureData->BorrowDrawTarget();
+  return mStream.InitReader(aReadHandle, aReaderSem, aWriterSem,
+                            std::move(aReaderServices));
 }
-
-CanvasTranslator::CanvasTranslator(
-    const TextureType& aTextureType, TextureData* aTextureData,
-    gfx::DrawTarget* aDT, const ipc::SharedMemoryBasic::Handle& aReadHandle,
-    const CrossProcessSemaphoreHandle& aReaderSem,
-    const CrossProcessSemaphoreHandle& aWriterSem,
-    UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices)
-    : gfx::InlineTranslator(aDT),
-      mTextureType(aTextureType),
-      mReferenceTextureData(aTextureData) {
-  mStream.InitReader(aReadHandle, aReaderSem, aWriterSem,
-                     std::move(aReaderServices));
-}
-
-CanvasTranslator::~CanvasTranslator() { mReferenceTextureData->Unlock(); }
 
 bool CanvasTranslator::TranslateRecording() {
   int32_t eventType = mStream.ReadNextEvent();

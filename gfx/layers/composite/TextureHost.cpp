@@ -222,6 +222,11 @@ already_AddRefed<TextureHost> TextureHost::Create(
       UniquePtr<SurfaceDescriptor> realDesc =
           aDeallocator->AsCompositorBridgeParentBase()
               ->LookupSurfaceDescriptorForClientDrawTarget(desc.drawTarget());
+      if (!realDesc) {
+        NS_WARNING("Failed to get descriptor for recorded texture.");
+        return nullptr;
+      }
+
       result = TextureHost::Create(*realDesc, aReadLock, aDeallocator, aBackend,
                                    aFlags, aExternalImageId);
       return result.forget();

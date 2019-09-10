@@ -17,14 +17,14 @@ namespace layers {
 sync protocol PCanvas {
 parent:
   /**
-   * Create a CanvasTranslator for a particular TextureType, which translates
-   * events from a CanvasEventRingBuffer. aReadHandle is the shared memory
-   * handle for the ring buffer. aReaderSem and aWriterSem are handles for the
-   * semaphores to handle waiting on either side.
+   * Initialize a CanvasTranslator for a particular TextureType, which
+   * translates events from a CanvasEventRingBuffer. aReadHandle is the shared
+   * memory handle for the ring buffer. aReaderSem and aWriterSem are handles
+   * for the semaphores to handle waiting on either side.
    */
-  async CreateTranslator(TextureType aTextureType, Handle aReadHandle,
-                         CrossProcessSemaphoreHandle aReaderSem,
-                         CrossProcessSemaphoreHandle aWriterSem);
+  async InitTranslator(TextureType aTextureType, Handle aReadHandle,
+                       CrossProcessSemaphoreHandle aReaderSem,
+                       CrossProcessSemaphoreHandle aWriterSem);
 
   /**
    * Used to tell the CanvasTranslator to start translating again after it has

@@ -138,7 +138,7 @@ static void EnsureAllClosed() {
   }
 }
 
-CanvasParent::CanvasParent() {}
+CanvasParent::CanvasParent() : mTranslator(CanvasTranslator::Create()) {}
 
 CanvasParent::~CanvasParent() {}
 
@@ -150,14 +150,16 @@ void CanvasParent::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
   CanvasParents().PutEntry(this);
 }
 
-mozilla::ipc::IPCResult CanvasParent::RecvCreateTranslator(
+mozilla::ipc::IPCResult CanvasParent::RecvInitTranslator(
     const TextureType& aTextureType,
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
     const CrossProcessSemaphoreHandle& aWriterSem) {
-  mTranslator = CanvasTranslator::Create(
-      aTextureType, aReadHandle, aReaderSem, aWriterSem,
-      MakeUnique<RingBufferReaderServices>(this));
+  if (!mTranslator->Init(aTextureType, aReadHandle, aReaderSem, aWriterSem,
+                         MakeUnique<RingBufferReaderServices>(this))) {
+    return IPC_FAIL(this, "Failed to initialize CanvasTranslator.");
+  }
+
   return RecvResumeTranslation();
 }
 
@@ -198,6 +200,11 @@ void CanvasParent::StartTranslation() {
 UniquePtr<SurfaceDescriptor>
 CanvasParent::LookupSurfaceDescriptorForClientDrawTarget(
     const uintptr_t aDrawTarget) {
+  if (!mTranslator) {
+    // We are shutting down.
+    return nullptr;
+  }
+
   return mTranslator->WaitForSurfaceDescriptor(
       reinterpret_cast<void*>(aDrawTarget));
 }
