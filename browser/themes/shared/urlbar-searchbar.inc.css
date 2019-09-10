@@ -28,7 +28,8 @@
 
 #urlbar-container,
 #search-container {
-  margin: 3px 5px;
+  padding-block: 3px;
+  margin-inline: 5px;
 }
 
 #urlbar,
@@ -85,21 +86,35 @@
   border-color: var(--toolbar-field-focus-border-color);
 }
 
+#urlbar-container.megabar {
+  position: relative;
+}
+
 #urlbar[breakout] {
   position: absolute;
-  /* The z-index needs to be big enough to trump other positioned UI pieces
-     that we want to overlay. 3 is used in the tab bar. */
-  z-index: 3;
-  top: 0;
-  margin-top: -@urlbarBreakoutVerticalExtend@;
-  margin-inline-start: -@urlbarBreakoutHorizontalExtend@;
-  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutHorizontalExtend@);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: var(--urlbar-height);
+  top: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
 }
 
 #urlbar[breakout] > #urlbar-input-container {
-  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutVerticalExtend@ - 2px /* urlbar border */);
   width: 100%;
+  height: 100%;
+}
+
+#urlbar[breakout][breakout-extend] {
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. 3 is used in the tab bar. */
+  z-index: 3;
+  top: -@urlbarBreakoutVerticalExtend@;
+  left: -@urlbarBreakoutHorizontalExtend@;
+  width: calc(100% + 2 * @urlbarBreakoutHorizontalExtend@);
+  height: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+#urlbar[breakout][breakout-extend] > #urlbar-input-container {
+  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutVerticalExtend@ - 2px /* urlbar border */);
   padding-block: calc(@urlbarBreakoutVerticalExtend@ + (var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
   padding-inline: @urlbarBreakoutHorizontalExtend@;
 }

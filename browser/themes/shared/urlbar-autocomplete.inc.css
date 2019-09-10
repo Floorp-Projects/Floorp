@@ -36,6 +36,16 @@
 
 .urlbarView.megabar {
   margin-inline: @urlbarViewHorizontalMargin@;
+  width: calc(100% - 2 * @urlbarViewHorizontalMargin@);
+}
+
+.urlbarView.megabar:not([hidden]) {
+  display: block;
+}
+
+.urlbarView.megabar .urlbarView-body-inner {
+  width: 100%;
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .urlbarView:not(.megabar) {
@@ -93,11 +103,6 @@
 
 #urlbar-contextual-tip-link {
   text-align: end;
-}
-
-.urlbarView.megabar .urlbarView-body-inner {
-  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutHorizontalExtend@ - 2 * @urlbarViewHorizontalMargin@ - 2px /* urlbar border */);
-  border-top: 1px solid var(--panel-separator-color);
 }
 
 .urlbarView-results {
