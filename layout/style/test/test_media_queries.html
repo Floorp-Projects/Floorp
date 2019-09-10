@@ -40,7 +40,7 @@ function run() {
 
   function query_applies(q) {
     style.setAttribute("media", q);
-    return body_cs.getPropertyValue("text-decoration") == "underline";
+    return body_cs.getPropertyValue("text-decoration-line") == "underline";
   }
 
   function should_apply(q) {
@@ -145,7 +145,8 @@ function run() {
     var ser2 = style.sheet.media.mediaText;
     is(ser2, ser1, "parse+serialize of '" + q + "' should be idempotent");
     if (test_application) {
-      let applies = body_cs.getPropertyValue("text-decoration") == "underline";
+      let applies = body_cs.getPropertyValue("text-decoration-line") ==
+                    "underline";
       is(applies, expected_to_apply,
          "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
          "apply after serialize + reparse");
@@ -171,7 +172,7 @@ function run() {
                      "serialization");
       if (test_application) {
         let applies = clonewin.getComputedStyle(clonedoc.body).
-                        textDecoration == "underline";
+                        textDecorationLine == "underline";
         is(applies, expected_to_apply,
            "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
            "apply after cloning");

@@ -50,11 +50,11 @@ function runTest() {
                         "  #display1 { text-decoration: line-through }\n" +
                         "}\n" +
                         "#display2 { text-decoration: underline }\n";
-    is(cs1.textDecoration,
+    is(cs1.textDecorationLine,
        expected_match ? "line-through" : "overline",
        "@supports condition \"" + condition_inner + "\" should " +
        (expected_match ? "" : "NOT ") + "match");
-    is(cs2.textDecoration, "underline",
+    is(cs2.textDecorationLine, "underline",
        "@supports condition \"" + condition_inner + "\" should be balanced");
   }
 
