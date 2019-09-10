@@ -186,8 +186,8 @@ impl FirefoxRunner {
 
         FirefoxRunner {
             path: path.to_path_buf(),
-            envs: envs,
-            profile: profile,
+            envs,
+            profile,
             args: vec![],
             stdout: None,
             stderr: None,
