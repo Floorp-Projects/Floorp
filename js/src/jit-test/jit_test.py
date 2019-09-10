@@ -272,6 +272,7 @@ def main(argv):
         # Prevent code coverage test that expects coverage
         # to be off when it starts.
         options.exclude += [os.path.join('debug', 'Script-getOffsetsCoverage-02.js')]
+        options.exclude += [os.path.join('debug', 'Script-startColumn.js')]
 
         # These tests expect functions to be parsed lazily, but lazy parsing
         # is disabled on coverage build.
