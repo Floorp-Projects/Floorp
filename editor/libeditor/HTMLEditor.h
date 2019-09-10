@@ -2611,6 +2611,15 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   EnsureSelectionInBodyOrDocumentElement();
 
+  /**
+   * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
+   * `<br>` element into empty list item or table cell elements between
+   * aStartRef and aEndRef.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertBRElementToEmptyListItemsAndTableCellsInRange(
+      const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

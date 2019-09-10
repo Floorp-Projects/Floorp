@@ -253,16 +253,19 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
     return NS_ERROR_FAILURE;
   }
 
-  Element* rootElement = HTMLEditorRef().GetRoot();
-  if (NS_WARN_IF(!rootElement && !HTMLEditorRef().GetDocument())) {
+  Element* bodyOrDocumentElement = HTMLEditorRef().GetRoot();
+  if (NS_WARN_IF(!bodyOrDocumentElement && !HTMLEditorRef().GetDocument())) {
     return NS_ERROR_FAILURE;
   }
 
   // make a utility range for use by the listenter
-  if (rootElement) {
-    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
-        RawRangeBoundary(rootElement, 0),
-        RawRangeBoundary(rootElement, rootElement->GetChildCount()));
+  if (bodyOrDocumentElement) {
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertBRElementToEmptyListItemsAndTableCellsInRange(
+                RawRangeBoundary(bodyOrDocumentElement, 0),
+                RawRangeBoundary(bodyOrDocumentElement,
+                                 bodyOrDocumentElement->GetChildCount()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -507,15 +510,16 @@ nsresult HTMLEditRules::AfterEditInner() {
     }
 
     // add in any needed <br>s, and remove any unneeded ones.
-    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
-        HTMLEditorRef()
-            .TopLevelEditSubActionDataRef()
-            .mChangedRange->StartRef()
-            .AsRaw(),
-        HTMLEditorRef()
-            .TopLevelEditSubActionDataRef()
-            .mChangedRange->EndRef()
-            .AsRaw());
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .InsertBRElementToEmptyListItemsAndTableCellsInRange(
+                          HTMLEditorRef()
+                              .TopLevelEditSubActionDataRef()
+                              .mChangedRange->StartRef()
+                              .AsRaw(),
+                          HTMLEditorRef()
+                              .TopLevelEditSubActionDataRef()
+                              .mChangedRange->EndRef()
+                              .AsRaw());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -9538,13 +9542,12 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInRange(
+nsresult HTMLEditor::InsertBRElementToEmptyListItemsAndTableCellsInRange(
     const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // Gather list of empty nodes
-  nsTArray<OwningNonNull<nsINode>> nodeArray;
-  EmptyEditableFunctor functor(&HTMLEditorRef());
+  AutoTArray<OwningNonNull<nsINode>, 64> nodeArray;
+  EmptyEditableFunctor functor(this);
   DOMIterator iter;
   if (NS_WARN_IF(NS_FAILED(iter.Init(aStartRef, aEndRef)))) {
     return NS_ERROR_FAILURE;
@@ -9557,11 +9560,9 @@ nsresult HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInRange(
     // still pass the "IsEmptyNode" test, and we want the br's to be after
     // them.  Also, we want the br to be after the selection if the selection
     // is in this node.
-    EditorDOMPoint endOfNode;
-    endOfNode.SetToEndOf(node);
+    EditorDOMPoint endOfNode(EditorDOMPoint::AtEndOf(node));
     CreateElementResult createPaddingBRResult =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfNode);
+        InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfNode);
     if (NS_WARN_IF(createPaddingBRResult.Failed())) {
       return createPaddingBRResult.Rv();
     }
