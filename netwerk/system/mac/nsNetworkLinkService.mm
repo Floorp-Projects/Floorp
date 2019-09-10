@@ -2,6 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include <numeric>
+#include <vector>
+#include <algorithm>
 
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -200,6 +203,12 @@ static bool scanArp(char* ip, char* mac, size_t maclen) {
   return false;
 }
 
+/*
+ * Fetch the routing table and only return the first gateway,
+ * Which is the default gateway.
+ *
+ * Returns 0 if the default gateway's IP has been found.
+ */
 static int routingTable(char* gw, size_t aGwLen) {
   size_t needed;
   int mib[6];
@@ -223,6 +232,8 @@ static int routingTable(char* gw, size_t aGwLen) {
     return 3;
   }
 
+  // There's no need to iterate over the routing table
+  // We're only looking for the first (default) gateway
   rtm = reinterpret_cast<struct rt_msghdr*>(&buf[0]);
   sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
   sa = reinterpret_cast<struct sockaddr*>(SA_SIZE(sa) + (char*)sa);
@@ -253,14 +264,10 @@ static bool ipv4NetworkId(SHA1Sum* sha1) {
 }
 
 static bool ipv6NetworkId(SHA1Sum* sha1) {
-  const int kMaxPrefixes = 8;
   struct ifaddrs* ifap;
-  struct in6_addr prefixStore[kMaxPrefixes];
-  struct in6_addr netmaskStore[kMaxPrefixes];
-  int prefixCount = 0;
+  using prefix_and_netmask = std::pair<in6_addr, in6_addr>;
+  std::vector<prefix_and_netmask> prefixAndNetmaskStore;
 
-  memset(prefixStore, 0, sizeof(prefixStore));
-  memset(netmaskStore, 0, sizeof(netmaskStore));
   if (!getifaddrs(&ifap)) {
     struct ifaddrs* ifa;
     for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
@@ -283,41 +290,44 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
                   sin_addr->sin6_addr.s6_addr[i] & sin_netmask->sin6_addr.s6_addr[i];
             }
 
-            int match = 0;
-            // check if prefix was already found
-            for (int i = 0; i < prefixCount; i++) {
-              if (!memcmp(&prefixStore[i], &prefix, sizeof(prefix)) &&
-                  !memcmp(&netmaskStore[i], &sin_netmask->sin6_addr,
-                          sizeof(sin_netmask->sin6_addr))) {
-                // a match
-                match = 1;
-                break;
-              }
-            }
-            if (match) {
-              // prefix already found
+            // check if prefix and netmask was already found
+            auto prefixAndNetmask = std::make_pair(prefix, sin_netmask->sin6_addr);
+            auto foundPosition = std::find_if(
+                prefixAndNetmaskStore.begin(), prefixAndNetmaskStore.end(),
+                [&prefixAndNetmask](prefix_and_netmask current) {
+                  return memcmp(&prefixAndNetmask.first, &current.first, sizeof(in6_addr)) == 0 &&
+                         memcmp(&prefixAndNetmask.second, &current.second, sizeof(in6_addr)) == 0;
+                });
+            if (foundPosition != prefixAndNetmaskStore.end()) {
               continue;
             }
-            memcpy(&prefixStore[prefixCount], &prefix, sizeof(prefix));
-            memcpy(&netmaskStore[prefixCount], &sin_netmask->sin6_addr,
-                   sizeof(sin_netmask->sin6_addr));
-            prefixCount++;
-            if (prefixCount == kMaxPrefixes) {
-              // reach maximum number of prefixes
-              break;
-            }
+            prefixAndNetmaskStore.push_back(prefixAndNetmask);
           }
         }
       }
     }
     freeifaddrs(ifap);
   }
-  if (!prefixCount) {
+  if (prefixAndNetmaskStore.empty()) {
     return false;
   }
-  for (int i = 0; i < prefixCount; i++) {
-    sha1->update(&prefixStore[i], sizeof(prefixStore[i]));
-    sha1->update(&netmaskStore[i], sizeof(netmaskStore[i]));
+
+  // getifaddrs does not guarantee the interfaces will always be in the same order.
+  // We want to make sure the hash remains consistent Regardless of the interface order.
+  std::sort(prefixAndNetmaskStore.begin(), prefixAndNetmaskStore.end(),
+            [](prefix_and_netmask a, prefix_and_netmask b) {
+              // compare prefixStore
+              int comparedPrefix = memcmp(&a.first, &b.first, sizeof(in6_addr));
+              if (comparedPrefix == 0) {
+                // compare netmaskStore
+                return memcmp(&a.second, &b.second, sizeof(in6_addr)) < 0;
+              }
+              return comparedPrefix < 0;
+            });
+
+  for (const auto& prefixAndNetmask : prefixAndNetmaskStore) {
+    sha1->update(&prefixAndNetmask.first, sizeof(in6_addr));
+    sha1->update(&prefixAndNetmask.second, sizeof(in6_addr));
   }
   return true;
 }
