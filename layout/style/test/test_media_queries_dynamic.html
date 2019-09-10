@@ -45,7 +45,7 @@ function run() {
     return cs;
   }
   function query_applies(cs) {
-    return cs.getPropertyValue("text-decoration") == "underline";
+    return cs.getPropertyValue("text-decoration-line") == "underline";
   }
 
   function should_apply(cs) {

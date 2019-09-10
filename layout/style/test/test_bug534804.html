@@ -56,7 +56,7 @@ function run2(sel, next_sibling_rule, later_sibling_rule)
   display.appendChild(span2);
   display.appendChild(span3);
 
-  function td(e) { return getComputedStyle(e, "").textDecoration; }
+  function td(e) { return getComputedStyle(e, "").textDecorationLine; }
 
   function check(desc, isempty) {
     is(td(span2), next_sibling_rule(isempty) ? "underline" : "none",
