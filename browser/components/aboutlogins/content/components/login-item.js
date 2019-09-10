@@ -104,7 +104,11 @@ export default class LoginItem extends HTMLElement {
       this._editButton.focus();
       return;
     }
-    this._deleteButton.focus();
+    if (!this._deleteButton.disabled) {
+      this._deleteButton.focus();
+      return;
+    }
+    this._originInput.focus();
   }
 
   async render() {
