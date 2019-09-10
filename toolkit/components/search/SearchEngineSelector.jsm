@@ -87,14 +87,43 @@ class SearchEngineSelector {
       }
     }
 
-    engines.sort(this._sort.bind(this));
+    let defaultEngine;
+    let privateEngine;
 
-    let privateEngine = engines.find(engine => {
-      return (
+    function shouldPrefer(setting, hasCurrentDefault, currentDefaultSetting) {
+      if (
+        setting == "yes" &&
+        (!hasCurrentDefault || currentDefaultSetting == "yes-if-no-other")
+      ) {
+        return true;
+      }
+      return setting == "yes-if-no-other" && !hasCurrentDefault;
+    }
+
+    for (const engine of engines) {
+      if (
+        "default" in engine &&
+        shouldPrefer(
+          engine.default,
+          !!defaultEngine,
+          defaultEngine && defaultEngine.default
+        )
+      ) {
+        defaultEngine = engine;
+      }
+      if (
         "defaultPrivate" in engine &&
-        ["yes", "yes-if-no-other"].includes(engine.defaultPrivate)
-      );
-    });
+        shouldPrefer(
+          engine.defaultPrivate,
+          !!privateEngine,
+          privateEngine && privateEngine.defaultPrivate
+        )
+      ) {
+        privateEngine = engine;
+      }
+    }
+
+    engines.sort(this._sort.bind(this, defaultEngine, privateEngine));
 
     let result = { engines };
 
@@ -108,8 +137,11 @@ class SearchEngineSelector {
     return result;
   }
 
-  _sort(a, b) {
-    return this._sortIndex(b) - this._sortIndex(a);
+  _sort(defaultEngine, privateEngine, a, b) {
+    return (
+      this._sortIndex(b, defaultEngine, privateEngine) -
+      this._sortIndex(a, defaultEngine, privateEngine)
+    );
   }
 
   /**
@@ -117,24 +149,21 @@ class SearchEngineSelector {
    * engines are ordered correctly.
    * @param {object} obj
    *   Object representing the engine configation.
+   * @param {object} defaultEngine
+   *   The default engine, for comparison to obj.
+   * @param {object} privateEngine
+   *   The private engine, for comparison to obj.
    * @returns {integer}
    *  Number indicating how this engine should be sorted.
    */
-  _sortIndex(obj) {
-    let orderHint = obj.orderHint || 0;
-    if (this._isDefault(obj)) {
-      orderHint += 50000;
+  _sortIndex(obj, defaultEngine, privateEngine) {
+    if (obj == defaultEngine) {
+      return Number.MAX_SAFE_INTEGER;
     }
-    if ("privateDefault" in obj && obj.default === "yes") {
-      orderHint += 40000;
+    if (obj == privateEngine) {
+      return Number.MAX_SAFE_INTEGER - 1;
     }
-    if ("default" in obj && obj.default === "yes-if-no-other") {
-      orderHint += 20000;
-    }
-    if ("privateDefault" in obj && obj.default === "yes-if-no-other") {
-      orderHint += 10000;
-    }
-    return orderHint;
+    return obj.orderHint || 0;
   }
 
   /**
