@@ -107,10 +107,32 @@ function latency(first, second) {
 }
 
 function compareHeader(header, first, second) {
-  const result = compareValues(
-    getResponseHeader(first, header) || "",
-    getResponseHeader(second, header) || ""
-  );
+  const firstValue = getResponseHeader(first, header) || "";
+  const secondValue = getResponseHeader(second, header) || "";
+
+  let result;
+
+  switch (header) {
+    case "Content-Length": {
+      result = compareValues(
+        parseInt(firstValue, 10) || 0,
+        parseInt(secondValue, 10) || 0
+      );
+      break;
+    }
+    case "Last-Modified": {
+      result = compareValues(
+        new Date(firstValue).valueOf() || -1,
+        new Date(secondValue).valueOf() || -1
+      );
+      break;
+    }
+    default: {
+      result = compareValues(firstValue, secondValue);
+      break;
+    }
+  }
+
   return result || waterfall(first, second);
 }
 
