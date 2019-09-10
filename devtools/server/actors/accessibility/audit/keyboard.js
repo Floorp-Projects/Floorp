@@ -69,6 +69,7 @@ const INTERACTIVE_ROLES = new Set([
   Ci.nsIAccessibleRole.ROLE_OPTION,
   Ci.nsIAccessibleRole.ROLE_PAGETAB,
   Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
+  Ci.nsIAccessibleRole.ROLE_PARENT_MENUITEM,
   Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
   Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
   Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
