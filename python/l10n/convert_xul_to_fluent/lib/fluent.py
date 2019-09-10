@@ -1,6 +1,6 @@
 from __future__ import absolute_import
-from syntax import ast
-from syntax.serializer import FluentSerializer
+from fluent.syntax import ast
+from fluent.syntax.serializer import FluentSerializer
 
 
 def get_value_from_dtd(name, dtd):

@@ -10,6 +10,8 @@ import argparse
 import sys
 # import re
 
+# To run this, you'll need to have lxml installed:
+#   `pip install lxml`
 
 # default migration directions
 data = {
