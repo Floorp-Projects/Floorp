@@ -51,12 +51,12 @@ class gfxFT2Font : public gfxFT2FontBase {
 
     if (!entry) return nullptr;
 
-    if (entry->mData.glyphIndex == 0xffffffffU) {
+    if (entry->GetData().glyphIndex == 0xffffffffU) {
       // this is a new entry, fill it
-      FillGlyphDataForChar(aFace, ch, &entry->mData);
+      FillGlyphDataForChar(aFace, ch, entry->GetModifiableData());
     }
 
-    return &entry->mData;
+    return &entry->GetData();
   }
 
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,

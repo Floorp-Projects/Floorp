@@ -80,9 +80,9 @@ T* nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
   auto count = this->Count();
   typename base_type::EntryType* ent = this->PutEntry(aKey);
   if (count != this->Count()) {
-    ent->mData = new T(std::forward<Args>(aConstructionArgs)...);
+    ent->SetData(nsAutoPtr<T>(new T(std::forward<Args>(aConstructionArgs)...)));
   }
-  return ent->mData;
+  return ent->GetData();
 }
 
 template <class KeyClass, class T>
@@ -91,7 +91,7 @@ bool nsClassHashtable<KeyClass, T>::Get(KeyType aKey, T** aRetVal) const {
 
   if (ent) {
     if (aRetVal) {
-      *aRetVal = ent->mData;
+      *aRetVal = ent->GetData();
     }
 
     return true;
@@ -111,7 +111,7 @@ T* nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const {
     return nullptr;
   }
 
-  return ent->mData;
+  return ent->GetData();
 }
 
 #endif  // nsClassHashtable_h__
