@@ -88,6 +88,90 @@ function verifyLogins(expectedLogins = []) {
 }
 
 /**
+ * Submit the content form and return a promise resolving to the username and
+ * password values echoed out in the response
+ *
+ * @param {Object} [browser] - browser with the form
+ * @param {String = ""} formAction - Optional url to set the form's action to before submitting
+ * @param {Object = null} selectorValues - Optional object with field values to set before form submission
+ * @param {Object = null} responseSelectors - Optional object with selectors to find the username and password in the response
+ */
+async function submitFormAndGetResults(
+  browser,
+  formAction = "",
+  selectorValues,
+  responseSelectors
+) {
+  function contentSubmitForm([contentFormAction, contentSelectorValues]) {
+    let doc = content.document;
+    let form = doc.querySelector("form");
+    if (contentFormAction) {
+      form.action = contentFormAction;
+    }
+    for (let [sel, value] of Object.entries(contentSelectorValues)) {
+      try {
+        doc.querySelector(sel).setUserInput(value);
+      } catch (ex) {
+        throw new Error(`submitForm: Couldn't set value of field at: ${sel}`);
+      }
+    }
+    form.submit();
+  }
+  await ContentTask.spawn(
+    browser,
+    [formAction, selectorValues],
+    contentSubmitForm
+  );
+  let result = await getFormSubmitResponseResult(
+    browser,
+    formAction,
+    responseSelectors
+  );
+  return result;
+}
+
+/**
+ * Wait for a given result page to load and return a promise resolving to an object with the parsed-out
+ * username/password values from the response
+ *
+ * @param {Object} [browser] - browser which is loading this page
+ * @param {String} resultURL - the path or filename to look for in the content.location
+ * @param {Object = null} - Optional object with selectors to find the username and password in the response
+ */
+async function getFormSubmitResponseResult(
+  browser,
+  resultURL = "/formsubmit.sjs",
+  { username = "#user", password = "#pass" } = {}
+) {
+  // default selectors are for the response page produced by formsubmit.sjs
+  let fieldValues = await ContentTask.spawn(
+    browser,
+    {
+      resultURL,
+      usernameSelector: username,
+      passwordSelector: password,
+    },
+    async function({ resultURL, usernameSelector, passwordSelector }) {
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          content.location.pathname.endsWith(resultURL) &&
+          content.document.readyState == "complete"
+        );
+      }, `Wait for form submission load (${resultURL})`);
+      let username = content.document.querySelector(usernameSelector)
+        .textContent;
+      let password = content.document.querySelector(passwordSelector)
+        .textContent;
+      return {
+        username,
+        password,
+      };
+    }
+  );
+  return fieldValues;
+}
+
+/**
  * Loads a test page in `DIRECTORY_URL` which automatically submits to formsubmit.sjs and returns a
  * promise resolving with the field values when the optional `aTaskFn` is done.
  *
@@ -108,23 +192,9 @@ function testSubmittingLoginForm(
     },
     async function(browser) {
       ok(true, "loaded " + aPageFile);
-      let fieldValues = await ContentTask.spawn(
+      let fieldValues = await getFormSubmitResponseResult(
         browser,
-        undefined,
-        async function() {
-          await ContentTaskUtils.waitForCondition(() => {
-            return (
-              content.location.pathname.endsWith("/formsubmit.sjs") &&
-              content.document.readyState == "complete"
-            );
-          }, "Wait for form submission load (formsubmit.sjs)");
-          let username = content.document.getElementById("user").textContent;
-          let password = content.document.getElementById("pass").textContent;
-          return {
-            username,
-            password,
-          };
-        }
+        "/formsubmit.sjs"
       );
       ok(true, "form submission loaded");
       if (aTaskFn) {
