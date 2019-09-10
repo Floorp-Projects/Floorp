@@ -72,7 +72,7 @@ class DynamicallyLinkedFunctionPtrBase {
       DynamicallyLinkedFunctionPtrBase&&) = delete;
 
   template <typename... Args>
-  ReturnT operator()(Args... args) const {
+  ReturnT operator()(Args&&... args) const {
     return mFunction(std::forward<Args>(args)...);
   }
 
