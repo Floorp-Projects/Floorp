@@ -17,25 +17,28 @@ class WebAppUseCases(
     private val applicationContext: Context,
     private val sessionManager: SessionManager,
     httpClient: Client,
-    supportWebApps: Boolean = true
+    private val supportWebApps: Boolean = true
 ) {
+
+    private val shortcutManager by lazy {
+        WebAppShortcutManager(
+            applicationContext,
+            httpClient,
+            supportWebApps = supportWebApps
+        )
+    }
+
+    /**
+     * Checks if the launcher supports adding shortcuts.
+     */
     fun isPinningSupported() =
         ShortcutManagerCompat.isRequestPinShortcutSupported(applicationContext)
 
     /**
-     * Checks to see if the current session is a Progressive Web App.
+     * Checks to see if the current session can be installed as a Progressive Web App.
      */
-    fun isPWA(): Boolean {
-        return sessionManager.selectedSession?.installableManifest() != null
-    }
-
-    private val shortcutManager by lazy {
-        WebAppShortcutManager(
-                applicationContext,
-                httpClient,
-                supportWebApps = supportWebApps
-        )
-    }
+    fun isInstallable() =
+        sessionManager.selectedSession?.installableManifest() != null && supportWebApps
 
     /**
      * Let the user add the selected session to the homescreen.

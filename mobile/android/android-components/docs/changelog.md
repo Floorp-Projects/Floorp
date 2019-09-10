@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-pwa**
+  * Adds `WebAppUseCases.isInstallable` to check if the current session can be installed as a Progressive Web App.
+
 # 12.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)
@@ -30,7 +33,7 @@ permalink: /changelog/
     strictSocialTrackingProtection = true
   )
   ```
-  
+
 * **context-menu**
   * Exposed title tag from GV in HitResult. Fixes [#1444]. If title is null or blank the src value is returned for title.
 
@@ -82,7 +85,7 @@ permalink: /changelog/
 
 * **feature-pwa**
   * Adds the ability to create a basic shortcut with a custom label
-  
+
 * **browser-engine-gecko-nightly**
   * Adds support for exposing Gecko scalars through the Glean SDK. See [bug 1579365](https://bugzilla.mozilla.org/show_bug.cgi?id=1579365) for details.
 
