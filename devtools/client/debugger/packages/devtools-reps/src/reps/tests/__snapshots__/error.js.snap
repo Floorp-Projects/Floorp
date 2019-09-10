@@ -225,6 +225,15 @@ exports[`Error - Reference error renders with expected text for ReferenceError 1
 </span>
 `;
 
+exports[`Error - Simple error renders with error type and preview message when in short mode 1`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server1.conn1.child1/obj1021"
+>
+  Error: "bar"
+</span>
+`;
+
 exports[`Error - Simple error renders with expected text for simple error 1`] = `
 <span
   className="objectBox-stackTrace"
