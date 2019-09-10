@@ -149,11 +149,10 @@ export function toggleBreakpointsAtLine(
 export function removeAllBreakpoints(cx: Context) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const breakpointList = getBreakpointsList(getState());
-    dispatch({ type: "REMOVE_BREAKPOINTS" });
-
-    return Promise.all(
+    await Promise.all(
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
+    dispatch({ type: "REMOVE_BREAKPOINTS" });
   };
 }
 
