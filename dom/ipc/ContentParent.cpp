@@ -40,6 +40,7 @@
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
@@ -72,6 +73,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/URLClassifierParent.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
@@ -4686,10 +4688,13 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     return IPC_FAIL(this, "Forbidden aChromeFlags passed");
   }
 
-  BrowserParent* thisBrowserParent = BrowserParent::GetFrom(aThisTab);
+  RefPtr<BrowserParent> topParent = BrowserParent::GetFrom(aThisTab);
+  while (topParent && topParent->GetBrowserBridgeParent()) {
+    topParent = topParent->GetBrowserBridgeParent()->Manager();
+  }
   BrowserHost* thisBrowserHost =
-      thisBrowserParent ? thisBrowserParent->GetBrowserHost() : nullptr;
-  MOZ_ASSERT(!thisBrowserParent == !thisBrowserHost);
+      topParent ? topParent->GetBrowserHost() : nullptr;
+  MOZ_ASSERT_IF(topParent, thisBrowserHost);
 
   // The content process should not have set its remote or fission flags if the
   // parent doesn't also have these set.
@@ -4705,10 +4710,10 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   nsCOMPtr<nsIContent> frame;
-  if (thisBrowserParent) {
-    frame = thisBrowserParent->GetOwnerElement();
+  if (topParent) {
+    frame = topParent->GetOwnerElement();
 
-    if (NS_WARN_IF(thisBrowserParent->IsMozBrowser())) {
+    if (NS_WARN_IF(topParent->IsMozBrowser())) {
       return IPC_FAIL(this, "aThisTab is not a MozBrowser");
     }
   }
@@ -4725,8 +4730,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-  if (thisBrowserParent) {
-    browserDOMWin = thisBrowserParent->GetBrowserDOMWindow();
+  if (topParent) {
+    browserDOMWin = topParent->GetBrowserDOMWindow();
   }
 
   // If we haven't found a chrome window to open in, just use the most recently
@@ -4865,8 +4870,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 
   if (aURIToLoad && aLoadURI) {
     nsCOMPtr<mozIDOMWindowProxy> openerWindow;
-    if (aSetOpener && thisBrowserParent) {
-      openerWindow = thisBrowserParent->GetParentWindowOuter();
+    if (aSetOpener && topParent) {
+      openerWindow = topParent->GetParentWindowOuter();
     }
     nsCOMPtr<nsIBrowserDOMWindow> newBrowserDOMWin =
         newBrowserParent->GetBrowserDOMWindow();
