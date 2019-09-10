@@ -979,7 +979,7 @@ const gManifestStartHandlers = {
     RecordReplayControl.manifestFinished(data);
   },
 
-  hitLogpoint({ text, condition }) {
+  hitLogpoint({ text, condition, skipPauseData }) {
     divergeFromRecording();
 
     const frame = scriptFrameForIndex(countScriptFrames() - 1);
@@ -994,9 +994,12 @@ const gManifestStartHandlers = {
     const displayName = formatDisplayName(frame);
     const rv = frame.evalWithBindings(`[${text}]`, { displayName });
 
-    const pauseData = getPauseData();
-    pauseData.paintData = RecordReplayControl.repaint();
-    ClearPausedState();
+    let pauseData;
+    if (!skipPauseData) {
+      pauseData = getPauseData();
+      pauseData.paintData = RecordReplayControl.repaint();
+      ClearPausedState();
+    }
 
     let result;
     if (rv.return) {
