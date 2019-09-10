@@ -5,6 +5,7 @@
 "use strict";
 
 const xpcInspector = require("xpcInspector");
+const { Cu } = require("chrome");
 
 /**
  * Manages pushing event loops and automatically pops and exits them in the
@@ -131,7 +132,7 @@ EventLoop.prototype = {
         })
         // Ignore iframes as they will be paused automatically when pausing their
         // owner top level document
-        .filter(window => window.top === window)
+        .filter(window => !Cu.isDeadWrapper(window) && window.top === window)
     );
   },
 
