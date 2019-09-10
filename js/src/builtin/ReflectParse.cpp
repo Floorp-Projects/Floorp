@@ -17,6 +17,7 @@
 #include "builtin/Array.h"
 #include "builtin/Reflect.h"
 #include "frontend/ModuleSharedContext.h"
+#include "frontend/ParseInfo.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
@@ -3634,7 +3635,9 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   options.setCanLazilyParse(false);
   options.allowHTMLComments = target == ParseGoal::Script;
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
-  UsedNameTracker usedNames(cx);
+
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
       cx, frontend::CreateScriptSourceObject(cx, options, mozilla::Nothing()));
@@ -3643,8 +3646,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   Parser<FullParseHandler, char16_t> parser(
-      cx, cx->tempLifoAlloc(), options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, usedNames, nullptr, nullptr, sourceObject,
+      cx, options, chars.begin().get(), chars.length(),
+      /* foldConstants = */ false, parseInfo, nullptr, nullptr, sourceObject,
       target);
   if (!parser.checkOptions()) {
     return false;

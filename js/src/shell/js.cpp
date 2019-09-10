@@ -5045,20 +5045,19 @@ static bool GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp) {
 using js::frontend::BinASTParser;
 using js::frontend::Directives;
 using js::frontend::GlobalSharedContext;
+using js::frontend::ParseInfo;
 using js::frontend::ParseNode;
-using js::frontend::UsedNameTracker;
 
 template <typename Tok>
 static bool ParseBinASTData(JSContext* cx, uint8_t* buf_data,
                             uint32_t buf_length, GlobalSharedContext* globalsc,
-                            UsedNameTracker& usedNames,
+                            ParseInfo& pci,
                             const JS::ReadOnlyCompileOptions& options,
                             HandleScriptSourceObject sourceObj) {
   MOZ_ASSERT(globalsc);
 
   // Note: We need to keep `reader` alive as long as we can use `parsed`.
-  BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options,
-                           sourceObj);
+  BinASTParser<Tok> reader(cx, pci, options, sourceObj);
 
   JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
 
@@ -5161,7 +5160,8 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   options.setIntroductionType("js shell bin parse")
       .setFileAndLine("<ArrayBuffer>", 1);
 
-  UsedNameTracker usedNames(cx);
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObj(
       cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
@@ -5175,7 +5175,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   auto parseFunc = mode == Multipart
                        ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
                        : ParseBinASTData<frontend::BinASTTokenReaderContext>;
-  if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options,
+  if (!parseFunc(cx, buf_data, buf_length, &globalsc, parseInfo, options,
                  sourceObj)) {
     return false;
   }
@@ -5249,7 +5249,8 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     options.allowHTMLComments = false;
   }
 
-  UsedNameTracker usedNames(cx);
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
       cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
@@ -5257,10 +5258,10 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Parser<FullParseHandler, char16_t> parser(
-      cx, cx->tempLifoAlloc(), options, chars, length,
-      /* foldConstants = */ false, usedNames, nullptr, nullptr, sourceObject,
-      goal);
+  Parser<FullParseHandler, char16_t> parser(cx, options, chars, length,
+                                            /* foldConstants = */ false,
+                                            parseInfo, nullptr, nullptr,
+                                            sourceObject, goal);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5323,7 +5324,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
 
   const char16_t* chars = stableChars.twoByteRange().begin().get();
   size_t length = scriptContents->length();
-  UsedNameTracker usedNames(cx);
+
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
       cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
@@ -5332,8 +5335,8 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, cx->tempLifoAlloc(), options, chars, length, false, usedNames,
-      nullptr, nullptr, sourceObject, frontend::ParseGoal::Script);
+      cx, options, chars, length, false, parseInfo, nullptr, nullptr,
+      sourceObject, frontend::ParseGoal::Script);
   if (!parser.checkOptions()) {
     return false;
   }

@@ -3674,8 +3674,7 @@ JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  return frontend::CompileGlobalBinASTScript(cx, cx->tempLifoAlloc(), options,
-                                             buf, length);
+  return frontend::CompileGlobalBinASTScript(cx, options, buf, length);
 }
 
 JSScript* JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
