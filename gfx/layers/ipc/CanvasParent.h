@@ -40,8 +40,8 @@ class CanvasParent final : public PCanvasParent {
   static void Shutdown();
 
   /**
-   * Create a canvas translator for a particular TextureType, which translates
-   * events from a CanvasEventRingBuffer.
+   * Initialize a canvas translator for a particular TextureType, which
+   * translates events from a CanvasEventRingBuffer.
    *
    * @param aTextureType the TextureType the translator will create
    * @param aReadHandle handle to the shared memory for the
@@ -49,7 +49,7 @@ class CanvasParent final : public PCanvasParent {
    * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
    * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
    */
-  ipc::IPCResult RecvCreateTranslator(
+  ipc::IPCResult RecvInitTranslator(
       const TextureType& aTextureType,
       const ipc::SharedMemoryBasic::Handle& aReadHandle,
       const CrossProcessSemaphoreHandle& aReaderSem,
