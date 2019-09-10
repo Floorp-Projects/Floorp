@@ -7644,6 +7644,16 @@ class Cursor::OpenOp final : public Cursor::CursorOpBase {
 
   void GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen);
 
+  // Should be called on the connection thread.
+  void PrepareKeyConditionClauses(const nsACString& aKeyString,
+                                  const nsACString& aDirectionClause,
+                                  const nsACString& aQueryStart);
+
+  // Should be called on the connection thread.
+  void PrepareIndexKeyConditionClause(
+      const nsACString& aSortColumn, const nsACString& aDirectionClause,
+      const nsLiteralCString& aObjectDataKeyPrefix, nsAutoCString aQueryStart);
+
   nsresult DoObjectStoreDatabaseWork(DatabaseConnection* aConnection);
 
   nsresult DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection);
@@ -9205,6 +9215,14 @@ const CommonOpenCursorParams& GetCommonOpenCursorParams(
     default:
       MOZ_CRASH("Should never get here!");
   }
+}
+
+constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
+  MOZ_ASSERT(
+      aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
+      aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
+
+  return aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE;
 }
 
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
@@ -25780,6 +25798,114 @@ void Cursor::OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen) {
   }
 }
 
+void Cursor::OpenOp::PrepareKeyConditionClauses(
+    const nsACString& aKeyString, const nsACString& aDirectionClause,
+    const nsACString& aQueryStart) {
+  const bool isIncreasingOrder = IsIncreasingOrder(mCursor->mDirection);
+
+  NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
+  nsAutoCString keyRangeClause;
+  nsAutoCString continueToKeyRangeClause;
+  AppendConditionClause(aKeyString, currentKey, !isIncreasingOrder, false,
+                        keyRangeClause);
+  AppendConditionClause(aKeyString, currentKey, !isIncreasingOrder, true,
+                        continueToKeyRangeClause);
+
+  {
+    Key bound;
+    bool open;
+    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
+
+    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
+      NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+
+      AppendConditionClause(aKeyString, rangeKey, isIncreasingOrder, !open,
+                            keyRangeClause);
+      AppendConditionClause(aKeyString, rangeKey, isIncreasingOrder, !open,
+                            continueToKeyRangeClause);
+      mCursor->mRangeKey = std::move(bound);
+    }
+  }
+
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  mCursor->mContinueQuery =
+      aQueryStart + keyRangeClause + aDirectionClause + openLimit;
+
+  mCursor->mContinueToQuery =
+      aQueryStart + continueToKeyRangeClause + aDirectionClause + openLimit;
+}
+
+void Cursor::OpenOp::PrepareIndexKeyConditionClause(
+    const nsACString& aSortColumn, const nsACString& aDirectionClause,
+    const nsLiteralCString& aObjectDataKeyPrefix, nsAutoCString aQueryStart) {
+  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  const bool isIncreasingOrder = IsIncreasingOrder(mCursor->mDirection);
+
+  {
+    Key bound;
+    bool open;
+    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
+    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
+      AppendConditionClause(aSortColumn, rangeKey, isIncreasingOrder, !open,
+                            aQueryStart);
+      mCursor->mRangeKey = std::move(bound);
+    }
+  }
+
+  const auto& comparisonChar =
+      isIncreasingOrder ? NS_LITERAL_CSTRING(">") : NS_LITERAL_CSTRING("<");
+
+  mCursor->mContinueToQuery =
+      aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") + comparisonChar +
+      NS_LITERAL_CSTRING("= :current_key") + aDirectionClause + openLimit;
+
+  switch (mCursor->mDirection) {
+    case IDBCursor::NEXT:
+    case IDBCursor::PREV:
+      mCursor->mContinueQuery =
+          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
+          comparisonChar +
+          NS_LITERAL_CSTRING(
+              "= :current_key "
+              "AND ( sort_column ") +
+          comparisonChar + NS_LITERAL_CSTRING(" :current_key OR ") +
+          aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key ") +
+          comparisonChar + NS_LITERAL_CSTRING(" :object_key ) ") +
+          aDirectionClause + openLimit;
+
+      mCursor->mContinuePrimaryKeyQuery =
+          aQueryStart +
+          NS_LITERAL_CSTRING(
+              " AND ("
+              "(sort_column == :current_key AND ") +
+          aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key ") +
+          comparisonChar +
+          NS_LITERAL_CSTRING(
+              "= :object_key) OR "
+              "sort_column ") +
+          comparisonChar +
+          NS_LITERAL_CSTRING(
+              " :current_key"
+              ")") +
+          aDirectionClause + openLimit;
+      break;
+
+    case IDBCursor::NEXT_UNIQUE:
+    case IDBCursor::PREV_UNIQUE:
+      mCursor->mContinueQuery =
+          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
+          comparisonChar + NS_LITERAL_CSTRING(" :current_key") +
+          aDirectionClause + openLimit;
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+}
+
 nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
@@ -25866,58 +25992,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  keyRangeClause.Truncate();
-  nsAutoCString continueToKeyRangeClause;
-
-  NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
-  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
-
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      AppendConditionClause(keyString, currentKey, false, false,
-                            keyRangeClause);
-      AppendConditionClause(keyString, currentKey, false, true,
-                            continueToKeyRangeClause);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(keyString, rangeKey, true, !open, keyRangeClause);
-        AppendConditionClause(keyString, rangeKey, true, !open,
-                              continueToKeyRangeClause);
-        mCursor->mRangeKey = upper;
-      }
-      break;
-    }
-
-    case IDBCursor::PREV:
-    case IDBCursor::PREV_UNIQUE: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      AppendConditionClause(keyString, currentKey, true, false, keyRangeClause);
-      AppendConditionClause(keyString, currentKey, true, true,
-                            continueToKeyRangeClause);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(keyString, rangeKey, false, !open,
-                              keyRangeClause);
-        AppendConditionClause(keyString, rangeKey, false, !open,
-                              continueToKeyRangeClause);
-        mCursor->mRangeKey = lower;
-      }
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-
-  mCursor->mContinueQuery =
-      queryStart + keyRangeClause + directionClause + openLimit;
-
-  mCursor->mContinueToQuery =
-      queryStart + continueToKeyRangeClause + directionClause + openLimit;
+  PrepareKeyConditionClauses(keyString, directionClause, queryStart);
 
   return NS_OK;
 }
@@ -25951,21 +26026,10 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
                                 keyRangeClause);
   }
 
-  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE:
-      directionClause.AppendLiteral(" ASC");
-      break;
-
-    case IDBCursor::PREV:
-    case IDBCursor::PREV_UNIQUE:
-      directionClause.AppendLiteral(" DESC");
-      break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
+  const nsAutoCString directionClause =
+      NS_LITERAL_CSTRING(" ORDER BY ") + keyString +
+      (IsIncreasingOrder(mCursor->mDirection) ? NS_LITERAL_CSTRING(" ASC")
+                                              : NS_LITERAL_CSTRING(" DESC"));
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
@@ -26007,35 +26071,7 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  keyRangeClause.Truncate();
-  nsAutoCString continueToKeyRangeClause;
-
-  const bool isUpperBound = mCursor->mDirection == IDBCursor::NEXT ||
-                            mCursor->mDirection == IDBCursor::NEXT_UNIQUE;
-
-  Key bound;
-  bool open;
-  GetRangeKeyInfo(!isUpperBound, &bound, &open);
-
-  NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
-  AppendConditionClause(keyString, currentKey, !isUpperBound, false,
-                        keyRangeClause);
-  AppendConditionClause(keyString, currentKey, !isUpperBound, true,
-                        continueToKeyRangeClause);
-  if (usingKeyRange && !bound.IsUnset()) {
-    NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
-
-    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
-                          keyRangeClause);
-    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
-                          continueToKeyRangeClause);
-    mCursor->mRangeKey = bound;
-  }
-
-  mCursor->mContinueQuery =
-      queryStart + keyRangeClause + directionClause + openLimit;
-  mCursor->mContinueToQuery =
-      queryStart + continueToKeyRangeClause + directionClause + openLimit;
+  PrepareKeyConditionClauses(keyString, directionClause, queryStart);
 
   return NS_OK;
 }
@@ -26159,106 +26195,9 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   // Now we need to make the query to get the next match.
-  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
-
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
-        mCursor->mRangeKey = upper;
-      }
-      mCursor->mContinueQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND sort_column >= :current_key "
-              "AND ( sort_column > :current_key OR "
-              "index_table.object_data_key > :object_key ) ") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinuePrimaryKeyQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND ("
-              "(sort_column == :current_key AND "
-              "index_table.object_data_key >= :object_key) OR "
-              "sort_column > :current_key"
-              ")") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::NEXT_UNIQUE: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
-        mCursor->mRangeKey = upper;
-      }
-      mCursor->mContinueQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::PREV: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
-        mCursor->mRangeKey = lower;
-      }
-      mCursor->mContinueQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND sort_column <= :current_key "
-              "AND ( sort_column < :current_key OR "
-              "index_table.object_data_key < :object_key ) ") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinuePrimaryKeyQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND ("
-              "(sort_column == :current_key AND "
-              "index_table.object_data_key <= :object_key) OR "
-              "sort_column < :current_key"
-              ")") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::PREV_UNIQUE: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
-        mCursor->mRangeKey = lower;
-      }
-      mCursor->mContinueQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
-          directionClause + openLimit;
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
+  PrepareIndexKeyConditionClause(sortColumn, directionClause,
+                                 NS_LITERAL_CSTRING("index_table."),
+                                 std::move(queryStart));
 
   return NS_OK;
 }
@@ -26373,105 +26312,8 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
-
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
-        mCursor->mRangeKey = upper;
-      }
-      mCursor->mContinueQuery = queryStart +
-                                NS_LITERAL_CSTRING(
-                                    " AND sort_column >= :current_key "
-                                    "AND ( sort_column > :current_key OR "
-                                    "object_data_key > :object_key )") +
-                                directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key ") +
-          directionClause + openLimit;
-      mCursor->mContinuePrimaryKeyQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND ("
-              "(sort_column == :current_key AND "
-              "object_data_key >= :object_key) OR "
-              "sort_column > :current_key"
-              ")") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::NEXT_UNIQUE: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
-        mCursor->mRangeKey = upper;
-      }
-      mCursor->mContinueQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::PREV: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
-        mCursor->mRangeKey = lower;
-      }
-
-      mCursor->mContinueQuery = queryStart +
-                                NS_LITERAL_CSTRING(
-                                    " AND sort_column <= :current_key "
-                                    "AND ( sort_column < :current_key OR "
-                                    "object_data_key < :object_key )") +
-                                directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key ") +
-          directionClause + openLimit;
-      mCursor->mContinuePrimaryKeyQuery =
-          queryStart +
-          NS_LITERAL_CSTRING(
-              " AND ("
-              "(sort_column == :current_key AND "
-              "object_data_key <= :object_key) OR "
-              "sort_column < :current_key"
-              ")") +
-          directionClause + openLimit;
-      break;
-    }
-
-    case IDBCursor::PREV_UNIQUE: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
-        mCursor->mRangeKey = lower;
-      }
-      mCursor->mContinueQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
-          directionClause + openLimit;
-      mCursor->mContinueToQuery =
-          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
-          directionClause + openLimit;
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
+  PrepareIndexKeyConditionClause(sortColumn, directionClause,
+                                 NS_LITERAL_CSTRING(""), std::move(queryStart));
 
   return NS_OK;
 }
