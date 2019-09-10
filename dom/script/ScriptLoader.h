@@ -272,8 +272,20 @@ class ScriptLoader final : public nsISupports {
    */
   void BeginDeferringScripts() {
     mDeferEnabled = true;
-    if (mDocument) {
-      mDocument->BlockOnload();
+    if (mDocumentParsingDone) {
+      // We already completed a parse and were just waiting for some async
+      // scripts to load (and were already blocking the load event waiting for
+      // that to happen), when document.open() happened and now we're doing a
+      // new parse.  We shouldn't block the load event again, but _should_ reset
+      // mDocumentParsingDone to false.  It'll get set to true again when the
+      // ParsingComplete call that corresponds to this BeginDeferringScripts
+      // call happens (on document.close()), since we just set mDeferEnabled to
+      // true.
+      mDocumentParsingDone = false;
+    } else {
+      if (mDocument) {
+        mDocument->BlockOnload();
+      }
     }
   }
 
