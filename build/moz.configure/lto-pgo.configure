@@ -43,17 +43,17 @@ set_config('MOZ_PROFILE_USE',
            depends_if('--enable-profile-use')(lambda _: True))
 
 
-@depends('--with-pgo-profile-path', '--enable-profile-use', llvm_profdata)
+@depends('--with-pgo-profile-path', '--enable-profile-use', llvm_profdata, check_build_environment)
 @imports('os')
-def pgo_profile_path(path, pgo_use, profdata):
+def pgo_profile_path(path, pgo_use, profdata, build_env):
     if not path:
-        return
+        return os.path.join(build_env.topobjdir, 'merged.profdata')
     if path and not pgo_use:
         die('Pass --enable-profile-use to use --with-pgo-profile-path.')
     if path and not profdata:
         die('LLVM_PROFDATA must be set to process the pgo profile.')
-    if not os.path.isdir(path[0]):
-        die('Argument to --with-pgo-profile-path must be a directory.')
+    if not os.path.isfile(path[0]):
+        die('Argument to --with-pgo-profile-path must be a file.')
     if not os.path.isabs(path[0]):
         die('Argument to --with-pgo-profile-path must be an absolute path.')
     return path[0]
@@ -61,10 +61,10 @@ def pgo_profile_path(path, pgo_use, profdata):
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
 
-@depends(c_compiler, check_build_environment, target)
+@depends(c_compiler, check_build_environment, target, pgo_profile_path)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler, build_env, target):
+def pgo_flags(compiler, build_env, target, profdata):
     topobjdir = build_env.topobjdir
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
@@ -79,7 +79,6 @@ def pgo_flags(compiler, build_env, target):
         )
 
     if compiler.type in ('clang-cl', 'clang'):
-        profdata = os.path.join(topobjdir, 'merged.profdata')
         prefix = ''
         if compiler.type == 'clang-cl':
             prefix = '/clang:'

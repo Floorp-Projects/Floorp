@@ -10,6 +10,6 @@ if [ -z "$USE_ARTIFACT" ]; then
         export MOZ_LTO=cross
         ac_add_options --enable-profile-use
         ac_add_options --with-pgo-jarlog="${WORKSPACE}/fetches/en-US.log"
-        ac_add_options --with-pgo-profile-path="${WORKSPACE}/fetches"
+        ac_add_options --with-pgo-profile-path="${WORKSPACE}/fetches/merged.profdata"
     fi
 fi

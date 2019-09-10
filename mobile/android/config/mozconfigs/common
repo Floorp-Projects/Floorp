@@ -100,7 +100,7 @@ if [ -n "$MOZ_PGO_PROFILE_USE" ]; then
     # This is disabled because jarlog re-ordering breaks apk publishing tasks,
     # see bug 1539933.
     # ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
-    ac_add_options --with-pgo-profile-path=/builds/worker/fetches
+    ac_add_options --with-pgo-profile-path=/builds/worker/fetches/merged.profdata
 fi
 
 # Package js shell.

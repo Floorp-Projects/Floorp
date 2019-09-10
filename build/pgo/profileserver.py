@@ -7,6 +7,8 @@
 import json
 import os
 import sys
+import glob
+import subprocess
 
 from mozbuild.base import MozbuildObject
 from mozfile import TemporaryDirectory
@@ -139,3 +141,21 @@ if __name__ == '__main__':
                 with open(logfile) as f:
                     print(f.read())
             sys.exit(ret)
+
+        llvm_profdata = env.get('LLVM_PROFDATA')
+        if llvm_profdata:
+            profraw_files = glob.glob('*.profraw')
+            if not profraw_files:
+                print('Could not find profraw files in the current directory: %s' % os.getcwd())
+                sys.exit(1)
+            merge_cmd = [
+                llvm_profdata,
+                'merge',
+                '-o',
+                'merged.profdata',
+            ] + profraw_files
+            rc = subprocess.call(merge_cmd)
+            if rc != 0:
+                print('INFRA-ERROR: Failed to merge profile data. Corrupt profile?')
+                # exit with TBPL_RETRY
+                sys.exit(4)
