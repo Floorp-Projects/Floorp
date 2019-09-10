@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 import os
 import posixpath
 import psutil
@@ -34,7 +36,7 @@ class RemoteReftestResolver(ReftestResolver):
         elif os.path.exists(os.path.abspath(path)):
             rv = os.path.abspath(path)
         else:
-            print >> sys.stderr, "Could not find manifest %s" % script_abs_path
+            print("Could not find manifest %s" % script_abs_path, file=sys.stderr)
             sys.exit(1)
         return os.path.normpath(rv)
 
@@ -99,7 +101,7 @@ class ReftestServer:
         self._process = self.automation.Process([xpcshell] + args, env=env)
         pid = self._process.pid
         if pid < 0:
-            print "TEST-UNEXPECTED-FAIL | remotereftests.py | Error starting server."
+            print("TEST-UNEXPECTED-FAIL | remotereftests.py | Error starting server.")
             return 2
         self.automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
 
@@ -114,8 +116,8 @@ class ReftestServer:
             time.sleep(1)
             i += 1
         else:
-            print ("TEST-UNEXPECTED-FAIL | remotereftests.py | "
-                   "Timed out while waiting for server startup.")
+            print("TEST-UNEXPECTED-FAIL | remotereftests.py | "
+                  "Timed out while waiting for server startup.")
             self.stop()
             return 1
 
@@ -148,7 +150,7 @@ class RemoteReftest(RefTest):
         verbose = False
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
-            print "set verbose!"
+            print("set verbose!")
         self.device = ADBDevice(adb=options.adb_path or 'adb',
                                 device=options.deviceSerial,
                                 test_root=options.remoteTestRoot,
@@ -236,8 +238,8 @@ class RemoteReftest(RefTest):
         paths = [options.xrePath, localAutomation.DIST_BIN]
         options.xrePath = self.findPath(paths)
         if options.xrePath is None:
-            print ("ERROR: unable to find xulrunner path for %s, "
-                   "please specify with --xre-path" % (os.name))
+            print("ERROR: unable to find xulrunner path for %s, "
+                  "please specify with --xre-path" % (os.name))
             return 1
         paths.append("bin")
         paths.append(os.path.join("..", "bin"))
@@ -250,8 +252,8 @@ class RemoteReftest(RefTest):
             paths.insert(0, options.utilityPath)
         options.utilityPath = self.findPath(paths, xpcshell)
         if options.utilityPath is None:
-            print ("ERROR: unable to find utility path for %s, "
-                   "please specify with --utility-path" % (os.name))
+            print("ERROR: unable to find utility path for %s, "
+                  "please specify with --utility-path" % (os.name))
             return 1
 
         options.serverProfilePath = tempfile.mkdtemp()
@@ -316,7 +318,7 @@ class RemoteReftest(RefTest):
             self.device.push(profileDir, options.remoteProfile)
             self.device.chmod(options.remoteProfile, recursive=True, root=True)
         except Exception:
-            print "Automation Error: Failed to copy profiledir to device"
+            print("Automation Error: Failed to copy profiledir to device")
             raise
 
         return profile
@@ -328,21 +330,21 @@ class RemoteReftest(RefTest):
                 for l in logcat:
                     ul = l.decode('utf-8', errors='replace')
                     sl = ul.encode('iso8859-1', errors='replace')
-                    print "%s\n" % sl
-            print "Device info:"
+                    print("%s\n" % sl)
+            print("Device info:")
             devinfo = self.device.get_info()
             for category in devinfo:
                 if type(devinfo[category]) is list:
-                    print "  %s:" % category
+                    print("  %s:" % category)
                     for item in devinfo[category]:
-                        print "     %s" % item
+                        print("     %s" % item)
                 else:
-                    print "  %s: %s" % (category, devinfo[category])
-            print "Test root: %s" % self.device.test_root
+                    print("  %s: %s" % (category, devinfo[category]))
+            print("Test root: %s" % self.device.test_root)
         except ADBTimeoutError:
             raise
         except Exception as e:
-            print "WARNING: Error getting device information: %s" % str(e)
+            print("WARNING: Error getting device information: %s" % str(e))
 
     def environment(self, **kwargs):
         return self.automation.environment(**kwargs)
@@ -396,7 +398,8 @@ def run_test_harness(parser, options):
     parser.validate(options, reftest)
 
     if mozinfo.info['debug']:
-        print "changing timeout for remote debug reftests from %s to 600 seconds" % options.timeout
+        print("changing timeout for remote debug reftests from %s to 600 seconds"
+              % options.timeout)
         options.timeout = 600
 
     # Hack in a symbolic link for jsreftest
@@ -425,7 +428,7 @@ def run_test_harness(parser, options):
         else:
             retVal = reftest.runTests(options.tests, options)
     except Exception:
-        print "Automation Error: Exception caught while running tests"
+        print("Automation Error: Exception caught while running tests")
         traceback.print_exc()
         retVal = 1
 
