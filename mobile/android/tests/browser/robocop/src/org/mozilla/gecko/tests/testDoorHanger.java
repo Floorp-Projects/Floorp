@@ -62,43 +62,6 @@ public class testDoorHanger extends OldBaseTest {
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger notification is hidden when opening a new tab");
         */
 
-        // Save offline-allow-by-default preferences first
-        mActions.getPrefs(new String[] { "offline-apps.allow_by_default" },
-                          new Actions.PrefHandlerBase() {
-            @Override // Actions.PrefHandlerBase
-            public void prefValue(String pref, boolean value) {
-                mAsserter.is(pref, "offline-apps.allow_by_default", "Expecting correct pref name");
-                offlineAllowedByDefault = value;
-            }
-        }).waitForFinish();
-
-        setPreferenceAndWaitForChange("offline-apps.allow_by_default", false);
-
-        // Load offline storage page
-        loadUrlAndWait(OFFLINE_STORAGE_URL);
-        waitForText(mStringHelper.OFFLINE_MESSAGE);
-
-        // Test doorhanger dismissed when tapping "Don't share"
-        waitForCheckBox();
-        mSolo.clickOnCheckBox(0);
-        mSolo.clickOnButton(mStringHelper.OFFLINE_DENY);
-        waitForTextDismissed(mStringHelper.OFFLINE_MESSAGE);
-        mAsserter.is(mSolo.searchText(mStringHelper.OFFLINE_MESSAGE), false, "Offline storage doorhanger notification is hidden when denying storage");
-
-        // Load offline storage page
-        loadUrlAndWait(OFFLINE_STORAGE_URL);
-        waitForText(mStringHelper.OFFLINE_MESSAGE);
-
-        // Test doorhanger dismissed when tapping "Allow" and is not displayed again
-        mSolo.clickOnButton(mStringHelper.OFFLINE_ALLOW);
-        waitForTextDismissed(mStringHelper.OFFLINE_MESSAGE);
-        mAsserter.is(mSolo.searchText(mStringHelper.OFFLINE_MESSAGE), false, "Offline storage doorhanger notification is hidden when allowing storage");
-        loadUrlAndWait(OFFLINE_STORAGE_URL);
-        mAsserter.is(mSolo.searchText(mStringHelper.OFFLINE_MESSAGE), false, "Offline storage doorhanger is no longer triggered");
-
-        // Revert offline setting
-        setPreferenceAndWaitForChange("offline-apps.allow_by_default", offlineAllowedByDefault);
-
         // Load new login page
         loadUrlAndWait(getAbsoluteUrl(mStringHelper.ROBOCOP_LOGIN_01_URL));
         waitForText(mStringHelper.LOGIN_MESSAGE);

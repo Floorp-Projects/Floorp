@@ -228,9 +228,6 @@ pref("browser.cache.frecency_half_life_hours", 6);
 // AppCache over insecure connection is disabled by default
 pref("browser.cache.offline.insecure.enable",  false);
 
-// enable offline apps by default, disable prompt
-pref("offline-apps.allow_by_default",          true);
-
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
