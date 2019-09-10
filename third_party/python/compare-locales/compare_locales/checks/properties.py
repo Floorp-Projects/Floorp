@@ -33,6 +33,10 @@ class PropertiesChecker(Checker):
     def check(self, refEnt, l10nEnt):
         '''Test for the different variable formats.
         '''
+        for encoding_trouble in super(
+            PropertiesChecker, self
+        ).check(refEnt, l10nEnt):
+            yield encoding_trouble
         refValue, l10nValue = refEnt.val, l10nEnt.val
         refSpecs = None
         # check for PluralForm.jsm stuff, should have the docs in the

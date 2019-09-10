@@ -5,6 +5,15 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import re
+
+
+class EntityPos(int):
+    pass
+
+
+mochibake = re.compile('\ufffd')
+
 
 class Checker(object):
     '''Abstract class to implement checks per file type.
@@ -29,10 +38,16 @@ class Checker(object):
         - "warning" or "error", depending on what should be reported,
         - tuple of line, column info for the error within the string
         - description string to be shown in the report
+
+        By default, check for possible encoding errors.
         '''
-        if True:
-            raise NotImplementedError("Need to subclass")
-        yield ("error", (0, 0), "This is an example error", "example")
+        for m in mochibake.finditer(l10nEnt.all):
+            yield (
+                "warning",
+                EntityPos(m.start()),
+                "\ufffd in: {}".format(l10nEnt.key),
+                "encodings"
+            )
 
     def set_reference(self, reference):
         '''Set the reference entities.

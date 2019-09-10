@@ -216,11 +216,10 @@ class EnumerateSourceTreeApp(EnumerateApp):
     be checked out for building.
     '''
 
-    def __init__(self, inipath, basepath, l10nbase, redirects,
-                 locales=None):
+    def __init__(self, inipath, basepath, l10nbase, redirects):
         self.basepath = basepath
         self.redirects = redirects
-        EnumerateApp.__init__(self, inipath, l10nbase, locales)
+        EnumerateApp.__init__(self, inipath, l10nbase)
 
     def setupConfigParser(self, inipath):
         self.config = SourceTreeConfigParser(inipath, self.basepath,

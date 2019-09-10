@@ -5,7 +5,11 @@ import tempfile
 import shutil
 
 from compare_locales import mozpath
-from compare_locales.paths import EnumerateApp, ProjectFiles
+from compare_locales.paths import (
+    EnumerateApp,
+    EnumerateSourceTreeApp,
+    ProjectFiles,
+)
 
 MAIL_INI = '''\
 [general]
@@ -113,5 +117,52 @@ class TestApp(unittest.TestCase):
         self.assertListEqual(
             mozpath.split(reffile)[-6:],
             ['comm', 'mozilla', 'toolkit', 'locales', 'en-US', 'platform.ftl'])
+        self.assertIsNone(mergefile)
+        self.assertSetEqual(test, set())
+
+    def test_src_app(self):
+        'Test parsing a App in source setup'
+        # move toolkit to toplevel
+        shutil.move(mozpath.join(self.stage, 'comm', 'mozilla'), self.stage)
+        app = EnumerateSourceTreeApp(
+            mozpath.join(self.stage, 'comm', 'mail', 'locales', 'l10n.ini'),
+            self.stage,
+            mozpath.join(self.stage, 'l10n-central'),
+            {
+                'mozilla-central': mozpath.join(self.stage, 'mozilla')
+            }
+        )
+        self.assertListEqual(app.config.allLocales(), ['af', 'de', 'fr'])
+        self.assertEqual(len(app.config.children), 1)
+        projectconfig = app.asConfig()
+        self.assertListEqual(projectconfig.locales, ['af', 'de', 'fr'])
+        files = ProjectFiles('de', [projectconfig])
+        files = list(files)
+        self.assertEqual(len(files), 3)
+
+        l10nfile, reffile, mergefile, test = files[0]
+        self.assertListEqual(mozpath.split(l10nfile)[-3:],
+                             ['de', 'mail', 'mail.ftl'])
+        self.assertListEqual(mozpath.split(reffile)[-4:],
+                             ['mail', 'locales', 'en-US', 'mail.ftl'])
+        self.assertIsNone(mergefile)
+        self.assertSetEqual(test, set())
+
+        l10nfile, reffile, mergefile, test = files[1]
+        self.assertListEqual(mozpath.split(l10nfile)[-3:],
+                             ['de', 'toolkit', 'localized.ftl'])
+        self.assertListEqual(
+            mozpath.split(reffile)[-5:],
+            ['mozilla', 'toolkit',
+             'locales', 'en-US', 'localized.ftl'])
+        self.assertIsNone(mergefile)
+        self.assertSetEqual(test, set())
+
+        l10nfile, reffile, mergefile, test = files[2]
+        self.assertListEqual(mozpath.split(l10nfile)[-3:],
+                             ['de', 'toolkit', 'platform.ftl'])
+        self.assertListEqual(
+            mozpath.split(reffile)[-5:],
+            ['mozilla', 'toolkit', 'locales', 'en-US', 'platform.ftl'])
         self.assertIsNone(mergefile)
         self.assertSetEqual(test, set())

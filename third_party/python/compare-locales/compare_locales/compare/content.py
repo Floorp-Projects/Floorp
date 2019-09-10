@@ -13,7 +13,7 @@ import re
 
 from compare_locales import parser
 from compare_locales import mozpath
-from compare_locales.checks import getChecker
+from compare_locales.checks import getChecker, EntityPos
 from compare_locales.keyedtuple import KeyedTuple
 
 from .observer import ObserverList
@@ -224,7 +224,10 @@ class ContentComparer:
                         # run checks:
                 if checker:
                     for tp, pos, msg, cat in checker.check(refent, l10nent):
-                        line, col = l10nent.value_position(pos)
+                        if isinstance(pos, EntityPos):
+                            line, col = l10nent.position(pos)
+                        else:
+                            line, col = l10nent.value_position(pos)
                         # skip error entities when merging
                         if tp == 'error' and merge_file is not None:
                             skips.append(l10nent)

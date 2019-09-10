@@ -112,6 +112,19 @@ class TestMessage(BaseHelper):
             )
         )
 
+    def test_bad_encoding(self):
+        self._test(
+            'simple = touché'.encode('latin-1'),
+            (
+                (
+                    "warning",
+                    14,
+                    "\ufffd in: simple",
+                    "encodings"
+                ),
+            )
+        )
+
 
 class TestTerm(BaseHelper):
     file = File('foo.ftl', 'foo.ftl')

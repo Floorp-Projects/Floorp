@@ -8,7 +8,6 @@ import re
 import bisect
 import codecs
 from collections import Counter
-import logging
 from compare_locales.keyedtuple import KeyedTuple
 from compare_locales.paths import File
 
@@ -335,25 +334,21 @@ class Parser(object):
         # python 3 doesn't. Let's split code paths
         if six.PY2:
             with open(file, 'rbU') as f:
-                try:
-                    self.readContents(f.read())
-                except UnicodeDecodeError as e:
-                    (logging.getLogger('locales')
-                            .error("Can't read file: " + file + '; ' + str(e)))
+                self.readContents(f.read())
         else:
-            with open(file, 'r', encoding=self.encoding, newline=None) as f:
-                try:
-                    self.readUnicode(f.read())
-                except UnicodeDecodeError as e:
-                    (logging.getLogger('locales')
-                            .error("Can't read file: " + file + '; ' + str(e)))
+            with open(
+                file, 'r',
+                encoding=self.encoding, errors='replace',
+                newline=None
+            ) as f:
+                self.readUnicode(f.read())
 
     def readContents(self, contents):
         '''Read contents and create parsing context.
 
         contents are in native encoding, but with normalized line endings.
         '''
-        (contents, _) = codecs.getdecoder(self.encoding)(contents)
+        (contents, _) = codecs.getdecoder(self.encoding)(contents, 'replace')
         self.readUnicode(contents)
 
     def readUnicode(self, contents):

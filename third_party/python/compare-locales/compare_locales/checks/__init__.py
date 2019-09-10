@@ -5,10 +5,17 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from .base import Checker, EntityPos
 from .android import AndroidChecker
 from .dtd import DTDChecker
 from .fluent import FluentChecker
 from .properties import PropertiesChecker
+
+
+__all__ = [
+    'Checker', 'EntityPos',
+    'AndroidChecker', 'DTDChecker', 'FluentChecker', 'PropertiesChecker',
+]
 
 
 def getChecker(file, extra_tests=None):
@@ -20,4 +27,4 @@ def getChecker(file, extra_tests=None):
         return FluentChecker(extra_tests, locale=file.locale)
     if AndroidChecker.use(file):
         return AndroidChecker(extra_tests, locale=file.locale)
-    return None
+    return Checker(extra_tests, locale=file.locale)

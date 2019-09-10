@@ -102,6 +102,12 @@ class NodeMixin(object):
     def raw_val(self):
         return self._val_literal
 
+    def position(self, offset=0):
+        return (0, offset)
+
+    def value_position(self, offset=0):
+        return (0, offset)
+
 
 class XMLWhitespace(NodeMixin, Whitespace):
     pass
@@ -138,6 +144,12 @@ class XMLJunk(Junk):
     @property
     def all(self):
         return self._all_literal
+
+    def position(self, offset=0):
+        return (0, offset)
+
+    def value_position(self, offset=0):
+        return (0, offset)
 
 
 def textContent(node):
