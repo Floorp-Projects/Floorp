@@ -11,10 +11,9 @@
 namespace js {
 namespace frontend {
 
-BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc,
-                                   UsedNameTracker& usedNames,
+BinASTParserBase::BinASTParserBase(JSContext* cx, ParseInfo& parseInfo,
                                    HandleScriptSourceObject sourceObject)
-    : ParserSharedBase(cx, alloc, usedNames, sourceObject,
+    : ParserSharedBase(cx, parseInfo, sourceObject,
                        ParserSharedBase::Kind::BinASTParser) {}
 
 }  // namespace frontend

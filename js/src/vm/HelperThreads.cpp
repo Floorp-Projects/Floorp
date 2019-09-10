@@ -683,8 +683,7 @@ void BinASTDecodeTask::parse(JSContext* cx) {
   RootedScriptSourceObject sourceObject(cx);
 
   JSScript* script = frontend::CompileGlobalBinASTScript(
-      cx, cx->tempLifoAlloc(), options, data.begin().get(), data.length(),
-      &sourceObject.get());
+      cx, options, data.begin().get(), data.length(), &sourceObject.get());
   if (script) {
     scripts.infallibleAppend(script);
     if (sourceObject) {

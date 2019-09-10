@@ -969,6 +969,13 @@ class MOZ_NON_TEMPORARY_CLASS LifoAllocScope {
   ~LifoAllocScope() {
     if (shouldRelease) {
       lifoAlloc->release(mark);
+
+      /*
+       * The parser can allocate enormous amounts of memory for large functions.
+       * Eagerly free the memory now (which otherwise won't be freed until the
+       * next GC) to avoid unnecessary OOMs.
+       */
+      lifoAlloc->freeAllIfHugeAndUnused();
     }
   }
 

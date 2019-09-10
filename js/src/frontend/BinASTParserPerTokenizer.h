@@ -66,8 +66,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   using VariableDeclarationKind = binast::VariableDeclarationKind;
 
  public:
-  BinASTParserPerTokenizer(JSContext* cx, LifoAlloc& alloc,
-                           UsedNameTracker& usedNames,
+  BinASTParserPerTokenizer(JSContext* cx, ParseInfo& parseInfo,
                            const JS::ReadOnlyCompileOptions& options,
                            HandleScriptSourceObject sourceObject,
                            Handle<LazyScript*> lazyScript = nullptr);
