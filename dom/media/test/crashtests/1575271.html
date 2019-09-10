@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+<head>
+<script>
+  async function start () {
+    const canvas = document.createElement("canvas")
+    const context = canvas.getContext("2d")
+    context.fillStyle = "blue"
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    const stream = canvas.captureStream()
+    const track = stream.getTracks()[0]
+    const recorder = new MediaRecorder(stream)
+    recorder.start()
+    await new Promise(r => recorder.onstart = r)
+    recorder.pause()
+    stream.removeTrack(track)
+    recorder.resume()
+    await new Promise(r => recorder.onstop = r)
+    document.documentElement.removeAttribute("class")
+  }
+
+  window.addEventListener('load', start)
+</script>
+</head>
+</html>
+
