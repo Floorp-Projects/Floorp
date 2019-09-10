@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Load resource from source element with empty type</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id="type"><source src="gizmo.mp4" type></video>
+<video id="type-and-equal"><source src="gizmo.mp4" type=></video>
+<video id="type-and-equal-quotation-marks"><source src="gizmo.mp4" type=""></video>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that media element can start loading when its
+ * child source element with empty type property. We would test following forms,
+ * `type`, `type=` and `type=""`.
+ */
+SimpleTest.waitForExplicitFinish();
+
+const videos = document.getElementsByTagName("video");
+const videoNum = videos.length;
+let loadedElementsNum = 0;
+
+for (let video of videos) {
+	video.addEventListener("loadeddata",
+  () => {
+  	ok(true, `loaded element '${video.id}'`);
+  	if (++loadedElementsNum == videoNum) {
+  		SimpleTest.finish();
+  	}
+  }, { once: true});
+}
+</script>
+</body>
+</html>
