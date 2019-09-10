@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -25,25 +24,6 @@ const char* kContentEncodingHeader = "Content-Encoding: gzip";
 // The maximum time, in milliseconds, we allow for the connection phase
 // to the server.
 const uint32_t kConnectionTimeoutMs = 30 * 1000;
-
-// Operate in std::string because nul bytes will be preserved
-bool IsValidDestination(std::string aHost) {
-  static const std::string kValidDestinations[] = {
-    "localhost",
-    "incoming.telemetry.mozilla.org",
-  };
-  for (auto destination : kValidDestinations) {
-    if (aHost == destination) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool IsValidDestination(char* aHost) {
-  return IsValidDestination(std::string(aHost));
-}
-
 
 /**
  * This shared function returns a Date header string for use in HTTP requests.
