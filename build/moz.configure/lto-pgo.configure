@@ -6,53 +6,6 @@
 
 # PGO
 # ==============================================================
-@depends(c_compiler, check_build_environment, target)
-@imports('multiprocessing')
-@imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler, build_env, target):
-    topobjdir = build_env.topobjdir
-    if topobjdir.endswith('/js/src'):
-        topobjdir = topobjdir[:-7]
-
-    if compiler.type == 'gcc':
-        return namespace(
-            gen_cflags=['-fprofile-generate'],
-            gen_ldflags=['-fprofile-generate'],
-            use_cflags=['-fprofile-use', '-fprofile-correction',
-                        '-Wcoverage-mismatch'],
-            use_ldflags=['-fprofile-use'],
-        )
-
-    if compiler.type in ('clang-cl', 'clang'):
-        profdata = os.path.join(topobjdir, 'merged.profdata')
-        prefix = ''
-        if compiler.type == 'clang-cl':
-            prefix = '/clang:'
-            if target.cpu == 'x86_64':
-                gen_ldflags = ['clang_rt.profile-x86_64.lib']
-            elif target.cpu == 'x86':
-                gen_ldflags = ['clang_rt.profile-i386.lib']
-            else:
-                gen_ldflags = None
-        else:
-            gen_ldflags = ['-fprofile-generate']
-
-        return namespace(
-            gen_cflags=[prefix + '-fprofile-generate'],
-            gen_ldflags=gen_ldflags,
-            use_cflags=[prefix + '-fprofile-use=%s' % profdata,
-                        # Some error messages about mismatched profile data
-                        # come in via -Wbackend-plugin, so disable those too.
-                        '-Wno-error=backend-plugin'],
-            use_ldflags=[],
-        )
-
-
-set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
-set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
-set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
-set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
-
 llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
                            allow_missing=True,
                            paths=toolchain_search_path)
@@ -107,6 +60,53 @@ def pgo_profile_path(path, pgo_use, profdata):
 
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
+
+@depends(c_compiler, check_build_environment, target)
+@imports('multiprocessing')
+@imports(_from='__builtin__', _import='min')
+def pgo_flags(compiler, build_env, target):
+    topobjdir = build_env.topobjdir
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
+    if compiler.type == 'gcc':
+        return namespace(
+            gen_cflags=['-fprofile-generate'],
+            gen_ldflags=['-fprofile-generate'],
+            use_cflags=['-fprofile-use', '-fprofile-correction',
+                        '-Wcoverage-mismatch'],
+            use_ldflags=['-fprofile-use'],
+        )
+
+    if compiler.type in ('clang-cl', 'clang'):
+        profdata = os.path.join(topobjdir, 'merged.profdata')
+        prefix = ''
+        if compiler.type == 'clang-cl':
+            prefix = '/clang:'
+            if target.cpu == 'x86_64':
+                gen_ldflags = ['clang_rt.profile-x86_64.lib']
+            elif target.cpu == 'x86':
+                gen_ldflags = ['clang_rt.profile-i386.lib']
+            else:
+                gen_ldflags = None
+        else:
+            gen_ldflags = ['-fprofile-generate']
+
+        return namespace(
+            gen_cflags=[prefix + '-fprofile-generate'],
+            gen_ldflags=gen_ldflags,
+            use_cflags=[prefix + '-fprofile-use=%s' % profdata,
+                        # Some error messages about mismatched profile data
+                        # come in via -Wbackend-plugin, so disable those too.
+                        '-Wno-error=backend-plugin'],
+            use_ldflags=[],
+        )
+
+
+set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
+set_config('PROFILE_GEN_LDFLAGS', pgo_flags.gen_ldflags)
+set_config('PROFILE_USE_CFLAGS', pgo_flags.use_cflags)
+set_config('PROFILE_USE_LDFLAGS', pgo_flags.use_ldflags)
 
 option('--with-pgo-jarlog',
        help='Use the provided jarlog file when packaging during a profile-use '
