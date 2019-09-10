@@ -121,6 +121,44 @@ add_task(async function test_error_busy_reject() {
 });
 
 /**
+ * Tests redirects are followed correctly, and the meta data corresponds
+ * to the correct, final response
+ */
+add_task(async function test_redirects() {
+  const targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+  let called = false;
+  const download = await Downloads.createDownload({
+    source: {
+      url: httpUrl("redirect"),
+      allowHttpStatus(aDownload, aStatusCode) {
+        Assert.strictEqual(download, aDownload, "Check Download objects");
+        Assert.strictEqual(
+          aStatusCode,
+          504,
+          "The status should be correct after a redirect"
+        );
+        called = true;
+        return true;
+      },
+    },
+    target: targetFile,
+  });
+  await download.start();
+  Assert.equal(
+    download.contentType,
+    "text/plain",
+    "Content-Type is correct after redirect"
+  );
+  Assert.equal(
+    download.totalBytes,
+    TEST_DATA_SHORT.length,
+    "Content-Length is correct after redirect"
+  );
+  Assert.equal(download.target.size, TEST_DATA_SHORT.length);
+  Assert.ok(called, "allowHttpStatus should have been called");
+});
+
+/**
  * Tests the DownloadError object.
  */
 add_task(function test_DownloadError() {
