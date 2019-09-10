@@ -116,6 +116,10 @@ nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
 
 void nsWaylandDisplay::SetShm(wl_shm* aShm) { mShm = aShm; }
 
+void nsWaylandDisplay::SetCompositor(wl_compositor* aCompositor) {
+  mCompositor = aCompositor;
+}
+
 void nsWaylandDisplay::SetSubcompositor(wl_subcompositor* aSubcompositor) {
   mSubcompositor = aSubcompositor;
 }
@@ -223,6 +227,12 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)primary_selection_device_manager,
                        display->GetEventQueue());
     display->SetPrimarySelectionDeviceManager(primary_selection_device_manager);
+  } else if (strcmp(interface, "wl_compositor") == 0) {
+    // Requested wl_compositor version 4 as we need wl_surface_damage_buffer().
+    auto compositor = static_cast<wl_compositor*>(
+        wl_registry_bind(registry, id, &wl_compositor_interface, 4));
+    wl_proxy_set_queue((struct wl_proxy*)compositor, display->GetEventQueue());
+    display->SetCompositor(compositor);
   } else if (strcmp(interface, "wl_subcompositor") == 0) {
     auto subcompositor = static_cast<wl_subcompositor*>(
         wl_registry_bind(registry, id, &wl_subcompositor_interface, 1));
@@ -306,6 +316,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mDisplay(aDisplay),
       mEventQueue(nullptr),
       mDataDeviceManager(nullptr),
+      mCompositor(nullptr),
       mSubcompositor(nullptr),
       mSeat(nullptr),
       mShm(nullptr),

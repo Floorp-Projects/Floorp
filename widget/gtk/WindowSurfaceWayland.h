@@ -204,7 +204,6 @@ class WindowSurfaceWayland : public WindowSurface {
       const LayoutDeviceIntRegion& aRegion,
       LayoutDeviceIntRegion& aWaylandBufferDamage);
   void CommitWaylandBuffer();
-  void CalcRectScale(LayoutDeviceIntRect& aRect, int scale);
 
   void DrawDelayedImageCommits(gfx::DrawTarget* aDrawTarget,
                                LayoutDeviceIntRegion& aWaylandBufferDamage);
