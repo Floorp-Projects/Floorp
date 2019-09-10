@@ -778,11 +778,6 @@ bool BaselineCacheIRCompiler::emitCompareStringResult() {
 
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
   allocator.discardStack(masm);
 
   Label slow, done;
