@@ -28,7 +28,6 @@ ErrorRep.propTypes = {
 function ErrorRep(props) {
   const object = props.object;
   const preview = object.preview;
-  const mode = props.mode;
 
   let name;
   if (preview && preview.name && preview.kind) {
@@ -48,13 +47,13 @@ function ErrorRep(props) {
 
   const content = [];
 
-  if (mode === MODE.TINY) {
+  if (props.mode === MODE.TINY) {
     content.push(name);
   } else {
     content.push(`${name}: "${preview.message}"`);
   }
 
-  if (preview.stack && (mode !== MODE.TINY && mode !== MODE.SHORT)) {
+  if (preview.stack && props.mode !== MODE.TINY) {
     const stacktrace = props.renderStacktrace
       ? props.renderStacktrace(parseStackString(preview.stack))
       : getStacktraceElements(props, preview);
