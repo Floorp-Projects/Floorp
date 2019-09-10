@@ -363,20 +363,32 @@ button > hbox > label {
 }
 
 /* Home Pane */
+
 #homepageGroup menulist,
 #homepageGroup textbox {
   margin: 5px 0;
 }
+
+#homepageGroup textbox {
+  text-align: match-parent;
+}
+
 #homepageAndNewWindowsOption {
   margin-top: 20px;
 }
+
 #homepageGroup:-moz-locale-dir(rtl) input {
   unicode-bidi: plaintext;
+}
+
+#homepageGroup:-moz-locale-dir(rtl) panel[type="autocomplete-richlistbox"] {
   direction: rtl;
 }
+
 .homepage-button:first-of-type {
   margin-inline-start: 0;
 }
+
 .homepage-button:last-of-type {
   margin-inline-end: 0;
 }
