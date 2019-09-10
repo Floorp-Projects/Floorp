@@ -2,10 +2,21 @@
 
 # TrackingProtectionPolicyForSessionTypes
 
-`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L280)
+`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L298)
 
 Subtype of [TrackingProtectionPolicy](../-tracking-protection-policy/index.md) to control the type of session this policy
 should be applied to. By default, a policy will be applied to all sessions.
+
+### Parameters
+
+`trackingCategory` - a list of tracking categories to apply.
+
+`cookiePolicy` - indicate how cookies should behave for this policy.
+
+`strictSocialTrackingProtection` - indicate  if content should be blocked from the
+social-tracking-protection-digest256 list, when given a null value,
+it is only applied when the [EngineSession.TrackingProtectionPolicy.TrackingCategory.STRICT](../-tracking-protection-policy/-tracking-category/-s-t-r-i-c-t.md)
+is set.
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`OtherExternal(action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`OtherExternal(action: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?)`
 
-Account was created for an unknown external reason, identified by [action](action.md).
+Account was created for an unknown external reason, hopefully identified by [action](action.md).
 

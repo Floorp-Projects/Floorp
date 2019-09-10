@@ -93,6 +93,7 @@
 | [mozilla.components.feature.intent.ext](mozilla.components.feature.intent.ext/index.md) |  |
 | [mozilla.components.feature.intent.processing](mozilla.components.feature.intent.processing/index.md) |  |
 | [mozilla.components.feature.media](mozilla.components.feature.media/index.md) |  |
+| [mozilla.components.feature.media.ext](mozilla.components.feature.media.ext/index.md) |  |
 | [mozilla.components.feature.media.state](mozilla.components.feature.media.state/index.md) |  |
 | [mozilla.components.feature.prompts](mozilla.components.feature.prompts/index.md) |  |
 | [mozilla.components.feature.push](mozilla.components.feature.push/index.md) |  |
