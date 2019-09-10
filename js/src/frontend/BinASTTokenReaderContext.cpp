@@ -334,15 +334,13 @@ class HuffmanPreludeReader {
     // The type of values in the sum.
     const BinASTSum contents;
 
-    // Comparing sum entries.
-    //
-    // By specification, we need to use string comparison.
+    // Comparing sum entries alphabetically.
     inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
       MOZ_ASSERT(aIndex <= maxNumberOfSymbols());
       MOZ_ASSERT(bIndex <= maxNumberOfSymbols());
-      const char* aString = describeBinASTKind(interfaceAt(aIndex));
-      const char* bString = describeBinASTKind(interfaceAt(bIndex));
-      return strcmp(aString, bString) < 0;
+      const size_t aKey = getBinASTKindSortKey(interfaceAt(aIndex));
+      const size_t bKey = getBinASTKindSortKey(interfaceAt(bIndex));
+      return aKey < bKey;
     }
 
     Sum(const NormalizedInterfaceAndField identity, const BinASTSum contents)
@@ -416,15 +414,13 @@ class HuffmanPreludeReader {
     using SymbolType = BinASTVariant;
     using Table = HuffmanTableIndexedSymbolsStringEnum;
 
-    // Comparing string enums.
-    //
-    // By specification, we need to use string comparison.
+    // Comparing string enums alphabetically.
     inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
       MOZ_ASSERT(aIndex <= maxNumberOfSymbols());
       MOZ_ASSERT(bIndex <= maxNumberOfSymbols());
-      const char* aString = describeBinASTVariant(variantAt(aIndex));
-      const char* bString = describeBinASTVariant(variantAt(bIndex));
-      return strcmp(aString, bString) < 0;
+      const size_t aKey = getBinASTVariantSortKey(variantAt(aIndex));
+      const size_t bKey = getBinASTVariantSortKey(variantAt(bIndex));
+      return aKey < bKey;
     }
 
     // The values in the enum.

@@ -100,6 +100,14 @@ const char* describeBinASTInterfaceAndField(
   return getBinASTInterfaceAndField(interfaceAndField).begin();
 }
 
+size_t getBinASTKindSortKey(const BinASTKind& kind) {
+  return static_cast<size_t>(kind);
+}
+
+size_t getBinASTVariantSortKey(const BinASTVariant& variant) {
+  return static_cast<size_t>(variant);
+}
+
 }  // namespace frontend
 
 BinaryASTSupport::BinaryASTSupport()
