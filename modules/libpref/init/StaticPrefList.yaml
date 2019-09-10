@@ -3739,7 +3739,7 @@
 # Maximum size for the surface cache, in kilobytes.
 - name: image.mem.surfacecache.max_size_kb
   type: uint32_t
-  value: 1024 * 1024
+  value: 2024 * 1024
   mirror: once
 
 # Minimum timeout for expiring unused images from the surface cache, in
