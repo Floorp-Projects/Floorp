@@ -37,7 +37,7 @@ RendererD3D::RendererD3D(egl::Display *display)
     : mDisplay(display),
       mPresentPathFastEnabled(false),
       mCapsInitialized(false),
-      mFeaturesInitialized(false),
+      mWorkaroundsInitialized(false),
       mDisjoint(false),
       mDeviceLost(false)
 {}
@@ -72,7 +72,7 @@ bool RendererD3D::skipDraw(const gl::State &glState, gl::PrimitiveMode drawMode)
     return false;
 }
 
-gl::GraphicsResetStatus RendererD3D::getResetStatus()
+GLenum RendererD3D::getResetStatus()
 {
     if (!mDeviceLost)
     {
@@ -80,17 +80,17 @@ gl::GraphicsResetStatus RendererD3D::getResetStatus()
         {
             mDeviceLost = true;
             notifyDeviceLost();
-            return gl::GraphicsResetStatus::UnknownContextReset;
+            return GL_UNKNOWN_CONTEXT_RESET_EXT;
         }
-        return gl::GraphicsResetStatus::NoError;
+        return GL_NO_ERROR;
     }
 
     if (testDeviceResettable())
     {
-        return gl::GraphicsResetStatus::NoError;
+        return GL_NO_ERROR;
     }
 
-    return gl::GraphicsResetStatus::UnknownContextReset;
+    return GL_UNKNOWN_CONTEXT_RESET_EXT;
 }
 
 void RendererD3D::notifyDeviceLost()
@@ -182,17 +182,6 @@ angle::Result RendererD3D::initRenderTarget(const gl::Context *context,
                                             RenderTargetD3D *renderTarget)
 {
     return clearRenderTarget(context, renderTarget, gl::ColorF(0, 0, 0, 0), 1, 0);
-}
-
-const angle::FeaturesD3D &RendererD3D::getFeatures() const
-{
-    if (!mFeaturesInitialized)
-    {
-        initializeFeatures(&mFeatures);
-        mFeaturesInitialized = true;
-    }
-
-    return mFeatures;
 }
 
 unsigned int GetBlendSampleMask(const gl::State &glState, int samples)

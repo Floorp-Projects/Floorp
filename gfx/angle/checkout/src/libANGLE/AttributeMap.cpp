@@ -37,7 +37,7 @@ EGLAttrib AttributeMap::get(EGLAttrib key) const
 EGLAttrib AttributeMap::get(EGLAttrib key, EGLAttrib defaultValue) const
 {
     auto iter = mAttributes.find(key);
-    return (iter != mAttributes.end()) ? iter->second : defaultValue;
+    return (mAttributes.find(key) != mAttributes.end()) ? iter->second : defaultValue;
 }
 
 EGLint AttributeMap::getAsInt(EGLAttrib key) const

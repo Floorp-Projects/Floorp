@@ -24,6 +24,33 @@ bool IsElementArrayBufferSubjectIndex(angle::SubjectIndex subjectIndex)
     return (subjectIndex == MAX_VERTEX_ATTRIBS);
 }
 
+ANGLE_INLINE ComponentType GetVertexAttributeComponentType(bool pureInteger, VertexAttribType type)
+{
+    if (pureInteger)
+    {
+        switch (type)
+        {
+            case VertexAttribType::Byte:
+            case VertexAttribType::Short:
+            case VertexAttribType::Int:
+                return ComponentType::Int;
+
+            case VertexAttribType::UnsignedByte:
+            case VertexAttribType::UnsignedShort:
+            case VertexAttribType::UnsignedInt:
+                return ComponentType::UnsignedInt;
+
+            default:
+                UNREACHABLE();
+                return ComponentType::NoType;
+        }
+    }
+    else
+    {
+        return ComponentType::Float;
+    }
+}
+
 constexpr angle::SubjectIndex kElementArrayBufferIndex = MAX_VERTEX_ATTRIBS;
 }  // namespace
 
@@ -100,8 +127,7 @@ VertexArray::VertexArray(rx::GLImplFactory *factory,
                          size_t maxAttribBindings)
     : mId(id),
       mState(this, maxAttribs, maxAttribBindings),
-      mVertexArray(factory->createVertexArray(mState)),
-      mBufferAccessValidationEnabled(false)
+      mVertexArray(factory->createVertexArray(mState))
 {
     for (size_t attribIndex = 0; attribIndex < maxAttribBindings; ++attribIndex)
     {
@@ -222,9 +248,10 @@ ANGLE_INLINE void VertexArray::setDirtyBindingBit(size_t bindingIndex,
     mDirtyBindingBits[bindingIndex].set(dirtyBindingBit);
 }
 
-ANGLE_INLINE void VertexArray::updateCachedBufferBindingSize(VertexBinding *binding)
+ANGLE_INLINE void VertexArray::updateCachedBufferBindingSize(const Context *context,
+                                                             VertexBinding *binding)
 {
-    if (!mBufferAccessValidationEnabled)
+    if (!context->isBufferAccessValidationEnabled())
         return;
 
     for (size_t boundAttribute : binding->getBoundAttributesMask())
@@ -264,7 +291,7 @@ ANGLE_INLINE void VertexArray::updateCachedTransformFeedbackBindingValidation(si
     mCachedTransformFeedbackConflictedBindingsMask.set(bindingIndex, hasConflict);
 }
 
-bool VertexArray::bindVertexBufferImpl(const Context *context,
+void VertexArray::bindVertexBufferImpl(const Context *context,
                                        size_t bindingIndex,
                                        Buffer *boundBuffer,
                                        GLintptr offset,
@@ -275,17 +302,7 @@ bool VertexArray::bindVertexBufferImpl(const Context *context,
 
     VertexBinding *binding = &mState.mVertexBindings[bindingIndex];
 
-    Buffer *oldBuffer = binding->getBuffer().get();
-
-    const bool sameBuffer = oldBuffer == boundBuffer;
-    const bool sameStride = static_cast<GLuint>(stride) == binding->getStride();
-    const bool sameOffset = offset == binding->getOffset();
-
-    if (sameBuffer && sameStride && sameOffset)
-    {
-        return false;
-    }
-
+    Buffer *oldBuffer                = binding->getBuffer().get();
     angle::ObserverBinding *observer = &mArrayBufferObserverBindings[bindingIndex];
     observer->assignSubject(boundBuffer);
 
@@ -300,7 +317,7 @@ bool VertexArray::bindVertexBufferImpl(const Context *context,
     binding->assignBuffer(boundBuffer);
     binding->setOffset(offset);
     binding->setStride(stride);
-    updateCachedBufferBindingSize(binding);
+    updateCachedBufferBindingSize(context, binding);
 
     // Update client memory attribute pointers. Affects all bound attributes.
     if (boundBuffer)
@@ -319,8 +336,6 @@ bool VertexArray::bindVertexBufferImpl(const Context *context,
         mState.mClientMemoryAttribsMask |= binding->getBoundAttributesMask();
         updateCachedMappedArrayBuffers(false, binding->getBoundAttributesMask());
     }
-
-    return true;
 }
 
 void VertexArray::bindVertexBuffer(const Context *context,
@@ -329,10 +344,8 @@ void VertexArray::bindVertexBuffer(const Context *context,
                                    GLintptr offset,
                                    GLsizei stride)
 {
-    if (bindVertexBufferImpl(context, bindingIndex, boundBuffer, offset, stride))
-    {
-        setDirtyBindingBit(bindingIndex, DIRTY_BINDING_BUFFER);
-    }
+    bindVertexBufferImpl(context, bindingIndex, boundBuffer, offset, stride);
+    setDirtyBindingBit(bindingIndex, DIRTY_BINDING_BUFFER);
 }
 
 void VertexArray::setVertexAttribBinding(const Context *context,
@@ -372,23 +385,16 @@ void VertexArray::setVertexBindingDivisor(size_t bindingIndex, GLuint divisor)
     }
 }
 
-ANGLE_INLINE bool VertexArray::setVertexAttribFormatImpl(VertexAttribute *attrib,
+ANGLE_INLINE void VertexArray::setVertexAttribFormatImpl(VertexAttribute *attrib,
                                                          GLint size,
                                                          VertexAttribType type,
                                                          bool normalized,
-                                                         bool pureInteger,
                                                          GLuint relativeOffset)
 {
-    angle::FormatID formatID = gl::GetVertexFormatID(type, normalized, size, pureInteger);
-
-    if (formatID != attrib->format->id || attrib->relativeOffset != relativeOffset)
-    {
-        attrib->relativeOffset = relativeOffset;
-        attrib->format         = &angle::Format::Get(formatID);
-        return true;
-    }
-
-    return false;
+    attrib->size           = size;
+    attrib->type           = type;
+    attrib->normalized     = normalized;
+    attrib->relativeOffset = relativeOffset;
 }
 
 void VertexArray::setVertexAttribFormat(size_t attribIndex,
@@ -399,14 +405,13 @@ void VertexArray::setVertexAttribFormat(size_t attribIndex,
                                         GLuint relativeOffset)
 {
     VertexAttribute &attrib = mState.mVertexAttributes[attribIndex];
+    attrib.pureInteger      = pureInteger;
 
     ComponentType componentType = GetVertexAttributeComponentType(pureInteger, type);
     SetComponentTypeMask(componentType, attribIndex, &mState.mVertexAttributesTypeMask);
 
-    if (setVertexAttribFormatImpl(&attrib, size, type, normalized, pureInteger, relativeOffset))
-    {
-        setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_FORMAT);
-    }
+    setVertexAttribFormatImpl(&attrib, size, type, normalized, relativeOffset);
+    setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_FORMAT);
 
     attrib.updateCachedElementLimit(mState.mVertexBindings[attrib.bindingIndex]);
 }
@@ -456,41 +461,21 @@ ANGLE_INLINE void VertexArray::setVertexAttribPointerImpl(const Context *context
     GLintptr offset = boundBuffer ? reinterpret_cast<GLintptr>(pointer) : 0;
 
     VertexAttribute &attrib = mState.mVertexAttributes[attribIndex];
+    attrib.pureInteger      = pureInteger;
 
     SetComponentTypeMask(componentType, attribIndex, &mState.mVertexAttributesTypeMask);
 
-    bool attribDirty = setVertexAttribFormatImpl(&attrib, size, type, normalized, pureInteger, 0);
-
-    if (attrib.bindingIndex != attribIndex)
-    {
-        setVertexAttribBinding(context, attribIndex, static_cast<GLuint>(attribIndex));
-    }
+    setVertexAttribFormatImpl(&attrib, size, type, normalized, 0);
+    setVertexAttribBinding(context, attribIndex, static_cast<GLuint>(attribIndex));
 
     GLsizei effectiveStride =
         stride != 0 ? stride : static_cast<GLsizei>(ComputeVertexAttributeTypeSize(attrib));
-
-    if (pointer != attrib.pointer || attrib.vertexAttribArrayStride != static_cast<GLuint>(stride))
-    {
-        attribDirty = true;
-    }
-
     attrib.pointer                 = pointer;
     attrib.vertexAttribArrayStride = stride;
 
-    // "Pointer buffer" dirty bit disabled because of a bug. http://anglebug.com/3256
     bindVertexBufferImpl(context, attribIndex, boundBuffer, offset, effectiveStride);
-    setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_POINTER);
-    ANGLE_UNUSED_VARIABLE(attribDirty);
 
-    // if (bindVertexBufferImpl(context, attribIndex, boundBuffer, offset, effectiveStride) &&
-    //    !attribDirty)
-    //{
-    //    setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_POINTER_BUFFER);
-    //}
-    // else if (attribDirty)
-    //{
-    //    setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_POINTER);
-    //}
+    setDirtyAttribBit(attribIndex, DIRTY_ATTRIB_POINTER);
 
     mState.mNullPointerClientMemoryAttribsMask.set(attribIndex,
                                                    boundBuffer == nullptr && pointer == nullptr);
@@ -567,23 +552,25 @@ VertexArray::DirtyBitType VertexArray::getDirtyBitFromIndex(bool contentsChanged
     }
 }
 
-void VertexArray::onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message)
+void VertexArray::onSubjectStateChange(const gl::Context *context,
+                                       angle::SubjectIndex index,
+                                       angle::SubjectMessage message)
 {
     switch (message)
     {
-        case angle::SubjectMessage::ContentsChanged:
-            setDependentDirtyBit(true, index);
+        case angle::SubjectMessage::CONTENTS_CHANGED:
+            setDependentDirtyBit(context, true, index);
             break;
 
-        case angle::SubjectMessage::SubjectChanged:
+        case angle::SubjectMessage::STORAGE_CHANGED:
             if (!IsElementArrayBufferSubjectIndex(index))
             {
-                updateCachedBufferBindingSize(&mState.mVertexBindings[index]);
+                updateCachedBufferBindingSize(context, &mState.mVertexBindings[index]);
             }
-            setDependentDirtyBit(false, index);
+            setDependentDirtyBit(context, false, index);
             break;
 
-        case angle::SubjectMessage::BindingChanged:
+        case angle::SubjectMessage::BINDING_CHANGED:
             if (!IsElementArrayBufferSubjectIndex(index))
             {
                 const Buffer *buffer = mState.mVertexBindings[index].getBuffer().get();
@@ -591,22 +578,22 @@ void VertexArray::onSubjectStateChange(angle::SubjectIndex index, angle::Subject
             }
             break;
 
-        case angle::SubjectMessage::SubjectMapped:
+        case angle::SubjectMessage::RESOURCE_MAPPED:
             if (!IsElementArrayBufferSubjectIndex(index))
             {
                 updateCachedMappedArrayBuffersBinding(mState.mVertexBindings[index]);
             }
-            onStateChange(angle::SubjectMessage::SubjectMapped);
+            onStateChange(context, angle::SubjectMessage::RESOURCE_MAPPED);
             break;
 
-        case angle::SubjectMessage::SubjectUnmapped:
-            setDependentDirtyBit(true, index);
+        case angle::SubjectMessage::RESOURCE_UNMAPPED:
+            setDependentDirtyBit(context, true, index);
 
             if (!IsElementArrayBufferSubjectIndex(index))
             {
                 updateCachedMappedArrayBuffersBinding(mState.mVertexBindings[index]);
             }
-            onStateChange(angle::SubjectMessage::SubjectUnmapped);
+            onStateChange(context, angle::SubjectMessage::RESOURCE_UNMAPPED);
             break;
 
         default:
@@ -615,12 +602,14 @@ void VertexArray::onSubjectStateChange(angle::SubjectIndex index, angle::Subject
     }
 }
 
-void VertexArray::setDependentDirtyBit(bool contentsChanged, angle::SubjectIndex index)
+void VertexArray::setDependentDirtyBit(const gl::Context *context,
+                                       bool contentsChanged,
+                                       angle::SubjectIndex index)
 {
     DirtyBitType dirtyBit = getDirtyBitFromIndex(contentsChanged, index);
     ASSERT(!mDirtyBitsGuard.valid() || mDirtyBitsGuard.value().test(dirtyBit));
     mDirtyBits.set(dirtyBit);
-    onStateChange(angle::SubjectMessage::ContentsChanged);
+    onStateChange(context, angle::SubjectMessage::CONTENTS_CHANGED);
 }
 
 bool VertexArray::hasTransformFeedbackBindingConflict(const gl::Context *context) const

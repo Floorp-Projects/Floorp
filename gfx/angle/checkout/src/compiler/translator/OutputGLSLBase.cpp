@@ -61,12 +61,11 @@ class CommaSeparatedListItemPrefixGenerator
   private:
     bool mFirst;
 
-    template <typename Stream>
-    friend Stream &operator<<(Stream &out, CommaSeparatedListItemPrefixGenerator &gen);
+    friend TInfoSinkBase &operator<<(TInfoSinkBase &out,
+                                     CommaSeparatedListItemPrefixGenerator &gen);
 };
 
-template <typename Stream>
-Stream &operator<<(Stream &out, CommaSeparatedListItemPrefixGenerator &gen)
+TInfoSinkBase &operator<<(TInfoSinkBase &out, CommaSeparatedListItemPrefixGenerator &gen)
 {
     if (gen.mFirst)
     {
@@ -161,90 +160,6 @@ void TOutputGLSLBase::writeBuiltInFunctionTriplet(Visit visit,
     }
 }
 
-// Outputs what goes inside layout(), except for location and binding qualifiers, as they are
-// handled differently between GL GLSL and Vulkan GLSL.
-std::string TOutputGLSLBase::getCommonLayoutQualifiers(TIntermTyped *variable)
-{
-    std::ostringstream out;
-    CommaSeparatedListItemPrefixGenerator listItemPrefix;
-
-    const TType &type                       = variable->getType();
-    const TLayoutQualifier &layoutQualifier = type.getLayoutQualifier();
-
-    if (type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn ||
-        IsVarying(type.getQualifier()))
-    {
-        if (type.getQualifier() == EvqFragmentOut && layoutQualifier.index >= 0)
-        {
-            out << listItemPrefix << "index = " << layoutQualifier.index;
-        }
-    }
-
-    if (type.getQualifier() == EvqFragmentOut)
-    {
-        if (layoutQualifier.yuv == true)
-        {
-            out << listItemPrefix << "yuv";
-        }
-    }
-
-    if (IsImage(type.getBasicType()))
-    {
-        if (layoutQualifier.imageInternalFormat != EiifUnspecified)
-        {
-            ASSERT(type.getQualifier() == EvqTemporary || type.getQualifier() == EvqUniform);
-            out << listItemPrefix
-                << getImageInternalFormatString(layoutQualifier.imageInternalFormat);
-        }
-    }
-
-    if (IsAtomicCounter(type.getBasicType()))
-    {
-        out << listItemPrefix << "offset = " << layoutQualifier.offset;
-    }
-
-    return out.str();
-}
-
-// Outputs what comes after in/out/uniform/buffer storage qualifier.
-std::string TOutputGLSLBase::getMemoryQualifiers(const TType &type)
-{
-    std::ostringstream out;
-
-    const TMemoryQualifier &memoryQualifier = type.getMemoryQualifier();
-    if (memoryQualifier.readonly)
-    {
-        ASSERT(IsImage(type.getBasicType()) || IsStorageBuffer(type.getQualifier()));
-        out << "readonly ";
-    }
-
-    if (memoryQualifier.writeonly)
-    {
-        ASSERT(IsImage(type.getBasicType()) || IsStorageBuffer(type.getQualifier()));
-        out << "writeonly ";
-    }
-
-    if (memoryQualifier.coherent)
-    {
-        ASSERT(IsImage(type.getBasicType()) || IsStorageBuffer(type.getQualifier()));
-        out << "coherent ";
-    }
-
-    if (memoryQualifier.restrictQualifier)
-    {
-        ASSERT(IsImage(type.getBasicType()) || IsStorageBuffer(type.getQualifier()));
-        out << "restrict ";
-    }
-
-    if (memoryQualifier.volatileQualifier)
-    {
-        ASSERT(IsImage(type.getBasicType()) || IsStorageBuffer(type.getQualifier()));
-        out << "volatile ";
-    }
-
-    return out.str();
-}
-
 void TOutputGLSLBase::writeLayoutQualifier(TIntermTyped *variable)
 {
     const TType &type = variable->getType();
@@ -274,6 +189,18 @@ void TOutputGLSLBase::writeLayoutQualifier(TIntermTyped *variable)
         {
             out << listItemPrefix << "location = " << layoutQualifier.location;
         }
+        if (type.getQualifier() == EvqFragmentOut && layoutQualifier.index >= 0)
+        {
+            out << listItemPrefix << "index = " << layoutQualifier.index;
+        }
+    }
+
+    if (type.getQualifier() == EvqFragmentOut)
+    {
+        if (layoutQualifier.yuv == true)
+        {
+            out << listItemPrefix << "yuv";
+        }
     }
 
     if (IsOpaqueType(type.getBasicType()))
@@ -284,24 +211,31 @@ void TOutputGLSLBase::writeLayoutQualifier(TIntermTyped *variable)
         }
     }
 
-    std::string otherQualifiers = getCommonLayoutQualifiers(variable);
-    if (!otherQualifiers.empty())
+    if (IsImage(type.getBasicType()))
     {
-        out << listItemPrefix << otherQualifiers;
+        if (layoutQualifier.imageInternalFormat != EiifUnspecified)
+        {
+            ASSERT(type.getQualifier() == EvqTemporary || type.getQualifier() == EvqUniform);
+            out << listItemPrefix
+                << getImageInternalFormatString(layoutQualifier.imageInternalFormat);
+        }
+    }
+
+    if (IsAtomicCounter(type.getBasicType()))
+    {
+        out << listItemPrefix << "offset = " << layoutQualifier.offset;
     }
 
     out << ") ";
 }
 
-void TOutputGLSLBase::writeQualifier(TQualifier qualifier, const TType &type, const TSymbol *symbol)
+void TOutputGLSLBase::writeQualifier(TQualifier qualifier, const TSymbol *symbol)
 {
     const char *result = mapQualifierToString(qualifier);
     if (result && result[0] != '\0')
     {
         objSink() << result << " ";
     }
-
-    objSink() << getMemoryQualifiers(type);
 }
 
 const char *TOutputGLSLBase::mapQualifierToString(TQualifier qualifier)
@@ -350,7 +284,38 @@ void TOutputGLSLBase::writeVariableType(const TType &type, const TSymbol *symbol
     }
     if (qualifier != EvqTemporary && qualifier != EvqGlobal)
     {
-        writeQualifier(qualifier, type, symbol);
+        writeQualifier(qualifier, symbol);
+    }
+
+    const TMemoryQualifier &memoryQualifier = type.getMemoryQualifier();
+    if (memoryQualifier.readonly)
+    {
+        ASSERT(IsImage(type.getBasicType()));
+        out << "readonly ";
+    }
+
+    if (memoryQualifier.writeonly)
+    {
+        ASSERT(IsImage(type.getBasicType()));
+        out << "writeonly ";
+    }
+
+    if (memoryQualifier.coherent)
+    {
+        ASSERT(IsImage(type.getBasicType()));
+        out << "coherent ";
+    }
+
+    if (memoryQualifier.restrictQualifier)
+    {
+        ASSERT(IsImage(type.getBasicType()));
+        out << "restrict ";
+    }
+
+    if (memoryQualifier.volatileQualifier)
+    {
+        ASSERT(IsImage(type.getBasicType()));
+        out << "volatile ";
     }
 
     // Declare the struct if we have not done so already.

@@ -17,7 +17,6 @@
 #include "compiler/translator/ImmutableString.h"
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/StaticType.h"
-#include "compiler/translator/util.h"
 
 namespace sh
 {
@@ -197,7 +196,7 @@ void TSymbolTable::addInvariantVarying(const TVariable &variable)
 bool TSymbolTable::isVaryingInvariant(const TVariable &variable) const
 {
     ASSERT(atGlobalLevel());
-    if (mGlobalInvariant && (IsShaderOutput(variable.getType().getQualifier())))
+    if (mGlobalInvariant)
     {
         return true;
     }
@@ -250,32 +249,6 @@ const TSymbol *TSymbolTable::findGlobal(const ImmutableString &name) const
 {
     ASSERT(!mTable.empty());
     return mTable[0]->find(name);
-}
-
-const TSymbol *TSymbolTable::findGlobalWithConversion(
-    const std::vector<ImmutableString> &names) const
-{
-    const TSymbol *target;
-    for (ImmutableString name : names)
-    {
-        target = findGlobal(name);
-        if (target != nullptr)
-            break;
-    }
-    return target;
-}
-
-const TSymbol *TSymbolTable::findBuiltInWithConversion(const std::vector<ImmutableString> &names,
-                                                       int shaderVersion) const
-{
-    const TSymbol *target;
-    for (ImmutableString name : names)
-    {
-        target = findBuiltIn(name, shaderVersion);
-        if (target != nullptr)
-            break;
-    }
-    return target;
 }
 
 bool TSymbolTable::declare(TSymbol *symbol)
@@ -364,29 +337,20 @@ void TSymbolTable::initializeBuiltIns(sh::GLenum type,
     // We need just one precision stack level for predefined precisions.
     mPrecisionStack.emplace_back(new PrecisionStackLevel);
 
-    if (IsDesktopGLSpec(spec))
+    switch (type)
     {
-        setDefaultPrecision(EbtInt, EbpUndefined);
-        setDefaultPrecision(EbtFloat, EbpUndefined);
+        case GL_FRAGMENT_SHADER:
+            setDefaultPrecision(EbtInt, EbpMedium);
+            break;
+        case GL_VERTEX_SHADER:
+        case GL_COMPUTE_SHADER:
+        case GL_GEOMETRY_SHADER_EXT:
+            setDefaultPrecision(EbtInt, EbpHigh);
+            setDefaultPrecision(EbtFloat, EbpHigh);
+            break;
+        default:
+            UNREACHABLE();
     }
-    else
-    {
-        switch (type)
-        {
-            case GL_FRAGMENT_SHADER:
-                setDefaultPrecision(EbtInt, EbpMedium);
-                break;
-            case GL_VERTEX_SHADER:
-            case GL_COMPUTE_SHADER:
-            case GL_GEOMETRY_SHADER_EXT:
-                setDefaultPrecision(EbtInt, EbpHigh);
-                setDefaultPrecision(EbtFloat, EbpHigh);
-                break;
-            default:
-                UNREACHABLE();
-        }
-    }
-
     // Set defaults for sampler types that have default precision, even those that are
     // only available if an extension exists.
     // New sampler types in ESSL3 don't have default precision. ESSL1 types do.

@@ -140,7 +140,7 @@ ANGLE_INLINE bool ValidateBindTexture(Context *context, TextureType target, GLui
     Texture *textureObject = context->getTexture(texture);
     if (textureObject && textureObject->getType() != target)
     {
-        context->validationError(GL_INVALID_OPERATION, err::kTextureTargetMismatch);
+        context->validationError(GL_INVALID_OPERATION, err::kTypeMismatch);
         return false;
     }
 
@@ -153,24 +153,6 @@ ANGLE_INLINE bool ValidateBindTexture(Context *context, TextureType target, GLui
 
     return true;
 }
-
-// Validation of all Tex[Sub]Image2D parameters except TextureTarget.
-bool ValidateES2TexImageParametersBase(Context *context,
-                                       TextureTarget target,
-                                       GLint level,
-                                       GLenum internalformat,
-                                       bool isCompressed,
-                                       bool isSubImage,
-                                       GLint xoffset,
-                                       GLint yoffset,
-                                       GLsizei width,
-                                       GLsizei height,
-                                       GLint border,
-                                       GLenum format,
-                                       GLenum type,
-                                       GLsizei imageSize,
-                                       const void *pixels);
-
 }  // namespace gl
 
 #endif  // LIBANGLE_VALIDATION_ES2_H_

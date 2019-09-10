@@ -44,11 +44,9 @@ using LogSeverity = int;
 // Note: the log severities are used to index into the array of names,
 // see g_logSeverityNames.
 constexpr LogSeverity LOG_EVENT          = 0;
-constexpr LogSeverity LOG_INFO           = 1;
-constexpr LogSeverity LOG_WARN           = 2;
-constexpr LogSeverity LOG_ERR            = 3;
-constexpr LogSeverity LOG_FATAL          = 4;
-constexpr LogSeverity LOG_NUM_SEVERITIES = 5;
+constexpr LogSeverity LOG_WARN           = 1;
+constexpr LogSeverity LOG_ERR            = 2;
+constexpr LogSeverity LOG_NUM_SEVERITIES = 3;
 
 void Trace(LogSeverity severity, const char *message);
 
@@ -189,20 +187,14 @@ std::ostream &FmtHex(std::ostream &os, T value)
 // better to have compact code for these operations.
 #define COMPACT_ANGLE_LOG_EX_EVENT(ClassName, ...) \
     ::gl::ClassName(__FUNCTION__, __LINE__, ::gl::LOG_EVENT, ##__VA_ARGS__)
-#define COMPACT_ANGLE_LOG_EX_INFO(ClassName, ...) \
-    ::gl::ClassName(__FUNCTION__, __LINE__, ::gl::LOG_INFO, ##__VA_ARGS__)
 #define COMPACT_ANGLE_LOG_EX_WARN(ClassName, ...) \
     ::gl::ClassName(__FUNCTION__, __LINE__, ::gl::LOG_WARN, ##__VA_ARGS__)
 #define COMPACT_ANGLE_LOG_EX_ERR(ClassName, ...) \
     ::gl::ClassName(__FUNCTION__, __LINE__, ::gl::LOG_ERR, ##__VA_ARGS__)
-#define COMPACT_ANGLE_LOG_EX_FATAL(ClassName, ...) \
-    ::gl::ClassName(__FUNCTION__, __LINE__, ::gl::LOG_FATAL, ##__VA_ARGS__)
 
 #define COMPACT_ANGLE_LOG_EVENT COMPACT_ANGLE_LOG_EX_EVENT(LogMessage)
-#define COMPACT_ANGLE_LOG_INFO COMPACT_ANGLE_LOG_EX_INFO(LogMessage)
 #define COMPACT_ANGLE_LOG_WARN COMPACT_ANGLE_LOG_EX_WARN(LogMessage)
 #define COMPACT_ANGLE_LOG_ERR COMPACT_ANGLE_LOG_EX_ERR(LogMessage)
-#define COMPACT_ANGLE_LOG_FATAL COMPACT_ANGLE_LOG_EX_FATAL(LogMessage)
 
 #define ANGLE_LOG_IS_ON(severity) (::gl::priv::ShouldCreatePlatformLogMessage(::gl::LOG_##severity))
 
@@ -233,10 +225,8 @@ std::ostream &FmtHex(std::ostream &os, T value)
 #    define ANGLE_ENABLE_ASSERTS
 #endif
 
-#define INFO() ANGLE_LOG(INFO)
 #define WARN() ANGLE_LOG(WARN)
 #define ERR() ANGLE_LOG(ERR)
-#define FATAL() ANGLE_LOG(FATAL)
 
 // A macro to log a performance event around a scope.
 #if defined(ANGLE_TRACE_ENABLED)
@@ -253,7 +243,7 @@ std::ostream &FmtHex(std::ostream &os, T value)
 #    define EVENT(message, ...) (void(0))
 #endif
 
-#if defined(__GNUC__)
+#if defined(COMPILER_GCC) || defined(__clang__)
 #    define ANGLE_CRASH() __builtin_trap()
 #else
 #    define ANGLE_CRASH() ((void)(*(volatile char *)0 = 0)), __assume(0)
@@ -261,9 +251,11 @@ std::ostream &FmtHex(std::ostream &os, T value)
 
 #if !defined(NDEBUG)
 #    define ANGLE_ASSERT_IMPL(expression) assert(expression)
+#    define ANGLE_ASSERT_IMPL_IS_NORETURN 0
 #else
 // TODO(jmadill): Detect if debugger is attached and break.
 #    define ANGLE_ASSERT_IMPL(expression) ANGLE_CRASH()
+#    define ANGLE_ASSERT_IMPL_IS_NORETURN 1
 #endif  // !defined(NDEBUG)
 
 // Note that gSwallowStream is used instead of an arbitrary LOG() stream to avoid the creation of an
@@ -280,15 +272,16 @@ std::ostream &FmtHex(std::ostream &os, T value)
 
 // A macro asserting a condition and outputting failures to the debug log
 #if defined(ANGLE_ENABLE_ASSERTS)
-#    define ASSERT(expression)                                                                \
-        (expression ? static_cast<void>(0)                                                    \
-                    : (FATAL() << "\t! Assert failed in " << __FUNCTION__ << " (" << __FILE__ \
-                               << ":" << __LINE__ << "): " << #expression))
+#    define ASSERT(expression)                                                              \
+        (expression ? static_cast<void>(0)                                                  \
+                    : ((ERR() << "\t! Assert failed in " << __FUNCTION__ << "(" << __LINE__ \
+                              << "): " << #expression),                                     \
+                       ANGLE_ASSERT_IMPL(expression)))
+#    define UNREACHABLE_IS_NORETURN ANGLE_ASSERT_IMPL_IS_NORETURN
 #else
 #    define ASSERT(condition) ANGLE_EAT_STREAM_PARAMETERS << !(condition)
+#    define UNREACHABLE_IS_NORETURN 0
 #endif  // defined(ANGLE_ENABLE_ASSERTS)
-
-#define UNREACHABLE_IS_NORETURN 0
 
 #define ANGLE_UNUSED_VARIABLE(variable) (static_cast<void>(variable))
 
@@ -307,11 +300,12 @@ std::ostream &FmtHex(std::ostream &os, T value)
         } while (0)
 
 // A macro for code which is not expected to be reached under valid assumptions
-#    define UNREACHABLE()                                                                    \
-        do                                                                                   \
-        {                                                                                    \
-            FATAL() << "\t! Unreachable reached: " << __FUNCTION__ << "(" << __FILE__ << ":" \
-                    << __LINE__ << ")";                                                      \
+#    define UNREACHABLE()                                                                  \
+        do                                                                                 \
+        {                                                                                  \
+            ERR() << "\t! Unreachable reached: " << __FUNCTION__ << "(" << __FILE__ << ":" \
+                  << __LINE__ << ")";                                                      \
+            ASSERT(false);                                                                 \
         } while (0)
 #else
 #    define UNIMPLEMENTED()                 \
@@ -341,7 +335,7 @@ std::ostream &FmtHex(std::ostream &os, T value)
 #    define ANGLE_ENABLE_STRUCT_PADDING_WARNINGS \
         _Pragma("clang diagnostic push") _Pragma("clang diagnostic error \"-Wpadded\"")
 #    define ANGLE_DISABLE_STRUCT_PADDING_WARNINGS _Pragma("clang diagnostic pop")
-#elif defined(__GNUC__)
+#elif defined(COMPILER_GCC)
 #    define ANGLE_ENABLE_STRUCT_PADDING_WARNINGS \
         _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic error \"-Wpadded\"")
 #    define ANGLE_DISABLE_STRUCT_PADDING_WARNINGS _Pragma("GCC diagnostic pop")
