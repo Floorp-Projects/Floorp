@@ -4741,6 +4741,12 @@ class DatabaseConnection final {
   nsresult GetCachedStatement(const nsACString& aQuery,
                               CachedStatement* aCachedStatement);
 
+  template <typename BindFunctor>
+  nsresult ExecuteCachedStatement(const nsACString& aQuery,
+                                  const BindFunctor& aBindFunctor);
+
+  nsresult ExecuteCachedStatement(const nsACString& aQuery);
+
   nsresult BeginWriteTransaction();
 
   nsresult CommitWriteTransaction();
@@ -4830,7 +4836,11 @@ class DatabaseConnection::CachedStatement final {
 #endif
   }
 
+  // TODO: Remove the implicit operator, and replace it by explicit calls to
+  // GetUnderlyingStatement.
   operator mozIStorageStatement*() const;
+
+  mozIStorageStatement& operator*() const;
 
   mozIStorageStatement* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
 
@@ -9444,6 +9454,32 @@ nsresult DatabaseConnection::GetCachedStatement(
   return NS_OK;
 }
 
+template <typename BindFunctor>
+nsresult DatabaseConnection::ExecuteCachedStatement(
+    const nsACString& aQuery, const BindFunctor& aBindFunctor) {
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(aQuery, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aBindFunctor(*stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult DatabaseConnection::ExecuteCachedStatement(const nsACString& aQuery) {
+  return ExecuteCachedStatement(aQuery, [](auto&) { return NS_OK; });
+}
+
 nsresult DatabaseConnection::BeginWriteTransaction() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
@@ -9453,14 +9489,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   AUTO_PROFILER_LABEL("DatabaseConnection::BeginWriteTransaction", DOM);
 
   // Release our read locks.
-  CachedStatement rollbackStmt;
-  nsresult rv =
-      GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"), &rollbackStmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = rollbackStmt->Execute();
+  nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9483,6 +9512,10 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     mUpdateRefcountFunction.swap(function);
   }
 
+  // This one cannot obviously use ExecuteCachedStatement because of the custom
+  // error handling for Execute only. If only Execute can produce
+  // NS_ERROR_STORAGE_BUSY, we could actually use ExecuteCachedStatement and
+  // simplify this.
   CachedStatement beginStmt;
   rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"), &beginStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9527,13 +9560,7 @@ nsresult DatabaseConnection::CommitWriteTransaction() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::CommitWriteTransaction", DOM);
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+  const nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("COMMIT;"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9553,7 +9580,7 @@ void DatabaseConnection::RollbackWriteTransaction() {
     return;
   }
 
-  DatabaseConnection::CachedStatement stmt;
+  CachedStatement stmt;
   nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"), &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -9578,13 +9605,7 @@ void DatabaseConnection::FinishWriteTransaction() {
     mUpdateRefcountFunction->Reset();
   }
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN;"), &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  rv = stmt->Execute();
+  const nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("BEGIN;"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -9600,13 +9621,8 @@ nsresult DatabaseConnection::StartSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::StartSavepoint", DOM);
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING(SAVEPOINT_CLAUSE), &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+  const nsresult rv =
+      ExecuteCachedStatement(NS_LITERAL_CSTRING(SAVEPOINT_CLAUSE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9629,22 +9645,20 @@ nsresult DatabaseConnection::ReleaseSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReleaseSavepoint", DOM);
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(
-      NS_LITERAL_CSTRING("RELEASE " SAVEPOINT_CLAUSE), &stmt);
-  if (NS_SUCCEEDED(rv)) {
-    rv = stmt->Execute();
-    if (NS_SUCCEEDED(rv)) {
-      mUpdateRefcountFunction->ReleaseSavepoint();
-
-#ifdef DEBUG
-      MOZ_ASSERT(mDEBUGSavepointCount);
-      mDEBUGSavepointCount--;
-#endif
-    }
+  nsresult rv =
+      ExecuteCachedStatement(NS_LITERAL_CSTRING("RELEASE " SAVEPOINT_CLAUSE));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  return rv;
+  mUpdateRefcountFunction->ReleaseSavepoint();
+
+#ifdef DEBUG
+  MOZ_ASSERT(mDEBUGSavepointCount);
+  mDEBUGSavepointCount--;
+#endif
+
+  return NS_OK;
 }
 
 nsresult DatabaseConnection::RollbackSavepoint() {
@@ -9710,13 +9724,7 @@ nsresult DatabaseConnection::CheckpointInternal(CheckpointMode aMode) {
 
   stmtString.AppendLiteral(");");
 
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(stmtString, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+  const nsresult rv = ExecuteCachedStatement(stmtString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10075,8 +10083,13 @@ DatabaseConnection::CachedStatement::~CachedStatement() {
 
 DatabaseConnection::CachedStatement::operator mozIStorageStatement*() const {
   AssertIsOnConnectionThread();
+  MOZ_ASSERT(mStatement);
 
   return mStatement;
+}
+
+mozIStorageStatement& DatabaseConnection::CachedStatement::operator*() const {
+  return *operator->();
 }
 
 mozIStorageStatement* DatabaseConnection::CachedStatement::operator->() const {
@@ -17870,7 +17883,7 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection* aConnection,
       NS_LITERAL_CSTRING("UPDATE database "
                          "SET last_vacuum_time = :time"
                          ", last_vacuum_size = :size;"),
-                               getter_AddRefs(stmt));
+      getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -18833,43 +18846,38 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
   DatabaseConnection::CachedStatement updateStmt;
-  rv = aConnection->GetCachedStatement(
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_data "
                          "SET index_data_values = :") +
           kStmtParamNameIndexDataValues +
           NS_LITERAL_CSTRING(" WHERE object_store_id = :") +
           kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
           kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
-      &updateStmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [&indexDataValues, indexDataValuesLength, aObjectStoreId,
+       &aObjectStoreKey](mozIStorageStatement& updateStmt) {
+        nsresult rv =
+            indexDataValues
+                ? updateStmt.BindAdoptedBlobByName(
+                      kStmtParamNameIndexDataValues, indexDataValues.release(),
+                      indexDataValuesLength)
+                : updateStmt.BindNullByName(kStmtParamNameIndexDataValues);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  if (indexDataValues) {
-    rv = updateStmt->BindAdoptedBlobByName(kStmtParamNameIndexDataValues,
-                                           indexDataValues.release(),
-                                           indexDataValuesLength);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    rv = updateStmt->BindNullByName(kStmtParamNameIndexDataValues);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
+        rv = updateStmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                        aObjectStoreId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = updateStmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = aObjectStoreKey.BindToStatement(&updateStmt, kStmtParamNameKey);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = aObjectStoreKey.BindToStatement(updateStmt, kStmtParamNameKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = updateStmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21167,21 +21175,20 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
     return rv;
   }
 
-  DatabaseConnection::CachedStatement updateStmt;
-  rv = aConnection->GetCachedStatement(
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING("UPDATE database "
                          "SET version = :version;"),
-      &updateStmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& updateStmt) {
+        nsresult rv =
+            updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = updateStmt->BindInt64ByIndex(0, int64_t(mRequestedVersion));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = updateStmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22527,45 +22534,43 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING(
           "INSERT INTO object_store (id, auto_increment, name, key_path) "
           "VALUES (:id, :auto_increment, :name, :key_path);"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& stmt) {
+        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt64ByIndex(0, mMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindStringByIndex(2, mMetadata.name());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindStringByIndex(2, mMetadata.name());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        if (mMetadata.keyPath().IsValid()) {
+          nsAutoString keyPathSerialization;
+          mMetadata.keyPath().SerializeToString(keyPathSerialization);
 
-  if (mMetadata.keyPath().IsValid()) {
-    nsAutoString keyPathSerialization;
-    mMetadata.keyPath().SerializeToString(keyPathSerialization);
+          rv = stmt.BindStringByIndex(3, keyPathSerialization);
+        } else {
+          rv = stmt.BindNullByIndex(3);
+        }
 
-    rv = stmt->BindStringByIndex(3, keyPathSerialization);
-  } else {
-    rv = stmt->BindNullByIndex(3);
-  }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22643,58 +22648,32 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   if (mIsLastObjectStore) {
     // We can just delete everything if this is the last object store.
-    DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM index_data;"), &stmt);
+    rv = aConnection->ExecuteCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM index_data;"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->Execute();
+    rv = aConnection->ExecuteCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM unique_index_data;"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM unique_index_data;"), &stmt);
+    rv = aConnection->ExecuteCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_data;"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->Execute();
+    rv = aConnection->ExecuteCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_store_index;"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_data;"), &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_store_index;"), &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_store;"), &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
+    rv = aConnection->ExecuteCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_store;"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -22714,64 +22693,59 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       }
 
       // Now clean up the object store index table.
-      DatabaseConnection::CachedStatement stmt;
-      rv = aConnection->GetCachedStatement(
+      // The parameter names are not used, parameters are bound by index only
+      // locally in the same function.
+      rv = aConnection->ExecuteCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM object_store_index "
-                             "WHERE object_store_id = :") +
-              kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(";"),
-          &stmt);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+                             "WHERE object_store_id = :object_store_id;"),
+          [this](mozIStorageStatement& stmt) {
+            nsresult rv =
+                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
 
-      rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                 mMetadata->mCommonMetadata.id());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = stmt->Execute();
+            return NS_OK;
+          });
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
       // We only have to worry about object data if this object store has no
       // indexes.
-      DatabaseConnection::CachedStatement stmt;
-      rv = aConnection->GetCachedStatement(
+      // The parameter names are not used, parameters are bound by index only
+      // locally in the same function.
+      rv = aConnection->ExecuteCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM object_data "
                              "WHERE object_store_id = :object_store_id;"),
-          &stmt);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+          [this](mozIStorageStatement& stmt) {
+            nsresult rv =
+                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
 
-      rv = stmt->BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = stmt->Execute();
+            return NS_OK;
+          });
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(
+    // The parameter names are not used, parameters are bound by index only
+    // locally in the same function.
+    rv = aConnection->ExecuteCachedStatement(
         NS_LITERAL_CSTRING("DELETE FROM object_store "
                            "WHERE id = :object_store_id;"),
-        &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        [this](mozIStorageStatement& stmt) {
+          nsresult rv =
+              stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
-    rv = stmt->BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
+          return NS_OK;
+        });
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -22839,28 +22813,25 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING("UPDATE object_store "
-                                                          "SET name = :name "
-                                                          "WHERE id = :id;"),
-                                       &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv = aConnection->ExecuteCachedStatement(
+      NS_LITERAL_CSTRING("UPDATE object_store "
+                         "SET name = :name "
+                         "WHERE id = :id;"),
+      [this](mozIStorageStatement& stmt) {
+        nsresult rv = stmt.BindStringByIndex(0, mNewName);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindStringByIndex(0, mNewName);
+        rv = stmt.BindInt64ByIndex(1, mId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt64ByIndex(1, mId);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22930,23 +22901,21 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
   DebugOnly<void*> storageConnection = aConnection->GetStorageConnection();
   MOZ_ASSERT(storageConnection);
 
-  DatabaseConnection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  const nsresult rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_data "
                          "SET index_data_values = update_index_data_values "
                          "(key, index_data_values, file_ids, data) "
                          "WHERE object_store_id = :object_store_id;"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& stmt) {
+        nsresult rv = stmt.BindInt64ByIndex(0, mObjectStoreId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt64ByIndex(0, mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23008,66 +22977,62 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING(
           "INSERT INTO object_store_index (id, name, key_path, unique_index, "
           "multientry, object_store_id, locale, "
           "is_auto_locale) "
           "VALUES (:id, :name, :key_path, :unique, :multientry, "
           ":object_store_id, :locale, :is_auto_locale)"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& stmt) {
+        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt64ByIndex(0, mMetadata.id());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindStringByIndex(1, mMetadata.name());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindStringByIndex(1, mMetadata.name());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        nsAutoString keyPathSerialization;
+        mMetadata.keyPath().SerializeToString(keyPathSerialization);
+        rv = stmt.BindStringByIndex(2, keyPathSerialization);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  nsAutoString keyPathSerialization;
-  mMetadata.keyPath().SerializeToString(keyPathSerialization);
-  rv = stmt->BindStringByIndex(2, keyPathSerialization);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindInt64ByIndex(5, mObjectStoreId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt64ByIndex(5, mObjectStoreId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = mMetadata.locale().IsEmpty()
+                 ? stmt.BindNullByIndex(6)
+                 : stmt.BindUTF8StringByIndex(6, mMetadata.locale());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  if (mMetadata.locale().IsEmpty()) {
-    rv = stmt->BindNullByIndex(6);
-  } else {
-    rv = stmt->BindUTF8StringByIndex(6, mMetadata.locale());
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+        rv = stmt.BindInt32ByIndex(7, mMetadata.autoLocale());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindInt32ByIndex(7, mMetadata.autoLocale());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23674,21 +23639,17 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  DatabaseConnection::CachedStatement deleteStmt;
-  rv = aConnection->GetCachedStatement(
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING("DELETE FROM object_store_index "
                          "WHERE id = :index_id;"),
-      &deleteStmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& deleteStmt) {
+        nsresult rv = deleteStmt.BindInt64ByIndex(0, mIndexId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = deleteStmt->BindInt64ByIndex(0, mIndexId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = deleteStmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23757,29 +23718,25 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv = aConnection->ExecuteCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_store_index "
                          "SET name = :name "
                          "WHERE id = :id;"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+      [this](mozIStorageStatement& stmt) {
+        nsresult rv = stmt.BindStringByIndex(0, mNewName);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  rv = stmt->BindStringByIndex(0, mNewName);
+        rv = stmt.BindInt64ByIndex(1, mIndexId);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt64ByIndex(1, mIndexId);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+        return NS_OK;
+      });
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24979,32 +24936,28 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
     GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey,
                                 keyRangeClause);
 
-    DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(
+    rv = aConnection->ExecuteCachedStatement(
         NS_LITERAL_CSTRING("DELETE FROM object_data "
                            "WHERE object_store_id = :") +
             kStmtParamNameObjectStoreId + keyRangeClause +
             NS_LITERAL_CSTRING(";"),
-        &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+        [this](mozIStorageStatement& stmt) {
+          nsresult rv = stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
+                                             mParams.objectStoreId());
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                               mParams.objectStoreId());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+          rv = BindKeyRangeToStatement(mParams.keyRange(), &stmt);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
-    rv = BindKeyRangeToStatement(mParams.keyRange(), stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+          return NS_OK;
+        });
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   rv = autoSave.Commit();
@@ -25056,31 +25009,26 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  if (objectStoreHasIndexes) {
-    rv = DeleteObjectStoreDataTableRowsWithIndexes(
-        aConnection, mParams.objectStoreId(), Nothing());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_data "
-                           "WHERE object_store_id = :object_store_id;"),
-        &stmt);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  rv =
+      objectStoreHasIndexes
+          ? DeleteObjectStoreDataTableRowsWithIndexes(
+                aConnection, mParams.objectStoreId(), Nothing())
+          : aConnection->ExecuteCachedStatement(
+                NS_LITERAL_CSTRING("DELETE FROM object_data "
+                                   "WHERE object_store_id = :object_store_id;"),
+                [this](mozIStorageStatement& stmt) {
+                  nsresult rv =
+                      stmt.BindInt64ByIndex(0, mParams.objectStoreId());
+                  if (NS_WARN_IF(NS_FAILED(rv))) {
+                    return rv;
+                  }
 
-    rv = stmt->BindInt64ByIndex(0, mParams.objectStoreId());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+                  return NS_OK;
+                });
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   rv = autoSave.Commit();
