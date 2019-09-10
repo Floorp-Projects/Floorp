@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 const EXT_SEARCH_PREFIX = "resource://search-extensions/";
@@ -57,6 +58,7 @@ class SearchEngineSelector {
       throw new Error("region and locale parameters required");
     }
     log(`fetchEngineConfiguration ${region}:${locale}`);
+    let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let engines = [];
     for (let config of this.configuration) {
       const appliesTo = config.appliesTo || [];
@@ -67,6 +69,9 @@ class SearchEngineSelector {
         let excluded =
           "excluded" in section &&
           this._isInSection(region, locale, section.excluded);
+        if ("cohort" in section && cohort != section.cohort) {
+          return false;
+        }
         return included && !excluded;
       });
 
