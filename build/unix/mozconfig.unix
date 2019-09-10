@@ -30,7 +30,7 @@ else
             if [ -n "$MOZ_PGO_PROFILE_USE" ]; then
                 ac_add_options --enable-profile-use=cross
                 ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
-                ac_add_options --with-pgo-profile-path=/builds/worker/fetches
+                ac_add_options --with-pgo-profile-path=/builds/worker/fetches/merged.profdata
             fi
         fi
         export LLVM_PROFDATA="$MOZ_FETCHES_DIR/clang/bin/llvm-profdata"
