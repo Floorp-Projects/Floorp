@@ -335,7 +335,7 @@ describe("ObjectInspector - renders", () => {
       autoExpandDepth: 1,
     });
 
-    await waitForLoadedProperties(store, ["Symbol(Block)"]);
+    await waitForLoadedProperties(store, ["Block"]);
     wrapper.update();
 
     const blockElementNode = wrapper.find(".node").first();
