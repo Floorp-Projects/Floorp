@@ -371,7 +371,12 @@ function semanticsRule(accessible) {
     // Ignore text leafs.
     accessible.role === Ci.nsIAccessibleRole.ROLE_TEXT_LEAF ||
     // Ignore accessibles with no accessible actions.
-    accessible.actionCount === 0
+    accessible.actionCount === 0 ||
+    // Ignore labels that have a label for relation with their target because
+    // they are clickable.
+    (accessible.role === Ci.nsIAccessibleRole.ROLE_LABEL &&
+      accessible.getRelationByType(Ci.nsIAccessibleRelation.RELATION_LABEL_FOR)
+        .targetsCount > 0)
   ) {
     return null;
   }
