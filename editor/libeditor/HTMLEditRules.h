@@ -210,16 +210,6 @@ class HTMLEditRules : public TextEditRules {
   void CheckInterlinePosition();
 
   /**
-   * AdjustSelection() may adjust Selection range to nearest editable content.
-   * Despite of the name, this may change the DOM tree.  If it needs to create
-   * a <br> to put caret, this tries to create a <br> element.
-   *
-   * @param aAction     Maybe used to look for a good point to put caret.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  AdjustSelection(nsIEditor::EDirection aAction);
-
-  /**
    * RemoveEmptyNodesInChangedRange() removes all empty nodes in
    * TopLevelEditSubActionData::mChangedRange.  However, if mail-cite node has
    * only a <br> element, the node will be removed but <br> element is moved

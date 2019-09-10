@@ -618,7 +618,8 @@ nsresult HTMLEditRules::AfterEditInner() {
     // did it.
     if (!HTMLEditorRef()
              .TopLevelEditSubActionDataRef()
-             .mDidDeleteEmptyParentBlocks) {
+             .mDidDeleteEmptyParentBlocks &&
+        SelectionRefPtr()->IsCollapsed()) {
       switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
         case EditSubAction::eInsertText:
         case EditSubAction::eInsertTextComingFromIME:
@@ -627,8 +628,13 @@ nsresult HTMLEditRules::AfterEditInner() {
         case EditSubAction::eInsertParagraphSeparator:
         case EditSubAction::ePasteHTMLContent:
         case EditSubAction::eInsertHTMLSource:
-          rv = AdjustSelection(
-              HTMLEditorRef().GetDirectionOfTopLevelEditSubAction());
+          // XXX AdjustCaretPositionAndEnsurePaddingBRElement() intentionally
+          //     does not create padding `<br>` element for empty editor.
+          //     Investigate which is better that whether this should does it
+          //     or wait MaybeCreatePaddingBRElementForEmptyEditor().
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .AdjustCaretPositionAndEnsurePaddingBRElement(
+                       HTMLEditorRef().GetDirectionOfTopLevelEditSubAction());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -9708,70 +9714,62 @@ void HTMLEditRules::CheckInterlinePosition() {
   }
 }
 
-nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
+    nsIEditor::EDirection aDirectionAndAmount) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
 
-  // if the selection isn't collapsed, do nothing.
-  // moose: one thing to do instead is check for the case of
-  // only a single break selected, and collapse it.  Good thing?  Beats me.
-  if (!SelectionRefPtr()->IsCollapsed()) {
-    return NS_OK;
-  }
-
-  // get the (collapsed) selection location
   EditorDOMPoint point(EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!point.IsSet())) {
     return NS_ERROR_FAILURE;
   }
 
-  // are we in an editable node?
-  while (!HTMLEditorRef().IsEditable(point.GetContainer())) {
-    // scan up the tree until we find an editable place to be
+  // If selection start is not editable, climb up the tree until editable one.
+  while (!IsEditable(point.GetContainer())) {
     point.Set(point.GetContainer());
     if (NS_WARN_IF(!point.IsSet())) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  // make sure we aren't in an empty block - user will see no cursor.  If this
-  // is happening, put a <br> in the block if allowed.
-  RefPtr<Element> theblock = HTMLEditorRef().GetBlock(*point.GetContainer());
-
-  if (theblock && HTMLEditorRef().IsEditable(theblock)) {
-    bool isEmptyNode;
-    nsresult rv =
-        HTMLEditorRef().IsEmptyNode(theblock, &isEmptyNode, false, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    // check if br can go into the destination node
-    if (isEmptyNode &&
-        HTMLEditorRef().CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
-      Element* rootElement = HTMLEditorRef().GetRoot();
-      if (NS_WARN_IF(!rootElement)) {
-        return NS_ERROR_FAILURE;
+  // If caret is in empty block element, we need to insert a `<br>` element
+  // because the block should have one-line height.
+  if (RefPtr<Element> blockElement = GetBlock(*point.GetContainer())) {
+    if (IsEditable(blockElement)) {
+      bool isEmptyNode;
+      nsresult rv = IsEmptyNode(blockElement, &isEmptyNode, false, false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
-      if (point.GetContainer() == rootElement) {
-        // Our root node is completely empty. Don't add a <br> here.
-        // AfterEditInner() will add one for us when it calls
-        // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor()!
+      if (isEmptyNode && CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
+        Element* bodyOrDocumentElement = GetRoot();
+        if (NS_WARN_IF(!bodyOrDocumentElement)) {
+          return NS_ERROR_FAILURE;
+        }
+        if (point.GetContainer() == bodyOrDocumentElement) {
+          // Our root node is completely empty. Don't add a <br> here.
+          // AfterEditInner() will add one for us when it calls
+          // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor().
+          // XXX This kind of dependency between methods makes us spaghetti.
+          //     Let's handle it here later.
+          // XXX This looks odd check.  If active editing host is not a
+          //     `<body>`, what are we doing?
+          return NS_OK;
+        }
+        CreateElementResult createPaddingBRResult =
+            InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
+        if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+          return createPaddingBRResult.Rv();
+        }
         return NS_OK;
       }
-
-      // we know we can skip the rest of this routine given the cirumstance
-      CreateElementResult createPaddingBRResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
-      if (NS_WARN_IF(createPaddingBRResult.Failed())) {
-        return createPaddingBRResult.Rv();
-      }
-      return NS_OK;
     }
   }
 
-  // are we in a text node?
+  // XXX Perhaps, we should do something if we're in a data node but not
+  //     a text node.
   if (point.IsInTextNode()) {
-    return NS_OK;  // we LIKE it when we are in a text node.  that RULZ
+    return NS_OK;
   }
 
   // Do we need to insert a padding <br> element for empty last line?  We do
@@ -9780,96 +9778,107 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
   // 2) prior node is a br AND
   // 3) that br is not visible
 
-  nsCOMPtr<nsIContent> nearNode =
-      HTMLEditorRef().GetPreviousEditableHTMLNode(point);
-  if (nearNode) {
-    // is nearNode also a descendant of same block?
-    RefPtr<Element> block = HTMLEditorRef().GetBlock(*point.GetContainer());
-    RefPtr<Element> nearBlock = HTMLEditorRef().GetBlockNodeParent(nearNode);
-    if (block && block == nearBlock) {
-      if (nearNode && TextEditUtils::IsBreak(nearNode)) {
-        if (!HTMLEditorRef().IsVisibleBRElement(nearNode)) {
-          // need to insert special moz BR. Why?  Because if we don't
-          // the user will see no new line for the break.  Also, things
-          // like table cells won't grow in height.
-          CreateElementResult createPaddingBRResult =
-              MOZ_KnownLive(HTMLEditorRef())
-                  .InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
-          if (NS_WARN_IF(createPaddingBRResult.Failed())) {
-            return createPaddingBRResult.Rv();
-          }
-          point.Set(createPaddingBRResult.GetNewNode());
-          // Selection stays *before* padding <br> element for empty last
-          // line, sticking to it.
-          ErrorResult error;
-          SelectionRefPtr()->SetInterlinePosition(true, error);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            error.SuppressException();
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          NS_WARNING_ASSERTION(!error.Failed(),
+  if (nsCOMPtr<nsIContent> previousEditableContent =
+          GetPreviousEditableHTMLNode(point)) {
+    RefPtr<Element> blockElementAtCaret = GetBlock(*point.GetContainer());
+    RefPtr<Element> blockElementParentAtPreviousEditableContent =
+        GetBlockNodeParent(previousEditableContent);
+    // If previous editable content of caret is in same block and a `<br>`
+    // element, we need to adjust interline position.
+    if (blockElementAtCaret &&
+        blockElementAtCaret == blockElementParentAtPreviousEditableContent &&
+        previousEditableContent &&
+        TextEditUtils::IsBreak(previousEditableContent)) {
+      // If it's an invisible `<br>` element, we need to insert a padding
+      // `<br>` element for making empty line have one-line height.
+      if (!IsVisibleBRElement(previousEditableContent)) {
+        CreateElementResult createPaddingBRResult =
+            InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
+        if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+          return createPaddingBRResult.Rv();
+        }
+        point.Set(createPaddingBRResult.GetNewNode());
+        // Selection stays *before* padding `<br>` element for empty last
+        // line, sticking to it.
+        IgnoredErrorResult ignoredError;
+        SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                             "Failed to set interline position");
+        ErrorResult error;
+        SelectionRefPtr()->Collapse(point, error);
+        if (NS_WARN_IF(Destroyed())) {
+          error.SuppressException();
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+      }
+      // If it's a visible `<br>` element and next editable content is a
+      // padding `<br>` element, we need to set interline position.
+      else if (nsIContent* nextEditableContentInBlock =
+                   GetNextEditableHTMLNodeInBlock(*previousEditableContent)) {
+        if (EditorBase::IsPaddingBRElementForEmptyLastLine(
+                *nextEditableContentInBlock)) {
+          // Make it stick to the padding `<br>` element so that it will be
+          // on blank line.
+          IgnoredErrorResult ignoredError;
+          SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+          NS_WARNING_ASSERTION(!ignoredError.Failed(),
                                "Failed to set interline position");
-          error = NS_OK;
-          SelectionRefPtr()->Collapse(point, error);
-          if (NS_WARN_IF(!CanHandleEditAction())) {
-            error.SuppressException();
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(error.Failed())) {
-            return error.StealNSResult();
-          }
-        } else {
-          nsCOMPtr<nsIContent> nextNode =
-              HTMLEditorRef().GetNextEditableHTMLNodeInBlock(*nearNode);
-          if (nextNode &&
-              EditorBase::IsPaddingBRElementForEmptyLastLine(*nextNode)) {
-            // Selection between a <br> element and a padding <br> element for
-            // empty last line.  Make it stick to the padding <br> element so
-            // that it will be on blank line.
-            IgnoredErrorResult ignoredError;
-            SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
-            NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                                 "Failed to set interline position");
-          }
         }
       }
     }
   }
 
-  // we aren't in a textnode: are we adjacent to text or a break or an image?
-  nearNode = HTMLEditorRef().GetPreviousEditableHTMLNodeInBlock(point);
-  if (nearNode &&
-      (TextEditUtils::IsBreak(nearNode) || EditorBase::IsTextNode(nearNode) ||
-       HTMLEditUtils::IsImage(nearNode) ||
-       nearNode->IsHTMLElement(nsGkAtoms::hr))) {
-    // this is a good place for the caret to be
-    return NS_OK;
+  // If previous editable content in same block is `<br>`, text node, `<img>`
+  //  or `<hr>`, current caret position is fine.
+  if (nsIContent* previousEditableContentInBlock =
+          GetPreviousEditableHTMLNodeInBlock(point)) {
+    if (TextEditUtils::IsBreak(previousEditableContentInBlock) ||
+        EditorBase::IsTextNode(previousEditableContentInBlock) ||
+        HTMLEditUtils::IsImage(previousEditableContentInBlock) ||
+        previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::hr)) {
+      return NS_OK;
+    }
   }
-  nearNode = HTMLEditorRef().GetNextEditableHTMLNodeInBlock(point);
-  if (nearNode &&
-      (TextEditUtils::IsBreak(nearNode) || EditorBase::IsTextNode(nearNode) ||
-       nearNode->IsAnyOfHTMLElements(nsGkAtoms::img, nsGkAtoms::hr))) {
-    return NS_OK;  // this is a good place for the caret to be
+  // If next editable content in same block is `<br>`, text node, `<img>` or
+  // `<hr>`, current caret position is fine.
+  if (nsIContent* nextEditableContentInBlock =
+          GetNextEditableHTMLNodeInBlock(point)) {
+    if (TextEditUtils::IsBreak(nextEditableContentInBlock) ||
+        EditorBase::IsTextNode(nextEditableContentInBlock) ||
+        nextEditableContentInBlock->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                                        nsGkAtoms::hr)) {
+      return NS_OK;
+    }
   }
 
-  // look for a nearby text node.
-  // prefer the correct direction.
-  nearNode = HTMLEditorRef().FindNearEditableContent(point, aAction);
-  if (!nearNode) {
+  // Otherwise, look for a near editable content towards edit action direction.
+
+  // If there is no editable content, keep current caret position.
+  nsIContent* nearEditableContent =
+      FindNearEditableContent(point, aDirectionAndAmount);
+  if (!nearEditableContent) {
     return NS_OK;
   }
 
-  EditorDOMPoint pt = HTMLEditorRef().GetGoodCaretPointFor(*nearNode, aAction);
+  EditorDOMPoint pointToPutCaret =
+      GetGoodCaretPointFor(*nearEditableContent, aDirectionAndAmount);
+  if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
   ErrorResult error;
-  SelectionRefPtr()->Collapse(pt, error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  SelectionRefPtr()->Collapse(pointToPutCaret, error);
+  if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+  return error.StealNSResult();
 }
 
 template <typename PT, typename CT>

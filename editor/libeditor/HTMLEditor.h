@@ -2592,6 +2592,17 @@ class HTMLEditor final : public TextEditor,
   nsIContent* FindNearEditableContent(const EditorDOMPointBase<PT, CT>& aPoint,
                                       nsIEditor::EDirection aDirection);
 
+  /**
+   * AdjustCaretPositionAndEnsurePaddingBRElement() may adjust caret
+   * position to nearest editable content and if padding `<br>` element is
+   * necessary at caret position, this creates it.
+   *
+   * @param aDirectionAndAmount Direction of the edit action.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AdjustCaretPositionAndEnsurePaddingBRElement(
+      nsIEditor::EDirection aDirectionAndAmount);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
