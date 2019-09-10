@@ -923,6 +923,13 @@ add_task(function test_common_initialize() {
     aResponse.write(TEST_DATA_SHORT);
   });
 
+  gHttpServer.registerPathHandler("/redirect", function(aRequest, aResponse) {
+    aResponse.setStatusLine("1.1", 301, "Moved Permanently");
+    aResponse.setHeader("Location", httpUrl("busy.txt"), false);
+    aResponse.setHeader("Content-Type", "text/javascript", false);
+    aResponse.setHeader("Content-Length", "0", false);
+  });
+
   // This URL will emulate being blocked by Windows Parental controls
   gHttpServer.registerPathHandler("/parentalblocked.zip", function(
     aRequest,
