@@ -59,10 +59,8 @@
 }
 
 #urlbar-contextual-tip {
-  font-size: 13px;
   align-items: center;
   display: flex;
-
   padding-top: 24px;
   padding-bottom: 24px;
   padding-inline-start: calc(@urlbarViewInlineStartPadding@);
@@ -80,9 +78,9 @@
 }
 
 #urlbar-contextual-tip-button {
-  height: 32px;
-  width: 128px;
-  font-size: 11px;
+  height: 2.3em;
+  width: 9.15em;
+  font-size: inherit;
   border: none;
   border-radius: 2px;
   color: white;
