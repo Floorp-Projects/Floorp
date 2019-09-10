@@ -44,8 +44,8 @@ var chars = {
 };
 
 var wsmap = {
-  false: { str: " NOT", "text-decoration": "none", "visibility": "visible" },
-  true: { str: "", "text-decoration": "underline", "visibility": "hidden" }
+  false: { str: " NOT", "text-decoration-line": "none", "visibility": "visible" },
+  true: { str: "", "text-decoration-line": "underline", "visibility": "hidden" }
 };
 
 for (var char in chars) {
@@ -53,7 +53,7 @@ for (var char in chars) {
   var mapent = wsmap[is_whitespace];
   div.setAttribute("class", "classvalue" + String.fromCharCode(char) + "b")
   div.setAttribute("title", "a" + String.fromCharCode(char) + "titlevalue")
-  for (var prop of ["text-decoration", "visibility"]) {
+  for (var prop of ["text-decoration-line", "visibility"]) {
     is(cs.getPropertyValue(prop), mapent[prop],
        "Character " + char + " should" + mapent.str +
        " be treated as whitespace ("
