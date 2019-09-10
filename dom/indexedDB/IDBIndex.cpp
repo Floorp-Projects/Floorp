@@ -455,28 +455,12 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
 
   IDBCursor::Direction direction = IDBCursor::ConvertDirection(aDirection);
 
-  OpenCursorParams params;
-  if (aKeysOnly) {
-    IndexOpenKeyCursorParams openParams;
-    openParams.commonIndexParams().commonParams().objectStoreId() =
-        objectStoreId;
-    openParams.commonIndexParams().indexId() = indexId;
-    openParams.commonIndexParams().commonParams().optionalKeyRange() =
-        std::move(optionalKeyRange);
-    openParams.commonIndexParams().commonParams().direction() = direction;
+  const CommonIndexOpenCursorParams commonIndexParams = {
+      {objectStoreId, std::move(optionalKeyRange), direction}, indexId};
 
-    params = std::move(openParams);
-  } else {
-    IndexOpenCursorParams openParams;
-    openParams.commonIndexParams().commonParams().objectStoreId() =
-        objectStoreId;
-    openParams.commonIndexParams().indexId() = indexId;
-    openParams.commonIndexParams().commonParams().optionalKeyRange() =
-        std::move(optionalKeyRange);
-    openParams.commonIndexParams().commonParams().direction() = direction;
-
-    params = std::move(openParams);
-  }
+  const auto params =
+      aKeysOnly ? OpenCursorParams{IndexOpenKeyCursorParams{commonIndexParams}}
+                : OpenCursorParams{IndexOpenCursorParams{commonIndexParams}};
 
   RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
