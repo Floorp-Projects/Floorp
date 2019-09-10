@@ -94,12 +94,6 @@ const threadSpec = generateActorSpec({
         skip: Arg(0, "json"),
       },
     },
-    threadGrips: {
-      request: {
-        actors: Arg(0, "array:string"),
-      },
-      response: RetVal("json"),
-    },
     dumpThread: {
       request: {},
       response: RetVal("json"),
