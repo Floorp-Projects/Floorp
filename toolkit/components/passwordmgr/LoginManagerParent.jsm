@@ -603,6 +603,10 @@ this.LoginManagerParent = {
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
+    let autoSavedStorageGUID = "";
+    if (generatedPW && generatedPW.storageGUID) {
+      autoSavedStorageGUID = generatedPW.storageGUID;
+    }
 
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
@@ -622,15 +626,6 @@ this.LoginManagerParent = {
           return;
         }
 
-        let autoSavedStorageGUID = "";
-        if (
-          generatedPW &&
-          generatedPW.storageGUID == oldLogin.guid &&
-          generatedPW.value == formLogin.password
-        ) {
-          // this login has a generated password, auto-saved in this session
-          autoSavedStorageGUID = generatedPW.storageGUID;
-        }
         formLogin.username = oldLogin.username;
         formLogin.usernameField = oldLogin.usernameField;
 
@@ -690,15 +685,6 @@ this.LoginManagerParent = {
 
     if (existingLogin) {
       log("Found an existing login matching this form submission");
-      let autoSavedStorageGUID = "";
-      if (
-        generatedPW &&
-        generatedPW.storageGUID == existingLogin.guid &&
-        generatedPW.value == formLogin.password
-      ) {
-        // this login has a generated password, auto-saved in this session
-        autoSavedStorageGUID = generatedPW.storageGUID;
-      }
 
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
