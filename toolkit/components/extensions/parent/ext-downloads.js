@@ -774,8 +774,14 @@ this.downloads = class extends ExtensionAPI {
               const source = {
                 url: options.url,
                 isPrivate: options.incognito,
-                allowHttpStatus,
               };
+
+              // Unless the API user explicitly wants errors ignored,
+              // set the allowHttpStatus callback, which will instruct
+              // DownloadCore to cancel downloads on HTTP errors.
+              if (!options.allowHttpErrors) {
+                source.allowHttpStatus = allowHttpStatus;
+              }
 
               if (options.method || options.headers || options.body) {
                 source.adjustChannel = adjustChannel;
