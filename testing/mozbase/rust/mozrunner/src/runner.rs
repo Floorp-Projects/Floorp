@@ -334,13 +334,10 @@ pub mod platform {
             if let Ok(plist) = Value::from_file(&info_plist) {
                 if let Some(dict) = plist.as_dictionary() {
                     if let Some(binary_file) = dict.get("CFBundleExecutable") {
-                        match binary_file {
-                            Value::String(s) => {
-                                path.push("Contents");
-                                path.push("MacOS");
-                                path.push(s);
-                            }
-                            _ => {}
+                        if let Value::String(s) = binary_file {
+                            path.push("Contents");
+                            path.push("MacOS");
+                            path.push(s);
                         }
                     }
                 }
