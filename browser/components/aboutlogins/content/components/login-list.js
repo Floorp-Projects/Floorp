@@ -423,7 +423,9 @@ export default class LoginList extends HTMLElement {
 
   _handleKeyboardNav(event) {
     if (
-      this._createLoginButton == this.shadowRoot.activeElement &&
+      (this._createLoginButton == this.shadowRoot.activeElement ||
+        (this._list == this.shadowRoot.activeElement &&
+          this._createLoginButton.disabled)) &&
       event.key == "Tab"
     ) {
       // Bug 1562716: Pressing Tab from the create-login-button cycles back to the
