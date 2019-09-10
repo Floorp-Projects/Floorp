@@ -70,8 +70,6 @@ class TextureStorage : angle::NonCopyable
     virtual angle::Result useLevelZeroWorkaroundTexture(const gl::Context *context,
                                                         bool useLevelZeroTexture);
 
-    virtual void invalidateTextures() {}
-
   protected:
     const angle::Subject *mSubject;
 };

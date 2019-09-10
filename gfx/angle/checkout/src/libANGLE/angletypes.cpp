@@ -59,11 +59,6 @@ BlendState::BlendState(const BlendState &other)
     memcpy(this, &other, sizeof(BlendState));
 }
 
-bool BlendState::allChannelsMasked() const
-{
-    return !colorMaskRed && !colorMaskGreen && !colorMaskBlue && !colorMaskAlpha;
-}
-
 bool operator==(const BlendState &a, const BlendState &b)
 {
     return memcmp(&a, &b, sizeof(BlendState)) == 0;
@@ -241,30 +236,20 @@ static void MinMax(int a, int b, int *minimum, int *maximum)
     }
 }
 
-Rectangle Rectangle::flip(bool flipX, bool flipY) const
-{
-    Rectangle flipped = *this;
-    if (flipX)
-    {
-        flipped.x     = flipped.x + flipped.width;
-        flipped.width = -flipped.width;
-    }
-    if (flipY)
-    {
-        flipped.y      = flipped.y + flipped.height;
-        flipped.height = -flipped.height;
-    }
-    return flipped;
-}
-
 Rectangle Rectangle::removeReversal() const
 {
-    return flip(isReversedX(), isReversedY());
-}
-
-bool Rectangle::encloses(const gl::Rectangle &inside) const
-{
-    return x0() <= inside.x0() && y0() <= inside.y0() && x1() >= inside.x1() && y1() >= inside.y1();
+    Rectangle unreversed = *this;
+    if (isReversedX())
+    {
+        unreversed.x     = unreversed.x + unreversed.width;
+        unreversed.width = -unreversed.width;
+    }
+    if (isReversedY())
+    {
+        unreversed.y      = unreversed.y + unreversed.height;
+        unreversed.height = -unreversed.height;
+    }
+    return unreversed;
 }
 
 bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *intersection)

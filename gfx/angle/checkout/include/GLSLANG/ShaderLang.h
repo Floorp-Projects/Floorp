@@ -26,7 +26,7 @@
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 209
+#define ANGLE_SH_VERSION 205
 
 enum ShShaderSpec
 {
@@ -38,8 +38,6 @@ enum ShShaderSpec
 
     SH_GLES3_1_SPEC,
     SH_WEBGL3_SPEC,
-
-    SH_GL3_3_SPEC,
 };
 
 enum ShShaderOutput
@@ -276,16 +274,6 @@ const ShCompileOptions SH_EMULATE_GL_DRAW_ID = UINT64_C(1) << 40;
 // another webpage/application.
 const ShCompileOptions SH_INIT_SHARED_VARIABLES = UINT64_C(1) << 41;
 
-// Forces the value returned from an atomic operations to be always be resolved. This is targeted to
-// workaround a bug in NVIDIA D3D driver where the return value from
-// RWByteAddressBuffer.InterlockedAdd does not get resolved when used in the .yzw components of a
-// RWByteAddressBuffer.Store operation. Only has an effect on HLSL translation.
-// http://anglebug.com/3246
-const ShCompileOptions SH_FORCE_ATOMIC_VALUE_RESOLUTION = UINT64_C(1) << 42;
-
-// Rewrite gl_BaseVertex and gl_BaseInstance as uniform int
-const ShCompileOptions SH_EMULATE_GL_BASE_VERTEX_BASE_INSTANCE = UINT64_C(1) << 43;
-
 // Defines alternate strategies for implementing array index clamping.
 enum ShArrayIndexClampingStrategy
 {
@@ -331,15 +319,12 @@ struct ShBuiltInResources
     int EXT_shader_framebuffer_fetch;
     int NV_shader_framebuffer_fetch;
     int ARM_shader_framebuffer_fetch;
-    int OVR_multiview;
     int OVR_multiview2;
     int EXT_YUV_target;
     int EXT_geometry_shader;
     int OES_texture_storage_multisample_2d_array;
-    int OES_texture_3D;
     int ANGLE_texture_multisample;
     int ANGLE_multi_draw;
-    int ANGLE_base_vertex_base_instance;
 
     // Set to 1 to enable replacing GL_EXT_draw_buffers #extension directives
     // with GL_NV_draw_buffers in ESSL output. This flag can be used to emulate
@@ -671,14 +656,6 @@ int GetGeometryShaderMaxVertices(const ShHandle handle);
 inline bool IsWebGLBasedSpec(ShShaderSpec spec)
 {
     return (spec == SH_WEBGL_SPEC || spec == SH_WEBGL2_SPEC || spec == SH_WEBGL3_SPEC);
-}
-
-//
-// Helper function to identify DesktopGL specs
-//
-inline bool IsDesktopGLSpec(ShShaderSpec spec)
-{
-    return spec == SH_GL3_3_SPEC;
 }
 }  // namespace sh
 

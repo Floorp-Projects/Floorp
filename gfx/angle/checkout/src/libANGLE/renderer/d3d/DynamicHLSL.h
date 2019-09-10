@@ -80,7 +80,7 @@ struct PixelShaderOutputVariable
     std::string name;
     std::string source;
     size_t outputLocation = 0;
-    size_t outputIndex    = 0;
+    size_t outputIndex = 0;
 };
 
 struct BuiltinVarying final : private angle::NonCopyable

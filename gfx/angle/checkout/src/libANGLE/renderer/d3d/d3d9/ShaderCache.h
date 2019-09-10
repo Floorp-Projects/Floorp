@@ -36,7 +36,7 @@ class ShaderCache : angle::NonCopyable
 
     void initialize(IDirect3DDevice9 *device) { mDevice = device; }
 
-    angle::Result create(d3d::Context *context,
+    angle::Result create(Context9 *context9,
                          const DWORD *function,
                          size_t length,
                          ShaderObject **outShaderObject)
@@ -54,7 +54,7 @@ class ShaderCache : angle::NonCopyable
 
         ShaderObject *shader;
         HRESULT result = createShader(function, &shader);
-        ANGLE_TRY_HR(context, result, "Failed to create shader");
+        ANGLE_TRY_HR(context9, result, "Failed to create shader");
 
         // Random eviction policy.
         if (mMap.size() >= kMaxMapSize)

@@ -296,7 +296,6 @@ class TCompiler : public TShHandleBase
 TCompiler *ConstructCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output);
 void DeleteCompiler(TCompiler *);
 
-void EmitWorkGroupSizeGLSL(const TCompiler &, TInfoSinkBase &sink);
 void EmitMultiviewGLSL(const TCompiler &, const ShCompileOptions &, TBehavior, TInfoSinkBase &sink);
 
 }  // namespace sh

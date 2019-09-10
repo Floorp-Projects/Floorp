@@ -69,7 +69,7 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
     if (mask & GL_DEPTH_BUFFER_BIT)
     {
         if (state.getDepthStencilState().depthMask &&
-            framebufferObject->getDepthAttachment() != nullptr)
+            framebufferObject->getDepthbuffer() != nullptr)
         {
             clearParams.clearDepth = true;
         }
@@ -77,8 +77,8 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
 
     if (mask & GL_STENCIL_BUFFER_BIT)
     {
-        if (framebufferObject->getStencilAttachment() != nullptr &&
-            framebufferObject->getStencilAttachment()->getStencilSize() > 0)
+        if (framebufferObject->getStencilbuffer() != nullptr &&
+            framebufferObject->getStencilbuffer()->getStencilSize() > 0)
         {
             clearParams.clearStencil = true;
         }
@@ -356,7 +356,7 @@ const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl:
 
     const auto &colorAttachments = mState.getColorAttachments();
     const auto &drawBufferStates = mState.getDrawBufferStates();
-    const auto &features         = mRenderer->getFeatures();
+    const auto &workarounds      = mRenderer->getWorkarounds();
 
     for (size_t attachmentIndex = 0; attachmentIndex < colorAttachments.size(); ++attachmentIndex)
     {
@@ -370,7 +370,7 @@ const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl:
                    drawBufferState == (GL_COLOR_ATTACHMENT0_EXT + attachmentIndex));
             colorAttachmentsForRender.push_back(&colorAttachment);
         }
-        else if (!features.mrtPerfWorkaround.enabled)
+        else if (!workarounds.mrtPerfWorkaround)
         {
             colorAttachmentsForRender.push_back(nullptr);
         }
@@ -379,7 +379,7 @@ const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl:
     // When rendering with no render target on D3D, two bugs lead to incorrect behavior on Intel
     // drivers < 4815. The rendering samples always pass neglecting discard statements in pixel
     // shader. We add a dummy texture as render target in such case.
-    if (mRenderer->getFeatures().addDummyTextureNoRenderTarget.enabled &&
+    if (mRenderer->getWorkarounds().addDummyTextureNoRenderTarget &&
         colorAttachmentsForRender.empty() && activeProgramOutputs.any())
     {
         static_assert(static_cast<size_t>(activeProgramOutputs.size()) <= 32,

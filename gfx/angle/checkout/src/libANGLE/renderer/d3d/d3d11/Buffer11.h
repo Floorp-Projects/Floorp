@@ -75,7 +75,6 @@ class Buffer11 : public BufferD3D
                                  GLsizeiptr size,
                                  d3d11::UnorderedAccessView **uavOut);
 
-    angle::Result markRawBufferUsage(const gl::Context *context);
     bool isMapped() const { return mMappedStorage != nullptr; }
     angle::Result packPixels(const gl::Context *context,
                              const gl::FramebufferAttachment &readAttachment,
@@ -130,7 +129,6 @@ class Buffer11 : public BufferD3D
     };
 
     void markBufferUsage(BufferUsage usage);
-    angle::Result markBufferUsage(const gl::Context *context, BufferUsage usage);
     angle::Result garbageCollection(const gl::Context *context, BufferUsage currentUsage);
 
     angle::Result updateBufferStorage(const gl::Context *context,

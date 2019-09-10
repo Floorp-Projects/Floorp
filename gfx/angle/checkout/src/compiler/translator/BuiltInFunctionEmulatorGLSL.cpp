@@ -5,7 +5,6 @@
 //
 
 #include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
-
 #include "angle_gl.h"
 #include "compiler/translator/BuiltInFunctionEmulator.h"
 #include "compiler/translator/VersionGLSL.h"
@@ -88,7 +87,7 @@ void InitBuiltInAtanFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *
     };
     for (int dim = 2; dim <= 4; ++dim)
     {
-        std::stringstream ss = sh::InitializeStream<std::stringstream>();
+        std::stringstream ss;
         ss << "emu_precision vec" << dim << " atan_emu(emu_precision vec" << dim
            << " y, emu_precision vec" << dim << " x)\n"
            << "{\n"
