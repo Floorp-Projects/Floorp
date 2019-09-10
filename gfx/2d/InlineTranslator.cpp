@@ -18,6 +18,9 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gfx {
 
+InlineTranslator::InlineTranslator()
+    : mFontContext(nullptr) {}
+
 InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
     : mBaseDT(aDT), mFontContext(aFontContext) {}
 
@@ -101,6 +104,8 @@ bool InlineTranslator::TranslateRecording(char* aData, size_t aLen) {
 already_AddRefed<DrawTarget> InlineTranslator::CreateDrawTarget(
     ReferencePtr aRefPtr, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
+  MOZ_ASSERT(mBaseDT, "mBaseDT has not been initialized.");
+
   RefPtr<DrawTarget> drawTarget = mBaseDT;
   AddDrawTarget(aRefPtr, drawTarget);
   return drawTarget.forget();

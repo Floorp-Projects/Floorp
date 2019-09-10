@@ -124,8 +124,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
                     MakeUnique<RingBufferWriterServices>(this));
 
     if (CanSend()) {
-      Unused << SendCreateTranslator(mTextureType, handle, readerSem,
-                                     writerSem);
+      Unused << SendInitTranslator(mTextureType, handle, readerSem, writerSem);
     }
   }
 
