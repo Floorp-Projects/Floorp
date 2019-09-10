@@ -34,6 +34,10 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+let getBoundsWithoutFlushing = element =>
+  element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
+let px = number => number.toFixed(2) + "px";
+
 /**
  * Represents the urlbar <textbox>.
  * Also forwards important textbox properties and methods.
@@ -81,6 +85,7 @@ class UrlbarInput {
     this.megabar = UrlbarPrefs.get("megabar");
     if (this.megabar) {
       this.textbox.classList.add("megabar");
+      this.textbox.parentNode.classList.add("megabar");
     }
 
     this.controller =
@@ -201,14 +206,14 @@ class UrlbarInput {
 
     this.dropmarker.addEventListener("mousedown", this);
 
-    this.window.addEventListener("resize", this);
-
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
     this.view.panel.addEventListener("command", this, true);
 
     this._copyCutController = new CopyCutController(this);
     this.inputField.controllers.insertControllerAt(0, this._copyCutController);
+
+    this.initLayoutBreakout();
 
     this._initPasteAndGo();
 
@@ -232,7 +237,6 @@ class UrlbarInput {
       this.removeEventListener(name, this);
     }
     this.dropmarker.removeEventListener("mousedown", this);
-    this.window.removeEventListener("resize", this);
 
     this.view.panel.remove();
     this.endLayoutBreakout(true);
@@ -868,10 +872,20 @@ class UrlbarInput {
     );
   }
 
-  startLayoutBreakout() {
+  async initLayoutBreakout() {
+    if (!this.megabar) {
+      return;
+    }
+    this.removeAttribute("breakout");
+    await this._updateLayoutBreakoutDimensions();
+    this.setAttribute("breakout", "true");
+    this.startLayoutBreakout();
+  }
+
+  async startLayoutBreakout() {
     if (
-      this.hasAttribute("breakout") ||
-      !this.megabar ||
+      !this.hasAttribute("breakout") ||
+      this.hasAttribute("breakout-extend") ||
       !(
         (this.focused && !this.textbox.classList.contains("hidden-focus")) ||
         this.view.isOpen
@@ -879,45 +893,31 @@ class UrlbarInput {
     ) {
       return;
     }
+    await this._updateLayoutBreakoutDimensions();
 
-    let getBoundsWithoutFlushing = element =>
-      this.window.windowUtils.getBoundsWithoutFlushing(element);
-    let px = number => number.toFixed(2) + "px";
+    this.setAttribute("breakout-extend", "true");
 
-    let inputRect = getBoundsWithoutFlushing(this.textbox);
-    if (inputRect.width == 0) {
-      this.window.requestAnimationFrame(() => {
-        this.startLayoutBreakout();
-      });
-      return;
+    let customizationTarget = this.textbox.closest(".customization-target");
+    if (customizationTarget) {
+      customizationTarget.setAttribute("urlbar-breakout-extend", "true");
     }
-
-    this.textbox.style.setProperty("--urlbar-width", px(inputRect.width));
-    this.textbox.style.setProperty("--urlbar-height", px(inputRect.height));
-
-    let toolbarRect = getBoundsWithoutFlushing(this.textbox.closest("toolbar"));
-    this.textbox.style.setProperty(
-      "--urlbar-toolbar-height",
-      px(toolbarRect.height)
-    );
-
-    // Ensure urlbar-container's height doesn't change.
-    let parentRect = getBoundsWithoutFlushing(this.textbox.parentNode);
-    this.textbox.parentNode.style.height = px(parentRect.height);
-
-    this.setAttribute("breakout", "true");
   }
 
   endLayoutBreakout(force) {
     if (
-      !force &&
-      (this.view.isOpen ||
-        (this.focused && !this.textbox.classList.contains("hidden-focus")))
+      !this.hasAttribute("breakout-extend") ||
+      (!force &&
+        (this.view.isOpen ||
+          (this.focused && !this.textbox.classList.contains("hidden-focus"))))
     ) {
       return;
     }
-    this.removeAttribute("breakout");
-    this.textbox.parentNode.style.height = "";
+    this.removeAttribute("breakout-extend");
+
+    let customizationTarget = this.textbox.closest(".customization-target");
+    if (customizationTarget) {
+      customizationTarget.removeAttribute("urlbar-breakout-extend");
+    }
   }
 
   setPageProxyState(state) {
@@ -927,6 +927,24 @@ class UrlbarInput {
   }
 
   // Private methods below.
+
+  async _updateLayoutBreakoutDimensions() {
+    await this.window.promiseDocumentFlushed(() => {});
+    await new Promise(resolve => {
+      this.window.requestAnimationFrame(() => {
+        if (!this.hasAttribute("breakout")) {
+          let inputHeight = px(getBoundsWithoutFlushing(this.textbox).height);
+          this.textbox.style.setProperty("--urlbar-height", inputHeight);
+          this.textbox.parentNode.style.minHeight = inputHeight;
+        }
+        this.textbox.style.setProperty(
+          "--urlbar-toolbar-height",
+          px(getBoundsWithoutFlushing(this.textbox.closest("toolbar")).height)
+        );
+        resolve();
+      });
+    });
+  }
 
   _setOpenViewOnFocus() {
     // FIXME: Not using UrlbarPrefs because its pref observer may run after
@@ -1692,22 +1710,6 @@ class UrlbarInput {
       allowAutofill,
       resetSearchState: false,
       event,
-    });
-  }
-
-  async _on_resize(event) {
-    if (!this.megabar || !this.hasAttribute("breakout")) {
-      return;
-    }
-
-    let px = number => number.toFixed(2) + "px";
-    let width = await this.window.promiseDocumentFlushed(() => {
-      // We use the container because it remains flexible unlike the broken-out
-      // Urlbar.
-      return this.textbox.parentNode.clientWidth;
-    });
-    this.window.requestAnimationFrame(() => {
-      this.textbox.style.setProperty("--urlbar-width", px(width));
     });
   }
 

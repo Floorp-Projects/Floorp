@@ -238,7 +238,7 @@ panelview[mainview] > .panel-header {
   pointer-events: auto;
 }
 
-toolbar[overflowable] > .customization-target {
+toolbar[overflowable] > .customization-target:not([urlbar-breakout-extend]) {
   overflow: hidden;
 }
 
