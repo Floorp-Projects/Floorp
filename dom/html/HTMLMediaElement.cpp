@@ -2521,7 +2521,8 @@ void HTMLMediaElement::LoadFromSourceChildren() {
 
     // If we have a type attribute, it must be a supported type.
     nsAutoString type;
-    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
+    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+        !type.IsEmpty()) {
       DecoderDoctorDiagnostics diagnostics;
       CanPlayStatus canPlay = GetCanPlay(type, &diagnostics);
       diagnostics.StoreFormatDiagnostics(OwnerDoc(), type,
