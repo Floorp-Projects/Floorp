@@ -23,7 +23,7 @@ class WindowsDllNopSpacePatcher final : public WindowsDllPatcherBase<VMPolicy> {
 
  public:
   template <typename... Args>
-  explicit WindowsDllNopSpacePatcher(Args... aArgs)
+  explicit WindowsDllNopSpacePatcher(Args&&... aArgs)
       : WindowsDllPatcherBase<VMPolicy>(std::forward<Args>(aArgs)...) {}
 
   ~WindowsDllNopSpacePatcher() { Clear(); }

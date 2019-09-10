@@ -98,7 +98,7 @@ class VMSharingPolicyUnique : public MMPolicy {
   using PoolType = TrampolinePool<ThisType, decltype(nullptr)>;
 
   template <typename... Args>
-  explicit VMSharingPolicyUnique(Args... aArgs)
+  explicit VMSharingPolicyUnique(Args&&... aArgs)
       : MMPolicy(std::forward<Args>(aArgs)...), mNextChunkIndex(0) {}
 
   Maybe<PoolType> Reserve(const uintptr_t aPivotAddr,

@@ -18,7 +18,7 @@ class WindowsDllPatcherBase {
   typedef typename VMPolicy::MMPolicyT MMPolicyT;
 
   template <typename... Args>
-  explicit WindowsDllPatcherBase(Args... aArgs)
+  explicit WindowsDllPatcherBase(Args&&... aArgs)
       : mVMPolicy(std::forward<Args>(aArgs)...) {}
 
   ReadOnlyTargetFunction<MMPolicyT> ResolveRedirectedAddress(

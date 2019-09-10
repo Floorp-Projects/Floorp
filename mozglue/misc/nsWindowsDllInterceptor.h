@@ -137,7 +137,7 @@ class FuncHook final {
   explicit operator bool() const { return !!mOrigFunc; }
 
   template <typename... ArgsType>
-  ReturnType operator()(ArgsType... aArgs) const {
+  ReturnType operator()(ArgsType&&... aArgs) const {
     return mOrigFunc(std::forward<ArgsType>(aArgs)...);
   }
 
@@ -238,7 +238,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
    * NB: This operator is only meaningful when invoked in the target process!
    */
   template <typename... ArgsType>
-  ReturnType operator()(ArgsType... aArgs) const {
+  ReturnType operator()(ArgsType&&... aArgs) const {
     return mOrigFunc(std::forward<ArgsType>(aArgs)...);
   }
 
@@ -292,7 +292,7 @@ class WindowsDllInterceptor final
 
  public:
   template <typename... Args>
-  explicit WindowsDllInterceptor(Args... aArgs)
+  explicit WindowsDllInterceptor(Args&&... aArgs)
       : mDetourPatcher(std::forward<Args>(aArgs)...)
 #if defined(_M_IX86)
         ,

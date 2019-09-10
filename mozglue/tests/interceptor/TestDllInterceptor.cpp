@@ -93,7 +93,7 @@ decltype(auto) Apply(OrigFuncT& aFunc, ArgTuple&& aArgs,
 #define DEFINE_TEST_FUNCTION(calling_convention)                               \
   template <typename R, typename... Args, typename... TestArgs>                \
   bool TestFunction(R(calling_convention* aFunc)(Args...), bool (*aPred)(R),   \
-                    TestArgs... aArgs) {                                       \
+                    TestArgs&&... aArgs) {                                     \
     using ArgTuple = Tuple<Args...>;                                           \
     using Indices = std::index_sequence_for<Args...>;                          \
     ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
@@ -105,7 +105,7 @@ decltype(auto) Apply(OrigFuncT& aFunc, ArgTuple&& aArgs,
   /* Specialization for functions returning void */                            \
   template <typename PredT, typename... Args, typename... TestArgs>            \
   bool TestFunction(void(calling_convention * aFunc)(Args...), PredT,          \
-                    TestArgs... aArgs) {                                       \
+                    TestArgs&&... aArgs) {                                     \
     using ArgTuple = Tuple<Args...>;                                           \
     using Indices = std::index_sequence_for<Args...>;                          \
     ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
@@ -130,7 +130,7 @@ DEFINE_TEST_FUNCTION(__fastcall)
 // Test the hooked function against the supplied predicate
 template <typename OrigFuncT, typename PredicateT, typename... Args>
 bool CheckHook(OrigFuncT& aOrigFunc, const char* aDllName,
-               const char* aFuncName, PredicateT&& aPred, Args... aArgs) {
+               const char* aFuncName, PredicateT&& aPred, Args&&... aArgs) {
   if (TestFunction(aOrigFunc, std::forward<PredicateT>(aPred),
                    std::forward<Args>(aArgs)...)) {
     printf(
@@ -257,7 +257,7 @@ constexpr uint8_t InterceptorFunction::sInterceptorTemplate[];
 // Hook the function and optionally attempt calling it
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
 bool TestHook(const char (&dll)[N], const char* func, PredicateT&& aPred,
-              Args... aArgs) {
+              Args&&... aArgs) {
   auto orig_func(
       mozilla::MakeUnique<WindowsDllInterceptor::FuncHookType<OrigFuncT>>());
 
@@ -530,7 +530,7 @@ struct Predicates<void(__fastcall*)(Args...)> {
 
 template <typename OrigFuncT, size_t N, typename PredicateT, typename... Args>
 bool MaybeTestHook(const bool cond, const char (&dll)[N], const char* func,
-                   PredicateT&& aPred, Args... aArgs) {
+                   PredicateT&& aPred, Args&&... aArgs) {
   if (!cond) {
     printf(
         "TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from "
