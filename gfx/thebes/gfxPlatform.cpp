@@ -2625,6 +2625,7 @@ static bool CalculateWrQualifiedPrefValue() {
   return Preferences::GetBool(WR_ROLLOUT_PREF, WR_ROLLOUT_PREF_DEFAULTVALUE);
 }
 
+#ifndef MOZ_WIDGET_ANDROID
 static void HardwareTooOldForWR(FeatureState& aFeature) {
   aFeature.Disable(FeatureStatus::BlockedDeviceTooOld, "Device too old",
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
@@ -2840,6 +2841,7 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
 #endif
 }
+#endif // !MOZ_WIDGET_ANDROID
 
 static FeatureState& WebRenderHardwareQualificationStatus(
     const IntSize& aScreenSize, bool aHasBattery,
@@ -2875,6 +2877,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     return featureWebRenderQualified;
   }
 
+#ifndef MOZ_WIDGET_ANDROID
   nsAutoString adapterVendorID;
   gfxInfo->GetAdapterVendorID(adapterVendorID);
 
@@ -2941,6 +2944,14 @@ static FeatureState& WebRenderHardwareQualificationStatus(
           NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
     }
   }
+#else // !MOZ_WIDGET_ANDROID
+#ifndef NIGHTLY_BUILD
+  featureWebRenderQualified.Disable(
+    FeatureStatus::BlockedReleaseChannelAndroid,
+    "Release channel and Android",
+    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_ANDROID"));
+#endif
+#endif
   return featureWebRenderQualified;
 }
 
