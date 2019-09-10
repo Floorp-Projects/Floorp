@@ -65,7 +65,7 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
             break;
           case "process-failed":
             gRunningProcesses.delete(process);
-            reject();
+            resolve();
             break;
           default:
             reject(new Error("Unexpected topic received " + topic));

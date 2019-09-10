@@ -312,7 +312,7 @@ void nsProcess::ProcessComplete() {
   }
 
   const char* topic;
-  if (mExitValue < 0) {
+  if (mExitValue != 0) {
     topic = "process-failed";
   } else {
     topic = "process-finished";
