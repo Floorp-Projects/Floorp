@@ -249,7 +249,6 @@ impl Wrench {
             None,
             size,
         ).unwrap();
-
         let api = sender.create_api();
         let document_id = api.add_document(size, 0);
 
