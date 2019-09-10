@@ -246,60 +246,23 @@ const uint32_t kConnectionThreadIdleMS = 30 * 1000;  // 30 seconds
 
 const uint32_t kFileCopyBufferSize = 32768;
 
-constexpr auto kJournalDirectoryName = NS_LITERAL_STRING("journals");
+#define JOURNAL_DIRECTORY_NAME "journals"
 
-constexpr auto kFileManagerDirectoryNameSuffix = NS_LITERAL_STRING(".files");
-constexpr auto kSQLiteSuffix = NS_LITERAL_STRING(".sqlite");
-constexpr auto kSQLiteJournalSuffix = NS_LITERAL_STRING(".sqlite-journal");
-constexpr auto kSQLiteSHMSuffix = NS_LITERAL_STRING(".sqlite-shm");
-constexpr auto kSQLiteWALSuffix = NS_LITERAL_STRING(".sqlite-wal");
+const char kFileManagerDirectoryNameSuffix[] = ".files";
+const char kSQLiteSuffix[] = ".sqlite";
+const char kSQLiteJournalSuffix[] = ".sqlite-journal";
+const char kSQLiteSHMSuffix[] = ".sqlite-shm";
+const char kSQLiteWALSuffix[] = ".sqlite-wal";
 
 const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
 const char kPrefFileHandleEnabled[] = "dom.fileHandle.enabled";
 
-constexpr auto kPermissionStringBase = NS_LITERAL_CSTRING("indexedDB-chrome-");
-constexpr auto kPermissionReadSuffix = NS_LITERAL_CSTRING("-read");
-constexpr auto kPermissionWriteSuffix = NS_LITERAL_CSTRING("-write");
+#define IDB_PREFIX "indexedDB"
 
-// The following constants define all names of binding parameters in statements,
-// where they are bound by name. This should include all parameter names which
-// are bound by name. Binding may be done by index when the statement definition
-// and binding are done in the same local scope, and no other reasons prevent
-// using the indexes (e.g. multiple statement variants with differing number or
-// order of parameters). Neither the styles of specifying parameter names
-// (literally vs. via these constants) nor the binding styles (by index vs. by
-// name) should not be mixed for the same statement. The decision must be made
-// for each statement based on the proximity of statement and binding calls.
-constexpr auto kStmtParamNameCurrentKey = NS_LITERAL_CSTRING("current_key");
-constexpr auto kStmtParamNameRangeKey = NS_LITERAL_CSTRING("range_key");
-constexpr auto kStmtParamNameObjectKey = NS_LITERAL_CSTRING("object_key");
-constexpr auto kStmtParamNameLowerKey = NS_LITERAL_CSTRING("lower_key");
-constexpr auto kStmtParamNameUpperKey = NS_LITERAL_CSTRING("upper_key");
-constexpr auto kStmtParamNameKey = NS_LITERAL_CSTRING("key");
-constexpr auto kStmtParamNameObjectStoreId =
-    NS_LITERAL_CSTRING("object_store_id");
-constexpr auto kStmtParamNameIndexId = NS_LITERAL_CSTRING("index_id");
-// TODO: Maybe the uses of kStmtParamNameId should be replaced by more
-// specific constants such as kStmtParamNameObjectStoreId.
-constexpr auto kStmtParamNameId = NS_LITERAL_CSTRING("id");
-constexpr auto kStmtParamNameValue = NS_LITERAL_CSTRING("value");
-constexpr auto kStmtParamNameObjectDataKey =
-    NS_LITERAL_CSTRING("object_data_key");
-constexpr auto kStmtParamNameIndexDataValues =
-    NS_LITERAL_CSTRING("index_data_values");
-constexpr auto kStmtParamNameData = NS_LITERAL_CSTRING("data");
-constexpr auto kStmtParamNameFileIds = NS_LITERAL_CSTRING("file_ids");
-constexpr auto kStmtParamNameValueLocale = NS_LITERAL_CSTRING("value_locale");
-
-// The following constants define some names of columns in tables, which are
-// referred to in remote locations, e.g. in calls to
-// GetBindingClauseForKeyRange.
-constexpr auto kColumnNameKey = NS_LITERAL_CSTRING("key");
-constexpr auto kColumnNameValue = NS_LITERAL_CSTRING("value");
-
-// SQL fragments used at multiple locations.
-constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
+#define PERMISSION_STRING_CHROME_BASE IDB_PREFIX "-chrome-"
+#define PERMISSION_STRING_CHROME_READ_SUFFIX "-read"
+#define PERMISSION_STRING_CHROME_WRITE_SUFFIX "-write"
 
 // The deletion marker file is created before RemoveDatabaseFilesAndDirectory
 // begins deleting a database. It is removed as the last step of deletion. If a
@@ -308,8 +271,7 @@ constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
 // are removed. The primary goal of this mechanism is to avoid situations where
 // a database has been partially deleted, leading to inconsistent state for the
 // origin.
-constexpr auto kIdbDeletionMarkerFilePrefix =
-    NS_LITERAL_STRING("idb-deleting-");
+#define IDB_DELETION_MARKER_FILE_PREFIX "idb-deleting-"
 
 const uint32_t kDeleteTimeoutMs = 1000;
 
@@ -337,6 +299,14 @@ const int32_t kDEBUGTransactionThreadPriority =
 const uint32_t kDEBUGTransactionThreadSleepMS = 0;
 
 #endif
+
+template <size_t N>
+constexpr size_t LiteralStringLength(const char (&aArr)[N]) {
+  static_assert(N, "Zero-length string literal?!");
+
+  // Don't include the null terminator.
+  return N - 1;
+}
 
 /*******************************************************************************
  * Metadata classes
@@ -1243,8 +1213,6 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection) {
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   rv = aConnection->CreateStatement(
       NS_LITERAL_CSTRING("INSERT INTO database (name, version, dataVersion) "
                          "VALUES (:name, :version, :dataVersion)"),
@@ -3235,9 +3203,6 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
   // Update the |database| table to include the origin, vacuum information, and
   // apply the WITHOUT ROWID optimization.
   nsCOMPtr<mozIStorageStatement> stmt;
-
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   rv = aConnection->CreateStatement(
       NS_LITERAL_CSTRING("INSERT INTO database_upgrade "
                          "SELECT name, :origin, version, 0, 0, 0 "
@@ -3247,7 +3212,7 @@ nsresult UpgradeSchemaFrom17_0To18_0Helper::DoUpgradeInternal(
     return rv;
   }
 
-  rv = stmt->BindUTF8StringByIndex(0, aOrigin);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3755,8 +3720,6 @@ nsresult UpgradeSchemaFrom22_0To23_0(mozIStorageConnection* aConnection,
   AUTO_PROFILER_LABEL("UpgradeSchemaFrom22_0To23_0", DOM);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   nsresult rv =
       aConnection->CreateStatement(NS_LITERAL_CSTRING("UPDATE database "
                                                       "SET origin = :origin;"),
@@ -3765,7 +3728,7 @@ nsresult UpgradeSchemaFrom22_0To23_0(mozIStorageConnection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindUTF8StringByIndex(0, aOrigin);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3939,7 +3902,7 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
   if (aTelemetryId) {
     telemetryFilenameClause.AssignLiteral("&telemetryFilename=indexedDB-");
     telemetryFilenameClause.AppendInt(aTelemetryId);
-    telemetryFilenameClause.Append(NS_ConvertUTF16toUTF8(kSQLiteSuffix));
+    telemetryFilenameClause.AppendLiteral(".sqlite");
   }
 
   rv = NS_MutateURI(mutator)
@@ -3962,7 +3925,7 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConnection);
 
-  static constexpr auto kBuiltInPragmas = NS_LITERAL_CSTRING(
+  static const char kBuiltInPragmas[] =
       // We use foreign keys in DEBUG builds only because there is a performance
       // cost to using them.
       "PRAGMA foreign_keys = "
@@ -3982,9 +3945,10 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
 
       // We aggressively truncate the database file when idle so don't bother
       // overwriting the WAL with 0 during active periods.
-      "PRAGMA secure_delete = OFF;");
+      "PRAGMA secure_delete = OFF;";
 
-  nsresult rv = aConnection->ExecuteSimpleSQL(kBuiltInPragmas);
+  nsresult rv = aConnection->ExecuteSimpleSQL(nsDependentCString(
+      kBuiltInPragmas, LiteralStringLength(kBuiltInPragmas)));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4335,8 +4299,6 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
       MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
 
       nsCOMPtr<mozIStorageStatement> stmt;
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
       nsresult rv = connection->CreateStatement(
           NS_LITERAL_CSTRING("INSERT INTO database (name, origin) "
                              "VALUES (:name, :origin)"),
@@ -4345,12 +4307,12 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         return rv;
       }
 
-      rv = stmt->BindStringByIndex(0, aName);
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = stmt->BindUTF8StringByIndex(1, aOrigin);
+      rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("origin"), aOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4557,8 +4519,6 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
       MOZ_ASSERT(vacuumTime);
 
       nsCOMPtr<mozIStorageStatement> vacuumTimeStmt;
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
       rv = connection->CreateStatement(
           NS_LITERAL_CSTRING("UPDATE database "
                              "SET last_vacuum_time = :time"
@@ -4568,12 +4528,14 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
         return rv;
       }
 
-      rv = vacuumTimeStmt->BindInt64ByIndex(0, vacuumTime);
+      rv = vacuumTimeStmt->BindInt64ByName(NS_LITERAL_CSTRING("time"),
+                                           vacuumTime);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = vacuumTimeStmt->BindInt64ByIndex(1, fileSize);
+      rv =
+          vacuumTimeStmt->BindInt64ByName(NS_LITERAL_CSTRING("size"), fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4672,7 +4634,7 @@ nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
-  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, kSQLiteSuffix));
+  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
   MOZ_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
@@ -4740,12 +4702,6 @@ class DatabaseConnection final {
 
   nsresult GetCachedStatement(const nsACString& aQuery,
                               CachedStatement* aCachedStatement);
-
-  template <typename BindFunctor>
-  nsresult ExecuteCachedStatement(const nsACString& aQuery,
-                                  const BindFunctor& aBindFunctor);
-
-  nsresult ExecuteCachedStatement(const nsACString& aQuery);
 
   nsresult BeginWriteTransaction();
 
@@ -4836,11 +4792,7 @@ class DatabaseConnection::CachedStatement final {
 #endif
   }
 
-  // TODO: Remove the implicit operator, and replace it by explicit calls to
-  // GetUnderlyingStatement.
   operator mozIStorageStatement*() const;
-
-  mozIStorageStatement& operator*() const;
 
   mozIStorageStatement* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN;
 
@@ -5455,9 +5407,8 @@ class DatabaseOperationBase : public Runnable,
                                           const nsCString& aLocale);
 
   static void AppendConditionClause(const nsACString& aColumnName,
-                                    const nsACString& aStatementParameterName,
-                                    bool aLessThan, bool aEquals,
-                                    nsAutoCString& aResult);
+                                    const nsACString& aArgName, bool aLessThan,
+                                    bool aEquals, nsAutoCString& aResult);
 
   static nsresult GetUniqueIndexTableForObjectStore(
       TransactionBase* aTransaction, int64_t aObjectStoreId,
@@ -7556,9 +7507,9 @@ class Cursor final : public PBackgroundIDBCursorParent {
   typedef OpenCursorParams::Type Type;
 
  private:
-  const RefPtr<TransactionBase> mTransaction;
-  const RefPtr<Database> mDatabase;
-  const RefPtr<FileManager> mFileManager;
+  RefPtr<TransactionBase> mTransaction;
+  RefPtr<Database> mDatabase;
+  RefPtr<FileManager> mFileManager;
   PBackgroundParent* mBackgroundParent;
 
   // These should only be touched on the PBackground thread to check whether the
@@ -7573,30 +7524,12 @@ class Cursor final : public PBackgroundIDBCursorParent {
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   nsCString mContinuePrimaryKeyQuery;
-  const nsCString mLocale;
+  nsCString mLocale;
 
-  // TODO: Apply the renamings suggested below, and also change related
-  // identifiers (e.g. local variables) and literals.
-
-  Key mKey;  ///< The current key, i.e. the key representing the cursor's
-             ///< position (https://w3c.github.io/IndexedDB/#cursor-position).
-             ///<
-             ///< TODO: Rename this to mPosition
-  Key mObjectKey;  ///< The key representing the cursor's object store position
-  ///< (https://w3c.github.io/IndexedDB/#cursor-object-store-position).
-  ///<
-  ///< TODO: Rename this to mObjectStorePosition
-  Key mRangeKey;  ///< If the cursor is based on a key range, the bound in the
-                  ///< direction of iteration (e.g. the upper bound in case of
-                  ///< mDirection == NEXT). If the cursor is based on a key, it
-                  ///< is unset. If mLocale is set, this was converted to
-                  ///< mLocale.
-                  ///<
-                  ///< TODO: Rename this to mLocaleAwareRangeBound
-  Key mSortKey;   ///< If mLocale is set, this is mKey converted to mLocale.
-                  ///< Otherwise, it is unset.
-                  ///<
-                  ///< TODO: Rename this to mLocaleAwarePosition
+  Key mKey;
+  Key mObjectKey;
+  Key mRangeKey;
+  Key mSortKey;
 
   CursorOpBase* mCurrentlyRunningOp;
 
@@ -7607,17 +7540,15 @@ class Cursor final : public PBackgroundIDBCursorParent {
   const bool mIsSameProcessActor;
   bool mActorDestroyed;
 
-  struct ConstructFromTransactionBase {};
-
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Cursor)
 
-  Cursor(RefPtr<TransactionBase> aTransaction, Type aType,
-         RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
-         RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
-         ConstructFromTransactionBase aConstructionTag);
-
  private:
+  // Only created by TransactionBase.
+  Cursor(TransactionBase* aTransaction, Type aType,
+         FullObjectStoreMetadata* aObjectStoreMetadata,
+         FullIndexMetadata* aIndexMetadata, Direction aDirection);
+
   // Reference counted.
   ~Cursor() override { MOZ_ASSERT(mActorDestroyed); }
 
@@ -7692,16 +7623,6 @@ class Cursor::OpenOp final : public Cursor::CursorOpBase {
   ~OpenOp() override = default;
 
   void GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen);
-
-  // Should be called on the connection thread.
-  void PrepareKeyConditionClauses(const nsACString& aKeyString,
-                                  const nsACString& aDirectionClause,
-                                  const nsACString& aQueryStart);
-
-  // Should be called on the connection thread.
-  void PrepareIndexKeyConditionClause(
-      const nsACString& aSortColumn, const nsACString& aDirectionClause,
-      const nsLiteralCString& aObjectDataKeyPrefix, nsAutoCString aQueryStart);
 
   nsresult DoObjectStoreDatabaseWork(DatabaseConnection* aConnection);
 
@@ -8849,7 +8770,8 @@ nsresult CreateMarkerFile(nsIFile* aBaseDirectory,
     return rv;
   }
 
-  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + aDatabaseNameBase);
+  rv = markerFile->Append(NS_LITERAL_STRING(IDB_DELETION_MARKER_FILE_PREFIX) +
+                          aDatabaseNameBase);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8910,31 +8832,46 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   }
 
   // The database file counts towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSuffix, aQuotaManager,
-                  aPersistenceType, aGroup, aOrigin);
+  nsAutoString filename = aFilenameBase + NS_LITERAL_STRING(".sqlite");
+
+  rv = DeleteFile(aBaseDirectory, filename, aQuotaManager, aPersistenceType,
+                  aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-journal files don't count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteJournalSuffix,
-                  /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+      kSQLiteJournalSuffix, LiteralStringLength(kSQLiteJournalSuffix));
+
+  filename = aFilenameBase + journalSuffix;
+
+  rv = DeleteFile(aBaseDirectory, filename, /* doesn't count */ nullptr,
+                  aPersistenceType, aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-shm files don't count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSHMSuffix,
-                  /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+
+  filename = aFilenameBase + shmSuffix;
+
+  rv = DeleteFile(aBaseDirectory, filename, /* doesn't count */ nullptr,
+                  aPersistenceType, aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-wal files do count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteWALSuffix,
-                  aQuotaManager, aPersistenceType, aGroup, aOrigin);
+  const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
+                                         LiteralStringLength(kSQLiteWALSuffix));
+
+  filename = aFilenameBase + walSuffix;
+
+  rv = DeleteFile(aBaseDirectory, filename, aQuotaManager, aPersistenceType,
+                  aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8946,7 +8883,11 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   }
 
   // The files directory counts towards quota.
-  rv = fmDirectory->Append(aFilenameBase + kFileManagerDirectoryNameSuffix);
+  const NS_ConvertASCIItoUTF16 filesSuffix(
+      kFileManagerDirectoryNameSuffix,
+      LiteralStringLength(kFileManagerDirectoryNameSuffix));
+
+  rv = fmDirectory->Append(aFilenameBase + filesSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9158,9 +9099,11 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
   MOZ_ALWAYS_SUCCEEDS(aFile->GetLeafName(filename));
 
   // Make sure we were given a database file.
-  MOZ_ASSERT(StringEndsWith(filename, kSQLiteSuffix));
+  NS_NAMED_LITERAL_STRING(sqliteExtension, ".sqlite");
 
-  filename.Truncate(filename.Length() - kSQLiteSuffix.Length());
+  MOZ_ASSERT(StringEndsWith(filename, sqliteExtension));
+
+  filename.Truncate(filename.Length() - sqliteExtension.Length());
 
   // Get the "idb" directory.
   nsCOMPtr<nsIFile> idbDirectory;
@@ -9217,45 +9160,6 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
   return id;
 }
 
-const CommonIndexOpenCursorParams& GetCommonIndexOpenCursorParams(
-    const OpenCursorParams& aParams) {
-  switch (aParams.type()) {
-    case OpenCursorParams::TIndexOpenCursorParams:
-      return aParams.get_IndexOpenCursorParams().commonIndexParams();
-    case OpenCursorParams::TIndexOpenKeyCursorParams:
-      return aParams.get_IndexOpenKeyCursorParams().commonIndexParams();
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-}
-
-const CommonOpenCursorParams& GetCommonOpenCursorParams(
-    const OpenCursorParams& aParams) {
-  switch (aParams.type()) {
-    case OpenCursorParams::TObjectStoreOpenCursorParams:
-      return aParams.get_ObjectStoreOpenCursorParams().commonParams();
-    case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
-      return aParams.get_ObjectStoreOpenKeyCursorParams().commonParams();
-    case OpenCursorParams::TIndexOpenCursorParams:
-    case OpenCursorParams::TIndexOpenKeyCursorParams:
-      return GetCommonIndexOpenCursorParams(aParams).commonParams();
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-}
-
-constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
-  MOZ_ASSERT(
-      aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
-      aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
-
-  return aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE;
-}
-
-constexpr bool IsKeyCursor(const Cursor::Type aType) {
-  return aType == OpenCursorParams::TObjectStoreOpenKeyCursorParams ||
-         aType == OpenCursorParams::TIndexOpenKeyCursorParams;
-}
 }  // namespace
 
 /*******************************************************************************
@@ -9454,32 +9358,6 @@ nsresult DatabaseConnection::GetCachedStatement(
   return NS_OK;
 }
 
-template <typename BindFunctor>
-nsresult DatabaseConnection::ExecuteCachedStatement(
-    const nsACString& aQuery, const BindFunctor& aBindFunctor) {
-  CachedStatement stmt;
-  nsresult rv = GetCachedStatement(aQuery, &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aBindFunctor(*stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult DatabaseConnection::ExecuteCachedStatement(const nsACString& aQuery) {
-  return ExecuteCachedStatement(aQuery, [](auto&) { return NS_OK; });
-}
-
 nsresult DatabaseConnection::BeginWriteTransaction() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
@@ -9489,7 +9367,14 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   AUTO_PROFILER_LABEL("DatabaseConnection::BeginWriteTransaction", DOM);
 
   // Release our read locks.
-  nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"));
+  CachedStatement rollbackStmt;
+  nsresult rv =
+      GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"), &rollbackStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = rollbackStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9512,10 +9397,6 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     mUpdateRefcountFunction.swap(function);
   }
 
-  // This one cannot obviously use ExecuteCachedStatement because of the custom
-  // error handling for Execute only. If only Execute can produce
-  // NS_ERROR_STORAGE_BUSY, we could actually use ExecuteCachedStatement and
-  // simplify this.
   CachedStatement beginStmt;
   rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE;"), &beginStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9560,7 +9441,13 @@ nsresult DatabaseConnection::CommitWriteTransaction() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::CommitWriteTransaction", DOM);
 
-  const nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("COMMIT;"));
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("COMMIT;"), &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9580,7 +9467,7 @@ void DatabaseConnection::RollbackWriteTransaction() {
     return;
   }
 
-  CachedStatement stmt;
+  DatabaseConnection::CachedStatement stmt;
   nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK;"), &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -9605,7 +9492,13 @@ void DatabaseConnection::FinishWriteTransaction() {
     mUpdateRefcountFunction->Reset();
   }
 
-  const nsresult rv = ExecuteCachedStatement(NS_LITERAL_CSTRING("BEGIN;"));
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN;"), &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -9621,8 +9514,13 @@ nsresult DatabaseConnection::StartSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::StartSavepoint", DOM);
 
-  const nsresult rv =
-      ExecuteCachedStatement(NS_LITERAL_CSTRING(SAVEPOINT_CLAUSE));
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING(SAVEPOINT_CLAUSE), &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9645,20 +9543,22 @@ nsresult DatabaseConnection::ReleaseSavepoint() {
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReleaseSavepoint", DOM);
 
-  nsresult rv =
-      ExecuteCachedStatement(NS_LITERAL_CSTRING("RELEASE " SAVEPOINT_CLAUSE));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mUpdateRefcountFunction->ReleaseSavepoint();
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(
+      NS_LITERAL_CSTRING("RELEASE " SAVEPOINT_CLAUSE), &stmt);
+  if (NS_SUCCEEDED(rv)) {
+    rv = stmt->Execute();
+    if (NS_SUCCEEDED(rv)) {
+      mUpdateRefcountFunction->ReleaseSavepoint();
 
 #ifdef DEBUG
-  MOZ_ASSERT(mDEBUGSavepointCount);
-  mDEBUGSavepointCount--;
+      MOZ_ASSERT(mDEBUGSavepointCount);
+      mDEBUGSavepointCount--;
 #endif
+    }
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult DatabaseConnection::RollbackSavepoint() {
@@ -9724,7 +9624,13 @@ nsresult DatabaseConnection::CheckpointInternal(CheckpointMode aMode) {
 
   stmtString.AppendLiteral(");");
 
-  const nsresult rv = ExecuteCachedStatement(stmtString);
+  CachedStatement stmt;
+  nsresult rv = GetCachedStatement(stmtString, &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10083,13 +9989,8 @@ DatabaseConnection::CachedStatement::~CachedStatement() {
 
 DatabaseConnection::CachedStatement::operator mozIStorageStatement*() const {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mStatement);
 
   return mStatement;
-}
-
-mozIStorageStatement& DatabaseConnection::CachedStatement::operator*() const {
-  return *operator->();
 }
 
 mozIStorageStatement* DatabaseConnection::CachedStatement::operator->() const {
@@ -10617,8 +10518,6 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
 
   nsresult rv;
   if (!mUpdateStatement) {
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     rv = connection->GetCachedStatement(
         NS_LITERAL_CSTRING("UPDATE file "
                            "SET refcount = refcount + :delta "
@@ -10631,12 +10530,12 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
 
   mozStorageStatementScoper updateScoper(mUpdateStatement);
 
-  rv = mUpdateStatement->BindInt32ByIndex(0, aDelta);
+  rv = mUpdateStatement->BindInt32ByName(NS_LITERAL_CSTRING("delta"), aDelta);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mUpdateStatement->BindInt64ByIndex(1, aId);
+  rv = mUpdateStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"), aId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10654,8 +10553,6 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
 
   if (rows > 0) {
     if (!mSelectStatement) {
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
       rv = connection->GetCachedStatement(NS_LITERAL_CSTRING("SELECT id "
                                                              "FROM file "
                                                              "WHERE id = :id"),
@@ -10667,7 +10564,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
 
     mozStorageStatementScoper selectScoper(mSelectStatement);
 
-    rv = mSelectStatement->BindInt64ByIndex(0, aId);
+    rv = mSelectStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"), aId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -10688,8 +10585,6 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   }
 
   if (!mInsertStatement) {
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     rv = connection->GetCachedStatement(
         NS_LITERAL_CSTRING("INSERT INTO file (id, refcount) "
                            "VALUES(:id, :delta)"),
@@ -10701,12 +10596,12 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
 
   mozStorageStatementScoper insertScoper(mInsertStatement);
 
-  rv = mInsertStatement->BindInt64ByIndex(0, aId);
+  rv = mInsertStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"), aId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mInsertStatement->BindInt32ByIndex(1, aDelta);
+  rv = mInsertStatement->BindInt32ByName(NS_LITERAL_CSTRING("delta"), aDelta);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -14052,31 +13947,88 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
   RefPtr<FullIndexMetadata> indexMetadata;
   Cursor::Direction direction;
 
-  // First extract the parameters common to all open cursor variants.
-  const auto& commonParams = GetCommonOpenCursorParams(aParams);
-  objectStoreMetadata =
-      GetMetadataForObjectStoreId(commonParams.objectStoreId());
-  if (NS_WARN_IF(!objectStoreMetadata)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-  if (aTrustParams &&
-      NS_WARN_IF(!VerifyRequestParams(commonParams.optionalKeyRange()))) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-  direction = commonParams.direction();
-
-  // Now, for the index open cursor variants, extract the additional parameter.
-  if (type == OpenCursorParams::TIndexOpenCursorParams ||
-      type == OpenCursorParams::TIndexOpenKeyCursorParams) {
-    const auto& commonIndexParams = GetCommonIndexOpenCursorParams(aParams);
-    indexMetadata =
-        GetMetadataForIndexId(objectStoreMetadata, commonIndexParams.indexId());
-    if (NS_WARN_IF(!indexMetadata)) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
+  switch (type) {
+    case OpenCursorParams::TObjectStoreOpenCursorParams: {
+      const ObjectStoreOpenCursorParams& params =
+          aParams.get_ObjectStoreOpenCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      direction = params.direction();
+      break;
     }
+
+    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
+      const ObjectStoreOpenKeyCursorParams& params =
+          aParams.get_ObjectStoreOpenKeyCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      direction = params.direction();
+      break;
+    }
+
+    case OpenCursorParams::TIndexOpenCursorParams: {
+      const IndexOpenCursorParams& params = aParams.get_IndexOpenCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      indexMetadata =
+          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      if (NS_WARN_IF(!indexMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      direction = params.direction();
+      break;
+    }
+
+    case OpenCursorParams::TIndexOpenKeyCursorParams: {
+      const IndexOpenKeyCursorParams& params =
+          aParams.get_IndexOpenKeyCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      indexMetadata =
+          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      if (NS_WARN_IF(!indexMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      direction = params.direction();
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
@@ -14084,11 +14036,11 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     return nullptr;
   }
 
-  // Create Cursor and transfer ownership to IPDL.
-  return MakeAndAddRef<Cursor>(this, type, std::move(objectStoreMetadata),
-                               std::move(indexMetadata), direction,
-                               Cursor::ConstructFromTransactionBase{})
-      .take();
+  RefPtr<Cursor> actor =
+      new Cursor(this, type, objectStoreMetadata, indexMetadata, direction);
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
 }
 
 bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* aActor,
@@ -14896,41 +14848,45 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
  * Cursor
  ******************************************************************************/
 
-Cursor::Cursor(RefPtr<TransactionBase> aTransaction, Type aType,
-               RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
-               RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
-               ConstructFromTransactionBase /*aConstructionTag*/)
-    : mTransaction(std::move(aTransaction)),
-      mDatabase(!IsKeyCursor(aType) ? mTransaction->GetDatabase() : nullptr),
-      mFileManager(!IsKeyCursor(aType) ? mDatabase->GetFileManager() : nullptr),
-      mBackgroundParent(
-          !IsKeyCursor(aType) ? mTransaction->GetBackgroundParent() : nullptr),
-      mObjectStoreMetadata(std::move(aObjectStoreMetadata)),
-      mIndexMetadata(std::move(aIndexMetadata)),
-      mObjectStoreId(mObjectStoreMetadata->mCommonMetadata.id()),
-      mIndexId(mIndexMetadata ? mIndexMetadata->mCommonMetadata.id() : 0),
-      mLocale(mIndexMetadata ? mIndexMetadata->mCommonMetadata.locale()
-                             : EmptyCString()),
+Cursor::Cursor(TransactionBase* aTransaction, Type aType,
+               FullObjectStoreMetadata* aObjectStoreMetadata,
+               FullIndexMetadata* aIndexMetadata, Direction aDirection)
+    : mTransaction(aTransaction),
+      mBackgroundParent(nullptr),
+      mObjectStoreMetadata(aObjectStoreMetadata),
+      mIndexMetadata(aIndexMetadata),
+      mObjectStoreId(aObjectStoreMetadata->mCommonMetadata.id()),
+      mIndexId(aIndexMetadata ? aIndexMetadata->mCommonMetadata.id() : 0),
       mCurrentlyRunningOp(nullptr),
       mType(aType),
       mDirection(aDirection),
-      mUniqueIndex(mIndexMetadata ? mIndexMetadata->mCommonMetadata.unique()
+      mUniqueIndex(aIndexMetadata ? aIndexMetadata->mCommonMetadata.unique()
                                   : false),
       mIsSameProcessActor(!BackgroundParent::IsOtherProcessActor(
-          mTransaction->GetBackgroundParent())),
+          aTransaction->GetBackgroundParent())),
       mActorDestroyed(false) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mType != OpenCursorParams::T__None);
-  MOZ_ASSERT(mObjectStoreMetadata);
-  MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
-                    mType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                mIndexMetadata);
+  MOZ_ASSERT(aTransaction);
+  MOZ_ASSERT(aType != OpenCursorParams::T__None);
+  MOZ_ASSERT(aObjectStoreMetadata);
+  MOZ_ASSERT_IF(aType == OpenCursorParams::TIndexOpenCursorParams ||
+                    aType == OpenCursorParams::TIndexOpenKeyCursorParams,
+                aIndexMetadata);
 
-  if (!IsKeyCursor(aType)) {
+  if (mType == OpenCursorParams::TObjectStoreOpenCursorParams ||
+      mType == OpenCursorParams::TIndexOpenCursorParams) {
+    mDatabase = aTransaction->GetDatabase();
     MOZ_ASSERT(mDatabase);
+
+    mFileManager = mDatabase->GetFileManager();
     MOZ_ASSERT(mFileManager);
+
+    mBackgroundParent = aTransaction->GetBackgroundParent();
     MOZ_ASSERT(mBackgroundParent);
+  }
+
+  if (aIndexMetadata) {
+    mLocale = aIndexMetadata->mCommonMetadata.locale();
   }
 
   static_assert(
@@ -15060,7 +15016,15 @@ bool Cursor::Start(const OpenCursorParams& aParams) {
   }
 
   const Maybe<SerializedKeyRange>& optionalKeyRange =
-      GetCommonOpenCursorParams(aParams).optionalKeyRange();
+      mType == OpenCursorParams::TObjectStoreOpenCursorParams
+          ? aParams.get_ObjectStoreOpenCursorParams().optionalKeyRange()
+          : mType == OpenCursorParams::TObjectStoreOpenKeyCursorParams
+                ? aParams.get_ObjectStoreOpenKeyCursorParams()
+                      .optionalKeyRange()
+                : mType == OpenCursorParams::TIndexOpenCursorParams
+                      ? aParams.get_IndexOpenCursorParams().optionalKeyRange()
+                      : aParams.get_IndexOpenKeyCursorParams()
+                            .optionalKeyRange();
 
   RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
 
@@ -15284,7 +15248,7 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     return rv;
   }
 
-  rv = journalDirectory->Append(kJournalDirectoryName);
+  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -15547,7 +15511,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
     return rv;
   }
 
-  rv = journalDirectory->Append(kJournalDirectoryName);
+  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -15597,8 +15561,6 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
       }
 
       nsCOMPtr<mozIStorageStatement> stmt;
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
       rv = connection->CreateStatement(
           NS_LITERAL_CSTRING("SELECT name, (name IN (SELECT id FROM file)) "
                              "FROM fs "
@@ -15614,7 +15576,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
         return rv;
       }
 
-      rv = stmt->BindStringByIndex(0, path);
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("path"), path);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -15714,7 +15676,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
       return rv;
     }
 
-    if (leafName.Equals(kJournalDirectoryName)) {
+    if (leafName.EqualsLiteral(JOURNAL_DIRECTORY_NAME)) {
       continue;
     }
 
@@ -15880,14 +15842,17 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     return rv;
   }
 
+  const NS_ConvertASCIItoUTF16 filesSuffix(
+      kFileManagerDirectoryNameSuffix,
+      LiteralStringLength(kFileManagerDirectoryNameSuffix));
+
   for (uint32_t count = subdirsToProcess.Length(), i = 0; i < count; i++) {
     const nsString& subdirName = subdirsToProcess[i];
 
     // If the directory has the correct suffix then it should exist in
     // databaseFilenames.
     nsDependentSubstring subdirNameBase;
-    if (GetBaseFilename(subdirName, kFileManagerDirectoryNameSuffix,
-                        subdirNameBase)) {
+    if (GetBaseFilename(subdirName, filesSuffix, subdirNameBase)) {
       Unused << NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase));
 
       continue;
@@ -15897,7 +15862,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     // it. Check to see if we have a database that references this directory.
     nsString subdirNameWithSuffix;
     if (databaseFilenames.GetEntry(subdirName)) {
-      subdirNameWithSuffix = subdirName + kFileManagerDirectoryNameSuffix;
+      subdirNameWithSuffix = subdirName + filesSuffix;
     } else {
       // Windows doesn't allow a directory to end with a dot ('.'), so we have
       // to check that possibility here too.
@@ -15907,8 +15872,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
       if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameWithDot))) {
         continue;
       }
-      subdirNameWithSuffix =
-          subdirNameWithDot + kFileManagerDirectoryNameSuffix;
+      subdirNameWithSuffix = subdirNameWithDot + filesSuffix;
     }
 
     // We do have a database that uses this directory so we should rename it
@@ -16036,13 +16000,16 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
+  const NS_ConvertASCIItoUTF16 filesSuffix(
+      kFileManagerDirectoryNameSuffix,
+      LiteralStringLength(kFileManagerDirectoryNameSuffix));
+
   for (uint32_t count = subdirsToProcess.Length(), i = 0; i < count; i++) {
     const nsString& subdirName = subdirsToProcess[i];
 
     // The directory must have the correct suffix.
     nsDependentSubstring subdirNameBase;
-    if (NS_WARN_IF(!GetBaseFilename(subdirName, kFileManagerDirectoryNameSuffix,
-                                    subdirNameBase))) {
+    if (NS_WARN_IF(!GetBaseFilename(subdirName, filesSuffix, subdirNameBase))) {
       // If there is an unexpected directory in the idb directory, trying to
       // delete at first instead of breaking the whole initialization.
       if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
@@ -16079,7 +16046,10 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
   }
 
-  const auto sqliteSuffix = kSQLiteSuffix;
+  const NS_ConvertASCIItoUTF16 sqliteSuffix(kSQLiteSuffix,
+                                            LiteralStringLength(kSQLiteSuffix));
+  const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
+                                         LiteralStringLength(kSQLiteWALSuffix));
 
   for (auto iter = databaseFilenames.ConstIter(); !iter.Done() && !aCanceled;
        iter.Next()) {
@@ -16092,8 +16062,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    rv =
-        fmDirectory->Append(databaseFilename + kFileManagerDirectoryNameSuffix);
+    rv = fmDirectory->Append(databaseFilename + filesSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append);
       return rv;
@@ -16120,7 +16089,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
         return rv;
       }
 
-      rv = walFile->Append(databaseFilename + kSQLiteWALSuffix);
+      rv = walFile->Append(databaseFilename + walSuffix);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append3);
         return rv;
@@ -16472,7 +16441,14 @@ nsresult QuotaClient::GetDatabaseFilenames(
     return rv;
   }
 
-  const auto sqliteSuffix = kSQLiteSuffix;
+  const NS_ConvertASCIItoUTF16 sqliteSuffix(kSQLiteSuffix,
+                                            LiteralStringLength(kSQLiteSuffix));
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+      kSQLiteJournalSuffix, LiteralStringLength(kSQLiteJournalSuffix));
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+  const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
+                                         LiteralStringLength(kSQLiteWALSuffix));
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -16495,9 +16471,11 @@ nsresult QuotaClient::GetDatabaseFilenames(
     }
 
     if (aObsoleteFilenames &&
-        StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
-      aObsoleteFilenames->PutEntry(
-          Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
+        StringBeginsWith(leafName,
+                         NS_LITERAL_STRING(IDB_DELETION_MARKER_FILE_PREFIX))) {
+      const uint32_t start = 13;
+      MOZ_ASSERT(start == LiteralStringLength(IDB_DELETION_MARKER_FILE_PREFIX));
+      aObsoleteFilenames->PutEntry(Substring(leafName, start));
       continue;
     }
 
@@ -16516,14 +16494,14 @@ nsresult QuotaClient::GetDatabaseFilenames(
     // Skip SQLite temporary files. These files take up space on disk but will
     // be deleted as soon as the database is opened, so we don't count them
     // towards quota.
-    if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
-        StringEndsWith(leafName, kSQLiteSHMSuffix)) {
+    if (StringEndsWith(leafName, journalSuffix) ||
+        StringEndsWith(leafName, shmSuffix)) {
       continue;
     }
 
     // The SQLite WAL file does count towards quota, but it is handled below
     // once we find the actual database file.
-    if (StringEndsWith(leafName, kSQLiteWALSuffix)) {
+    if (StringEndsWith(leafName, walSuffix)) {
       continue;
     }
 
@@ -16571,6 +16549,11 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     return NS_OK;
   }
 
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+      kSQLiteJournalSuffix, LiteralStringLength(kSQLiteJournalSuffix));
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
          file && !aCanceled) {
@@ -16583,7 +16566,8 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     // Ignore the markerfiles. Note: the unremoved files can still be calculated
     // here as long as its size matches the size recorded in QuotaManager
     // in-memory objects.
-    if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
+    if (StringBeginsWith(leafName,
+                         NS_LITERAL_STRING(IDB_DELETION_MARKER_FILE_PREFIX))) {
       continue;
     }
 
@@ -16593,8 +16577,8 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     }
 
     // Journal files and sqlite-shm files don't count towards usage.
-    if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
-        StringEndsWith(leafName, kSQLiteSHMSuffix)) {
+    if (StringEndsWith(leafName, journalSuffix) ||
+        StringEndsWith(leafName, shmSuffix)) {
       continue;
     }
 
@@ -16622,7 +16606,7 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
           return rv;
         }
 
-        if (!leafName.Equals(kJournalDirectoryName)) {
+        if (!leafName.EqualsLiteral(JOURNAL_DIRECTORY_NAME)) {
           NS_WARNING("Unknown directory found!");
         }
       }
@@ -17019,6 +17003,7 @@ nsresult Maintenance::DirectoryWork() {
                 "Something changed with available persistence types!");
 
   NS_NAMED_LITERAL_STRING(idbDirName, IDB_DIRECTORY_NAME);
+  NS_NAMED_LITERAL_STRING(sqliteExtension, ".sqlite");
 
   for (const PersistenceType persistenceType : kPersistenceTypes) {
     // Loop over "<persistence>" directories.
@@ -17175,7 +17160,7 @@ nsresult Maintenance::DirectoryWork() {
           return rv;
         }
 
-        if (!StringEndsWith(idbFilePath, kSQLiteSuffix)) {
+        if (!StringEndsWith(idbFilePath, sqliteExtension)) {
           continue;
         }
 
@@ -17877,8 +17862,6 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection* aConnection,
   MOZ_ASSERT(fileSize > 0);
 
   nsCOMPtr<mozIStorageStatement> stmt;
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   rv = aConnection->CreateStatement(
       NS_LITERAL_CSTRING("UPDATE database "
                          "SET last_vacuum_time = :time"
@@ -17888,12 +17871,12 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection* aConnection,
     return;
   }
 
-  rv = stmt->BindInt64ByIndex(0, vacuumTime);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("time"), vacuumTime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  rv = stmt->BindInt64ByIndex(1, fileSize);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("size"), fileSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -18079,11 +18062,12 @@ void DatabaseOperationBase::GetBindingClauseForKeyRange(
 
   NS_NAMED_LITERAL_CSTRING(andStr, " AND ");
   NS_NAMED_LITERAL_CSTRING(spacecolon, " :");
+  NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
 
   if (aKeyRange.isOnly()) {
     // Both keys equal.
     aBindingClause = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") +
-                     spacecolon + kStmtParamNameLowerKey;
+                     spacecolon + lowerKey;
     return;
   }
 
@@ -18096,7 +18080,7 @@ void DatabaseOperationBase::GetBindingClauseForKeyRange(
     if (!aKeyRange.lowerOpen()) {
       aBindingClause.AppendLiteral("=");
     }
-    aBindingClause.Append(spacecolon + kStmtParamNameLowerKey);
+    aBindingClause.Append(spacecolon + lowerKey);
   }
 
   if (!aKeyRange.upper().IsUnset()) {
@@ -18106,7 +18090,7 @@ void DatabaseOperationBase::GetBindingClauseForKeyRange(
     if (!aKeyRange.upperOpen()) {
       aBindingClause.AppendLiteral("=");
     }
-    aBindingClause.Append(spacecolon + kStmtParamNameUpperKey);
+    aBindingClause.Append(spacecolon + NS_LITERAL_CSTRING("upper_key"));
   }
 
   MOZ_ASSERT(!aBindingClause.IsEmpty());
@@ -18312,7 +18296,8 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
   nsresult rv = NS_OK;
 
   if (!aKeyRange.lower().IsUnset()) {
-    rv = aKeyRange.lower().BindToStatement(aStatement, kStmtParamNameLowerKey);
+    rv = aKeyRange.lower().BindToStatement(aStatement,
+                                           NS_LITERAL_CSTRING("lower_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18323,7 +18308,8 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
   }
 
   if (!aKeyRange.upper().IsUnset()) {
-    rv = aKeyRange.upper().BindToStatement(aStatement, kStmtParamNameUpperKey);
+    rv = aKeyRange.upper().BindToStatement(aStatement,
+                                           NS_LITERAL_CSTRING("upper_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18353,7 +18339,7 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
-    rv = lower.BindToStatement(aStatement, kStmtParamNameLowerKey);
+    rv = lower.BindToStatement(aStatement, NS_LITERAL_CSTRING("lower_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18374,7 +18360,7 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
-    rv = upper.BindToStatement(aStatement, kStmtParamNameUpperKey);
+    rv = upper.BindToStatement(aStatement, NS_LITERAL_CSTRING("upper_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18384,9 +18370,10 @@ nsresult DatabaseOperationBase::BindKeyRangeToStatement(
 }
 
 // static
-void DatabaseOperationBase::AppendConditionClause(
-    const nsACString& aColumnName, const nsACString& aStatementParameterName,
-    bool aLessThan, bool aEquals, nsAutoCString& aResult) {
+void DatabaseOperationBase::AppendConditionClause(const nsACString& aColumnName,
+                                                  const nsACString& aArgName,
+                                                  bool aLessThan, bool aEquals,
+                                                  nsAutoCString& aResult) {
   aResult +=
       NS_LITERAL_CSTRING(" AND ") + aColumnName + NS_LITERAL_CSTRING(" ");
 
@@ -18400,7 +18387,7 @@ void DatabaseOperationBase::AppendConditionClause(
     aResult.Append('=');
   }
 
-  aResult += NS_LITERAL_CSTRING(" :") + aStatementParameterName;
+  aResult += NS_LITERAL_CSTRING(" :") + aArgName;
 }
 
 // static
@@ -18508,6 +18495,12 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     return NS_OK;
   }
 
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(valueLocaleString, "value_locale");
+
   DatabaseConnection::CachedStatement insertUniqueStmt;
   DatabaseConnection::CachedStatement insertStmt;
 
@@ -18526,12 +18519,8 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
           NS_LITERAL_CSTRING("INSERT INTO unique_index_data "
                              "(index_id, value, object_store_id, "
                              "object_data_key, value_locale) "
-                             "VALUES (:") +
-              kStmtParamNameIndexId + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameValue + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameObjectDataKey + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameValueLocale + NS_LITERAL_CSTRING(");"),
+                             "VALUES (:index_id, :value, :object_store_id, "
+                             ":object_data_key, :value_locale);"),
           &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -18541,39 +18530,35 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
           NS_LITERAL_CSTRING("INSERT OR IGNORE INTO index_data "
                              "(index_id, value, object_data_key, "
                              "object_store_id, value_locale) "
-                             "VALUES (:") +
-              kStmtParamNameIndexId + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameValue + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameObjectDataKey + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(", :") +
-              kStmtParamNameValueLocale + NS_LITERAL_CSTRING(");"),
+                             "VALUES (:index_id, :value, :object_data_key, "
+                             ":object_store_id, :value_locale);"),
           &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameIndexId, info.mIndexId);
+    rv = stmt->BindInt64ByName(indexIdString, info.mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = info.mKey.BindToStatement(stmt, kStmtParamNameValue);
+    rv = info.mKey.BindToStatement(stmt, valueString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = info.mSortKey.BindToStatement(stmt, kStmtParamNameValueLocale);
+    rv = info.mSortKey.BindToStatement(stmt, valueLocaleString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
+    rv = stmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aObjectStoreKey.BindToStatement(stmt, kStmtParamNameObjectDataKey);
+    rv = aObjectStoreKey.BindToStatement(stmt, objectDataKeyString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18618,6 +18603,10 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     return NS_OK;
   }
 
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
+
   DatabaseConnection::CachedStatement deleteUniqueStmt;
   DatabaseConnection::CachedStatement deleteStmt;
 
@@ -18634,9 +18623,8 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     } else if (indexValue.mUnique) {
       rv = aConnection->GetCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM unique_index_data "
-                             "WHERE index_id = :") +
-              kStmtParamNameIndexId + NS_LITERAL_CSTRING(" AND value = :") +
-              kStmtParamNameValue + NS_LITERAL_CSTRING(";"),
+                             "WHERE index_id = :index_id "
+                             "AND value = :value;"),
           &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -18644,29 +18632,27 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
     } else {
       rv = aConnection->GetCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM index_data "
-                             "WHERE index_id = :") +
-              kStmtParamNameIndexId + NS_LITERAL_CSTRING(" AND value = :") +
-              kStmtParamNameValue +
-              NS_LITERAL_CSTRING(" AND object_data_key = :") +
-              kStmtParamNameObjectDataKey + NS_LITERAL_CSTRING(";"),
+                             "WHERE index_id = :index_id "
+                             "AND value = :value "
+                             "AND object_data_key = :object_data_key;"),
           &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameIndexId, indexValue.mIndexId);
+    rv = stmt->BindInt64ByName(indexIdString, indexValue.mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = indexValue.mKey.BindToStatement(stmt, kStmtParamNameValue);
+    rv = indexValue.mKey.BindToStatement(stmt, valueString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     if (!indexValue.mUnique) {
-      rv = aObjectStoreKey.BindToStatement(stmt, kStmtParamNameObjectDataKey);
+      rv = aObjectStoreKey.BindToStatement(stmt, objectDataKeyString);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -18704,6 +18690,9 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
   const bool singleRowOnly = aKeyRange.isSome() && aKeyRange.ref().isOnly();
 
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
+
   nsresult rv;
   Key objectStoreKey;
   DatabaseConnection::CachedStatement selectStmt;
@@ -18712,9 +18701,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT index_data_values "
                            "FROM object_data "
-                           "WHERE object_store_id = :") +
-            kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
-            kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
+                           "WHERE object_store_id = :object_store_id "
+                           "AND key = :key;"),
         &selectStmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -18722,23 +18710,21 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
     objectStoreKey = aKeyRange.ref().lower();
 
-    rv = objectStoreKey.BindToStatement(selectStmt, kStmtParamNameKey);
+    rv = objectStoreKey.BindToStatement(selectStmt, keyString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
     nsAutoCString keyRangeClause;
     if (aKeyRange.isSome()) {
-      GetBindingClauseForKeyRange(aKeyRange.ref(), kStmtParamNameKey,
-                                  keyRangeClause);
+      GetBindingClauseForKeyRange(aKeyRange.ref(), keyString, keyRangeClause);
     }
 
     rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT index_data_values, key "
                            "FROM object_data "
                            "WHERE object_store_id = :") +
-            kStmtParamNameObjectStoreId + keyRangeClause +
-            NS_LITERAL_CSTRING(";"),
+            objectStoreIdString + keyRangeClause + NS_LITERAL_CSTRING(";"),
         &selectStmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -18752,7 +18738,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     }
   }
 
-  rv = selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
+  rv = selectStmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -18788,22 +18774,20 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     } else {
       rv = aConnection->GetCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM object_data "
-                             "WHERE object_store_id = :") +
-              kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
-              kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
+                             "WHERE object_store_id = :object_store_id "
+                             "AND key = :key;"),
           &deleteStmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = deleteStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
-                                     aObjectStoreId);
+    rv = deleteStmt->BindInt64ByName(objectStoreIdString, aObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = objectStoreKey.BindToStatement(deleteStmt, kStmtParamNameKey);
+    rv = objectStoreKey.BindToStatement(deleteStmt, keyString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18846,38 +18830,44 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
   DatabaseConnection::CachedStatement updateStmt;
-  rv = aConnection->ExecuteCachedStatement(
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_data "
-                         "SET index_data_values = :") +
-          kStmtParamNameIndexDataValues +
-          NS_LITERAL_CSTRING(" WHERE object_store_id = :") +
-          kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
-          kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
-      [&indexDataValues, indexDataValuesLength, aObjectStoreId,
-       &aObjectStoreKey](mozIStorageStatement& updateStmt) {
-        nsresult rv =
-            indexDataValues
-                ? updateStmt.BindAdoptedBlobByName(
-                      kStmtParamNameIndexDataValues, indexDataValues.release(),
-                      indexDataValuesLength)
-                : updateStmt.BindNullByName(kStmtParamNameIndexDataValues);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+                         "SET index_data_values = :index_data_values "
+                         "WHERE object_store_id = :object_store_id "
+                         "AND key = :key;"),
+      &updateStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = updateStmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                        aObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  NS_NAMED_LITERAL_CSTRING(indexDataValuesString, "index_data_values");
 
-        rv = aObjectStoreKey.BindToStatement(&updateStmt, kStmtParamNameKey);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  if (indexDataValues) {
+    rv = updateStmt->BindAdoptedBlobByName(indexDataValuesString,
+                                           indexDataValues.release(),
+                                           indexDataValuesLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    rv = updateStmt->BindNullByName(indexDataValuesString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
-        return NS_OK;
-      });
+  rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                                   aObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aObjectStoreKey.BindToStatement(updateStmt, NS_LITERAL_CSTRING("key"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = updateStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -18899,14 +18889,15 @@ nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
   nsresult rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("SELECT id "
                          "FROM object_store_index "
-                         "WHERE object_store_id = :") +
-          kStmtParamNameObjectStoreId + kOpenLimit + NS_LITERAL_CSTRING("1;"),
+                         "WHERE object_store_id = :object_store_id "
+                         "LIMIT 1;"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, aObjectStoreId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                             aObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -19522,12 +19513,18 @@ nsresult FactoryOp::CheckPermission(
     if (aContentParent) {
       // Check to make sure that the child process has access to the database it
       // is accessing.
+      NS_NAMED_LITERAL_CSTRING(permissionStringBase,
+                               PERMISSION_STRING_CHROME_BASE);
       NS_ConvertUTF16toUTF8 databaseName(mCommonParams.metadata().name());
+      NS_NAMED_LITERAL_CSTRING(readSuffix,
+                               PERMISSION_STRING_CHROME_READ_SUFFIX);
+      NS_NAMED_LITERAL_CSTRING(writeSuffix,
+                               PERMISSION_STRING_CHROME_WRITE_SUFFIX);
 
       const nsAutoCString permissionStringWrite =
-          kPermissionStringBase + databaseName + kPermissionWriteSuffix;
+          permissionStringBase + databaseName + writeSuffix;
       const nsAutoCString permissionStringRead =
-          kPermissionStringBase + databaseName + kPermissionReadSuffix;
+          permissionStringBase + databaseName + readSuffix;
 
       bool canWrite = CheckAtLeastOneAppHasPermission(aContentParent,
                                                       permissionStringWrite);
@@ -19752,7 +19749,7 @@ nsresult FactoryOp::OpenDirectory() {
   nsAutoString filename;
   GetDatabaseFilename(databaseName, filename);
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20055,7 +20052,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + filename);
+  rv = markerFile->Append(NS_LITERAL_STRING(IDB_DELETION_MARKER_FILE_PREFIX) +
+                          filename);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20083,7 +20081,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20106,7 +20104,9 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = fmDirectory->Append(filename + kFileManagerDirectoryNameSuffix);
+  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+
+  rv = fmDirectory->Append(filename + filesSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20527,8 +20527,6 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     indexTable.AssignLiteral("index_data");
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   nsCString readQuery =
       NS_LITERAL_CSTRING("SELECT value, object_data_key FROM ") + indexTable +
       NS_LITERAL_CSTRING(" WHERE index_id = :index_id");
@@ -20538,7 +20536,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     return rv;
   }
 
-  rv = readStmt->BindInt64ByIndex(0, aIndexMetadata.id());
+  rv = readStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                                 aIndexMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -20549,14 +20548,12 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
   while (NS_SUCCEEDED((rv = readStmt->ExecuteStep(&hasResult))) && hasResult) {
     if (needCreateWriteQuery) {
       needCreateWriteQuery = false;
-      nsCString writeQuery =
-          NS_LITERAL_CSTRING("UPDATE ") + indexTable +
-          NS_LITERAL_CSTRING("SET value_locale = :") +
-          kStmtParamNameValueLocale +
-          NS_LITERAL_CSTRING(" WHERE index_id = :") + kStmtParamNameIndexId +
-          NS_LITERAL_CSTRING(" AND value = :") + kStmtParamNameValue +
-          NS_LITERAL_CSTRING(" AND object_data_key = :") +
-          kStmtParamNameObjectDataKey;
+      nsCString writeQuery = NS_LITERAL_CSTRING("UPDATE ") + indexTable +
+                             NS_LITERAL_CSTRING(
+                                 "SET value_locale = :value_locale "
+                                 "WHERE index_id = :index_id AND "
+                                 "value = :value AND "
+                                 "object_data_key = :object_data_key");
       rv = aConnection->CreateStatement(writeQuery, getter_AddRefs(writeStmt));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -20564,7 +20561,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     }
 
     mozStorageStatementScoper scoper(writeStmt);
-    rv = writeStmt->BindInt64ByName(kStmtParamNameIndexId, aIndexMetadata.id());
+    rv = writeStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                                    aIndexMetadata.id());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -20575,7 +20573,7 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       return rv;
     }
 
-    rv = oldKey.BindToStatement(writeStmt, kStmtParamNameValue);
+    rv = oldKey.BindToStatement(writeStmt, NS_LITERAL_CSTRING("value"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -20588,7 +20586,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
                  : NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
-    rv = newSortKey.BindToStatement(writeStmt, kStmtParamNameValueLocale);
+    rv = newSortKey.BindToStatement(writeStmt,
+                                    NS_LITERAL_CSTRING("value_locale"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -20598,7 +20597,8 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
       return rv;
     }
 
-    rv = objectKey.BindToStatement(writeStmt, kStmtParamNameObjectDataKey);
+    rv = objectKey.BindToStatement(writeStmt,
+                                   NS_LITERAL_CSTRING("object_data_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -20609,8 +20609,6 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
     }
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
   nsCString metaQuery = NS_LITERAL_CSTRING(
       "UPDATE object_store_index SET "
       "locale = :locale WHERE id = :id");
@@ -20622,12 +20620,12 @@ nsresult OpenDatabaseOp::UpdateLocaleAwareIndex(
 
   nsString locale;
   CopyASCIItoUTF16(aLocale, locale);
-  rv = metaStmt->BindStringByIndex(0, locale);
+  rv = metaStmt->BindStringByName(NS_LITERAL_CSTRING("locale"), locale);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = metaStmt->BindInt64ByIndex(1, aIndexMetadata.id());
+  rv = metaStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aIndexMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21175,20 +21173,22 @@ nsresult OpenDatabaseOp::VersionChangeOp::DoDatabaseWork(
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement updateStmt;
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("UPDATE database "
                          "SET version = :version;"),
-      [this](mozIStorageStatement& updateStmt) {
-        nsresult rv =
-            updateStmt.BindInt64ByIndex(0, int64_t(mRequestedVersion));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      &updateStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        return NS_OK;
-      });
+  rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("version"),
+                                   int64_t(mRequestedVersion));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = updateStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21379,7 +21379,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22015,6 +22015,9 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
       mTransaction->mModifiedAutoIncrementObjectStoreMetadataArray;
 
   if (!metadataArray.IsEmpty()) {
+    NS_NAMED_LITERAL_CSTRING(osid, "osid");
+    NS_NAMED_LITERAL_CSTRING(ai, "ai");
+
     Database* database = mTransaction->GetDatabase();
     MOZ_ASSERT(database);
 
@@ -22033,24 +22036,23 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
       if (stmt) {
         MOZ_ALWAYS_SUCCEEDS(stmt->Reset());
       } else {
-        // The parameter names are not used, parameters are bound by index only
-        // locally in the same function.
         rv = connection->GetCachedStatement(
             NS_LITERAL_CSTRING("UPDATE object_store "
-                               "SET auto_increment = :auto_increment WHERE id "
-                               "= :object_store_id;"),
+                               "SET auto_increment = :") +
+                ai + NS_LITERAL_CSTRING(" WHERE id = :") + osid +
+                NS_LITERAL_CSTRING(";"),
             &stmt);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
 
-      rv = stmt->BindInt64ByIndex(1, metadata->mCommonMetadata.id());
+      rv = stmt->BindInt64ByName(osid, metadata->mCommonMetadata.id());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = stmt->BindInt64ByIndex(0, metadata->mNextAutoIncrementId);
+      rv = stmt->BindInt64ByName(ai, metadata->mNextAutoIncrementId);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -22507,15 +22509,14 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // another that already exists. This should be impossible because we should
     // have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT name "
                            "FROM object_store "
                            "WHERE name = :name;"),
         &stmt));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mMetadata.name()));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name()));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -22534,43 +22535,48 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING(
           "INSERT INTO object_store (id, auto_increment, name, key_path) "
           "VALUES (:id, :auto_increment, :name, :key_path);"),
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt32ByIndex(1, mMetadata.autoIncrement() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mMetadata.id());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindStringByIndex(2, mMetadata.name());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
+                             mMetadata.autoIncrement() ? 1 : 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        if (mMetadata.keyPath().IsValid()) {
-          nsAutoString keyPathSerialization;
-          mMetadata.keyPath().SerializeToString(keyPathSerialization);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-          rv = stmt.BindStringByIndex(3, keyPathSerialization);
-        } else {
-          rv = stmt.BindNullByIndex(3);
-        }
+  NS_NAMED_LITERAL_CSTRING(keyPath, "key_path");
 
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  if (mMetadata.keyPath().IsValid()) {
+    nsAutoString keyPathSerialization;
+    mMetadata.keyPath().SerializeToString(keyPathSerialization);
 
-        return NS_OK;
-      });
+    rv = stmt->BindStringByName(keyPath, keyPathSerialization);
+  } else {
+    rv = stmt->BindNullByName(keyPath);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22597,6 +22603,8 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   aConnection->AssertIsOnConnectionThread();
 
   AUTO_PROFILER_LABEL("DeleteObjectStoreOp::DoDatabaseWork", DOM);
+
+  NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
 
 #ifdef DEBUG
   {
@@ -22648,32 +22656,58 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   if (mIsLastObjectStore) {
     // We can just delete everything if this is the last object store.
-    rv = aConnection->ExecuteCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM index_data;"));
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM index_data;"), &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->ExecuteCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM unique_index_data;"));
+    rv = stmt->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->ExecuteCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_data;"));
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM unique_index_data;"), &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->ExecuteCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_store_index;"));
+    rv = stmt->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aConnection->ExecuteCachedStatement(
-        NS_LITERAL_CSTRING("DELETE FROM object_store;"));
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_data;"), &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_store_index;"), &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_store;"), &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -22693,59 +22727,65 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       }
 
       // Now clean up the object store index table.
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
-      rv = aConnection->ExecuteCachedStatement(
+      DatabaseConnection::CachedStatement stmt;
+      rv = aConnection->GetCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM object_store_index "
                              "WHERE object_store_id = :object_store_id;"),
-          [this](mozIStorageStatement& stmt) {
-            nsresult rv =
-                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-            return NS_OK;
-          });
+      rv = stmt->BindInt64ByName(objectStoreIdString,
+                                 mMetadata->mCommonMetadata.id());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
       // We only have to worry about object data if this object store has no
       // indexes.
-      // The parameter names are not used, parameters are bound by index only
-      // locally in the same function.
-      rv = aConnection->ExecuteCachedStatement(
+      DatabaseConnection::CachedStatement stmt;
+      rv = aConnection->GetCachedStatement(
           NS_LITERAL_CSTRING("DELETE FROM object_data "
                              "WHERE object_store_id = :object_store_id;"),
-          [this](mozIStorageStatement& stmt) {
-            nsresult rv =
-                stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
+          &stmt);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-            return NS_OK;
-          });
+      rv = stmt->BindInt64ByName(objectStoreIdString,
+                                 mMetadata->mCommonMetadata.id());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->Execute();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    rv = aConnection->ExecuteCachedStatement(
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("DELETE FROM object_store "
                            "WHERE id = :object_store_id;"),
-        [this](mozIStorageStatement& stmt) {
-          nsresult rv =
-              stmt.BindInt64ByIndex(0, mMetadata->mCommonMetadata.id());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+        &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-          return NS_OK;
-        });
+    rv = stmt->BindInt64ByName(objectStoreIdString,
+                               mMetadata->mCommonMetadata.id());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -22784,17 +22824,17 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // another that already exists. This should be impossible because we should
     // have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("SELECT name "
-                           "FROM object_store "
-                           "WHERE name = :name AND id != :id;"),
-        &stmt));
+    MOZ_ALWAYS_SUCCEEDS(
+        aConnection->GetCachedStatement(NS_LITERAL_CSTRING("SELECT name "
+                                                           "FROM object_store "
+                                                           "WHERE name = :name "
+                                                           "AND id != :id;"),
+                                        &stmt));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(0, mNewName));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(1, mId));
+    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mId));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -22813,25 +22853,28 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
-      NS_LITERAL_CSTRING("UPDATE object_store "
-                         "SET name = :name "
-                         "WHERE id = :id;"),
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindStringByIndex(0, mNewName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  DatabaseConnection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING("UPDATE object_store "
+                                                          "SET name = :name "
+                                                          "WHERE id = :id;"),
+                                       &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt64ByIndex(1, mId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName);
 
-        return NS_OK;
-      });
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mId);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22901,21 +22944,24 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
   DebugOnly<void*> storageConnection = aConnection->GetStorageConnection();
   MOZ_ASSERT(storageConnection);
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  const nsresult rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_data "
                          "SET index_data_values = update_index_data_values "
                          "(key, index_data_values, file_ids, data) "
                          "WHERE object_store_id = :object_store_id;"),
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        return NS_OK;
-      });
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                             mObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22948,16 +22994,16 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // store as another that already exists. This should be impossible because
     // we should have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING(
-            "SELECT name "
-            "FROM object_store_index "
-            "WHERE object_store_id = :object_store_id AND name = :name;"),
+        NS_LITERAL_CSTRING("SELECT name "
+                           "FROM object_store_index "
+                           "WHERE object_store_id = :osid "
+                           "AND name = :name;"),
         &stmt));
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mMetadata.name()));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name()));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -22977,62 +23023,72 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING(
           "INSERT INTO object_store_index (id, name, key_path, unique_index, "
           "multientry, object_store_id, locale, "
           "is_auto_locale) "
-          "VALUES (:id, :name, :key_path, :unique, :multientry, "
-          ":object_store_id, :locale, :is_auto_locale)"),
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindInt64ByIndex(0, mMetadata.id());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+          "VALUES (:id, :name, :key_path, :unique, :multientry, :osid, "
+          ":locale, "
+          ":is_auto_locale)"),
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindStringByIndex(1, mMetadata.name());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mMetadata.id());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        nsAutoString keyPathSerialization;
-        mMetadata.keyPath().SerializeToString(keyPathSerialization);
-        rv = stmt.BindStringByIndex(2, keyPathSerialization);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mMetadata.name());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt32ByIndex(3, mMetadata.unique() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  nsAutoString keyPathSerialization;
+  mMetadata.keyPath().SerializeToString(keyPathSerialization);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                              keyPathSerialization);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt32ByIndex(4, mMetadata.multiEntry() ? 1 : 0);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("unique"),
+                             mMetadata.unique() ? 1 : 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt64ByIndex(5, mObjectStoreId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("multientry"),
+                             mMetadata.multiEntry() ? 1 : 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = mMetadata.locale().IsEmpty()
-                 ? stmt.BindNullByIndex(6)
-                 : stmt.BindUTF8StringByIndex(6, mMetadata.locale());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt32ByIndex(7, mMetadata.autoLocale());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  if (mMetadata.locale().IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("locale"));
+  } else {
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("locale"),
+                                    mMetadata.locale());
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        return NS_OK;
-      });
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("is_auto_locale"),
+                             mMetadata.autoLocale());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23289,20 +23345,20 @@ nsresult DeleteIndexOp::RemoveReferencesToIndex(
     nsresult rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("UPDATE object_data "
                            "SET index_data_values = NULL "
-                           "WHERE object_store_id = :") +
-            kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
-            kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
+                           "WHERE object_store_id = :object_store_id "
+                           "AND key = :key;"),
         &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                               mObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = aObjectStoreKey.BindToStatement(stmt, kStmtParamNameKey);
+    rv = aObjectStoreKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -23379,15 +23435,14 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   {
     // Make sure |mIsLastIndex| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT id "
                            "FROM object_store_index "
                            "WHERE object_store_id = :object_store_id;"),
         &stmt));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
+    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByName(
+        NS_LITERAL_CSTRING("object_store_id"), mObjectStoreId));
 
     bool foundThisIndex = false;
     bool foundOtherIndex = false;
@@ -23439,9 +23494,8 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           NS_LITERAL_CSTRING("/* do not warn (bug someone else) */ "
                              "SELECT value, object_data_key "
                              "FROM unique_index_data "
-                             "WHERE index_id = :") +
-              kStmtParamNameIndexId +
-              NS_LITERAL_CSTRING(" ORDER BY object_data_key ASC;"),
+                             "WHERE index_id = :index_id "
+                             "ORDER BY object_data_key ASC;"),
           &selectStmt);
     } else {
       rv = aConnection->GetCachedStatement(
@@ -23453,12 +23507,9 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
               "FROM unique_index_data "
               "JOIN object_data "
               "ON unique_index_data.object_data_key = object_data.key "
-              "WHERE unique_index_data.index_id = :") +
-              kStmtParamNameIndexId +
-              NS_LITERAL_CSTRING(" AND object_data.object_store_id = :") +
-              kStmtParamNameObjectStoreId +
-              NS_LITERAL_CSTRING(
-                  " ORDER BY unique_index_data.object_data_key ASC;"),
+              "WHERE unique_index_data.index_id = :index_id "
+              "AND object_data.object_store_id = :object_store_id "
+              "ORDER BY unique_index_data.object_data_key ASC;"),
           &selectStmt);
     }
   } else {
@@ -23467,26 +23518,23 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
           NS_LITERAL_CSTRING("/* do not warn (bug me not) */ "
                              "SELECT value, object_data_key "
                              "FROM index_data "
-                             "WHERE index_id = :") +
-              kStmtParamNameIndexId +
-              NS_LITERAL_CSTRING(" AND object_store_id = :") +
-              kStmtParamNameObjectStoreId +
-              NS_LITERAL_CSTRING(" ORDER BY object_data_key ASC;"),
+                             "WHERE index_id = :index_id "
+                             "AND object_store_id = :object_store_id "
+                             "ORDER BY object_data_key ASC;"),
           &selectStmt);
     } else {
       rv = aConnection->GetCachedStatement(
-          NS_LITERAL_CSTRING("/* do not warn (bug off) */ "
-                             "SELECT index_data.value, "
-                             "index_data.object_data_key, "
-                             "object_data.index_data_values "
-                             "FROM index_data "
-                             "JOIN object_data "
-                             "ON index_data.object_data_key = object_data.key "
-                             "WHERE index_data.index_id = :") +
-              kStmtParamNameIndexId +
-              NS_LITERAL_CSTRING(" AND object_data.object_store_id = :") +
-              kStmtParamNameObjectStoreId +
-              NS_LITERAL_CSTRING(" ORDER BY index_data.object_data_key ASC;"),
+          NS_LITERAL_CSTRING(
+              "/* do not warn (bug off) */ "
+              "SELECT index_data.value, "
+              "index_data.object_data_key, "
+              "object_data.index_data_values "
+              "FROM index_data "
+              "JOIN object_data "
+              "ON index_data.object_data_key = object_data.key "
+              "WHERE index_data.index_id = :index_id "
+              "AND object_data.object_store_id = :object_store_id "
+              "ORDER BY index_data.object_data_key ASC;"),
           &selectStmt);
     }
   }
@@ -23494,18 +23542,23 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  rv = selectStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
+  NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
+
+  rv = selectStmt->BindInt64ByName(indexIdString, mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (!mUnique || !mIsLastIndex) {
-    rv = selectStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+    rv = selectStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
                                      mObjectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
+
+  NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
 
   DatabaseConnection::CachedStatement deleteIndexRowStmt;
   DatabaseConnection::CachedStatement nullIndexDataValuesStmt;
@@ -23582,18 +23635,15 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       if (mUnique) {
         rv = aConnection->GetCachedStatement(
             NS_LITERAL_CSTRING("DELETE FROM unique_index_data "
-                               "WHERE index_id = :") +
-                kStmtParamNameIndexId + NS_LITERAL_CSTRING(" AND value = :") +
-                kStmtParamNameValue + NS_LITERAL_CSTRING(";"),
+                               "WHERE index_id = :index_id "
+                               "AND value = :value;"),
             &deleteIndexRowStmt);
       } else {
         rv = aConnection->GetCachedStatement(
             NS_LITERAL_CSTRING("DELETE FROM index_data "
-                               "WHERE index_id = :") +
-                kStmtParamNameIndexId + NS_LITERAL_CSTRING(" AND value = :") +
-                kStmtParamNameValue +
-                NS_LITERAL_CSTRING(" AND object_data_key = :") +
-                kStmtParamNameObjectDataKey + NS_LITERAL_CSTRING(";"),
+                               "WHERE index_id = :index_id "
+                               "AND value = :value "
+                               "AND object_data_key = :object_data_key;"),
             &deleteIndexRowStmt);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -23601,19 +23651,19 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       }
     }
 
-    rv = deleteIndexRowStmt->BindInt64ByName(kStmtParamNameIndexId, mIndexId);
+    rv = deleteIndexRowStmt->BindInt64ByName(indexIdString, mIndexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = indexKey.BindToStatement(deleteIndexRowStmt, kStmtParamNameValue);
+    rv = indexKey.BindToStatement(deleteIndexRowStmt, valueString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     if (!mUnique) {
       rv = lastObjectStoreKey.BindToStatement(deleteIndexRowStmt,
-                                              kStmtParamNameObjectDataKey);
+                                              objectDataKeyString);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -23639,17 +23689,21 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     }
   }
 
-  rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement deleteStmt;
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("DELETE FROM object_store_index "
                          "WHERE id = :index_id;"),
-      [this](mozIStorageStatement& deleteStmt) {
-        nsresult rv = deleteStmt.BindInt64ByIndex(0, mIndexId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      &deleteStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        return NS_OK;
-      });
+  rv = deleteStmt->BindInt64ByName(indexIdString, mIndexId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = deleteStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23683,8 +23737,6 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     // that already exists. This should be impossible because we should have
     // thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
     MOZ_ALWAYS_SUCCEEDS(aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("SELECT name "
                            "FROM object_store_index "
@@ -23693,11 +23745,14 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                            "AND id != :id;"),
         &stmt));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(0, mObjectStoreId));
+    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByName(
+        NS_LITERAL_CSTRING("object_store_id"), mObjectStoreId));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindStringByIndex(1, mNewName));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName));
 
-    MOZ_ALWAYS_SUCCEEDS(stmt->BindInt64ByIndex(2, mIndexId));
+    MOZ_ALWAYS_SUCCEEDS(
+        stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mIndexId));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -23718,25 +23773,29 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv = aConnection->ExecuteCachedStatement(
+  DatabaseConnection::CachedStatement stmt;
+  rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("UPDATE object_store_index "
                          "SET name = :name "
                          "WHERE id = :id;"),
-      [this](mozIStorageStatement& stmt) {
-        nsresult rv = stmt.BindStringByIndex(0, mNewName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-        rv = stmt.BindInt64ByIndex(1, mIndexId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName);
 
-        return NS_OK;
-      });
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mIndexId);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23972,21 +24031,20 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   nsresult rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("SELECT index_data_values "
                          "FROM object_data "
-                         "WHERE object_store_id = :") +
-          kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(" AND key = :") +
-          kStmtParamNameKey + NS_LITERAL_CSTRING(";"),
+                         "WHERE object_store_id = :object_store_id "
+                         "AND key = :key;"),
       &indexValuesStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = indexValuesStmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+  rv = indexValuesStmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
                                         mParams.objectStoreId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = mResponse.BindToStatement(indexValuesStmt, kStmtParamNameKey);
+  rv = mResponse.BindToStatement(indexValuesStmt, NS_LITERAL_CSTRING("key"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24178,24 +24236,24 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   // if we allow overwrite or not. By not allowing overwrite we raise
   // detectable errors rather than corrupting data.
   DatabaseConnection::CachedStatement stmt;
-  const auto& optReplaceDirective = (!mOverwrite || keyUnset)
-                                        ? NS_LITERAL_CSTRING("")
-                                        : NS_LITERAL_CSTRING("OR REPLACE ");
-  rv = aConnection->GetCachedStatement(
-      NS_LITERAL_CSTRING("INSERT ") + optReplaceDirective +
-          NS_LITERAL_CSTRING("INTO object_data "
-                             "(object_store_id, key, file_ids, data) "
-                             "VALUES (:") +
-          kStmtParamNameObjectStoreId + NS_LITERAL_CSTRING(", :") +
-          kStmtParamNameKey + NS_LITERAL_CSTRING(", :") +
-          kStmtParamNameFileIds + NS_LITERAL_CSTRING(", :") +
-          kStmtParamNameData + NS_LITERAL_CSTRING(");"),
-      &stmt);
+  if (!mOverwrite || keyUnset) {
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("INSERT INTO object_data "
+                           "(object_store_id, key, file_ids, data) "
+                           "VALUES (:osid, :key, :file_ids, :data);"),
+        &stmt);
+  } else {
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("INSERT OR REPLACE INTO object_data "
+                           "(object_store_id, key, file_ids, data) "
+                           "VALUES (:osid, :key, :file_ids, :data);"),
+        &stmt);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, osid);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24253,7 +24311,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     }
   }
 
-  key.BindToStatement(stmt, kStmtParamNameKey);
+  key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
   if (mDataOverThreshold) {
     // The data we store in the SQLite database is a (signed) 64-bit integer.
@@ -24268,7 +24326,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
     int64_t data = (uint64_t(flags) << 32) | index;
 
-    rv = stmt->BindInt64ByName(kStmtParamNameData, data);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("data"), data);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24299,7 +24357,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed.release());
     size_t dataBufferLength = compressedLength;
 
-    rv = stmt->BindAdoptedBlobByName(kStmtParamNameData, dataBuffer,
+    rv = stmt->BindAdoptedBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
                                      dataBufferLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -24397,12 +24455,12 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       storedFileInfo.Serialize(fileIds);
     }
 
-    rv = stmt->BindStringByName(kStmtParamNameFileIds, fileIds);
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    rv = stmt->BindNullByName(kStmtParamNameFileIds);
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("file_ids"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24604,22 +24662,22 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
+                                NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
   nsCString limitClause;
   if (mLimit) {
-    limitClause = kOpenLimit;
+    limitClause.AssignLiteral(" LIMIT ");
     limitClause.AppendInt(mLimit);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT file_ids, data "
                         "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause +
-                    NS_LITERAL_CSTRING(" ORDER BY key ASC") + limitClause;
+                        "WHERE object_store_id = :osid") +
+                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY key ASC") +
+                    limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -24627,7 +24685,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24798,8 +24856,8 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
-                                keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
+                                NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
   nsAutoCString limitClause;
@@ -24811,9 +24869,9 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT key "
                         "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause +
-                    NS_LITERAL_CSTRING(" ORDER BY key ASC") + limitClause;
+                        "WHERE object_store_id = :osid") +
+                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY key ASC") +
+                    limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -24821,7 +24879,7 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId, mObjectStoreId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24932,32 +24990,36 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
       return rv;
     }
   } else {
+    NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
+
     nsAutoCString keyRangeClause;
-    GetBindingClauseForKeyRange(mParams.keyRange(), kColumnNameKey,
+    GetBindingClauseForKeyRange(mParams.keyRange(), NS_LITERAL_CSTRING("key"),
                                 keyRangeClause);
 
-    rv = aConnection->ExecuteCachedStatement(
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
         NS_LITERAL_CSTRING("DELETE FROM object_data "
                            "WHERE object_store_id = :") +
-            kStmtParamNameObjectStoreId + keyRangeClause +
-            NS_LITERAL_CSTRING(";"),
-        [this](mozIStorageStatement& stmt) {
-          nsresult rv = stmt.BindInt64ByName(kStmtParamNameObjectStoreId,
-                                             mParams.objectStoreId());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+            objectStoreIdString + keyRangeClause + NS_LITERAL_CSTRING(";"),
+        &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-          rv = BindKeyRangeToStatement(mParams.keyRange(), &stmt);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+    rv = stmt->BindInt64ByName(objectStoreIdString, mParams.objectStoreId());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-          return NS_OK;
-        });
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    rv = BindKeyRangeToStatement(mParams.keyRange(), stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = autoSave.Commit();
@@ -25009,26 +25071,32 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  // The parameter names are not used, parameters are bound by index only
-  // locally in the same function.
-  rv =
-      objectStoreHasIndexes
-          ? DeleteObjectStoreDataTableRowsWithIndexes(
-                aConnection, mParams.objectStoreId(), Nothing())
-          : aConnection->ExecuteCachedStatement(
-                NS_LITERAL_CSTRING("DELETE FROM object_data "
-                                   "WHERE object_store_id = :object_store_id;"),
-                [this](mozIStorageStatement& stmt) {
-                  nsresult rv =
-                      stmt.BindInt64ByIndex(0, mParams.objectStoreId());
-                  if (NS_WARN_IF(NS_FAILED(rv))) {
-                    return rv;
-                  }
+  if (objectStoreHasIndexes) {
+    rv = DeleteObjectStoreDataTableRowsWithIndexes(
+        aConnection, mParams.objectStoreId(), Nothing());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    DatabaseConnection::CachedStatement stmt;
+    rv = aConnection->GetCachedStatement(
+        NS_LITERAL_CSTRING("DELETE FROM object_data "
+                           "WHERE object_store_id = :object_store_id;"),
+        &stmt);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
-                  return NS_OK;
-                });
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("object_store_id"),
+                               mParams.objectStoreId());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   rv = autoSave.Commit();
@@ -25051,14 +25119,14 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
     GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
-                                kColumnNameKey, keyRangeClause);
+                                NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT count(*) "
                         "FROM object_data "
-                        "WHERE object_store_id = :") +
-                    kStmtParamNameObjectStoreId + keyRangeClause;
+                        "WHERE object_store_id = :osid") +
+                    keyRangeClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25066,7 +25134,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameObjectStoreId,
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
                              mParams.objectStoreId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -25204,13 +25272,13 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameValue,
-                                keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
+                                NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
   nsCString limitClause;
   if (mLimit) {
-    limitClause = kOpenLimit;
+    limitClause.AssignLiteral(" LIMIT ");
     limitClause.AppendInt(mLimit);
   }
 
@@ -25225,8 +25293,8 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
                         "index_table.object_store_id "
                         "AND object_data.key = "
                         "index_table.object_data_key "
-                        "WHERE index_id = :") +
-                    kStmtParamNameIndexId + keyRangeClause + limitClause;
+                        "WHERE index_id = :index_id") +
+                    keyRangeClause + limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25234,7 +25302,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
                              mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -25384,21 +25452,22 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameValue,
-                                keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
+                                NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
   nsCString limitClause;
   if (mLimit) {
-    limitClause = kOpenLimit;
+    limitClause.AssignLiteral(" LIMIT ");
     limitClause.AppendInt(mLimit);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT object_data_key "
                         "FROM ") +
-                    indexTable + NS_LITERAL_CSTRING("WHERE index_id = :") +
-                    kStmtParamNameIndexId + keyRangeClause + limitClause;
+                    indexTable +
+                    NS_LITERAL_CSTRING("WHERE index_id = :index_id") +
+                    keyRangeClause + limitClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25406,7 +25475,7 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
                              mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -25486,14 +25555,15 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
     GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
-                                kColumnNameValue, keyRangeClause);
+                                NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
                         "SELECT count(*) "
                         "FROM ") +
-                    indexTable + NS_LITERAL_CSTRING("WHERE index_id = :") +
-                    kStmtParamNameIndexId + keyRangeClause;
+                    indexTable +
+                    NS_LITERAL_CSTRING("WHERE index_id = :index_id") +
+                    keyRangeClause;
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(query, &stmt);
@@ -25501,7 +25571,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameIndexId,
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
                              mMetadata->mCommonMetadata.id());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -25728,105 +25798,6 @@ void Cursor::OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen) {
   }
 }
 
-void Cursor::OpenOp::PrepareKeyConditionClauses(
-    const nsACString& aKeyString, const nsACString& aDirectionClause,
-    const nsACString& aQueryStart) {
-  const bool isIncreasingOrder = IsIncreasingOrder(mCursor->mDirection);
-
-  nsAutoCString keyRangeClause;
-  nsAutoCString continueToKeyRangeClause;
-  AppendConditionClause(aKeyString, kStmtParamNameCurrentKey,
-                        !isIncreasingOrder, false, keyRangeClause);
-  AppendConditionClause(aKeyString, kStmtParamNameCurrentKey,
-                        !isIncreasingOrder, true, continueToKeyRangeClause);
-
-  {
-    Key bound;
-    bool open;
-    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
-
-    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
-      AppendConditionClause(aKeyString, kStmtParamNameRangeKey,
-                            isIncreasingOrder, !open, keyRangeClause);
-      AppendConditionClause(aKeyString, kStmtParamNameRangeKey,
-                            isIncreasingOrder, !open, continueToKeyRangeClause);
-      mCursor->mRangeKey = std::move(bound);
-    }
-  }
-
-  mCursor->mContinueQuery =
-      aQueryStart + keyRangeClause + aDirectionClause + kOpenLimit;
-
-  mCursor->mContinueToQuery =
-      aQueryStart + continueToKeyRangeClause + aDirectionClause + kOpenLimit;
-}
-
-void Cursor::OpenOp::PrepareIndexKeyConditionClause(
-    const nsACString& aSortColumn, const nsACString& aDirectionClause,
-    const nsLiteralCString& aObjectDataKeyPrefix, nsAutoCString aQueryStart) {
-  const bool isIncreasingOrder = IsIncreasingOrder(mCursor->mDirection);
-
-  {
-    Key bound;
-    bool open;
-    GetRangeKeyInfo(!isIncreasingOrder, &bound, &open);
-    if (mOptionalKeyRange.isSome() && !bound.IsUnset()) {
-      AppendConditionClause(aSortColumn, kStmtParamNameRangeKey,
-                            isIncreasingOrder, !open, aQueryStart);
-      mCursor->mRangeKey = std::move(bound);
-    }
-  }
-
-  const auto& comparisonChar =
-      isIncreasingOrder ? NS_LITERAL_CSTRING(">") : NS_LITERAL_CSTRING("<");
-
-  mCursor->mContinueToQuery =
-      aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") + comparisonChar +
-      NS_LITERAL_CSTRING("= :") + kStmtParamNameCurrentKey + aDirectionClause +
-      kOpenLimit;
-
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::PREV:
-      mCursor->mContinueQuery =
-          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING("= :") +
-          kStmtParamNameCurrentKey + NS_LITERAL_CSTRING(" AND ( sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          NS_LITERAL_CSTRING(" OR ") + aObjectDataKeyPrefix +
-          NS_LITERAL_CSTRING("object_data_key ") + comparisonChar +
-          NS_LITERAL_CSTRING(" :") + kStmtParamNameObjectKey +
-          NS_LITERAL_CSTRING(" ) ") + aDirectionClause + kOpenLimit;
-
-      mCursor->mContinuePrimaryKeyQuery =
-          aQueryStart +
-          NS_LITERAL_CSTRING(
-              " AND ("
-              "(sort_column == :") +
-          kStmtParamNameCurrentKey + NS_LITERAL_CSTRING(" AND ") +
-          aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key ") +
-          comparisonChar + NS_LITERAL_CSTRING("= :") + kStmtParamNameObjectKey +
-          NS_LITERAL_CSTRING(
-              ") OR "
-              "sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          kStmtParamNameCurrentKey + NS_LITERAL_CSTRING(")") +
-          aDirectionClause + kOpenLimit;
-      break;
-
-    case IDBCursor::NEXT_UNIQUE:
-    case IDBCursor::PREV_UNIQUE:
-      mCursor->mContinueQuery =
-          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          aDirectionClause + kOpenLimit;
-      break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-}
-
 nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
@@ -25840,21 +25811,24 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + keyString +
                          NS_LITERAL_CSTRING(
                              ", file_ids, data "
                              "FROM object_data "
                              "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+                         id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), keyString,
                                 keyRangeClause);
   }
 
-  nsAutoCString directionClause =
-      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameKey;
+  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::NEXT_UNIQUE:
@@ -25872,8 +25846,8 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                               kOpenLimit + NS_LITERAL_CSTRING("1");
+  nsCString firstQuery = queryStart + keyRangeClause + directionClause +
+                         openLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -25881,7 +25855,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->mObjectStoreId);
+  rv = stmt->BindInt64ByName(id, mCursor->mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25910,7 +25884,58 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  PrepareKeyConditionClauses(kStmtParamNameKey, directionClause, queryStart);
+  keyRangeClause.Truncate();
+  nsAutoCString continueToKeyRangeClause;
+
+  NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
+  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+
+  switch (mCursor->mDirection) {
+    case IDBCursor::NEXT:
+    case IDBCursor::NEXT_UNIQUE: {
+      Key upper;
+      bool open;
+      GetRangeKeyInfo(false, &upper, &open);
+      AppendConditionClause(keyString, currentKey, false, false,
+                            keyRangeClause);
+      AppendConditionClause(keyString, currentKey, false, true,
+                            continueToKeyRangeClause);
+      if (usingKeyRange && !upper.IsUnset()) {
+        AppendConditionClause(keyString, rangeKey, true, !open, keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, true, !open,
+                              continueToKeyRangeClause);
+        mCursor->mRangeKey = upper;
+      }
+      break;
+    }
+
+    case IDBCursor::PREV:
+    case IDBCursor::PREV_UNIQUE: {
+      Key lower;
+      bool open;
+      GetRangeKeyInfo(true, &lower, &open);
+      AppendConditionClause(keyString, currentKey, true, false, keyRangeClause);
+      AppendConditionClause(keyString, currentKey, true, true,
+                            continueToKeyRangeClause);
+      if (usingKeyRange && !lower.IsUnset()) {
+        AppendConditionClause(keyString, rangeKey, false, !open,
+                              keyRangeClause);
+        AppendConditionClause(keyString, rangeKey, false, !open,
+                              continueToKeyRangeClause);
+        mCursor->mRangeKey = lower;
+      }
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  mCursor->mContinueQuery =
+      queryStart + keyRangeClause + directionClause + openLimit;
+
+  mCursor->mContinueToQuery =
+      queryStart + continueToKeyRangeClause + directionClause + openLimit;
 
   return NS_OK;
 }
@@ -25928,27 +25953,42 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
+  NS_NAMED_LITERAL_CSTRING(keyString, "key");
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + keyString +
                          NS_LITERAL_CSTRING(
                              " FROM object_data "
                              "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+                         id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), kColumnNameKey,
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), keyString,
                                 keyRangeClause);
   }
 
-  const nsAutoCString directionClause =
-      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameKey +
-      (IsIncreasingOrder(mCursor->mDirection) ? NS_LITERAL_CSTRING(" ASC")
-                                              : NS_LITERAL_CSTRING(" DESC"));
+  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
+  switch (mCursor->mDirection) {
+    case IDBCursor::NEXT:
+    case IDBCursor::NEXT_UNIQUE:
+      directionClause.AppendLiteral(" ASC");
+      break;
+
+    case IDBCursor::PREV:
+    case IDBCursor::PREV_UNIQUE:
+      directionClause.AppendLiteral(" DESC");
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+                         openLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -25956,7 +25996,7 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->mObjectStoreId);
+  rv = stmt->BindInt64ByName(id, mCursor->mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25985,7 +26025,35 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  PrepareKeyConditionClauses(kStmtParamNameKey, directionClause, queryStart);
+  keyRangeClause.Truncate();
+  nsAutoCString continueToKeyRangeClause;
+
+  const bool isUpperBound = mCursor->mDirection == IDBCursor::NEXT ||
+                            mCursor->mDirection == IDBCursor::NEXT_UNIQUE;
+
+  Key bound;
+  bool open;
+  GetRangeKeyInfo(!isUpperBound, &bound, &open);
+
+  NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
+  AppendConditionClause(keyString, currentKey, !isUpperBound, false,
+                        keyRangeClause);
+  AppendConditionClause(keyString, currentKey, !isUpperBound, true,
+                        continueToKeyRangeClause);
+  if (usingKeyRange && !bound.IsUnset()) {
+    NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+
+    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
+                          keyRangeClause);
+    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
+                          continueToKeyRangeClause);
+    mCursor->mRangeKey = bound;
+  }
+
+  mCursor->mContinueQuery =
+      queryStart + keyRangeClause + directionClause + openLimit;
+  mCursor->mContinueToQuery =
+      queryStart + continueToKeyRangeClause + directionClause + openLimit;
 
   return NS_OK;
 }
@@ -26007,6 +26075,8 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
                              : NS_LITERAL_CSTRING("index_data");
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
 
   nsAutoCString sortColumnAlias;
   if (mCursor->IsLocaleAware()) {
@@ -26034,7 +26104,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
                                  "AND index_table.object_data_key = "
                                  "object_data.key "
                                  "WHERE index_table.index_id = :") +
-                             kStmtParamNameId;
+                             id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
@@ -26065,7 +26135,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+                         openLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -26073,7 +26143,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->mIndexId);
+  rv = stmt->BindInt64ByName(id, mCursor->mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26107,9 +26177,106 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   // Now we need to make the query to get the next match.
-  PrepareIndexKeyConditionClause(sortColumn, directionClause,
-                                 NS_LITERAL_CSTRING("index_table."),
-                                 std::move(queryStart));
+  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+
+  switch (mCursor->mDirection) {
+    case IDBCursor::NEXT: {
+      Key upper;
+      bool open;
+      GetRangeKeyInfo(false, &upper, &open);
+      if (usingKeyRange && !upper.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
+        mCursor->mRangeKey = upper;
+      }
+      mCursor->mContinueQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND sort_column >= :current_key "
+              "AND ( sort_column > :current_key OR "
+              "index_table.object_data_key > :object_key ) ") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND ("
+              "(sort_column == :current_key AND "
+              "index_table.object_data_key >= :object_key) OR "
+              "sort_column > :current_key"
+              ")") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::NEXT_UNIQUE: {
+      Key upper;
+      bool open;
+      GetRangeKeyInfo(false, &upper, &open);
+      if (usingKeyRange && !upper.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
+        mCursor->mRangeKey = upper;
+      }
+      mCursor->mContinueQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::PREV: {
+      Key lower;
+      bool open;
+      GetRangeKeyInfo(true, &lower, &open);
+      if (usingKeyRange && !lower.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
+        mCursor->mRangeKey = lower;
+      }
+      mCursor->mContinueQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND sort_column <= :current_key "
+              "AND ( sort_column < :current_key OR "
+              "index_table.object_data_key < :object_key ) ") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND ("
+              "(sort_column == :current_key AND "
+              "index_table.object_data_key <= :object_key) OR "
+              "sort_column < :current_key"
+              ")") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::PREV_UNIQUE: {
+      Key lower;
+      bool open;
+      GetRangeKeyInfo(true, &lower, &open);
+      if (usingKeyRange && !lower.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
+        mCursor->mRangeKey = lower;
+      }
+      mCursor->mContinueQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
+          directionClause + openLimit;
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
 
   return NS_OK;
 }
@@ -26132,6 +26299,8 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
                         : NS_LITERAL_CSTRING("index_data");
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+  NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
 
   nsAutoCString sortColumnAlias;
   if (mCursor->IsLocaleAware()) {
@@ -26149,7 +26318,7 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
                                  "object_data_key "
                                  " FROM ") +
                              table + NS_LITERAL_CSTRING(" WHERE index_id = :") +
-                             kStmtParamNameId;
+                             id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
@@ -26180,7 +26349,7 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+                         openLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -26188,7 +26357,7 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, mCursor->mIndexId);
+  rv = stmt->BindInt64ByName(id, mCursor->mIndexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26222,8 +26391,105 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  PrepareIndexKeyConditionClause(sortColumn, directionClause,
-                                 NS_LITERAL_CSTRING(""), std::move(queryStart));
+  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+
+  switch (mCursor->mDirection) {
+    case IDBCursor::NEXT: {
+      Key upper;
+      bool open;
+      GetRangeKeyInfo(false, &upper, &open);
+      if (usingKeyRange && !upper.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
+        mCursor->mRangeKey = upper;
+      }
+      mCursor->mContinueQuery = queryStart +
+                                NS_LITERAL_CSTRING(
+                                    " AND sort_column >= :current_key "
+                                    "AND ( sort_column > :current_key OR "
+                                    "object_data_key > :object_key )") +
+                                directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key ") +
+          directionClause + openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND ("
+              "(sort_column == :current_key AND "
+              "object_data_key >= :object_key) OR "
+              "sort_column > :current_key"
+              ")") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::NEXT_UNIQUE: {
+      Key upper;
+      bool open;
+      GetRangeKeyInfo(false, &upper, &open);
+      if (usingKeyRange && !upper.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
+        mCursor->mRangeKey = upper;
+      }
+      mCursor->mContinueQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::PREV: {
+      Key lower;
+      bool open;
+      GetRangeKeyInfo(true, &lower, &open);
+      if (usingKeyRange && !lower.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
+        mCursor->mRangeKey = lower;
+      }
+
+      mCursor->mContinueQuery = queryStart +
+                                NS_LITERAL_CSTRING(
+                                    " AND sort_column <= :current_key "
+                                    "AND ( sort_column < :current_key OR "
+                                    "object_data_key < :object_key )") +
+                                directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key ") +
+          directionClause + openLimit;
+      mCursor->mContinuePrimaryKeyQuery =
+          queryStart +
+          NS_LITERAL_CSTRING(
+              " AND ("
+              "(sort_column == :current_key AND "
+              "object_data_key <= :object_key) OR "
+              "sort_column < :current_key"
+              ")") +
+          directionClause + openLimit;
+      break;
+    }
+
+    case IDBCursor::PREV_UNIQUE: {
+      Key lower;
+      bool open;
+      GetRangeKeyInfo(true, &lower, &open);
+      if (usingKeyRange && !lower.IsUnset()) {
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
+        mCursor->mRangeKey = lower;
+      }
+      mCursor->mContinueQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
+          directionClause + openLimit;
+      mCursor->mContinueToQuery =
+          queryStart + NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
+          directionClause + openLimit;
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
 
   return NS_OK;
 }
@@ -26367,6 +26633,10 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsCString query = continueQuery + countString;
 
+  NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
+  NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
+  NS_NAMED_LITERAL_CSTRING(objectKeyName, "object_key");
+
   const bool usingRangeKey = !mCursor->mRangeKey.IsUnset();
 
   DatabaseConnection::CachedStatement stmt;
@@ -26377,20 +26647,20 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   int64_t id = isIndex ? mCursor->mIndexId : mCursor->mObjectStoreId;
 
-  rv = stmt->BindInt64ByName(kStmtParamNameId, id);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), id);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Bind current key.
-  rv = currentKey.BindToStatement(stmt, kStmtParamNameCurrentKey);
+  rv = currentKey.BindToStatement(stmt, currentKeyName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // Bind range key if it is specified.
   if (usingRangeKey) {
-    rv = mCursor->mRangeKey.BindToStatement(stmt, kStmtParamNameRangeKey);
+    rv = mCursor->mRangeKey.BindToStatement(stmt, rangeKeyName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -26401,7 +26671,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   if (isIndex && !hasContinueKey &&
       (mCursor->mDirection == IDBCursor::NEXT ||
        mCursor->mDirection == IDBCursor::PREV)) {
-    rv = mCursor->mObjectKey.BindToStatement(stmt, kStmtParamNameObjectKey);
+    rv = mCursor->mObjectKey.BindToStatement(stmt, objectKeyName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -26410,7 +26680,7 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // Bind object key if primaryKey is specified.
   if (hasContinuePrimaryKey) {
     rv = mParams.get_ContinuePrimaryKeyParams().primaryKey().BindToStatement(
-        stmt, kStmtParamNameObjectKey);
+        stmt, objectKeyName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
