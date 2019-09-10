@@ -368,7 +368,7 @@ struct DIGroup {
     GP("clippedImageRect %d %d %d %d\n", mClippedImageBounds.x,
        mClippedImageBounds.y, mClippedImageBounds.width,
        mClippedImageBounds.height);
-    LayerIntSize size = mLayerBounds.Size();
+    LayerIntSize size = mVisibleRect.Size();
     GP("imageSize: %d %d\n", size.width, size.height);
     /*if (aItem->IsReused() && aData->mGeometry) {
       return;
@@ -602,12 +602,12 @@ struct DIGroup {
       }
     }
 
-    IntSize dtSize = mLayerBounds.Size().ToUnknownSize();
+    IntSize dtSize = mVisibleRect.Size().ToUnknownSize();
     // The actual display item's size shouldn't have the scale factored in
     // Round the bounds out to leave space for unsnapped content
     LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
     LayoutDeviceRect itemBounds =
-        (LayerRect(mLayerBounds) - mResidualOffset) / scale;
+        (LayerRect(mVisibleRect) - mResidualOffset) / scale;
 
     if (mInvalidRect.IsEmpty()) {
       GP("Not repainting group because it's empty\n");
@@ -647,7 +647,7 @@ struct DIGroup {
               }
               fonts = std::move(aScaledFonts);
             },
-            mLayerBounds.ToUnknownRect().TopLeft());
+            mVisibleRect.ToUnknownRect().TopLeft());
 
     RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
@@ -709,7 +709,7 @@ struct DIGroup {
       // Convert mInvalidRect to image space by subtracting the corner of the
       // image bounds
       auto dirtyRect = ViewAs<ImagePixel>(
-          mInvalidRect - mLayerBounds.ToUnknownRect().TopLeft());
+          mInvalidRect - mVisibleRect.ToUnknownRect().TopLeft());
 
       auto bottomRight = dirtyRect.BottomRight();
       GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
@@ -765,7 +765,7 @@ struct DIGroup {
                       WebRenderDrawEventRecorder* aRecorder,
                       RenderRootStateManager* aRootManager,
                       wr::IpcResourceUpdateQueue& aResources) {
-    LayerIntSize size = mLayerBounds.Size();
+    LayerIntSize size = mVisibleRect.Size();
     for (nsDisplayItem* item = aStartItem; item != aEndItem;
          item = item->GetAbove()) {
       BlobItemData* data = GetBlobItemData(item);
@@ -1239,8 +1239,8 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       // tighter for just the sublist that made it into this group.
       // We want to ensure the tight bounds are still clipped by area
       // that we're building the display list for.
-      if (!groupData->mFollowingGroup.mGroupBounds.IsEqualEdges(
-              currentGroup->mGroupBounds) ||
+      if (!groupData->mFollowingGroup.mVisibleRect.IsEqualEdges(currentGroup->mVisibleRect) ||
+          !groupData->mFollowingGroup.mGroupBounds.IsEqualEdges(currentGroup->mGroupBounds) ||
           groupData->mFollowingGroup.mScale != currentGroup->mScale ||
           groupData->mFollowingGroup.mAppUnitsPerDevPixel !=
               currentGroup->mAppUnitsPerDevPixel ||
@@ -1460,8 +1460,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   auto layerBounds = LayerIntRect::FromUnknownRect(
       ScaleToOutsidePixelsOffset(groupBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
-  GP("scale: %f %f - %d - %f %f\n", scale.width, scale.height,
-     group.mAppUnitsPerDevPixel, residualOffset.x, residualOffset.y);
 
   const nsRect& untransformedPaintRect = aWrappingItem->GetUntransformedPaintRect();
 
@@ -1479,7 +1477,8 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   GP("Inherrited scale %f %f\n", scale.width, scale.height);
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
      q.y, q.width, q.height);
-  if (!group.mGroupBounds.IsEqualEdges(groupBounds) ||
+  if (!group.mVisibleRect.IsEqualEdges(visibleRect) ||
+      !group.mGroupBounds.IsEqualEdges(groupBounds) ||
       group.mAppUnitsPerDevPixel != appUnitsPerDevPixel ||
       group.mScale != scale || group.mResidualOffset != residualOffset) {
     GP("Property change. Deleting blob\n");
@@ -1524,6 +1523,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mVisibleRect = visibleRect;
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mImageBounds = layerBounds.ToUnknownRect();
+  group.mImageBounds = visibleRect.ToUnknownRect();
   group.mClippedImageBounds = group.mImageBounds;
 
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
