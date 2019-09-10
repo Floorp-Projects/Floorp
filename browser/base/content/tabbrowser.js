@@ -988,25 +988,14 @@
       // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
       try {
         if (docElement.getAttribute("chromehidden").includes("location")) {
-          const uri = Services.uriFixup.createExposableURI(aBrowser.currentURI);
-          if (uri.scheme === "about") {
-            newTitle = `${uri.spec}${sep}${newTitle}`;
-          } else if (uri.scheme === "moz-extension") {
-            const ext = WebExtensionPolicy.getByHostname(uri.host);
-            if (ext && ext.name) {
-              const prefix = document.querySelector("#urlbar-label-extension")
-                .value;
-              newTitle = `${prefix} (${ext.name})${sep}${newTitle}`;
-            } else {
-              newTitle = `${uri.prePath}${sep}${newTitle}`;
-            }
+          var uri = Services.uriFixup.createExposableURI(aBrowser.currentURI);
+          if (uri.scheme == "about") {
+            newTitle = uri.spec + sep + newTitle;
           } else {
-            newTitle = `${uri.prePath}${sep}${newTitle}`;
+            newTitle = uri.prePath + sep + newTitle;
           }
         }
-      } catch (e) {
-        // ignored
-      }
+      } catch (e) {}
 
       return newTitle;
     },
