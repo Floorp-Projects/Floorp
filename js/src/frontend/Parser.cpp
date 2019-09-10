@@ -164,7 +164,28 @@ ParserSharedBase::ParserSharedBase(JSContext* cx, ParseInfo& parserInfo,
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
+// Ensure we don't hold onto any memory via trace list nodes
+// which may be freed when the lifo alloc dies.
+void ParserSharedBase::cleanupTraceList() {
+  TraceListNode* elem = traceListHead_;
+  while (elem) {
+    if (elem->isObjectBox()) {
+      ObjectBox* objBox = elem->asObjectBox();
+
+      // FunctionBoxes are LifoAllocated, but the LazyScriptCreationData that
+      // they hold onto have SystemAlloc memory. We need to make sure this gets
+      // cleaned up before the Lifo gets released (in ParseInfo) to ensure that
+      // we don't leak memory.
+      if (objBox->isFunctionBox()) {
+        objBox->asFunctionBox()->cleanupMemory();
+      }
+    }
+    elem = elem->traceLink;
+  }
+}
+
 ParserSharedBase::~ParserSharedBase() {
+  cleanupTraceList();
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
 
