@@ -735,7 +735,7 @@ void CreateInterfaceObjects(
 /**
  * Define the properties (regular and chrome-only) on obj.
  *
- * obj the object to instal the properties on. This should be the interface
+ * obj the object to install the properties on. This should be the interface
  *     prototype object for regular interfaces and the instance object for
  *     interfaces marked with Global.
  * properties contains the methods, attributes and constants to be defined on
