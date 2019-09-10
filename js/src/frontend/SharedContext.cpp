@@ -122,7 +122,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          bool isMethod, bool isInterpreted,
                          bool isInterpretedLazy,
                          FunctionFlags::FunctionKind kind, JSAtom* explicitName)
-    : ObjectBox(traceListHead),
+    : ObjectBox(nullptr, traceListHead, TraceListNode::NodeType::Function),
       SharedContext(cx, Kind::FunctionBox, directives, extraWarnings),
       enclosingScope_(nullptr),
       namedLambdaBindings_(nullptr),
