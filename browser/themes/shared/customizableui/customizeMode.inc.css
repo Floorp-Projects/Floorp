@@ -451,6 +451,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   border-radius: var(--arrowpanel-border-radius);
 %else
   border: 1px solid var(--arrowpanel-border-color);
+  margin: 0;
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 %endif
   max-width: 29em;
