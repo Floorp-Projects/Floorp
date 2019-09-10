@@ -8,6 +8,9 @@
 // inet_ntop() doesn't exist on Windows XP.
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
+#include <algorithm>
+#include <vector>
+
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
@@ -184,8 +187,18 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     return;
   }
 
+  // We will hash the found network ids
+  // for privacy reasons
   SHA1Sum sha1;
   uint32_t networkCount = 0;
+
+  // The networks stored in enumNetworks
+  // are not ordered. We will sort them
+  // To keep a consistent hash
+  // regardless of the found networks order.
+  std::vector<GUID> nwGUIDS;
+
+  // Consume the found networks iterator
   while (true) {
     RefPtr<INetwork> network;
     hr = enumNetworks->Next(1, getter_AddRefs(network), nullptr);
@@ -198,6 +211,15 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
     if (hr != S_OK) {
       continue;
     }
+    nwGUIDS.push_back(nwGUID);
+  }
+
+  std::sort(nwGUIDS.begin(), nwGUIDS.end(), [](const GUID& a, const GUID& b) {
+    return memcmp(&a, &b, sizeof(GUID)) < 0;
+  });
+
+  // Hash the sorted network ids
+  for (const GUID& nwGUID : nwGUIDS) {
     networkCount++;
     sha1.update(&nwGUID, sizeof(nwGUID));
 
