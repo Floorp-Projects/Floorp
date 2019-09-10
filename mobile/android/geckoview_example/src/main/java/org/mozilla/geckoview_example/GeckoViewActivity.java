@@ -1320,7 +1320,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private final class ExampleTelemetryDelegate
             implements RuntimeTelemetry.Delegate {
         @Override
-        public void onHistogram(final @NonNull RuntimeTelemetry.Metric<long[]> histogram) {
+        public void onHistogram(final @NonNull RuntimeTelemetry.Histogram histogram) {
             Log.d(LOGTAG, "onHistogram " + histogram);
         }
         @Override

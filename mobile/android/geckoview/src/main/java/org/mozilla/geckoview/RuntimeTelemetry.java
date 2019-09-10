@@ -96,6 +96,28 @@ public final class RuntimeTelemetry {
     }
 
     /**
+     * The Histogram telemetry metric object.
+     */
+    public static class Histogram extends Metric<long[]> {
+        /**
+         * Whether or not this is a Categorical Histogram.
+         */
+        public final boolean isCategorical;
+
+        /* package */ Histogram(final boolean isCategorical, final String name,
+                                final long[] value) {
+            super(name, value);
+            this.isCategorical = isCategorical;
+        }
+
+        // For testing
+        protected Histogram() {
+            super(null, null);
+            isCategorical = false;
+        }
+    }
+
+    /**
      * The runtime telemetry delegate.
      * Implement this if you want to receive runtime (Gecko) telemetry and
      * attach it via {@link GeckoRuntimeSettings.Builder#telemetryDelegate}.
@@ -107,7 +129,7 @@ public final class RuntimeTelemetry {
          * @param metric The runtime metric details.
          */
         @AnyThread
-        default void onHistogram(final @NonNull Metric<long[]> metric) {}
+        default void onHistogram(final @NonNull Histogram metric) {}
 
         /**
          * A runtime telemetry boolean scalar has been received.
@@ -168,12 +190,12 @@ public final class RuntimeTelemetry {
 
         @WrapForJNI(calledFrom = "gecko")
         /* package */ void dispatchHistogram(
-                final String name, final long[] values) {
+                final boolean isCategorical, final String name, final long[] values) {
             if (mDelegate == null) {
                 // TODO throw?
                 return;
             }
-            mDelegate.onHistogram(new Metric<>(name, values));
+            mDelegate.onHistogram(new Histogram(isCategorical, name, values));
         }
 
         @WrapForJNI(calledFrom = "gecko")

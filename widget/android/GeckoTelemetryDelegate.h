@@ -36,9 +36,9 @@ class GeckoTelemetryDelegate final
       : mProxy(aProxy) {}
 
  private:
-  // Implement StreamingTelemetryDelegate.
-  void ReceiveHistogramSamples(const nsCString& aName,
-                               const nsTArray<uint32_t>& aSamples) override {
+  void DispatchHistogram(bool aIsCategorical,
+                         const nsCString& aName,
+                         const nsTArray<uint32_t>& aSamples) {
     if (!mozilla::jni::IsAvailable() || !mProxy || aSamples.Length() < 1) {
       return;
     }
@@ -49,13 +49,20 @@ class GeckoTelemetryDelegate final
     }
 
     mProxy->DispatchHistogram(
+        aIsCategorical,
         aName,
         mozilla::jni::LongArray::New(samples->Elements(), samples->Length()));
   }
 
+  // Implement StreamingTelemetryDelegate.
+  void ReceiveHistogramSamples(const nsCString& aName,
+                               const nsTArray<uint32_t>& aSamples) override {
+    DispatchHistogram(/* isCategorical */ false, aName, aSamples);
+  }
+
   void ReceiveCategoricalHistogramSamples(
       const nsCString& aName, const nsTArray<uint32_t>& aSamples) override {
-    MOZ_ASSERT_UNREACHABLE("ReceiveCategoricalHistogramSamples unimplemented");
+    DispatchHistogram(/* isCategorical */ true, aName, aSamples);
   }
 
   void ReceiveBoolScalarValue(const nsCString& aName, bool aValue) override {

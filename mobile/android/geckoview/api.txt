@@ -1136,9 +1136,14 @@ package org.mozilla.geckoview {
 
   public static interface RuntimeTelemetry.Delegate {
     method @AnyThread default public void onBooleanScalar(@NonNull RuntimeTelemetry.Metric<Boolean>);
-    method @AnyThread default public void onHistogram(@NonNull RuntimeTelemetry.Metric<long[]>);
+    method @AnyThread default public void onHistogram(@NonNull RuntimeTelemetry.Histogram);
     method @AnyThread default public void onLongScalar(@NonNull RuntimeTelemetry.Metric<Long>);
     method @AnyThread default public void onStringScalar(@NonNull RuntimeTelemetry.Metric<String>);
+  }
+
+  public static class RuntimeTelemetry.Histogram extends RuntimeTelemetry.Metric {
+    ctor protected Histogram();
+    field public final boolean isCategorical;
   }
 
   public static class RuntimeTelemetry.Metric<T> {
