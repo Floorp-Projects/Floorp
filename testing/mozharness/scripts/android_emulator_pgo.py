@@ -270,10 +270,6 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
             self.fatal('INFRA-ERROR: Failed with an ADBTimeoutError',
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
-        # We normally merge as part of a GENERATED_FILES step in the profile-use
-        # build, but Android runs sometimes result in a truncated profile. We do
-        # a merge here to make sure the data isn't corrupt so we can retry the
-        # 'run' task if necessary.
         profraw_files = glob.glob('/builds/worker/workspace/*.profraw')
         if not profraw_files:
             self.fatal('Could not find any profraw files in /builds/worker/workspace')
@@ -281,7 +277,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
             os.path.join(os.environ['MOZ_FETCHES_DIR'], 'clang/bin/llvm-profdata'),
             'merge',
             '-o',
-            '/builds/worker/workspace/merged.profraw',
+            '/builds/worker/workspace/merged.profdata',
         ] + profraw_files
         rc = subprocess.call(merge_cmd)
         if rc != 0:
@@ -294,7 +290,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
             '-acvf',
             '/builds/worker/artifacts/profdata.tar.xz',
             '-C', '/builds/worker/workspace',
-            'merged.profraw',
+            'merged.profdata',
             'en-US.log',
         ]
         subprocess.check_call(tar_cmd)

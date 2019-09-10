@@ -153,16 +153,6 @@ if not CONFIG['JS_STANDALONE'] or not CONFIG['MOZ_BUILD_APP']:
         'build',
     ]
 
-if CONFIG['PGO_PROFILE_PATH']:
-    profdata_gen = ('merged.profdata.stub', 'merged.profdata')
-    GENERATED_FILES += [
-        profdata_gen
-    ]
-    GENERATED_FILES[profdata_gen].script = 'build/merge_profdata.py'
-    GENERATED_FILES[profdata_gen].inputs = [
-        '/' + CONFIG['PGO_PROFILE_PATH'],
-    ]
-
 DIRS += [
     'mfbt',
 ]

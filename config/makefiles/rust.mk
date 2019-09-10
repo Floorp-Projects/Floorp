@@ -136,7 +136,7 @@ target_rust_ltoable := force-cargo-library-build
 target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
 
 ifdef MOZ_PGO_RUST
-rust_pgo_flags := $(if $(MOZ_PROFILE_GENERATE),-C profile-generate=$(topobjdir)) $(if $(MOZ_PROFILE_USE),-C profile-use=$(topobjdir)/merged.profdata)
+rust_pgo_flags := $(if $(MOZ_PROFILE_GENERATE),-C profile-generate=$(topobjdir)) $(if $(MOZ_PROFILE_USE),-C profile-use=$(PGO_PROFILE_PATH))
 endif
 
 $(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST),-Clinker-plugin-lto) $(rust_pgo_flags)

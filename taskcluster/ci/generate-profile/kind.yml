@@ -56,6 +56,9 @@ jobs:
             cwd: '{checkout}'
             command: >
                 ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - linux64-clang
 
     linux64-shippable/opt:
         description: "Linux64 Profile Generation"
@@ -90,6 +93,9 @@ jobs:
             cwd: '{checkout}'
             command: >
                 ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - linux64-clang
 
     android-api-16/pgo:
         description: "Android 4.0 api-16+ Profile Generation"
@@ -159,6 +165,9 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - win64-clang-cl
 
     win64-shippable/opt:
         description: "Win64 Profile Generation"
@@ -189,3 +198,6 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - win64-clang-cl

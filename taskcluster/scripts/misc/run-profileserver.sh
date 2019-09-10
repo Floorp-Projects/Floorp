@@ -14,6 +14,7 @@ export UPLOAD_PATH
 
 PGO_RUNDIR=obj-firefox/dist
 export JARLOG_FILE="en-US.log"
+export LLVM_PROFDATA=$MOZ_FETCHES_DIR/clang/bin/llvm-profdata
 
 set -v
 
@@ -38,10 +39,4 @@ mkdir -p $UPLOAD_PATH
 mv $MOZ_FETCHES_DIR/firefox $PGO_RUNDIR
 ./mach python build/pgo/profileserver.py --binary $PGO_RUNDIR/firefox/firefox
 
-# Fail the build if for some reason we didn't collect any profile data.
-if test -z "$(find . -maxdepth 1 -name '*.profraw' -print -quit)"; then
-    echo "ERROR: no profile data produced"
-    exit 1
-fi
-
-tar -acvf $UPLOAD_PATH/profdata.tar.xz *.profraw en-US.log
+tar -acvf $UPLOAD_PATH/profdata.tar.xz merged.profdata en-US.log
