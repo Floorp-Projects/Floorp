@@ -18,12 +18,12 @@ function reallyHandleRequest(request, response) {
 
   var user = null, pass = null;
   // user=xxx
-  match = /user=([^&]*)/.exec(query);
+  match = /user(?:name)?=([^&]*)/.exec(query);
   if (match)
     user = match[1];
 
   // pass=xxx
-  match = /pass=([^&]*)/.exec(query);
+  match = /pass(?:word)?=([^&]*)/.exec(query);
   if (match)
     pass = match[1];
 
