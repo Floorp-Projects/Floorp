@@ -286,6 +286,8 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   template <typename BoxT, typename ArgT>
   BoxT* newTraceListNode(ArgT* arg);
 
+  void cleanupTraceList();
+
  public:
   // Create a new JSObject and store it into the trace list.
   ObjectBox* newObjectBox(JSObject* obj);
