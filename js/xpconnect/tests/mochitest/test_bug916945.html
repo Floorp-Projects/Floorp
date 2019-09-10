@@ -24,8 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
     ok('winA' in window, "same-origin named access works");
     ok(winA instanceof Window, "same-origin named access works");
     ok('winB' in window, "cross-origin named access works when iframe name matches");
-    // XXXbholley - flip me when Window moves to new bindings.
-    todo_is(winB instanceof Window, "cross-origin named access works when iframe name matches");
+    ok(winB instanceof Window, "cross-origin named access works when iframe name matches");
 
     // Setting the 'name' attribute should propagate to the docshell.
     var ifrB = document.getElementById('ifrB');
@@ -35,8 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
                    'attribute sets propagate to the docshell');
     });
     ok('foo' in window, "names are dynamic if updated via setAttribute");
-    // XXXbholley - flip me when Window moves to new bindings.
-    todo('foo' instanceof Window, "names are dynamic if updated via setAttribute");
+    ok(foo instanceof Window, "names are dynamic if updated via setAttribute");
 
     // Setting window.name on the subframe should not propagate to the attribute.
     await SpecialPowers.spawn(ifrB, [], () => {
