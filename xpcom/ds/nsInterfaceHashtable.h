@@ -104,7 +104,7 @@ bool nsInterfaceHashtable<KeyClass, Interface>::Get(
 
   if (ent) {
     if (aInterface) {
-      *aInterface = ent->GetData();
+      *aInterface = ent->mData;
 
       NS_IF_ADDREF(*aInterface);
     }
@@ -129,7 +129,7 @@ already_AddRefed<Interface> nsInterfaceHashtable<KeyClass, Interface>::Get(
     return nullptr;
   }
 
-  nsCOMPtr<Interface> copy = ent->GetData();
+  nsCOMPtr<Interface> copy = ent->mData;
   return copy.forget();
 }
 
@@ -143,7 +143,7 @@ Interface* nsInterfaceHashtable<KeyClass, Interface>::GetWeak(
       *aFound = true;
     }
 
-    return ent->GetData();
+    return ent->mData;
   }
 
   // Key does not exist, return nullptr and set aFound to false
@@ -162,7 +162,7 @@ bool nsInterfaceHashtable<KeyClass, Interface>::Put(
     return false;
   }
 
-  ent->SetData(std::move(aValue));
+  ent->mData = aValue;
   return true;
 }
 
@@ -173,7 +173,7 @@ bool nsInterfaceHashtable<KeyClass, Interface>::Remove(KeyType aKey,
 
   if (ent) {
     if (aData) {
-      ent->GetModifiableData()->forget(aData);
+      ent->mData.forget(aData);
     }
     this->RemoveEntry(ent);
     return true;
