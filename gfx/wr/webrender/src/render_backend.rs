@@ -1748,6 +1748,8 @@ impl RenderBackend {
                 config.serialize_tree(&doc.clip_scroll_tree, file_name);
                 let file_name = format!("builder-{}-{}", id.namespace_id.0, id.id);
                 config.serialize(doc.frame_builder.as_ref().unwrap(), file_name);
+                let file_name = format!("scratch-{}-{}", id.namespace_id.0, id.id);
+                config.serialize(&doc.scratch, file_name);
                 let file_name = format!("render-tasks-{}-{}.svg", id.namespace_id.0, id.id);
                 let mut svg_file = fs::File::create(&config.file_path(file_name, "svg"))
                     .expect("Failed to open the SVG file.");
