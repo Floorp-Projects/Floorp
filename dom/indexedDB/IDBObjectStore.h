@@ -54,6 +54,8 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
 
   static const JSClass sDummyPropJSClass;
 
+  // TODO: This could be made const if Bug 1575173 is resolved. It is
+  // initialized in the constructor and never modified/cleared.
   RefPtr<IDBTransaction> mTransaction;
   JS::Heap<JS::Value> mCachedKeyPath;
 
