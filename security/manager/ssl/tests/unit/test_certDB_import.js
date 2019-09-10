@@ -148,6 +148,34 @@ function testImportEmptyCertPackage() {
   );
 }
 
+function testImportEmptyUserCert() {
+  // Because this is an empty cert package, nothing will be imported. We know it succeeded if no errors are thrown.
+  let byteArray = [
+    0x30,
+    0x0f,
+    0x06,
+    0x09,
+    0x60,
+    0x86,
+    0x48,
+    0x01,
+    0x86,
+    0xf8,
+    0x42,
+    0x02,
+    0x05,
+    0xa0,
+    0x02,
+    0x30,
+    0x00,
+  ];
+  gCertDB.importUserCertificate(
+    byteArray,
+    byteArray.length,
+    gInterfaceRequestor
+  );
+}
+
 function run_test() {
   let certificateDialogsCID = MockRegistrar.register(
     "@mozilla.org/nsCertificateDialogs;1",
@@ -167,6 +195,7 @@ function run_test() {
   // Import the CA cert so that the e-mail import succeeds.
   testImportCACert();
   testImportEmptyCertPackage();
+  testImportEmptyUserCert();
 
   // Import the e-mail cert and check for success.
   let emailArray = getCertAsByteArray("test_certDB_import/emailEE.pem");

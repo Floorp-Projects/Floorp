@@ -42,15 +42,15 @@ class nsNSSCertificateDB final : public nsIX509CertDB
                                    nsIInterfaceRequestor* ctx,
                                    nsCString& nickname);
 
-  static nsresult ImportCACerts(int numCACerts, SECItem* CACerts,
+  static nsresult ImportCACerts(nsTArray<nsTArray<uint8_t>>& CACerts,
                                 nsIInterfaceRequestor* ctx);
 
   static void DisplayCertificateAlert(nsIInterfaceRequestor* ctx,
                                       const char* stringID,
                                       nsIX509Cert* certToShow);
 
-  CERTDERCerts* getCertsFromPackage(const mozilla::UniquePLArenaPool& arena,
-                                    uint8_t* data, uint32_t length);
+  nsresult getCertsFromPackage(nsTArray<nsTArray<uint8_t>>& collectArgs,
+                               uint8_t* data, uint32_t length);
   nsresult handleCACertDownload(mozilla::NotNull<nsIArray*> x509Certs,
                                 nsIInterfaceRequestor* ctx);
 };
