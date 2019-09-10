@@ -114,19 +114,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
-   * Called before aligning contents around Selection.  This method actually
-   * sets align attributes to align contents.
-   *
-   * @param aAlignType          New align attribute value where the contents
-   *                            should be aligned to.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult WillAlign(const nsAString& aAlignType, bool* aCancel,
-                     bool* aHandled);
-
-  /**
    * Called before changing absolute positioned element to static positioned.
    * This method actually changes the position property of nearest absolute
    * positioned element.  Therefore, this might cause destroying the HTML
@@ -191,20 +178,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult DidAbsolutePosition();
 
-  /**
-   * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
-   * This creates AutoSelectionRestorer.  Therefore, even if this returns
-   * NS_OK, CanHandleEditAction() may return false if the editor is destroyed
-   * during restoring the Selection.  So, every caller needs to check if
-   * CanHandleEditAction() returns true before modifying the DOM tree or
-   * changing Selection.
-   *
-   * @param aAlignType          New align attribute value where the contents
-   *                            should be aligned to.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignContentsAtSelection(const nsAString& aAlignType);
-
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
@@ -237,33 +210,6 @@ class HTMLEditRules : public TextEditRules {
   void CheckInterlinePosition();
 
   /**
-   * AdjustSelection() may adjust Selection range to nearest editable content.
-   * Despite of the name, this may change the DOM tree.  If it needs to create
-   * a <br> to put caret, this tries to create a <br> element.
-   *
-   * @param aAction     Maybe used to look for a good point to put caret.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  AdjustSelection(nsIEditor::EDirection aAction);
-
-  /**
-   * FindNearEditableNode() tries to find an editable node near aPoint.
-   *
-   * @param aPoint      The DOM point where to start to search from.
-   * @param aDirection  If nsIEditor::ePrevious is set, this searches an
-   *                    editable node from next nodes.  Otherwise, from
-   *                    previous nodes.
-   * @return            If found, returns non-nullptr.  Otherwise, nullptr.
-   *                    Note that if found node is in different table element,
-   *                    this returns nullptr.
-   *                    And also if aDirection is not nsIEditor::ePrevious,
-   *                    the result may be the node pointed by aPoint.
-   */
-  template <typename PT, typename CT>
-  nsIContent* FindNearEditableNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                                   nsIEditor::EDirection aDirection);
-
-  /**
    * RemoveEmptyNodesInChangedRange() removes all empty nodes in
    * TopLevelEditSubActionData::mChangedRange.  However, if mail-cite node has
    * only a <br> element, the node will be removed but <br> element is moved
@@ -275,35 +221,6 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
-
-  nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
-
-  /**
-   * ConfirmSelectionInBody() makes sure that Selection is in editor root
-   * element typically <body> element (see HTMLEditor::UpdateRootElement())
-   * and only one Selection range.
-   * XXX This method is not necessary because even if selection is outside the
-   *     <body> element, elements outside the <body> element should be
-   *     editable, e.g., any element can be inserted siblings as <body> element
-   *     and other browsers allow to edit such elements.
-   */
-  MOZ_MUST_USE nsresult ConfirmSelectionInBody();
-
-  /**
-   * AlignBlock() resets align attribute, text-align property, etc first.
-   * Then, aligns contents of aElement on aAlignType.
-   *
-   * @param aElement            The element whose contents will be aligned.
-   * @param aAlignType          Boundary or "center" which contents should be
-   *                            aligned on.
-   * @param aResetAlignOf       Resets align of whether element and its
-   *                            descendants or only descendants.
-   */
-  enum class ResetAlignOf { ElementAndDescendants, OnlyDescendants };
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AlignBlock(Element& aElement,
-                                   const nsAString& aAlignType,
-                                   ResetAlignOf aResetAlignOf);
 
   /**
    * DocumentModifiedWorker() is called by DocumentModified() either
