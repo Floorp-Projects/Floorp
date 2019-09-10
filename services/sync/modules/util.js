@@ -49,13 +49,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "localDeviceName",
-  "services.sync.client.name",
-  ""
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "localDeviceType",
   "services.sync.client.type",
   DEVICE_TYPE_DESKTOP
@@ -691,68 +684,6 @@ var Utils = {
     // We used to include the FxA hosts (hence the Set() result) but we now
     // don't give them special treatment (hence the Set() with exactly 1 item)
     return result;
-  },
-
-  getDefaultDeviceName() {
-    // Generate a client name if we don't have a useful one yet
-    let env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    let user =
-      env.get("USER") ||
-      env.get("USERNAME") ||
-      Svc.Prefs.get("account") ||
-      Svc.Prefs.get("username");
-    // A little hack for people using the the moz-build environment on Windows
-    // which sets USER to the literal "%USERNAME%" (yes, really)
-    if (user == "%USERNAME%" && env.get("USERNAME")) {
-      user = env.get("USERNAME");
-    }
-
-    let brand = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
-    );
-    let brandName = brand.GetStringFromName("brandShortName");
-
-    // The DNS service may fail to provide a hostname in edge-cases we don't
-    // fully understand - bug 1391488.
-    let hostname;
-    try {
-      // hostname of the system, usually assigned by the user or admin
-      hostname = Cc["@mozilla.org/network/dns-service;1"].getService(
-        Ci.nsIDNSService
-      ).myHostName;
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-    let system =
-      // 'device' is defined on unix systems
-      Services.sysinfo.get("device") ||
-      hostname ||
-      // fall back on ua info string
-      Cc["@mozilla.org/network/protocol;1?name=http"].getService(
-        Ci.nsIHttpProtocolHandler
-      ).oscpu;
-
-    let syncStrings = Services.strings.createBundle(
-      "chrome://weave/locale/sync.properties"
-    );
-    return syncStrings.formatStringFromName("client.name2", [
-      user,
-      brandName,
-      system,
-    ]);
-  },
-
-  getDeviceName() {
-    let deviceName = localDeviceName;
-
-    if (deviceName === "") {
-      deviceName = this.getDefaultDeviceName();
-      Svc.Prefs.set("client.name", deviceName);
-    }
-
-    return deviceName;
   },
 
   /**

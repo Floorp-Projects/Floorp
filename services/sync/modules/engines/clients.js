@@ -234,21 +234,14 @@ ClientEngine.prototype = {
   },
 
   get localName() {
-    return Utils.getDeviceName();
+    return this.fxAccounts.device.getLocalName();
   },
   set localName(value) {
-    Svc.Prefs.set("client.name", value);
-    // Update the registration in the background.
-    this.fxAccounts.updateDeviceRegistration().catch(error => {
-      this._log.warn("failed to update fxa device registration", error);
-    });
+    this.fxAccounts.device.setLocalName(value);
   },
 
   get localType() {
-    return Utils.getDeviceType();
-  },
-  set localType(value) {
-    Svc.Prefs.set("client.type", value);
+    return this.fxAccounts.device.getLocalType();
   },
 
   getClientName(id) {
@@ -363,7 +356,7 @@ ClientEngine.prototype = {
     this._log.debug("Updating the known stale clients");
     // _fetchFxADevices side effect updates this._knownStaleFxADeviceIds.
     await this._fetchFxADevices();
-    let localFxADeviceId = await fxAccounts.getDeviceId();
+    let localFxADeviceId = await fxAccounts.device.getLocalId();
     // Process newer records first, so that if we hit a record with a device ID
     // we've seen before, we can mark it stale immediately.
     let clientList = Object.values(this._store._remoteClients).sort(
@@ -452,7 +445,7 @@ ClientEngine.prototype = {
           await this._removeRemoteClient(id);
         }
       }
-      let localFxADeviceId = await fxAccounts.getDeviceId();
+      let localFxADeviceId = await fxAccounts.device.getLocalId();
       // Bug 1264498: Mobile clients don't remove themselves from the clients
       // collection when the user disconnects Sync, so we mark as stale clients
       // with the same name that haven't synced in over a week.
@@ -622,7 +615,7 @@ ClientEngine.prototype = {
     };
     let excludedIds = null;
     if (!ids) {
-      const localFxADeviceId = await fxAccounts.getDeviceId();
+      const localFxADeviceId = await fxAccounts.device.getLocalId();
       excludedIds = [localFxADeviceId];
     }
     try {
@@ -1110,7 +1103,7 @@ ClientStore.prototype = {
     // Package the individual components into a record for the local client
     if (id == this.engine.localID) {
       try {
-        record.fxaDeviceId = await this.engine.fxAccounts.getDeviceId();
+        record.fxaDeviceId = await this.engine.fxAccounts.device.getLocalId();
       } catch (error) {
         this._log.warn("failed to get fxa device id", error);
       }

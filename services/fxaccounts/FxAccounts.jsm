@@ -50,6 +50,7 @@ const {
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   ON_NEW_DEVICE_ID,
   POLL_SESSION,
+  PREF_ACCOUNT_ROOT,
   PREF_LAST_FXA_USER,
   SERVER_ERRNO_TO_ERROR,
   SCOPE_OLD_SYNC,
@@ -89,15 +90,19 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "FxAccountsProfile",
-  "resource://gre/modules/FxAccountsProfile.jsm"
+  "FxAccountsDevice",
+  "resource://gre/modules/FxAccountsDevice.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
   this,
-  "Utils",
-  "resource://services-sync/util.js"
+  "FxAccountsProfile",
+  "resource://gre/modules/FxAccountsProfile.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -113,9 +118,9 @@ var publicProperties = [
   "canGetKeys",
   "checkVerificationStatus",
   "commands",
+  "device",
   "getAccountsClient",
   "getAssertion",
-  "getDeviceId",
   "getDeviceList",
   "getKeys",
   "authorizeOAuthCode",
@@ -518,6 +523,14 @@ FxAccountsInternal.prototype = {
     return this._commands;
   },
 
+  _device: null,
+  get device() {
+    if (!this._device) {
+      this._device = new FxAccountsDevice(this);
+    }
+    return this._device;
+  },
+
   _oauthClient: null,
   get oauthClient() {
     if (!this._oauthClient) {
@@ -723,6 +736,7 @@ FxAccountsInternal.prototype = {
     if (!FXA_ENABLED) {
       throw new Error("Cannot call setSignedInUser when FxA is disabled.");
     }
+    Preferences.resetBranch(PREF_ACCOUNT_ROOT);
     log.debug("setSignedInUser - aborting any existing flows");
     const signedInUser = await this.getSignedInUser();
     if (signedInUser) {
@@ -839,33 +853,6 @@ FxAccountsInternal.prototype = {
    */
   invalidateCertificate() {
     return this.currentAccountState.updateUserAccountData({ cert: null });
-  },
-
-  async getDeviceId() {
-    let data = await this.currentAccountState.getUserAccountData();
-    if (!data) {
-      // Without a signed-in user, there can be no device id.
-      return null;
-    }
-    // Try migrating first. Remove this in Firefox 65+.
-    if (data.deviceId) {
-      log.info("Migrating from deviceId to device.");
-      await this.currentAccountState.updateUserAccountData({
-        deviceId: null,
-        deviceRegistrationVersion: null,
-        device: {
-          id: data.deviceId,
-          registrationVersion: data.deviceRegistrationVersion,
-        },
-      });
-      data = await this.currentAccountState.getUserAccountData();
-    }
-    const { device } = data;
-    if (await this.checkDeviceUpdateNeeded(device)) {
-      return this._registerOrUpdateDevice(data);
-    }
-    // Return the device id that we already registered with the server.
-    return device.id;
   },
 
   async checkDeviceUpdateNeeded(device) {
@@ -1022,6 +1009,7 @@ FxAccountsInternal.prototype = {
   },
 
   async _signOutLocal() {
+    Preferences.resetBranch(PREF_ACCOUNT_ROOT);
     await this.currentAccountState.signOut();
     // this "aborts" this.currentAccountState but doesn't make a new one.
     await this.abortExistingFlow();
@@ -2083,7 +2071,7 @@ FxAccountsInternal.prototype = {
 
     try {
       const subscription = await this.fxaPushService.registerPushEndpoint();
-      const deviceName = this._getDeviceName();
+      const deviceName = this.device.getLocalName();
       let deviceOptions = {};
 
       // if we were able to obtain a subscription
@@ -2115,7 +2103,7 @@ FxAccountsInternal.prototype = {
         device = await this.fxAccountsClient.registerDevice(
           sessionToken,
           deviceName,
-          this._getDeviceType(),
+          this.device.getLocalType(),
           deviceOptions
         );
         Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
@@ -2135,14 +2123,6 @@ FxAccountsInternal.prototype = {
     } catch (error) {
       return this._handleDeviceError(error, sessionToken);
     }
-  },
-
-  _getDeviceName() {
-    return Utils.getDeviceName();
-  },
-
-  _getDeviceType() {
-    return Utils.getDeviceType();
   },
 
   _handleDeviceError(error, sessionToken) {

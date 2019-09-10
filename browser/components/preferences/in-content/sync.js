@@ -568,7 +568,10 @@ var gSyncPane = {
   _populateComputerName(value) {
     let textbox = document.getElementById("fxaSyncComputerName");
     if (!textbox.hasAttribute("placeholder")) {
-      textbox.setAttribute("placeholder", Weave.Utils.getDefaultDeviceName());
+      textbox.setAttribute(
+        "placeholder",
+        fxAccounts.device.getDefaultLocalName()
+      );
     }
     textbox.value = value;
   },
