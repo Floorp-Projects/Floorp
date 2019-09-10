@@ -365,10 +365,14 @@ nsresult HTMLEditRules::BeforeEdit() {
   }
 
   // Check that selection is in subtree defined by body node
-  nsresult rv = ConfirmSelectionInBody();
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef()).EnsureSelectionInBodyOrDocumentElement();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureSelectionInBodyOrDocumentElement() failed, but ignored");
 
   return NS_OK;
 }
@@ -419,11 +423,14 @@ nsresult HTMLEditRules::AfterEdit() {
 nsresult HTMLEditRules::AfterEditInner() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  nsresult rv = ConfirmSelectionInBody();
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef()).EnsureSelectionInBodyOrDocumentElement();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EnsureSelectionInBodyOrDocumentElement() failed, but ignored");
   switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
     case EditSubAction::eReplaceHeadWithHTMLSource:
     case EditSubAction::eCreatePaddingBRElementForEmptyEditor:
@@ -10292,12 +10299,12 @@ nsresult HTMLEditor::DestroyListStructureRecursively(Element& aListElement) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::ConfirmSelectionInBody() {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  Element* rootElement = HTMLEditorRef().GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
-    return NS_ERROR_UNEXPECTED;
+  RefPtr<Element> bodyOrDocumentElement = GetRoot();
+  if (NS_WARN_IF(!bodyOrDocumentElement)) {
+    return NS_ERROR_FAILURE;
   }
 
   EditorRawDOMPoint selectionStartPoint(
@@ -10305,6 +10312,12 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
     return NS_ERROR_FAILURE;
   }
+
+  // XXX This does wrong things.  Web apps can put any elements as sibling
+  //     of `<body>` element.  Therefore, this collapses `Selection` into
+  //     the `<body>` element which `HTMLDocument.body` is set to.  So,
+  //     this makes users impossible to modify content outside of the
+  //     `<body>` element even if caret is in an editing host.
 
   // Check that selection start container is inside the <body> element.
   // XXXsmaug this code is insane.
@@ -10316,13 +10329,14 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(rootElement, 0), ignoredError);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0),
+                                ignoredError);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         !ignoredError.Failed(),
-        "Failed to collapse selection at start of the root element");
+        "Selection::Collapse() with start of editing host failed, but ignored");
     return NS_OK;
   }
 
@@ -10342,13 +10356,14 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(rootElement, 0), ignoredError);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0),
+                                ignoredError);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         !ignoredError.Failed(),
-        "Failed to collapse selection at start of the root element");
+        "Selection::Collapse() with start of editing host failed, but ignored");
   }
 
   return NS_OK;
