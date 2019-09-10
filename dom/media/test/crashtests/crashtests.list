@@ -130,4 +130,5 @@ load 1560215.html
 skip-if(Android) load 1547784.html # Skip on Android as clearkey is not supported
 load 1547899.html
 load 1569645.html
+load 1575271.html
 load 1577184.html
