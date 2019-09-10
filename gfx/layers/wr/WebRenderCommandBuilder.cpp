@@ -2047,7 +2047,6 @@ static bool PaintByLayer(nsDisplayItem* aItem,
 
 static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
                                   const LayoutDevicePoint& aOffset,
-                                  const IntRect& visibleRect,
                                   nsDisplayListBuilder* aDisplayListBuilder,
                                   const RefPtr<BasicLayerManager>& aManager,
                                   const gfx::Size& aScale,
@@ -2056,7 +2055,7 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
 
   bool isInvalidated = false;
   // XXX Why is this ClearRect() needed?
-  aDT->ClearRect(Rect(visibleRect));
+  aDT->ClearRect(Rect(aDT->GetRect()));
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
 
@@ -2101,14 +2100,15 @@ static bool PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
     // which isn't very useful.
     if (aHighlight) {
       aDT->SetTransform(gfx::Matrix());
-      aDT->FillRect(Rect(visibleRect), gfx::ColorPattern(aHighlight.value()));
+      aDT->FillRect(Rect(aDT->GetRect()),
+                    gfx::ColorPattern(aHighlight.value()));
     }
     if (aItem->Frame()->PresContext()->GetPaintFlashing() && isInvalidated) {
       aDT->SetTransform(gfx::Matrix());
       float r = float(rand()) / float(RAND_MAX);
       float g = float(rand()) / float(RAND_MAX);
       float b = float(rand()) / float(RAND_MAX);
-      aDT->FillRect(Rect(visibleRect),
+      aDT->FillRect(Rect(aDT->GetRect()),
                     gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
     }
   }
@@ -2182,19 +2182,21 @@ WebRenderCommandBuilder::GenerateFallbackData(
   auto dtRect = LayerIntRect::FromUnknownRect(
       ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
+  auto dtSize = dtRect.Size();
 
   auto visibleRect = LayerIntRect::FromUnknownRect(
                          ScaleToOutsidePixelsOffset(
                              aItem->GetBuildingRect(), scale.width,
                              scale.height, appUnitsPerDevPixel, residualOffset))
                          .Intersect(dtRect);
+  // visibleRect is relative to the blob origin so adjust for that
+  visibleRect -= dtRect.TopLeft();
 
-  auto visibleSize = visibleRect.Size();
-  if (visibleSize.IsEmpty()) {
+  if (dtSize.IsEmpty()) {
     return nullptr;
   }
-  // Display item bounds should be unscaled
-  aImageRect = visibleRect / layerScale;
+
+  aImageRect = dtRect / layerScale;
 
   nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
 
@@ -2265,7 +2267,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 }
                 fonts = std::move(aScaledFonts);
               },
-              visibleRect.ToUnknownRect().TopLeft());
+              dtRect.ToUnknownRect().TopLeft());
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
@@ -2274,11 +2276,8 @@ WebRenderCommandBuilder::GenerateFallbackData(
         fallbackData->mBasicLayerManager =
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
-      // aOffset is (0, 0) because blobs don't want to normalize their
-      // coordinates
       bool isInvalidated = PaintItemByDrawTarget(
-          aItem, dt, LayoutDevicePoint(0, 0),
-          /*aVisibleRect: */ visibleRect.ToUnknownRect(), aDisplayListBuilder,
+          aItem, dt, LayoutDevicePoint(0, 0), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
         if (!aItem->GetBuildingRect().IsEqualInterior(
@@ -2288,7 +2287,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
           isInvalidated = true;
         }
       }
-      recorder->FlushItem(visibleRect.ToUnknownRect());
+      recorder->FlushItem(dtRect.ToUnknownRect());
       recorder->Finish();
 
       if (!validFonts) {
@@ -2301,7 +2300,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                              recorder->mOutputStream.mLength);
         wr::BlobImageKey key =
             wr::BlobImageKey{mManager->WrBridge()->GetNextImageKey()};
-        wr::ImageDescriptor descriptor(visibleSize.ToUnknownSize(), 0,
+        wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0,
                                        dt->GetFormat(), opacity);
         if (!aResources.AddBlobImage(
                 key, descriptor, bytes,
@@ -2337,7 +2336,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
       {
         UpdateImageHelper helper(imageContainer, imageClient,
-                                 visibleSize.ToUnknownSize(), format);
+                                 dtSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           if (!dt) {
@@ -2347,12 +2346,8 @@ WebRenderCommandBuilder::GenerateFallbackData(
             fallbackData->mBasicLayerManager =
                 new BasicLayerManager(mManager->GetWidget());
           }
-          // aOffset is applied because this case is a "real" image and not a
-          // blob
           isInvalidated = PaintItemByDrawTarget(
-              aItem, dt,
-              /*aOffset: */ aImageRect.TopLeft(),
-              /*aVisibleRect: */ dt->GetRect(), aDisplayListBuilder,
+              aItem, dt, aImageRect.TopLeft(), aDisplayListBuilder,
               fallbackData->mBasicLayerManager, scale, highlight);
         }
 
