@@ -63,17 +63,37 @@ add_task(async function test() {
         ok(true, testObj.expectedValue + " is on clipboard now");
 
         await ContentTask.spawn(browser, testObj, async function(aTestObj) {
-          let loginItem = content.document.querySelector("login-item");
+          let loginItem = Cu.waiveXrays(
+            content.document.querySelector("login-item")
+          );
           let copyButton = loginItem.shadowRoot.querySelector(
             aTestObj.copyButtonSelector
           );
-          ok(copyButton.dataset.copied, "Success message should be shown");
-          await ContentTaskUtils.waitForCondition(
-            () => !copyButton.dataset.copied,
-            "'copied' attribute should be removed after a timeout"
+          let otherCopyButton =
+            copyButton == loginItem._copyUsernameButton
+              ? loginItem._copyPasswordButton
+              : loginItem._copyUsernameButton;
+          ok(
+            !otherCopyButton.dataset.copied,
+            "The other copy button should have the 'copied' state removed"
           );
+          ok(copyButton.dataset.copied, "Success message should be shown");
         });
       }
+
+      // Wait for the 'copied' attribute to get removed from the copyPassword
+      // button, which is the last button that is clicked in the above testcase.
+      // Since another Copy button isn't clicked, the state won't get cleared
+      // instantly. This test covers the built-in timeout of the visual display.
+      await ContentTask.spawn(browser, null, async () => {
+        let copyButton = Cu.waiveXrays(
+          content.document.querySelector("login-item")
+        )._copyPasswordButton;
+        await ContentTaskUtils.waitForCondition(
+          () => !copyButton.dataset.copied,
+          "'copied' attribute should be removed after a timeout"
+        );
+      });
     }
   );
 });
