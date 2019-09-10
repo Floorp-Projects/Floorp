@@ -382,14 +382,14 @@
   width: 16px;
   height: 16px;
   padding: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted],
 .tab-icon-sound[activemedia-blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-playing.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .tab-icon-sound[muted] {
