@@ -223,17 +223,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
 
   /**
-   * ConfirmSelectionInBody() makes sure that Selection is in editor root
-   * element typically <body> element (see HTMLEditor::UpdateRootElement())
-   * and only one Selection range.
-   * XXX This method is not necessary because even if selection is outside the
-   *     <body> element, elements outside the <body> element should be
-   *     editable, e.g., any element can be inserted siblings as <body> element
-   *     and other browsers allow to edit such elements.
-   */
-  MOZ_MUST_USE nsresult ConfirmSelectionInBody();
-
-  /**
    * DocumentModifiedWorker() is called by DocumentModified() either
    * synchronously or asynchronously.
    */
