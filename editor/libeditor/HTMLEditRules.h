@@ -193,15 +193,6 @@ class HTMLEditRules : public TextEditRules {
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
   /**
-   * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
-   * <br> element into empty list item or table cell elements between
-   * aStartRef and aEndRef.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertBRElementToEmptyListItemsAndTableCellsInRange(
-      const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
-
-  /**
    * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
    * necessary,
    */
