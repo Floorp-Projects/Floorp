@@ -1174,3 +1174,57 @@ Data that is sent in the activation ping
 </table>
 </pre>
 
+## private_browsing_shortcut
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <td>create_shortcut</td>
+        <td>event</td>
+        <td>A user pressed the "Add private browsing shortcut" button in settings.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>cfr_add_shortcut</td>
+        <td>event</td>
+        <td>A user pressed the "Add shortcut" button when the contextual feature recommender appeared.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>cfr_cancel</td>
+        <td>event</td>
+        <td>A user pressed the "No thanks" button when the contextual feature recommender appeared.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>pinned_shortcut_priv</td>
+        <td>event</td>
+        <td>A user pressed the pinned private shortcut in Android home screen, opening up a new private search.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>static_shortcut_tab</td>
+        <td>event</td>
+        <td>A user pressed the long-press shortcut "Open new tab", opening up a new search.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>static_shortcut_priv</td>
+        <td>event</td>
+        <td>A user pressed the long-press shortcut "Open new private tab", opening up a new private search.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/5194">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>

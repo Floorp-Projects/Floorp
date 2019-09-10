@@ -28,6 +28,7 @@ import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
+import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.ReaderMode
@@ -335,6 +336,24 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.PrivateBrowsingNotificationDeleteAndOpenTapped -> EventWrapper<NoExtraKeys>(
             { PrivateBrowsingMode.notificationDelete.record(it) }
+        )
+        is Event.PrivateBrowsingCreateShortcut -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.createShortcut.record(it) }
+        )
+        is Event.PrivateBrowsingAddShortcutCFR -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.cfrAddShortcut.record(it) }
+        )
+        is Event.PrivateBrowsingCancelCFR -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.cfrCancel.record(it) }
+        )
+        is Event.PrivateBrowsingPinnedShortcutPrivateTab -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.pinnedShortcutPriv.record(it) }
+        )
+        is Event.PrivateBrowsingStaticShortcutTab -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.staticShortcutTab.record(it) }
+        )
+        is Event.PrivateBrowsingStaticShortcutPrivateTab -> EventWrapper<NoExtraKeys>(
+            { PrivateBrowsingShortcut.staticShortcutPriv.record(it) }
         )
         is Event.WhatsNewTapped -> EventWrapper(
             { Events.whatsNewTapped.record(it) },

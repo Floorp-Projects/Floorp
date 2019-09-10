@@ -583,12 +583,16 @@ class HomeFragment : Fragment(), AccountObserver {
                 )
             layout.findViewById<Button>(R.id.cfr_pos_button).apply {
                 setOnClickListener {
+                    context.metrics.track(Event.PrivateBrowsingAddShortcutCFR)
                     PrivateShortcutCreateManager.createPrivateShortcut(context)
                     trackingOnboarding.dismiss()
                 }
             }
             layout.findViewById<Button>(R.id.cfr_neg_button).apply {
-                setOnClickListener { trackingOnboarding.dismiss() }
+                setOnClickListener {
+                    context.metrics.track(Event.PrivateBrowsingCancelCFR)
+                    trackingOnboarding.dismiss()
+                }
             }
             // We want to show the popup only after privateBrowsingButton is available.
             // Otherwise, we will encounter an activity token error.

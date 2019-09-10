@@ -57,6 +57,7 @@ import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
@@ -157,6 +158,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                 navigateToSitePermissions()
             }
             resources.getString(pref_key_add_private_browsing_shortcut) -> {
+                requireContext().metrics.track(Event.PrivateBrowsingCreateShortcut)
                 PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
             }
             resources.getString(pref_key_accessibility) -> {

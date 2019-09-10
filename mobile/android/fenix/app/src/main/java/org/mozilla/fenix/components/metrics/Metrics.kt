@@ -103,6 +103,12 @@ sealed class Event {
     object PrivateBrowsingNotificationTapped : Event()
     object PrivateBrowsingNotificationOpenTapped : Event()
     object PrivateBrowsingNotificationDeleteAndOpenTapped : Event()
+    object PrivateBrowsingCreateShortcut : Event()
+    object PrivateBrowsingAddShortcutCFR : Event()
+    object PrivateBrowsingCancelCFR : Event()
+    object PrivateBrowsingPinnedShortcutPrivateTab : Event()
+    object PrivateBrowsingStaticShortcutTab : Event()
+    object PrivateBrowsingStaticShortcutPrivateTab : Event()
 
     // Interaction events with extras
 

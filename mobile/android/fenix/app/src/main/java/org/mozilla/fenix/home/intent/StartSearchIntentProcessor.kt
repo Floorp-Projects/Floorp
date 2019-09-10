@@ -25,6 +25,9 @@ class StartSearchIntentProcessor(
         return if (event != null) {
             when (event) {
                 SEARCH_WIDGET -> metrics.track(Event.SearchWidgetNewTabPressed)
+                STATIC_SHORTCUT_NEW_TAB -> metrics.track(Event.PrivateBrowsingStaticShortcutTab)
+                STATIC_SHORTCUT_NEW_PRIVATE_TAB -> metrics.track(Event.PrivateBrowsingStaticShortcutPrivateTab)
+                PRIVATE_BROWSING_PINNED_SHORTCUT -> metrics.track(Event.PrivateBrowsingPinnedShortcutPrivateTab)
             }
 
             out.removeExtra(HomeActivity.OPEN_TO_SEARCH)

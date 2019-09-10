@@ -1243,6 +1243,74 @@ private_browsing_mode:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+private_browsing_shortcut:
+  create_shortcut:
+    type: event
+    description: >
+      A user pressed the "Add private browsing shortcut" button in settings.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  cfr_add_shortcut:
+    type: event
+    description: >
+      A user pressed the "Add shortcut" button when the contextual feature recommender appeared.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  cfr_cancel:
+    type: event
+    description: >
+      A user pressed the "No thanks" button when the contextual feature recommender appeared.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  pinned_shortcut_priv:
+    type: event
+    description: >
+      A user pressed the pinned private shortcut in Android home screen, opening up a new private search.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  static_shortcut_tab:
+    type: event
+    description: >
+      A user pressed the long-press shortcut "Open new tab", opening up a new search.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  static_shortcut_priv:
+    type: event
+    description: >
+      A user pressed the long-press shortcut "Open new private tab", opening up a new private search.
+    bugs:
+      - 4658
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5194
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 experiments.metrics:
   active_experiment:
     type: string
