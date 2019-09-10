@@ -23,6 +23,10 @@ class AndroidChecker(Checker):
         - tuple of line, column info for the error within the string
         - description string to be shown in the report
         '''
+        for encoding_trouble in super(
+            AndroidChecker, self
+        ).check(refEnt, l10nEnt):
+            yield encoding_trouble
         refNode = refEnt.node
         l10nNode = l10nEnt.node
         # Apples and oranges, error out.

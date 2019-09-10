@@ -24,6 +24,19 @@ class TestProperties(BaseHelper):
                    (('warning', 20, r'unknown escape sequence, \e',
                      'escape'),))
 
+    def test_bad_encoding(self):
+        self._test(
+            'some = touché"'.encode('latin-1'),
+            (
+                (
+                    "warning",
+                    12,
+                    "\ufffd in: some",
+                    "encodings"
+                ),
+            )
+        )
+
 
 class TestPlurals(BaseHelper):
     file = File('foo.properties', 'foo.properties')

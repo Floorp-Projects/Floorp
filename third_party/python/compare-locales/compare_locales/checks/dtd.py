@@ -80,6 +80,10 @@ class DTDChecker(Checker):
 
         Return a checker that offers just those entities.
         """
+        for encoding_trouble in super(
+            DTDChecker, self
+        ).check(refEnt, l10nEnt):
+            yield encoding_trouble
         refValue, l10nValue = refEnt.raw_val, l10nEnt.raw_val
         # find entities the refValue references,
         # reusing markup from DTDParser.

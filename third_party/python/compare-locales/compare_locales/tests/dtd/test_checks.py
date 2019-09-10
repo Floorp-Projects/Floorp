@@ -95,6 +95,19 @@ stuff">
         self._test(b'''<!ENTITY style "width:12ch;height:200px;">''', tuple())
         self._test(b'''<!ENTITY ftd "0">''', tuple())
 
+    def test_bad_encoding(self):
+        self._test(
+            '<!ENTITY foo "touché">'.encode('latin-1'),
+            (
+                (
+                    "warning",
+                    19,
+                    "\ufffd in: foo",
+                    "encodings"
+                ),
+            )
+        )
+
 
 class TestEntitiesInDTDs(BaseHelper):
     file = File('foo.dtd', 'foo.dtd')
