@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.library.bookmarks.addfolder
 
-import android.graphics.PorterDuff.Mode.SRC_IN
-import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -26,7 +24,6 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -73,8 +70,6 @@ class AddBookmarkFolderFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_add_folder, menu)
-        menu.findItem(R.id.confirm_add_folder_button).icon.colorFilter =
-            PorterDuffColorFilter(context!!.getColorFromAttr(R.attr.primaryText), SRC_IN)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

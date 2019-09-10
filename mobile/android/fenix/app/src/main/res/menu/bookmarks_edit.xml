@@ -10,6 +10,7 @@
             android:icon="@drawable/ic_delete"
             android:iconTint="?primaryText"
             android:title="@string/bookmark_menu_delete_button"
+            android:contentDescription="@string/bookmark_menu_delete_button"
             app:showAsAction="ifRoom"
             tools:targetApi="o" />
 </menu>

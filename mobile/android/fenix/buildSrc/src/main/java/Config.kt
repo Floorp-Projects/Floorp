@@ -1,5 +1,4 @@
 import org.gradle.api.Project
-import java.lang.Math.pow
 import java.lang.RuntimeException
 
 import java.text.SimpleDateFormat
@@ -118,8 +117,7 @@ object Config {
         var version = 0x78200000 // 1111000001000000000000000000000
         // We reserve 1 "middle" high order bit for the future, and 3 low order bits
         // for architecture and APK splits.
-        version = version or (base shl  3)
-
+        version = version or (base shl 3)
 
         // 'x' bit is 1 for x86/x86-64 architectures
         if (abi == "x86_64" || abi == "x86") {

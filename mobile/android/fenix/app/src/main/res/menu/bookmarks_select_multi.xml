@@ -7,7 +7,7 @@
     <item
         android:id="@+id/edit_bookmark_multi_select"
         android:icon="@drawable/ic_edit"
-        android:iconTint="?primaryText"
+        android:iconTint="@color/white_color"
         android:title="@string/bookmark_edit"
         app:showAsAction="ifRoom"
         tools:targetApi="o" />

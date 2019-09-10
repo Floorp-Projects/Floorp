@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import android.graphics.PorterDuff.Mode.SRC_IN
-import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -14,7 +12,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -177,13 +174,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
                 } else {
                     inflater.inflate(R.menu.bookmarks_select_multi, menu)
                 }
-                menu.findItem(R.id.edit_bookmark_multi_select)?.run {
-                    isVisible = mode.selectedItems.size == 1
-                    icon.colorFilter = PorterDuffColorFilter(
-                        ContextCompat.getColor(context!!, R.color.white_color),
-                        SRC_IN
-                    )
-                }
+
+                menu.findItem(R.id.edit_bookmark_multi_select)?.isVisible = mode.selectedItems.size == 1
             }
         }
     }
