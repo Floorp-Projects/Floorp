@@ -163,6 +163,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             }}
             dispatch={this.props.dispatch}
             shouldSendImpressionStats={true}
+            extraClasses={`ds-dismiss-ds-text-promo`}
           >
             <DSTextPromo
               dispatch={this.props.dispatch}

@@ -3024,19 +3024,24 @@ main {
   to {
     transform: rotate(360deg); } }
 
+.ds-dismiss-ds-text-promo {
+  width: 744px;
+  margin: auto; }
+  .ds-dismiss-ds-text-promo .ds-dismiss-button {
+    margin: 16px; }
+
 .ds-text-promo {
   display: flex;
-  max-width: 744px;
-  margin: 16px auto; }
-  .ds-text-promo picture {
+  max-width: 640px;
+  margin: 18px 24px; }
+  .ds-text-promo .ds-image {
     width: 40px;
     height: 40px;
-    margin: 0 12px 0 0;
+    margin: 4px 12px 0 0;
     border-radius: 4px;
     flex-shrink: 0; }
   .ds-text-promo .text {
-    line-height: 24px;
-    margin: -4.5px 0 0; }
+    line-height: 24px; }
   .ds-text-promo h3 {
     margin: 0;
     font-weight: 600;
