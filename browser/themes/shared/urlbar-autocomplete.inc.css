@@ -16,6 +16,14 @@
   --autocomplete-popup-color: var(--arrowpanel-color);
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
+
+  /* From in-content/common.inc.css. */
+  --in-content-button-background: rgba(12, 12, 13, 0.1);
+  --in-content-button-background-hover: rgba(12, 12, 13, 0.2);
+  --in-content-button-background-active: rgba(12, 12, 13, 0.3);
+  --in-content-primary-button-background: #0060df;
+  --in-content-primary-button-background-hover: #003eaa;
+  --in-content-primary-button-background-active: #002275;
 }
 
 :root[lwt-popup-darktext] {
@@ -26,6 +34,10 @@
 :root[lwt-popup-brighttext] {
   --urlbar-popup-url-color: @lwtPopupBrighttextLinkColor@;
   --urlbar-popup-action-color: #30e60b;
+
+  /* From in-content/common.inc.css. */
+  --in-content-button-background-hover: rgba(249, 249, 250, 0.15);
+  --in-content-button-background-active: rgba(249, 249, 250, 0.2);
 }
 
 .urlbarView {
@@ -84,15 +96,15 @@
   border: none;
   border-radius: 2px;
   color: white;
-  background-color: #0060df; /* corresponds to blue-60 */
+  background-color: var(--in-content-primary-button-background);
 }
 
 #urlbar-contextual-tip-button:hover {
-  background-color: #003eaa; /* corresponds to blue-70 */
+  background-color: var(--in-content-primary-button-background-hover);
 }
 
 #urlbar-contextual-tip-button:active {
-  background-color: #002275; /* corresponds to blue-80 */
+  background-color: var(--in-content-primary-button-background-active);
 }
 
 #urlbar-contextual-tip-button:-moz-focusring {
@@ -153,11 +165,11 @@
   direction: ltr !important;
 }
 
-.urlbarView-row:hover {
+.urlbarView-row:not([type=tip]):hover {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView-row[selected] {
+.urlbarView-row:not([type=tip])[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
@@ -171,6 +183,38 @@
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
+  min-width: 24px;
+  height: 24px;
+  margin-inline-end: 12px;
+}
+
+/* The help icon is a standard Photon ghost button. */
+.urlbarView-tip-help {
+  min-width: 16px;
+  height: 32px;
+  background-image: url("chrome://global/skin/icons/help.svg");
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-inline: 8px;
+  margin-inline-start: 8px;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+.urlbarView-tip-help:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.urlbarView-tip-help:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+.urlbarView-tip-help:-moz-focusring,
+.urlbarView-tip-button:-moz-focusring {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
 
 #urlbar-contextual-tip-icon {
@@ -199,6 +243,58 @@
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
+.urlbarView-row[type=tip] {
+  border-bottom: 1px solid var(--panel-separator-color);
+  padding-block: 24px;
+  margin-bottom: 4px;
+}
+
+.urlbarView-row[type=tip]:not(:first-child) {
+  border-top: 1px solid var(--panel-separator-color);
+  margin-top: 4px;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  width: 100%;
+}
+
+/* The tip button is a Photon default button when unfocused and a
+   primary button in all other states. */
+.urlbarView-tip-button {
+  min-height: 32px;
+  padding: 8px;
+  border: none;
+  border-radius: 2px;
+  font-size: 0.93em;
+  color: inherit;
+  background-color: var(--in-content-button-background);
+  min-width: 10em;
+  flex-shrink: 0;
+}
+
+.urlbarView-tip-button:hover {
+  color: white;
+  background-color: var(--in-content-primary-button-background-hover);
+}
+
+.urlbarView-tip-button:hover:active {
+  color: white;
+  background-color: var(--in-content-primary-button-background-active);
+}
+
+.urlbarView-tip-button:-moz-focusring {
+ color: white:
+ background-color: var(--in-content-primary-button-background);
+}
+
+.urlbarView-tip-button-spacer {
+  flex: 1;
+  min-width: 75px;
+}
+
 .urlbarView-title {
   overflow: hidden;
   white-space: nowrap;
@@ -206,6 +302,11 @@
      never crop the url completely */
   flex-shrink: 0;
   max-width: calc(70% - 2 * (16px + @urlbarViewIconMarginEnd@));
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title {
+   white-space: normal;
+   flex: auto;
 }
 
 .urlbarView-title-separator::before {

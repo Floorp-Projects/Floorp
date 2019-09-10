@@ -218,6 +218,7 @@
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/tab.svg                        (../shared/icons/tab.svg)
+  skin/classic/browser/tip.svg                        (../shared/icons/tip.svg)
   skin/classic/browser/toggle.svg                     (../shared/icons/toggle.svg)
   skin/classic/browser/undo.svg                       (../shared/icons/undo.svg)
   skin/classic/browser/unpin-tab.svg                  (../shared/icons/unpin-tab.svg)

@@ -610,7 +610,7 @@ class UrlbarView {
     }
     // Add remaining results, if we have fewer rows than results.
     for (; resultIndex < results.length; ++resultIndex) {
-      let row = this._createRow();
+      let row = this._createRow(results[resultIndex].type);
       this._updateRow(row, results[resultIndex]);
       // Due to stale rows, we may have more rows than maxResults, thus we must
       // hide them, and we'll revert this when stale rows are removed.
@@ -623,7 +623,7 @@ class UrlbarView {
     this._updateIndices();
   }
 
-  _createRow() {
+  _createRow(type) {
     let item = this._createElement("div");
     item.className = "urlbarView-row";
     item.setAttribute("role", "option");
@@ -647,26 +647,40 @@ class UrlbarView {
     content.appendChild(title);
     item._elements.set("title", title);
 
-    let tagsContainer = this._createElement("span");
-    tagsContainer.className = "urlbarView-tags";
-    content.appendChild(tagsContainer);
-    item._elements.set("tagsContainer", tagsContainer);
+    if (type == UrlbarUtils.RESULT_TYPE.TIP) {
+      let buttonSpacer = this._createElement("span");
+      buttonSpacer.className = "urlbarView-tip-button-spacer";
+      content.appendChild(buttonSpacer);
 
-    let titleSeparator = this._createElement("span");
-    titleSeparator.className = "urlbarView-title-separator";
-    content.appendChild(titleSeparator);
-    item._elements.set("titleSeparator", titleSeparator);
+      let tipButton = this._createElement("button");
+      tipButton.className = "urlbarView-tip-button";
+      content.appendChild(tipButton);
+      item._elements.set("tipButton", tipButton);
 
-    let action = this._createElement("span");
-    action.className = "urlbarView-secondary urlbarView-action";
-    content.appendChild(action);
-    item._elements.set("action", action);
+      let helpIcon = this._createElement("span");
+      helpIcon.className = "urlbarView-tip-help";
+      content.appendChild(helpIcon);
+    } else {
+      let tagsContainer = this._createElement("span");
+      tagsContainer.className = "urlbarView-tags";
+      content.appendChild(tagsContainer);
+      item._elements.set("tagsContainer", tagsContainer);
 
-    let url = this._createElement("span");
-    url.className = "urlbarView-secondary urlbarView-url";
-    content.appendChild(url);
-    item._elements.set("url", url);
+      let titleSeparator = this._createElement("span");
+      titleSeparator.className = "urlbarView-title-separator";
+      content.appendChild(titleSeparator);
+      item._elements.set("titleSeparator", titleSeparator);
 
+      let action = this._createElement("span");
+      action.className = "urlbarView-secondary urlbarView-action";
+      content.appendChild(action);
+      item._elements.set("action", action);
+
+      let url = this._createElement("span");
+      url.className = "urlbarView-secondary urlbarView-url";
+      content.appendChild(url);
+      item._elements.set("url", url);
+    }
     return item;
   }
 
@@ -683,6 +697,8 @@ class UrlbarView {
       item.setAttribute("type", "remotetab");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
       item.setAttribute("type", "switchtab");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+      item.setAttribute("type", "tip");
     } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     } else {
@@ -695,11 +711,27 @@ class UrlbarView {
       result.type == UrlbarUtils.RESULT_TYPE.KEYWORD
     ) {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+      favicon.src = result.payload.icon || UrlbarUtils.ICON.TIP;
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
 
     let title = item._elements.get("title");
+
+    if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+      this._addTextContentWithHighlights(title, result.payload.text, []);
+      let tipButton = item._elements.get("tipButton");
+      this._addTextContentWithHighlights(
+        tipButton,
+        result.payload.buttonText,
+        []
+      );
+      // Tips are dissimilar to other types of results and don't need the rest
+      // of this markup. We return early.
+      return;
+    }
+
     this._addTextContentWithHighlights(
       title,
       result.title,
