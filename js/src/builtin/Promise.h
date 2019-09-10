@@ -61,7 +61,8 @@ enum PromiseSlots {
 // The PromiseSlot_RejectFunction slot is not used.
 #define PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS 0x08
 
-// This promise is the return value of an async function invocation.
+// This promise is either the return value of an async function invocation or
+// an async generator's method.
 #define PROMISE_FLAG_ASYNC 0x10
 
 // This promise knows how to propagate information required to keep track of
@@ -239,9 +240,9 @@ MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsync(JSContext* cx);
 
 /**
  * Returns true if the given object is a promise created by
- * CreatePromiseObjectForAsync function.
+ * either CreatePromiseObjectForAsync function or async generator's method.
  */
-MOZ_MUST_USE bool IsPromiseForAsync(JSObject* promise);
+MOZ_MUST_USE bool IsPromiseForAsyncFunctionOrGenerator(JSObject* promise);
 
 class AsyncFunctionGeneratorObject;
 

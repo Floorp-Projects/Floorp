@@ -2404,9 +2404,9 @@ static bool SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
-  if (IsPromiseForAsync(promise)) {
+  if (IsPromiseForAsyncFunctionOrGenerator(promise)) {
     JS_ReportErrorASCII(
-        cx, "async function's promise shouldn't be manually settled");
+        cx, "async function/generator's promise shouldn't be manually settled");
     return false;
   }
 
@@ -2484,9 +2484,10 @@ static bool ResolvePromise(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  if (IsPromiseForAsync(promise)) {
+  if (IsPromiseForAsyncFunctionOrGenerator(promise)) {
     JS_ReportErrorASCII(
-        cx, "async function's promise shouldn't be manually resolved");
+        cx,
+        "async function/generator's promise shouldn't be manually resolved");
     return false;
   }
 
@@ -2520,9 +2521,10 @@ static bool RejectPromise(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  if (IsPromiseForAsync(promise)) {
+  if (IsPromiseForAsyncFunctionOrGenerator(promise)) {
     JS_ReportErrorASCII(
-        cx, "async function's promise shouldn't be manually rejected");
+        cx,
+        "async function/generator's promise shouldn't be manually rejected");
     return false;
   }
 
