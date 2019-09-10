@@ -102,7 +102,7 @@ angle::Result Renderbuffer::setStorage(const Context *context,
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   0, InitState::MayNeedInit);
-    onStateChange(angle::SubjectMessage::SubjectChanged);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
     return angle::Result::Continue;
 }
@@ -119,7 +119,7 @@ angle::Result Renderbuffer::setStorageMultisample(const Context *context,
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   static_cast<GLsizei>(samples), InitState::MayNeedInit);
-    onStateChange(angle::SubjectMessage::SubjectChanged);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
     return angle::Result::Continue;
 }
@@ -133,7 +133,7 @@ angle::Result Renderbuffer::setStorageEGLImageTarget(const Context *context, egl
 
     mState.update(static_cast<GLsizei>(image->getWidth()), static_cast<GLsizei>(image->getHeight()),
                   Format(image->getFormat()), 0, image->sourceInitState());
-    onStateChange(angle::SubjectMessage::SubjectChanged);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
     return angle::Result::Continue;
 }

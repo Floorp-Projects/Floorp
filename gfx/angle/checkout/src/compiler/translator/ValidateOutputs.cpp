@@ -119,7 +119,7 @@ void ValidateOutputsTraverser::validate(TDiagnostics *diagnostics) const
                 const size_t offsetLocation = location + elementIndex;
                 if ((*validOutputsToUse)[offsetLocation])
                 {
-                    std::stringstream strstr = sh::InitializeStream<std::stringstream>();
+                    std::stringstream strstr;
                     strstr << "conflicting output locations with previously defined output '"
                            << (*validOutputsToUse)[offsetLocation]->getName() << "'";
                     error(*symbol, strstr.str().c_str(), diagnostics);

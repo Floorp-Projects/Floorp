@@ -34,13 +34,11 @@ class BufferManager;
 struct Caps;
 class Context;
 class FramebufferManager;
-class MemoryObjectManager;
 class PathManager;
 class ProgramPipelineManager;
 class Query;
 class RenderbufferManager;
 class SamplerManager;
-class SemaphoreManager;
 class ShaderProgramManager;
 class SyncManager;
 class TextureManager;
@@ -58,7 +56,6 @@ class State : angle::NonCopyable
     State(ContextID contextIn,
           const State *shareContextState,
           TextureManager *shareTextures,
-          const EGLenum clientType,
           const Version &clientVersion,
           bool debug,
           bool bindGeneratesResource,
@@ -72,7 +69,6 @@ class State : angle::NonCopyable
 
     // Getters
     ContextID getContextID() const { return mContext; }
-    EGLenum getClientType() const { return mClientType; }
     GLint getClientMajorVersion() const { return mClientVersion.major; }
     GLint getClientMinorVersion() const { return mClientVersion.minor; }
     const Version &getClientVersion() const { return mClientVersion; }
@@ -92,7 +88,7 @@ class State : angle::NonCopyable
 
     // State chunk getters
     const RasterizerState &getRasterizerState() const;
-    const BlendState &getBlendState() const { return mBlend; }
+    const BlendState &getBlendState() const;
     const DepthStencilState &getDepthStencilState() const;
 
     // Clear behavior setters & state parameter block generation function
@@ -234,8 +230,6 @@ class State : angle::NonCopyable
     void detachTexture(const Context *context, const TextureMap &zeroTextures, GLuint texture);
     void initializeZeroTextures(const Context *context, const TextureMap &zeroTextures);
 
-    void invalidateTexture(TextureType type);
-
     // Sampler object binding manipulation
     void setSamplerBinding(const Context *context, GLuint textureUnit, Sampler *sampler);
     GLuint getSamplerId(GLuint textureUnit) const
@@ -300,11 +294,6 @@ class State : angle::NonCopyable
     void setTransformFeedbackBinding(const Context *context, TransformFeedback *transformFeedback);
     TransformFeedback *getCurrentTransformFeedback() const { return mTransformFeedback.get(); }
 
-    ANGLE_INLINE bool isTransformFeedbackActive() const
-    {
-        TransformFeedback *curTransformFeedback = mTransformFeedback.get();
-        return curTransformFeedback && curTransformFeedback->isActive();
-    }
     ANGLE_INLINE bool isTransformFeedbackActiveUnpaused() const
     {
         TransformFeedback *curTransformFeedback = mTransformFeedback.get();
@@ -493,11 +482,6 @@ class State : angle::NonCopyable
 
     enum DirtyBitType
     {
-        // Note: process draw framebuffer binding first, so that other dirty bits whose effect
-        // depend on the current draw framebuffer are not processed while the old framebuffer is
-        // still bound.
-        DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING,
-        DIRTY_BIT_READ_FRAMEBUFFER_BINDING,
         DIRTY_BIT_SCISSOR_TEST_ENABLED,
         DIRTY_BIT_SCISSOR,
         DIRTY_BIT_VIEWPORT,
@@ -540,6 +524,8 @@ class State : angle::NonCopyable
         DIRTY_BIT_DITHER_ENABLED,
         DIRTY_BIT_GENERATE_MIPMAP_HINT,
         DIRTY_BIT_SHADER_DERIVATIVE_HINT,
+        DIRTY_BIT_READ_FRAMEBUFFER_BINDING,
+        DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING,
         DIRTY_BIT_RENDERBUFFER_BINDING,
         DIRTY_BIT_VERTEX_ARRAY_BINDING,
         DIRTY_BIT_DRAW_INDIRECT_BUFFER_BINDING,
@@ -571,16 +557,15 @@ class State : angle::NonCopyable
     // TODO(jmadill): Consider storing dirty objects in a list instead of by binding.
     enum DirtyObjectType
     {
-        DIRTY_OBJECT_TEXTURES_INIT,
-        DIRTY_OBJECT_IMAGES_INIT,
-        DIRTY_OBJECT_READ_ATTACHMENTS,
-        DIRTY_OBJECT_DRAW_ATTACHMENTS,
-        DIRTY_OBJECT_READ_FRAMEBUFFER,
+        DIRTY_OBJECT_READ_FRAMEBUFFER = 0,
         DIRTY_OBJECT_DRAW_FRAMEBUFFER,
+        DIRTY_OBJECT_DRAW_ATTACHMENTS,
         DIRTY_OBJECT_VERTEX_ARRAY,
         DIRTY_OBJECT_TEXTURES,  // Top-level dirty bit. Also see mDirtyTextures.
         DIRTY_OBJECT_SAMPLERS,  // Top-level dirty bit. Also see mDirtySamplers.
         DIRTY_OBJECT_PROGRAM,
+        DIRTY_OBJECT_TEXTURES_INIT,
+        DIRTY_OBJECT_IMAGES_INIT,
         DIRTY_OBJECT_UNKNOWN,
         DIRTY_OBJECT_MAX = DIRTY_OBJECT_UNKNOWN,
     };
@@ -589,11 +574,7 @@ class State : angle::NonCopyable
     const DirtyBits &getDirtyBits() const { return mDirtyBits; }
     void clearDirtyBits() { mDirtyBits.reset(); }
     void clearDirtyBits(const DirtyBits &bitset) { mDirtyBits &= ~bitset; }
-    void setAllDirtyBits()
-    {
-        mDirtyBits.set();
-        mDirtyCurrentValues.set();
-    }
+    void setAllDirtyBits() { mDirtyBits.set(); }
 
     using DirtyObjects = angle::BitSet<DIRTY_OBJECT_MAX>;
     void clearDirtyObjects() { mDirtyObjects.reset(); }
@@ -603,12 +584,6 @@ class State : angle::NonCopyable
     void setObjectDirty(GLenum target);
     void setTextureDirty(size_t textureUnitIndex);
     void setSamplerDirty(size_t samplerIndex);
-
-    ANGLE_INLINE void setReadFramebufferDirty()
-    {
-        mDirtyObjects.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-        mDirtyObjects.set(DIRTY_OBJECT_READ_ATTACHMENTS);
-    }
 
     ANGLE_INLINE void setDrawFramebufferDirty()
     {
@@ -667,8 +642,8 @@ class State : angle::NonCopyable
         return (mTexturesIncompatibleWithSamplers & mProgram->getActiveSamplersMask()).none();
     }
 
-    ProvokingVertexConvention getProvokingVertex() const { return mProvokingVertex; }
-    void setProvokingVertex(ProvokingVertexConvention val)
+    ProvokingVertex getProvokingVertex() const { return mProvokingVertex; }
+    void setProvokingVertex(ProvokingVertex val)
     {
         mDirtyBits.set(State::DIRTY_BIT_PROVOKING_VERTEX);
         mProvokingVertex = val;
@@ -685,46 +660,36 @@ class State : angle::NonCopyable
                                   Texture *texture);
 
     // Functions to synchronize dirty states
-    angle::Result syncTexturesInit(const Context *context);
-    angle::Result syncImagesInit(const Context *context);
-    angle::Result syncReadAttachments(const Context *context);
-    angle::Result syncDrawAttachments(const Context *context);
     angle::Result syncReadFramebuffer(const Context *context);
     angle::Result syncDrawFramebuffer(const Context *context);
+    angle::Result syncDrawAttachments(const Context *context);
     angle::Result syncVertexArray(const Context *context);
     angle::Result syncTextures(const Context *context);
     angle::Result syncSamplers(const Context *context);
     angle::Result syncProgram(const Context *context);
+    angle::Result syncTexturesInit(const Context *context);
+    angle::Result syncImagesInit(const Context *context);
 
     using DirtyObjectHandler = angle::Result (State::*)(const Context *context);
     static constexpr DirtyObjectHandler kDirtyObjectHandlers[DIRTY_OBJECT_MAX] = {
-        &State::syncTexturesInit,    &State::syncImagesInit,      &State::syncReadAttachments,
-        &State::syncDrawAttachments, &State::syncReadFramebuffer, &State::syncDrawFramebuffer,
+        &State::syncReadFramebuffer, &State::syncDrawFramebuffer, &State::syncDrawAttachments,
         &State::syncVertexArray,     &State::syncTextures,        &State::syncSamplers,
-        &State::syncProgram,
-    };
+        &State::syncProgram,         &State::syncTexturesInit,    &State::syncImagesInit};
 
-    // Robust init must happen before Framebuffer init for the Vulkan back-end.
-    static_assert(DIRTY_OBJECT_TEXTURES_INIT < DIRTY_OBJECT_DRAW_FRAMEBUFFER, "init order");
-    static_assert(DIRTY_OBJECT_IMAGES_INIT < DIRTY_OBJECT_DRAW_FRAMEBUFFER, "init order");
-    static_assert(DIRTY_OBJECT_DRAW_ATTACHMENTS < DIRTY_OBJECT_DRAW_FRAMEBUFFER, "init order");
-    static_assert(DIRTY_OBJECT_READ_ATTACHMENTS < DIRTY_OBJECT_READ_FRAMEBUFFER, "init order");
-
-    static_assert(DIRTY_OBJECT_TEXTURES_INIT == 0, "check DIRTY_OBJECT_TEXTURES_INIT index");
-    static_assert(DIRTY_OBJECT_IMAGES_INIT == 1, "check DIRTY_OBJECT_IMAGES_INIT index");
-    static_assert(DIRTY_OBJECT_READ_ATTACHMENTS == 2, "check DIRTY_OBJECT_READ_ATTACHMENTS index");
-    static_assert(DIRTY_OBJECT_DRAW_ATTACHMENTS == 3, "check DIRTY_OBJECT_DRAW_ATTACHMENTS index");
-    static_assert(DIRTY_OBJECT_READ_FRAMEBUFFER == 4, "check DIRTY_OBJECT_READ_FRAMEBUFFER index");
-    static_assert(DIRTY_OBJECT_DRAW_FRAMEBUFFER == 5, "check DIRTY_OBJECT_DRAW_FRAMEBUFFER index");
-    static_assert(DIRTY_OBJECT_VERTEX_ARRAY == 6, "check DIRTY_OBJECT_VERTEX_ARRAY index");
-    static_assert(DIRTY_OBJECT_TEXTURES == 7, "check DIRTY_OBJECT_TEXTURES index");
-    static_assert(DIRTY_OBJECT_SAMPLERS == 8, "check DIRTY_OBJECT_SAMPLERS index");
-    static_assert(DIRTY_OBJECT_PROGRAM == 9, "check DIRTY_OBJECT_PROGRAM index");
+    static_assert(DIRTY_OBJECT_READ_FRAMEBUFFER == 0, "check DIRTY_OBJECT_READ_FRAMEBUFFER index");
+    static_assert(DIRTY_OBJECT_DRAW_FRAMEBUFFER == 1, "check DIRTY_OBJECT_DRAW_FRAMEBUFFER index");
+    static_assert(DIRTY_OBJECT_DRAW_ATTACHMENTS == 2, "check DIRTY_OBJECT_DRAW_ATTACHMENTS index");
+    static_assert(DIRTY_OBJECT_VERTEX_ARRAY == 3, "check DIRTY_OBJECT_VERTEX_ARRAY index");
+    static_assert(DIRTY_OBJECT_TEXTURES == 4, "check DIRTY_OBJECT_TEXTURES index");
+    static_assert(DIRTY_OBJECT_SAMPLERS == 5, "check DIRTY_OBJECT_SAMPLERS index");
+    static_assert(DIRTY_OBJECT_PROGRAM == 6, "check DIRTY_OBJECT_PROGRAM index");
+    static_assert(DIRTY_OBJECT_TEXTURES_INIT == 7, "check DIRTY_OBJECT_TEXTURES_INIT index");
+    static_assert(DIRTY_OBJECT_IMAGES_INIT == 8, "check DIRTY_OBJECT_IMAGES_INIT index");
+    static_assert(DIRTY_OBJECT_MAX == 9, "check DIRTY_OBJECT_MAX");
 
     // Dispatch table for buffer update functions.
     static const angle::PackedEnumMap<BufferBinding, BufferBindingSetter> kBufferSetters;
 
-    EGLenum mClientType;
     Version mClientVersion;
     ContextID mContext;
 
@@ -744,8 +709,6 @@ class State : angle::NonCopyable
     PathManager *mPathManager;
     FramebufferManager *mFramebufferManager;
     ProgramPipelineManager *mProgramPipelineManager;
-    MemoryObjectManager *mMemoryObjectManager;
-    SemaphoreManager *mSemaphoreManager;
 
     // Cached values from Context's caps
     GLuint mMaxDrawBuffers;
@@ -791,7 +754,7 @@ class State : angle::NonCopyable
     BindingPointer<ProgramPipeline> mProgramPipeline;
 
     // GL_ANGLE_provoking_vertex
-    ProvokingVertexConvention mProvokingVertex;
+    ProvokingVertex mProvokingVertex;
 
     using VertexAttribVector = std::vector<VertexAttribCurrentValueData>;
     VertexAttribVector mVertexAttribCurrentValues;  // From glVertexAttrib

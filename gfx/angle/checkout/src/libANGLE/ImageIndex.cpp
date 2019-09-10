@@ -68,18 +68,6 @@ TextureTarget TextureTypeToTarget(TextureType type, GLint layerIndex)
         return NonCubeTextureTypeToTarget(type);
     }
 }
-
-bool IsArrayTarget(TextureTarget target)
-{
-    switch (target)
-    {
-        case TextureTarget::_2DArray:
-        case TextureTarget::_2DMultisampleArray:
-            return true;
-        default:
-            return false;
-    }
-}
 }  // anonymous namespace
 
 ImageIndex::ImageIndex()
@@ -176,10 +164,9 @@ ImageIndex ImageIndex::Make3D(GLint levelIndex, GLint layerIndex)
     return ImageIndex(TextureType::_3D, levelIndex, layerIndex, 1);
 }
 
-ImageIndex ImageIndex::MakeFromTarget(TextureTarget target, GLint levelIndex, GLint depth)
+ImageIndex ImageIndex::MakeFromTarget(TextureTarget target, GLint levelIndex)
 {
-    return ImageIndex(TextureTargetToType(target), levelIndex, TextureTargetToLayer(target),
-                      IsArrayTarget(target) ? depth : 1);
+    return ImageIndex(TextureTargetToType(target), levelIndex, TextureTargetToLayer(target), 1);
 }
 
 ImageIndex ImageIndex::MakeFromType(TextureType type,

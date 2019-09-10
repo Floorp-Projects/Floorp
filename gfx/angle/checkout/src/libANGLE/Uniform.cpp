@@ -26,6 +26,12 @@ void ActiveVariable::setActive(ShaderType shaderType, bool used)
     mActiveUseBits.set(shaderType, used);
 }
 
+bool ActiveVariable::isActive(ShaderType shaderType) const
+{
+    ASSERT(shaderType != ShaderType::InvalidEnum);
+    return mActiveUseBits[shaderType];
+}
+
 void ActiveVariable::unionReferencesWith(const ActiveVariable &other)
 {
     mActiveUseBits |= other.mActiveUseBits;

@@ -306,9 +306,6 @@ void QueryTexParameterBase(const Texture *texture, GLenum pname, ParamType *para
         case GL_TEXTURE_BORDER_COLOR:
             ConvertFromColor<isPureInteger>(texture->getBorderColor(), params);
             break;
-        case GL_TEXTURE_NATIVE_ID_ANGLE:
-            *params = CastFromStateValue<ParamType>(pname, texture->getNativeID());
-            break;
         default:
             UNREACHABLE();
             break;
@@ -457,47 +454,47 @@ void SetSamplerParameterBase(Context *context,
     switch (pname)
     {
         case GL_TEXTURE_WRAP_S:
-            sampler->setWrapS(context, ConvertToGLenum(pname, params[0]));
+            sampler->setWrapS(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_WRAP_T:
-            sampler->setWrapT(context, ConvertToGLenum(pname, params[0]));
+            sampler->setWrapT(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_WRAP_R:
-            sampler->setWrapR(context, ConvertToGLenum(pname, params[0]));
+            sampler->setWrapR(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_MIN_FILTER:
-            sampler->setMinFilter(context, ConvertToGLenum(pname, params[0]));
+            sampler->setMinFilter(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_MAG_FILTER:
-            sampler->setMagFilter(context, ConvertToGLenum(pname, params[0]));
+            sampler->setMagFilter(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_MAX_ANISOTROPY_EXT:
-            sampler->setMaxAnisotropy(context, CastQueryValueTo<GLfloat>(pname, params[0]));
+            sampler->setMaxAnisotropy(CastQueryValueTo<GLfloat>(pname, params[0]));
             break;
         case GL_TEXTURE_COMPARE_MODE:
-            sampler->setCompareMode(context, ConvertToGLenum(pname, params[0]));
+            sampler->setCompareMode(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_COMPARE_FUNC:
-            sampler->setCompareFunc(context, ConvertToGLenum(pname, params[0]));
+            sampler->setCompareFunc(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_MIN_LOD:
-            sampler->setMinLod(context, CastQueryValueTo<GLfloat>(pname, params[0]));
+            sampler->setMinLod(CastQueryValueTo<GLfloat>(pname, params[0]));
             break;
         case GL_TEXTURE_MAX_LOD:
-            sampler->setMaxLod(context, CastQueryValueTo<GLfloat>(pname, params[0]));
+            sampler->setMaxLod(CastQueryValueTo<GLfloat>(pname, params[0]));
             break;
         case GL_TEXTURE_SRGB_DECODE_EXT:
-            sampler->setSRGBDecode(context, ConvertToGLenum(pname, params[0]));
+            sampler->setSRGBDecode(ConvertToGLenum(pname, params[0]));
             break;
         case GL_TEXTURE_BORDER_COLOR:
-            sampler->setBorderColor(context, ConvertToColor<isPureInteger>(params));
+            sampler->setBorderColor(ConvertToColor<isPureInteger>(params));
             break;
         default:
             UNREACHABLE();
             break;
     }
 
-    sampler->onStateChange(angle::SubjectMessage::ContentsChanged);
+    sampler->onStateChange(context, angle::SubjectMessage::CONTENTS_CHANGED);
 }
 
 // Warning: you should ensure binding really matches attrib.bindingIndex before using this function.
@@ -520,18 +517,16 @@ void QueryVertexAttribBase(const VertexAttribute &attrib,
             *params = CastFromStateValue<ParamType>(pname, static_cast<GLint>(attrib.enabled));
             break;
         case GL_VERTEX_ATTRIB_ARRAY_SIZE:
-            *params = CastFromGLintStateValue<ParamType>(pname, attrib.format->channelCount);
+            *params = CastFromGLintStateValue<ParamType>(pname, attrib.size);
             break;
         case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
             *params = CastFromGLintStateValue<ParamType>(pname, attrib.vertexAttribArrayStride);
             break;
         case GL_VERTEX_ATTRIB_ARRAY_TYPE:
-            *params = CastFromGLintStateValue<ParamType>(
-                pname, gl::ToGLenum(attrib.format->vertexAttribType));
+            *params = CastFromGLintStateValue<ParamType>(pname, ToGLenum(attrib.type));
             break;
         case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-            *params =
-                CastFromStateValue<ParamType>(pname, static_cast<GLint>(attrib.format->isNorm()));
+            *params = CastFromStateValue<ParamType>(pname, static_cast<GLint>(attrib.normalized));
             break;
         case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
             *params = CastFromGLintStateValue<ParamType>(pname, binding.getBuffer().id());
@@ -540,7 +535,7 @@ void QueryVertexAttribBase(const VertexAttribute &attrib,
             *params = CastFromStateValue<ParamType>(pname, binding.getDivisor());
             break;
         case GL_VERTEX_ATTRIB_ARRAY_INTEGER:
-            *params = CastFromGLintStateValue<ParamType>(pname, attrib.format->isPureInt());
+            *params = CastFromGLintStateValue<ParamType>(pname, attrib.pureInteger);
             break;
         case GL_VERTEX_ATTRIB_BINDING:
             *params = CastFromGLintStateValue<ParamType>(pname, attrib.bindingIndex);
@@ -1126,7 +1121,7 @@ void QueryBufferPointerv(const Buffer *buffer, GLenum pname, void **params)
 
 void QueryProgramiv(Context *context, const Program *program, GLenum pname, GLint *params)
 {
-    ASSERT(program != nullptr || pname == GL_COMPLETION_STATUS_KHR);
+    ASSERT(program != nullptr);
 
     switch (pname)
     {
@@ -1137,14 +1132,7 @@ void QueryProgramiv(Context *context, const Program *program, GLenum pname, GLin
             *params = program->isLinked();
             return;
         case GL_COMPLETION_STATUS_KHR:
-            if (context->isContextLost())
-            {
-                *params = GL_TRUE;
-            }
-            else
-            {
-                *params = program->isLinking() ? GL_FALSE : GL_TRUE;
-            }
+            *params = program->isLinking() ? GL_FALSE : GL_TRUE;
             return;
         case GL_VALIDATE_STATUS:
             *params = program->isValidated();
@@ -1279,9 +1267,9 @@ void QueryRenderbufferiv(const Context *context,
     }
 }
 
-void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *params)
+void QueryShaderiv(Shader *shader, GLenum pname, GLint *params)
 {
-    ASSERT(shader != nullptr || pname == GL_COMPLETION_STATUS_KHR);
+    ASSERT(shader != nullptr);
 
     switch (pname)
     {
@@ -1295,14 +1283,7 @@ void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *
             *params = shader->isCompiled() ? GL_TRUE : GL_FALSE;
             return;
         case GL_COMPLETION_STATUS_KHR:
-            if (context->isContextLost())
-            {
-                *params = GL_TRUE;
-            }
-            else
-            {
-                *params = shader->isCompleted() ? GL_TRUE : GL_FALSE;
-            }
+            *params = shader->isCompleted() ? GL_TRUE : GL_FALSE;
             return;
         case GL_INFO_LOG_LENGTH:
             *params = shader->getInfoLogLength();
@@ -1383,7 +1364,7 @@ void QueryVertexAttribfv(const VertexAttribute &attrib,
                          GLenum pname,
                          GLfloat *params)
 {
-    QueryVertexAttribBase(attrib, binding, currentValueData.Values.FloatValues, pname, params);
+    QueryVertexAttribBase(attrib, binding, currentValueData.FloatValues, pname, params);
 }
 
 void QueryVertexAttribiv(const VertexAttribute &attrib,
@@ -1392,7 +1373,7 @@ void QueryVertexAttribiv(const VertexAttribute &attrib,
                          GLenum pname,
                          GLint *params)
 {
-    QueryVertexAttribBase(attrib, binding, currentValueData.Values.FloatValues, pname, params);
+    QueryVertexAttribBase(attrib, binding, currentValueData.FloatValues, pname, params);
 }
 
 void QueryVertexAttribPointerv(const VertexAttribute &attrib, GLenum pname, void **pointer)
@@ -1415,7 +1396,7 @@ void QueryVertexAttribIiv(const VertexAttribute &attrib,
                           GLenum pname,
                           GLint *params)
 {
-    QueryVertexAttribBase(attrib, binding, currentValueData.Values.IntValues, pname, params);
+    QueryVertexAttribBase(attrib, binding, currentValueData.IntValues, pname, params);
 }
 
 void QueryVertexAttribIuiv(const VertexAttribute &attrib,
@@ -1424,8 +1405,7 @@ void QueryVertexAttribIuiv(const VertexAttribute &attrib,
                            GLenum pname,
                            GLuint *params)
 {
-    QueryVertexAttribBase(attrib, binding, currentValueData.Values.UnsignedIntValues, pname,
-                          params);
+    QueryVertexAttribBase(attrib, binding, currentValueData.UnsignedIntValues, pname, params);
 }
 
 void QueryActiveUniformBlockiv(const Program *program,
@@ -1500,7 +1480,7 @@ angle::Result QuerySynciv(const Context *context,
                           GLsizei *length,
                           GLint *values)
 {
-    ASSERT(sync != nullptr || pname == GL_SYNC_STATUS);
+    ASSERT(sync);
 
     // All queries return one value, exit early if the buffer can't fit anything.
     if (bufSize < 1)
@@ -1524,14 +1504,7 @@ angle::Result QuerySynciv(const Context *context,
             *values = clampCast<GLint>(sync->getFlags());
             break;
         case GL_SYNC_STATUS:
-            if (context->isContextLost())
-            {
-                *values = GL_SIGNALED;
-            }
-            else
-            {
-                ANGLE_TRY(sync->getStatus(context, values));
-            }
+            ANGLE_TRY(sync->getStatus(context, values));
             break;
 
         default:
@@ -2757,7 +2730,6 @@ unsigned int GetTexParameterCount(GLenum pname)
         case GL_TEXTURE_COMPARE_FUNC:
         case GL_TEXTURE_SRGB_DECODE_EXT:
         case GL_DEPTH_STENCIL_TEXTURE_MODE:
-        case GL_TEXTURE_NATIVE_ID_ANGLE:
             return 1;
         default:
             return 0;

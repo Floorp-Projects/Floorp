@@ -34,7 +34,7 @@ Config::Config()
       alphaMaskSize(0),
       bindToTextureRGB(EGL_FALSE),
       bindToTextureRGBA(EGL_FALSE),
-      colorBufferType(EGL_RGB_BUFFER),
+      colorBufferType(EGL_NONE),
       configCaveat(EGL_NONE),
       configID(0),
       conformant(0),
@@ -273,7 +273,7 @@ std::vector<const Config *> ConfigSet::filter(const AttributeMap &attributeMap) 
                     match = config.configID == attributeValue;
                     break;
                 case EGL_LEVEL:
-                    match = config.level == attributeValue;
+                    match = config.level >= attributeValue;
                     break;
                 case EGL_NATIVE_RENDERABLE:
                     match = config.nativeRenderable == static_cast<EGLBoolean>(attributeValue);
@@ -294,22 +294,13 @@ std::vector<const Config *> ConfigSet::filter(const AttributeMap &attributeMap) 
                     match = config.transparentType == static_cast<EGLenum>(attributeValue);
                     break;
                 case EGL_TRANSPARENT_BLUE_VALUE:
-                    if (attributeMap.get(EGL_TRANSPARENT_TYPE, EGL_NONE) != EGL_NONE)
-                    {
-                        match = config.transparentBlueValue == attributeValue;
-                    }
+                    match = config.transparentBlueValue == attributeValue;
                     break;
                 case EGL_TRANSPARENT_GREEN_VALUE:
-                    if (attributeMap.get(EGL_TRANSPARENT_TYPE, EGL_NONE) != EGL_NONE)
-                    {
-                        match = config.transparentGreenValue == attributeValue;
-                    }
+                    match = config.transparentGreenValue == attributeValue;
                     break;
                 case EGL_TRANSPARENT_RED_VALUE:
-                    if (attributeMap.get(EGL_TRANSPARENT_TYPE, EGL_NONE) != EGL_NONE)
-                    {
-                        match = config.transparentRedValue == attributeValue;
-                    }
+                    match = config.transparentRedValue == attributeValue;
                     break;
                 case EGL_BIND_TO_TEXTURE_RGB:
                     match = config.bindToTextureRGB == static_cast<EGLBoolean>(attributeValue);
