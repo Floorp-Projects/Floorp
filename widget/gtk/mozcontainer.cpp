@@ -578,16 +578,12 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
       return nullptr;
     }
     GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(container));
+    nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
 
     // Available as of GTK 3.8+
-    static auto sGdkWaylandDisplayGetWlCompositor =
-        (wl_compositor * (*)(GdkDisplay*))
-            dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_compositor");
-    struct wl_compositor* compositor =
-        sGdkWaylandDisplayGetWlCompositor(display);
+    struct wl_compositor* compositor = waylandDisplay->GetCompositor();
     container->surface = wl_compositor_create_surface(compositor);
 
-    nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
     container->subsurface = wl_subcompositor_get_subsurface(
         waylandDisplay->GetSubcompositor(), container->surface,
         moz_container_get_gtk_container_surface(container));

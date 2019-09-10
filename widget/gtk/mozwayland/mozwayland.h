@@ -108,6 +108,17 @@ static inline void wl_subsurface_destroy(struct wl_subsurface* wl_subsurface) {
 }
 #endif
 
+#ifndef WL_SURFACE_DAMAGE_BUFFER
+#  define WL_SURFACE_DAMAGE_BUFFER 9
+
+static inline void wl_surface_damage_buffer(struct wl_surface* wl_surface,
+                                            int32_t x, int32_t y, int32_t width,
+                                            int32_t height) {
+  wl_proxy_marshal((struct wl_proxy*)wl_surface, WL_SURFACE_DAMAGE_BUFFER, x, y,
+                   width, height);
+}
+#endif
+
 #ifdef __cplusplus
 }
 #endif
