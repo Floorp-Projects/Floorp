@@ -17,7 +17,6 @@ module.exports = {
     "jsx-a11y", // require("eslint-plugin-jsx-a11y")
     // Temporarily disabled since they aren't vendored into in mozilla central yet
     // "react-hooks", // require("react-hooks")
-    "fetch-options", // require("eslint-plugin-fetch-options")
   ],
   "settings": {
     "react": {
@@ -27,7 +26,7 @@ module.exports = {
   "extends": [
     "eslint:recommended",
     "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
-    "plugin:mozilla/recommended", // require("eslint-plugin-mozilla")
+    "plugin:mozilla/recommended", // require("eslint-plugin-mozilla") require("eslint-plugin-fetch-options") require("eslint-plugin-html") require("eslint-plugin-no-unsanitized")
     "plugin:mozilla/browser-test",
     "plugin:mozilla/mochitest-test",
     "plugin:mozilla/xpcshell-test",

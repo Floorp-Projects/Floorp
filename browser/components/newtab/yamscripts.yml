@@ -65,7 +65,7 @@ scripts:
 
 # lint: Run eslint and sass-lint
   lint:
-    eslint-check: eslint --cache --print-config . | eslint-config-prettier-check
+    eslint-check: eslint --cache --print-config AboutNewTabService.jsm | eslint-config-prettier-check
     eslint: eslint --cache --ext=.js,.jsm,.jsx .
     sasslint: sass-lint -v -q
 

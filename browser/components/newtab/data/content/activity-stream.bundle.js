@@ -8824,12 +8824,9 @@ class DSDismiss_DSDismiss extends external_React_default.a.PureComponent {
   }
 
   render() {
-    let className = "ds-dismiss";
-
-    if (this.state.hovering) {
-      className += " hovering";
-    }
-
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
     return external_React_default.a.createElement("div", {
       className: className
     }, this.props.children, external_React_default.a.createElement("button", {
@@ -9916,7 +9913,8 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
             shim: spoc.shim
           },
           dispatch: this.props.dispatch,
-          shouldSendImpressionStats: true
+          shouldSendImpressionStats: true,
+          extraClasses: `ds-dismiss-ds-text-promo`
         }, external_React_default.a.createElement(DSTextPromo_DSTextPromo, {
           dispatch: this.props.dispatch,
           image: image_src,
