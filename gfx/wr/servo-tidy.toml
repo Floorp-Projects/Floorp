@@ -8,7 +8,6 @@ check-alphabetical-order = false
 packages = [
     "crossbeam-utils",
     "gl_generator",
-    "khronos_api",
     "lazy_static",
     "nix",
     "percent-encoding",
@@ -17,7 +16,6 @@ packages = [
     "winapi",
     "core-graphics",
     "core-text",
-    "xml-rs",
     "yaml-rust",
 ]
 
