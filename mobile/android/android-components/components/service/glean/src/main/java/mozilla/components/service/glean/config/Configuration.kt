@@ -4,9 +4,10 @@
 
 package mozilla.components.service.glean.config
 
-import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.BuildConfig
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.service.glean.net.PingUploader
 
 /**
  * The Configuration class describes how to configure the Glean.
@@ -14,10 +15,6 @@ import mozilla.components.service.glean.BuildConfig
  * @property serverEndpoint the server pings are sent to. Please note that this is
  *           is only meant to be changed for tests.
  * @property userAgent the user agent used when sending pings, only to be used internally.
- * @property connectionTimeout the timeout, in milliseconds, to use when connecting to
- *           the [serverEndpoint]
- * @property readTimeout the timeout, in milliseconds, to use when connecting to
- *           the [serverEndpoint]
  * @property maxEvents the number of events to store before the events ping is sent
  * @property logPings whether to log ping contents to the console. This is only meant to be used
  *           internally by the `GleanDebugActivity`.
@@ -29,14 +26,12 @@ import mozilla.components.service.glean.BuildConfig
 data class Configuration internal constructor(
     val serverEndpoint: String,
     val userAgent: String = DEFAULT_USER_AGENT,
-    val connectionTimeout: Long = DEFAULT_CONNECTION_TIMEOUT,
-    val readTimeout: Long = DEFAULT_READ_TIMEOUT,
     val maxEvents: Int = DEFAULT_MAX_EVENTS,
     val logPings: Boolean = DEFAULT_LOG_PINGS,
     // NOTE: since only simple object or strings can be made `const val`s, if the
     // default values for the lines below are ever changed, they are required
     // to change in the public constructor below.
-    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
+    val httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }),
     val pingTag: String? = null,
     val channel: String? = null
 ) {
@@ -47,16 +42,12 @@ data class Configuration internal constructor(
     // constructor from the secondary, public one, below.
     constructor(
         serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
-        connectionTimeout: Long = DEFAULT_CONNECTION_TIMEOUT,
-        readTimeout: Long = DEFAULT_READ_TIMEOUT,
         maxEvents: Int = DEFAULT_MAX_EVENTS,
-        httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
+        httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }),
         channel: String? = null
     ) : this (
         serverEndpoint = serverEndpoint,
         userAgent = DEFAULT_USER_AGENT,
-        connectionTimeout = connectionTimeout,
-        readTimeout = readTimeout,
         maxEvents = maxEvents,
         logPings = DEFAULT_LOG_PINGS,
         httpClient = httpClient,
@@ -67,8 +58,6 @@ data class Configuration internal constructor(
     companion object {
         const val DEFAULT_TELEMETRY_ENDPOINT = "https://incoming.telemetry.mozilla.org"
         const val DEFAULT_USER_AGENT = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)"
-        const val DEFAULT_CONNECTION_TIMEOUT = 10000L
-        const val DEFAULT_READ_TIMEOUT = 30000L
         const val DEFAULT_MAX_EVENTS = 500
         const val DEFAULT_LOG_PINGS = false
     }

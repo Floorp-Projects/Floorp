@@ -7,68 +7,49 @@ package mozilla.components.service.glean.net
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Header
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isClientError
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.service.glean.BuildConfig
-import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
  * A simple ping Uploader, which implements a "send once" policy, never
- * storing or attempting to send the ping again.
+ * storing or attempting to send the ping again. This uses Android Component's
+ * `concept-fetch`.
  */
-internal class HttpPingUploader : PingUploader {
-    private val logger = Logger("glean/HttpPingUploader")
+class ConceptFetchHttpUploader(
+    internal val client: Lazy<Client>
+) : PingUploader {
+    private val logger = Logger("glean/ConceptFetchHttpUploader")
 
-    /**
-     * Log the contents of a ping to the console, if configured to do so in
-     * [Configuration.logPings].
-     *
-     * @param path the URL path to append to the server address
-     * @param data the serialized text data to send
-     * @param config the Glean configuration object
-     */
-    private fun logPing(path: String, data: String, config: Configuration) {
-        if (config.logPings) {
-            // Parse and reserialize the JSON so it has indentation and is human-readable.
-            try {
-                val json = JSONObject(data)
-                val indented = json.toString(2)
-
-                logger.debug("Glean ping to URL: $path\n$indented")
-            } catch (e: JSONException) {
-                logger.debug("Exception parsing ping as JSON: $e") // $COVERAGE-IGNORE$
-            }
-        }
+    companion object {
+        // The timeout, in milliseconds, to use when connecting to the server.
+        const val DEFAULT_CONNECTION_TIMEOUT = 10000L
+        // The timeout, in milliseconds, to use when reading from the server.
+        const val DEFAULT_READ_TIMEOUT = 30000L
     }
 
     /**
-     * Synchronously upload a ping to Mozilla servers.
-     * Note that the `X-Client-Type`: `Glean` and `X-Client-Version`: <SDK version>
-     * headers are added to the HTTP request in addition to the UserAgent. This allows
-     * us to easily handle pings coming from Glean on the legacy Mozilla pipeline.
+     * Synchronously upload a ping to a server.
      *
-     * @param path the URL path to append to the server address
+     * @param url the URL path to upload the data to
      * @param data the serialized text data to send
-     * @param config the Glean configuration object
+     * @param headers a [HeadersList] containing String to String [Pair] with
+     *        the first entry being the header name and the second its value.
      *
      * @return true if the ping was correctly dealt with (sent successfully
      *         or faced an unrecoverable error), false if there was a recoverable
      *         error callers can deal with.
      */
-    override fun upload(path: String, data: String, config: Configuration): Boolean {
-        logPing(path, data, config)
-
-        val request = buildRequest(path, data, config)
+    override fun upload(url: String, data: String, headers: HeadersList): Boolean {
+        val request = buildRequest(url, data, headers)
 
         return try {
-            performUpload(config.httpClient.value, request)
+            performUpload(client.value, request)
         } catch (e: IOException) {
             logger.warn("IOException while uploading ping", e)
             false
@@ -76,30 +57,19 @@ internal class HttpPingUploader : PingUploader {
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun buildRequest(path: String, data: String, config: Configuration): Request {
-        val headers = MutableHeaders(
-            "Content-Type" to "application/json; charset=utf-8",
-            "User-Agent" to config.userAgent,
-            "Date" to createDateHeaderValue(),
-            // Add headers for supporting the legacy pipeline.
-            "X-Client-Type" to "Glean",
-            "X-Client-Version" to BuildConfig.LIBRARY_VERSION
-        )
-
-        var endpoint = config.serverEndpoint
-
-        // If there is a pingTag set, then this header needs to be added in order to flag pings
-        // for "debug view" use.
-        config.pingTag?.let {
-            headers.append("X-Debug-ID", it)
-        }
+    internal fun buildRequest(
+        url: String,
+        data: String,
+        headers: HeadersList
+    ): Request {
+        val conceptHeaders = MutableHeaders(headers.map { Header(it.first, it.second) })
 
         return Request(
-            url = endpoint + path,
+            url = url,
             method = Request.Method.POST,
-            connectTimeout = Pair(config.connectionTimeout, TimeUnit.MILLISECONDS),
-            readTimeout = Pair(config.readTimeout, TimeUnit.MILLISECONDS),
-            headers = headers,
+            connectTimeout = Pair(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS),
+            readTimeout = Pair(DEFAULT_READ_TIMEOUT, TimeUnit.MILLISECONDS),
+            headers = conceptHeaders,
             // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
             // offer a better API to do that, so we nuke all cookies going to our telemetry
             // endpoint.

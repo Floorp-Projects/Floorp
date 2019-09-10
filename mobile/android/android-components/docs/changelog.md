@@ -21,6 +21,9 @@ permalink: /changelog/
 * **feature-downloads**
   *  ⚠️ **This is a breaking change**: The `feature-downloads` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `DownloadsFeature` requires a `BrowserStore` instance (instead of a `SessionManager` instance) and a `DownloadsUseCases` instance now.
 
+* **service-glean**
+  * ⚠️ **This is a breaking change**: applications need to use `ConceptFetchHttpUploader` for overriding the ping uploading mechanism instead of directly using `concept-fetch` implementations.
+
 # 12.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)

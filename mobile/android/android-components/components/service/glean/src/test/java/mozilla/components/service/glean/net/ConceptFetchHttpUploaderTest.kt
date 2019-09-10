@@ -9,10 +9,10 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.fetch.okhttp.OkHttpClient
-import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -28,51 +28,64 @@ import java.net.CookieManager
 import java.net.HttpCookie
 import java.net.URI
 import java.util.concurrent.TimeUnit
+import org.mockito.Mockito.verify
 
 @RunWith(RobolectricTestRunner::class)
-class HttpPingUploaderTest {
+class ConceptFetchHttpUploaderTest {
     private val testPath: String = "/some/random/path/not/important"
     private val testPing: String = "{ 'ping': 'test' }"
     private val testDefaultConfig = Configuration().copy(
-        userAgent = "Glean/Test 25.0.2",
-        connectionTimeout = 3050,
-        readTimeout = 7050
+        userAgent = "Glean/Test 25.0.2"
     )
 
     @Test
     fun `connection timeouts must be properly set`() {
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+        val uploader =
+            spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))
 
-        val request = uploader.buildRequest(testPath, testPing, testDefaultConfig)
+        val request = uploader.buildRequest(testPath, testPing, emptyList())
 
-        assertEquals(Pair(7050L, TimeUnit.MILLISECONDS), request.readTimeout)
-        assertEquals(Pair(3050L, TimeUnit.MILLISECONDS), request.connectTimeout)
+        assertEquals(
+            Pair(ConceptFetchHttpUploader.DEFAULT_READ_TIMEOUT, TimeUnit.MILLISECONDS),
+            request.readTimeout
+        )
+        assertEquals(
+            Pair(ConceptFetchHttpUploader.DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS),
+            request.connectTimeout
+        )
     }
 
     @Test
-    fun `user-agent must be properly set`() {
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+    fun `Glean headers are correctly dispatched`() {
+        val mockClient: Client = mock()
+        `when`(mockClient.fetch(any())).thenReturn(
+            Response("URL", 200, mock(), mock()))
 
-        val request = uploader.buildRequest(testPath, testPing, testDefaultConfig)
+        val expectedHeaders = mapOf(
+            "Content-Type" to "application/json; charset=utf-8",
+            "Test-header" to "SomeValue",
+            "OtherHeader" to "Glean/Test 25.0.2"
+        )
 
-        assertEquals(testDefaultConfig.userAgent, request.headers!!["User-Agent"])
-    }
+        val uploader = ConceptFetchHttpUploader(lazy { mockClient })
+        uploader.upload(testPath, testPing, expectedHeaders.toList())
+        val requestCaptor = argumentCaptor<Request>()
+        verify(mockClient).fetch(requestCaptor.capture())
 
-    @Test
-    fun `X-Client-* headers must be properly set`() {
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
-
-        val request = uploader.buildRequest(testPath, testPing, testDefaultConfig)
-
-        assertEquals("Glean", request.headers!!["X-Client-Type"])
-        assertEquals(BuildConfig.LIBRARY_VERSION, request.headers!!["X-Client-Version"])
+        expectedHeaders.forEach { (headerName, headerValue) ->
+            assertEquals(
+                headerValue,
+                requestCaptor.value.headers!![headerName]
+            )
+        }
     }
 
     @Test
     fun `Cookie policy must be properly set`() {
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+        val uploader =
+            spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))
 
-        val request = uploader.buildRequest(testPath, testPing, testDefaultConfig)
+        val request = uploader.buildRequest(testPath, testPing, emptyList())
 
         assertEquals(request.cookiePolicy, Request.CookiePolicy.OMIT)
     }
@@ -83,11 +96,9 @@ class HttpPingUploaderTest {
         `when`(mockClient.fetch(any())).thenReturn(Response(
             "URL", 200, mock(), mock()))
 
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+        val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-        val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
-
-        assertTrue(uploader.upload(testPath, testPing, config))
+        assertTrue(uploader.upload(testPath, testPing, emptyList()))
     }
     @Test
     fun `upload() returns false for server errors (5xx)`() {
@@ -96,11 +107,9 @@ class HttpPingUploaderTest {
             `when`(mockClient.fetch(any())).thenReturn(Response(
                 "URL", responseCode, mock(), mock()))
 
-            val uploader = spy<HttpPingUploader>(HttpPingUploader())
+            val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
-
-            assertFalse(uploader.upload(testPath, testPing, config))
+            assertFalse(uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -111,11 +120,9 @@ class HttpPingUploaderTest {
             `when`(mockClient.fetch(any())).thenReturn(Response(
                 "URL", responseCode, mock(), mock()))
 
-            val uploader = spy<HttpPingUploader>(HttpPingUploader())
+            val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
-
-            assertTrue(uploader.upload(testPath, testPing, config))
+            assertTrue(uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -126,11 +133,9 @@ class HttpPingUploaderTest {
             `when`(mockClient.fetch(any())).thenReturn(Response(
                 "URL", responseCode, mock(), mock()))
 
-            val uploader = spy<HttpPingUploader>(HttpPingUploader())
+            val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
-            val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
-
-            assertTrue(uploader.upload(testPath, testPing, config))
+            assertTrue(uploader.upload(testPath, testPing, emptyList()))
         }
     }
 
@@ -138,20 +143,16 @@ class HttpPingUploaderTest {
     fun `upload() correctly uploads the ping data with default configuration`() {
         val server = getMockWebServer()
 
-        val testConfig = testDefaultConfig.copy(
-            userAgent = "Telemetry/42.23",
-            serverEndpoint = "http://" + server.hostName + ":" + server.port
-        )
+        val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
 
-        val client = HttpPingUploader()
-        assertTrue(client.upload(testPath, testPing, testConfig))
+        val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
+        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
         assertEquals("POST", request.method)
         assertEquals(testPing, request.body.readUtf8())
-        assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
-        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
+        assertEquals("header", request.getHeader("test"))
 
         server.shutdown()
     }
@@ -160,21 +161,16 @@ class HttpPingUploaderTest {
     fun `upload() correctly uploads the ping data with httpurlconnection client`() {
         val server = getMockWebServer()
 
-        val testConfig = testDefaultConfig.copy(
-            userAgent = "Telemetry/42.23",
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            httpClient = lazy { HttpURLConnectionClient() }
-        )
+        val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
 
-        val client = HttpPingUploader()
-        assertTrue(client.upload(testPath, testPing, testConfig))
+        val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
+        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
         assertEquals("POST", request.method)
         assertEquals(testPing, request.body.readUtf8())
-        assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
-        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
+        assertEquals("header", request.getHeader("test"))
         assertTrue(request.headers.values("Cookie").isEmpty())
 
         server.shutdown()
@@ -184,21 +180,16 @@ class HttpPingUploaderTest {
     fun `upload() correctly uploads the ping data with OkHttp client`() {
         val server = getMockWebServer()
 
-        val testConfig = testDefaultConfig.copy(
-            userAgent = "Telemetry/42.23",
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            httpClient = lazy { OkHttpClient() }
-        )
+        val client = ConceptFetchHttpUploader(lazy { OkHttpClient() })
 
-        val client = HttpPingUploader()
-        assertTrue(client.upload(testPath, testPing, testConfig))
+        val submissionUrl = "http://" + server.hostName + ":" + server.port + testPath
+        assertTrue(client.upload(submissionUrl, testPing, listOf(Pair("test", "header"))))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
         assertEquals("POST", request.method)
         assertEquals(testPing, request.body.readUtf8())
-        assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
-        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
+        assertEquals("header", request.getHeader("test"))
         assertTrue(request.headers.values("Cookie").isEmpty())
 
         server.shutdown()
@@ -240,15 +231,14 @@ class HttpPingUploaderTest {
         cookieManager.cookieStore.add(URI("http://localhost:${server.port}/test"), cookie3)
 
         // Trigger the connection.
-        val client = HttpPingUploader()
-        assertTrue(client.upload(testPath, testPing, testConfig))
+        val client = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
+        val submissionUrl = testConfig.serverEndpoint + testPath
+        assertTrue(client.upload(submissionUrl, testPing, emptyList()))
 
         val request = server.takeRequest()
         assertEquals(testPath, request.path)
         assertEquals("POST", request.method)
         assertEquals(testPing, request.body.readUtf8())
-        assertEquals("Telemetry/42.23", request.getHeader("User-Agent"))
-        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"))
         assertTrue(request.headers.values("Cookie").isEmpty())
 
         // Check that we still have a cookie.
@@ -263,27 +253,23 @@ class HttpPingUploaderTest {
         val mockClient: Client = mock()
         `when`(mockClient.fetch(any())).thenThrow(IOException())
 
-        val config = testDefaultConfig.copy(httpClient = lazy { mockClient })
-
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+        val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
 
         // And IOException during upload is a failed upload that we should retry. The client should
         // return false in this case.
-        assertFalse(uploader.upload("path", "ping", config))
+        assertFalse(uploader.upload("path", "ping", emptyList()))
     }
 
     @Test
-    fun `X-Debug-ID header is correctly added when pingTag is not null`() {
-        val uploader = spy<HttpPingUploader>(HttpPingUploader())
+    fun `the lazy client should only be instantiated after the first upload`() {
+        val mockClient: Client = mock()
+        `when`(mockClient.fetch(any())).thenReturn(
+            Response("URL", 200, mock(), mock()))
+        val uploader = spy<ConceptFetchHttpUploader>(ConceptFetchHttpUploader(lazy { mockClient }))
+        assertFalse(uploader.client.isInitialized())
 
-        val debugConfig = Configuration().copy(
-            userAgent = "Glean/Test 25.0.2",
-            connectionTimeout = 3050,
-            readTimeout = 7050,
-            pingTag = "this-ping-is-tagged"
-        )
-
-        val request = uploader.buildRequest(testPath, testPing, debugConfig)
-        assertEquals("this-ping-is-tagged", request.headers!!["X-Debug-ID"])
+        // After calling upload, the client must get instantiated.
+        uploader.upload("path", "ping", emptyList())
+        assertTrue(uploader.client.isInitialized())
     }
 }

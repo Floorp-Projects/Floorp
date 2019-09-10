@@ -19,6 +19,7 @@ import java.util.UUID
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.GleanMetrics.Pings
+import mozilla.components.service.glean.net.BaseUploader
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
@@ -48,6 +49,11 @@ open class GleanInternalAPI internal constructor () {
     private lateinit var storageEngineManager: StorageEngineManager
     internal lateinit var pingMaker: PingMaker
     internal lateinit var configuration: Configuration
+
+    // This is the wrapped http uploading mechanism: provides base functionalities
+    // for logging and delegates the actual upload to the implementation in
+    // the `Configuration`.
+    internal val httpClient by lazy { BaseUploader(configuration.httpClient) }
 
     private val gleanLifecycleObserver by lazy { GleanLifecycleObserver() }
 
