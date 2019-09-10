@@ -139,7 +139,12 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, contentBlockingSettings.antiTrackingCategories)
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+        assertEquals(
+            trackingStrictCategories - artificialCategory,
+            contentBlockingSettings.antiTrackingCategories
+        )
 
         val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
         assertEquals(safeStrictBrowsingCategories, contentBlockingSettings.safeBrowsingCategories)
@@ -159,6 +164,33 @@ class GeckoEngineTest {
             engine.settings.domStorageEnabled = false
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedSettingException) { }
+    }
+
+    @Test
+    fun `the SCRIPTS_AND_SUB_RESOURCES tracking protection category must not be passed to gecko view`() {
+
+        val geckoRunTime = GeckoRuntime.getDefault(testContext)
+
+        val engine = GeckoEngine(testContext, runtime = geckoRunTime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+
+        assertEquals(
+            trackingStrictCategories - artificialCategory,
+            geckoRunTime.settings.contentBlocking.antiTrackingCategories
+        )
+
+        geckoRunTime.settings.contentBlocking.setAntiTracking(0)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            arrayOf(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+        )
+
+        assertEquals(0, geckoRunTime.settings.contentBlocking.antiTrackingCategories)
     }
 
     @Test
@@ -253,7 +285,12 @@ class GeckoEngineTest {
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
-        assertEquals(trackingStrictCategories, contentBlockingSettings.antiTrackingCategories)
+        val artificialCategory =
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
+        assertEquals(
+            trackingStrictCategories - artificialCategory,
+            contentBlockingSettings.antiTrackingCategories
+        )
 
         assertEquals(SafeBrowsingPolicy.RECOMMENDED.id, contentBlockingSettings.safeBrowsingCategories)
 

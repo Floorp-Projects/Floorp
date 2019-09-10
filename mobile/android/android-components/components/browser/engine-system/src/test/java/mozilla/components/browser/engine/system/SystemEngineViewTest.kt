@@ -593,11 +593,6 @@ class SystemEngineViewTest {
 
         assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.ANALYTICS)
 
-        whenever(blockedRequest.url).thenReturn(Uri.parse("http://contenttest1.com/"))
-        webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
-
-        assertTrue(trackerBlocked!!.trackingCategories.first() == TrackingCategory.CONTENT)
-
         whenever(blockedRequest.url).thenReturn(Uri.parse("http://www.socialtest1.com/"))
         webViewClient.shouldInterceptRequest(engineSession.webView, blockedRequest)
 
@@ -1034,7 +1029,7 @@ class SystemEngineViewTest {
             UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL
         )
         val strictCategories = setOf(
-            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL, UrlMatcher.CONTENT
+            UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS, UrlMatcher.SOCIAL
         )
 
         var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources, recommendedPolicy)

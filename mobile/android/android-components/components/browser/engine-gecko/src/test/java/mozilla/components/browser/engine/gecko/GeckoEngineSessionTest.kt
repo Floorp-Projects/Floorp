@@ -907,16 +907,6 @@ class GeckoEngineSessionTest {
         assertEquals(TrackingCategory.CRYPTOMINING.id, ContentBlocking.AT_CRYPTOMINING)
         assertEquals(TrackingCategory.FINGERPRINTING.id, ContentBlocking.AT_FINGERPRINTING)
 
-        assertEquals(
-            TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id },
-            ContentBlocking.AT_STRICT
-        )
-
-        assertEquals(
-            TrackingProtectionPolicy.recommended().trackingCategories.sumBy { it.id },
-            ContentBlocking.AT_DEFAULT
-        )
-
         assertEquals(TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL.id, ContentBlocking.COOKIE_ACCEPT_ALL)
         assertEquals(
             TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS.id,
