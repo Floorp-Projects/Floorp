@@ -14,16 +14,9 @@ const { LightweightThemeChild } = ChromeUtils.import(
   "resource:///actors/LightweightThemeChild.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
-
 var syncedTabsDeckComponent = new SyncedTabsDeckComponent({
   window,
   SyncedTabs,
-  fxAccounts,
 });
 
 let themeListener;
