@@ -17,6 +17,7 @@ DevToolsModules(
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')

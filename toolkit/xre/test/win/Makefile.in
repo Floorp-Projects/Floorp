@@ -6,7 +6,7 @@ MOZ_WINCONSOLE = 1
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: TestXREMakeCommandLineWin.ini
+libs:: $(srcdir)/TestXREMakeCommandLineWin.ini
 	$(INSTALL) $^ $(FINAL_TARGET)/
 
 check::

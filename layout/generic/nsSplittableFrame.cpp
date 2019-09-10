@@ -221,7 +221,7 @@ nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
   }
 
   LogicalSides skip;
-  if (GetPrevInFlow()) {
+  if (GetPrevContinuation()) {
     skip |= eLogicalSideBitsBStart;
   }
 
@@ -241,7 +241,7 @@ nsIFrame::LogicalSides nsSplittableFrame::GetLogicalSkipSides(
       }
     }
   } else {
-    nsIFrame* nif = GetNextInFlow();
+    nsIFrame* nif = GetNextContinuation();
     if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
       skip |= eLogicalSideBitsBEnd;
     }

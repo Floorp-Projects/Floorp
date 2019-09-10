@@ -54,11 +54,7 @@ def Libxul(name, output_category=None):
             '/widget/windows',
             '/xpcom/base',
         ]
-        # config/version.mk says $(srcdir)/$(RCINCLUDE), and this needs to
-        # be valid in both toolkit/library and toolkit/library/gtest.
-        # Eventually, the make backend would do its own path canonicalization
-        # and config/version.mk would lift the $(srcdir)
-        RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
+        RCINCLUDE = '/toolkit/library/xulrunner.rc'
 
     # Show a breakdown of linker time. (Too verbose for local builds.)
     if CONFIG['CC_TYPE'] == 'clang-cl' and not CONFIG['DEVELOPER_OPTIONS']:

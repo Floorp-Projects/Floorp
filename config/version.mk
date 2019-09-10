@@ -34,7 +34,7 @@ endif
 endif
 endif
 ifdef RCINCLUDE
-_RC_STRING += -RCINCLUDE $(srcdir)/$(RCINCLUDE)
+_RC_STRING += -RCINCLUDE $(RCINCLUDE)
 endif
 
 GARBAGE += $(RESFILE) $(RCFILE)

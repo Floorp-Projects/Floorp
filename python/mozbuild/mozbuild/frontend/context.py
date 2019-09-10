@@ -1656,7 +1656,7 @@ VARIABLES = {
 
         This variable contains a list of system libaries to link against.
         """),
-    'RCFILE': (unicode, unicode,
+    'RCFILE': (Path, unicode,
                """The program .rc file.
 
         This variable can only be used on Windows.
@@ -1668,7 +1668,7 @@ VARIABLES = {
         This variable can only be used on Windows.
         """),
 
-    'RCINCLUDE': (unicode, unicode,
+    'RCINCLUDE': (Path, unicode,
                   """The resource script file to be included in the default .res file.
 
         This variable can only be used on Windows.
