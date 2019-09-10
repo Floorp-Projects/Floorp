@@ -257,8 +257,8 @@ impl Runner for FirefoxRunner {
     fn start(mut self) -> Result<FirefoxProcess, RunnerError> {
         self.profile.user_prefs()?.write()?;
 
-        let stdout = self.stdout.unwrap_or_else(|| Stdio::inherit());
-        let stderr = self.stderr.unwrap_or_else(|| Stdio::inherit());
+        let stdout = self.stdout.unwrap_or_else(Stdio::inherit);
+        let stderr = self.stderr.unwrap_or_else(Stdio::inherit);
 
         let binary_path = platform::resolve_binary_path(&mut self.path);
         let mut cmd = Command::new(binary_path);
