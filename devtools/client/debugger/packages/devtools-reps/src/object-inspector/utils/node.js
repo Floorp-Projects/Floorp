@@ -380,7 +380,7 @@ function makeNodesForEntries(item: Node): Node {
         return createNode({
           parent: item,
           name: index,
-          path: `${entriesPath}/${index}`,
+          path: createPath(entriesPath, index),
           contents: { value: GripMapEntryRep.createGripMapEntry(key, value) },
         });
       });
@@ -389,7 +389,7 @@ function makeNodesForEntries(item: Node): Node {
         return createNode({
           parent: item,
           name: index,
-          path: `${entriesPath}/${index}`,
+          path: createPath(entriesPath, index),
           contents: { value },
         });
       });
@@ -522,7 +522,7 @@ function makeDefaultPropsBucket(
       createNode({
         parent: defaultPropertiesNode,
         name: maybeEscapePropertyName(name),
-        path: `${index}/${name}`,
+        path: createPath(index, name),
         contents: ownProperties[name],
       })
     );
@@ -676,16 +676,12 @@ function createNode(options: {
 
   // The path is important to uniquely identify the item in the entire
   // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name, wrapped in a Symbol
-  // to avoid name clashing,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of Symbol(`foo/bar/baz`)
-  // for the inner object.
+  // lists. The path will be separated by property name.
+
   return {
     parent,
     name,
-    path: parent
-      ? Symbol(`${getSymbolDescriptor(parent.path)}/${path || name}`)
-      : Symbol(path || name),
+    path: createPath(parent && parent.path, path || name),
     contents,
     type,
     meta,
@@ -708,10 +704,6 @@ function createSetterNode({ parent, property, name }) {
     contents: { value: property.set },
     type: NODE_TYPES.SET,
   });
-}
-
-function getSymbolDescriptor(symbol: Symbol | string): string {
-  return symbol.toString().replace(/^(Symbol\()(.*)(\))$/, "$2");
 }
 
 function setNodeChildren(node: Node, children: Array<Node>): Node {
@@ -915,6 +907,10 @@ function getNonPrototypeParentGripValue(item: Node | null): Node | null {
   }
 
   return getValue(parentGripNode);
+}
+
+function createPath(parentPath, path) {
+  return parentPath ? `${parentPath}◦${path}` : path;
 }
 
 module.exports = {

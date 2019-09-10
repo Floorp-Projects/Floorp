@@ -41,7 +41,7 @@ describe("getChildren", () => {
     const paths = children.map(n => n.path.toString());
 
     expect(names).toEqual(["x", "<get x()>"]);
-    expect(paths).toEqual(["Symbol(rootpath/x)", "Symbol(rootpath/<get x()>)"]);
+    expect(paths).toEqual(["rootpath◦x", "rootpath◦<get x()>"]);
   });
 
   it("accessors - setter", () => {
@@ -53,7 +53,7 @@ describe("getChildren", () => {
     const paths = children.map(n => n.path.toString());
 
     expect(names).toEqual(["x", "<set x()>"]);
-    expect(paths).toEqual(["Symbol(rootpath/x)", "Symbol(rootpath/<set x()>)"]);
+    expect(paths).toEqual(["rootpath◦x", "rootpath◦<set x()>"]);
   });
 
   it("accessors - getter & setter", () => {
@@ -68,9 +68,9 @@ describe("getChildren", () => {
 
     expect(names).toEqual(["x", "<get x()>", "<set x()>"]);
     expect(paths).toEqual([
-      "Symbol(rootpath/x)",
-      "Symbol(rootpath/<get x()>)",
-      "Symbol(rootpath/<set x()>)",
+      "rootpath◦x",
+      "rootpath◦<get x()>",
+      "rootpath◦<set x()>",
     ]);
   });
 
@@ -88,10 +88,7 @@ describe("getChildren", () => {
     const paths = nodes.map(n => n.path.toString());
 
     expect(names).toEqual(["<target>", "<handler>"]);
-    expect(paths).toEqual([
-      "Symbol(rootpath/<target>)",
-      "Symbol(rootpath/<handler>)",
-    ]);
+    expect(paths).toEqual(["rootpath◦<target>", "rootpath◦<handler>"]);
   });
 
   it("safeGetterValues", () => {
@@ -138,9 +135,7 @@ describe("getChildren", () => {
       ["unloadEventStart", 0],
       ["<prototype>", stub.prototype],
     ];
-    const childrenPaths = childrenEntries.map(
-      ([name]) => `Symbol(rootpath/${name})`
-    );
+    const childrenPaths = childrenEntries.map(([name]) => `rootpath◦${name}`);
 
     expect(nodeEntries).toEqual(childrenEntries);
     expect(nodePaths).toEqual(childrenPaths);
@@ -153,7 +148,7 @@ describe("getChildren", () => {
         value: gripMapStubs.get("testSymbolKeyedMap"),
       },
     });
-    const cachedData = Symbol();
+    const cachedData = "";
     const children = getChildren({
       cachedNodes: new Map([[mapNode.path, cachedData]]),
       item: mapNode,
@@ -205,7 +200,7 @@ describe("getChildren", () => {
 
   it("adds children to cache when it already has some", () => {
     const cachedNodes = new Map();
-    const children = [Symbol()];
+    const children = [""];
     const rootNode = createNode({ name: "root", contents: children });
     getChildren({
       cachedNodes,

@@ -65,9 +65,6 @@ add_task(async function() {
     "The expected nodes are displayed"
   );
 
-  info("Expand the object in the console output");
-  object.click();
-  await waitFor(() => message.querySelectorAll(".node").length === 5);
   const cNode = message.querySelectorAll(".node")[3];
   info("Ctrl+click on the `c` property node to put it in the sidebar");
   EventUtils.sendMouseEvent(

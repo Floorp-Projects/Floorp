@@ -138,7 +138,7 @@ describe("ObjectInspector - state", () => {
       storeHasExactExpandedPaths(store, [
         "root-1",
         "root-2",
-        "Symbol(root-1/<prototype>)",
+        "root-1◦<prototype>",
       ])
     ).toBeTruthy();
 
@@ -178,9 +178,7 @@ describe("ObjectInspector - state", () => {
     // Once all the loading promises are resolved, actors and loadedProperties
     // should have the expected values.
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
-    expect(
-      storeHasLoadedProperty(store, "Symbol(root-1/<prototype>)")
-    ).toBeTruthy();
+    expect(storeHasLoadedProperty(store, "root-1◦<prototype>")).toBeTruthy();
 
     expect(
       getActors(store.getState()).has(protoStub.prototype.actor)
@@ -217,9 +215,7 @@ describe("ObjectInspector - state", () => {
     wrapper.update();
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
-    expect(
-      storeHasLoadedProperty(store, "Symbol(root-2/<handler>)")
-    ).toBeTruthy();
+    expect(storeHasLoadedProperty(store, "root-2◦<handler>")).toBeTruthy();
   });
 
   it("does not expand if the user selected some text", async () => {
