@@ -3222,13 +3222,9 @@
 
 - name: gfx.direct3d11.use-double-buffering
   type: RelaxedAtomicBool
-#ifdef XP_WIN
   # Prefer flipping between two buffers over copying from our back buffer
   # to the OS.
-  value: @IS_NIGHTLY_BUILD@
-#else
-  value: false
-#endif
+  value: true
   mirror: always
 
 - name: gfx.direct3d11.enable-debug-layer
