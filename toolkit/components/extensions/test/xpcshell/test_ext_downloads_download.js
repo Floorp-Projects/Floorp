@@ -415,9 +415,10 @@ add_task(async function test_downloads() {
   await extension.unload();
 });
 
-add_task(async function test_download_http_errors() {
+async function testHttpErrors(allowHttpErrors) {
   const server = createHttpServer();
   const url = `http://localhost:${server.identity.primaryPort}/error`;
+  const content = "HTTP Error test";
 
   server.registerPathHandler("/error", (request, response) => {
     response.setStatusLine(
@@ -426,23 +427,26 @@ add_task(async function test_download_http_errors() {
       "Some Error"
     );
     response.setHeader("Content-Type", "text/plain", false);
-    response.setHeader("Content-Length", "3");
-    response.write("err");
+    response.setHeader("Content-Length", content.length.toString());
+    response.write(content);
   });
 
   function background(code) {
     let dlid = 0;
+    let expectedState;
     browser.test.onMessage.addListener(async options => {
       try {
+        expectedState = options.allowHttpErrors ? "complete" : "interrupted";
         dlid = await browser.downloads.download(options);
       } catch (err) {
         browser.test.fail(`Unexpected error in downloads.download(): ${err}`);
       }
     });
     function onChanged({ id, state }) {
-      if (!state || dlid !== id || state.current !== "interrupted") {
+      if (dlid !== id || !state || state.current === "in_progress") {
         return;
       }
+      browser.test.assertEq(state.current, expectedState, "correct state");
       browser.downloads.search({ id }).then(([download]) => {
         browser.test.sendMessage("done", download.error);
       });
@@ -458,37 +462,56 @@ add_task(async function test_download_http_errors() {
   });
   await extension.startup();
 
-  function download(code) {
+  async function download(code, expected_when_disallowed) {
     const options = {
       url: url + "?" + code,
+      filename: `test-${code}`,
       conflictAction: "overwrite",
+      allowHttpErrors,
     };
     extension.sendMessage(options);
-    return extension.awaitMessage("done");
+    const rv = await extension.awaitMessage("done");
+
+    if (allowHttpErrors) {
+      const localPath = downloadDir.clone();
+      localPath.append(options.filename);
+      equal(
+        localPath.fileSize,
+        // The 20x No content errors will not produce any response body,
+        // only "true" errors do.
+        code >= 400 ? content.length : 0,
+        "Downloaded file has expected size" + code
+      );
+      localPath.remove(false);
+
+      ok(!rv, "error must be ignored and hence false-y");
+      return;
+    }
+
+    equal(
+      rv,
+      expected_when_disallowed,
+      "error must have the correct InterruptReason"
+    );
   }
 
-  let res = await download(204); // No Content
-  equal(res, "SERVER_BAD_CONTENT", "error is correct");
-
-  res = await download(204); // Reset Content
-  equal(res, "SERVER_BAD_CONTENT", "error is correct");
-
-  res = await download(404);
-  equal(res, "SERVER_BAD_CONTENT", "error is correct");
-
-  res = await download(403);
-  equal(res, "SERVER_FORBIDDEN", "error is correct");
-
-  res = await download(402);
-  equal(res, "SERVER_UNAUTHORIZED", "error is correct");
-
-  res = await download(407); // Proxy authentication required
-  equal(res, "SERVER_UNAUTHORIZED", "error is correct");
-
-  res = await download(504);
-  equal(res, "SERVER_FAILED", "error is correct");
+  await download(204, "SERVER_BAD_CONTENT"); // No Content
+  await download(205, "SERVER_BAD_CONTENT"); // Reset Content
+  await download(404, "SERVER_BAD_CONTENT"); // Not Found
+  await download(403, "SERVER_FORBIDDEN"); // Forbidden
+  await download(402, "SERVER_UNAUTHORIZED"); // Unauthorized
+  await download(407, "SERVER_UNAUTHORIZED"); // Proxy auth required
+  await download(504, "SERVER_FAILED"); //General errors, here Gateway Timeout
 
   await extension.unload();
+}
+
+add_task(function test_download_disallowed_http_errors() {
+  return testHttpErrors(false);
+});
+
+add_task(function test_download_allowed_http_errors() {
+  return testHttpErrors(true);
 });
 
 add_task(async function test_download_http_details() {

@@ -423,6 +423,12 @@
                 "description": "Post body.",
                 "optional": true,
                 "type": "string"
+              },
+              "allowHttpErrors": {
+                "description": "When this flag is set to <code>true</code>, then the browser will allow downloads to proceed after encountering HTTP errors such as <code>404 Not Found</code>.",
+                "optional": true,
+                "default": false,
+                "type": "boolean"
               }
             }
           },
