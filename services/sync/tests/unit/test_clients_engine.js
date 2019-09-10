@@ -980,16 +980,8 @@ add_task(async function test_clients_not_in_fxa_list() {
     notifyDevices() {
       return Promise.resolve(true);
     },
-    device: {
-      getLocalId() {
-        return fxAccounts.device.getLocalId();
-      },
-      getLocalName() {
-        return fxAccounts.device.getLocalName();
-      },
-      getLocalType() {
-        return fxAccounts.device.getLocalType();
-      },
+    getDeviceId() {
+      return fxAccounts.getDeviceId();
     },
     getDeviceList() {
       return Promise.resolve([{ id: remoteId }]);
@@ -1059,16 +1051,8 @@ add_task(async function test_dupe_device_ids() {
     notifyDevices() {
       return Promise.resolve(true);
     },
-    device: {
-      getLocalId() {
-        return fxAccounts.device.getLocalId();
-      },
-      getLocalName() {
-        return fxAccounts.device.getLocalName();
-      },
-      getLocalType() {
-        return fxAccounts.device.getLocalType();
-      },
+    getDeviceId() {
+      return fxAccounts.getDeviceId();
     },
     getDeviceList() {
       return Promise.resolve([{ id: remoteDeviceId }]);
@@ -2073,16 +2057,8 @@ add_task(async function test_other_clients_notified_on_first_sync() {
   const fxAccounts = engine.fxAccounts;
   let calls = 0;
   engine.fxAccounts = {
-    device: {
-      getLocalId() {
-        return fxAccounts.device.getLocalId();
-      },
-      getLocalName() {
-        return fxAccounts.device.getLocalName();
-      },
-      getLocalType() {
-        return fxAccounts.device.getLocalType();
-      },
+    getDeviceId() {
+      return fxAccounts.getDeviceId();
     },
     notifyDevices() {
       calls++;
