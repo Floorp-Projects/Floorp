@@ -10,7 +10,7 @@ import android.widget.CompoundButton
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class RadioSearchEngineListPreference @JvmOverloads constructor(
     context: Context,
@@ -26,6 +26,6 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
 
     override fun onSearchEngineSelected(searchEngine: SearchEngine) {
         context.components.search.searchEngineManager.defaultSearchEngine = searchEngine
-        Settings.getInstance(context).defaultSearchEngineName = searchEngine.name
+        context.settings.defaultSearchEngineName = searchEngine.name
     }
 }

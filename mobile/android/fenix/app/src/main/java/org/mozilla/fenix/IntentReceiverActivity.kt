@@ -15,7 +15,7 @@ import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class IntentReceiverActivity : Activity() {
 
@@ -32,7 +32,7 @@ class IntentReceiverActivity : Activity() {
             return
         }
 
-        val isPrivate = Settings.getInstance(this).usePrivateMode
+        val isPrivate = this.settings.usePrivateMode
 
         MainScope().launch {
             // The intent property is nullable, but the rest of the code below

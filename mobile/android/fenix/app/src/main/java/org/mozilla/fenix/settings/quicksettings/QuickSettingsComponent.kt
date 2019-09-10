@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.core.net.toUri
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -19,7 +20,6 @@ import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.toggle
-import org.mozilla.fenix.utils.Settings
 
 class QuickSettingsComponent(
     private val container: ViewGroup,
@@ -46,7 +46,7 @@ class QuickSettingsComponent(
     ): SitePermissions {
 
         return if (sitePermissions == null) {
-            val settings = Settings.getInstance(context)
+            val settings = context.settings
             val origin = requireNotNull(url.toUri().host)
             var location = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION).toStatus()
             var camera = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA).toStatus()

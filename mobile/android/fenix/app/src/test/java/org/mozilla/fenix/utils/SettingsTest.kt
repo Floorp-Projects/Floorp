@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.PhoneFeature
 import org.robolectric.annotation.Config
 
@@ -30,7 +31,7 @@ class SettingsTest {
 
     @Before
     fun setUp() {
-        settings = Settings.getInstance(testContext)
+        settings = testContext.settings
             .apply(Settings::clear)
     }
 
@@ -70,7 +71,7 @@ class SettingsTest {
     fun isCrashReportingEnabled_enabledInBuild() {
         // When
         clearExistingInstance()
-        val settings = Settings.getInstance(testContext, isCrashReportEnabledInBuild = true)
+        val settings = testContext.settings(true)
             .apply(Settings::clear)
 
         // Then
@@ -81,7 +82,7 @@ class SettingsTest {
     fun isCrashReportingEnabled_disabledInBuild() {
         // When
         clearExistingInstance()
-        val settings = Settings.getInstance(testContext, isCrashReportEnabledInBuild = false)
+        val settings = testContext.settings(false)
             .apply(Settings::clear)
 
         // Then

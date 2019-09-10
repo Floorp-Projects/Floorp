@@ -20,7 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 const val POSITION_SNAP_BUFFER = 1f
 
@@ -64,7 +64,7 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     fun bounceSheet() {
-        Settings.getInstance(context).incrementAutomaticBounceQuickActionSheetCount()
+        context.settings.incrementAutomaticBounceQuickActionSheetCount()
         scope.launch(Dispatchers.Main) {
             delay(BOUNCE_ANIMATION_DELAY_LENGTH)
             quickActionSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED

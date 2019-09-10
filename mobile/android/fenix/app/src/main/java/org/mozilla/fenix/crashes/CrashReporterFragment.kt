@@ -20,7 +20,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class CrashReporterFragment : Fragment() {
     override fun onCreateView(
@@ -69,7 +69,7 @@ class CrashReporterFragment : Fragment() {
 
     private fun submitReportIfNecessary(crash: Crash) {
         var didSubmitCrashReport = false
-        if (Settings.getInstance(context!!).isCrashReportingEnabled && sendCrashCheckbox.isChecked) {
+        if (requireContext().settings.isCrashReportingEnabled && sendCrashCheckbox.isChecked) {
             requireComponents.analytics.crashReporter.submitReport(crash)
             didSubmitCrashReport = true
         }

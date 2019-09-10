@@ -19,8 +19,8 @@ import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.LeanplumMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
 
@@ -81,7 +81,7 @@ class Analytics(
                 LeanplumMetricsService(context as Application),
                 AdjustMetricsService(context)
             ),
-            isTelemetryEnabled = { Settings.getInstance(context).isTelemetryEnabled }
+            isTelemetryEnabled = { context.settings.isTelemetryEnabled }
         )
     }
 }

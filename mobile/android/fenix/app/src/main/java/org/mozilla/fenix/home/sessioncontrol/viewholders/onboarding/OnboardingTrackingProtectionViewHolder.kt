@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -23,7 +23,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
         )
 
         view.tracking_protection_toggle.apply {
-            isChecked = Settings.getInstance(view.context).shouldUseTrackingProtection
+            isChecked = view.context.settings.shouldUseTrackingProtection
             setOnCheckedChangeListener { _, isChecked ->
                 updateTrackingProtectionSetting(isChecked)
             }
@@ -31,7 +31,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
     }
 
     private fun updateTrackingProtectionSetting(enabled: Boolean) {
-        Settings.getInstance(itemView.context).shouldUseTrackingProtection = enabled
+        itemView.context.settings.shouldUseTrackingProtection = enabled
         with(itemView.context.components) {
             val policy = core.createTrackingProtectionPolicy(enabled)
             useCases.settingsUseCases.updateTrackingProtection.invoke(policy)

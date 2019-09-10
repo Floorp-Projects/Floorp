@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -68,7 +68,7 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
             }
         }
 
-        with(Settings.getInstance(view.context)) {
+        with(view.context.settings) {
             val radio = when {
                 this.shouldUseLightTheme -> radioLightTheme
                 this.shouldUseDarkTheme -> radioDarkTheme

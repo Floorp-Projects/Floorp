@@ -17,8 +17,8 @@ import kotlinx.android.synthetic.main.layout_quick_action_sheet.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
-import org.mozilla.fenix.utils.Settings
 
 interface QuickActionSheetViewInteractor {
     fun onQuickActionSheetOpened()
@@ -130,7 +130,7 @@ class QuickActionSheetView(
             }
         )
 
-        if (quickActionSheetState.bounceNeeded && Settings.getInstance(view.context).shouldAutoBounceQuickActionSheet) {
+        if (quickActionSheetState.bounceNeeded && view.context.settings.shouldAutoBounceQuickActionSheet) {
             quickActionSheet.bounceSheet()
         }
 
@@ -140,7 +140,7 @@ class QuickActionSheetView(
     }
 
     private fun notifyReaderModeButton(readable: Boolean) {
-        val settings = Settings.getInstance(view.context).preferences
+        val settings = view.context.settings.preferences
         val shouldNotifyKey = view.context.getString(R.string.pref_key_reader_mode_notification)
 
         @DrawableRes

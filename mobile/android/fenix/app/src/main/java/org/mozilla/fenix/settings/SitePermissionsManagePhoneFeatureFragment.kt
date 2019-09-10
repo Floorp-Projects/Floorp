@@ -25,6 +25,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
@@ -42,7 +43,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
         (activity as AppCompatActivity).title = phoneFeature.getLabel(requireContext())
         (activity as AppCompatActivity).supportActionBar?.show()
-        settings = Settings.getInstance(requireContext())
+        settings = requireContext().settings
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

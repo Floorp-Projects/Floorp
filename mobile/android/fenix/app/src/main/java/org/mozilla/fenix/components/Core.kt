@@ -32,8 +32,8 @@ import mozilla.components.feature.session.HistoryDelegate
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
-import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
 
 /**
@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit
  */
 @Mockable
 class Core(private val context: Context) {
-
     /**
      * The browser engine component initialized based on the build
      * configuration (see build variants).
@@ -49,12 +48,12 @@ class Core(private val context: Context) {
     val engine: Engine by lazy {
         val defaultSettings = DefaultSettings(
             requestInterceptor = AppRequestInterceptor(context),
-            remoteDebuggingEnabled = Settings.getInstance(context).isRemoteDebuggingEnabled,
+            remoteDebuggingEnabled = context.settings.isRemoteDebuggingEnabled,
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage),
             preferredColorScheme = getPreferredColorScheme(),
-            automaticFontSizeAdjustment = Settings.getInstance(context).shouldUseAutoSize,
+            automaticFontSizeAdjustment = context.settings.shouldUseAutoSize,
             suspendMediaWhenInactive = !FeatureFlags.mediaIntegration
         )
 
@@ -149,7 +148,7 @@ class Core(private val context: Context) {
      * @return the constructed tracking protection policy based on preferences.
      */
     fun createTrackingProtectionPolicy(
-        normalMode: Boolean = Settings.getInstance(context).shouldUseTrackingProtection,
+        normalMode: Boolean = context.settings.shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
         val trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
@@ -170,8 +169,8 @@ class Core(private val context: Context) {
             (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                     Configuration.UI_MODE_NIGHT_YES
         return when {
-            Settings.getInstance(context).shouldUseDarkTheme -> PreferredColorScheme.Dark
-            Settings.getInstance(context).shouldUseLightTheme -> PreferredColorScheme.Light
+            context.settings.shouldUseDarkTheme -> PreferredColorScheme.Dark
+            context.settings.shouldUseLightTheme -> PreferredColorScheme.Light
             inDark -> PreferredColorScheme.Dark
             else -> PreferredColorScheme.Light
         }

@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for all search engine integration related functionality.
@@ -33,7 +33,7 @@ class Search(private val context: Context) {
             GlobalScope.launch {
                 defaultSearchEngine = getDefaultSearchEngineAsync(
                     context,
-                    Settings.getInstance(context).defaultSearchEngineName
+                    context.settings.defaultSearchEngineName
                 )
             }
         }

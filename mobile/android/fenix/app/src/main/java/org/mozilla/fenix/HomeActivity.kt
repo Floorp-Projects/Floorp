@@ -43,6 +43,7 @@ import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
@@ -58,7 +59,6 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback {
@@ -92,7 +92,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
         setupToolbarAndNavigation()
 
-        if (Settings.getInstance(this).isTelemetryEnabled) {
+        if (settings.isTelemetryEnabled) {
             if (isSentryEnabled()) {
                 lifecycle.addObserver(SentryBreadcrumbsRecorder(navHost.navController, ::getSentryBreadcrumbMessage))
             }
@@ -281,7 +281,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     }
 
     protected open fun createBrowsingModeManager(): BrowsingModeManager {
-        return DefaultBrowsingModeManager(Settings.getInstance(this)) { mode ->
+        return DefaultBrowsingModeManager(settings) { mode ->
             themeManager.currentTheme = mode
         }
     }

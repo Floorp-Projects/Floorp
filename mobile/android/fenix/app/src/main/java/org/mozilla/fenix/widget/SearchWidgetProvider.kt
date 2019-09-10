@@ -19,7 +19,7 @@ import androidx.annotation.Dimension.DP
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 import android.os.Build
 import androidx.appcompat.widget.AppCompatDrawableManager
 import androidx.core.graphics.drawable.toBitmap
@@ -28,11 +28,11 @@ import androidx.core.graphics.drawable.toBitmap
 class SearchWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
-        Settings.getInstance(context).addSearchWidgetInstalled(1)
+        context.settings.addSearchWidgetInstalled(1)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        Settings.getInstance(context).addSearchWidgetInstalled(-appWidgetIds.size)
+        context.settings.addSearchWidgetInstalled(-appWidgetIds.size)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {

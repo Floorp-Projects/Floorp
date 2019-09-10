@@ -24,6 +24,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECI
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
@@ -45,7 +46,7 @@ class QuickSettingsUIView(
 ) {
     private val blockedByAndroidPhoneFeatures = mutableListOf<PhoneFeature>()
     private inline val context get() = view.context
-    private val settings: Settings = Settings.getInstance(context)
+    private val settings: Settings = context.settings
     private val trackingProtectionSettingView = TrackingProtectionSettingView(view, actionEmitter)
     private val labelAndActions = mapOf(
         CAMERA to findLabelActionPair(R.id.camera_icon, R.id.camera_action_label),

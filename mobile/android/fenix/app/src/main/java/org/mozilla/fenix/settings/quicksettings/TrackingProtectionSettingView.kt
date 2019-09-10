@@ -13,7 +13,7 @@ import androidx.core.view.isVisible
 import io.reactivex.Observer
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class TrackingProtectionSettingView(
     container: View,
@@ -29,7 +29,7 @@ class TrackingProtectionSettingView(
     }
 
     fun bind(isTrackingProtectionOn: Boolean) {
-        val globalTPSetting = Settings.getInstance(trackingProtectionSwitch.context).shouldUseTrackingProtection
+        val globalTPSetting = trackingProtectionSwitch.context.settings.shouldUseTrackingProtection
 
         trackingProtectionAction.isVisible = !globalTPSetting
         trackingProtectionAction.setOnClickListener(this)

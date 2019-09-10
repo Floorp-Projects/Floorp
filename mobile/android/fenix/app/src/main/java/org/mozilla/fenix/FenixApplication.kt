@@ -32,9 +32,9 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.fenix.GleanMetrics.ExperimentsMetrics
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
-import org.mozilla.fenix.utils.Settings
 import java.io.File
 
 @SuppressLint("Registered")
@@ -80,7 +80,7 @@ open class FenixApplication : Application() {
         experimentLoader = loadExperiments()
 
         // Enable the service-experiments component
-        if (Settings.getInstance(this).isExperimentationEnabled) {
+        if (this.settings.isExperimentationEnabled) {
             Experiments.initialize(
                 applicationContext,
                 mozilla.components.service.experiments.Configuration(
@@ -100,7 +100,7 @@ open class FenixApplication : Application() {
         }
 
         setupLeakCanary()
-        if (Settings.getInstance(this).isTelemetryEnabled) {
+        if (this.settings.isTelemetryEnabled) {
             components.analytics.metrics.start()
         }
 
@@ -238,7 +238,7 @@ open class FenixApplication : Application() {
     @SuppressLint("WrongConstant")
     // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun setDayNightTheme() {
-        val settings = Settings.getInstance(this)
+        val settings = this.settings
         when {
             settings.shouldUseLightTheme -> {
                 AppCompatDelegate.setDefaultNightMode(

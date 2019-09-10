@@ -20,7 +20,7 @@ import kotlinx.android.synthetic.main.search_engine_radio_button.view.*
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
@@ -69,7 +69,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val selectedSearchEngine =
             context.components.search.searchEngineManager.getDefaultSearchEngine(
                 context,
-                Settings.getInstance(context).defaultSearchEngineName
+                context.settings.defaultSearchEngineName
             ).identifier
 
         searchEngineGroup!!.removeAllViews()

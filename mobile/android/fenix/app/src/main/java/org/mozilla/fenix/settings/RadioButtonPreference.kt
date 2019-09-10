@@ -15,7 +15,7 @@ import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class RadioButtonPreference @JvmOverloads constructor(
     context: Context,
@@ -76,13 +76,13 @@ class RadioButtonPreference @JvmOverloads constructor(
     private fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
         radioButton.isChecked = isChecked
-        Settings.getInstance(context).preferences.edit().putBoolean(key, isChecked)
+        context.settings.preferences.edit().putBoolean(key, isChecked)
             .apply()
     }
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
-        radioButton.isChecked = Settings.getInstance(context).preferences.getBoolean(key, false)
+        radioButton.isChecked = context.settings.preferences.getBoolean(key, false)
         radioButton.setStartCheckedIndicator()
     }
 

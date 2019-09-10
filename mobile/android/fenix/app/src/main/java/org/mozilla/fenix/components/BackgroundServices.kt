@@ -39,9 +39,9 @@ import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
@@ -142,7 +142,7 @@ class BackgroundServices(
 
             context.components.analytics.metrics.track(Event.SyncAuthSignOut)
 
-            Settings.getInstance(context).fxaSignedIn = false
+            context.settings.fxaSignedIn = false
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
@@ -152,7 +152,7 @@ class BackgroundServices(
 
             context.components.analytics.metrics.track(Event.SyncAuthSignIn)
 
-            Settings.getInstance(context).fxaSignedIn = true
+            context.settings.fxaSignedIn = true
         }
     }
 
@@ -174,13 +174,11 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
-        Settings.getInstance(context).fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
-
+        context.settings.fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 
         // Enable push if we have the config.
         if (pushConfig != null) {
-
             // Register our account observer so we know how to update our push subscriptions.
             it.register(accountObserver)
 

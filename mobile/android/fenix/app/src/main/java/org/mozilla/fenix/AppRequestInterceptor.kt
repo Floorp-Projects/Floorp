@@ -12,7 +12,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 import java.net.MalformedURLException
 import java.net.URL
 
@@ -31,7 +31,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
 
     private fun adjustTrackingProtection(host: String, context: Context, session: EngineSession) {
         val trackingProtectionException = ExceptionDomains.load(context).contains(host)
-        val trackingProtectionEnabled = Settings.getInstance(context).shouldUseTrackingProtection
+        val trackingProtectionEnabled = context.settings.shouldUseTrackingProtection
         if (trackingProtectionException || !trackingProtectionEnabled) {
             session.disableTrackingProtection()
         } else {

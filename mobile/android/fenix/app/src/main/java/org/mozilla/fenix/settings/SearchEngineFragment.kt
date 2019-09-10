@@ -10,7 +10,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
@@ -25,24 +25,24 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
         val searchSuggestionsPreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions))?.apply {
-                isChecked = Settings.getInstance(context).shouldShowSearchSuggestions
+                isChecked = context.settings.shouldShowSearchSuggestions
             }
 
         searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         val showHistorySuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_browsing_history))?.apply {
-                isChecked = Settings.getInstance(context).shouldShowHistorySuggestions
+                isChecked = context.settings.shouldShowHistorySuggestions
             }
 
         val showBookmarkSuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_bookmarks))?.apply {
-                isChecked = Settings.getInstance(context).shouldShowBookmarkSuggestions
+                isChecked = context.settings.shouldShowBookmarkSuggestions
             }
 
         val showClipboardSuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_clipboard_suggestions))?.apply {
-                isChecked = Settings.getInstance(context).shouldShowClipboardSuggestions
+                isChecked = context.settings.shouldShowClipboardSuggestions
             }
 
         showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()

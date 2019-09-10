@@ -40,9 +40,9 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.toolbar.ToolbarView
-import org.mozilla.fenix.utils.Settings
 
 @Suppress("TooManyFunctions", "LargeClass")
 class SearchFragment : Fragment(), BackHandler {
@@ -91,10 +91,10 @@ class SearchFragment : Fragment(), BackHandler {
                     showShortcutEnginePicker = displayShortcutEnginePicker,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
-                    showSearchSuggestions = Settings.getInstance(requireContext()).shouldShowSearchSuggestions,
-                    showClipboardSuggestions = Settings.getInstance(requireContext()).shouldShowClipboardSuggestions,
-                    showHistorySuggestions = Settings.getInstance(requireContext()).shouldShowHistorySuggestions,
-                    showBookmarkSuggestions = Settings.getInstance(requireContext()).shouldShowBookmarkSuggestions,
+                    showSearchSuggestions = requireContext().settings.shouldShowSearchSuggestions,
+                    showClipboardSuggestions = requireContext().settings.shouldShowClipboardSuggestions,
+                    showHistorySuggestions = requireContext().settings.shouldShowHistorySuggestions,
+                    showBookmarkSuggestions = requireContext().settings.shouldShowBookmarkSuggestions,
                     session = session
                 )
             )
@@ -212,7 +212,7 @@ class SearchFragment : Fragment(), BackHandler {
         val currentDefaultEngine =
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(
                 requireContext(),
-                Settings.getInstance(requireContext()).defaultSearchEngineName
+                requireContext().settings.defaultSearchEngineName
             )
 
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
@@ -292,7 +292,7 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     private fun historyStorageProvider(): HistoryStorage? {
-        return if (Settings.getInstance(requireContext()).shouldShowHistorySuggestions) {
+        return if (requireContext().settings.shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
         } else null
     }

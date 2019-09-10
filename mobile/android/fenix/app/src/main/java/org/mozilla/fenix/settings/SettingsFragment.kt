@@ -56,6 +56,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -119,7 +120,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
-            if (org.mozilla.fenix.utils.Settings.getInstance(it).shouldUseTrackingProtection) {
+            if (it.settings.shouldUseTrackingProtection) {
                 getString(R.string.tracking_protection_on)
             } else {
                 getString(R.string.tracking_protection_off)
@@ -129,7 +130,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val themesPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_theme))
         themesPreference?.summary = context?.let {
-            org.mozilla.fenix.utils.Settings.getInstance(it).themeSettingString
+            it.settings.themeSettingString
         }
 
         val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
@@ -249,7 +250,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         preferenceRemoteDebugging?.setOnPreferenceChangeListener { preference, newValue ->
-            org.mozilla.fenix.utils.Settings.getInstance(preference.context).preferences.edit()
+        preference.context.settings.preferences.edit()
                 .putBoolean(preference.key, newValue as Boolean).apply()
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true

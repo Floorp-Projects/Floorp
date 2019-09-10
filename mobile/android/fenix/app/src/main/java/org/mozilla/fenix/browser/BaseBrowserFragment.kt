@@ -69,10 +69,10 @@ import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.Settings
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -501,7 +501,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
      * Updates the site permissions rules based on user settings.
      */
     private fun assignSitePermissionsRules() {
-        val settings = Settings.getInstance(requireContext())
+        val settings = requireContext().settings
 
         val rules: SitePermissionsRules = settings.getSitePermissionsCustomSettingsRules()
 

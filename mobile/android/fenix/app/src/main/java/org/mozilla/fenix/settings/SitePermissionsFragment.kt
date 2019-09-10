@@ -12,7 +12,7 @@ import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
@@ -54,7 +54,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private fun initPhoneFeature(phoneFeature: PhoneFeature) {
         val context = requireContext()
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
 
         val summary = phoneFeature.getActionLabel(context, settings = settings)
         val preferenceKey = phoneFeature.getPreferenceKey(context)

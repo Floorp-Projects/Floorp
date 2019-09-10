@@ -10,7 +10,7 @@ import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.edit
 import androidx.core.content.withStyledAttributes
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRadioButton(context, attrs) {
     private val radioGroups = mutableListOf<OnboardingRadioButton>()
@@ -45,7 +45,7 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
 
     private fun updateRadioValue(isChecked: Boolean) {
         this.isChecked = isChecked
-        Settings.getInstance(context).preferences.edit {
+        context.settings.preferences.edit {
             putBoolean(context.getString(key), isChecked)
         }
     }

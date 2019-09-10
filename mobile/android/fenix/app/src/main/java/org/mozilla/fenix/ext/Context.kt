@@ -23,11 +23,14 @@ import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
+import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Get the BrowserApplication object from a context.
@@ -105,3 +108,9 @@ fun Context.getRootView(): View? =
 @ColorInt
 fun Context.getColorFromAttr(@AttrRes attr: Int) =
     ContextCompat.getColor(this, ThemeManager.resolveAttribute(attr, this))
+
+fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased) =
+    Settings.getInstance(this, isCrashReportEnabledInBuild)
+
+val Context.settings: Settings
+    get() = Settings.getInstance(this)

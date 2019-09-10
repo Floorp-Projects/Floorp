@@ -13,7 +13,7 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 /**
  * Displays the toggle for tracking protection and a button to open
@@ -40,9 +40,9 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val trackingProtectionKey = getPreferenceKey(R.string.pref_key_tracking_protection)
         val preferenceTP = findPreference<SwitchPreference>(trackingProtectionKey)
 
-        preferenceTP?.isChecked = Settings.getInstance(context!!).shouldUseTrackingProtection
+        preferenceTP?.isChecked = context!!.settings.shouldUseTrackingProtection
         preferenceTP?.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
-            Settings.getInstance(preference.context).shouldUseTrackingProtection = trackingProtectionOn
+            preference.context.settings.shouldUseTrackingProtection = trackingProtectionOn
             with(preference.context.components) {
                 val policy = core.createTrackingProtectionPolicy(trackingProtectionOn)
                 useCases.settingsUseCases.updateTrackingProtection(policy)

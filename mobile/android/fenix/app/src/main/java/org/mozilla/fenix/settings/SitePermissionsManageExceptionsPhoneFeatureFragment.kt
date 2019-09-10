@@ -26,7 +26,7 @@ import org.jetbrains.anko.noButton
 import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
@@ -35,7 +35,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     private lateinit var radioAllow: RadioButton
     private lateinit var radioBlock: RadioButton
     private lateinit var blockedByAndroidView: View
-    val settings by lazy { Settings.getInstance(requireContext()) }
+    val settings by lazy { requireContext().settings }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

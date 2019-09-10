@@ -11,7 +11,7 @@ import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
 import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.ext.settings
 import java.util.UUID.randomUUID
 
 private val Event.name: String?
@@ -77,9 +77,9 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             "fennec_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FIREFOX.productName),
             "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
-            "fxa_signed_in" to Settings.getInstance(application).fxaSignedIn,
-            "fxa_has_synced_items" to Settings.getInstance(application).fxaHasSyncedItems,
-            "search_widget_installed" to Settings.getInstance(application).searchWidgetInstalled
+            "fxa_signed_in" to application.settings.fxaSignedIn,
+            "fxa_has_synced_items" to application.settings.fxaHasSyncedItems,
+            "search_widget_installed" to application.settings.searchWidgetInstalled
         ))
     }
 
@@ -108,7 +108,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun shouldTrack(event: Event): Boolean {
-        return Settings.getInstance(application).isTelemetryEnabled &&
+        return application.settings.isTelemetryEnabled &&
                 token.type != Token.Type.Invalid && !event.name.isNullOrEmpty()
     }
 
