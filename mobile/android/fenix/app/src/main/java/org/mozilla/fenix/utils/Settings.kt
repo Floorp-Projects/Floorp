@@ -10,13 +10,16 @@ import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.support.ktx.android.content.PreferencesHolder
+import mozilla.components.support.ktx.android.content.booleanPreference
+import mozilla.components.support.ktx.android.content.floatPreference
+import mozilla.components.support.ktx.android.content.intPreference
+import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.settings.sharedpreferences.PreferencesHolder
-import org.mozilla.fenix.settings.sharedpreferences.booleanPreference
 import java.security.InvalidParameterException
 
 /**
@@ -70,11 +73,10 @@ class Settings private constructor(
         default = false
     )
 
-    var defaultSearchEngineName: String
-        get() = preferences.getString(appContext.getPreferenceKey(R.string.pref_key_search_engine), "") ?: ""
-        set(name) = preferences.edit()
-            .putString(appContext.getPreferenceKey(R.string.pref_key_search_engine), name)
-            .apply()
+    var defaultSearchEngineName by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_engine),
+        default = ""
+    )
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
@@ -108,14 +110,10 @@ class Settings private constructor(
         default = true
     )
 
-    var fontSizeFactor: Float
-        get() = preferences.getFloat(
-            appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale),
-            1f
-        )
-        set(value) = preferences.edit()
-            .putFloat(appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale), value)
-            .apply()
+    var fontSizeFactor by floatPreference(
+        appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale),
+        default = 1f
+    )
 
     val shouldShowHistorySuggestions by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_browsing_history),
@@ -162,8 +160,10 @@ class Settings private constructor(
         }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val autoBounceQuickActionSheetCount: Int
-        get() = preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0)
+    internal val autoBounceQuickActionSheetCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action),
+        default = 0
+    )
 
     fun incrementAutomaticBounceQuickActionSheetCount() {
         preferences.edit().putInt(
@@ -193,7 +193,10 @@ class Settings private constructor(
         )
     }
 
-    var fxaSignedIn by booleanPreference(appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in), default = true)
+    var fxaSignedIn by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in),
+        default = true
+    )
 
     var fxaHasSyncedItems by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items),
