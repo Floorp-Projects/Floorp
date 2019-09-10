@@ -1304,10 +1304,7 @@ const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = {number};
         }
         let enum_variants : Vec<_> = self.variants_by_symbol
             .iter()
-            .sorted_by(|&(ref symbol_1, ref name_1), &(ref symbol_2, ref name_2)| {
-                Ord::cmp(name_1, name_2)
-                    .then_with(|| Ord::cmp(symbol_1, symbol_2))
-            })
+            .sorted_by_key(|a| a.0)
             .collect_vec();
         let variants_limit = enum_variants.len();
 
