@@ -2182,21 +2182,19 @@ WebRenderCommandBuilder::GenerateFallbackData(
   auto dtRect = LayerIntRect::FromUnknownRect(
       ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
-  auto dtSize = dtRect.Size();
 
   auto visibleRect = LayerIntRect::FromUnknownRect(
                          ScaleToOutsidePixelsOffset(
                              aItem->GetBuildingRect(), scale.width,
                              scale.height, appUnitsPerDevPixel, residualOffset))
                          .Intersect(dtRect);
-  // visibleRect is relative to the blob origin so adjust for that
-  visibleRect -= dtRect.TopLeft();
 
-  if (dtSize.IsEmpty()) {
+  auto visibleSize = visibleRect.Size();
+  if (visibleSize.IsEmpty()) {
     return nullptr;
   }
   // Display item bounds should be unscaled
-  aImageRect = dtRect / layerScale;
+  aImageRect = visibleRect / layerScale;
 
   nsDisplayItemGeometry* geometry = fallbackData->mGeometry;
 
@@ -2267,7 +2265,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 }
                 fonts = std::move(aScaledFonts);
               },
-              dtRect.ToUnknownRect().TopLeft());
+              visibleRect.ToUnknownRect().TopLeft());
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
@@ -2280,7 +2278,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
       // coordinates
       bool isInvalidated = PaintItemByDrawTarget(
           aItem, dt, LayoutDevicePoint(0, 0),
-          /*aVisibleRect: */ dtRect.ToUnknownRect(), aDisplayListBuilder,
+          /*aVisibleRect: */ visibleRect.ToUnknownRect(), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
         if (!aItem->GetBuildingRect().IsEqualInterior(
@@ -2290,7 +2288,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
           isInvalidated = true;
         }
       }
-      recorder->FlushItem(dtRect.ToUnknownRect());
+      recorder->FlushItem(visibleRect.ToUnknownRect());
       recorder->Finish();
 
       if (!validFonts) {
@@ -2303,7 +2301,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                              recorder->mOutputStream.mLength);
         wr::BlobImageKey key =
             wr::BlobImageKey{mManager->WrBridge()->GetNextImageKey()};
-        wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0,
+        wr::ImageDescriptor descriptor(visibleSize.ToUnknownSize(), 0,
                                        dt->GetFormat(), opacity);
         if (!aResources.AddBlobImage(
                 key, descriptor, bytes,
@@ -2339,7 +2337,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
       {
         UpdateImageHelper helper(imageContainer, imageClient,
-                                 dtSize.ToUnknownSize(), format);
+                                 visibleSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           if (!dt) {
