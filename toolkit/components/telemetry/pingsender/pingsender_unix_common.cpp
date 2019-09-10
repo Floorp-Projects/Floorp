@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <dlfcn.h>
@@ -27,7 +26,6 @@ class CurlWrapper {
   CurlWrapper();
   ~CurlWrapper();
   bool Init();
-  bool IsValidDestination(const string& url);
   bool Post(const string& url, const string& payload);
 
   // libcurl functions
@@ -41,16 +39,9 @@ class CurlWrapper {
   void (*easy_cleanup)(CURL*);
   void (*global_cleanup)(void);
 
-  CURLU* (*curl_url)();
-  CURLUcode (*curl_url_get)(CURLU *, CURLUPart, char **, unsigned int);
-  CURLUcode (*curl_url_set)(CURLU *, CURLUPart, const char *, unsigned int);
-  void (*curl_free)( char *);
-  void (*curl_url_cleanup)(CURLU *);
-
  private:
   void* mLib;
   void* mCurl;
-  bool mCanParseUrl;
 };
 
 CurlWrapper::CurlWrapper()
@@ -63,11 +54,6 @@ CurlWrapper::CurlWrapper()
       easy_strerror(nullptr),
       easy_cleanup(nullptr),
       global_cleanup(nullptr),
-      curl_url(nullptr),
-      curl_url_get(nullptr),
-      curl_url_set(nullptr),
-      curl_free(nullptr),
-      curl_url_cleanup(nullptr),
       mLib(nullptr),
       mCurl(nullptr) {}
 
@@ -129,24 +115,11 @@ bool CurlWrapper::Init() {
   *(void**)(&easy_cleanup) = dlsym(mLib, "curl_easy_cleanup");
   *(void**)(&global_cleanup) = dlsym(mLib, "curl_global_cleanup");
 
-  *(void**)(&curl_url) = dlsym(mLib, "curl_url");
-  *(void**)(&curl_url_set) = dlsym(mLib, "curl_url_set");
-  *(void**)(&curl_url_get) = dlsym(mLib, "curl_url_get");
-  *(void**)(&curl_free) = dlsym(mLib, "curl_free");
-  *(void**)(&curl_url_cleanup) = dlsym(mLib, "curl_url_cleanup");
-
   if (!easy_init || !easy_setopt || !easy_perform || !easy_getinfo ||
       !slist_append || !slist_free_all || !easy_strerror || !easy_cleanup ||
       !global_cleanup) {
     PINGSENDER_LOG("ERROR: libcurl is missing one of the required symbols\n");
     return false;
-  }
-
-  mCanParseUrl = true;
-  if (!curl_url || !curl_url_get || !curl_url_set || !curl_free ||
-      !curl_url_cleanup) {
-    mCanParseUrl = false;
-    PINGSENDER_LOG("WARNING: Do not have url parsing functions in libcurl\n");
   }
 
   mCurl = easy_init();
@@ -167,67 +140,6 @@ static size_t DummyWriteCallback(char* ptr, size_t size, size_t nmemb,
   Unused << userdata;
 
   return size * nmemb;
-}
-
-// If we can't use curl's URL parsing (which is safer) we have to fallback
-// to this handwritten one (which is only as safe as we are clever.)
-bool FallbackIsValidDestination(const string& aUrl) {
-  // Lowercase the url
-  string url = aUrl;
-  std::transform(url.begin(), url.end(), url.begin(),
-    [](unsigned char c){ return std::tolower(c); });
-  // Strip off the scheme in the beginning
-  if (url.find_first_of("http://") != std::string::npos) {
-    url = url.substr(7);
-  } else if (url.find_first_of("https://") != std::string::npos) {
-    url = url.substr(8);
-  }
-
-  // Remove any user information. If a @ appeared in the userinformation,
-  // it would need to be encoded.
-  unsigned long atStart = url.find_first_of("@");
-  url = (atStart == std::string::npos) ? url : url.substr(atStart + 1);
-
-  // Remove any path or fragment information, leaving us with a url that may contain
-  // host, and port.
-  unsigned long fragStart = url.find_first_of("#");
-  url = (fragStart == std::string::npos) ? url : url.substr(0, fragStart);
-  unsigned long pathStart = url.find_first_of("/");
-  url = (pathStart == std::string::npos) ? url : url.substr(0, pathStart);
-
-  // Remove the port, because we run tests targeting localhost:port
-  unsigned long portStart = url.find_last_of(":");
-  url = (portStart == std::string::npos) ? url : url.substr(0, portStart);
-
-  return ::IsValidDestination(url);
-}
-
-bool CurlWrapper::IsValidDestination(const string& aUrl) {
-  if (!mCanParseUrl) {
-    return FallbackIsValidDestination(aUrl);
-  }
-
-  bool ret = false;
-  CURLU *h = curl_url();
-  if (!h) {
-    return FallbackIsValidDestination(aUrl);
-  }
-
-  if (CURLUE_OK != curl_url_set(h, CURLUPART_URL, aUrl.c_str(), 0)) {
-    goto cleanup;
-  }
-
-  char *host;
-  if (CURLUE_OK != curl_url_get(h, CURLUPART_HOST, &host, 0)) {
-    goto cleanup;
-  }
-
-  ret = ::IsValidDestination(host);
-  curl_free(host);
-
-cleanup:
-  curl_url_cleanup(h);
-  return ret;
 }
 
 bool CurlWrapper::Post(const string& url, const string& payload) {
@@ -282,10 +194,6 @@ bool Post(const string& url, const string& payload) {
   CurlWrapper curl;
 
   if (!curl.Init()) {
-    return false;
-  }
-  if (!curl.IsValidDestination(url)) {
-    PINGSENDER_LOG("ERROR: Invalid destination host\n");
     return false;
   }
 

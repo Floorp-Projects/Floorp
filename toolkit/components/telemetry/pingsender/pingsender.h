@@ -16,7 +16,4 @@ namespace PingSender {
 // System-specific function to make an HTTP POST operation
 bool Post(const std::string& url, const std::string& payload);
 
-bool IsValidDestination(char* aUriEndingInHost);
-bool IsValidDestination(std::string aUriEndingInHost);
-
 }  // namespace PingSender
