@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <ImageView
+        android:id="@+id/switchIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginTop="@dimen/library_item_icon_margin_vertical"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginBottom="@dimen/library_item_icon_margin_vertical"
+        android:background="@drawable/ic_cryptominers"
+        android:clickable="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/switchItemTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:clickable="false"
+        android:textAppearance="@style/ListItemTextStyle"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/switchItemDescription"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/switchIcon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@tools:sample/lorem" />
+
+    <TextView
+        android:id="@+id/switchItemDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginBottom="18dp"
+        android:clickable="false"
+        android:textColor="?attr/secondaryText"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/switchIcon"
+        app:layout_constraintTop_toBottomOf="@+id/switchItemTitle"
+        tools:text="@tools:sample/lorem/random" />
+</merge>

@@ -38,6 +38,11 @@ object FeatureFlags {
     const val mediaIntegration = true
 
     /**
+     * Displays the categories blocked by ETP in a panel in the toolbar
+     */
+    val etpCategories = nightly or debug
+
+    /**
      * Granular data deletion provides additional choices on the Delete Browsing Data
      * setting screen for cookies, cached images and files, and site permissions.
      */

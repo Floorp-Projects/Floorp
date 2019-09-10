@@ -57,7 +57,7 @@
         <androidx.preference.Preference
             android:icon="@drawable/ic_tracking_protection_enabled"
             android:key="@string/pref_key_tracking_protection_settings"
-            android:title="@string/preferences_tracking_protection" />
+            android:title="@string/preference_enhanced_tracking_protection" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_permission"
             android:key="@string/pref_key_site_permissions"

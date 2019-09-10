@@ -4,12 +4,17 @@
 
 package org.mozilla.fenix.browser
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.RadioButton
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -18,6 +23,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +37,8 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.util.dpToPx
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
@@ -42,8 +50,10 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarController
 import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.QuickActionSheetAction
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -139,6 +149,18 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         ).also { observer ->
             getSessionById()?.register(observer, this, autoPause = true)
         }
+        getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
+    }
+
+    private val toolbarSessionObserver = object : Session.Observer {
+        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+            if (!loading &&
+                context!!.settings.shouldShowTrackingProtectionOnboarding &&
+                session.trackerBlockingEnabled
+            ) {
+                showTrackingProtectionOnboarding()
+            }
+        }
     }
 
     override fun onResume() {
@@ -181,14 +203,26 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
-        val directions = BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-            sessionId = session.id,
-            url = session.url,
-            isSecured = session.securityInfo.secure,
-            isTrackingProtectionOn = session.trackerBlockingEnabled,
-            sitePermissions = sitePermissions,
-            gravity = getAppropriateLayoutGravity()
-        )
+        val directions =
+            BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                sessionId = session.id,
+                url = session.url,
+                isSecured = session.securityInfo.secure,
+                isTrackingProtectionOn = session.trackerBlockingEnabled,
+                sitePermissions = sitePermissions,
+                gravity = getAppropriateLayoutGravity()
+            )
+        nav(R.id.browserFragment, directions)
+    }
+
+    override fun navToTrackingProtectionPanel(session: Session) {
+        val directions =
+            BrowserFragmentDirections.actionBrowserFragmentToTrackingProtectionPanelDialogFragment(
+                sessionId = session.id,
+                url = session.url,
+                trackingProtectionEnabled = session.trackerBlockingEnabled,
+                gravity = getAppropriateLayoutGravity()
+            )
         nav(R.id.browserFragment, directions)
     }
 
@@ -309,8 +343,44 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         }
     }
 
+    private fun showTrackingProtectionOnboarding() {
+        if (!FeatureFlags.etpCategories) {
+            return
+        }
+        context?.let {
+            it.settings.incrementTrackingProtectionOnboardingCount()
+            val layout = LayoutInflater.from(it)
+                .inflate(R.layout.tracking_protection_onboarding_popup, null)
+            layout.onboarding_message.text =
+                it.getString(R.string.etp_onboarding_message, getString(R.string.app_name))
+            val trackingOnboarding =
+                PopupWindow(
+                    layout,
+                    TP_ONBOARDING_WIDTH.dpToPx(resources.displayMetrics),
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    true
+                )
+            val closeButton = layout.findViewById<ImageView>(R.id.close_onboarding)
+            closeButton.increaseTapArea(BUTTON_INCREASE_DPS)
+            closeButton.setOnClickListener {
+                trackingOnboarding.dismiss()
+            }
+            trackingOnboarding.isOutsideTouchable = true
+            trackingOnboarding.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            trackingOnboarding.showAtLocation(
+                browserToolbarView.view,
+                Gravity.BOTTOM or Gravity.START,
+                TP_ONBOARDING_X_OFFSET.dpToPx(resources.displayMetrics),
+                browserToolbarView.view.height
+            )
+        }
+    }
+
     companion object {
+        private const val BUTTON_INCREASE_DPS = 12
+        private const val TP_ONBOARDING_X_OFFSET = 4
         private const val SHARED_TRANSITION_MS = 200L
+        private const val TP_ONBOARDING_WIDTH = 256
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         const val REPORT_SITE_ISSUE_URL =
             "https://webcompat.com/issues/new?url=%s&label=browser-fenix"

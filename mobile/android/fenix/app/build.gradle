@@ -425,6 +425,8 @@ dependencies {
 
     implementation Deps.autodispose
 
+    implementation Deps.lottie
+
     implementation Deps.adjust
     implementation Deps.installreferrer // Required by Adjust
 

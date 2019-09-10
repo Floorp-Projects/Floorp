@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/details_blocking_header"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:paddingStart="0dp"
+            android:text="@string/enhanced_tracking_protection_blocked"
+            android:textStyle="bold" />
+
+        <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
+            android:id="@+id/category_social_media"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:categoryItemDescription="@string/etp_social_media_trackers_description"
+            app:categoryItemIcon="@drawable/ic_social_media_trackers"
+            app:categoryItemTitle="@string/etp_social_media_trackers_title" />
+
+        <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
+            android:id="@+id/category_cookies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:categoryItemDescription="@string/etp_cookies_description"
+            app:categoryItemIcon="@drawable/ic_cookies"
+            app:categoryItemTitle="@string/etp_cookies_title" />
+
+        <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
+            android:id="@+id/category_cryptominers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:categoryItemDescription="@string/etp_cryptominers_description"
+            app:categoryItemIcon="@drawable/ic_cryptominers"
+            app:categoryItemTitle="@string/etp_cryptominers_title" />
+
+        <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
+            android:id="@+id/category_fingerprinters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:categoryItemDescription="@string/etp_fingerprinters_description"
+            app:categoryItemIcon="@drawable/ic_fingerprinters"
+            app:categoryItemTitle="@string/etp_fingerprinters_title" />
+
+        <org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem
+            android:id="@+id/category_tracking_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:categoryItemDescription="@string/etp_tracking_content_description"
+            app:categoryItemIcon="@drawable/ic_tracking_content"
+            app:categoryItemTitle="@string/etp_tracking_content_title" />
+    </LinearLayout>
+</ScrollView>

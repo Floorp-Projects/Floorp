@@ -29,9 +29,9 @@ class Settings private constructor(
     context: Context,
     private val isCrashReportEnabledInBuild: Boolean
 ) : PreferencesHolder {
-
     companion object {
         const val autoBounceMaximumCount = 2
+        const val trackingProtectionOnboardingMaximumCount = 2
         const val FENIX_PREFERENCES = "fenix_preferences"
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
@@ -80,7 +80,10 @@ class Settings private constructor(
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
-                preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true)
+                preferences.getBoolean(
+                    appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+                    true
+                )
 
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
@@ -96,6 +99,12 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_experimentation),
         default = true
     )
+
+    private var trackingProtectionOnboardingShownThisSession = false
+
+    val shouldShowTrackingProtectionOnboarding: Boolean
+        get() = trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
+                !trackingProtectionOnboardingShownThisSession
 
     val shouldAutoBounceQuickActionSheet: Boolean
         get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
@@ -150,6 +159,11 @@ class Settings private constructor(
         default = false
     )
 
+    val useStrictTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
+        false
+    )
+
     val themeSettingString: String
         get() = when {
             shouldFollowDeviceTheme -> appContext.getString(R.string.preference_follow_device_theme)
@@ -177,10 +191,27 @@ class Settings private constructor(
         default = true
     )
 
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val trackingProtectionOnboardingCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
+        0
+    )
+
+    fun incrementTrackingProtectionOnboardingCount() {
+        trackingProtectionOnboardingShownThisSession = true
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
+            trackingProtectionOnboardingCount + 1
+        ).apply()
+    }
+
     fun getSitePermissionsPhoneFeatureAction(feature: PhoneFeature) =
         intToAction(preferences.getInt(feature.getPreferenceKey(appContext), ASK_TO_ALLOW_INT))
 
-    fun setSitePermissionsPhoneFeatureAction(feature: PhoneFeature, value: SitePermissionsRules.Action) {
+    fun setSitePermissionsPhoneFeatureAction(
+        feature: PhoneFeature,
+        value: SitePermissionsRules.Action
+    ) {
         preferences.edit().putInt(feature.getPreferenceKey(appContext), actionToInt(value)).apply()
     }
 
@@ -212,5 +243,8 @@ class Settings private constructor(
     }
 
     val searchWidgetInstalled: Boolean
-        get() = 0 < preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_search_widget_installed), 0)
+        get() = 0 < preferences.getInt(
+            appContext.getPreferenceKey(R.string.pref_key_search_widget_installed),
+            0
+        )
 }

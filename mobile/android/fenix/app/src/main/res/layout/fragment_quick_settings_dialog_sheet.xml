@@ -22,22 +22,22 @@
             style="@style/QuickSettingsText"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="https://wikipedia.org"
-            app:layout_constraintEnd_toEndOf="parent" />
+            tools:text="https://wikipedia.org" />
 
         <TextView
             android:id="@+id/security_info"
             style="@style/QuickSettingsText.Icon"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/url"
             tools:drawableStart="@drawable/mozac_ic_lock"
             tools:drawableTint="@color/photonGreen50"
-            tools:text="Secure connection"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            tools:text="Secure connection" />
 
         <View
             android:id="@+id/line_divider_security"
@@ -49,62 +49,71 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/security_info" />
 
-        <Switch
-            android:id="@+id/tracking_protection"
-            style="@style/QuickSettingsText.Icon"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/tracking_protection_view"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/quicksettings_item_height"
-            tools:drawableStart="@drawable/ic_tracking_protection"
-            android:paddingEnd="24dp"
-            android:text="@string/preferences_tracking_protection"
-            app:layout_constraintBottom_toTopOf="@id/tracking_protection_action"
-            app:layout_constraintTop_toBottomOf="@id/line_divider_security" />
-
-        <TextView
-            android:id="@+id/tracking_protection_action"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:gravity="top"
-            android:paddingStart="48dp"
-            android:text="@string/preferences_tracking_protection_turned_off_globally"
-            android:textColor="?accentBright"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/report_site_issue_action"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
-
-        <TextView
-            android:id="@+id/report_site_issue_action"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:gravity="top"
-            android:paddingStart="48dp"
-            android:text="@string/browser_menu_report_issue"
-            android:textColor="?accentUsedOnDarkBackground"
-            app:layout_constraintBottom_toTopOf="@id/line_divider"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection_action" />
-
-        <View
-            android:id="@+id/line_divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
+            android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@id/camera_icon"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/line_divider_security">
+
+            <Switch
+                android:id="@+id/tracking_protection"
+                style="@style/QuickSettingsText.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/quicksettings_item_height"
+                android:paddingEnd="24dp"
+                android:text="@string/preferences_tracking_protection"
+                app:layout_constraintBottom_toTopOf="@id/tracking_protection_action"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:drawableStart="@drawable/ic_tracking_protection" />
+
+            <TextView
+                android:id="@+id/tracking_protection_action"
+                style="@style/QuickSettingsText.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/quicksettings_item_height"
+                android:gravity="top"
+                android:paddingStart="48dp"
+                android:text="@string/preferences_tracking_protection_turned_off_globally"
+                android:textColor="?accentBright"
+                android:visibility="gone"
+                app:layout_constraintBottom_toTopOf="@id/report_site_issue_action"
+                app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+
+            <TextView
+                android:id="@+id/report_site_issue_action"
+                style="@style/QuickSettingsText.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/quicksettings_item_height"
+                android:gravity="top"
+                android:paddingStart="48dp"
+                android:text="@string/browser_menu_report_issue"
+                android:textColor="?accentUsedOnDarkBackground"
+                app:layout_constraintBottom_toTopOf="@id/line_divider"
+                app:layout_constraintTop_toBottomOf="@id/tracking_protection_action" />
+
+
+            <View
+                android:id="@+id/line_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="?neutralFaded"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             android:id="@+id/camera_icon"
             style="@style/QuickSettingsText.Icon"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
-            android:text="@string/preference_phone_feature_camera"
             android:drawableStart="@drawable/ic_camera"
+            android:text="@string/preference_phone_feature_camera"
+            app:layout_constraintEnd_toStartOf="@+id/camera_action_label"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/line_divider"
-            app:layout_constraintEnd_toStartOf="@+id/camera_action_label"/>
+            app:layout_constraintTop_toBottomOf="@id/tracking_protection_view" />
 
         <TextView
             android:id="@+id/camera_action_label"
@@ -112,7 +121,7 @@
             android:layout_width="wrap_content"
             android:layout_height="@dimen/quicksettings_item_height"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/line_divider"
+            app:layout_constraintTop_toBottomOf="@id/tracking_protection_view"
             tools:text="Allowed" />
 
         <TextView
@@ -120,11 +129,11 @@
             style="@style/QuickSettingsText.Icon"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
-            android:text="@string/preference_phone_feature_microphone"
             android:drawableStart="@drawable/ic_microphone"
+            android:text="@string/preference_phone_feature_microphone"
+            app:layout_constraintEnd_toStartOf="@+id/microphone_action_label"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/camera_icon"
-            app:layout_constraintEnd_toStartOf="@+id/microphone_action_label"/>
+            app:layout_constraintTop_toBottomOf="@id/camera_icon" />
 
         <TextView
             android:id="@+id/microphone_action_label"
@@ -140,11 +149,11 @@
             style="@style/QuickSettingsText.Icon"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
-            android:text="@string/preference_phone_feature_notification"
             android:drawableStart="@drawable/ic_notifications"
+            android:text="@string/preference_phone_feature_notification"
+            app:layout_constraintEnd_toStartOf="@+id/notification_action_label"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/microphone_icon"
-            app:layout_constraintEnd_toStartOf="@+id/notification_action_label" />
+            app:layout_constraintTop_toBottomOf="@id/microphone_icon" />
 
         <TextView
             android:id="@+id/notification_action_label"
@@ -160,11 +169,11 @@
             style="@style/QuickSettingsText.Icon"
             android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
-            android:text="@string/preference_phone_feature_location"
             android:drawableStart="@drawable/ic_location"
+            android:text="@string/preference_phone_feature_location"
+            app:layout_constraintEnd_toStartOf="@+id/location_action_label"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notification_icon"
-            app:layout_constraintEnd_toStartOf="@+id/location_action_label"/>
+            app:layout_constraintTop_toBottomOf="@id/notification_icon" />
 
         <TextView
             android:id="@+id/location_action_label"

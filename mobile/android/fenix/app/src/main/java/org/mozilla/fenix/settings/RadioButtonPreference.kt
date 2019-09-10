@@ -17,13 +17,14 @@ import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 
-class RadioButtonPreference @JvmOverloads constructor(
+open class RadioButtonPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : Preference(context, attrs) {
     private val radioGroups = mutableListOf<RadioButtonPreference>()
-    private lateinit var summaryView: TextView
-    private lateinit var radioButton: RadioButton
+    private var summaryView: TextView? = null
+    private var titleView: TextView? = null
+    private var radioButton: RadioButton? = null
     private var shouldSummaryBeParsedAsHtmlContent: Boolean = true
     private var defaultValue: Boolean = false
     private var clickListener: (() -> Unit)? = null
@@ -34,14 +35,21 @@ class RadioButtonPreference @JvmOverloads constructor(
         context.withStyledAttributes(
             attrs,
             androidx.preference.R.styleable.Preference,
-            getAttr(context, androidx.preference.R.attr.preferenceStyle, android.R.attr.preferenceStyle),
+            getAttr(
+                context,
+                androidx.preference.R.attr.preferenceStyle,
+                android.R.attr.preferenceStyle
+            ),
             0
         ) {
             defaultValue = when {
                 hasValue(androidx.preference.R.styleable.Preference_defaultValue) ->
                     getBoolean(androidx.preference.R.styleable.Preference_defaultValue, false)
                 hasValue(androidx.preference.R.styleable.Preference_android_defaultValue) ->
-                    getBoolean(androidx.preference.R.styleable.Preference_android_defaultValue, false)
+                    getBoolean(
+                        androidx.preference.R.styleable.Preference_android_defaultValue,
+                        false
+                    )
                 else -> false
             }
         }
@@ -53,6 +61,17 @@ class RadioButtonPreference @JvmOverloads constructor(
 
     fun onClickListener(listener: (() -> Unit)) {
         clickListener = listener
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        if (!enabled) {
+            summaryView?.alpha = HALF_ALPHA
+            titleView?.alpha = HALF_ALPHA
+        } else {
+            summaryView?.alpha = FULL_ALPHA
+            titleView?.alpha = FULL_ALPHA
+        }
     }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
@@ -75,44 +94,53 @@ class RadioButtonPreference @JvmOverloads constructor(
 
     private fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
-        radioButton.isChecked = isChecked
+        radioButton?.isChecked = isChecked
         context.settings.preferences.edit().putBoolean(key, isChecked)
             .apply()
     }
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
-        radioButton.isChecked = context.settings.preferences.getBoolean(key, false)
-        radioButton.setStartCheckedIndicator()
+        radioButton?.isChecked = context.settings.preferences.getBoolean(key, defaultValue)
+        radioButton?.setStartCheckedIndicator()
     }
 
     private fun toggleRadioGroups() {
-        if (radioButton.isChecked) {
+        if (radioButton?.isChecked == true) {
             radioGroups.forEach { it.updateRadioValue(false) }
         }
     }
 
     private fun bindTitle(holder: PreferenceViewHolder) {
-        val titleView = holder.findViewById(R.id.title) as TextView
+        titleView = holder.findViewById(R.id.title) as TextView
+        titleView?.alpha = if (isEnabled) FULL_ALPHA else HALF_ALPHA
 
         if (!title.isNullOrEmpty()) {
-            titleView.text = title
+            titleView?.text = title
         }
     }
 
     private fun bindSummaryView(holder: PreferenceViewHolder) {
         summaryView = holder.findViewById(R.id.widget_summary) as TextView
 
-        if (!summary.isNullOrEmpty()) {
-            summaryView.text = if (shouldSummaryBeParsedAsHtmlContent) {
-                HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
-            } else {
-                summary
-            }
+        summaryView?.alpha = if (isEnabled) FULL_ALPHA else HALF_ALPHA
+        summaryView?.let {
+            if (!summary.isNullOrEmpty()) {
+                it.text = if (shouldSummaryBeParsedAsHtmlContent) {
+                    HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
+                } else {
+                    summary
+                }
 
-            summaryView.visibility = View.VISIBLE
-        } else {
-            summaryView.visibility = View.GONE
+                it.visibility = View.VISIBLE
+            } else {
+                it.visibility = View.GONE
+            }
         }
+    }
+
+    companion object {
+        const val HALF_ALPHA = 0.5F
+        const val FULL_ALPHA = 1F
     }
 }

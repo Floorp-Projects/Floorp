@@ -98,7 +98,10 @@ class Core(private val context: Context) {
                 withContext(Dispatchers.IO) {
                     sessionStorage.restore()
                 }?.let { snapshot ->
-                    sessionManager.restore(snapshot, updateSelection = (sessionManager.selectedSession == null))
+                    sessionManager.restore(
+                        snapshot,
+                        updateSelection = (sessionManager.selectedSession == null)
+                    )
                 }
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
@@ -151,7 +154,9 @@ class Core(private val context: Context) {
         normalMode: Boolean = context.settings.shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
-        val trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+        val trackingProtectionPolicy =
+            if (context.settings.useStrictTrackingProtection) TrackingProtectionPolicy.strict() else
+                TrackingProtectionPolicy.recommended()
 
         return when {
             normalMode && privateMode -> trackingProtectionPolicy

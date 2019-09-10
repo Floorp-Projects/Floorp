@@ -7,6 +7,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="12dp"
-    android:text="@string/preferences_tracking_protection_exceptions_description"
+    android:text="@string/enhanced_tracking_protection_exceptions"
     android:textColor="?primaryText"
     android:textSize="16sp" />

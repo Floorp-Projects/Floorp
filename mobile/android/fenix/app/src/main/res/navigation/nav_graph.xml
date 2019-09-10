@@ -100,8 +100,8 @@
             app:nullable="true" />
         <argument
             android:name="showShortcutEnginePicker"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_searchFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment"
@@ -185,22 +185,28 @@
         <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_trackingProtectionPanelDialogFragment"
+            app:destination="@id/trackingProtectionPanelDialogFragment" />
     </fragment>
 
     <fragment
-            android:id="@+id/externalAppBrowserFragment"
-            android:name="org.mozilla.fenix.customtabs.ExternalAppBrowserFragment"
-            tools:layout="@layout/fragment_browser">
+        android:id="@+id/externalAppBrowserFragment"
+        android:name="org.mozilla.fenix.customtabs.ExternalAppBrowserFragment"
+        tools:layout="@layout/fragment_browser">
         <argument
-                android:name="activeSessionId"
-                app:argType="string"
-                app:nullable="true" />
+            android:name="activeSessionId"
+            app:argType="string"
+            app:nullable="true" />
         <action
-                android:id="@+id/action_externalAppBrowserFragment_to_shareFragment"
-                app:destination="@id/shareFragment" />
+            android:id="@+id/action_externalAppBrowserFragment_to_shareFragment"
+            app:destination="@id/shareFragment" />
         <action
-                android:id="@+id/action_externalAppBrowserFragment_to_quickSettingsSheetDialogFragment"
-                app:destination="@id/quickSettingsSheetDialogFragment" />
+            android:id="@+id/action_externalAppBrowserFragment_to_quickSettingsSheetDialogFragment"
+            app:destination="@id/quickSettingsSheetDialogFragment" />
+        <action
+            android:id="@+id/action_externalAppBrowserFragment_to_trackingProtectionPanelDialogFragment"
+            app:destination="@id/trackingProtectionPanelDialogFragment" />
     </fragment>
 
     <fragment
@@ -396,13 +402,12 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="@string/preferences_sync">
-    </fragment>
+        android:label="@string/preferences_sync"></fragment>
 
     <fragment
         android:id="@+id/aboutFragment"
         android:name="org.mozilla.fenix.settings.AboutFragment"
-        android:label="AboutFragment" >
+        android:label="AboutFragment">
         <action
             android:id="@+id/action_aboutFragment_to_browserFragment"
             app:destination="@id/browserFragment" />
@@ -414,7 +419,7 @@
         <action
             android:id="@+id/action_crashReporterFragment_to_homeFragment"
             app:destination="@id/homeFragment"
-            app:popUpTo="@id/nav_graph"/>
+            app:popUpTo="@id/nav_graph" />
         <argument
             android:name="crashIntent"
             app:argType="android.content.Intent" />
@@ -430,6 +435,12 @@
         <action
             android:id="@+id/action_trackingProtectionFragment_to_exceptionsFragment"
             app:destination="@id/exceptionsFragment" />
+        <action
+            android:id="@+id/action_trackingProtectionFragment_to_trackingProtectionBlockingFragment"
+            app:destination="@id/trackingProtectionBlockingFragment" />
+        <action
+            android:id="@+id/action_trackingProtectionFragment_to_browserFragment"
+            app:destination="@id/browserFragment" />
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
@@ -515,6 +526,36 @@
     <dialog
         android:id="@+id/signOutFragment"
         android:name="org.mozilla.fenix.settings.SignOutFragment" />
-    <action android:id="@+id/action_global_shareFragment"
-            app:destination="@id/shareFragment"/>
+    <action
+        android:id="@+id/action_global_shareFragment"
+        app:destination="@id/shareFragment" />
+    <dialog
+        android:id="@+id/trackingProtectionPanelDialogFragment"
+        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragment"
+        android:label="TrackingProtectionPanelDialogFragment">
+        <argument
+            android:name="sessionId"
+            app:argType="string" />
+        <argument
+            android:name="url"
+            app:argType="string" />
+        <argument
+            android:name="trackingProtectionEnabled"
+            app:argType="boolean" />
+        <argument
+            android:name="gravity"
+            android:defaultValue="80"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_trackingProtectionPanelDialogFragment_to_trackingProtectionFragment"
+            app:destination="@id/trackingProtectionFragment" />
+    </dialog>
+    <fragment
+        android:id="@+id/trackingProtectionBlockingFragment"
+        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionBlockingFragment"
+        android:label="TrackingProtectionBlockingFragment">
+        <argument
+            android:name="strictMode"
+            app:argType="boolean" />
+    </fragment>
 </navigation>

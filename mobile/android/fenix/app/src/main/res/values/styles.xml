@@ -54,6 +54,7 @@
         <item name="homeBackground">@color/foundation_normal_theme</item>
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
         <item name="privateBrowsingButtonAccent">@color/primary_text_normal_theme</item>
+        <item name="shieldLottieFile">@raw/shield_json</item>
     </style>
 
     <style name="NormalTheme" parent="NormalThemeBase" />
@@ -134,6 +135,7 @@
         <item name="homeBackground">@drawable/private_home_background_gradient</item>
         <item name="privateBrowsingButtonBackground">@color/primary_text_private_theme</item>
         <item name="privateBrowsingButtonAccent">@color/above_private_theme</item>
+        <item name="shieldLottieFile">@raw/shield_json_dark</item>
 
     </style>
 
@@ -271,6 +273,7 @@
         <item name="android:textColor">@color/state_list_text_color</item>
         <item name="android:textSize">14sp</item>
         <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:layout_alignParentStart">true</item>
     </style>

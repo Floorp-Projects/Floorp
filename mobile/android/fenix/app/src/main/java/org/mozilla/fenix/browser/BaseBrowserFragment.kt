@@ -207,6 +207,10 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 showQuickSettingsDialog()
             }
 
+            browserToolbarView.view.setOnTrackingProtectionClickedListener {
+                showTrackingProtectionPanel()
+            }
+
             contextMenuFeature.set(
                 feature = ContextMenuFeature(
                     requireFragmentManager(),
@@ -487,6 +491,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
     protected abstract fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?)
 
+    protected abstract fun navToTrackingProtectionPanel(session: Session)
+
     /**
      * Returns the top and bottom margins.
      */
@@ -527,6 +533,13 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             view?.let {
                 navToQuickSettingsSheet(session, sitePermissions)
             }
+        }
+    }
+
+    private fun showTrackingProtectionPanel() {
+        val session = getSessionById() ?: return
+        view?.let {
+            navToTrackingProtectionPanel(session)
         }
     }
 

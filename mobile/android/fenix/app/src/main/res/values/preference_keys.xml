@@ -77,10 +77,13 @@
     <string name="pref_key_follow_device_theme" translatable="false">pref_key_follow_device_theme</string>
 
     <!-- Tracking Protection Settings -->
+    <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>
     <string name="pref_key_tracking_protection" translatable="false">pref_key_tracking_protection</string>
     <string name="pref_key_tracking_protection_exceptions" translatable="false">pref_key_tracking_protection_exceptions</string>
-
+    <string name="pref_key_tracking_protection_standard" translatable="false">pref_key_tracking_protection_standard</string>
+    <string name="pref_key_tracking_protection_strict" translatable="false">pref_key_tracking_protection_strict</string>
+    <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
     <!-- Quick Action Sheet -->
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
     <string name="pref_key_reader_mode_notification" translatable="false">pref_key_reader_mode_notification</string>

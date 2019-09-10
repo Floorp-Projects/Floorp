@@ -9,9 +9,11 @@ import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import io.reactivex.Observer
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 
@@ -20,15 +22,23 @@ class TrackingProtectionSettingView(
     private val actionEmitter: Observer<QuickSettingsAction>
 ) : View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private val trackingProtectionSwitch: Switch = container.findViewById(R.id.tracking_protection)
-    private val trackingProtectionAction: TextView = container.findViewById(R.id.tracking_protection_action)
+    private val trackingProtectionAction: TextView =
+        container.findViewById(R.id.tracking_protection_action)
+    private val trackingProtectionSettingView: ConstraintLayout =
+        container.findViewById(R.id.tracking_protection_view)
 
     init {
         trackingProtectionSwitch.putCompoundDrawablesRelativeWithIntrinsicBounds(
-            start = AppCompatResources.getDrawable(container.context, R.drawable.ic_tracking_protection)
+            start = AppCompatResources.getDrawable(
+                container.context,
+                R.drawable.ic_tracking_protection
+            )
         )
     }
 
     fun bind(isTrackingProtectionOn: Boolean) {
+        trackingProtectionSettingView.visibility =
+            if (FeatureFlags.etpCategories) View.GONE else View.VISIBLE
         val globalTPSetting = trackingProtectionSwitch.context.settings.shouldUseTrackingProtection
 
         trackingProtectionAction.isVisible = !globalTPSetting

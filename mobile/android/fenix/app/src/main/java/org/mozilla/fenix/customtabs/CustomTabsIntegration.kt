@@ -10,13 +10,18 @@ import android.view.Gravity
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
+import com.airbnb.lottie.LottieCompositionFactory
+import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.theme.ThemeManager
 
 class CustomTabsIntegration(
     context: Context,
@@ -50,6 +55,25 @@ class CustomTabsIntegration(
 
         // Hide the Quick Action Bar.
         quickActionbar.visibility = View.GONE
+
+        val task = LottieCompositionFactory
+            .fromRawRes(
+                context,
+                ThemeManager.resolveAttribute(R.attr.shieldLottieFile, context)
+            )
+        task.addListener { result ->
+            val lottieDrawable = LottieDrawable()
+            lottieDrawable.composition = result
+            toolbar.displayTrackingProtectionIcon =
+                context.settings.shouldUseTrackingProtection && FeatureFlags.etpCategories
+            toolbar.displaySeparatorView = false
+
+            toolbar.setTrackingProtectionIcons(
+                iconOnNoTrackersBlocked = context.getDrawable(R.drawable.ic_tracking_protection_enabled)!!,
+                iconOnTrackersBlocked = lottieDrawable,
+                iconDisabledForSite = context.getDrawable(R.drawable.ic_tracking_protection_disabled)!!
+            )
+        }
     }
 
     private val customTabToolbarMenu by lazy {

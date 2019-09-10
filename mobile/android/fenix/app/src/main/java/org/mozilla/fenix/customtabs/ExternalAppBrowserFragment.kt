@@ -78,6 +78,18 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         nav(R.id.externalAppBrowserFragment, directions)
     }
 
+    override fun navToTrackingProtectionPanel(session: Session) {
+        val directions =
+            ExternalAppBrowserFragmentDirections
+                .actionExternalAppBrowserFragmentToTrackingProtectionPanelDialogFragment(
+                sessionId = session.id,
+                url = session.url,
+                trackingProtectionEnabled = session.trackerBlockingEnabled,
+                gravity = getAppropriateLayoutGravity()
+            )
+        nav(R.id.externalAppBrowserFragment, directions)
+    }
+
     override fun getEngineMargins(): Pair<Int, Int> {
         val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
         return toolbarSize to 0

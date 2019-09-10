@@ -33,10 +33,23 @@
     <attr name="toolbarStartGradient" format="reference"/>
     <attr name="toolbarCenterGradient" format="reference"/>
     <attr name="toolbarEndGradient" format="reference"/>
+    <attr name="shieldLottieFile" format="reference" />
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />
         <attr name="listItemIcon" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="TrackingProtectionCategory">
+        <attr name="categoryItemTitle" format="reference" />
+        <attr name="categoryItemDescription" format="reference" />
+        <attr name="categoryItemIcon" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SwitchWithDescription">
+        <attr name="switchTitle" format="reference" />
+        <attr name="switchDescription" format="reference" />
+        <attr name="switchIcon" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="DeleteBrowsingDataItem">

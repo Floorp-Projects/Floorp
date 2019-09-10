@@ -56,6 +56,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.AboutFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
+import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
@@ -236,6 +237,10 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             )
         BrowserDirection.FromAbout ->
             AboutFragmentDirections.actionAboutFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromTrackingProtection ->
+            TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToBrowserFragment(
+            customTabSessionId
+        )
     }
 
     private fun load(

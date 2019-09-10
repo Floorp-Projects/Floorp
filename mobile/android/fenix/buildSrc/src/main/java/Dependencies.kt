@@ -64,6 +64,9 @@ object Versions {
     const val robolectric = "4.2"
 
     const val google_ads_id_version = "16.0.0"
+
+    const val airbnb_lottie = "3.0.7"
+
     const val androidx_fragment_testing_version = "1.2.0-alpha02"
 }
 
@@ -217,4 +220,6 @@ object Deps {
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
     const val androidx_fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_fragment_testing_version}"
+
+    const val lottie = "com.airbnb.android:lottie:${Versions.airbnb_lottie}"
 }

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panel_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?foundation">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/normal_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/url"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="https://wikipedia.org" />
+
+        <org.mozilla.fenix.trackingprotection.SwitchWithDescription
+            android:id="@+id/tracking_protection"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/preference_enhanced_tracking_protection"
+            app:layout_constraintTop_toBottomOf="@id/url"
+            app:switchDescription="@string/etp_panel_on"
+            app:switchIcon="@drawable/ic_tracking_protection"
+            app:switchTitle="@string/preference_enhanced_tracking_protection" />
+
+        <TextView
+            android:id="@+id/blocking_header"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/enhanced_tracking_protection_blocked"
+            android:textColor="?attr/primaryText"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+
+        <TextView
+            android:id="@+id/cross_site_tracking"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_cookies"
+            android:text="@string/etp_cookies_title"
+            app:layout_constraintTop_toBottomOf="@id/blocking_header" />
+
+        <TextView
+            android:id="@+id/fingerprinters"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_fingerprinters"
+            android:text="@string/etp_fingerprinters_title"
+            app:layout_constraintTop_toBottomOf="@id/cross_site_tracking" />
+
+        <TextView
+            android:id="@+id/cryptominers"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_cryptominers"
+            android:text="@string/etp_cryptominers_title"
+            app:layout_constraintTop_toBottomOf="@id/fingerprinters" />
+
+        <TextView
+            android:id="@+id/social_media_trackers"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_social_media_trackers"
+            android:text="@string/etp_social_media_trackers_title"
+            app:layout_constraintTop_toBottomOf="@id/cryptominers" />
+
+        <TextView
+            android:id="@+id/tracking_content"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_tracking_content"
+            android:text="@string/etp_tracking_content_title"
+            app:layout_constraintTop_toBottomOf="@id/social_media_trackers" />
+
+        <TextView
+            android:id="@+id/not_blocking_header"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/enhanced_tracking_protection_allowed"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content" />
+
+        <TextView
+            android:id="@+id/cross_site_tracking_loaded"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_cookies"
+            android:text="@string/etp_cookies_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/not_blocking_header" />
+
+        <TextView
+            android:id="@+id/fingerprinters_loaded"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_fingerprinters"
+            android:text="@string/etp_fingerprinters_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cross_site_tracking_loaded" />
+
+        <TextView
+            android:id="@+id/cryptominers_loaded"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_cryptominers"
+            android:text="@string/etp_cryptominers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/fingerprinters_loaded" />
+
+        <TextView
+            android:id="@+id/social_media_trackers_loaded"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_social_media_trackers"
+            android:text="@string/etp_social_media_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cryptominers_loaded" />
+
+        <TextView
+            android:id="@+id/tracking_content_loaded"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_tracking_content"
+            android:text="@string/etp_tracking_content_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/social_media_trackers_loaded" />
+
+        <View
+            android:id="@+id/line_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?neutralFaded"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content_loaded" />
+
+        <TextView
+            android:id="@+id/protection_settings"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:drawableStart="@drawable/ic_settings"
+            android:paddingEnd="24dp"
+            android:text="@string/etp_settings"
+            app:layout_constraintTop_toBottomOf="@id/line_divider" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/details_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/details_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:src="@drawable/mozac_ic_back"
+            android:tint="?attr/primaryText"
+            app:layout_constraintBottom_toBottomOf="@+id/category_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/category_title" />
+
+        <TextView
+            android:id="@+id/category_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginTop="11dp"
+            android:layout_marginEnd="19dp"
+            android:textColor="?attr/primaryText"
+            android:textSize="16sp"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@tools:sample/lorem" />
+
+        <TextView
+            android:id="@+id/category_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="19dp"
+            android:textColor="?secondaryText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/category_title"
+            tools:text="@tools:sample/lorem" />
+
+        <View
+            android:id="@+id/line_divider_details"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="?neutralFaded"
+            app:layout_constraintTop_toBottomOf="@id/category_description" />
+
+        <TextView
+            android:id="@+id/details_blocking_header"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="26dp"
+            android:paddingStart="0dp"
+            android:text="@string/enhanced_tracking_protection_blocked"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_divider_details" />
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/blocking_scrollview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:scrollbars="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/details_blocking_header"
+            app:layout_constraintTop_toBottomOf="@id/details_blocking_header">
+
+            <TextView
+                android:id="@+id/blocking_text_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="52dp"
+                android:layout_marginEnd="26dp"
+                android:layout_marginBottom="12dp"
+                tools:text="@tools:sample/lorem/random" />
+        </androidx.core.widget.NestedScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
