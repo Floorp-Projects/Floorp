@@ -21,7 +21,7 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.coroutines.EmptyCoroutineContext
 
-private const val DELAY_STATE_UPDATE_MS = 250L
+private const val DELAY_STATE_UPDATE_MS = 100L
 
 /**
  * A state machine that subscribes to all [Session] instances and watches changes to their [Media] to create an
