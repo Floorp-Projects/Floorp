@@ -3394,55 +3394,55 @@ const size_t BINAST_INTERFACE_AND_FIELD_LIMIT = 275;
  * (sorted by alphabetical order)
  */
 #define FOR_EACH_BIN_VARIANT(F)                               \
-  F(AssertedDeclaredKindConstLexical, "const lexical")        \
-  F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \
-  F(AssertedDeclaredKindOrVariableDeclarationKindVar, "var")  \
+  F(UnaryOperatorNot, "!")                                    \
+  F(BinaryOperatorNeq, "!=")                                  \
+  F(BinaryOperatorStrictNeq, "!==")                           \
+  F(BinaryOperatorMod, "%")                                   \
+  F(CompoundAssignmentOperatorModAssign, "%=")                \
   F(BinaryOperatorBitAnd, "&")                                \
-  F(BinaryOperatorBitOr, "|")                                 \
-  F(BinaryOperatorBitXor, "^")                                \
+  F(BinaryOperatorLogicalAnd, "&&")                           \
+  F(CompoundAssignmentOperatorBitAndAssign, "&=")             \
+  F(BinaryOperatorMul, "*")                                   \
+  F(BinaryOperatorPow, "**")                                  \
+  F(CompoundAssignmentOperatorPowAssign, "**=")               \
+  F(CompoundAssignmentOperatorMulAssign, "*=")                \
+  F(BinaryOperatorOrUnaryOperatorPlus, "+")                   \
+  F(UpdateOperatorIncr, "++")                                 \
+  F(CompoundAssignmentOperatorPlusAssign, "+=")               \
   F(BinaryOperatorComma, ",")                                 \
+  F(BinaryOperatorOrUnaryOperatorMinus, "-")                  \
+  F(UpdateOperatorDecr, "--")                                 \
+  F(CompoundAssignmentOperatorMinusAssign, "-=")              \
   F(BinaryOperatorDiv, "/")                                   \
+  F(CompoundAssignmentOperatorDivAssign, "/=")                \
+  F(BinaryOperatorLessThan, "<")                              \
+  F(BinaryOperatorLsh, "<<")                                  \
+  F(CompoundAssignmentOperatorLshAssign, "<<=")               \
+  F(BinaryOperatorLeqThan, "<=")                              \
   F(BinaryOperatorEq, "==")                                   \
-  F(BinaryOperatorGeqThan, ">=")                              \
+  F(BinaryOperatorStrictEq, "===")                            \
   F(BinaryOperatorGreaterThan, ">")                           \
+  F(BinaryOperatorGeqThan, ">=")                              \
+  F(BinaryOperatorRsh, ">>")                                  \
+  F(CompoundAssignmentOperatorRshAssign, ">>=")               \
+  F(BinaryOperatorUrsh, ">>>")                                \
+  F(CompoundAssignmentOperatorUrshAssign, ">>>=")             \
+  F(BinaryOperatorBitXor, "^")                                \
+  F(CompoundAssignmentOperatorBitXorAssign, "^=")             \
+  F(VariableDeclarationKindConst, "const")                    \
+  F(AssertedDeclaredKindConstLexical, "const lexical")        \
+  F(UnaryOperatorDelete, "delete")                            \
   F(BinaryOperatorIn, "in")                                   \
   F(BinaryOperatorInstanceof, "instanceof")                   \
-  F(BinaryOperatorLeqThan, "<=")                              \
-  F(BinaryOperatorLessThan, "<")                              \
-  F(BinaryOperatorLogicalAnd, "&&")                           \
-  F(BinaryOperatorLogicalOr, "||")                            \
-  F(BinaryOperatorLsh, "<<")                                  \
-  F(BinaryOperatorMod, "%")                                   \
-  F(BinaryOperatorMul, "*")                                   \
-  F(BinaryOperatorNeq, "!=")                                  \
-  F(BinaryOperatorOrUnaryOperatorMinus, "-")                  \
-  F(BinaryOperatorOrUnaryOperatorPlus, "+")                   \
-  F(BinaryOperatorPow, "**")                                  \
-  F(BinaryOperatorRsh, ">>")                                  \
-  F(BinaryOperatorStrictEq, "===")                            \
-  F(BinaryOperatorStrictNeq, "!==")                           \
-  F(BinaryOperatorUrsh, ">>>")                                \
-  F(CompoundAssignmentOperatorBitAndAssign, "&=")             \
-  F(CompoundAssignmentOperatorBitOrAssign, "|=")              \
-  F(CompoundAssignmentOperatorBitXorAssign, "^=")             \
-  F(CompoundAssignmentOperatorDivAssign, "/=")                \
-  F(CompoundAssignmentOperatorLshAssign, "<<=")               \
-  F(CompoundAssignmentOperatorMinusAssign, "-=")              \
-  F(CompoundAssignmentOperatorModAssign, "%=")                \
-  F(CompoundAssignmentOperatorMulAssign, "*=")                \
-  F(CompoundAssignmentOperatorPlusAssign, "+=")               \
-  F(CompoundAssignmentOperatorPowAssign, "**=")               \
-  F(CompoundAssignmentOperatorRshAssign, ">>=")               \
-  F(CompoundAssignmentOperatorUrshAssign, ">>>=")             \
-  F(UnaryOperatorBitNot, "~")                                 \
-  F(UnaryOperatorDelete, "delete")                            \
-  F(UnaryOperatorNot, "!")                                    \
+  F(VariableDeclarationKindLet, "let")                        \
+  F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \
   F(UnaryOperatorTypeof, "typeof")                            \
+  F(AssertedDeclaredKindOrVariableDeclarationKindVar, "var")  \
   F(UnaryOperatorVoid, "void")                                \
-  F(UpdateOperatorDecr, "--")                                 \
-  F(UpdateOperatorIncr, "++")                                 \
-  F(VariableDeclarationKindConst, "const")                    \
-  F(VariableDeclarationKindLet, "let")
+  F(BinaryOperatorBitOr, "|")                                 \
+  F(CompoundAssignmentOperatorBitOrAssign, "|=")              \
+  F(BinaryOperatorLogicalOr, "||")                            \
+  F(UnaryOperatorBitNot, "~")
 
 enum class BinASTVariant : uint16_t {
 #define EMIT_ENUM(name, _) name,
@@ -3850,6 +3850,16 @@ const char* describeBinASTVariant(const BinASTVariant& variant);
  * Return a string describing a `BinASTList`.
  */
 const char* describeBinASTList(const BinASTList& list);
+
+/**
+ * Return a sort key for sorting `BinASTKind`s alphabetically.
+ */
+size_t getBinASTKindSortKey(const BinASTKind& kind);
+
+/**
+ * Return a sort key for sorting `BinASTVariant`s alphabetically.
+ */
+size_t getBinASTVariantSortKey(const BinASTVariant& variant);
 
 }  // namespace frontend
 }  // namespace js

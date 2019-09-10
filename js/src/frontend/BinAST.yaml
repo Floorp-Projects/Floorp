@@ -366,6 +366,16 @@ hpp:
        */
       const char* describeBinASTList(const BinASTList& list);
 
+      /**
+       * Return a sort key for sorting `BinASTKind`s alphabetically.
+       */
+      size_t getBinASTKindSortKey(const BinASTKind& kind);
+
+      /**
+       * Return a sort key for sorting `BinASTVariant`s alphabetically.
+       */
+      size_t getBinASTVariantSortKey(const BinASTVariant& variant);
+
       } // namespace frontend
       } // namespace js
 
