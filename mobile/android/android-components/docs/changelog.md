@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 12.0.0-SNAPSHOT  (In Development)
+# 13.0.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/72?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v12.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/73?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 12.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v11.0.0...v12.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/72?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v12.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-engine-gecko-nightly**, **browser-engine-gecko-beta** and **browser-engine-gecko**
   * The `TrackingProtectionPolicy.recommended()` and `TrackingProtectionPolicy.strict()`  policies are now aligned with standard and strict (respectively) policies on FireFox desktop, for more details see the [issue #4349](https://github.com/mozilla-mobile/android-components/issues/4349).
