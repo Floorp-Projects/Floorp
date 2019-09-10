@@ -53,51 +53,6 @@ function getDialogDoc() {
   return null;
 }
 
-async function submitForm(browser, formAction, selectorValues) {
-  function contentSubmitForm([contentFormAction, contentSelectorValues]) {
-    let doc = content.document;
-    let form = doc.getElementById("form");
-    form.action = contentFormAction;
-    for (let [sel, value] of Object.entries(contentSelectorValues)) {
-      try {
-        doc.querySelector(sel).value = value;
-      } catch (ex) {
-        throw new Error(`submitForm: Couldn't set value of field at: ${sel}`);
-      }
-    }
-    form.submit();
-  }
-  await ContentTask.spawn(
-    browser,
-    [formAction, selectorValues],
-    contentSubmitForm
-  );
-  let result = await getResponseResult(browser, formAction);
-  return result;
-}
-
-async function getResponseResult(browser, resultUrl) {
-  let fieldValues = await ContentTask.spawn(
-    browser,
-    [resultUrl],
-    async function(contentResultUrl) {
-      await ContentTaskUtils.waitForCondition(() => {
-        return (
-          content.location.pathname.endsWith(contentResultUrl) &&
-          content.document.readyState == "complete"
-        );
-      }, `Wait for form submission load (${contentResultUrl})`);
-      let username = content.document.getElementById("user").textContent;
-      let password = content.document.getElementById("pass").textContent;
-      return {
-        username,
-        password,
-      };
-    }
-  );
-  return fieldValues;
-}
-
 async function waitForAuthPrompt() {
   let promptDoc = await TestUtils.waitForCondition(() => {
     return getAuthPrompt();
@@ -170,10 +125,14 @@ add_task(async function test_normal_popup_notification_1() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#user": "notifyu1",
-        "#pass": "notifyp1",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#user": "notifyu1",
+          "#pass": "notifyp1",
+        }
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
@@ -216,10 +175,14 @@ add_task(async function test_private_popup_notification_2() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#user": "notifyu1",
-        "#pass": "notifyp1",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#user": "notifyu1",
+          "#pass": "notifyp1",
+        }
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
@@ -287,10 +250,14 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#user": "notifyu1",
-        "#pass": "notifyp1",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#user": "notifyu1",
+          "#pass": "notifyp1",
+        }
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
@@ -335,10 +302,14 @@ add_task(async function test_normal_popup_notification_3() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#user": "notifyu1",
-        "#pass": "notifyp1",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#user": "notifyu1",
+          "#pass": "notifyp1",
+        }
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
@@ -386,10 +357,14 @@ add_task(async function test_private_popup_notification_3b() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#user": "notifyu1",
-        "#pass": "notifyp1",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#user": "notifyu1",
+          "#pass": "notifyp1",
+        }
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
 
@@ -437,10 +412,14 @@ add_task(async function test_normal_new_password_4() {
       url: form2Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#pass": "notifyp1",
-        "#newpass": "notifyp2",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#pass": "notifyp1",
+          "#newpass": "notifyp2",
+        }
+      );
       is(fieldValues.password, "notifyp1", "Checking submitted password");
       let notif = getCaptureDoorhanger(
         "password-change",
@@ -499,10 +478,14 @@ add_task(async function test_private_new_password_5() {
       url: form2Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#pass": "notifyp1",
-        "#newpass": "notifyp2",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#pass": "notifyp1",
+          "#newpass": "notifyp2",
+        }
+      );
       is(fieldValues.password, "notifyp1", "Checking submitted password");
       let notif = getCaptureDoorhanger(
         "password-change",
@@ -547,10 +530,14 @@ add_task(async function test_normal_with_login_6() {
       url: form2Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {
-        "#pass": "notifyp1",
-        "#newpass": "notifyp2",
-      });
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {
+          "#pass": "notifyp1",
+          "#newpass": "notifyp2",
+        }
+      );
       is(fieldValues.password, "notifyp1", "Checking submitted password");
       let notif = getCaptureDoorhanger(
         "password-change",
@@ -597,7 +584,11 @@ add_task(async function test_normal_autofilled_7() {
       await formFilled;
 
       // the form should have been autofilled, so submit without updating field values
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {}
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
     }
@@ -616,7 +607,11 @@ add_task(async function test_private_not_autofilled_8() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {}
+      );
       ok(!fieldValues.username, "Checking submitted username");
       ok(!fieldValues.password, "Checking submitted password");
     }
@@ -659,7 +654,7 @@ add_task(async function test_private_not_autofilled_8() {
 //     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 //     await promiseFormInput;
 
-//     let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+//     let fieldValues = await submitFormAndGetResults(browser, "formsubmit.sjs", {});
 //     is(fieldValues.username, "notifyu1", "Checking submitted username");
 //     is(fieldValues.password, "notifyp1", "Checking submitted password");
 //   });
@@ -679,7 +674,11 @@ add_task(async function test_normal_autofilled_10() {
       url: form1Url,
     },
     async function(browser) {
-      let fieldValues = await submitForm(browser, "formsubmit.sjs", {});
+      let fieldValues = await submitFormAndGetResults(
+        browser,
+        "formsubmit.sjs",
+        {}
+      );
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "notifyp1", "Checking submitted password");
     }
@@ -759,7 +758,10 @@ add_task(async function test_private_http_basic_auth() {
     async function(browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
-      let fieldValues = await getResponseResult(browser, "authenticate.sjs");
+      let fieldValues = await getFormSubmitResponseResult(
+        browser,
+        "authenticate.sjs"
+      );
       is(fieldValues.username, "test", "Checking authorized username");
       is(fieldValues.password, "testpass", "Checking authorized password");
 
@@ -803,7 +805,10 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
     async function(browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
-      let fieldValues = await getResponseResult(browser, "authenticate.sjs");
+      let fieldValues = await getFormSubmitResponseResult(
+        browser,
+        "authenticate.sjs"
+      );
       is(fieldValues.username, "test", "Checking authorized username");
       is(fieldValues.password, "testpass", "Checking authorized password");
 
