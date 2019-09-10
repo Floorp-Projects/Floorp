@@ -154,11 +154,12 @@ class WindowImageSurface {
   void Draw(gfx::DrawTarget* aDest,
             LayoutDeviceIntRegion& aWaylandBufferDamage);
 
-  WindowImageSurface(gfx::SourceSurface* aSurface,
+  WindowImageSurface(gfxImageSurface* aImageSurface,
                      const LayoutDeviceIntRegion& aUpdateRegion);
 
  private:
   RefPtr<gfx::SourceSurface> mSurface;
+  RefPtr<gfxImageSurface> mImageSurface;
   const LayoutDeviceIntRegion mUpdateRegion;
 };
 
