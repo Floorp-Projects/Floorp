@@ -6,32 +6,19 @@
 
 #include "AppleEncoderModule.h"
 
-#include "nsMimeTypes.h"
-
 #include "AppleVTEncoder.h"
+#include "MP4Decoder.h"
 
 namespace mozilla {
 
 bool AppleEncoderModule::SupportsMimeType(const nsACString& aMimeType) const {
-  return aMimeType.EqualsLiteral(VIDEO_MP4) ||
-         aMimeType.EqualsLiteral("video/avc");
+  return MP4Decoder::IsH264(aMimeType);
 }
 
 already_AddRefed<MediaDataEncoder> AppleEncoderModule::CreateVideoEncoder(
     const CreateEncoderParams& aParams) const {
-  const VideoInfo* info = aParams.mConfig.GetAsVideoInfo();
-  MOZ_ASSERT(info);
-
-  using Config = AppleVTEncoder::Config;
-  Config config =
-      Config(MediaDataEncoder::CodecType::H264, aParams.mUsage, info->mImage,
-             aParams.mPixelFormat, aParams.mFramerate, aParams.mBitrate);
-  if (aParams.mCodecSpecific) {
-    config.SetCodecSpecific(aParams.mCodecSpecific.ref().mH264);
-  }
-
   RefPtr<MediaDataEncoder> encoder(
-      new AppleVTEncoder(std::forward<Config>(config), aParams.mTaskQueue));
+      new AppleVTEncoder(aParams.ToH264Config(), aParams.mTaskQueue));
   return encoder.forget();
 }
 

@@ -21,7 +21,7 @@ class Image;
 
 class AppleVTEncoder final : public MediaDataEncoder {
  public:
-  using Config = VideoConfig<H264Specific>;
+  using Config = H264Config;
 
   struct FrameParams {
     using TimeUnit = media::TimeUnit;
