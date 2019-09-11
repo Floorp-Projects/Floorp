@@ -2273,16 +2273,16 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
   OpenCursorParams params;
   if (aKeysOnly) {
     ObjectStoreOpenKeyCursorParams openParams;
-    openParams.objectStoreId() = objectStoreId;
-    openParams.optionalKeyRange() = std::move(optionalKeyRange);
-    openParams.direction() = direction;
+    openParams.commonParams().objectStoreId() = objectStoreId;
+    openParams.commonParams().optionalKeyRange() = std::move(optionalKeyRange);
+    openParams.commonParams().direction() = direction;
 
     params = std::move(openParams);
   } else {
     ObjectStoreOpenCursorParams openParams;
-    openParams.objectStoreId() = objectStoreId;
-    openParams.optionalKeyRange() = std::move(optionalKeyRange);
-    openParams.direction() = direction;
+    openParams.commonParams().objectStoreId() = objectStoreId;
+    openParams.commonParams().optionalKeyRange() = std::move(optionalKeyRange);
+    openParams.commonParams().direction() = direction;
 
     params = std::move(openParams);
   }
