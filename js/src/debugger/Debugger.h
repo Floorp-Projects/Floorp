@@ -332,6 +332,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
 
   // Expose WeakMap public interface.
 
+  using Base::zone;
   using Base::all;
   using Base::has;
   using Base::lookup;
@@ -372,7 +373,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
   }
 
   bool findCrossCompartmentTargets(CompartmentSet& targets);
-  bool findSweepGroupEdges(JS::Zone* debuggerZone);
+  bool findSweepGroupEdges() override;
 
  private:
 #ifdef JS_GC_ZEAL

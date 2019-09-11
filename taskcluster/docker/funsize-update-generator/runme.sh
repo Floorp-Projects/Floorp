@@ -53,7 +53,7 @@ else
   export MBSDIFF_HOOK=
 fi
 
-if [ ! -z "$FILENAME_TEMPLATE" ]; then
+if [ -n "$FILENAME_TEMPLATE" ]; then
     EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE $EXTRA_PARAMS"
 fi
 
