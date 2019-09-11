@@ -96,7 +96,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static void IntPrefChanged(nsLookAndFeelIntPref* data);
   static void FloatPrefChanged(nsLookAndFeelFloatPref* data);
   static void ColorPrefChanged(unsigned int index, const char* prefName);
-  static void NotifyPrefChanged();
   void InitFromPref(nsLookAndFeelIntPref* aPref);
   void InitFromPref(nsLookAndFeelFloatPref* aPref);
   void InitColorFromPref(int32_t aIndex);
