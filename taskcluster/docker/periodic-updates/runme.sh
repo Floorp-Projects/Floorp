@@ -16,33 +16,33 @@ test "${PRODUCT}"
 
 PARAMS=""
 
-if [ ! -z "${USE_MOZILLA_CENTRAL}" ]
+if [ -n "${USE_MOZILLA_CENTRAL}" ]
 then
   PARAMS="${PARAMS} --use-mozilla-central"
 fi
 
 # TODO change these, so that they're run if the artifact location is specified?
-if [ ! -z "${DO_HSTS}" ]
+if [ -n "${DO_HSTS}" ]
 then
   PARAMS="${PARAMS} --hsts"
 fi
 
-if [ ! -z "${DO_HPKP}" ]
+if [ -n "${DO_HPKP}" ]
 then
   PARAMS="${PARAMS} --hpkp"
 fi
 
-if [ ! -z "${DO_BLOCKLIST}" ]
+if [ -n "${DO_BLOCKLIST}" ]
 then
   PARAMS="${PARAMS} --blocklist"
 fi
 
-if [ ! -z "${DO_REMOTE_SETTINGS}" ]
+if [ -n "${DO_REMOTE_SETTINGS}" ]
 then
   PARAMS="${PARAMS} --remote-settings"
 fi
 
-if [ ! -z "${DO_SUFFIX_LIST}" ]
+if [ -n "${DO_SUFFIX_LIST}" ]
 then
   PARAMS="${PARAMS} --suffix-list"
 fi
