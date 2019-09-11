@@ -2,132 +2,176 @@
 
 exports[`EventListeners should render 1`] = `
 <div
-  className="event-listeners-content"
+  className="event-listeners"
 >
-  <ul
-    className="event-listeners-list"
-  />
+  <div
+    className="event-search-container"
+  >
+    <form
+      className="event-search-form"
+      onSubmit={[Function]}
+    >
+      <input
+        className="event-search-input"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Filter by event type"
+        value=""
+      />
+    </form>
+  </div>
+  <div
+    className="event-listeners-content"
+  >
+    <ul
+      className="event-listeners-list"
+    />
+  </div>
 </div>
 `;
 
 exports[`EventListeners should render categories appropriately 1`] = `
 <div
-  className="event-listeners-content"
+  className="event-listeners"
 >
-  <ul
-    className="event-listeners-list"
+  <div
+    className="event-search-container"
   >
-    <li
-      className="event-listener-group"
-      key="0"
+    <form
+      className="event-search-form"
+      onSubmit={[Function]}
     >
-      <div
-        className="event-listener-header"
-      >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
-        >
-          <AccessibleImage
-            className="arrow"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 1"
-          />
-          <span
-            className="event-listener-category"
-          >
-            Category 1
-          </span>
-        </label>
-      </div>
-    </li>
-    <li
-      className="event-listener-group"
-      key="1"
+      <input
+        className="event-search-input"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Filter by event type"
+        value=""
+      />
+    </form>
+  </div>
+  <div
+    className="event-listeners-content"
+  >
+    <ul
+      className="event-listeners-list"
     >
-      <div
-        className="event-listener-header"
+      <li
+        className="event-listener-group"
+        key="0"
       >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
+        <div
+          className="event-listener-header"
         >
-          <AccessibleImage
-            className="arrow"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 2"
-          />
-          <span
-            className="event-listener-category"
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
           >
-            Category 2
-          </span>
-        </label>
-      </div>
-    </li>
-  </ul>
+            <AccessibleImage
+              className="arrow"
+            />
+          </button>
+          <label
+            className="event-listener-label"
+          >
+            <input
+              checked={false}
+              onChange={[Function]}
+              type="checkbox"
+              value="Category 1"
+            />
+            <span
+              className="event-listener-category"
+            >
+              Category 1
+            </span>
+          </label>
+        </div>
+      </li>
+      <li
+        className="event-listener-group"
+        key="1"
+      >
+        <div
+          className="event-listener-header"
+        >
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
+          >
+            <AccessibleImage
+              className="arrow"
+            />
+          </button>
+          <label
+            className="event-listener-label"
+          >
+            <input
+              checked={false}
+              onChange={[Function]}
+              type="checkbox"
+              value="Category 2"
+            />
+            <span
+              className="event-listener-category"
+            >
+              Category 2
+            </span>
+          </label>
+        </div>
+      </li>
+    </ul>
+  </div>
 </div>
 `;
 
 exports[`EventListeners should render checked subcategories appropriately 1`] = `
 <div
-  className="event-listeners-content"
+  className="event-listeners"
 >
-  <ul
-    className="event-listeners-list"
+  <div
+    className="event-search-container"
   >
-    <li
-      className="event-listener-group"
-      key="0"
+    <form
+      className="event-search-form"
+      onSubmit={[Function]}
     >
-      <div
-        className="event-listener-header"
+      <input
+        className="event-search-input"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Filter by event type"
+        value=""
+      />
+    </form>
+  </div>
+  <div
+    className="event-listeners-content"
+  >
+    <ul
+      className="event-listeners-list"
+    >
+      <li
+        className="event-listener-group"
+        key="0"
       >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
+        <div
+          className="event-listener-header"
         >
-          <AccessibleImage
-            className="arrow expanded"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 1"
-          />
-          <span
-            className="event-listener-category"
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
           >
-            Category 1
-          </span>
-        </label>
-      </div>
-      <ul>
-        <li
-          className="event-listener-event"
-          key="category1.subcategory1"
-        >
+            <AccessibleImage
+              className="arrow expanded"
+            />
+          </button>
           <label
             className="event-listener-label"
           >
@@ -135,148 +179,138 @@ exports[`EventListeners should render checked subcategories appropriately 1`] = 
               checked={false}
               onChange={[Function]}
               type="checkbox"
-              value="category1.subcategory1"
+              value="Category 1"
             />
             <span
-              className="event-listener-name"
+              className="event-listener-category"
             >
-              Subcategory 1
+              Category 1
             </span>
           </label>
-        </li>
-        <li
-          className="event-listener-event"
-          key="category1.subcategory2"
+        </div>
+        <ul>
+          <li
+            className="event-listener-event"
+            key="category1.subcategory1"
+          >
+            <label
+              className="event-listener-label"
+            >
+              <input
+                checked={false}
+                onChange={[Function]}
+                type="checkbox"
+                value="category1.subcategory1"
+              />
+              <span
+                className="event-listener-name"
+              >
+                Subcategory 1
+              </span>
+            </label>
+          </li>
+          <li
+            className="event-listener-event"
+            key="category1.subcategory2"
+          >
+            <label
+              className="event-listener-label"
+            >
+              <input
+                checked={true}
+                onChange={[Function]}
+                type="checkbox"
+                value="category1.subcategory2"
+              />
+              <span
+                className="event-listener-name"
+              >
+                Subcategory 2
+              </span>
+            </label>
+          </li>
+        </ul>
+      </li>
+      <li
+        className="event-listener-group"
+        key="1"
+      >
+        <div
+          className="event-listener-header"
         >
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
+          >
+            <AccessibleImage
+              className="arrow"
+            />
+          </button>
           <label
             className="event-listener-label"
           >
             <input
-              checked={true}
+              checked={false}
               onChange={[Function]}
               type="checkbox"
-              value="category1.subcategory2"
+              value="Category 2"
             />
             <span
-              className="event-listener-name"
+              className="event-listener-category"
             >
-              Subcategory 2
+              Category 2
             </span>
           </label>
-        </li>
-      </ul>
-    </li>
-    <li
-      className="event-listener-group"
-      key="1"
-    >
-      <div
-        className="event-listener-header"
-      >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
-        >
-          <AccessibleImage
-            className="arrow"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 2"
-          />
-          <span
-            className="event-listener-category"
-          >
-            Category 2
-          </span>
-        </label>
-      </div>
-    </li>
-  </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
 </div>
 `;
 
 exports[`EventListeners should render expanded categories appropriately 1`] = `
 <div
-  className="event-listeners-content"
+  className="event-listeners"
 >
-  <ul
-    className="event-listeners-list"
+  <div
+    className="event-search-container"
   >
-    <li
-      className="event-listener-group"
-      key="0"
+    <form
+      className="event-search-form"
+      onSubmit={[Function]}
     >
-      <div
-        className="event-listener-header"
-      >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
-        >
-          <AccessibleImage
-            className="arrow"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 1"
-          />
-          <span
-            className="event-listener-category"
-          >
-            Category 1
-          </span>
-        </label>
-      </div>
-    </li>
-    <li
-      className="event-listener-group"
-      key="1"
+      <input
+        className="event-search-input"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Filter by event type"
+        value=""
+      />
+    </form>
+  </div>
+  <div
+    className="event-listeners-content"
+  >
+    <ul
+      className="event-listeners-list"
     >
-      <div
-        className="event-listener-header"
+      <li
+        className="event-listener-group"
+        key="0"
       >
-        <button
-          className="event-listener-expand"
-          onClick={[Function]}
+        <div
+          className="event-listener-header"
         >
-          <AccessibleImage
-            className="arrow expanded"
-          />
-        </button>
-        <label
-          className="event-listener-label"
-        >
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-            value="Category 2"
-          />
-          <span
-            className="event-listener-category"
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
           >
-            Category 2
-          </span>
-        </label>
-      </div>
-      <ul>
-        <li
-          className="event-listener-event"
-          key="category2.subcategory1"
-        >
+            <AccessibleImage
+              className="arrow"
+            />
+          </button>
           <label
             className="event-listener-label"
           >
@@ -284,19 +318,31 @@ exports[`EventListeners should render expanded categories appropriately 1`] = `
               checked={false}
               onChange={[Function]}
               type="checkbox"
-              value="category2.subcategory1"
+              value="Category 1"
             />
             <span
-              className="event-listener-name"
+              className="event-listener-category"
             >
-              Subcategory 3
+              Category 1
             </span>
           </label>
-        </li>
-        <li
-          className="event-listener-event"
-          key="category2.subcategory2"
+        </div>
+      </li>
+      <li
+        className="event-listener-group"
+        key="1"
+      >
+        <div
+          className="event-listener-header"
         >
+          <button
+            className="event-listener-expand"
+            onClick={[Function]}
+          >
+            <AccessibleImage
+              className="arrow expanded"
+            />
+          </button>
           <label
             className="event-listener-label"
           >
@@ -304,17 +350,59 @@ exports[`EventListeners should render expanded categories appropriately 1`] = `
               checked={false}
               onChange={[Function]}
               type="checkbox"
-              value="category2.subcategory2"
+              value="Category 2"
             />
             <span
-              className="event-listener-name"
+              className="event-listener-category"
             >
-              Subcategory 4
+              Category 2
             </span>
           </label>
-        </li>
-      </ul>
-    </li>
-  </ul>
+        </div>
+        <ul>
+          <li
+            className="event-listener-event"
+            key="category2.subcategory1"
+          >
+            <label
+              className="event-listener-label"
+            >
+              <input
+                checked={false}
+                onChange={[Function]}
+                type="checkbox"
+                value="category2.subcategory1"
+              />
+              <span
+                className="event-listener-name"
+              >
+                Subcategory 3
+              </span>
+            </label>
+          </li>
+          <li
+            className="event-listener-event"
+            key="category2.subcategory2"
+          >
+            <label
+              className="event-listener-label"
+            >
+              <input
+                checked={false}
+                onChange={[Function]}
+                type="checkbox"
+                value="category2.subcategory2"
+              />
+              <span
+                className="event-listener-name"
+              >
+                Subcategory 4
+              </span>
+            </label>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
 </div>
 `;

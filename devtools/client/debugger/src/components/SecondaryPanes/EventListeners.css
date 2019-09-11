@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.event-listeners-content {
+ .event-listeners-content {
   padding-top: 4px;
   padding-bottom: 4px;
-  padding-inline-start: 6px;
-  padding-inline-end: 20px;
 }
 
 .event-listeners-content ul {
@@ -31,10 +29,7 @@
 .event-listener-expand {
   border: none;
   background: none;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-inline-start: 0;
-  padding-inline-end: 2px;
+  padding: 4px 5px;
   line-height: 12px;
 }
 
@@ -50,9 +45,7 @@
 .event-listener-label {
   display: flex;
   align-items: center;
-  padding-inline-start: 2px;
   padding-inline-end: 10px;
-  width: 100%;
 }
 
 .event-listener-category {
@@ -72,10 +65,24 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
   transform: rotate(90deg);
 }
 
+.event-listeners-list {
+  border-top: 1px;
+  padding-inline-start: 18px;
+  padding-inline-end: 20px;
+}
+
 .event-listener-event {
   display: flex;
   align-items: center;
-  margin-inline-start: 30px;
+}
+
+.event-listeners-list .event-listener-event {
+  margin-inline-start: 40px;
+}
+
+.event-search-results-list .event-listener-event {
+  padding-inline-start: 20px;
+  padding-inline-end: 20px;
 }
 
 .event-listener-name {
@@ -88,4 +95,54 @@ html[dir="rtl"] .event-listeners-content .arrow.expanded {
   margin-inline-start: 0px;
   margin-top: 0px;
   margin-bottom: 0px;
+}
+
+.event-search-container {
+  display: flex;
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.event-search-form {
+  display: flex;
+  flex-grow: 1;
+}
+
+.event-search-input {
+  flex-grow: 1;
+  margin: 0;
+  font-size: inherit;
+  background-color: var(--theme-sidebar-background);
+  border: 0px;
+  outline: 0px;
+  line-height: 16px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-inline-start: 19px;
+  padding-inline-end: 12px;
+  color: var(--theme-body-color);
+  background-image: url("chrome://devtools/skin/images/filter-small.svg");
+  background-position-x: 4px;
+  background-position-y: 50%;
+  background-repeat: no-repeat;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.category-label {
+  color: var(--theme-comment);
+}
+
+.event-search-input::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
+
+.event-search-container:focus-within {
+  border: 1px solid var(--theme-highlight-blue);
+}
+
+.devtools-searchinput-clear {
+  margin-inline-end: 8px;
 }

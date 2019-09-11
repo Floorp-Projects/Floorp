@@ -79,4 +79,55 @@ describe("EventListeners", () => {
     const { component } = render(props);
     expect(component).toMatchSnapshot();
   });
+
+  it("should filter the event listeners based on the event name", async () => {
+    const props = {
+      ...generateDefaults(),
+      categories: getCategories(),
+    };
+    const { component } = render(props);
+    component.find(".event-search-input").simulate("focus");
+
+    const searchInput = component.find(".event-search-input");
+    // Simulate a search query of "Subcategory 3" to display just one event which
+    // will be the Subcategory 3 event
+    searchInput.simulate("change", { target: { value: "Subcategory 3" } });
+
+    const displayedEvents = component.find(".event-listener-event");
+    expect(displayedEvents).toHaveLength(1);
+  });
+
+  it("should filter the event listeners based on the category name", async () => {
+    const props = {
+      ...generateDefaults(),
+      categories: getCategories(),
+    };
+    const { component } = render(props);
+    component.find(".event-search-input").simulate("focus");
+
+    const searchInput = component.find(".event-search-input");
+    // Simulate a search query of "Category 1" to display two events which will be
+    // the Subcategory 1 event and the Subcategory 2 event
+    searchInput.simulate("change", { target: { value: "Category 1" } });
+
+    const displayedEvents = component.find(".event-listener-event");
+    expect(displayedEvents).toHaveLength(2);
+  });
+
+  it("should be case insensitive when filtering events and categories", async () => {
+    const props = {
+      ...generateDefaults(),
+      categories: getCategories(),
+    };
+    const { component } = render(props);
+    component.find(".event-search-input").simulate("focus");
+
+    const searchInput = component.find(".event-search-input");
+    // Simulate a search query of "Subcategory 3" to display just one event which
+    // will be the Subcategory 3 event
+    searchInput.simulate("change", { target: { value: "sUbCaTeGoRy 3" } });
+
+    const displayedEvents = component.find(".event-listener-event");
+    expect(displayedEvents).toHaveLength(1);
+  });
 });
