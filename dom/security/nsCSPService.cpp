@@ -252,24 +252,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->LoadInfo();
 
-  // Check CSP navigate-to
-  // We need to enforce the CSP of the document that initiated the load,
-  // which is the CSP to inherit.
-  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
-  if (cspToInherit) {
-    bool allowsNavigateTo = false;
-    rv = cspToInherit->GetAllowsNavigateTo(newUri, loadInfo,
-                                           true,  /* aWasRedirected */
-                                           false, /* aEnforceWhitelist */
-                                           &allowsNavigateTo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!allowsNavigateTo) {
-      oldChannel->Cancel(NS_ERROR_CSP_NAVIGATE_TO_VIOLATION);
-      return NS_OK;
-    }
-  }
-
   // No need to continue processing if CSP is disabled or if the protocol
   // is *not* subject to CSP.
   // Please note, the correct way to opt-out of CSP using a custom
