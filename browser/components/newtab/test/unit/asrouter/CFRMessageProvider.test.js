@@ -11,8 +11,8 @@ const REGULAR_IDS = [
 ];
 
 describe("CFRMessageProvider", () => {
-  it("should have a total of 5 messages", () => {
-    assert.lengthOf(messages, 5);
+  it("should have a total of 8 messages", () => {
+    assert.lengthOf(messages, 8);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {

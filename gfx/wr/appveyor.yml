@@ -1,3 +1,4 @@
+image: Visual Studio 2017
 before_test:
   - ps: iex (Get-Content -Raw ci-scripts\set-screenresolution.ps1)
   - ps: Set-ScreenResolution 1920 1080

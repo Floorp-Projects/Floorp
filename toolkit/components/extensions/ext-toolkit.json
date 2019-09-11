@@ -114,6 +114,14 @@
       ["management"]
     ]
   },
+  "memory" : {
+    "url": "chrome://extensions/content/parent/ext-memory.js",
+    "schema": "chrome://extensions/content/schemas/memory.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["memory"]
+    ]
+  },
   "networkStatus": {
     "url": "chrome://extensions/content/parent/ext-networkStatus.js",
     "schema": "chrome://extensions/content/schemas/network_status.json",

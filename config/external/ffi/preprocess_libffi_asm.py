@@ -2,7 +2,7 @@
 # vim: set filetype=python:
 # This Souce Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distibuted with this
-# file, You can obtain one at http://mozilla.og/MPL/2.0/.
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
 from __future__ import print_function

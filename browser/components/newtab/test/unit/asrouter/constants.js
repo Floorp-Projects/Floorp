@@ -120,7 +120,6 @@ export const FAKE_RECOMMENDATION = {
         },
         {
           label: { string_id: "secondary_button_id_2" },
-          action: { id: "secondary_action" },
         },
         {
           label: { string_id: "secondary_button_id_3" },
@@ -149,6 +148,9 @@ export class FakeRemotePageManager {
         },
         ConfirmationHint: {
           show: sinon.stub(),
+        },
+        gProtectionsHandler: {
+          showProtectionsPopup: sinon.stub(),
         },
       },
     };

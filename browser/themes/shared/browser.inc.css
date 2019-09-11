@@ -249,6 +249,10 @@ menupopup::part(drop-indicator) {
   width: 343px;
 }
 
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] {
+  width: 386px;
+}
+
 #contextual-feature-recommendation-notification .popup-notification-icon {
   margin-inline-end: 4px;
 }
@@ -259,6 +263,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification .popup-notification-body-container {
+  width: 100%;
   padding-bottom: 0;
 }
 
@@ -306,6 +311,10 @@ menupopup::part(drop-indicator) {
   padding-bottom: 20px;
 }
 
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] .popup-notification-description {
+  font-size: 13px;
+}
+
 #cfr-notification-feature-steps {
   display: flex;
   flex-direction: column;
@@ -338,6 +347,7 @@ menupopup::part(drop-indicator) {
   margin: 0;
 }
 
+#contextual-feature-recommendation-notification .popup-notification-learnmore-link,
 #cfr-notification-footer-users,
 #cfr-notification-footer-learn-more-link {
   font-size: 12px;

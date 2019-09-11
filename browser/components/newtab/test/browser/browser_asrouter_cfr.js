@@ -13,16 +13,22 @@ const createDummyRecommendation = ({
   category,
   heading_text,
   layout,
+  skip_address_bar_notifier,
 }) => ({
   content: {
     layout: layout || "addon_recommendation",
     category,
+    anchor_id: "page-action-buttons",
+    skip_address_bar_notifier,
     notification_text: "Mochitest",
     heading_text: heading_text || "Mochitest",
     info_icon: {
       label: { attributes: { tooltiptext: "Why am I seeing this" } },
       sumo_path: "extensionrecommendations",
     },
+    icon: "foo",
+    icon_dark_theme: "bar",
+    learn_more: "extensionrecommendations",
     addon: {
       id: "addon-id",
       title: "Addon name",
@@ -107,6 +113,19 @@ function checkCFRAddonsElements(notification) {
   );
 }
 
+function checkCFRSocialTrackingProtection(notification) {
+  Assert.ok(notification.hidden === false, "Panel should be visible");
+  Assert.ok(
+    notification.getAttribute("data-notification-category") ===
+      "icon_and_message",
+    "Panel have corret data attribute"
+  );
+  Assert.ok(
+    notification.querySelector("#cfr-notification-footer-learn-more-link"),
+    "Panel should have learn more link"
+  );
+}
+
 function clearNotifications() {
   for (let notification of PopupNotifications._currentNotifications) {
     notification.remove();
@@ -128,6 +147,8 @@ function trigger_cfr_panel(
     heading_text,
     category = "cfrAddons",
     layout,
+    skip_address_bar_notifier = false,
+    use_single_secondary_button = false,
   } = {}
 ) {
   // a fake action type will result in the action being ignored
@@ -136,9 +157,15 @@ function trigger_cfr_panel(
     category,
     heading_text,
     layout,
+    skip_address_bar_notifier,
   });
   if (category !== "cfrAddons") {
     delete recommendation.content.addon;
+  }
+  if (use_single_secondary_button) {
+    recommendation.content.buttons.secondary = [
+      recommendation.content.buttons.secondary[0],
+    ];
   }
 
   clearNotifications();
@@ -399,6 +426,49 @@ add_task(async function test_cfr_pin_tab_notification_show() {
     "Should have removed the notification"
   );
 });
+
+add_task(
+  async function test_cfr_social_tracking_protection_notification_show() {
+    // addRecommendation checks that scheme starts with http and host matches
+    let browser = gBrowser.selectedBrowser;
+    await BrowserTestUtils.loadURI(browser, "http://example.com/");
+    await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+    const showPanel = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
+
+    const response = await trigger_cfr_panel(browser, "example.com", {
+      action: { type: "OPEN_PROTECTION_PANEL" },
+      category: "cfrFeatures",
+      layout: "icon_and_message",
+      skip_address_bar_notifier: true,
+      use_single_secondary_button: true,
+    });
+    Assert.ok(
+      response,
+      "Should return true if addRecommendation checks were successful"
+    );
+    await showPanel;
+
+    const notification = document.getElementById(
+      "contextual-feature-recommendation-notification"
+    );
+    checkCFRSocialTrackingProtection(notification);
+
+    // Check there is a primary button and click it. It will trigger the callback.
+    Assert.ok(notification.button);
+    let hidePanel = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popuphidden"
+    );
+    document
+      .getElementById("contextual-feature-recommendation-notification")
+      .button.click();
+    await hidePanel;
+  }
+);
 
 add_task(async function test_cfr_features_and_addon_show() {
   // addRecommendation checks that scheme starts with http and host matches

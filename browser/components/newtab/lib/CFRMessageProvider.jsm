@@ -546,6 +546,7 @@ const CFR_MESSAGES = [
         string_id: "cfr-doorhanger-sync-logins-body",
       },
       icon: "chrome://browser/content/aboutlogins/icons/intro-illustration.svg",
+      icon_class: "cfr-doorhanger-large-icon",
       buttons: {
         secondary: [
           {
@@ -602,6 +603,144 @@ const CFR_MESSAGES = [
     },
     trigger: {
       id: "newSavedLogin",
+    },
+  },
+  {
+    id: "SOCIAL_TRACKING_PROTECTION",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      anchor_id: "tracking-protection-icon-box",
+      skip_address_bar_notifier: true,
+      bucket_id: "CFR_SOCIAL_TRACKING_PROTECTION",
+      heading_text: { string_id: "cfr-doorhanger-socialtracking-heading" },
+      notification_text: "",
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      learn_more: "social-media-tracking-report",
+      text: { string_id: "cfr-doorhanger-socialtracking-description" },
+      icon: "chrome://browser/skin/notification-icons/block-social.svg",
+      icon_dark_theme:
+        "chrome://browser/skin/notification-icons/block-social-dark.svg",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
+          action: { type: "OPEN_PROTECTION_PANEL" },
+          event: "PROTECTION",
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
+            event: "BLOCK",
+          },
+        ],
+      },
+    },
+    targeting: "pageLoad >= 4",
+    frequency: {
+      lifetime: 2,
+      custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
+    },
+    trigger: {
+      id: "trackingProtection",
+      params: [Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT],
+    },
+  },
+  {
+    id: "FINGERPRINTERS_PROTECTION",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      anchor_id: "tracking-protection-icon-box",
+      skip_address_bar_notifier: true,
+      bucket_id: "CFR_SOCIAL_TRACKING_PROTECTION",
+      heading_text: { string_id: "cfr-doorhanger-fingerprinters-heading" },
+      notification_text: "",
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      learn_more: "fingerprinters-report",
+      text: { string_id: "cfr-doorhanger-fingerprinters-description" },
+      icon: "chrome://browser/skin/notification-icons/block-fingerprinter.svg",
+      icon_dark_theme:
+        "chrome://browser/skin/notification-icons/block-fingerprinter-dark.svg",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
+          action: { type: "OPEN_PROTECTION_PANEL" },
+          event: "PROTECTION",
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
+            event: "BLOCK",
+          },
+        ],
+      },
+    },
+    targeting: "pageLoad >= 4",
+    frequency: {
+      lifetime: 2,
+      custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
+    },
+    trigger: {
+      id: "trackingProtection",
+      params: [Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT],
+    },
+  },
+  {
+    id: "CRYPTOMINERS_PROTECTION",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      anchor_id: "tracking-protection-icon-box",
+      skip_address_bar_notifier: true,
+      bucket_id: "CFR_SOCIAL_TRACKING_PROTECTION",
+      heading_text: { string_id: "cfr-doorhanger-cryptominers-heading" },
+      notification_text: "",
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      learn_more: "cryptominers-report",
+      text: { string_id: "cfr-doorhanger-cryptominers-description" },
+      icon: "chrome://browser/skin/notification-icons/block-cryptominer.svg",
+      icon_dark_theme:
+        "chrome://browser/skin/notification-icons/block-cryptominer-dark.svg",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
+          action: { type: "OPEN_PROTECTION_PANEL" },
+          event: "PROTECTION",
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
+            event: "BLOCK",
+          },
+        ],
+      },
+    },
+    targeting: "pageLoad >= 4",
+    frequency: {
+      lifetime: 2,
+      custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
+    },
+    trigger: {
+      id: "trackingProtection",
+      params: [Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT],
     },
   },
 ];

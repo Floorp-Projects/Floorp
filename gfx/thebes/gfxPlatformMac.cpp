@@ -387,40 +387,28 @@ class OSXVsyncSource final : public VsyncSource {
         return;
       }
 
-      // Workaround for bug 1201401: CGDisplayIDToOpenGLDisplayMask() is a
-      // documented method with undocumented behavior -- it returns '0' as an
-      // error condition. Through at least macOS Catalina, Apple relies on
-      // this behavior in the CoreVideo framework to indicate that a given
-      // display is (temporarily) invalid (kCVReturnInvalidDisplay). But a
-      // method called (indirectly) from CVDisplayLinkCreateWithCGDisplays()
-      // ignores this error return (again indirectly), eventually leading to
-      // crashes in CVCGDisplayLink::getDisplayTimes(). The workaround is to
-      // call CGDisplayIDToOpenGLDisplayMask() ourselves, and do an early
-      // return if it returns '0' (that is, if a succeeding call to
-      // CVDisplayLinkCreateWithCGDisplays() would trigger Apple's bug and
-      // lead to a crash). It also makes sense to return early if
-      // CGGetActiveDisplayList() fails or there are no active displays.
-      const UInt32 kMaxDisplays = 256;
-      uint32_t displayCount;
-      CGDirectDisplayID displays[kMaxDisplays];
-      if ((CGGetActiveDisplayList(kMaxDisplays, displays, &displayCount) !=
-           kCGErrorSuccess) ||
-          (displayCount == 0)) {
-        return;
-      }
-      for (uint32_t i = 0; i < displayCount; ++i) {
-        if (CGDisplayIDToOpenGLDisplayMask(displays[i]) == 0) {
-          return;
-        }
-      }
-
       // Create a display link capable of being used with all active displays
       // TODO: See if we need to create an active DisplayLink for each monitor
       // in multi-monitor situations. According to the docs, it is compatible
       // with all displays running on the computer But if we have different
       // monitors at different display rates, we may hit issues.
-      if (CVDisplayLinkCreateWithCGDisplays(
-              displays, displayCount, &mDisplayLink) != kCVReturnSuccess) {
+      CVReturn retval = CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
+
+      // Workaround for bug 1201401: CVDisplayLinkCreateWithCGDisplays()
+      // (called by CVDisplayLinkCreateWithActiveCGDisplays()) sometimes
+      // creates a CVDisplayLinkRef with an uninitialized (nulled) internal
+      // pointer. If we continue to use this CVDisplayLinkRef, we will
+      // eventually crash in CVCGDisplayLink::getDisplayTimes(), where the
+      // internal pointer is dereferenced. Fortunately, when this happens
+      // another internal variable is also left uninitialized (zeroed),
+      // which is accessible via CVDisplayLinkGetCurrentCGDisplay(). In
+      // normal conditions the current display is never zero.
+      if ((retval == kCVReturnSuccess) &&
+          (CVDisplayLinkGetCurrentCGDisplay(mDisplayLink) == 0)) {
+        retval = kCVReturnInvalidDisplay;
+      }
+
+      if (retval != kCVReturnSuccess) {
         NS_WARNING(
             "Could not create a display link with all active displays. "
             "Retrying");
