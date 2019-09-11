@@ -1789,9 +1789,11 @@ Completion Completion::fromJSResult(JSContext* cx, bool ok, const Value& rv) {
 
   RootedValue exception(cx);
   RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
-  MOZ_ALWAYS_TRUE(cx->getPendingException(&exception));
-
+  bool getSucceeded = cx->getPendingException(&exception);
   cx->clearPendingException();
+  if (!getSucceeded) {
+    return Completion(Terminate());
+  }
 
   return Completion(Throw(exception, stack));
 }
