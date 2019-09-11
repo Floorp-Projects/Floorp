@@ -3918,8 +3918,8 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
 }
 
 template <class UnbarrieredKey, class Wrapper, bool InvisibleKeysOk>
-bool DebuggerWeakMap<UnbarrieredKey, Wrapper, InvisibleKeysOk>::
-    findZoneEdges() {
+bool DebuggerWeakMap<UnbarrieredKey, Wrapper,
+                     InvisibleKeysOk>::findSweepGroupEdges() {
   Zone* debuggerZone = zone();
   MOZ_ASSERT(debuggerZone->isGCMarking());
   for (Enum e(*this); !e.empty(); e.popFront()) {

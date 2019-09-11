@@ -373,7 +373,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
   }
 
   bool findCrossCompartmentTargets(CompartmentSet& targets);
-  bool findZoneEdges() override;
+  bool findSweepGroupEdges() override;
 
  private:
 #ifdef JS_GC_ZEAL
