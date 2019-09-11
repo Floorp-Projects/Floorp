@@ -1,6 +1,10 @@
 /* import-globals-from antitracking_head.js */
 
-requestLongerTimeout(6);
+if (AppConstants.MOZ_CODE_COVERAGE) {
+  requestLongerTimeout(12);
+} else {
+  requestLongerTimeout(6);
+}
 
 AntiTracking.runTestInNormalAndPrivateMode(
   "BroadcastChannel",
