@@ -3536,10 +3536,19 @@ impl Renderer {
             self.device.enable_depth_write();
             self.set_blend(false, framebuffer_kind);
 
+            // If updating only a dirty rect within a picture cache target, the
+            // clear must also be scissored to that dirty region.
+            let scissor_rect = target.alpha_batch_container.task_scissor_rect.map(|rect| {
+                draw_target.build_scissor_rect(
+                    Some(rect),
+                    content_origin,
+                )
+            });
+
             self.device.clear_target(
                 target.clear_color.map(|c| c.to_array()),
                 Some(1.0),
-                None,
+                scissor_rect,
             );
 
             self.device.disable_depth_write();

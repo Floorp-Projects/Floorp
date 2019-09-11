@@ -717,6 +717,7 @@ impl<'a> DisplayListFlattener<'a> {
             main_scroll_root,
             self.config.background_color,
             shared_clips,
+            parent_clip_chain_id,
         ));
 
         let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
@@ -1930,6 +1931,7 @@ impl<'a> DisplayListFlattener<'a> {
                 ROOT_SPATIAL_NODE_INDEX,
                 self.config.background_color,
                 Vec::new(),
+                ClipChainId::NONE,
             );
 
             let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
