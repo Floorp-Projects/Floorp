@@ -503,20 +503,7 @@ ReplayDebugger.prototype = {
     }
   },
 
-  replayPaint(data) {
-    this._control.paint(data);
-  },
-
-  replayPaintCurrentPoint() {
-    if (this.replayIsRecording()) {
-      return RecordReplayControl.restoreMainGraphics();
-    }
-
-    const point = this._control.lastPausePoint();
-    return this._control.paint(point);
-  },
-
-  // Clear out all data that becomes invalid when the child unpauses.
+  // Reset the per-pause pool when the child unpauses.
   _invalidateAfterUnpause() {
     this._pool = new ReplayPool(this);
   },

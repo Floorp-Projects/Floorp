@@ -1946,13 +1946,6 @@ const gControl = {
     return gControl.sendRequest({ type: "pauseData" });
   },
 
-  paint(point) {
-    const data = maybeGetPauseData(point);
-    if (data && data.paintData) {
-      RecordReplayControl.hadRepaint(data.paintData);
-    }
-  },
-
   repaint() {
     if (!gPausePoint) {
       return;
