@@ -14,9 +14,10 @@ dictionary RTCTrackEventInit : EventInit {
     required RTCRtpTransceiver     transceiver;
 };
 
-[Pref="media.peerconnection.enabled",
- Constructor(DOMString type, RTCTrackEventInit eventInitDict)]
+[Pref="media.peerconnection.enabled"]
 interface RTCTrackEvent : Event {
+    constructor(DOMString type, RTCTrackEventInit eventInitDict);
+  
     readonly        attribute RTCRtpReceiver           receiver;
     readonly        attribute MediaStreamTrack         track;
 

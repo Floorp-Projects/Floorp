@@ -79,7 +79,7 @@ bool InputEvent::IsComposing() {
 
 already_AddRefed<InputEvent> InputEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const InputEventInit& aParam, ErrorResult& aRv) {
+    const InputEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<InputEvent> e = new InputEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

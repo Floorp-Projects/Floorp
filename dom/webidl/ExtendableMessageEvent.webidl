@@ -7,9 +7,11 @@
  * https://w3c.github.io/ServiceWorker/#extendablemessage-event-section
  */
 
-[Constructor(DOMString type, optional ExtendableMessageEventInit eventInitDict = {}),
- Exposed=(ServiceWorker)]
+[Exposed=(ServiceWorker)]
 interface ExtendableMessageEvent : ExtendableEvent {
+  constructor(DOMString type,
+              optional ExtendableMessageEventInit eventInitDict = {});
+
   /**
    * Custom data associated with this event.
    */

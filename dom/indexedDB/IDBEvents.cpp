@@ -63,7 +63,7 @@ already_AddRefed<IDBVersionChangeEvent> IDBVersionChangeEvent::CreateInternal(
 
 already_AddRefed<IDBVersionChangeEvent> IDBVersionChangeEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const IDBVersionChangeEventInit& aOptions, ErrorResult& aRv) {
+    const IDBVersionChangeEventInit& aOptions) {
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
 
   return CreateInternal(target, aType, aOptions.mOldVersion,

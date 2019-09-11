@@ -10,10 +10,12 @@
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/network.html#closeevent
  */
 
-[Constructor(DOMString type, optional CloseEventInit eventInitDict = {}),LegacyEventInit,
+[LegacyEventInit,
  Exposed=(Window,Worker)]
 interface CloseEvent : Event
 {
+  constructor(DOMString type, optional CloseEventInit eventInitDict = {});
+
   readonly attribute boolean wasClean;
   readonly attribute unsigned short code;
   readonly attribute DOMString reason;

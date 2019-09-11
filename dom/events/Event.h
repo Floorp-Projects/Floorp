@@ -166,8 +166,7 @@ class Event : public nsISupports, public nsWrapperCache {
 
   static already_AddRefed<Event> Constructor(const GlobalObject& aGlobal,
                                              const nsAString& aType,
-                                             const EventInit& aParam,
-                                             ErrorResult& aRv);
+                                             const EventInit& aParam);
 
   void GetType(nsAString& aType) const;
 

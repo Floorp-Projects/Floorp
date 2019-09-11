@@ -881,11 +881,7 @@ class NotificationEventOp : public ExtendableEventOp,
     init.mCancelable = false;
 
     RefPtr<NotificationEvent> notificationEvent =
-        NotificationEvent::Constructor(target, args.eventName(), init, result);
-
-    if (NS_WARN_IF(result.Failed())) {
-      return false;
-    }
+        NotificationEvent::Constructor(target, args.eventName(), init);
 
     notificationEvent->SetTrusted(true);
 
@@ -974,6 +970,7 @@ class MessageEventOp final : public ExtendableEventOp {
     Sequence<OwningNonNull<MessagePort>> ports;
     if (!mData->TakeTransferredPortsAsSequence(ports)) {
       RejectAll(NS_ERROR_FAILURE);
+      rv.SuppressException();
       return true;
     }
 
@@ -992,18 +989,14 @@ class MessageEventOp final : public ExtendableEventOp {
     init.mSource.SetValue().SetAsClient() = new Client(
         sgo, mArgs.get_ServiceWorkerMessageEventOpArgs().clientInfoAndState());
 
-    rv = NS_OK;
+    rv.SuppressException();
     RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
     RefPtr<ExtendableMessageEvent> extendableEvent =
         ExtendableMessageEvent::Constructor(
             target,
             deserializationFailed ? NS_LITERAL_STRING("messageerror")
                                   : NS_LITERAL_STRING("message"),
-            init, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      RejectAll(rv.StealNSResult());
-      return false;
-    }
+            init);
 
     extendableEvent->SetTrusted(true);
 
@@ -1577,12 +1570,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   /**
    * Step 4b: create the FetchEvent
    */
-  ErrorResult result;
   RefPtr<FetchEvent> fetchEvent = FetchEvent::Constructor(
-      globalObject, NS_LITERAL_STRING("fetch"), fetchEventInit, result);
-  if (NS_WARN_IF(result.Failed())) {
-    return result.StealNSResult();
-  }
+      globalObject, NS_LITERAL_STRING("fetch"), fetchEventInit);
   fetchEvent->SetTrusted(true);
   fetchEvent->PostInit(args.workerScriptSpec(), this);
 

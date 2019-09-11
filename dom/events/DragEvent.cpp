@@ -70,10 +70,9 @@ DataTransfer* DragEvent::GetDataTransfer() {
 }
 
 // static
-already_AddRefed<DragEvent> DragEvent::Constructor(const GlobalObject& aGlobal,
-                                                   const nsAString& aType,
-                                                   const DragEventInit& aParam,
-                                                   ErrorResult& aRv) {
+already_AddRefed<DragEvent> DragEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const DragEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<DragEvent> e = new DragEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

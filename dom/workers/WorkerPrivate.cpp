@@ -4746,7 +4746,7 @@ bool WorkerPrivate::ConnectMessagePort(
   }
 
   RefPtr<MessageEvent> event = MessageEvent::Constructor(
-      globalObject, NS_LITERAL_STRING("connect"), init, rv);
+      globalObject, NS_LITERAL_STRING("connect"), init);
 
   event->SetTrusted(true);
 

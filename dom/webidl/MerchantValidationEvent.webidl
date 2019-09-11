@@ -11,11 +11,14 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional MerchantValidationEventInit eventInitDict = {}),
-SecureContext,
+[SecureContext,
 Exposed=Window,
 Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface MerchantValidationEvent : Event {
+  [Throws]
+  constructor(DOMString type,
+              optional MerchantValidationEventInit eventInitDict = {});
+
   readonly attribute DOMString methodName;
   readonly attribute USVString validationURL;
   [Throws]

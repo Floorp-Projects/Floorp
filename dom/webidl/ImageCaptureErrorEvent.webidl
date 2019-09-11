@@ -10,9 +10,11 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-[Pref="dom.imagecapture.enabled",
-Constructor(DOMString type, optional ImageCaptureErrorEventInit imageCaptureErrorInitDict = {})]
+[Pref="dom.imagecapture.enabled"]
 interface ImageCaptureErrorEvent : Event {
+  constructor(DOMString type,
+              optional ImageCaptureErrorEventInit imageCaptureErrorInitDict = {});
+
   readonly attribute ImageCaptureError? imageCaptureError;
 };
 

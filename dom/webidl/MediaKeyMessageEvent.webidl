@@ -17,8 +17,10 @@ enum MediaKeyMessageType {
   "individualization-request"
 };
 
-[Constructor(DOMString type, MediaKeyMessageEventInit eventInitDict)]
 interface MediaKeyMessageEvent : Event {
+  [Throws]
+  constructor(DOMString type, MediaKeyMessageEventInit eventInitDict);
+
   readonly attribute MediaKeyMessageType messageType;
   [Throws]
   readonly attribute ArrayBuffer message;

@@ -7,9 +7,11 @@
  * https://html.spec.whatwg.org/multipage/#the-hashchangeevent-interface
  */
 
-[Constructor(DOMString type, optional HashChangeEventInit eventInitDict = {}), LegacyEventInit]
+[LegacyEventInit]
 interface HashChangeEvent : Event
 {
+  constructor(DOMString type, optional HashChangeEventInit eventInitDict = {});
+
   readonly attribute DOMString oldURL;
   readonly attribute DOMString newURL;
 

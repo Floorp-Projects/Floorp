@@ -39,7 +39,7 @@ void FocusEvent::InitFocusEvent(const nsAString& aType, bool aCanBubble,
 
 already_AddRefed<FocusEvent> FocusEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const FocusEventInit& aParam, ErrorResult& aRv) {
+    const FocusEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<FocusEvent> e = new FocusEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

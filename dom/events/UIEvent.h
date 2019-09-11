@@ -36,8 +36,7 @@ class UIEvent : public Event {
 
   static already_AddRefed<UIEvent> Constructor(const GlobalObject& aGlobal,
                                                const nsAString& aType,
-                                               const UIEventInit& aParam,
-                                               ErrorResult& aRv);
+                                               const UIEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {

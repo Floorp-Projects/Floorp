@@ -9,9 +9,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional CompositionEventInit eventInitDict = {})]
 interface CompositionEvent : UIEvent
 {
+  constructor(DOMString type, optional CompositionEventInit eventInitDict = {});
+
   readonly attribute DOMString? data;
   // locale is currently non-standard
   readonly attribute DOMString  locale;

@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[Constructor(DOMString type, optional TCPServerSocketEventInit eventInitDict = {}),
- Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
+[Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
  Exposed=Window]
 interface TCPServerSocketEvent : Event {
+  constructor(DOMString type,
+              optional TCPServerSocketEventInit eventInitDict = {});
+
   readonly attribute TCPSocket socket;
 };
 

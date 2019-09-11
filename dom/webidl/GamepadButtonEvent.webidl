@@ -4,10 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.gamepad.non_standard_events.enabled",
- Constructor(DOMString type, optional GamepadButtonEventInit eventInitDict = {})]
+[Pref="dom.gamepad.non_standard_events.enabled"]
 interface GamepadButtonEvent : GamepadEvent
 {
+  constructor(DOMString type,
+              optional GamepadButtonEventInit eventInitDict = {});
+
   readonly attribute unsigned long button;
 };
 

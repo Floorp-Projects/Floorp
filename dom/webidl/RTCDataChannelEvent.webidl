@@ -11,8 +11,9 @@ dictionary RTCDataChannelEventInit : EventInit {
     required RTCDataChannel channel;
 };
 
-[Pref="media.peerconnection.enabled",
- Constructor(DOMString type, RTCDataChannelEventInit eventInitDict)]
+[Pref="media.peerconnection.enabled"]
 interface RTCDataChannelEvent : Event {
-  readonly attribute RTCDataChannel channel;
+    constructor(DOMString type, RTCDataChannelEventInit eventInitDict);
+
+    readonly attribute RTCDataChannel channel;
 };

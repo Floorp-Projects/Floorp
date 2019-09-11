@@ -112,7 +112,7 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
 // static
 already_AddRefed<PointerEvent> PointerEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const PointerEventInit& aParam, ErrorResult& aRv) {
+    const PointerEventInit& aParam) {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(owner, aType, aParam);
 }

@@ -27,7 +27,7 @@ TransitionEvent::TransitionEvent(EventTarget* aOwner,
 // static
 already_AddRefed<TransitionEvent> TransitionEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const TransitionEventInit& aParam, ErrorResult& aRv) {
+    const TransitionEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

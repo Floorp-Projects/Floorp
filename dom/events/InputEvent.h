@@ -25,8 +25,7 @@ class InputEvent : public UIEvent {
 
   static already_AddRefed<InputEvent> Constructor(const GlobalObject& aGlobal,
                                                   const nsAString& aType,
-                                                  const InputEventInit& aParam,
-                                                  ErrorResult& aRv);
+                                                  const InputEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {

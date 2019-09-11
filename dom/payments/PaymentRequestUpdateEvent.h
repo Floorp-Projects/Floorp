@@ -41,7 +41,7 @@ class PaymentRequestUpdateEvent : public Event, public PromiseNativeHandler {
   // Called by WebIDL constructor
   static already_AddRefed<PaymentRequestUpdateEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const PaymentRequestUpdateEventInit& aEventInitDict, ErrorResult& aRv);
+      const PaymentRequestUpdateEventInit& aEventInitDict);
 
   void UpdateWith(Promise& aPromise, ErrorResult& aRv);
 

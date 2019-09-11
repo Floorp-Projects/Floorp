@@ -120,7 +120,7 @@ void MouseEvent::InitializeExtraMouseEventDictionaryMembers(
 
 already_AddRefed<MouseEvent> MouseEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const MouseEventInit& aParam, ErrorResult& aRv) {
+    const MouseEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<MouseEvent> e = new MouseEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

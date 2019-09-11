@@ -4,10 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.gamepad.non_standard_events.enabled",
- Constructor(DOMString type, optional GamepadAxisMoveEventInit eventInitDict = {})]
+[Pref="dom.gamepad.non_standard_events.enabled"]
 interface GamepadAxisMoveEvent : GamepadEvent
 {
+  constructor(DOMString type,
+              optional GamepadAxisMoveEventInit eventInitDict = {});
+
   readonly attribute unsigned long axis;
   readonly attribute double value;
 };

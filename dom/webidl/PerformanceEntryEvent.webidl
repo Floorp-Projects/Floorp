@@ -14,10 +14,12 @@ dictionary PerformanceEntryEventInit : EventInit
   DOMString origin = "";
 };
 
-[Constructor(DOMString type, optional PerformanceEntryEventInit eventInitDict = {}),
- ChromeOnly]
+[ChromeOnly]
 interface PerformanceEntryEvent : Event
 {
+  constructor(DOMString type,
+              optional PerformanceEntryEventInit eventInitDict = {});
+
   readonly attribute DOMString name;
   readonly attribute DOMString entryType;
   readonly attribute DOMHighResTimeStamp startTime;

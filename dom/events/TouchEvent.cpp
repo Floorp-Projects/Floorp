@@ -303,7 +303,7 @@ bool TouchEvent::LegacyAPIEnabled(nsIDocShell* aDocShell,
 // static
 already_AddRefed<TouchEvent> TouchEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const TouchEventInit& aParam, ErrorResult& aRv) {
+    const TouchEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<TouchEvent> e = new TouchEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

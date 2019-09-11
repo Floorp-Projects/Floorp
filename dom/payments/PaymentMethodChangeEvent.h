@@ -35,7 +35,7 @@ class PaymentMethodChangeEvent final : public PaymentRequestUpdateEvent {
   // Called by WebIDL constructor
   static already_AddRefed<PaymentMethodChangeEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const PaymentMethodChangeEventInit& aEventInitDict, ErrorResult& aRv);
+      const PaymentMethodChangeEventInit& aEventInitDict);
 
   void GetMethodName(nsAString& aMethodName);
   void SetMethodName(const nsAString& aMethodName);

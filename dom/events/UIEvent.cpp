@@ -73,8 +73,7 @@ UIEvent::UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
 // static
 already_AddRefed<UIEvent> UIEvent::Constructor(const GlobalObject& aGlobal,
                                                const nsAString& aType,
-                                               const UIEventInit& aParam,
-                                               ErrorResult& aRv) {
+                                               const UIEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<UIEvent> e = new UIEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
