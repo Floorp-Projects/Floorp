@@ -4053,7 +4053,8 @@ void profiler_add_network_marker(
     nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition,
-    const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI) {
+    const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
+    UniqueProfilerBacktrace aSource) {
   if (!profiler_is_active()) {
     return;
   }
@@ -4076,7 +4077,7 @@ void profiler_add_network_marker(
       MakeUnique<NetworkMarkerPayload>(
           static_cast<int64_t>(aChannelId), PromiseFlatCString(spec).get(),
           aType, aStart, aEnd, aPriority, aCount, aCacheDisposition, aTimings,
-          PromiseFlatCString(redirect_spec).get()));
+          PromiseFlatCString(redirect_spec).get(), std::move(aSource)));
 }
 
 // This logic needs to add a marker for a different thread, so we actually need

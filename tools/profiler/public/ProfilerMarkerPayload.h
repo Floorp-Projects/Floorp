@@ -251,8 +251,10 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
                        int64_t aCount,
                        mozilla::net::CacheDisposition aCacheDisposition,
                        const mozilla::net::TimingStruct* aTimings = nullptr,
-                       const char* aRedirectURI = nullptr)
-      : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing()),
+                       const char* aRedirectURI = nullptr,
+                       UniqueProfilerBacktrace aSource = nullptr)
+      : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing(),
+                              mozilla::Nothing(), std::move(aSource)),
         mID(aID),
         mURI(aURI ? strdup(aURI) : nullptr),
         mRedirectURI(aRedirectURI && (strlen(aRedirectURI) > 0)

@@ -625,4 +625,8 @@ interface nsIHttpChannel : nsIIdentChannel
                              in boolean aWarning,
                              in AString aURL,
                              in AString aContentType);
+
+%{ C++
+  virtual void SetSource(UniqueProfilerBacktrace aSource) {}
+%}
 };

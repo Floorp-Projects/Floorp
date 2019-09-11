@@ -249,6 +249,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   using nsIHttpChannel::IsThirdPartyTrackingResource;
 
+  virtual void SetSource(UniqueProfilerBacktrace aSource) override {
+    mSource = std::move(aSource);
+  }
+
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI** aDocumentURI) override;
   NS_IMETHOD SetDocumentURI(nsIURI* aDocumentURI) override;
@@ -720,6 +724,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   Atomic<uint32_t, ReleaseAcquire> mFirstPartyClassificationFlags;
   Atomic<uint32_t, ReleaseAcquire> mThirdPartyClassificationFlags;
   Atomic<uint32_t, ReleaseAcquire> mFlashPluginState;
+
+  UniqueProfilerBacktrace mSource;
 
   uint32_t mLoadFlags;
   uint32_t mCaps;

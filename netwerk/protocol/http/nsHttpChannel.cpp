@@ -5932,7 +5932,7 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
     profiler_add_network_marker(
         mURI, priority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
         mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
-        mCacheDisposition, &timings, mRedirectURI);
+        mCacheDisposition, &timings, mRedirectURI, std::move(mSource));
   }
 #endif
 
@@ -6361,9 +6361,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   mLastStatusReported =
       TimeStamp::Now();  // in case we enable the profiler after AsyncOpen()
   if (profiler_is_active()) {
-    profiler_add_network_marker(
-        mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
-        mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition);
+    profiler_add_network_marker(mURI, mPriority, mChannelId,
+                                NetworkLoadType::LOAD_START,
+                                mChannelCreationTimestamp, mLastStatusReported,
+                                0, mCacheDisposition, nullptr, nullptr);
   }
 #endif
 
@@ -8245,7 +8246,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     profiler_add_network_marker(
         uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
-        mCacheDisposition, &mTransactionTimings, nullptr);
+        mCacheDisposition, &mTransactionTimings, nullptr, std::move(mSource));
   }
 #endif
 
