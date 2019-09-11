@@ -180,6 +180,11 @@ add_task(async function() {
     ["Image inside an anchor (onmousedown)", "#img-6", null],
     ["Image inside an anchor (onclick)", "#img-7", null],
     ["Image inside an anchor (onmouseup)", "#img-8", null],
+    [
+      "Section with a collapse action from aria-expanded attribute",
+      "#section-1",
+      null,
+    ],
   ];
 
   for (const [description, selector, expected] of tests) {
