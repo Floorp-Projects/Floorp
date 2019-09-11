@@ -58,9 +58,6 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
   indexedDB::BackgroundCursorChild* mBackgroundActor;
 
-  // TODO: mRequest, mSourceObjectStore and mSourceIndex could be made const if
-  // Bug 1575173 is resolved. They are initialized in the constructor and never
-  // modified/cleared.
   RefPtr<IDBRequest> mRequest;
   RefPtr<IDBObjectStore> mSourceObjectStore;
   RefPtr<IDBIndex> mSourceIndex;
