@@ -12,6 +12,7 @@ from abc import ABCMeta, abstractmethod
 from mozlog import get_default_logger, commandline, structuredlog
 from mozlog.reader import LogHandler
 from mozpack.files import FileFinder
+from six import PY2
 
 from . import result
 from .pathutils import expand_exclusions, filterpaths, findobject
@@ -96,7 +97,8 @@ class LineType(BaseType):
             return self._lint_dir(path, config, **lintargs)
 
         payload = config['payload']
-        with open(path, 'r') as fh:
+        kwargs = {} if PY2 else {'errors': 'replace'}
+        with open(path, 'r', **kwargs) as fh:
             lines = fh.readlines()
 
         errors = []
@@ -146,7 +148,7 @@ class GlobalType(ExternalType):
         # Global lints are expensive to invoke.  Try to avoid running
         # them based on extensions and exclusions.
         try:
-            expand_exclusions(files, config, lintargs['root']).next()
+            next(expand_exclusions(files, config, lintargs['root']))
         except StopIteration:
             return []
 

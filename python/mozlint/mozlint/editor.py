@@ -40,7 +40,7 @@ def edit_issues(result):
             '-c', '1bd',
         ]
 
-        with tempfile.NamedTemporaryFile() as fh:
+        with tempfile.NamedTemporaryFile(mode='w') as fh:
             s = formatters.get('compact', summary=False)(result)
             fh.write(s)
             fh.flush()
@@ -49,5 +49,5 @@ def edit_issues(result):
             subprocess.call(cmd)
 
     else:
-        for path, errors in result.issues.iteritems():
+        for path, errors in result.issues.items():
             subprocess.call([editor, path])

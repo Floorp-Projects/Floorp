@@ -49,7 +49,7 @@ class Parser(object):
                 continue
 
             if not isinstance(linter[attr], list) or \
-                    not all(isinstance(a, basestring) for a in linter[attr]):
+                    not all(isinstance(a, str) for a in linter[attr]):
                 raise LinterParseError(relpath, "The {} directive must be a "
                                                 "list of strings!".format(attr))
             invalid_paths = set()
@@ -101,7 +101,7 @@ class Parser(object):
             raise LinterParseError(path, "No lint definitions found!")
 
         linters = []
-        for name, linter in config.iteritems():
+        for name, linter in config.items():
             linter['name'] = name
             linter['path'] = path
             self._validate(linter)

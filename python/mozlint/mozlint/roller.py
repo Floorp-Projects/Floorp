@@ -16,6 +16,11 @@ from multiprocessing import cpu_count
 from multiprocessing.queues import Queue
 from subprocess import CalledProcessError
 
+try:
+    from multiprocessing import get_context
+except ImportError:
+    get_context = None
+
 import mozpack.path as mozpath
 from mozversioncontrol import get_repository_object, MissingUpstreamRepo, InvalidRepoPath
 
@@ -66,6 +71,10 @@ class InterruptableQueue(Queue):
     This is needed to gracefully handle KeyboardInterrupts when a worker is
     blocking on ProcessPoolExecutor's call queue.
     """
+    def __init__(self, *args, **kwargs):
+        if get_context:
+            kwargs['ctx'] = get_context()
+        super(InterruptableQueue, self).__init__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
         try:
@@ -117,7 +126,7 @@ class LintRoller(object):
 
         :param paths: A path or iterable of paths to linter definitions.
         """
-        if isinstance(paths, basestring):
+        if isinstance(paths, str):
             paths = (paths,)
 
         for linter in chain(*[self.parse(p) for p in paths]):
@@ -198,7 +207,7 @@ class LintRoller(object):
         # Need to use a set in case vcs operations specify the same file
         # more than once.
         paths = paths or set()
-        if isinstance(paths, basestring):
+        if isinstance(paths, str):
             paths = set([paths])
         elif isinstance(paths, (list, tuple)):
             paths = set(paths)
@@ -259,7 +268,7 @@ class LintRoller(object):
             more than a couple seconds.
             """
             [f.cancel() for f in futures]
-            executor.shutdown(wait=False)
+            executor.shutdown(wait=True)
             print("\nwarning: not all files were linted")
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 

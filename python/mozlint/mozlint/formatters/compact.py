@@ -22,7 +22,7 @@ class CompactFormatter(object):
     def __call__(self, result):
         message = []
         num_problems = 0
-        for path, errors in sorted(result.issues.iteritems()):
+        for path, errors in sorted(result.issues.items()):
             num_problems += len(errors)
             for err in errors:
                 assert isinstance(err, Issue)
