@@ -86,7 +86,8 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
         shell = True
 
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = ProcessHandler(cmd_args, env=os.environ, stream=None, shell=shell)
+    proc = ProcessHandler(cmd_args, env=os.environ, stream=None,
+                          shell=shell, universal_newlines=True)
     proc.run()
     signal.signal(signal.SIGINT, orig)
 
