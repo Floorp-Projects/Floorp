@@ -243,12 +243,12 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun redirectLoad() {
         val redirectUri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/robocop/robocop_blank_02.html"
+            "http://example.org/tests/junit/hello.html"
         } else {
             "http://jigsaw.w3.org/HTTP/300/Overview.html"
         }
         val uri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/robocop/simple_redirect.sjs?$redirectUri"
+            "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
         } else {
             "http://jigsaw.w3.org/HTTP/300/301.html"
         }
