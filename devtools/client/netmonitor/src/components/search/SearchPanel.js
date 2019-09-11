@@ -168,7 +168,7 @@ class SearchPanel extends Component {
       const indexEnd = indexStart + query.length;
 
       // Handles a match in a string
-      if (indexStart > 0) {
+      if (indexStart >= 0) {
         return span(
           { title: object.value },
           span({}, object.value.substring(0, indexStart)),
