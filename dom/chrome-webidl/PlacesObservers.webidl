@@ -6,9 +6,9 @@
 
 callback PlacesEventCallback = void (sequence<PlacesEvent> events);
 
-[ChromeOnly, Exposed=Window,
- Constructor(PlacesEventCallback callback)]
+[ChromeOnly, Exposed=Window]
 interface PlacesWeakCallbackWrapper {
+  constructor(PlacesEventCallback callback);
 };
 
 // Global singleton which should handle all events for places.

@@ -23,8 +23,7 @@ PlacesWeakCallbackWrapper::PlacesWeakCallbackWrapper(
 
 already_AddRefed<PlacesWeakCallbackWrapper>
 PlacesWeakCallbackWrapper::Constructor(const GlobalObject& aGlobal,
-                                       PlacesEventCallback& aCallback,
-                                       ErrorResult& rv) {
+                                       PlacesEventCallback& aCallback) {
   nsCOMPtr<nsISupports> parent = aGlobal.GetAsSupports();
   RefPtr<PlacesWeakCallbackWrapper> wrapper =
       new PlacesWeakCallbackWrapper(parent, aCallback);

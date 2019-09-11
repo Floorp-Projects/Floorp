@@ -8,9 +8,11 @@
  * compared. Additionally, if created with `allowQuestion = true`, any
  * occurrence of "?" in the glob matches any single literal character.
  */
-[Constructor(DOMString glob, optional boolean allowQuestion = true),
- ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=Window]
 interface MatchGlob {
+  [Throws]
+  constructor(DOMString glob, optional boolean allowQuestion = true);
+  
   /**
    * Returns true if the string matches the glob.
    */

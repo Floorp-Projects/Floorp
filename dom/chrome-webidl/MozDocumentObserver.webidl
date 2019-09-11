@@ -9,8 +9,10 @@ callback interface MozDocumentCallback {
   void onPreloadDocument(MozDocumentMatcher matcher, LoadInfo loadInfo);
 };
 
-[ChromeOnly, Constructor(MozDocumentCallback callbacks), Exposed=Window]
+[ChromeOnly, Exposed=Window]
 interface MozDocumentObserver {
+  constructor(MozDocumentCallback callbacks);
+
   [Throws]
   void observe(sequence<MozDocumentMatcher> matchers);
   void disconnect();
