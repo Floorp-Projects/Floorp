@@ -182,21 +182,9 @@ class HTMLEditRules : public TextEditRules {
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
 
-  /**
-   * Called after handling edit action.  This may adjust Selection, remove
-   * unnecessary empty nodes, create <br> elements if needed, etc.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AfterEditInner();
-
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-
-  /**
-   * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
-   * necessary,
-   */
-  MOZ_MUST_USE nsresult PinSelectionToNewBlock();
 
   /**
    * DocumentModifiedWorker() is called by DocumentModified() either

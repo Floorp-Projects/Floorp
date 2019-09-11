@@ -4583,7 +4583,7 @@ bool Zone::findSweepGroupEdges(Zone* atomsZone) {
     }
   }
 
-  return WeakMapBase::findSweepGroupEdges(this);
+  return WeakMapBase::findSweepGroupEdgesForZone(this);
 }
 
 static bool AddEdgesForMarkQueue(GCMarker& marker) {

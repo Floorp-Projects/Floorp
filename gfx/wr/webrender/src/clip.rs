@@ -522,6 +522,7 @@ pub struct ClipStore {
 // A clip chain instance is what gets built for a given clip
 // chain id + local primitive region + positioning node.
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipChainInstance {
     pub clips_range: ClipNodeRange,
     // Combined clip rect for clips that are in the
