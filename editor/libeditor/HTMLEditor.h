@@ -2648,6 +2648,13 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   EnsureCaretInBlockElement(dom::Element& aElement);
 
+  /**
+   * Called by `HTMLEditRules::AfterEdit()`.  This may adjust Selection, remove
+   * unnecessary empty nodes, create `<br>` elements if needed, etc.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  OnEndHandlingTopLevelEditSubActionInternal();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
