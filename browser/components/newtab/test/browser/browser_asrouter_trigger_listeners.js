@@ -141,3 +141,97 @@ add_task(async function check_newSavedLogin_listener() {
     }
   );
 });
+
+add_task(async function check_trackingProtection_listener() {
+  const TEST_URL =
+    "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
+
+  const contentBlockingEvent = 1234;
+  let observerEvent = 0;
+  let pageLoadSum = 0;
+  const triggerHandler = (target, trigger) => {
+    const {
+      id,
+      param: { host },
+      context: { pageLoad },
+    } = trigger;
+    is(id, "trackingProtection", "should match event name");
+    is(host, TEST_URL, "should match test URL");
+
+    observerEvent += 1;
+    pageLoadSum += pageLoad;
+  };
+  const trackingProtectionListener = ASRouterTriggerListeners.get(
+    "trackingProtection"
+  );
+
+  // Previously initialized by the Router
+  trackingProtectionListener.uninit();
+
+  // Initialise listener
+  await trackingProtectionListener.init(triggerHandler, [contentBlockingEvent]);
+
+  await BrowserTestUtils.withNewTab(
+    TEST_URL,
+    async function triggerTrackingProtection(browser) {
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            browser,
+            host: TEST_URL,
+            event: contentBlockingEvent + 1,
+          },
+        },
+        "SiteProtection:ContentBlockingEvent"
+      );
+    }
+  );
+
+  is(observerEvent, 0, "shouldn't receive unrelated observer notification");
+  is(pageLoadSum, 0, "shouldn't receive unrelated observer notification");
+
+  await BrowserTestUtils.withNewTab(
+    TEST_URL,
+    async function triggerTrackingProtection(browser) {
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            browser,
+            host: TEST_URL,
+            event: contentBlockingEvent,
+          },
+        },
+        "SiteProtection:ContentBlockingEvent"
+      );
+
+      await BrowserTestUtils.waitForCondition(
+        () => observerEvent !== 0,
+        "Wait for the observer notification to run"
+      );
+      is(observerEvent, 1, "should receive observer notification");
+      is(pageLoadSum, 2, "should receive observer notification");
+    }
+  );
+
+  // Uninitialise listener
+  trackingProtectionListener.uninit();
+
+  await BrowserTestUtils.withNewTab(
+    TEST_URL,
+    async function triggerTrackingProtectionAfterUninit(browser) {
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            browser,
+            host: TEST_URL,
+            event: contentBlockingEvent,
+          },
+        },
+        "SiteProtection:ContentBlockingEvent"
+      );
+      await new Promise(resolve => executeSoon(resolve));
+      is(observerEvent, 1, "shouldn't receive obs. notification after uninit");
+      is(pageLoadSum, 2, "shouldn't receive obs. notification after uninit");
+    }
+  );
+});
