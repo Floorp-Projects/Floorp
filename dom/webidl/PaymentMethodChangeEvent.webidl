@@ -10,11 +10,13 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional PaymentMethodChangeEventInit eventInitDict = {}),
- SecureContext,
+[SecureContext,
  Exposed=Window,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentMethodChangeEvent : PaymentRequestUpdateEvent {
+    constructor(DOMString type,
+                optional PaymentMethodChangeEventInit eventInitDict = {});
+
     readonly attribute DOMString methodName;
     readonly attribute object?   methodDetails;
 };

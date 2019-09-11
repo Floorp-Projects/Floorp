@@ -23,7 +23,7 @@ class TransitionEvent : public Event {
 
   static already_AddRefed<TransitionEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const TransitionEventInit& aParam, ErrorResult& aRv);
+      const TransitionEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {

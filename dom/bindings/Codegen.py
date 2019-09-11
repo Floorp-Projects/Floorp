@@ -18348,7 +18348,7 @@ class CGEventMethod(CGNativeMember):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         if not self.isInit:
             self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
-            self.args.append(Argument('ErrorResult&', 'aRv'))
+
         return constructorForNativeCaller + CGNativeMember.declare(self, cgClass)
 
     def defineInit(self, cgClass):
@@ -18470,7 +18470,6 @@ class CGEventMethod(CGNativeMember):
         if needCx(None, self.arguments(), [], considerTypes=True, static=True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
-        self.args.append(Argument('ErrorResult&', 'aRv'))
         return constructorForNativeCaller + CGNativeMember.define(self, cgClass)
 
 

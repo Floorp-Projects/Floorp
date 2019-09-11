@@ -58,7 +58,7 @@ already_AddRefed<VRDisplayEvent> VRDisplayEvent::Constructor(
 
 already_AddRefed<VRDisplayEvent> VRDisplayEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const VRDisplayEventInit& aEventInitDict, ErrorResult& aRv) {
+    const VRDisplayEventInit& aEventInitDict) {
   nsCOMPtr<mozilla::dom::EventTarget> owner =
       do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(owner, aType, aEventInitDict);

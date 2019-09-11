@@ -7,9 +7,11 @@ enum SecurityPolicyViolationEventDisposition
   "enforce", "report"
 };
 
-[Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict = {})]
 interface SecurityPolicyViolationEvent : Event
 {
+    constructor(DOMString type,
+		optional SecurityPolicyViolationEventInit eventInitDict = {});
+
     readonly attribute DOMString      documentURI;
     readonly attribute DOMString      referrer;
     readonly attribute DOMString      blockedURI;

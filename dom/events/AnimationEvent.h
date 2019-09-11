@@ -23,7 +23,7 @@ class AnimationEvent : public Event {
 
   static already_AddRefed<AnimationEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const AnimationEventInit& aParam, ErrorResult& aRv);
+      const AnimationEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {

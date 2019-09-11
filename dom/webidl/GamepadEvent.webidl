@@ -7,10 +7,11 @@
  * https://w3c.github.io/gamepad/#gamepadevent-interface
  */
 
-[Pref="dom.gamepad.enabled",
- Constructor(DOMString type, optional GamepadEventInit eventInitDict = {})]
+[Pref="dom.gamepad.enabled"]
 interface GamepadEvent : Event
 {
+  constructor(DOMString type, optional GamepadEventInit eventInitDict = {});
+
   readonly attribute Gamepad? gamepad;
 };
 

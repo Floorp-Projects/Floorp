@@ -101,7 +101,7 @@ class ExtendableEvent : public Event {
 
   static already_AddRefed<ExtendableEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const EventInit& aOptions, ErrorResult& aRv) {
+      const EventInit& aOptions) {
     nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
     return Constructor(target, aType, aOptions);
   }
@@ -148,7 +148,7 @@ class FetchEvent final : public ExtendableEvent {
 
   static already_AddRefed<FetchEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const FetchEventInit& aOptions, ErrorResult& aRv);
+      const FetchEventInit& aOptions);
 
   bool WaitToRespond() const { return mWaitToRespond; }
 
@@ -259,11 +259,11 @@ class ExtendableMessageEvent final : public ExtendableEvent {
 
   static already_AddRefed<ExtendableMessageEvent> Constructor(
       mozilla::dom::EventTarget* aOwner, const nsAString& aType,
-      const ExtendableMessageEventInit& aOptions, ErrorResult& aRv);
+      const ExtendableMessageEventInit& aOptions);
 
   static already_AddRefed<ExtendableMessageEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const ExtendableMessageEventInit& aOptions, ErrorResult& aRv);
+      const ExtendableMessageEventInit& aOptions);
 
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
                ErrorResult& aRv);

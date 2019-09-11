@@ -475,6 +475,7 @@ class SendMessageEventRunnable final : public ExtendableEventWorkerRunnable {
     bool deserializationFailed = rv.ErrorCodeIs(NS_ERROR_DOM_DATA_CLONE_ERR);
 
     if (!deserializationFailed && NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
       return true;
     }
 
@@ -498,18 +499,14 @@ class SendMessageEventRunnable final : public ExtendableEventWorkerRunnable {
     init.mSource.SetValue().SetAsClient() =
         new Client(sgo, mClientInfoAndState);
 
-    rv = NS_OK;
+    rv.SuppressException();
     RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
     RefPtr<ExtendableMessageEvent> extendableEvent =
         ExtendableMessageEvent::Constructor(
             target,
             deserializationFailed ? NS_LITERAL_STRING("messageerror")
                                   : NS_LITERAL_STRING("message"),
-            init, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return false;
-    }
+            init);
 
     extendableEvent->SetTrusted(true);
 
@@ -1125,10 +1122,7 @@ class SendNotificationEventRunnable final
     nei.mCancelable = false;
 
     RefPtr<NotificationEvent> event =
-        NotificationEvent::Constructor(target, mEventName, nei, result);
-    if (NS_WARN_IF(result.Failed())) {
-      return false;
-    }
+        NotificationEvent::Constructor(target, mEventName, nei);
 
     event->SetTrusted(true);
 
@@ -1490,12 +1484,8 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     }
 
     init.mIsReload = mIsReload;
-    RefPtr<FetchEvent> event = FetchEvent::Constructor(
-        globalObj, NS_LITERAL_STRING("fetch"), init, result);
-    if (NS_WARN_IF(result.Failed())) {
-      result.SuppressException();
-      return false;
-    }
+    RefPtr<FetchEvent> event =
+        FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init);
 
     event->PostInit(mInterceptedChannel, mRegistration, mScriptSpec);
     event->SetTrusted(true);

@@ -49,7 +49,7 @@ class StorageEvent : public Event {
 
   static already_AddRefed<StorageEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const StorageEventInit& aEventInitDict, ErrorResult& aRv);
+      const StorageEventInit& aEventInitDict);
 
   void InitStorageEvent(const nsAString& aType, bool aCanBubble,
                         bool aCancelable, const nsAString& aKey,

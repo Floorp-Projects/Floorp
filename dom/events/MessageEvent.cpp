@@ -86,7 +86,7 @@ void MessageEvent::GetSource(
 /* static */
 already_AddRefed<MessageEvent> MessageEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const MessageEventInit& aParam, ErrorResult& aRv) {
+    const MessageEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(t, aType, aParam);
 }

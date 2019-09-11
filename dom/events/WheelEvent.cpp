@@ -84,7 +84,7 @@ uint32_t WheelEvent::DeltaMode() { return mEvent->AsWheelEvent()->mDeltaMode; }
 
 already_AddRefed<WheelEvent> WheelEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const WheelEventInit& aParam, ErrorResult& aRv) {
+    const WheelEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<WheelEvent> e = new WheelEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

@@ -10,9 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional ClipboardEventInit eventInitDict = {})]
 interface ClipboardEvent : Event
 {
+  [Throws]
+  constructor(DOMString type, optional ClipboardEventInit eventInitDict = {});
+
   readonly attribute DataTransfer? clipboardData;
 };
 

@@ -3,9 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-[ChromeOnly, Constructor(DOMString type, optional StyleRuleChangeEventInit eventInitDict = {})]
+[ChromeOnly]
 interface StyleRuleChangeEvent : Event
 {
+  constructor(DOMString type,
+              optional StyleRuleChangeEventInit eventInitDict = {});
+
   readonly attribute CSSStyleSheet? stylesheet;
   readonly attribute CSSRule? rule;
 };

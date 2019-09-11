@@ -10,10 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, SpeechSynthesisEventInit eventInitDict),
- Pref="media.webspeech.synth.enabled"]
+[Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesisEvent : Event
 {
+  constructor(DOMString type, SpeechSynthesisEventInit eventInitDict);
+
   readonly attribute SpeechSynthesisUtterance utterance;
   readonly attribute unsigned long charIndex;
   readonly attribute unsigned long? charLength;

@@ -34,7 +34,7 @@ class NotificationEvent final : public ExtendableEvent {
 
   static already_AddRefed<NotificationEvent> Constructor(
       mozilla::dom::EventTarget* aOwner, const nsAString& aType,
-      const NotificationEventInit& aOptions, ErrorResult& aRv) {
+      const NotificationEventInit& aOptions) {
     RefPtr<NotificationEvent> e = new NotificationEvent(aOwner);
     bool trusted = e->Init(aOwner);
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
@@ -47,9 +47,9 @@ class NotificationEvent final : public ExtendableEvent {
 
   static already_AddRefed<NotificationEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const NotificationEventInit& aOptions, ErrorResult& aRv) {
+      const NotificationEventInit& aOptions) {
     nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
-    return Constructor(owner, aType, aOptions, aRv);
+    return Constructor(owner, aType, aOptions);
   }
 
   already_AddRefed<Notification> Notification_() {

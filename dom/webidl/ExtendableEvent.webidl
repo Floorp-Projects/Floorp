@@ -7,9 +7,10 @@
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  */
 
-[Constructor(DOMString type, optional ExtendableEventInit eventInitDict = {}),
- Exposed=ServiceWorker]
+[Exposed=ServiceWorker]
 interface ExtendableEvent : Event {
+  constructor(DOMString type, optional ExtendableEventInit eventInitDict = {});
+  
   // https://github.com/slightlyoff/ServiceWorker/issues/261
   [Throws]
   void waitUntil(Promise<any> p);

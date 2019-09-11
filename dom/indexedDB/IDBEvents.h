@@ -74,7 +74,7 @@ class IDBVersionChangeEvent final : public Event {
 
   static already_AddRefed<IDBVersionChangeEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const IDBVersionChangeEventInit& aOptions, ErrorResult& aRv);
+      const IDBVersionChangeEventInit& aOptions);
 
   uint64_t OldVersion() const { return mOldVersion; }
 

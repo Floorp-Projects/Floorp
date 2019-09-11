@@ -7,9 +7,10 @@
  * https://html.spec.whatwg.org/#messageevent
  */
 
-[Constructor(DOMString type, optional MessageEventInit eventInitDict = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface MessageEvent : Event {
+  constructor(DOMString type, optional MessageEventInit eventInitDict = {});
+  
   /**
    * Custom data associated with this event.
    */

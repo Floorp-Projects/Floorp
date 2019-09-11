@@ -44,7 +44,7 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 
 already_AddRefed<CustomEvent> CustomEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const CustomEventInit& aParam, ErrorResult& aRv) {
+    const CustomEventInit& aParam) {
   nsCOMPtr<mozilla::dom::EventTarget> t =
       do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<CustomEvent> e = new CustomEvent(t, nullptr, nullptr);

@@ -4,11 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, PromiseRejectionEventInit eventInitDict),
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Pref="dom.promise_rejection_events.enabled"]
 interface PromiseRejectionEvent : Event
 {
+  constructor(DOMString type, PromiseRejectionEventInit eventInitDict);
+
   [BinaryName="rejectedPromise"]
   readonly attribute Promise<any> promise;
   readonly attribute any reason;

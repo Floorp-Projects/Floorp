@@ -10,10 +10,11 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional CustomEventInit eventInitDict = {}),
- Exposed=(Window, Worker)]
+[Exposed=(Window, Worker)]
 interface CustomEvent : Event
 {
+  constructor(DOMString type, optional CustomEventInit eventInitDict = {});
+
   readonly attribute any detail;
 
   // initCustomEvent is a Gecko specific deprecated method.

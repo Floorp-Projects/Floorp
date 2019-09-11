@@ -11,9 +11,10 @@ dictionary MediaStreamTrackEventInit : EventInit {
     required MediaStreamTrack track;
 };
 
-[Exposed=Window,
- Constructor (DOMString type, MediaStreamTrackEventInit eventInitDict)]
+[Exposed=Window]
 interface MediaStreamTrackEvent : Event {
+    constructor(DOMString type, MediaStreamTrackEventInit eventInitDict);
+
     [SameObject]
     readonly        attribute MediaStreamTrack track;
 };
