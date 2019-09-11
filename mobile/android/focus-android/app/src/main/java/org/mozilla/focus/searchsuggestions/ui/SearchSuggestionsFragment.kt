@@ -163,8 +163,8 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
                 context.components.sessionManager.add(session, selected = true)
             }
 
-            override fun updateDrawState(ds: TextPaint?) {
-                ds?.isUnderlineText = false
+            override fun updateDrawState(ds: TextPaint) {
+                ds.isUnderlineText = false
             }
         }
 

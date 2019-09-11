@@ -251,7 +251,7 @@ class UrlInputFragment :
         homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)
 
         val deepLinkAction = object : ClickableSpan() {
-            override fun onClick(widget: View?) {
+            override fun onClick(p0: View) {
                 tip.deepLink.invoke()
             }
         }

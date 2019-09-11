@@ -420,7 +420,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             closeButton.setImageDrawable(closeIcon)
         }
 
-        if (customTabConfig.disableUrlbarHiding) {
+        if (!customTabConfig.enableUrlbarHiding) {
             val params = urlBar!!.layoutParams as AppBarLayout.LayoutParams
             params.scrollFlags = 0
         }

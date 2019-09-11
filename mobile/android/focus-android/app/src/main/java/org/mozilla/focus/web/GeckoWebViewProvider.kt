@@ -32,7 +32,6 @@ import org.json.JSONException
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
-import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -90,13 +89,11 @@ class GeckoWebViewProvider : IWebViewProvider {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
             runtimeSettingsBuilder.contentBlocking(ContentBlocking.Settings.Builder()
-                    .categories(ContentBlocking.SB_MALWARE)
-                    .categories(ContentBlocking.SB_PHISHING)
+                    .safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING)
                     .build())
             val contentBlockingBuilder = ContentBlocking.Settings.Builder()
             if (Settings.getInstance(context).shouldUseSafeBrowsing()) {
-                contentBlockingBuilder.categories(ContentBlocking.SB_MALWARE)
-                        .categories(ContentBlocking.SB_PHISHING)
+                contentBlockingBuilder.safeBrowsing(ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING)
             }
             runtimeSettingsBuilder.contentBlocking(contentBlockingBuilder.build())
             runtimeSettingsBuilder.crashHandler(CrashHandlerService::class.java)
@@ -152,7 +149,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 .registerOnSharedPreferenceChangeListener(this)
             geckoSession = createGeckoSession()
             applySettingsAndSetDelegates()
-            setSession(geckoSession, geckoRuntime)
+            setSession(geckoSession)
         }
 
         private fun applySettingsAndSetDelegates() {
@@ -163,7 +160,6 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoSession.progressDelegate = createProgressDelegate()
             geckoSession.navigationDelegate = createNavigationDelegate()
             geckoSession.contentBlockingDelegate = createTrackingProtectionDelegate()
-            geckoSession.promptDelegate = createPromptDelegate()
             finder = geckoSession.finder
             finder.displayFlags = GeckoSession.FINDER_DISPLAY_HIGHLIGHT_ALL
         }
@@ -235,7 +231,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             } else {
                 geckoRuntime!!.settings.javaScriptEnabled = true
                 geckoRuntime!!.settings.webFontsEnabled = true
-                geckoRuntime!!.settings.contentBlocking.cookieBehavior = ContentBlocking.COOKIE_ACCEPT_ALL
+                geckoRuntime!!.settings.contentBlocking.cookieBehavior = ContentBlocking.CookieBehavior.ACCEPT_ALL
             }
             callback?.onBlockingStateChanged(enabled)
         }
@@ -272,13 +268,13 @@ class GeckoWebViewProvider : IWebViewProvider {
                 context.getString(R.string.pref_key_safe_browsing) -> {
                     val shouldUseSafeBrowsing =
                         Settings.getInstance(context).shouldUseSafeBrowsing()
-                    var cats = geckoRuntime!!.settings.contentBlocking.categories
+                    var cats = geckoRuntime!!.settings.contentBlocking.safeBrowsingCategories
                     if (shouldUseSafeBrowsing) {
-                        cats = cats or ContentBlocking.SB_MALWARE or ContentBlocking.SB_PHISHING
+                        cats = cats or ContentBlocking.SafeBrowsing.MALWARE or ContentBlocking.SafeBrowsing.PHISHING
                     } else {
-                        cats = cats and ContentBlocking.SB_MALWARE.inv() and ContentBlocking.SB_PHISHING.inv()
+                        cats = cats and ContentBlocking.SafeBrowsing.MALWARE.inv() and ContentBlocking.SafeBrowsing.PHISHING.inv()
                     }
-                    geckoRuntime!!.settings.contentBlocking.categories = cats
+                    geckoRuntime!!.settings.contentBlocking.setSafeBrowsing(cats)
                 }
                 else -> return
             }
@@ -300,45 +296,45 @@ class GeckoWebViewProvider : IWebViewProvider {
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_yes_option
                         ) ->
-                            ContentBlocking.COOKIE_ACCEPT_NONE
+                            ContentBlocking.CookieBehavior.ACCEPT_NONE
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option
                         ) ->
-                            ContentBlocking.COOKIE_ACCEPT_NON_TRACKERS
+                            ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_third_party_only_option
                         ) ->
-                            ContentBlocking.COOKIE_ACCEPT_FIRST_PARTY
-                        else -> ContentBlocking.COOKIE_ACCEPT_ALL
+                            ContentBlocking.CookieBehavior.ACCEPT_FIRST_PARTY
+                        else -> ContentBlocking.CookieBehavior.ACCEPT_ALL
                     }
         }
 
         private fun updateBlocking() {
             val settings = Settings.getInstance(context)
 
-            var categories = geckoRuntime!!.settings.contentBlocking.categories
+            var categories = geckoRuntime!!.settings.contentBlocking.antiTrackingCategories
             if (settings.shouldBlockSocialTrackers()) {
-                categories = categories or ContentBlocking.AT_SOCIAL
+                categories = categories or ContentBlocking.AntiTracking.SOCIAL
             } else {
-                categories = categories and ContentBlocking.AT_SOCIAL.inv()
+                categories = categories and ContentBlocking.AntiTracking.SOCIAL.inv()
             }
             if (settings.shouldBlockAdTrackers()) {
-                categories = categories or ContentBlocking.AT_AD
+                categories = categories or ContentBlocking.AntiTracking.AD
             } else {
-                categories = categories and ContentBlocking.AT_AD.inv()
+                categories = categories and ContentBlocking.AntiTracking.AD.inv()
             }
             if (settings.shouldBlockAnalyticTrackers()) {
-                categories = categories or ContentBlocking.AT_ANALYTIC
+                categories = categories or ContentBlocking.AntiTracking.ANALYTIC
             } else {
-                categories = categories and ContentBlocking.AT_ANALYTIC.inv()
+                categories = categories and ContentBlocking.AntiTracking.ANALYTIC.inv()
             }
             if (settings.shouldBlockOtherTrackers()) {
-                categories = categories or ContentBlocking.AT_CONTENT
+                categories = categories or ContentBlocking.AntiTracking.CONTENT
             } else {
-                categories = categories and ContentBlocking.AT_CONTENT.inv()
+                categories = categories and ContentBlocking.AntiTracking.CONTENT.inv()
             }
 
-            geckoRuntime!!.settings.contentBlocking.categories = categories
+            geckoRuntime!!.settings.contentBlocking.setAntiTracking(categories)
         }
 
         @Suppress("ComplexMethod", "ReturnCount")
@@ -575,10 +571,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                     callback?.countBlockedTracker()
                 }
             }
-        }
-
-        private fun createPromptDelegate(): GeckoSession.PromptDelegate {
-            return GeckoViewPrompt(context as Activity)
         }
 
         override fun canGoForward(): Boolean {

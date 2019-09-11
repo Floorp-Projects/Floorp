@@ -10,7 +10,7 @@ import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabConfig
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.BrowserFragment

@@ -16,7 +16,7 @@ object AppConstants {
     private const val PRODUCT_FLAVOR_KLAR = "klar"
 
     val isKlarBuild: Boolean
-        get() = PRODUCT_FLAVOR_KLAR == BuildConfig.FLAVOR_product
+        get() = PRODUCT_FLAVOR_KLAR == BuildConfig.FLAVOR
 
     val isReleaseBuild: Boolean
         get() = BUILD_TYPE_RELEASE == BuildConfig.BUILD_TYPE
