@@ -715,16 +715,16 @@ void profiler_add_marker_for_thread(
 enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
 
 #  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end,  \
-                                      count, cache, timings, redirect)      \
+                                      count, cache, timings, redirect, ...) \
     profiler_add_network_marker(uri, pri, channel, type, start, end, count, \
-                                cache, timings, redirect)
+                                cache, timings, redirect, ##__VA_ARGS__)
 
 void profiler_add_network_marker(
     nsIURI* aURI, int32_t aPriority, uint64_t aChannelId, NetworkLoadType aType,
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition,
     const mozilla::net::TimingStruct* aTimings = nullptr,
-    nsIURI* aRedirectURI = nullptr);
+    nsIURI* aRedirectURI = nullptr, UniqueProfilerBacktrace aSource = nullptr);
 
 enum TracingKind {
   TRACING_EVENT,
