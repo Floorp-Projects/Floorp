@@ -176,6 +176,10 @@ add_task(async function() {
       "#label-4",
       null,
     ],
+    ["Image inside an anchor (href)", "#img-5", null],
+    ["Image inside an anchor (onmousedown)", "#img-6", null],
+    ["Image inside an anchor (onclick)", "#img-7", null],
+    ["Image inside an anchor (onmouseup)", "#img-8", null],
   ];
 
   for (const [description, selector, expected] of tests) {

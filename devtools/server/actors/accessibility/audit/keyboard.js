@@ -376,7 +376,10 @@ function semanticsRule(accessible) {
     // they are clickable.
     (accessible.role === Ci.nsIAccessibleRole.ROLE_LABEL &&
       accessible.getRelationByType(Ci.nsIAccessibleRelation.RELATION_LABEL_FOR)
-        .targetsCount > 0)
+        .targetsCount > 0) ||
+    // Ignore images that are inside an anchor (have linked state).
+    (accessible.role === Ci.nsIAccessibleRole.ROLE_GRAPHIC &&
+      state.value & Ci.nsIAccessibleStates.STATE_LINKED)
   ) {
     return null;
   }
