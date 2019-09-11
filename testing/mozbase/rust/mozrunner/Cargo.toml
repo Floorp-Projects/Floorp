@@ -8,7 +8,7 @@ license = "MPL-2.0"
 
 [dependencies]
 log = "0.4"
-mozprofile = { path = "../mozprofile" }
+mozprofile = { path = "../mozprofile", version = "0.6" }
 plist = "0.5"
 
 [target.'cfg(target_os = "windows")'.dependencies]
