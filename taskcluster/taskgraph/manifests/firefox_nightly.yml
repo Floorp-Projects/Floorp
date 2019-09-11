@@ -49,22 +49,34 @@ platform_names:
     filename_platform:
         by-platform:
             linux-shippable: 'linux-i686'
+            linux-devedition-nightly: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
+            linux64-devedition-nightly: 'linux-x86_64'
             linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
+            macosx64-devedition-nightly: 'mac'
             win32-shippable: 'win32'
+            win32-devedition-nightly: 'win32'
             win64-shippable: 'win64'
+            win64-devedition-nightly: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
+            win64-aarch64-devedition-nightly: 'win64-aarch64'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
     stage_platform:
         by-platform:
             linux-shippable: 'linux'
+            linux-devedition-nightly: 'linux'
             linux64-asan-reporter-nightly: 'linux64-asan-reporter'
             linux64-shippable: 'linux64'
+            linux64-devedition-nightly: 'linux64'
             macosx64-shippable: 'macosx64'
+            macosx64-devedition-nightly: 'macosx64'
             win32-shippable: 'win32'
+            win32-devedition-nightly: 'win32'
             win64-shippable: 'win64'
+            win64-devedition-nightly: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
+            win64-aarch64-devedition-nightly: 'win64-aarch64'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
 
 default: &default

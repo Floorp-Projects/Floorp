@@ -17,102 +17,9 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          generate_beetmover_upstream_artifacts,
                                          get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
-                                         get_worker_type_for_scope,
-                                         should_use_artifact_map)
-from taskgraph.util.taskcluster import get_artifact_prefix
+                                         get_worker_type_for_scope)
 from taskgraph.util.treeherder import replace_group
 
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
-    "en-US/buildhub.json",
-    "en-US/target.common.tests.tar.gz",
-    "en-US/target.cppunittest.tests.tar.gz",
-    "en-US/target.crashreporter-symbols.zip",
-    "en-US/target.json",
-    "en-US/target.mochitest.tests.tar.gz",
-    "en-US/target.mozinfo.json",
-    "en-US/target.reftest.tests.tar.gz",
-    "en-US/target.talos.tests.tar.gz",
-    "en-US/target.awsy.tests.tar.gz",
-    "en-US/target.test_packages.json",
-    "en-US/target.txt",
-    "en-US/target.web-platform.tests.tar.gz",
-    "en-US/target.xpcshell.tests.tar.gz",
-    "en-US/target_info.txt",
-    "en-US/mozharness.zip",
-    "en-US/robocop.apk",
-    "en-US/target.jsshell.zip",
-]
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI = [
-    "buildhub.json",
-    "target.json",
-    "target.mozinfo.json",
-    "target.test_packages.json",
-    "target.txt",
-    "target_info.txt",
-    "robocop.apk",
-]
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_MOBILE_UPSTREAM_ARTIFACTS_SIGNED_EN_US = [
-    "en-US/target.apk",
-]
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_MOBILE_UPSTREAM_ARTIFACTS_SIGNED_MULTI = [
-    "target.apk",
-]
-
-
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
-    'android-x86-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-x86_64-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-aarch64-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-api-16-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-x86-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
-    'android-x86_64-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
-    'android-aarch64-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
-    'android-api-16-nightly-l10n': [],
-    'android-api-16-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
-}
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-UPSTREAM_ARTIFACT_SIGNED_PATHS = {
-    'android-x86-nightly': ["en-US/target.apk"],
-    'android-x86_64-nightly': ["en-US/target.apk"],
-    'android-aarch64-nightly': ["en-US/target.apk"],
-    'android-api-16-nightly': ["en-US/target.apk"],
-    'android-x86-nightly-multi': ["target.apk"],
-    'android-x86_64-nightly-multi': ["target.apk"],
-    'android-aarch64-nightly-multi': ["target.apk"],
-    'android-api-16-nightly-l10n': ["target.apk"],
-    'android-api-16-nightly-multi': ["target.apk"],
-}
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-UPSTREAM_SOURCE_ARTIFACTS = [
-    "source.tar.xz",
-    "source.tar.xz.asc",
-]
 
 transforms = TransformSequence()
 
@@ -204,67 +111,6 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(job, signing_task_ref, build_task_ref, platform,
-                                locale=None):
-    build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
-    signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
-
-    artifact_prefix = get_artifact_prefix(job)
-    if locale:
-        artifact_prefix = '{}/{}'.format(artifact_prefix, locale)
-        platform = "{}-l10n".format(platform)
-
-    if platform.endswith("-source"):
-        return [
-            {
-                "taskId": {"task-reference": signing_task_ref},
-                "taskType": "signing",
-                "paths": ["{}/{}".format(artifact_prefix, p)
-                          for p in UPSTREAM_SOURCE_ARTIFACTS],
-                "locale": locale or "en-US",
-            }
-        ]
-
-    upstream_artifacts = []
-
-    # Some platforms (like android-api-16-nightly-l10n) may not depend on any unsigned artifact
-    if build_mapping[platform]:
-        upstream_artifacts.append({
-            "taskId": {"task-reference": build_task_ref},
-            "taskType": "build",
-            "paths": ["{}/{}".format(artifact_prefix, p)
-                      for p in build_mapping[platform]],
-            "locale": locale or "en-US",
-        })
-
-    upstream_artifacts.append({
-        "taskId": {"task-reference": signing_task_ref},
-        "taskType": "signing",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in signing_mapping[platform]],
-        "locale": locale or "en-US",
-    })
-
-    if not locale and "android" in platform:
-        # edge case to support 'multi' locale paths
-        multi_platform = "{}-multi".format(platform)
-        upstream_artifacts.extend([{
-            "taskId": {"task-reference": build_task_ref},
-            "taskType": "build",
-            "paths": ["{}/{}".format(artifact_prefix, p)
-                      for p in build_mapping[multi_platform]],
-            "locale": "multi",
-        }, {
-            "taskId": {"task-reference": signing_task_ref},
-            "taskType": "signing",
-            "paths": ["{}/{}".format(artifact_prefix, p)
-                      for p in signing_mapping[multi_platform]],
-            "locale": "multi",
-        }])
-
-    return upstream_artifacts
-
-
 def craft_release_properties(config, job):
     params = config.params
     build_platform = job['attributes']['build_platform']
@@ -304,34 +150,17 @@ def make_task_worker(config, jobs):
 
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
-        build_task = None
-        signing_task = None
-        for dependency in job["dependencies"].keys():
-            if 'signing' in dependency:
-                signing_task = dependency
-            else:
-                build_task = dependency
 
-        signing_task_ref = "<" + str(signing_task) + ">"
-        build_task_ref = "<" + str(build_task) + ">"
-
-        if should_use_artifact_map(platform):
-            upstream_artifacts = generate_beetmover_upstream_artifacts(
-                config, job, platform, locale
-            )
-        else:
-            upstream_artifacts = generate_upstream_artifacts(
-                job, signing_task_ref, build_task_ref, platform, locale
-            )
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': upstream_artifacts,
+            'upstream-artifacts': generate_beetmover_upstream_artifacts(
+                config, job, platform, locale
+            ),
+            'artifact-map': generate_beetmover_artifact_map(
+                config, job, platform=platform, locale=locale
+            ),
         }
-
-        if should_use_artifact_map(platform):
-            worker['artifact-map'] = generate_beetmover_artifact_map(
-                config, job, platform=platform, locale=locale)
 
         if locale:
             worker["locale"] = locale
