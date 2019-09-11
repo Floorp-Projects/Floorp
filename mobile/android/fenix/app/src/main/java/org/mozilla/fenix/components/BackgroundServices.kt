@@ -99,7 +99,7 @@ class BackgroundServices(
         PushConfig(projectId)
     }
 
-    val pushService by lazy { FirebasePush() }
+    private val pushService by lazy { FirebasePush() }
 
     val push by lazy {
         AutoPushFeature(
@@ -119,8 +119,8 @@ class BackgroundServices(
         private val logger = Logger("DeviceEventsObserver")
         override fun onEvents(events: List<DeviceEvent>) {
             logger.info("Received ${events.size} device event(s)")
-            events.filter { it is DeviceEvent.TabReceived }.forEach {
-                notificationManager.showReceivedTabs(it as DeviceEvent.TabReceived)
+            events.filterIsInstance<DeviceEvent.TabReceived>().forEach {
+                notificationManager.showReceivedTabs(it)
             }
         }
     }
