@@ -14,6 +14,8 @@ namespace js {
 
 typedef uint32_t RawBytecodeLocationOffset;
 
+class PropertyName;
+
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;
 
@@ -69,6 +71,8 @@ class BytecodeLocation {
 
   uint32_t bytecodeToOffset(JSScript* script);
 
+  PropertyName* getPropertyName(const JSScript* script) const;
+
   bool operator==(const BytecodeLocation& other) const {
     MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
     return rawBytecode_ == other.rawBytecode_;
@@ -119,6 +123,16 @@ class BytecodeLocation {
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
 
   uint32_t icIndex() const { return GET_ICINDEX(rawBytecode_); }
+
+  bool isEqualityOp() const { return IsEqualityOp(getOp()); }
+
+  bool isStrictEqualityOp() const {
+    return is(JSOP_STRICTEQ) || is(JSOP_STRICTNE);
+  }
+
+  bool isDetectingOp() const { return IsDetecting(getOp()); }
+
+  bool isNameOp() const { return IsNameOp(getOp()); }
 
   // Accessors:
   JSOp getOp() const { return JSOp(*rawBytecode_); }

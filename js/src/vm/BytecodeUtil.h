@@ -535,6 +535,14 @@ inline bool IsCheckStrictOp(JSOp op) {
   return CodeSpec[op].format & JOF_CHECKSTRICT;
 }
 
+inline bool IsDetecting(JSOp op) {
+  return CodeSpec[op].format & JOF_DETECTING;
+}
+
+inline bool IsNameOp(JSOp op) {
+  return CodeSpec[op].format & JOF_NAME;
+}
+
 #ifdef DEBUG
 inline bool IsCheckSloppyOp(JSOp op) {
   return CodeSpec[op].format & JOF_CHECKSLOPPY;
