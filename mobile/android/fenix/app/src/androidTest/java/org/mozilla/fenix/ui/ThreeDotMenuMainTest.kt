@@ -49,6 +49,7 @@ class ThreeDotMenuMainTest {
             verifySettingsButton()
             verifyLibraryButton()
             verifyHelpButton()
+            verifyWhatsNewButton()
         }.openSettings {
             verifySettingsView()
         }.goBack {
@@ -59,6 +60,10 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openHelp {
             verifyHelpUrl()
+        }.openHomeScreen {
+        }.openThreeDotMenu {
+        }.openWhatsNew {
+            verifyWhatsNewURL()
         }
     }
 }

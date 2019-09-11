@@ -44,6 +44,7 @@ class ThreeDotMenuRobot {
     fun verifyShareDialogTitle() = assertShareDialogTitle()
     fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
     fun verifyShareALinkTitle() = assertShareALinkTitle()
+    fun verifyWhatsNewButton() = assertWhatsNewButton()
 
     class Transition {
 
@@ -112,6 +113,14 @@ class ThreeDotMenuRobot {
             FindInPageRobot().interact()
             return FindInPageRobot.Transition()
         }
+
+        fun openWhatsNew(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.wait(Until.findObject(By.text("What's New")), waitingTime)
+            whatsNewButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -166,3 +175,7 @@ private fun assertSendToDeviceTitle() = SendToDeviceTitle()
 
 private fun ShareALinkTitle() = onView(allOf(withText("SHARE A LINK"), withResourceName("link_header")))
 private fun assertShareALinkTitle() = ShareALinkTitle()
+
+private fun whatsNewButton() = onView(allOf(withText("What's New")))
+private fun assertWhatsNewButton() = whatsNewButton()
+    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

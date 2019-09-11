@@ -30,6 +30,15 @@ class BrowserRobot {
             .check(matches(withText(containsString(redirectUrl))))
     }
 
+    fun verifyWhatsNewURL() {
+        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        val redirectUrl = "https://support.mozilla.org/"
+
+        mDevice.waitForIdle()
+        onView(withId(R.id.mozac_browser_toolbar_url_view))
+            .check(matches(withText(containsString(redirectUrl))))
+    }
+
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
     *  document.querySelector('#testContent').innerText == expectedText
     */
