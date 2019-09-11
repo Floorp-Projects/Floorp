@@ -41,13 +41,16 @@ ChromeUtils.defineModuleGetter(
   "ExtensionTestCommon",
   "resource://testing-common/ExtensionTestCommon.jsm"
 );
-XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  let { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm",
-    null
-  );
-  return Management;
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "Management",
+  "resource://gre/modules/Extension.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "UninstallObserver",
+  "resource://gre/modules/Extension.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -950,6 +953,10 @@ var AddonTestUtils = {
         });
       }
     }
+    // AddonListeners are removed when the addonManager is shutdown,
+    // ensure the Extension observer is added.  We call uninit in
+    // promiseShutdown to allow re-initialization.
+    UninstallObserver.init();
 
     let XPIScope = ChromeUtils.import(
       "resource://gre/modules/addons/XPIProvider.jsm",
@@ -1048,6 +1055,7 @@ var AddonTestUtils = {
       "resource://gre/modules/Extension.jsm",
       null
     );
+    UninstallObserver.uninit();
     ChromeUtils.defineModuleGetter(
       ExtensionScope,
       "XPIProvider",

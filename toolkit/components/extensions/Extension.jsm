@@ -11,6 +11,7 @@ var EXPORTED_SYMBOLS = [
   "ExtensionData",
   "Langpack",
   "Management",
+  "UninstallObserver",
 ];
 
 /* exported Extension, ExtensionData */
@@ -266,6 +267,14 @@ var UninstallObserver = {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
       this.initialized = true;
+    }
+  },
+
+  // AddonTestUtils will call this as necessary.
+  uninit() {
+    if (this.initialized) {
+      AddonManager.removeAddonListener(this);
+      this.initialized = false;
     }
   },
 
