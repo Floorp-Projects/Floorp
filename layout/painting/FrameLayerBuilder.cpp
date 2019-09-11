@@ -2092,9 +2092,9 @@ void FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder,
 }
 
 void FrameLayerBuilder::FlashPaint(gfxContext* aContext) {
-  float r = float(rand()) / RAND_MAX;
-  float g = float(rand()) / RAND_MAX;
-  float b = float(rand()) / RAND_MAX;
+  float r = float(rand()) / float(RAND_MAX);
+  float g = float(rand()) / float(RAND_MAX);
+  float b = float(rand()) / float(RAND_MAX);
   aContext->SetColor(Color(r, g, b, 0.4f));
   aContext->Paint();
 }
