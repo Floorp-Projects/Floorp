@@ -125,7 +125,12 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   /**
    * Rewind a thread until a breakpoint is hit.
    */
-  rewind() {
+  async rewind() {
+    if (!this.paused) {
+      this.interrupt();
+      await this.once("paused");
+    }
+
     this._doResume(null, true);
   }
 
