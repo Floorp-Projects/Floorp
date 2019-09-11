@@ -1,15 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * This is a temporary workaround to
- * be resolved in bug 1539000.
- */
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(
-  /Too many characters in placeable/
-);
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.aboutConfig.showWarning", true]],

@@ -251,6 +251,11 @@ public class GeckoViewActivity extends AppCompatActivity {
 
 
             }
+
+            sGeckoRuntime.setDelegate(() -> {
+                mKillProcessOnDestroy = true;
+                finish();
+            });
         }
 
         if(savedInstanceState == null) {
@@ -295,7 +300,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(channel);
         }
     }
-    
+
     private TabSession createSession() {
         TabSession session = mTabSessionManager.newSession(new GeckoSessionSettings.Builder()
                 .useMultiprocess(mUseMultiprocess)

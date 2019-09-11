@@ -45,11 +45,7 @@ function nextTest() {
   document.body.appendChild(iframe);
 }
 
-SpecialPowers.pushPrefEnv({"set": [
-  ["dom.security.featurePolicy.enabled", true],
-  ["dom.security.featurePolicy.header.enabled", true],
-  ["dom.security.featurePolicy.webidl.enabled", true],
-]}).then(nextTest);
+nextTest();
 </script>
 </body>
 </html>

@@ -17,8 +17,6 @@
  * platforms provide that header, we can convert all users and remove this one.
  */
 
-#include <wchar.h>
-
 namespace mozilla {
 
 /* Forward declarations. */

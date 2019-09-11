@@ -161,6 +161,7 @@ for (const type of [
   "SHOW_FIREFOX_ACCOUNTS",
   "PIN_CURRENT_TAB",
   "ENABLE_FIREFOX_MONITOR",
+  "OPEN_PROTECTION_PANEL",
 ]) {
   ASRouterActions[type] = type;
 }

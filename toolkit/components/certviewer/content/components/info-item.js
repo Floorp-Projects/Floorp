@@ -33,7 +33,15 @@ export class InfoItem extends HTMLElement {
   render() {
     let label = this.shadowRoot.querySelector("label");
     let labelText = normalizeToKebabCase(this.item.label);
-    label.setAttribute("data-l10n-id", "certificate-viewer-" + labelText);
+
+    // Map specific elements to a different message ID, to allow updates to
+    // existing labels and avoid duplicates.
+    let stringMapping = {
+      signaturealgorithm: "signature-algorithm",
+    };
+    let fluentID = stringMapping[labelText] || labelText;
+
+    label.setAttribute("data-l10n-id", "certificate-viewer-" + fluentID);
 
     this.classList.add(labelText);
 

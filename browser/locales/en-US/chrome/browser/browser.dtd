@@ -171,8 +171,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
-<!ENTITY urlbar.viewSiteInfo.label                      "View site information">
-
 <!ENTITY urlbar.defaultNotificationAnchor.tooltip         "Open message panel">
 <!ENTITY urlbar.geolocationNotificationAnchor.tooltip     "Open location request panel">
 <!ENTITY urlbar.autoplayNotificationAnchor.tooltip        "Open autoplay panel">

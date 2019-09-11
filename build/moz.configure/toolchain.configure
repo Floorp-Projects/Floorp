@@ -1365,23 +1365,34 @@ set_config('COLOR_CFLAGS', color_cflags)
 # Note that we don't need to do this with gcc, as libc++ detects gcc and
 # effectively does the same thing we are doing here.
 #
-# _LIBCPP_ALWAYS_INLINE and _LIBCPP_HIDE_FROM_ABI need similar workarounds,
-# since they too declare hidden visibility.
+# _LIBCPP_ALWAYS_INLINE needs a similar workarounds, since it too declares
+# hidden visibility.
+#
+# _LIBCPP_HIDE_FROM_ABI is a macro in libc++ versions in NDKs >=r19.  It too
+# declares hidden visibility, but it also declares functions as excluded from
+# explicit instantiation (roughly: the function can be unused in the current
+# compilation, but does not then trigger an actual definition of the function;
+# it is assumed the real definition comes from elsewhere).  We need to replicate
+# this setup.
 
 
 @depends(c_compiler, target)
 def libcxx_override_visibility(c_compiler, target):
     if c_compiler.type == 'clang' and target.os == 'Android':
-        return ''
+        return namespace(
+            empty='',
+            hide_from_abi='__attribute__((__exclude_from_explicit_instantiation__))',
+        )
 
 
-set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_override_visibility)
+set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_override_visibility.empty)
 set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49',
-           libcxx_override_visibility)
-set_define('_LIBCPP_ALWAYS_INLINE', libcxx_override_visibility)
-set_define('_LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49', libcxx_override_visibility)
+           libcxx_override_visibility.empty)
+set_define('_LIBCPP_ALWAYS_INLINE', libcxx_override_visibility.empty)
+set_define('_LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49',
+           libcxx_override_visibility.empty)
 
-set_define('_LIBCPP_HIDE_FROM_ABI', libcxx_override_visibility)
+set_define('_LIBCPP_HIDE_FROM_ABI', libcxx_override_visibility.hide_from_abi)
 
 @depends(target, check_build_environment)
 def visibility_flags(target, env):

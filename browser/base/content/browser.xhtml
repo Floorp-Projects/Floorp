@@ -75,6 +75,7 @@
 <linkset>
   <html:link rel="localization" href="branding/brand.ftl"/>
   <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="browser/browser.ftl"/>
   <html:link rel="localization" href="browser/menubar.ftl"/>
 </linkset>
 
@@ -885,7 +886,7 @@
               </box>
               <box id="identity-box" role="button"
                    align="center"
-                   aria-label="&urlbar.viewSiteInfo.label;"
+                   data-l10n-id="browser-urlbar-identity-button"
                    pageproxystate="invalid"
                    onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"

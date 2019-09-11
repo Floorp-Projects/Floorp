@@ -101,7 +101,7 @@ addMessageListener("init", ({ domain }) => {
   cs.removeAll();
   cs.add(
     domain,
-    "",
+    "/",
     "oh",
     "hai",
     false,
