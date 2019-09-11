@@ -392,8 +392,8 @@ add_task(async function test_getEarliestRecordedDate() {
   await TrackingDBService.saveEvents(JSON.stringify({}));
   let db = await Sqlite.openConnection({ path: DB_PATH });
 
-  let date = await TrackingDBService.getEarliestRecordedDate();
-  equal(date, null, "There is no earliest recorded date");
+  let timestamp = await TrackingDBService.getEarliestRecordedDate();
+  equal(timestamp, null, "There is no earliest recorded date");
 
   // populate the database
   await addEventsToDB(db);
@@ -402,7 +402,8 @@ add_task(async function test_getEarliestRecordedDate() {
     .toISOString()
     .split("T")[0];
 
-  date = await TrackingDBService.getEarliestRecordedDate();
+  timestamp = await TrackingDBService.getEarliestRecordedDate();
+  let date = new Date(timestamp).toISOString().split("T")[0];
   equal(date, daysBefore9, "The earliest recorded event is nine days before.");
 
   await TrackingDBService.clearAll();
