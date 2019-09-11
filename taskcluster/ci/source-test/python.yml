@@ -152,7 +152,7 @@ mozlint:
         - windows10-64/opt
     python-version: [2]
     treeherder:
-        symbol: ml
+        symbol: mozlint
     run:
         using: python-test
         subsuite: mozlint
