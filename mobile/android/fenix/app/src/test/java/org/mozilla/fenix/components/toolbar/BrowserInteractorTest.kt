@@ -19,25 +19,32 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetController
 
 class BrowserInteractorTest {
 
-    val metrics: MetricController = mockk()
-    val context: Context = mockk()
-    val browserStore: BrowserFragmentStore = mockk(relaxed = true)
-    val browserToolbarController: BrowserToolbarController = mockk(relaxed = true)
-    val quickActionSheetController: QuickActionSheetController = mockk(relaxed = true)
-    val readerModeController: ReaderModeController = mockk(relaxed = true)
-    val session: Session = mockk()
-
-    val interactor = BrowserInteractor(
-        context,
-        browserStore,
-        browserToolbarController,
-        quickActionSheetController,
-        readerModeController,
-        session
-    )
+    lateinit var metrics: MetricController
+    lateinit var context: Context
+    lateinit var browserStore: BrowserFragmentStore
+    lateinit var browserToolbarController: BrowserToolbarController
+    lateinit var quickActionSheetController: QuickActionSheetController
+    lateinit var readerModeController: ReaderModeController
+    lateinit var session: Session
+    lateinit var interactor: BrowserInteractor
 
     @Before
     fun setup() {
+        metrics = mockk()
+        context = mockk()
+        browserStore = mockk(relaxed = true)
+        browserToolbarController = mockk(relaxed = true)
+        quickActionSheetController = mockk(relaxed = true)
+        readerModeController = mockk(relaxed = true)
+        session = mockk()
+        interactor = BrowserInteractor(
+            context,
+            browserStore,
+            browserToolbarController,
+            quickActionSheetController,
+            readerModeController,
+            session
+        )
         every { context.metrics } returns metrics
         every { context.components.core.sessionManager.selectedSession } returns session
     }

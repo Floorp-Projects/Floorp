@@ -96,9 +96,4 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun getAppropriateLayoutGravity() = Gravity.TOP
-
-    companion object {
-        private const val SHARED_TRANSITION_MS = 200L
-        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
-    }
 }

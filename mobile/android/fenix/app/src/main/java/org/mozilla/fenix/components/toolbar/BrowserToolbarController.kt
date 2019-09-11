@@ -57,7 +57,8 @@ class DefaultBrowserToolbarController(
         navController.nav(
             R.id.browserFragment,
             BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                sessionId = customTabSession?.id ?: context.components.core.sessionManager.selectedSession?.id
+                sessionId = customTabSession?.id ?: context.components.core.sessionManager.selectedSession?.id,
+                pastedText = text
             )
         )
     }

@@ -51,6 +51,8 @@ class BrowserToolbarView(
     val toolbarIntegration: ToolbarIntegration
 
     init {
+        val isCustomTabSession = customTabSession != null
+
         view.setOnUrlLongClickListener {
             val clipboard = view.context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             val customView = LayoutInflater.from(view.context).inflate(R.layout.browser_toolbar_popup_window, null)
@@ -62,8 +64,8 @@ class BrowserToolbarView(
 
             popupWindow.showAsDropDown(view, view.context.dimen(R.dimen.context_menu_x_offset), 0, Gravity.START)
 
-            customView.paste.isVisible = clipboard.containsText()
-            customView.paste_and_go.isVisible = clipboard.containsText()
+            customView.paste.isVisible = clipboard.containsText() && !isCustomTabSession
+            customView.paste_and_go.isVisible = clipboard.containsText() && !isCustomTabSession
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
@@ -85,7 +87,6 @@ class BrowserToolbarView(
 
         with(container.context) {
             val sessionManager = components.core.sessionManager
-            val isCustomTabSession = customTabSession != null
 
             view.apply {
                 elevation = TOOLBAR_ELEVATION.dpToFloat(resources.displayMetrics)
