@@ -8,7 +8,7 @@ newtab-unit-tests:
     treeherder:
         symbol: node(newtab)
         kind: test
-        tier: 2
+        tier: 1
     worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "desktop1604-test"}
