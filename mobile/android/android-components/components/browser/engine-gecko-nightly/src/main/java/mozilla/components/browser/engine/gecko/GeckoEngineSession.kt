@@ -516,7 +516,7 @@ class GeckoEngineSession(
             screenY: Int,
             element: GeckoSession.ContentDelegate.ContextElement
         ) {
-            val hitResult = handleLongClick(element.srcUri, element.type, element.linkUri)
+            val hitResult = handleLongClick(element.srcUri, element.type, element.linkUri, element.title)
             hitResult?.let {
                 notifyObservers { onLongPress(it) }
             }
