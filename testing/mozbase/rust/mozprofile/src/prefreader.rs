@@ -356,7 +356,7 @@ impl<'a> PrefTokenizer<'a> {
         for _ in 0..hex_chars {
             match self.get_char() {
                 Some(x) => {
-                    value = value << 4;
+                    value <<= 4;
                     match x {
                         '0'..='9' => value += x as u32 - '0' as u32,
                         'a'..='f' => value += x as u32 - 'a' as u32,
