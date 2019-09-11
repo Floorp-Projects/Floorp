@@ -16,6 +16,7 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 
 ## Soft code freeze [Wednesday, 2nd week of sprint]
 - [ ] Create a branch for the *current* milestone and protect it through Settings on the repo (need admin privileges). After that master is tracking the next milestone.
+- [ ] On the Release branch, pin the AC version to the stable version (like https://github.com/mozilla-mobile/fenix/commit/e413da29f6a7a7d4a765817a9cd5687abbf27619 ) w/ commit message "Pin to stable AC `<version>` for release"
 - [ ] [Create an issue](https://github.com/mozilla-mobile/fenix/issues/new?template=release_checklist.md&title=Releng+for+) in the *upcoming* milestone: "Releng for [release]".
 - [ ] Go through the list of bugs closed during this sprint and make sure all they're all added to the correct milestone.
 - [ ] Add either `eng:qa:needed` flags on each issue that still needs it.
