@@ -68,8 +68,6 @@ interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned short certificateTransparencyStatus;
 
     [must_use]
-    readonly attribute boolean isDelegatedCredential;
-    [must_use]
     readonly attribute boolean isDomainMismatch;
     [must_use]
     readonly attribute boolean isNotValidAtThisTime;
