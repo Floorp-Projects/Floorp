@@ -1714,7 +1714,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
                                       [self.location])
 
                 self._noInterfaceObject = True
-            elif identifier == "Constructor" or identifier == "NamedConstructor" or identifier == "ChromeConstructor" or identifier == "HTMLConstructor":
+            elif identifier == "Constructor" or identifier == "NamedConstructor" or identifier == "HTMLConstructor":
                 if identifier == "Constructor" and not self.hasInterfaceObject():
                     raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
                                       [self.location])
@@ -1722,10 +1722,6 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 if identifier == "NamedConstructor" and not attr.hasValue():
                     raise WebIDLError("NamedConstructor must either take an identifier or take a named argument list",
                                       [attr.location])
-
-                if identifier == "ChromeConstructor" and not self.hasInterfaceObject():
-                    raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
-                                      [self.location])
 
                 if identifier == "HTMLConstructor":
                     if not self.hasInterfaceObject():
@@ -1745,7 +1741,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
 
                 retType = IDLWrapperType(self.location, self)
 
-                if identifier == "Constructor" or identifier == "ChromeConstructor" or identifier == "HTMLConstructor":
+                if identifier == "Constructor" or identifier == "HTMLConstructor":
                     name = "constructor"
                     allowForbidden = True
                 else:
@@ -1761,11 +1757,8 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 # indicate otherwise).
                 method.addExtendedAttributes(
                     [IDLExtendedAttribute(self.location, ("Throws",))])
-                if identifier == "ChromeConstructor":
-                    method.addExtendedAttributes(
-                        [IDLExtendedAttribute(self.location, ("ChromeOnly",))])
 
-                if identifier == "Constructor" or identifier == "ChromeConstructor" or identifier == "HTMLConstructor":
+                if identifier == "Constructor" or identifier == "HTMLConstructor":
                     method.resolve(self)
                 else:
                     # We need to detect conflicts for NamedConstructors across

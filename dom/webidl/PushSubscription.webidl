@@ -39,10 +39,12 @@ dictionary PushSubscriptionInit
   BufferSource? appServerKey;
 };
 
-[Exposed=(Window,Worker), Pref="dom.push.enabled",
- ChromeConstructor(PushSubscriptionInit initDict)]
+[Exposed=(Window,Worker), Pref="dom.push.enabled"]
 interface PushSubscription
 {
+  [Throws, ChromeOnly]
+  constructor(PushSubscriptionInit initDict);
+
   readonly attribute USVString endpoint;
   readonly attribute PushSubscriptionOptions options;
   [Throws]
