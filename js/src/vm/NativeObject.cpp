@@ -2333,67 +2333,56 @@ bool js::NativeGetExistingProperty(JSContext* cx, HandleObject receiver,
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
- * access is "property-detecting". Caller will use this value to determine
- * whether or not to warn that an undefined object property *may* be used in
- * a way that the programmer does not expect. In other words, we do not want
- * to warn the programmer if he/she/they are doing something like
- *
- * if (obj.property) { }
- * or
- * if (obj.property == undefined) {}
- * or
- * if (obj.property == null) {}
+ * access is "property-detecting" -- that is, if we shouldn't warn about it
+ * even if no such property is found and strict warnings are enabled.
  */
 static bool Detecting(JSContext* cx, JSScript* script, jsbytecode* pc) {
   MOZ_ASSERT(script->containsPC(pc));
 
-  BytecodeIterator scriptIterator =
-      BytecodeIterator(BytecodeLocation(script, pc));
-  BytecodeIterator endIter = BytecodeIterator(script->endLocation());
+  // Skip jump target and dup opcodes.
+  while (pc < script->codeEnd() &&
+         (BytecodeIsJumpTarget(JSOp(*pc)) || JSOp(*pc) == JSOP_DUP))
+    pc = GetNextPc(pc);
 
-  // Skip over jump targets and duplication operations.
-  while (scriptIterator->isJumpTarget() || scriptIterator->is(JSOP_DUP)) {
-    if (++scriptIterator == endIter) {
-      // If we are at the end of the script, we cannot be detecting
-      // the property.
-      return false;
-    }
+  MOZ_ASSERT(script->containsPC(pc));
+  if (pc >= script->codeEnd()) {
+    return false;
   }
 
-  // General case: Do not warn if the operation branches on or tests
-  // the equality of the property.
-  if (scriptIterator->isDetectingOp()) {
+  // General case: a branch or equality op follows the access.
+  JSOp op = JSOp(*pc);
+  if (CodeSpec[op].format & JOF_DETECTING) {
     return true;
   }
 
-  // Special case: Do not warn if we are checking whether the property is null.
-  if (scriptIterator->is(JSOP_NULL)) {
-    if (++scriptIterator == endIter) {
-      return false;
+  jsbytecode* endpc = script->codeEnd();
+
+  if (op == JSOP_NULL) {
+    // Special case #1: don't warn about (obj.prop == null).
+    if (++pc < endpc) {
+      op = JSOp(*pc);
+      return op == JSOP_EQ || op == JSOP_NE;
     }
-    return scriptIterator->isEqualityOp() &&
-           !scriptIterator->isStrictEqualityOp();
+    return false;
   }
 
-  // Special case #2: Do not warn if we are checking whether the property is
-  // undefined.
-  if (scriptIterator->is(JSOP_GETGNAME) || scriptIterator->is(JSOP_GETNAME) ||
-      scriptIterator->is(JSOP_UNDEFINED)) {
-    // If we using the result of a variable lookup to use in the comparison
-    // against the property and that lookup does not result in 'undefined',
-    // the type of subsequent operations do not matter -- we always warn.
-    if (scriptIterator->isNameOp() &&
-        scriptIterator->getPropertyName(script) != cx->names().undefined) {
-      return false;
+  // Special case #2: don't warn about (obj.prop == undefined).
+  if (op == JSOP_GETGNAME || op == JSOP_GETNAME) {
+    JSAtom* atom = script->getAtom(GET_UINT32_INDEX(pc));
+    if (atom == cx->names().undefined && (pc += CodeSpec[op].length) < endpc) {
+      op = JSOp(*pc);
+      return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ ||
+             op == JSOP_STRICTNE;
     }
-    // Because we know that the top of the stack is 'undefined', if the next
-    // operation exists and it is a comparison operation (of any kind) we
-    // supress a warning.
-    if (++scriptIterator == endIter) {
-      return false;
-    }
-    return scriptIterator->isEqualityOp();
   }
+  if (op == JSOP_UNDEFINED) {
+    if ((pc += CodeSpec[op].length) < endpc) {
+      op = JSOp(*pc);
+      return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ ||
+             op == JSOP_STRICTNE;
+    }
+  }
+
   return false;
 }
 
