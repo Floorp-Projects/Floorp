@@ -124,12 +124,7 @@ ExtensionPreferencesManager.addSetting(CONTAINERS_ENABLED_SETTING_NAME, {
         "privacy.userContext.extension": value,
       };
     }
-
-    let prefs = {};
-    for (let pref of this.prefNames) {
-      prefs[pref] = undefined;
-    }
-    return prefs;
+    return {};
   },
 });
 
