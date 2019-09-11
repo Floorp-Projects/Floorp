@@ -57,31 +57,74 @@ def WebIDLTest(parser, harness):
         };
     """)
     results = parser.finish()
-    harness.check(len(results), 3, "Should be three productions")
-    harness.ok(isinstance(results[0], WebIDL.IDLInterface),
-               "Should be an IDLInterface")
-    harness.ok(isinstance(results[1], WebIDL.IDLInterface),
-               "Should be an IDLInterface")
-    harness.ok(isinstance(results[2], WebIDL.IDLInterface),
-               "Should be an IDLInterface")
 
-    checkMethod(results[0].ctor(), "::TestConstructorNoArgs::constructor",
-                "constructor", [("TestConstructorNoArgs (Wrapper)", [])])
-    checkMethod(results[1].ctor(), "::TestConstructorWithArgs::constructor",
-                "constructor",
-                [("TestConstructorWithArgs (Wrapper)",
-                 [("::TestConstructorWithArgs::constructor::name", "name", "String", False, False)])])
-    checkMethod(results[2].ctor(), "::TestConstructorOverloads::constructor",
-                "constructor",
-                [("TestConstructorOverloads (Wrapper)",
-                 [("::TestConstructorOverloads::constructor::foo", "foo", "Object", False, False)]),
-                 ("TestConstructorOverloads (Wrapper)",
-                 [("::TestConstructorOverloads::constructor::bar", "bar", "Boolean", False, False)])])
+    def checkResults(results):
+        harness.check(len(results), 3, "Should be three productions")
+        harness.ok(isinstance(results[0], WebIDL.IDLInterface),
+                   "Should be an IDLInterface")
+        harness.ok(isinstance(results[1], WebIDL.IDLInterface),
+                   "Should be an IDLInterface")
+        harness.ok(isinstance(results[2], WebIDL.IDLInterface),
+                   "Should be an IDLInterface")
+
+        checkMethod(results[0].ctor(), "::TestConstructorNoArgs::constructor",
+                    "constructor", [("TestConstructorNoArgs (Wrapper)", [])])
+        harness.check(len(results[0].members), 0,
+                      "TestConstructorNoArgs should not have members")
+        checkMethod(results[1].ctor(), "::TestConstructorWithArgs::constructor",
+                    "constructor",
+                    [("TestConstructorWithArgs (Wrapper)",
+                      [("::TestConstructorWithArgs::constructor::name", "name", "String", False, False)])])
+        harness.check(len(results[1].members), 0,
+                      "TestConstructorWithArgs should not have members")
+        checkMethod(results[2].ctor(), "::TestConstructorOverloads::constructor",
+                    "constructor",
+                    [("TestConstructorOverloads (Wrapper)",
+                      [("::TestConstructorOverloads::constructor::foo", "foo", "Object", False, False)]),
+                     ("TestConstructorOverloads (Wrapper)",
+                      [("::TestConstructorOverloads::constructor::bar", "bar", "Boolean", False, False)])])
+        harness.check(len(results[2].members), 0,
+                      "TestConstructorOverloads should not have members")
+
+    checkResults(results)
+
+    parser = parser.reset()
+    parser.parse("""
+        interface TestConstructorNoArgs {
+          constructor();
+        };
+
+        interface TestConstructorWithArgs {
+          constructor(DOMString name);
+        };
+
+        interface TestConstructorOverloads {
+          constructor(object foo);
+          constructor(boolean bar);
+        };
+    """)
+    results = parser.finish()
+    checkResults(results)
 
     parser = parser.reset()
     parser.parse("""
         [ChromeConstructor()]
         interface TestChromeConstructor {
+        };
+    """)
+    results = parser.finish()
+    harness.check(len(results), 1, "Should be one production")
+    harness.ok(isinstance(results[0], WebIDL.IDLInterface),
+               "Should be an IDLInterface")
+
+    checkMethod(results[0].ctor(), "::TestChromeConstructor::constructor",
+                "constructor", [("TestChromeConstructor (Wrapper)", [])],
+                chromeOnly=True)
+
+    parser = parser.reset()
+    parser.parse("""
+        interface TestChromeConstructor {
+          [ChromeOnly] constructor();
         };
     """)
     results = parser.finish()
@@ -193,6 +236,7 @@ def WebIDLTest(parser, harness):
             interface TestHTMLConstructorAndConstructor {
             };
         """)
+        results = parser.finish()
     except:
         threw = True
 
@@ -207,10 +251,78 @@ def WebIDLTest(parser, harness):
             interface TestHTMLConstructorAndConstructor {
             };
         """)
+        results = parser.finish()
     except:
         threw = True
 
     harness.ok(threw, "Can't have both a HTMLConstructor and a Constructor")
+
+    # Test HTMLConstructor and constructor operation
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Can't have both a constructor and a HTMLConstructor")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [Throws]
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a throwing constructor and a HTMLConstructor")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              constructor(DOMString a);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a HTMLConstructor and a constructor operation")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [Throws]
+              constructor(DOMString a);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a HTMLConstructor and a throwing constructor "
+               "operation")
 
     # Test HTMLConstructor and ChromeConstructor
     parser = parser.reset()
@@ -270,3 +382,131 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Can't have both a HTMLConstructor and a ChromeConstructor")
+
+    # Test HTMLConstructor and [ChromeOnly] constructor operation
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [ChromeOnly]
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a ChromeOnly constructor and a HTMLConstructor")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [Throws, ChromeOnly]
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a throwing chromeonly constructor and a "
+               "HTMLConstructor")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [ChromeOnly]
+              constructor(DOMString a);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a HTMLConstructor and a chromeonly constructor "
+               "operation")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [HTMLConstructor]
+            interface TestHTMLConstructorAndConstructor {
+              [Throws, ChromeOnly]
+              constructor(DOMString a);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have both a HTMLConstructor and a throwing chromeonly "
+               "constructor operation")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [NoInterfaceObject]
+            interface InterfaceWithoutInterfaceObject {
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have a constructor operation on a [NoInterfaceObject] "
+               "interface")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface InterfaceWithPartial {
+            };
+
+            partial interface InterfaceWithPartial {
+              constructor();
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have a constructor operation on a partial interface")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface InterfaceWithMixin {
+            };
+
+            interface mixin Mixin {
+              constructor();
+            };
+
+            InterfaceWithMixin includes Mixin
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Can't have a constructor operation on a mixin")
+

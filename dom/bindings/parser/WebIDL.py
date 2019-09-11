@@ -1077,9 +1077,20 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
         ctor = self.ctor()
         if ctor is not None:
-            assert len(ctor._exposureGlobalNames) == 0
+            if not self.hasInterfaceObject():
+                raise WebIDLError(
+                    "Can't have both a constructor and [NoInterfaceObject]",
+                    [self.location, ctor.location])
+
+            assert(len(ctor._exposureGlobalNames) == 0 or
+                   ctor._exposureGlobalNames == self._exposureGlobalNames)
             ctor._exposureGlobalNames.update(self._exposureGlobalNames)
-            ctor.finish(scope)
+            if ctor in self.members:
+                # constructor operation.
+                self.members.remove(ctor)
+            else:
+                # extended attribute.
+                ctor.finish(scope)
 
         for ctor in self.namedConstructors:
             assert len(ctor._exposureGlobalNames) == 0
@@ -1741,19 +1752,15 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     name = attr.value()
                     allowForbidden = False
 
-                methodIdentifier = IDLUnresolvedIdentifier(self.location, name,
-                                                           allowForbidden=allowForbidden)
+                method = IDLConstructor(
+                    attr.location, args, name,
+                    htmlConstructor=(identifier == "HTMLConstructor"))
+                method.reallyInit(self)
 
-                method = IDLMethod(self.location, methodIdentifier, retType,
-                                   args, static=True,
-                                   htmlConstructor=(identifier == "HTMLConstructor"))
-                # Constructors are always NewObject and are always
-                # assumed to be able to throw (since there's no way to
-                # indicate otherwise) and never have any other
-                # extended attributes.
+                # Are always assumed to be able to throw (since there's no way to
+                # indicate otherwise).
                 method.addExtendedAttributes(
-                    [IDLExtendedAttribute(self.location, ("NewObject",)),
-                     IDLExtendedAttribute(self.location, ("Throws",))])
+                    [IDLExtendedAttribute(self.location, ("Throws",))])
                 if identifier == "ChromeConstructor":
                     method.addExtendedAttributes(
                         [IDLExtendedAttribute(self.location, ("ChromeOnly",))])
@@ -1886,6 +1893,17 @@ class IDLInterface(IDLInterfaceOrNamespace):
 
     def isSerializable(self):
         return self.getExtendedAttribute("Serializable")
+
+    def setNonPartial(self, location, parent, members):
+        # Before we do anything else, finish initializing any constructors that
+        # might be in "members", so we don't have partially-initialized objects
+        # hanging around.  We couldn't do it before now because we needed to have
+        # to have the IDLInterface on hand to properly set the return type.
+        for member in members:
+            if isinstance(member, IDLConstructor):
+                member.reallyInit(self)
+
+        IDLInterfaceOrNamespace.setNonPartial(self, location, parent, members)
 
 
 class IDLNamespace(IDLInterfaceOrNamespace):
@@ -5481,6 +5499,52 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return deps
 
 
+class IDLConstructor(IDLMethod):
+    def __init__(self, location, args, name, htmlConstructor=False):
+        # We can't actually init our IDLMethod yet, because we do not know the
+        # return type yet.  Just save the info we have for now and we will init
+        # it later.
+        self._initLocation = location
+        self._initArgs = args
+        self._initName = name
+        self._htmlConstructor = htmlConstructor
+        self._inited = False
+        self._initExtendedAttrs = []
+
+    def addExtendedAttributes(self, attrs):
+        if self._inited:
+            return IDLMethod.addExtendedAttributes(self, attrs)
+        self._initExtendedAttrs.extend(attrs)
+
+    def handleExtendedAttribute(self, attr):
+        identifier = attr.identifier()
+        if (identifier == "BinaryName" or
+            identifier == "ChromeOnly" or
+            identifier == "NewObject" or
+            identifier == "SecureContext" or
+            identifier == "Throws"):
+            IDLMethod.handleExtendedAttribute(self, attr)
+        else:
+            raise WebIDLError("Unknown extended attribute %s on method" % identifier,
+                              [attr.location])
+
+    def reallyInit(self, parentInterface):
+        name = self._initName
+        location = self._initLocation
+        identifier = IDLUnresolvedIdentifier(location, name, allowForbidden=True)
+        retType = IDLWrapperType(parentInterface.location, parentInterface)
+        IDLMethod.__init__(self, location, identifier, retType, self._initArgs,
+                           static=True, htmlConstructor=self._htmlConstructor)
+        self._inited = True;
+        # Propagate through whatever extended attributes we already had
+        self.addExtendedAttributes(self._initExtendedAttrs)
+        self._initExtendedAttrs = []
+        # Constructors are always NewObject.  Whether they throw or not is
+        # indicated by [Throws] annotations in the usual way.
+        self.addExtendedAttributes(
+            [IDLExtendedAttribute(self.location, ("NewObject",))])
+
+
 class IDLImplementsStatement(IDLObject):
     def __init__(self, location, implementor, implementee):
         IDLObject.__init__(self, location)
@@ -6061,7 +6125,7 @@ class Parser(Tokenizer):
 
     def p_PartialInterfaceRest(self, p):
         """
-            PartialInterfaceRest : IDENTIFIER LBRACE InterfaceMembers RBRACE SEMICOLON
+            PartialInterfaceRest : IDENTIFIER LBRACE PartialInterfaceMembers RBRACE SEMICOLON
         """
         location = self.getLocation(p, 1)
         identifier = IDLUnresolvedIdentifier(location, p[1])
@@ -6142,8 +6206,38 @@ class Parser(Tokenizer):
 
     def p_InterfaceMember(self, p):
         """
-            InterfaceMember : Const
-                            | AttributeOrOperationOrMaplikeOrSetlikeOrIterable
+            InterfaceMember : PartialInterfaceMember
+                            | Constructor
+        """
+        p[0] = p[1]
+
+    def p_Constructor(self, p):
+        """
+            Constructor : CONSTRUCTOR LPAREN ArgumentList RPAREN SEMICOLON
+        """
+        p[0] = IDLConstructor(self.getLocation(p, 1), p[3], "constructor")
+
+    def p_PartialInterfaceMembers(self, p):
+        """
+            PartialInterfaceMembers : ExtendedAttributeList PartialInterfaceMember PartialInterfaceMembers
+        """
+        p[0] = [p[2]]
+
+        assert not p[1] or p[2]
+        p[2].addExtendedAttributes(p[1])
+
+        p[0].extend(p[3])
+
+    def p_PartialInterfaceMembersEmpty(self, p):
+        """
+            PartialInterfaceMembers :
+        """
+        p[0] = []
+
+    def p_PartialInterfaceMember(self, p):
+        """
+            PartialInterfaceMember : Const
+                                   | AttributeOrOperationOrMaplikeOrSetlikeOrIterable
         """
         p[0] = p[1]
 
