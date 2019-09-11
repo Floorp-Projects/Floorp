@@ -7,26 +7,36 @@
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
 function runTest() {
-  try {
-    let eventName = "formdata";
-    window.testValue = "not fired";
-    document.documentElement.setAttribute("on" + eventName, "window.testValue = 'fired'");
-    document.documentElement.dispatchEvent(new Event(eventName));
-    is(window.testValue, "not fired", `${eventName} should not have fired when pref disable`);
+  var iframe = document.createElement("iframe");
+  iframe.src = "about:blank";
+  iframe.onload = () => frameLoaded(iframe);
+  document.body.appendChild(iframe);
+}
 
-    window.testValue = "not fired";
-    document.documentElement.removeAttribute("on" + eventName);
-    document.documentElement.dispatchEvent(new Event(eventName));
-    is(window.testValue, "not fired", `${eventName} should not have fired any event`);
+function frameLoaded(iframe) {
+  let win = iframe.contentWindow;
+  let doc = iframe.contentDocument;
+  let element = iframe.contentDocument.documentElement;
 
-    is(window.onformdata, null, "Should not have window.onformdata");
-    is(document.onformdata, null, "Should not have document.onformdata");
-    is(document.documentElement.onformdata, null, "Should not have document.documentElement.onformdata");
-  } finally {
-    delete window.testValue;
-    SimpleTest.finish();
-  }
-};
+  is(win.onformdata, undefined, "Should not have window.onformdata");
+  is(doc.onformdata, undefined, "Should not have document.onformdata");
+  is(element.onformdata, undefined, "Should not have document.documentElement.onformdata");
+
+  let eventName = "formdata";
+  win.testValue = "not fired";
+  element.setAttribute("on" + eventName, "window.testValue = 'fired'");
+  element.dispatchEvent(new Event(eventName));
+  is(win.testValue, "not fired", `${eventName} should not have fired when pref disable`);
+
+  win.testValue = "not fired";
+  element.removeAttribute("on" + eventName);
+  element.dispatchEvent(new Event(eventName));
+  is(win.testValue, "not fired", `${eventName} should not have fired any event`);
+
+  delete win.testValue;
+  SimpleTest.finish();
+}
+
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["dom.formdata.event.enabled", false]]}, runTest);
   </script>
