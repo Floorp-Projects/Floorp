@@ -71,6 +71,10 @@ add_task(async function test() {
         );
 
         let i = 0;
+        // Message ID mappings
+        let stringMapping = {
+          signaturealgorithm: "signature-algorithm",
+        };
         for (let infoItem of infoItems) {
           let infoItemLabel = infoItem.shadowRoot
             .querySelector("label")
@@ -89,6 +93,8 @@ add_task(async function test() {
             .replace(/\//g, "")
             .replace(/--/g, "-")
             .toLowerCase();
+          adjustedCertsElemLabel =
+            stringMapping[adjustedCertsElemLabel] || adjustedCertsElemLabel;
 
           if (adjustedCertsElemInfo == null) {
             adjustedCertsElemInfo = "";
