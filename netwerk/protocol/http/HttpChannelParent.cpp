@@ -133,21 +133,18 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
   switch (aArgs.type()) {
     case HttpChannelCreationArgs::THttpChannelOpenArgs: {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
-      PrincipalInfo contentBlockingAllowListPrincipal;
-      if (a.contentBlockingAllowListPrincipal().type() ==
-          OptionalPrincipalInfo::TPrincipalInfo) {
-        contentBlockingAllowListPrincipal =
-            a.contentBlockingAllowListPrincipal();
-      }
       return DoAsyncOpen(
           a.uri(), a.original(), a.doc(), a.referrerInfo(), a.apiRedirectTo(),
-          a.topWindowURI(), contentBlockingAllowListPrincipal, a.loadFlags(),
-          a.requestHeaders(), a.requestMethod(), a.uploadStream(),
-          a.uploadStreamHasHeaders(), a.priority(), a.classOfService(),
-          a.redirectionLimit(), a.allowSTS(), a.thirdPartyFlags(), a.resumeAt(),
-          a.startPos(), a.entityID(), a.chooseApplicationCache(),
-          a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(),
-          a.beConservative(), a.tlsFlags(), a.loadInfo(),
+          a.topWindowURI(),
+          a.contentBlockingAllowListPrincipal()
+              .valueOr(RefPtr<nsIPrincipal>())
+              .get(),
+          a.loadFlags(), a.requestHeaders(), a.requestMethod(),
+          a.uploadStream(), a.uploadStreamHasHeaders(), a.priority(),
+          a.classOfService(), a.redirectionLimit(), a.allowSTS(),
+          a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
+          a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
+          a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
           a.synthesizedResponseHead(), a.synthesizedSecurityInfoSerialization(),
           a.cacheKey(), a.requestContextID(), a.preflightArgs(),
           a.initialRwin(), a.blockAuthPrompt(),
@@ -391,7 +388,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const Maybe<URIParams>& aDocURI, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectToURI,
     const Maybe<URIParams>& aTopWindowURI,
-    const PrincipalInfo& aContentBlockingAllowListPrincipal,
+    nsIPrincipal* aContentBlockingAllowListPrincipal,
     const uint32_t& aLoadFlags, const RequestHeaderTuples& requestHeaders,
     const nsCString& requestMethod, const Maybe<IPCStream>& uploadStream,
     const bool& uploadStreamHasHeaders, const int16_t& priority,
@@ -433,10 +430,6 @@ bool HttpChannelParent::DoAsyncOpen(
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
-  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal =
-      (aContentBlockingAllowListPrincipal.type() != PrincipalInfo::T__None)
-          ? PrincipalInfoToPrincipal(aContentBlockingAllowListPrincipal)
-          : nullptr;
 
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64
        " topwinid=%" PRIx64 "]\n",
@@ -503,9 +496,9 @@ bool HttpChannelParent::DoAsyncOpen(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  if (contentBlockingAllowListPrincipal) {
+  if (aContentBlockingAllowListPrincipal) {
     httpChannel->SetContentBlockingAllowListPrincipal(
-        contentBlockingAllowListPrincipal);
+        aContentBlockingAllowListPrincipal);
   }
 
   if (aLoadFlags != nsIRequest::LOAD_NORMAL)
