@@ -307,7 +307,8 @@
   fill-opacity: 1;
 }
 
-#protections-popup-info-button:hover {
+#protections-popup-info-button:hover,
+#protections-popup-info-button:-moz-focusring {
   outline-color: rgba(12, 12, 13, 0.2);
   background-color: rgba(12, 12, 13, 0.2);
 }
