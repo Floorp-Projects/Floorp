@@ -136,6 +136,7 @@ a.hidden,
   grid-template-rows: 20% auto;
   padding: 0;
   margin-bottom: 25px;
+  line-height: 1.6em;
 }
 
 .card-header,
@@ -156,8 +157,9 @@ a.hidden,
 .card .content {
   margin-bottom: 24px;
   margin-top: 5px;
-  font-size: 0.85em;
+  font-size: .93em;
   cursor: default;
+  color: var(--in-content-deemphasized-text);
 }
 
 #protection-details {
@@ -426,6 +428,10 @@ label:hover {
   margin: 0;
 }
 
+.tab-content p:nth-of-type(2) {
+  color: var(--in-content-deemphasized-text);
+}
+
 #tab-social:checked ~ #social,
 #tab-cookie:checked ~ #cookie,
 #tab-tracker:checked ~ #tracker,
@@ -478,6 +484,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: grid;
   font-size: 0.875em;
   align-items: center;
+  color: var(--in-content-deemphasized-text);
 }
 
 #lockwise-body-content > .no-logins {
@@ -581,6 +588,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-row: 2;
   grid-column: span 2;
   font-size: 0.85em;
+  color: var(--in-content-deemphasized-text);
 }
 
 .monitor-stat {
