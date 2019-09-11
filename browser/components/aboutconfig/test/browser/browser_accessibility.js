@@ -1,18 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * This is a temporary workaround to
- * be resolved in bug 1539000.
- */
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(
-  /Too many characters in placeable/
-);
+const MAX_PLACEABLE_LENGTH = 2500;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["test.aboutconfig.added", true]],
+    set: [
+      ["test.aboutconfig.added", "=".repeat(MAX_PLACEABLE_LENGTH)],
+      ["test.aboutconfig.long", "=".repeat(MAX_PLACEABLE_LENGTH + 1)],
+    ],
   });
 });
 
@@ -29,5 +25,15 @@ add_task(async function test_accessible_value() {
         : "about-config-pref-accessible-value-default";
       Assert.equal(span.getAttribute("data-l10n-id"), expectedL10nId);
     }
+
+    // If the value is too long for localization, the state is not included.
+    let span = this.getRow("test.aboutconfig.long").valueCell.querySelector(
+      "span"
+    );
+    Assert.ok(!span.hasAttribute("data-l10n-id"));
+    Assert.equal(
+      span.getAttribute("aria-label"),
+      Preferences.get("test.aboutconfig.long")
+    );
   });
 });

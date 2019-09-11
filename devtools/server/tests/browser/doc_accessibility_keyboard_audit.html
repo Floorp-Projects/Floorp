@@ -40,5 +40,47 @@
   <img id="img-2" longdesc="https://example.com" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
   <img id="img-3" longdesc="https://example.com" onclick="console.log('foo');" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
   <img id="img-4" onclick="console.log('foo');" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  <button id="buttonmenu-1" aria-haspopup="true">I have a popup</button>
+  <div role="button" id="buttonmenu-2" aria-haspopup="true">I have a popup</div>
+  <input id="checkbox-1" type="checkbox" name="hello" />
+  <select id="listbox-1" size="2">
+    <option id="lb_orange">orange</option>
+    <option id="lb_apple">apple</option>
+  </select>
+  <select id="combobox-1"></select>
+  <select id="combobox-2"><option>One</option></select>
+  <select id="combobox-3">
+    <option id="cb_orange">orange</option>
+    <option id="cb_apple">apple</option>
+  </select>
+  <div id="editcombobox-1" role="combobox"><span role="option">One</span></div>
+  <span id="editcombobox-2"role="combobox"></span>
+  <span id="editcombobox-3"role="combobox" tabindex="0"></span>
+  <span id="switch-1" role="switch"></span>
+  <span id="switch-2" role="switch" tabindex="0"></span>
+  <div aria-label="Tag" role="combobox" aria-expanded="true" aria-owns="owned_listbox" aria-haspopup="listbox">
+    <input type="text" aria-autocomplete="list" aria-controls="owned_listbox" aria-activedescendant="selected_option">
+  </div>
+  <ul role="listbox" id="owned_listbox">
+      <li role="option">Zebra</li>
+      <li role="option" id="selected_option">Zoom</li>
+  </ul>
+  <label id="label-1">hello<input type="checkbox" name="world" /></label>
+  <label id="label-2" for="checkbox-1">hello</label>
+  <label id="label-3">hello</label>
+  <label id="label-4">hello</label><input type="checkbox" name="world" />
+  <a href="about:mozilla" target="_blank" rel="opener">
+    <img id="img-5" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onmousedown="">
+    <img id="img-6" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onclick="">
+    <img id="img-7" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <a onmouseup="">
+    <img id="img-8" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAJklEQVRIie3NMREAAAgAoe9fWls4eAzMVM0xoVAoFAqFQqFQ+C9chp4NHvu+4Q4AAAAASUVORK5CYII=" alt="alt text">
+  </a>
+  <section id="section-1" class="collapsible-section top-sites animation-enabled" aria-expanded="true"></section>
 </body>
 </html>

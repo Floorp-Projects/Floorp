@@ -2980,6 +2980,7 @@ bool DebugEnvironments::updateLiveEnvironments(JSContext* cx) {
           return false;
         }
         if (!envs->liveEnvs.put(&ei.environment(), LiveEnvironmentVal(ei))) {
+          ReportOutOfMemory(cx);
           return false;
         }
       }

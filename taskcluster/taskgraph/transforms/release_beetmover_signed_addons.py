@@ -15,8 +15,7 @@ from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          generate_beetmover_upstream_artifacts,
-                                         generate_beetmover_artifact_map,
-                                         should_use_artifact_map)
+                                         generate_beetmover_artifact_map)
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
@@ -111,50 +110,21 @@ def make_task_description(config, jobs):
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        signing_task_ref = '<langpack-copy>'
-
         platform = job["attributes"]["build_platform"]
         locale = job["attributes"]["chunk_locales"]
-        if should_use_artifact_map(platform):
-            upstream_artifacts = generate_beetmover_upstream_artifacts(
-                config, job, platform, locale,
-            )
-        else:
-            upstream_artifacts = generate_upstream_artifacts(
-                signing_task_ref, job['attributes']['chunk_locales']
-            )
+
         job['worker'] = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-            'upstream-artifacts': upstream_artifacts,
+            'upstream-artifacts': generate_beetmover_upstream_artifacts(
+                config, job, platform, locale,
+            ),
+            'artifact-map': generate_beetmover_artifact_map(
+                config, job, platform=platform, locale=locale
+            ),
         }
 
-        if should_use_artifact_map(platform):
-            job['worker']['artifact-map'] = generate_beetmover_artifact_map(
-                config, job, platform=platform, locale=locale)
-
         yield job
-
-
-def generate_upstream_artifacts(upstream_task_ref, locales):
-    def locale_path(locale): return ''
-    if locales and locales != ['en-US']:
-        def locale_path(locale): return '{}/'.format(locale)
-        # We assume 'en-US' is not in locales, assert it here
-        assert 'en-US' not in locales, "Expected no en-US in: {}".format(locales)
-    else:
-        # We assume only 'en-US' is in locales, assert it here
-        assert 'en-US' in locales, "Expect en-US in: {}".format(locales)
-        assert len(locales) == 1, "Expect locales to only contain en-US"
-
-    return [{
-        'taskId': {'task-reference': upstream_task_ref},
-        'taskType': 'scriptworker',
-        'locale': locale,
-        'paths': [
-            'public/build/{}target.langpack.xpi'.format(locale_path(locale))
-        ],
-    } for locale in locales]
 
 
 @transforms.add
@@ -219,7 +189,6 @@ def _change_platform_data(config, platform_job, platform):
     orig_platform = 'linux64'
     if 'devedition' in platform:
         orig_platform = 'linux64-devedition'
-    backup_platform = platform_job['attributes']['build_platform']
     platform_job['attributes']['build_platform'] = platform
     platform_job['label'] = platform_job['label'].replace(orig_platform, platform)
     platform_job['description'] = platform_job['description'].replace(orig_platform, platform)
@@ -229,24 +198,28 @@ def _change_platform_data(config, platform_job, platform):
     platform_job['worker']['release-properties']['platform'] = platform
 
     # amend artifactMap entries as well
-    if should_use_artifact_map(backup_platform):
-        platform_mapping = {
-            'linux64': 'linux-x86_64',
-            'linux': 'linux-i686',
-            'macosx64': 'mac',
-            'win32': 'win32',
-            'win64': 'win64',
-        }
-        orig_platform = platform_mapping.get(orig_platform, orig_platform)
-        platform = platform_mapping.get(platform, platform)
-        platform_job['worker']['artifact-map'] = [
-            {
-                'locale': entry['locale'],
-                'taskId': entry['taskId'],
-                'paths': _change_platform_in_artifact_map_paths(entry['paths'],
-                                                                orig_platform,
-                                                                platform)
-            } for entry in platform_job['worker']['artifact-map']
-        ]
+    platform_mapping = {
+        'linux64': 'linux-x86_64',
+        'linux': 'linux-i686',
+        'macosx64': 'mac',
+        'win32': 'win32',
+        'win64': 'win64',
+        'linux64-devedition': 'linux-x86_64',
+        'linux-devedition': 'linux-i686',
+        'macosx64-devedition': 'mac',
+        'win32-devedition': 'win32',
+        'win64-devedition': 'win64',
+    }
+    orig_platform = platform_mapping.get(orig_platform, orig_platform)
+    platform = platform_mapping.get(platform, platform)
+    platform_job['worker']['artifact-map'] = [
+        {
+            'locale': entry['locale'],
+            'taskId': entry['taskId'],
+            'paths': _change_platform_in_artifact_map_paths(entry['paths'],
+                                                            orig_platform,
+                                                            platform)
+        } for entry in platform_job['worker']['artifact-map']
+    ]
 
     return platform_job

@@ -2,6 +2,7 @@ import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
 import schema from "content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json";
 
 const DEFAULT_CONTENT = {
+  layout: "addon_recommendation",
   category: "dummyCategory",
   bucket_id: "some_bucket_id",
   notification_text: "Recommendation",
@@ -40,6 +41,7 @@ const DEFAULT_CONTENT = {
 };
 
 const L10N_CONTENT = {
+  layout: "addon_recommendation",
   category: "dummyL10NCategory",
   bucket_id: "some_bucket_id",
   notification_text: { string_id: "notification_text_id" },

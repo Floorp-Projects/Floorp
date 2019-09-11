@@ -488,8 +488,13 @@ this.ASRouterTargeting = {
 
     return (
       (candidateMessageTrigger.params &&
+        trigger.param.host &&
         candidateMessageTrigger.params.includes(trigger.param.host)) ||
+      (candidateMessageTrigger.params &&
+        trigger.param.type &&
+        candidateMessageTrigger.params.includes(trigger.param.type)) ||
       (candidateMessageTrigger.patterns &&
+        trigger.param.url &&
         new MatchPatternSet(candidateMessageTrigger.patterns).matches(
           trigger.param.url
         ))

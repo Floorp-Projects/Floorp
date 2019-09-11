@@ -1971,6 +1971,18 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: OPEN_PROTECTION_PANEL", () => {
+      it("should open protection panel", async () => {
+        const msg = fakeExecuteUserAction({ type: "OPEN_PROTECTION_PANEL" });
+        let { gProtectionsHandler } = msg.target.browser.ownerGlobal;
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(gProtectionsHandler.showProtectionsPopup);
+        assert.calledWithExactly(gProtectionsHandler.showProtectionsPopup, {});
+      });
+    });
+
     describe("#dispatch(action, target)", () => {
       it("should an action and target to onMessage", async () => {
         // use the IMPRESSION action to make sure actions are actually getting processed

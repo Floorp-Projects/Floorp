@@ -30,6 +30,7 @@ toolkit.jar:
 #endif
     content/extensions/parent/ext-idle.js (parent/ext-idle.js)
     content/extensions/parent/ext-management.js (parent/ext-management.js)
+    content/extensions/parent/ext-memory.js (parent/ext-memory.js)
     content/extensions/parent/ext-networkStatus.js (parent/ext-networkStatus.js)
     content/extensions/parent/ext-notifications.js (parent/ext-notifications.js)
     content/extensions/parent/ext-permissions.js (parent/ext-permissions.js)
