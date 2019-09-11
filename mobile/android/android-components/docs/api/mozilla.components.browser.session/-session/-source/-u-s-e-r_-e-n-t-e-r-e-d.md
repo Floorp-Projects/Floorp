@@ -2,7 +2,7 @@
 
 # USER_ENTERED
 
-`USER_ENTERED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L173)
+`USER_ENTERED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L175)
 
 User entered a URL or search term
 

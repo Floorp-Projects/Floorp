@@ -2,7 +2,7 @@
 
 # AddToHomescreenUseCase
 
-`class AddToHomescreenUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L49)
+`class AddToHomescreenUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L52)
 
 Let the user add the selected session to the homescreen.
 
