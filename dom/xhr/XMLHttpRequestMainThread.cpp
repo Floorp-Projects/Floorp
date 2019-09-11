@@ -2404,6 +2404,8 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
     rv = httpChannel->SetRequestMethod(mRequestMethod);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    httpChannel->SetSource(profiler_get_backtrace());
+
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
     if (timedChannel) {
@@ -3118,6 +3120,17 @@ void XMLHttpRequestMainThread::SetMozBackgroundRequest(
 void XMLHttpRequestMainThread::SetOriginStack(
     UniquePtr<SerializedStackHolder> aOriginStack) {
   mOriginStack = std::move(aOriginStack);
+}
+
+void XMLHttpRequestMainThread::SetSource(UniqueProfilerBacktrace aSource) {
+  if (!mChannel) {
+    return;
+  }
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+
+  if (httpChannel) {
+    httpChannel->SetSource(std::move(aSource));
+  }
 }
 
 bool XMLHttpRequestMainThread::WithCredentials() const {
