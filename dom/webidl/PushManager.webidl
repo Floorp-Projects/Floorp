@@ -22,9 +22,11 @@ interface PushManagerImpl {
   Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
 };
 
-[Exposed=(Window,Worker), Pref="dom.push.enabled",
- ChromeConstructor(DOMString scope)]
+[Exposed=(Window,Worker), Pref="dom.push.enabled"]
 interface PushManager {
+  [Throws, ChromeOnly]
+  constructor(DOMString scope);
+
   [Throws, UseCounter]
   Promise<PushSubscription>    subscribe(optional PushSubscriptionOptionsInit options = {});
   [Throws]
