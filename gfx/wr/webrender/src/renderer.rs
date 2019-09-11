@@ -5948,6 +5948,7 @@ impl Renderer {
         let mut image_handler = DummyExternalImageHandler {
             data: FastHashMap::default(),
         };
+
         // Note: this is a `SCENE` level population of the external image handlers
         // It would put both external buffers and texture into the map.
         // But latter are going to be overwritten later in this function
