@@ -247,7 +247,7 @@ class WeakMap
   bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
   bool findZoneEdges() override {
-    // This is overridden by ObjectValueMap.
+    // This is overridden by ObjectValueMap and DebuggerWeakMap.
     return true;
   }
 
