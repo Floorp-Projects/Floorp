@@ -201,9 +201,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  
-  int32_t mIndex;                           // -1 means "no index"
-  int32_t mRequestedIndex;                  // -1 means "no requested index"
+  int32_t mIndex;           // -1 means "no index"
+  int32_t mRequestedIndex;  // -1 means "no requested index"
 
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;

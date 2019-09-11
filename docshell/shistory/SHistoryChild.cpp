@@ -283,9 +283,10 @@ SHistoryChild::EvictAllContentViewers(void) {
 }
 
 NS_IMETHODIMP_(void)
-SHistoryChild::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry, bool aReplace) {
-  SendEvictContentViewersOrReplaceEntry(
-      static_cast<SHEntryChild*>(aNewSHEntry), aReplace);
+SHistoryChild::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
+                                                 bool aReplace) {
+  SendEvictContentViewersOrReplaceEntry(static_cast<SHEntryChild*>(aNewSHEntry),
+                                        aReplace);
 }
 
 NS_IMETHODIMP_(void)
