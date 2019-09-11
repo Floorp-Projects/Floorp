@@ -101,10 +101,6 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
 
   setCallback(value) {
     let prefs = {};
-    // Start with all prefs being reset.
-    for (let pref of this.prefNames) {
-      prefs[pref] = undefined;
-    }
     switch (value) {
       case "default":
         // All prefs are already set to be reset.
