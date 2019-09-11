@@ -2938,11 +2938,6 @@ nsCookieService::ImportCookies(nsIFile* aCookieFile) {
  * private GetCookie/SetCookie helpers
  ******************************************************************************/
 
-// helper function for GetCookieList
-static inline bool ispathdelimiter(char c) {
-  return c == '/' || c == '?' || c == '#' || c == ';';
-}
-
 bool nsCookieService::DomainMatches(nsCookie* aCookie,
                                     const nsACString& aHost) {
   // first, check for an exact host or domain cookie match, e.g. "google.com"
@@ -2953,33 +2948,26 @@ bool nsCookieService::DomainMatches(nsCookie* aCookie,
 }
 
 bool nsCookieService::PathMatches(nsCookie* aCookie, const nsACString& aPath) {
-  // calculate cookie path length, excluding trailing '/'
+  // if our cookie path is empty we can't really perform our prefix check, and
+  // also we can't check the last character of the cookie path, so we would
+  // never return a successful match.
+  if (aCookie->Path().IsEmpty()) return false;
+
+  // if the cookie path and the request path are identical, they match.
+  if (aCookie->Path().Equals(aPath)) return true;
+
+  // if the cookie path is a prefix of the request path, and the last character
+  // of the cookie path is %x2F ("/"), they match.
+  bool isPrefix = StringBeginsWith(aPath, aCookie->Path());
+  if (isPrefix && aCookie->Path().Last() == '/') return true;
+
+  // if the cookie path is a prefix of the request path, and the first character
+  // of the request path that is not included in the cookie path is a %x2F ("/")
+  // character, they match.
   uint32_t cookiePathLen = aCookie->Path().Length();
-  if (cookiePathLen > 0 && aCookie->Path().Last() == '/') --cookiePathLen;
+  if (isPrefix && aPath[cookiePathLen] == '/') return true;
 
-  // if the given path is shorter than the cookie path, it doesn't match
-  // if the given path doesn't start with the cookie path, it doesn't match.
-  if (!StringBeginsWith(aPath, Substring(aCookie->Path(), 0, cookiePathLen)))
-    return false;
-
-  // if the given path is longer than the cookie path, and the first char after
-  // the cookie path is not a path delimiter, it doesn't match.
-  if (aPath.Length() > cookiePathLen &&
-      !ispathdelimiter(aPath.CharAt(cookiePathLen))) {
-    /*
-     * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
-     * '/' is the "standard" case; the '?' test allows a site at host/abc?def
-     * to receive a cookie that has a path attribute of abc.  this seems
-     * strange but at least one major site (citibank, bug 156725) depends
-     * on it.  The test for # and ; are put in to proactively avoid problems
-     * with other sites - these are the only other chars allowed in the path.
-     */
-    return false;
-  }
-
-  // either the paths match exactly, or the cookie path is a prefix of
-  // the given path.
-  return true;
+  return false;
 }
 
 void nsCookieService::GetCookiesForURI(
