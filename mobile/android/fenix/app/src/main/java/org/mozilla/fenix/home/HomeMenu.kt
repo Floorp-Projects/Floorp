@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
-import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -60,7 +59,7 @@ class HomeMenu(
                 highlight = BrowserMenuHighlightableItem.Highlight(
                     startImageResource = R.drawable.ic_whats_new_notification,
                     backgroundResource = ThemeManager.resolveAttribute(R.attr.selectableItemBackground, context),
-                    colorResource = ContextCompat.getColor(context, R.color.whats_new_notification_color)
+                    colorResource = R.color.whats_new_notification_color
                 ),
                 isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
             ) {
