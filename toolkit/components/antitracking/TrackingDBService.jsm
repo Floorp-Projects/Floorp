@@ -292,7 +292,13 @@ TrackingDBService.prototype = {
       return null;
     }
     let earliestDate = date[0].getResultByName("timestamp");
-    return earliestDate || null;
+
+    // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
+    // to ensure we display the correct date no matter the user's location.
+    let hoursInMS12 = 12 * 60 * 60 * 1000;
+    let earliestDateInMS = new Date(earliestDate).getTime() + hoursInMS12;
+
+    return earliestDateInMS || null;
   },
 };
 
