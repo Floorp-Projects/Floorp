@@ -206,9 +206,12 @@ def run(paths, linters, formats, outgoing, workdir, edit,
     for formatter_name, path in formats:
         formatter = formatters.get(formatter_name)
 
-        # Encode output with 'replace' to avoid UnicodeEncodeErrors on
-        # environments that aren't using utf-8.
-        out = formatter(result).encode(sys.stdout.encoding or 'ascii', 'replace')
+        out = formatter(result)
+        if sys.version_info[0] == 2:
+            # Encode output with 'replace' to avoid UnicodeEncodeErrors on
+            # environments that aren't using utf-8.
+            out = formatter(result).encode(sys.stdout.encoding or 'ascii', 'replace')
+
         if out:
             output_file = open(path, 'w') if path else sys.stdout
             print(out, file=output_file)

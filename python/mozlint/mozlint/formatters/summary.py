@@ -18,7 +18,7 @@ class SummaryFormatter(object):
         self.depth = depth or int(os.environ.get('MOZLINT_SUMMARY_DEPTH', 1))
 
     def __call__(self, result):
-        paths = set(result.issues.keys() + result.suppressed_warnings.keys())
+        paths = set(list(result.issues.keys()) + list(result.suppressed_warnings.keys()))
 
         commonprefix = mozpath.commonprefix([mozpath.abspath(p) for p in paths])
         commonprefix = commonprefix.rsplit('/', 1)[0] + '/'
