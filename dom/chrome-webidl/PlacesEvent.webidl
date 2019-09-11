@@ -135,8 +135,10 @@ dictionary PlacesBookmarkAdditionInit {
   required boolean isTagging;
 };
 
-[ChromeOnly, Exposed=Window, Constructor(PlacesBookmarkAdditionInit initDict)]
+[ChromeOnly, Exposed=Window]
 interface PlacesBookmarkAddition : PlacesBookmark {
+  constructor(PlacesBookmarkAdditionInit initDict);
+
   /**
    * The item's index in the folder.
    */

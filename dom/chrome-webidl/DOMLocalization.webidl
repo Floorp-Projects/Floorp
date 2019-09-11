@@ -24,17 +24,21 @@
  *
  */
 
-/**
- * Constructor arguments:
- *    - aResourceids       - a list of localization resource URIs
- *                           which will provide messages for this
- *                           Localization instance.
- *    - aGenerateMessages  - a callback function which will be
- *                           used to generate an iterator
- *                           over FluentBundle instances.
- */
-[ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds, optional GenerateMessages aGenerateMessages)]
+[ChromeOnly]
 interface DOMLocalization : Localization {
+  /**
+   * Constructor arguments:
+   *    - aResourceids       - a list of localization resource URIs
+   *                           which will provide messages for this
+   *                           Localization instance.
+   *    - aGenerateMessages  - a callback function which will be
+   *                           used to generate an iterator
+   *                           over FluentBundle instances.
+   */
+  [Throws]
+  constructor(optional sequence<DOMString> aResourceIds,
+              optional GenerateMessages aGenerateMessages);
+
   /**
    * Adds a node to nodes observed for localization
    * related changes.

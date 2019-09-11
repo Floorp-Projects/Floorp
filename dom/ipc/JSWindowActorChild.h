@@ -44,8 +44,8 @@ class JSWindowActorChild final : public JSWindowActor {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<JSWindowActorChild> Constructor(GlobalObject& aGlobal,
-                                                          ErrorResult& aRv) {
+  static already_AddRefed<JSWindowActorChild> Constructor(
+      GlobalObject& aGlobal) {
     nsCOMPtr<nsIGlobalObject> global(
         do_QueryInterface(aGlobal.GetAsSupports()));
     return MakeAndAddRef<JSWindowActorChild>(global);

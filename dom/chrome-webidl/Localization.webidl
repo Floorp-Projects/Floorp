@@ -62,18 +62,21 @@ callback GenerateMessages = Promise<any> (sequence<DOMString> aResourceIds);
  *    - formatMessages     - format multiple compound messages
  *
  */
-
-/**
- * Constructor arguments:
- *    - aResourceids       - a list of localization resource URIs
- *                           which will provide messages for this
- *                           Localization instance.
- *    - aGenerateMessages  - a callback function which will be
- *                           used to generate an iterator
- *                           over FluentBundle instances.
- */
-[ChromeOnly, Constructor(optional sequence<DOMString> aResourceIds, optional GenerateMessages aGenerateMessages)]
+[ChromeOnly]
 interface Localization {
+  /**
+   * Constructor arguments:
+   *    - aResourceids       - a list of localization resource URIs
+   *                           which will provide messages for this
+   *                           Localization instance.
+   *    - aGenerateMessages  - a callback function which will be
+   *                           used to generate an iterator
+   *                           over FluentBundle instances.
+   */
+  [Throws]
+  constructor(optional sequence<DOMString> aResourceIds,
+              optional GenerateMessages aGenerateMessages);
+
   /**
    * A method for adding resources to the localization context.
    *

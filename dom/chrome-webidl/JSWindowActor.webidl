@@ -19,8 +19,11 @@ interface JSWindowActor {
                          optional any transfers);
 };
 
-[ChromeOnly, ChromeConstructor]
+[ChromeOnly]
 interface JSWindowActorParent {
+  [ChromeOnly]
+  constructor();
+
   /**
    * Actor initialization occurs after the constructor is called but before the
    * first message is delivered. Until the actor is initialized, accesses to
@@ -33,8 +36,11 @@ interface JSWindowActorParent {
 };
 JSWindowActorParent implements JSWindowActor;
 
-[ChromeOnly, ChromeConstructor]
+[ChromeOnly]
 interface JSWindowActorChild {
+  [ChromeOnly]
+  constructor();
+  
   /**
    * Actor initialization occurs after the constructor is called but before the
    * first message is delivered. Until the actor is initialized, accesses to

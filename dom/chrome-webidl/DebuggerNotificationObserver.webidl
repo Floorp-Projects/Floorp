@@ -6,8 +6,11 @@
 
 callback DebuggerNotificationCallback = void (DebuggerNotification n);
 
-[ChromeOnly, Constructor, Exposed=(Window, Worker)]
+[ChromeOnly, Exposed=(Window, Worker)]
 interface DebuggerNotificationObserver {
+  [Throws]
+  constructor();
+
   // Throws if the object is not a browser global or does not support
   // debugger notifications.
   // Returns false if already connected to this global.

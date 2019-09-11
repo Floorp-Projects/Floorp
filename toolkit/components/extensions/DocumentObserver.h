@@ -22,8 +22,7 @@ class DocumentObserver final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DocumentObserver)
 
   static already_AddRefed<DocumentObserver> Constructor(
-      dom::GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks,
-      ErrorResult& aRv);
+      dom::GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks);
 
   void Observe(const dom::Sequence<OwningNonNull<MozDocumentMatcher>>& matchers,
                ErrorResult& aRv);
