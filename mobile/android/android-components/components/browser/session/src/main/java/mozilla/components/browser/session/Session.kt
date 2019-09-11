@@ -9,8 +9,11 @@ import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
+import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
+import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.ConsumePromptRequestAction
@@ -383,6 +386,12 @@ class Session(
             if (new.isNotEmpty()) {
                 onFindResult(this@Session, new.last())
             }
+        }
+
+        if (new.isNotEmpty()) {
+            store?.syncDispatch(AddFindResultAction(id, new.last().toFindResultState()))
+        } else {
+            store?.syncDispatch(ClearFindResultsAction(id))
         }
     }
 

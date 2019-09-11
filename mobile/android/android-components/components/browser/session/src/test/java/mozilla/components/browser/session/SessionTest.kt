@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
@@ -742,6 +743,24 @@ class SessionTest {
 
         session.findResults = emptyList()
         verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `action is dispatched when find results are updated`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        val result: Session.FindResult = Session.FindResult(0, 1, false)
+        session.findResults += result
+        verify(store).dispatch(ContentAction.AddFindResultAction(session.id, result.toFindResultState()))
+
+        session.findResults = emptyList()
+        verify(store).dispatch(ContentAction.ClearFindResultsAction(session.id))
+
+        verifyNoMoreInteractions(store)
     }
 
     @Test

@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -368,5 +369,45 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertNull(tab.content.promptRequest)
+    }
+
+    @Test
+    fun `AddFindResultAction adds result`() {
+        assertTrue(tab.content.findResults.isEmpty())
+
+        val result: FindResultState = mock()
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, result)
+        ).joinBlocking()
+
+        assertEquals(1, tab.content.findResults.size)
+        assertEquals(result, tab.content.findResults.last())
+
+        val result2: FindResultState = mock()
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, result2)
+        ).joinBlocking()
+
+        assertEquals(2, tab.content.findResults.size)
+        assertEquals(result2, tab.content.findResults.last())
+    }
+
+    @Test
+    fun `ClearFindResultsAction removes all results`() {
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, mock())
+        ).joinBlocking()
+
+        store.dispatch(
+            ContentAction.AddFindResultAction(tab.id, mock())
+        ).joinBlocking()
+
+        assertEquals(2, tab.content.findResults.size)
+
+        store.dispatch(
+            ContentAction.ClearFindResultsAction(tab.id)
+        ).joinBlocking()
+
+        assertTrue(tab.content.findResults.isEmpty())
     }
 }

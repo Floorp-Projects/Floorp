@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
@@ -202,6 +203,16 @@ sealed class ContentAction : BrowserAction() {
      * Removes the [PromptRequest] of the [ContentState] with the given [sessionId].
      */
     data class ConsumePromptRequestAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Adds a [FindResultState] to the [ContentState] with the given [sessionId].
+     */
+    data class AddFindResultAction(val sessionId: String, val findResult: FindResultState) : ContentAction()
+
+    /**
+     * Removes all [FindResultState]s of the [ContentState] with the given [sessionId].
+     */
+    data class ClearFindResultsAction(val sessionId: String) : ContentAction()
 }
 
 /**

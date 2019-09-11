@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import mozilla.components.browser.session.ext.toFindResultState
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -859,5 +860,31 @@ class SessionManagerMigrationTest {
         store.state.findTab("session")!!.also { tab ->
             assertNull(tab.content.promptRequest)
         }
+    }
+
+    @Test
+    fun `Adding a find result`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        manager.add(session)
+
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
+
+        val result = Session.FindResult(0, 0, false)
+        session.findResults += result
+
+        assertEquals(1, session.findResults.size)
+        assertEquals(result, session.findResults.last())
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(1, tab.content.findResults.size)
+            assertEquals(result.toFindResultState(), tab.content.findResults.last())
+        }
+
+        session.findResults = emptyList()
+        assertTrue(session.findResults.isEmpty())
+        assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
     }
 }
