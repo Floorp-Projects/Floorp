@@ -132,9 +132,3 @@
         </xul:vbox>
       </popupnotificationcontent>
     </popupnotification>
-
-    <popupnotification id="socialblock-notification" hidden="true">
-      <popupnotificationcontent id="socialblock-content" orient="vertical">
-        <description id="socialblock-message"></description>
-      </popupnotificationcontent>
-    </popupnotification>
