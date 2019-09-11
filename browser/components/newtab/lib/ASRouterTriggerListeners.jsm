@@ -429,6 +429,107 @@ this.ASRouterTriggerListeners = new Map([
       },
     },
   ],
+
+  /**
+   * Attach listener to count location changes and notify the trigger handler
+   * on content blocked event
+   */
+  [
+    "trackingProtection",
+    {
+      _initialized: false,
+      _triggerHandler: null,
+      _events: [],
+      _sessionPageLoad: 0,
+      onLocationChange: null,
+
+      async init(triggerHandler, params, patterns) {
+        params.forEach(p => this._events.push(p));
+
+        if (!this._initialized) {
+          Services.obs.addObserver(this, "SiteProtection:ContentBlockingEvent");
+
+          this.onLocationChange = this._onLocationChange.bind(this);
+
+          // Add listeners to all existing browser windows
+          for (let win of Services.wm.getEnumerator("navigator:browser")) {
+            if (isPrivateWindow(win)) {
+              continue;
+            }
+            await checkStartupFinished(win);
+            win.gBrowser.addTabsProgressListener(this);
+          }
+
+          this._initialized = true;
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      uninit() {
+        if (this._initialized) {
+          Services.obs.removeObserver(
+            this,
+            "SiteProtection:ContentBlockingEvent"
+          );
+
+          for (let win of Services.wm.getEnumerator("navigator:browser")) {
+            if (isPrivateWindow(win)) {
+              continue;
+            }
+            win.gBrowser.removeTabsProgressListener(this);
+          }
+
+          this.onLocationChange = null;
+          this._initialized = false;
+        }
+        this._triggerHandler = null;
+        this._events = [];
+        this._sessionPageLoad = 0;
+      },
+
+      observe(aSubject, aTopic, aData) {
+        switch (aTopic) {
+          case "SiteProtection:ContentBlockingEvent":
+            const { browser, host, event } = aSubject.wrappedJSObject;
+            if (this._events.includes(event)) {
+              this._triggerHandler(browser, {
+                id: "trackingProtection",
+                param: {
+                  host,
+                  type: event,
+                },
+                context: {
+                  pageLoad: this._sessionPageLoad,
+                },
+              });
+            }
+            break;
+        }
+      },
+
+      _onLocationChange(
+        aBrowser,
+        aWebProgress,
+        aRequest,
+        aLocationURI,
+        aFlags
+      ) {
+        // Some websites trigger redirect events after they finish loading even
+        // though the location remains the same. This results in onLocationChange
+        // events to be fired twice.
+        const isSameDocument = !!(
+          aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
+        );
+        if (
+          ["http", "https"].includes(aLocationURI.scheme) &&
+          aWebProgress.isTopLevel &&
+          !isSameDocument
+        ) {
+          this._sessionPageLoad += 1;
+        }
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];
