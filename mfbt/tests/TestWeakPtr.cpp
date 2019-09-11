@@ -9,6 +9,16 @@
 using mozilla::SupportsWeakPtr;
 using mozilla::WeakPtr;
 
+static char IamB[] = "B";
+static char IamC[] = "C";
+static char IamD[] = "D";
+static char IamE[] = "E";
+
+class B : public SupportsWeakPtr<B> {
+ public:
+  char const* whoAmI() const { return IamB; }
+};
+
 // To have a class C support weak pointers, inherit from SupportsWeakPtr<C>.
 class C : public SupportsWeakPtr<C> {
  public:
@@ -24,11 +34,26 @@ class C : public SupportsWeakPtr<C> {
     mNum = 0xDEAD;
   }
 
+  char const* whoAmI() const { return IamC; }
+
   void act() {}
 
   bool isConst() { return false; }
 
   bool isConst() const { return true; }
+};
+
+// Supports weakptr for two base classes (B and C) and itself (D)
+class D : public B, public C, public SupportsWeakPtr<D> {
+ public:
+  char const* whoAmI() const { return IamD; }
+};
+
+// Derived from a class that supports weakptr, but doesn't implement itself
+// To check upcast works as expected
+class E : public D {
+ public:
+  char const* whoAmI() const { return IamE; }
 };
 
 bool isConst(C*) { return false; }
@@ -110,4 +135,39 @@ int main() {
 
   delete c2;
   MOZ_RELEASE_ASSERT(!w2, "Deleting an object should clear WeakPtr's to it.");
+
+  // Testing multiple base classes weak pointer support
+  D* d = new D;
+  WeakPtr<D> dd = d;
+  WeakPtr<const D> ddconst = d;
+  WeakPtr<C> dc = d;
+  WeakPtr<const C> dcconst = d;
+  WeakPtr<B> db = d;
+  WeakPtr<const B> dbconst = d;
+
+  MOZ_RELEASE_ASSERT(dd->whoAmI() == IamD);
+  MOZ_RELEASE_ASSERT(ddconst->whoAmI() == IamD);
+  MOZ_RELEASE_ASSERT(dc->whoAmI() == IamC);
+  MOZ_RELEASE_ASSERT(dcconst->whoAmI() == IamC);
+  MOZ_RELEASE_ASSERT(db->whoAmI() == IamB);
+  MOZ_RELEASE_ASSERT(dbconst->whoAmI() == IamB);
+
+  delete d;
+
+  MOZ_RELEASE_ASSERT(!dd);
+  MOZ_RELEASE_ASSERT(!ddconst);
+  MOZ_RELEASE_ASSERT(!dc);
+  MOZ_RELEASE_ASSERT(!dcconst);
+  MOZ_RELEASE_ASSERT(!db);
+  MOZ_RELEASE_ASSERT(!dbconst);
+
+  // Check that we correctly upcast to the base class supporting weakptr
+  E* e = new E;
+  WeakPtr<D> ed = e;
+
+  MOZ_RELEASE_ASSERT(ed->whoAmI() == IamD);
+
+  delete e;
+
+  MOZ_RELEASE_ASSERT(!ed);
 }
