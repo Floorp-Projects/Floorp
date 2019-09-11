@@ -98,7 +98,7 @@ function initialValueCallback() {
 function setPrefs(setting, item) {
   let prefs = item.initialValue || setting.setCallback(item.value);
   let changed = false;
-  for (let pref in prefs) {
+  for (let pref of setting.prefNames) {
     if (prefs[pref] === undefined) {
       if (Preferences.isSet(pref)) {
         changed = true;
