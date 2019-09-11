@@ -17,12 +17,6 @@ interface nsISimpleEnumerator;
 interface nsICookie;
 interface nsIFile;
 
-[scriptable, function, uuid(20709db8-8dad-4e45-b33e-6e7c761dfc5d)]
-interface nsIPrivateModeCallback : nsISupports
-{
-  void callback();
-};
-
 /**
  * An optional interface for accessing or removing the cookies
  * that are in the cookie list
