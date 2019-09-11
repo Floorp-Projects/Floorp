@@ -235,8 +235,7 @@ class HomeFragment : Fragment(), AccountObserver {
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
                 sessionId = null,
-                showShortcutEnginePicker = true,
-                pastedText = null
+                showShortcutEnginePicker = true
             )
             val extras =
                 FragmentNavigator.Extras.Builder()
@@ -390,8 +389,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 invokePendingDeleteJobs()
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
                     sessionId = null,
-                    showShortcutEnginePicker = true,
-                    pastedText = null
+                    showShortcutEnginePicker = true
                 )
                 nav(R.id.homeFragment, directions)
             }

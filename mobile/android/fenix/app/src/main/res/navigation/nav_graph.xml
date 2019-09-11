@@ -108,6 +108,7 @@
             app:popUpTo="@+id/searchFragment" />
         <argument
             android:name="pastedText"
+            android:defaultValue="@null"
             app:argType="string"
             app:nullable="true"/>
     </fragment>

@@ -67,8 +67,7 @@ class StartSearchIntentProcessorTest {
             navController.navigate(
                 NavGraphDirections.actionGlobalSearch(
                     sessionId = null,
-                    showShortcutEnginePicker = true,
-                    pastedText = null
+                    showShortcutEnginePicker = true
                 )
             )
         }

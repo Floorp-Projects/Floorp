@@ -26,8 +26,7 @@ class StartSearchIntentProcessor(
 
             val directions = NavGraphDirections.actionGlobalSearch(
                 sessionId = null,
-                showShortcutEnginePicker = true,
-                pastedText = null
+                showShortcutEnginePicker = true
             )
             navController.nav(null, directions)
             true
