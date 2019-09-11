@@ -2640,6 +2640,14 @@ class HTMLEditor final : public TextEditor,
    */
   void SetSelectionInterlinePosition();
 
+  /**
+   * EnsureSelectionInBlockElement() may move caret into aElement or its
+   * parent block if caret is outside of them.  Don't call this when
+   * `Selection` is not collapsed.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureCaretInBlockElement(dom::Element& aElement);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

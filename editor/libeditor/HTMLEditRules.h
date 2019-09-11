@@ -193,12 +193,6 @@ class HTMLEditRules : public TextEditRules {
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
 
   /**
-   * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
-   * necessary,
-   */
-  MOZ_MUST_USE nsresult PinSelectionToNewBlock();
-
-  /**
    * DocumentModifiedWorker() is called by DocumentModified() either
    * synchronously or asynchronously.
    */
