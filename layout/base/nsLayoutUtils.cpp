@@ -2261,8 +2261,8 @@ static void ConstrainToCoordValues(float& aStart, float& aSize) {
   // can't return a value greater than nscoord_MAX. If aSize is greater than
   // nscoord_MAX then we reduce it to nscoord_MAX while keeping the rect
   // centered:
-  if (aSize > float(nscoord_MAX)) {
-    float excess = aSize - float(nscoord_MAX);
+  if (aSize > nscoord_MAX) {
+    float excess = aSize - nscoord_MAX;
     excess /= 2;
     aStart += excess;
     aSize = (float)nscoord_MAX;
