@@ -230,6 +230,13 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldUseTrackingProtectionStrict() {
+        // When
+        // Then
+        assertTrue(settings.useStrictTrackingProtection)
+    }
+
+    @Test
     fun shouldUseAutoBatteryTheme() {
         // When just created
         // Then

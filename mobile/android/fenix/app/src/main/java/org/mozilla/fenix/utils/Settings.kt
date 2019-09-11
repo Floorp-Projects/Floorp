@@ -165,7 +165,7 @@ class Settings private constructor(
 
     val useStrictTrackingProtection by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
-        false
+        true
     )
 
     val themeSettingString: String

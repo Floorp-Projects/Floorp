@@ -5,31 +5,33 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.Preference
-        app:allowDividerBelow="false"
         android:key="@string/pref_key_etp_learn_more"
         android:layout="@layout/tracking_protection_learn_more_preference"
         android:summary="@string/preference_enhanced_tracking_protection_explanation"
-        android:title="@string/preference_enhanced_tracking_protection_explanation_title" />
+        android:title="@string/preference_enhanced_tracking_protection_explanation_title"
+        app:allowDividerBelow="false" />
     <SwitchPreference
         android:defaultValue="true"
         android:icon="@drawable/ic_tracking_protection_enabled"
         android:key="@string/pref_key_tracking_protection"
         android:title="@string/preference_enhanced_tracking_protection" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
+        android:defaultValue="false"
         android:dependency="@string/pref_key_tracking_protection"
-        android:defaultValue="true"
         android:key="@string/pref_key_tracking_protection_standard"
         android:summary="@string/preference_enhanced_tracking_protection_standard_description"
-        android:title="@string/preference_enhanced_tracking_protection_standard" />
+        android:title="@string/preference_enhanced_tracking_protection_standard"
+        app:isPreferenceVisible="false" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
+        android:defaultValue="true"
         android:dependency="@string/pref_key_tracking_protection"
-        android:defaultValue="false"
         android:key="@string/pref_key_tracking_protection_strict"
         android:summary="@string/preference_enhanced_tracking_protection_strict_description"
-        android:title="@string/preference_enhanced_tracking_protection_strict" />
+        android:title="@string/preference_enhanced_tracking_protection_strict"
+        app:isPreferenceVisible="false" />
     <Preference
-        app:allowDividerAbove="true"
         android:icon="@drawable/ic_info"
         android:key="@string/pref_key_tracking_protection_exceptions"
-        android:title="@string/preferences_tracking_protection_exceptions" />
+        android:title="@string/preferences_tracking_protection_exceptions"
+        app:allowDividerAbove="true" />
 </androidx.preference.PreferenceScreen>
