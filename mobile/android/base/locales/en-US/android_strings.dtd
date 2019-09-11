@@ -22,15 +22,17 @@
 <!ENTITY firstrun_data_subtext2 "Turn off images to spend less data on every site you visit.">
 <!ENTITY firstrun_sync_title "Sync">
 <!ENTITY updatednewfirstrun_sync_title "Account">
-<!ENTITY firstrun_sync_message2 "Pick up where you left off.">
+<!ENTITY firstrun_sync_message3 "Sync your bookmarks, history, and passwords to your phone.">
 <!ENTITY firstrun_sync_subtext2 "Use Sync to find the bookmarks, passwords, and other things you save to &brandShortName; on all your devices.">
 <!ENTITY newfirstrun_sync_subtext "Sync the things you save on mobile to Firefox for desktop, privately and securely.">
 <!ENTITY updatednewfirstrun_sync_subtext "Sign in to your account to get the most out of &brandShortName;">
+<!ENTITY firstrun_sendtab_title "Send Tab">
+<!ENTITY firstrun_sendtab_message "Share tabs from mobile to desktop — instantly.">
 <!ENTITY firstrun_signin_message "Get connected, get started">
 <!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY newfirstrun_signin_button "Turn on Sync">
 <!ENTITY updatednewfirstrun_signin_button "Sign in to &brandShortName;">
-<!ENTITY  onboard_start_button_browser "Start Browsing">
+<!ENTITY onboard_start_button_browser "Start Browsing">
 <!ENTITY firstrun_button_notnow "Not right now">
 <!ENTITY firstrun_button_next "Next">
 <!ENTITY firstrun_signup_button "Sign up">
