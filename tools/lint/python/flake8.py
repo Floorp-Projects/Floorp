@@ -97,7 +97,7 @@ def lint(paths, config, **lintargs):
     # Run flake8.
     app = Application()
 
-    output_file = mozfile.NamedTemporaryFile()
+    output_file = mozfile.NamedTemporaryFile(mode='r')
     flake8_cmd = [
         '--config', config_path,
         '--output-file', output_file.name,
@@ -154,5 +154,5 @@ def lint(paths, config, **lintargs):
 
         results.append(result.from_config(config, **res))
 
-    map(process_line, output_file.readlines())
+    list(map(process_line, output_file.readlines()))
     return results
