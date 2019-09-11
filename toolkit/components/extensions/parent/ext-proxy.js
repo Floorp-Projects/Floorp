@@ -81,9 +81,6 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
         let [, rawPort] = value[prop].split(":");
         let port = parseInt(rawPort, 10) || DEFAULT_PORTS.get(prop);
         prefs[`network.proxy.${prop}_port`] = port;
-      } else {
-        prefs[`network.proxy.${prop}`] = undefined;
-        prefs[`network.proxy.${prop}_port`] = undefined;
       }
     }
 
