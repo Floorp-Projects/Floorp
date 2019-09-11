@@ -111,16 +111,13 @@ MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype,
 };
 
-function MockFxAccounts(device = {}) {
-  return new FxAccounts({
-    newAccountState(credentials) {
+async function MockFxAccounts(credentials, device = {}) {
+  let fxa = new FxAccounts({
+    newAccountState(creds) {
       // we use a real accountState but mocked storage.
       let storage = new MockStorageManager();
-      storage.initialize(credentials);
+      storage.initialize(creds);
       return new AccountState(storage);
-    },
-    _getDeviceName() {
-      return device.name || "mock device name";
     },
     async availableCommands() {
       return {};
@@ -146,6 +143,12 @@ function MockFxAccounts(device = {}) {
     },
     DEVICE_REGISTRATION_VERSION,
   });
+  await fxa.internal.setSignedInUser(credentials);
+  Services.prefs.setStringPref(
+    "identity.fxaccounts.account.device.name",
+    device.name || "mock device name"
+  );
+  return fxa;
 }
 
 add_task(async function test_updateDeviceRegistration_with_new_device() {
@@ -153,8 +156,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const deviceType = "bar";
 
   const credentials = getTestUser("baz");
-  const fxa = new MockFxAccounts({ name: deviceName });
-  await fxa.internal.setSignedInUser(credentials);
+  const fxa = await MockFxAccounts(credentials, { name: deviceName });
   // Remove the current device registration (setSignedInUser does one!).
   await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
 
@@ -213,8 +215,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   const deviceName = "phil's device";
 
   const credentials = getTestUser("pb");
-  const fxa = new MockFxAccounts({ name: deviceName });
-  await fxa.internal.setSignedInUser(credentials);
+  const fxa = await MockFxAccounts(credentials, { name: deviceName });
   await fxa.updateUserAccountData({
     uid: credentials.uid,
     device: {
@@ -278,8 +279,7 @@ add_task(
     const currentDeviceId = "my device id";
 
     const credentials = getTestUser("baz");
-    const fxa = new MockFxAccounts({ name: deviceName });
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials, { name: deviceName });
     await fxa.updateUserAccountData({
       uid: credentials.uid,
       device: {
@@ -350,8 +350,7 @@ add_task(
     const conflictingDeviceId = "conflicting device id";
 
     const credentials = getTestUser("baz");
-    const fxa = new MockFxAccounts({ name: deviceName });
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials, { name: deviceName });
     await fxa.updateUserAccountData({
       uid: credentials.uid,
       device: {
@@ -439,8 +438,7 @@ add_task(
     const deviceName = "foo";
 
     const credentials = getTestUser("baz");
-    const fxa = new MockFxAccounts({ name: deviceName });
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials, { name: deviceName });
     await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
 
     const spy = {
@@ -486,8 +484,7 @@ add_task(
   async function test_getDeviceId_with_no_device_id_invokes_device_registration() {
     const credentials = getTestUser("foo");
     credentials.verified = true;
-    const fxa = new MockFxAccounts();
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials);
     await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
 
     const spy = { count: 0, args: [] };
@@ -502,7 +499,7 @@ add_task(
       return Promise.resolve("bar");
     };
 
-    const result = await fxa.internal.getDeviceId();
+    const result = await fxa.internal.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -516,8 +513,7 @@ add_task(
   async function test_getDeviceId_with_registration_version_outdated_invokes_device_registration() {
     const credentials = getTestUser("foo");
     credentials.verified = true;
-    const fxa = new MockFxAccounts();
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0, args: [] };
     fxa.internal.currentAccountState.getUserAccountData = () =>
@@ -534,7 +530,7 @@ add_task(
       return Promise.resolve("wibble");
     };
 
-    const result = await fxa.internal.getDeviceId();
+    const result = await fxa.internal.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -547,8 +543,7 @@ add_task(
   async function test_getDeviceId_with_device_id_and_uptodate_registration_version_doesnt_invoke_device_registration() {
     const credentials = getTestUser("foo");
     credentials.verified = true;
-    const fxa = new MockFxAccounts();
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0 };
     fxa.internal.currentAccountState.getUserAccountData = async () => ({
@@ -563,7 +558,7 @@ add_task(
       return Promise.resolve("bar");
     };
 
-    const result = await fxa.internal.getDeviceId();
+    const result = await fxa.internal.device.getLocalId();
 
     Assert.equal(spy.count, 0);
     Assert.equal(result, "foo's device id");
@@ -574,8 +569,7 @@ add_task(
   async function test_getDeviceId_with_device_id_and_with_no_registration_version_invokes_device_registration() {
     const credentials = getTestUser("foo");
     credentials.verified = true;
-    const fxa = new MockFxAccounts();
-    await fxa.internal.setSignedInUser(credentials);
+    const fxa = await MockFxAccounts(credentials);
 
     const spy = { count: 0, args: [] };
     fxa.internal.currentAccountState.getUserAccountData = () =>
@@ -586,7 +580,7 @@ add_task(
       return Promise.resolve("wibble");
     };
 
-    const result = await fxa.internal.getDeviceId();
+    const result = await fxa.internal.device.getLocalId();
 
     Assert.equal(spy.count, 1);
     Assert.equal(spy.args[0].length, 1);
@@ -595,38 +589,11 @@ add_task(
   }
 );
 
-add_task(async function test_migration_toplevel_deviceId_to_device() {
-  const credentials = getTestUser("foo");
-  credentials.verified = true;
-  const fxa = new MockFxAccounts();
-  await fxa.internal.setSignedInUser(credentials);
-  await fxa.updateUserAccountData({ uid: credentials.uid, device: null });
-  // Can't use updateUserAccountData here since it won't accept deprecated fields!
-  const accountData =
-    fxa.internal.currentAccountState.storageManager.accountData;
-  accountData.deviceId = "mydeviceid";
-  accountData.deviceRegistrationVersion = DEVICE_REGISTRATION_VERSION;
-
-  const result = await fxa.internal.getDeviceId();
-  Assert.equal(result, "mydeviceid");
-
-  const state = fxa.internal.currentAccountState;
-  const data = await state.getUserAccountData();
-  Assert.deepEqual(data.device, {
-    id: "mydeviceid",
-    registrationVersion: DEVICE_REGISTRATION_VERSION,
-    registeredCommandsKeys: [],
-  });
-  Assert.ok(!data.deviceId);
-  Assert.ok(!data.deviceRegistrationVersion);
-});
-
 add_task(async function test_devicelist_pushendpointexpired() {
   const deviceId = "mydeviceid";
   const credentials = getTestUser("baz");
   credentials.verified = true;
-  const fxa = new MockFxAccounts();
-  await fxa.internal.setSignedInUser(credentials);
+  const fxa = await MockFxAccounts(credentials);
   await fxa.updateUserAccountData({
     uid: credentials.uid,
     device: {

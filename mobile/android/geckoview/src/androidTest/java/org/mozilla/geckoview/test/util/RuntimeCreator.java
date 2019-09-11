@@ -1,6 +1,5 @@
 package org.mozilla.geckoview.test.util;
 
-import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.RuntimeTelemetry;
@@ -35,7 +34,7 @@ public class RuntimeCreator {
         public RuntimeTelemetry.Delegate delegate = null;
 
         @Override
-        public void onHistogram(@NonNull RuntimeTelemetry.Metric<long[]> metric) {
+        public void onHistogram(@NonNull RuntimeTelemetry.Histogram metric) {
             if (delegate != null) {
                 delegate.onHistogram(metric);
             }

@@ -292,11 +292,17 @@ ChildProcess.prototype = {
         startPoint = this.manifest.destination;
       }
     }
-    let snapshotIndex = this.snapshots.length - 1;
-    while (pointPrecedes(point, this.snapshots[snapshotIndex])) {
-      snapshotIndex--;
+    let startCheckpoint;
+    if (this.snapshots.length) {
+      let snapshotIndex = this.snapshots.length - 1;
+      while (pointPrecedes(point, this.snapshots[snapshotIndex])) {
+        snapshotIndex--;
+      }
+      startCheckpoint = this.snapshots[snapshotIndex].checkpoint;
+    } else {
+      // Children which just started haven't taken snapshots.
+      startCheckpoint = FirstCheckpointId;
     }
-    const startCheckpoint = this.snapshots[snapshotIndex].checkpoint;
     return (
       startDelay + checkpointRangeDuration(startCheckpoint, point.checkpoint)
     );
@@ -1472,22 +1478,32 @@ async function findLogpointHits(
     if (!condition) {
       callback(point, ["Loading..."]);
     }
-    sendAsyncManifest({
+    let skipPauseData = false;
+    const manifest = {
       shouldSkip: () => false,
       contents() {
-        return { kind: "hitLogpoint", text, condition };
+        return { kind: "hitLogpoint", text, condition, skipPauseData };
       },
-      onFinished(child, { pauseData, result, resultData }) {
-        if (result) {
-          addPauseData(point, pauseData, /* trackCached */ true);
-          callback(point, result, resultData);
+      onFinished(child, { pauseData, result, resultData, restoredSnapshot }) {
+        if (restoredSnapshot && !skipPauseData) {
+          // Gathering pause data sometimes triggers a snapshot restore.
+          skipPauseData = true;
+          sendAsyncManifest(manifest);
+        } else {
+          if (result) {
+            if (!skipPauseData) {
+              addPauseData(point, pauseData, /* trackCached */ true);
+            }
+            callback(point, result, resultData);
+          }
+          child.divergedFromRecording = true;
         }
-        child.divergedFromRecording = true;
       },
       point,
       expectedDuration: 250,
       lowPriority: true,
-    });
+    };
+    sendAsyncManifest(manifest);
   }
 }
 

@@ -45,11 +45,13 @@ class TelemetryTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : RuntimeTelemetry.Delegate {
             @AssertCalled
-            override fun onHistogram(metric: RuntimeTelemetry.Metric<LongArray>) {
+            override fun onHistogram(metric: RuntimeTelemetry.Histogram) {
                 assertThat("Metric name should be correct", metric.name,
                         equalTo("TELEMETRY_TEST_STREAMING"))
                 assertThat("Metric name should be correct", metric.value,
                         equalTo(longArrayOf(401, 12, 1, 109, 2000)))
+                assertThat("The histogram should not be categorical", metric.isCategorical,
+                        equalTo(false))
             }
 
             @AssertCalled

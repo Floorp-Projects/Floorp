@@ -21,6 +21,10 @@ process-type-file = Local File
 # permission to allocate large amounts of memory
 process-type-weblargeallocation = Large Allocation
 
+# process used to isolate a webpage from other web pages
+# to improve security
+process-type-webisolated = Isolated Web Content
+
 # process used to communicate with the GPU for
 # graphics acceleration
 process-type-gpu = GPU

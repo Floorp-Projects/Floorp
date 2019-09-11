@@ -103,7 +103,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
 function createRootsFromGrip(grip) {
   return [
     {
-      path: Symbol((grip && grip.actor) || JSON.stringify(grip)),
+      path: (grip && grip.actor) || JSON.stringify(grip),
       contents: { value: grip },
     },
   ];

@@ -575,7 +575,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("start", "middle"),
     new AnimTestcaseFromTo("middle", "end"),
   ]),
-  new TestcaseBundle(gPropList.text_decoration, [
+  new TestcaseBundle(gPropList.text_decoration_line, [
     new AnimTestcaseFromTo("none", "underline"),
     new AnimTestcaseFromTo("overline", "line-through"),
     new AnimTestcaseFromTo("blink", "underline"),

@@ -249,17 +249,6 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Promote multiple pause-lifetime object actors to thread-lifetime ones.
-   *
-   * @param array actors
-   *        An array with actor IDs to promote.
-   */
-  threadGrips: DebuggerClient.requester({
-    type: "threadGrips",
-    actors: arg(0),
-  }),
-
-  /**
    * Request the loaded sources for the current thread.
    */
   getSources: DebuggerClient.requester({
