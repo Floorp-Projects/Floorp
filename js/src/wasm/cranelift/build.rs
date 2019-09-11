@@ -74,7 +74,7 @@ fn main() {
             }
         }
         None => {
-            println!("cargo:warning={}", "MOZ_TOPOBJDIR should be set by default, otherwise the build is not guaranted to finish.");
+            println!("cargo:warning=MOZ_TOPOBJDIR should be set by default, otherwise the build is not guaranted to finish.");
         }
     }
 
