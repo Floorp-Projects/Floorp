@@ -3912,10 +3912,6 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
         return false;
       }
     }
-
-    dbg->forEachWeakMap([debuggerZone](auto& weakMap) {
-      weakMap.findSweepGroupEdges(debuggerZone);
-    });
   }
 
   return true;
@@ -3923,7 +3919,8 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
 
 template <class UnbarrieredKey, class Wrapper, bool InvisibleKeysOk>
 bool DebuggerWeakMap<UnbarrieredKey, Wrapper, InvisibleKeysOk>::
-    findSweepGroupEdges(JS::Zone* debuggerZone) {
+    findZoneEdges() {
+  Zone* debuggerZone = zone();
   MOZ_ASSERT(debuggerZone->isGCMarking());
   for (Enum e(*this); !e.empty(); e.popFront()) {
     MOZ_ASSERT(e.front().value()->zone() == debuggerZone);
