@@ -11,6 +11,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -358,6 +361,8 @@ var dataProviders = {
       if (!remoteType) {
         continue;
       }
+
+      remoteType = E10SUtils.remoteTypePrefix(remoteType);
 
       if (remoteTypes[remoteType]) {
         remoteTypes[remoteType]++;
