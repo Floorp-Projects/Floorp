@@ -79,6 +79,21 @@ class PageAction {
     this.stateTransitionTimeoutIDs = [];
   }
 
+  addImpression(recommendation) {
+    this._dispatchImpression(recommendation);
+    // Only send an impression ping upon the first expansion.
+    // Note that when the user clicks on the "show" button on the asrouter admin
+    // page (both `bucket_id` and `id` will be set as null), we don't want to send
+    // the impression ping in that case.
+    if (!!recommendation.id && !!recommendation.content.bucket_id) {
+      this._sendTelemetry({
+        message_id: recommendation.id,
+        bucket_id: recommendation.content.bucket_id,
+        event: "IMPRESSION",
+      });
+    }
+  }
+
   async showAddressBarNotifier(recommendation, shouldExpand = false) {
     this.container.hidden = false;
 
@@ -114,18 +129,7 @@ class PageAction {
       // After one second, expand
       this._expand(DELAY_BEFORE_EXPAND_MS);
 
-      this._dispatchImpression(recommendation);
-      // Only send an impression ping upon the first expansion.
-      // Note that when the user clicks on the "show" button on the asrouter admin
-      // page (both `bucket_id` and `id` will be set as null), we don't want to send
-      // the impression ping in that case.
-      if (!!recommendation.id && !!recommendation.content.bucket_id) {
-        this._sendTelemetry({
-          message_id: recommendation.id,
-          bucket_id: recommendation.content.bucket_id,
-          event: "IMPRESSION",
-        });
-      }
+      this.addImpression(recommendation);
     }
   }
 
@@ -579,52 +583,41 @@ class PageAction {
       callback: primaryActionCallback,
     };
 
-    // For each secondary action, get the strings and attributes
-    const secondaryBtnStrings = [];
-    for (let button of secondary) {
+    let _renderSecondaryButtonAction = async (event, button) => {
       let label = await this.getStrings(button.label);
-      secondaryBtnStrings.push({ label, attributes: label.attributes });
-    }
-    const secondaryActions = [
-      {
-        label: secondaryBtnStrings[0].label,
-        accessKey: secondaryBtnStrings[0].attributes.accesskey,
+      let { attributes } = label;
+
+      return {
+        label,
+        accessKey: attributes.accesskey,
         callback: () => {
-          this.dispatchUserAction(secondary[0].action);
+          if (button.action) {
+            this.dispatchUserAction(button.action);
+          } else {
+            this._blockMessage(id);
+            this.hideAddressBarNotifier();
+            RecommendationMap.delete(browser);
+          }
+
           this._sendTelemetry({
             message_id: id,
             bucket_id: content.bucket_id,
-            event: "DISMISS",
+            event,
           });
         },
-      },
-      {
-        label: secondaryBtnStrings[1].label,
-        accessKey: secondaryBtnStrings[1].attributes.accesskey,
-        callback: () => {
-          this._blockMessage(id);
-          this.hideAddressBarNotifier();
-          this._sendTelemetry({
-            message_id: id,
-            bucket_id: content.bucket_id,
-            event: "BLOCK",
-          });
-          RecommendationMap.delete(browser);
-        },
-      },
-      {
-        label: secondaryBtnStrings[2].label,
-        accessKey: secondaryBtnStrings[2].attributes.accesskey,
-        callback: () => {
-          this.dispatchUserAction(secondary[2].action);
-          this._sendTelemetry({
-            message_id: id,
-            bucket_id: content.bucket_id,
-            event: "MANAGE",
-          });
-        },
-      },
-    ];
+      };
+    };
+
+    // For each secondary action, define default telemetry event
+    const defaultSecondaryEvent = ["DISMISS", "BLOCK", "MANAGE"];
+    const secondaryActions = await Promise.all(
+      secondary.map((button, i) => {
+        return _renderSecondaryButtonAction(
+          button.event || defaultSecondaryEvent[i],
+          button
+        );
+      })
+    );
 
     // Actually show the notification
     this.currentNotification = this.window.PopupNotifications.show(
@@ -655,11 +648,18 @@ class PageAction {
       return;
     }
     const message = RecommendationMap.get(browser);
-    const { id, content } = message;
 
     // The recommendation should remain either collapsed or expanded while the
     // doorhanger is showing
     this._clearScheduledStateChanges(browser, message);
+
+    await this.showPopup();
+  }
+
+  async showPopup() {
+    const browser = this.window.gBrowser.selectedBrowser;
+    const message = RecommendationMap.get(browser);
+    const { id, content } = message;
 
     // A hacky way of setting the popup anchor outside the usual url bar icon box
     // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
