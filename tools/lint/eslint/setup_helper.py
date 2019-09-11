@@ -6,22 +6,22 @@
 
 from __future__ import absolute_import, print_function
 
-from filecmp import dircmp
 import json
 import os
 import platform
 import re
-from mozfile.mozfile import remove as mozfileremove
+import shutil
 import subprocess
 import sys
-import shutil
 import tempfile
 from distutils.version import LooseVersion, StrictVersion
-from mozbuild.util import ensure_subprocess_env
+from filecmp import dircmp
+
 from mozbuild.nodeutil import (find_node_executable, find_npm_executable,
                                NPM_MIN_VERSION, NODE_MIN_VERSION)
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
+from mozbuild.util import ensure_subprocess_env
+from mozfile.mozfile import remove as mozfileremove
+
 
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
 Could not find Node.js executable later than %s.
@@ -233,7 +233,7 @@ def eslint_module_needs_setup():
     needs_clobber = False
     node_modules_path = os.path.join(get_project_root(), "node_modules")
 
-    for name, expected_data in expected_eslint_modules().iteritems():
+    for name, expected_data in expected_eslint_modules().items():
         # expected_eslint_modules returns a string for the version number of
         # dependencies for installation of eslint generally, and an object
         # for our in-tree plugins (which contains the entire module info).
@@ -316,8 +316,8 @@ def get_possible_node_paths_win():
 
 def get_version(path):
     try:
-        version_str = subprocess.check_output([path, "--version"],
-                                              stderr=subprocess.STDOUT)
+        version_str = subprocess.check_output([path, "--version"], stderr=subprocess.STDOUT,
+                                              universal_newlines=True)
         return version_str
     except (subprocess.CalledProcessError, OSError):
         return None
