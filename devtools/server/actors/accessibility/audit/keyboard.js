@@ -54,30 +54,37 @@ const SHOW_LONG_DESC_ACTION = "showlongdesc";
 const FOCUS_PSEUDO_CLASS = ":focus";
 const MOZ_FOCUSRING_PSEUDO_CLASS = ":-moz-focusring";
 
-const INTERACTIVE_ROLES = new Set([
+const KEYBOARD_FOCUSABLE_ROLES = new Set([
   Ci.nsIAccessibleRole.ROLE_BUTTONMENU,
   Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
-  Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
-  Ci.nsIAccessibleRole.ROLE_CHECK_RICH_OPTION,
   Ci.nsIAccessibleRole.ROLE_COMBOBOX,
-  Ci.nsIAccessibleRole.ROLE_COMBOBOX_OPTION,
   Ci.nsIAccessibleRole.ROLE_EDITCOMBOBOX,
   Ci.nsIAccessibleRole.ROLE_ENTRY,
   Ci.nsIAccessibleRole.ROLE_LINK,
   Ci.nsIAccessibleRole.ROLE_LISTBOX,
-  Ci.nsIAccessibleRole.ROLE_MENUITEM,
-  Ci.nsIAccessibleRole.ROLE_OPTION,
-  Ci.nsIAccessibleRole.ROLE_PAGETAB,
   Ci.nsIAccessibleRole.ROLE_PASSWORD_TEXT,
-  Ci.nsIAccessibleRole.ROLE_PARENT_MENUITEM,
   Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
   Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
-  Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-  Ci.nsIAccessibleRole.ROLE_RICH_OPTION,
   Ci.nsIAccessibleRole.ROLE_SLIDER,
   Ci.nsIAccessibleRole.ROLE_SPINBUTTON,
+  Ci.nsIAccessibleRole.ROLE_SUMMARY,
   Ci.nsIAccessibleRole.ROLE_SWITCH,
   Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
+]);
+
+const INTERACTIVE_ROLES = new Set([
+  ...KEYBOARD_FOCUSABLE_ROLES,
+  Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
+  Ci.nsIAccessibleRole.ROLE_CHECK_RICH_OPTION,
+  Ci.nsIAccessibleRole.ROLE_COMBOBOX_OPTION,
+  Ci.nsIAccessibleRole.ROLE_MENUITEM,
+  Ci.nsIAccessibleRole.ROLE_OPTION,
+  Ci.nsIAccessibleRole.ROLE_OUTLINE,
+  Ci.nsIAccessibleRole.ROLE_OUTLINEITEM,
+  Ci.nsIAccessibleRole.ROLE_PAGETAB,
+  Ci.nsIAccessibleRole.ROLE_PARENT_MENUITEM,
+  Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
+  Ci.nsIAccessibleRole.ROLE_RICH_OPTION,
 ]);
 
 /**
@@ -295,7 +302,7 @@ function interactiveRule(accessible) {
  *         when enabled, audit report object otherwise.
  */
 function focusableRule(accessible) {
-  if (!INTERACTIVE_ROLES.has(accessible.role)) {
+  if (!KEYBOARD_FOCUSABLE_ROLES.has(accessible.role)) {
     return null;
   }
 
@@ -315,6 +322,21 @@ function focusableRule(accessible) {
     return null;
   }
 
+  let ariaRoles;
+  try {
+    ariaRoles = accessible.attributes.getStringProperty("xml-roles");
+  } catch (e) {
+    // No xml-roles. nsPersistentProperties throws if the attribute for a key
+    // is not found.
+  }
+  if (
+    ariaRoles &&
+    (ariaRoles.includes("combobox") || ariaRoles.includes("listbox"))
+  ) {
+    // Do not force ARIA combobox or listbox to be focusable.
+    return null;
+  }
+
   return { score: FAIL, issue: INTERACTIVE_NOT_FOCUSABLE };
 }
 
@@ -331,7 +353,11 @@ function focusableRule(accessible) {
  *         interactive role, audit report object otherwise.
  */
 function semanticsRule(accessible) {
-  if (INTERACTIVE_ROLES.has(accessible.role)) {
+  if (
+    INTERACTIVE_ROLES.has(accessible.role) ||
+    // Visible listboxes will have focusable state when inside comboboxes.
+    accessible.role === Ci.nsIAccessibleRole.ROLE_COMBOBOX_LIST
+  ) {
     return null;
   }
 
