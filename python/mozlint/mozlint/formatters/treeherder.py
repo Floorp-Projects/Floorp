@@ -18,7 +18,7 @@ class TreeherderFormatter(object):
 
     def __call__(self, result):
         message = []
-        for path, errors in sorted(result.issues.iteritems()):
+        for path, errors in sorted(result.issues.items()):
             for err in errors:
                 assert isinstance(err, Issue)
 

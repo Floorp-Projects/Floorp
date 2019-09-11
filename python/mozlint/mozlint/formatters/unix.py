@@ -18,7 +18,7 @@ class UnixFormatter(object):
     def __call__(self, result):
         msg = []
 
-        for path, errors in sorted(result.issues.iteritems()):
+        for path, errors in sorted(result.issues.items()):
             for err in errors:
                 assert isinstance(err, Issue)
 
