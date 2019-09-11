@@ -54,6 +54,10 @@ const CONFIG_URL =
             included: { everywhere: true },
             excluded: { regions: ["us"] },
           },
+          {
+            included: { everywhere: true },
+            cohort: "acohortid",
+          },
         ],
       },
       {
@@ -95,5 +99,16 @@ add_task(async function() {
     names,
     ["excite", "aol"],
     "The engines should be in the correct order"
+  );
+
+  Services.prefs.setCharPref("browser.search.cohort", "acohortid");
+  ({ engines, privateDefault } = engineSelector.fetchEngineConfiguration(
+    "us",
+    "en-US"
+  ));
+  Assert.deepEqual(
+    engines.map(obj => obj.engineName),
+    ["lycos", "altavista", "aol", "excite"],
+    "Engines are in the correct order and include the cohort engine"
   );
 });
