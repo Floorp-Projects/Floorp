@@ -9,20 +9,23 @@
   display: none;
 }
 
+
 #identity-popup,
 #protections-popup {
-  font-size: 1.18rem;
-  --popup-width: 36.36rem;
+%if defined(XP_MACOSX) || defined(XP_WIN)
+  font-size: 1.18em;
+%endif
+  --popup-width: 30.81em;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
-  --horizontal-padding: 2.1rem;
+  --horizontal-padding: 1.78em;
   --vertical-section-padding: 0.9em;
   --height-offset: 0px;
 }
 
 #protections-popup[toast] {
-  --popup-width: 32rem;
+  --popup-width: 27.12em;
 }
 
 #protections-popup[infoMessageShowing] {
