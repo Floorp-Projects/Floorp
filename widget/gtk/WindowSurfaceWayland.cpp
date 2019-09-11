@@ -712,27 +712,63 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
       WindowBackBuffer::GetSurfaceFormat());
 }
 
-static bool IsWindowFullScreenUpdate(LayoutDeviceIntRect& screenRect,
-                                     const LayoutDeviceIntRegion& aRegion) {
-  if (aRegion.GetNumRects() > 1) return false;
+static bool IsWindowFullScreenUpdate(
+    LayoutDeviceIntRect& aScreenRect,
+    const LayoutDeviceIntRegion& aUpdatedRegion) {
+  if (aUpdatedRegion.GetNumRects() > 1) return false;
 
-  IntRect rect = aRegion.RectIter().Get().ToUnknownRect();
-  return (rect.x == 0 && rect.y == 0 && screenRect.width == rect.width &&
-          screenRect.height == rect.height);
+  IntRect rect = aUpdatedRegion.RectIter().Get().ToUnknownRect();
+  return (rect.x == 0 && rect.y == 0 && aScreenRect.width == rect.width &&
+          aScreenRect.height == rect.height);
 }
 
-static bool IsPopupFullScreenUpdate(LayoutDeviceIntRect& screenRect,
-                                    const LayoutDeviceIntRegion& aRegion) {
+static bool IsPopupFullScreenUpdate(
+    LayoutDeviceIntRect& aScreenRect,
+    const LayoutDeviceIntRegion& aUpdatedRegion) {
   // We know that popups can be drawn from two parts; a panel and an arrow.
   // Assume we redraw whole popups when we have two rects and bounding
   // box is equal to window borders.
-  if (aRegion.GetNumRects() > 2) return false;
+  if (aUpdatedRegion.GetNumRects() > 2) return false;
 
-  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
+  gfx::IntRect bounds = aUpdatedRegion.GetBounds().ToUnknownRect();
   gfx::IntSize lockSize(bounds.XMost(), bounds.YMost());
 
-  return (screenRect.width == lockSize.width &&
-          screenRect.height == lockSize.height);
+  return (aScreenRect.width == lockSize.width &&
+          aScreenRect.height == lockSize.height);
+}
+
+bool WindowSurfaceWayland::CanDrawToWaylandBufferDirectly(
+    const LayoutDeviceIntRect& aScreenRect,
+    const LayoutDeviceIntRegion& aUpdatedRegion) {
+  // whole buffer damage or no cache - we can go direct rendering safely.
+  if (mWholeWindowBufferDamage) {
+    return true;
+  }
+
+  // Let's try to eliminate a buffer copy
+  if (mRenderingCacheMode != CACHE_ALL) {
+    // There's some cached rendering, we can't throw it away.
+    if (mDelayedImageCommits.Length()) {
+      return false;
+    }
+
+    // More than one regions can overlap and produce flickering/artifacts.
+    if (aUpdatedRegion.GetNumRects() > 1) {
+      return false;
+    }
+
+    gfx::IntRect bounds = aUpdatedRegion.GetBounds().ToUnknownRect();
+    gfx::IntSize lockSize(bounds.XMost(), bounds.YMost());
+
+    // There's some heuristics here. Let's enable direct rendering for large
+    // screen updates like video playback or page scrolling which is bigger
+    // than 1/3 of screen.
+    if (lockSize.width * 3 > aScreenRect.width &&
+        lockSize.height * 3 > aScreenRect.height) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /*
@@ -751,6 +787,10 @@ static bool IsPopupFullScreenUpdate(LayoutDeviceIntRect& screenRect,
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     const LayoutDeviceIntRegion& aRegion) {
   MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
+
+  // Disable all commits from frame callback handler and delayed comit handler
+  // as we're updated by gecko compositor.
+  mPendingCommit = false;
 
   LayoutDeviceIntRect lockedScreenRect = mWindow->GetBounds();
   gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
@@ -813,8 +853,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   }
 
   mDrawToWaylandBufferDirectly =
-      (mWholeWindowBufferDamage || mRenderingCacheMode != CACHE_ALL);
-
+      CanDrawToWaylandBufferDirectly(mBufferScreenRect, aRegion);
   if (mDrawToWaylandBufferDirectly) {
     // If there's any pending image commit scratch them as we're going
     // to redraw the whole sceen anyway.
@@ -847,22 +886,10 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
 void WindowImageSurface::Draw(gfx::SourceSurface* aSurface,
                               gfx::DrawTarget* aDest,
                               const LayoutDeviceIntRegion& aRegion) {
-  uint32_t numRects = aRegion.GetNumRects();
-  if (numRects != 1) {
-    AutoTArray<IntRect, 32> rects;
-    rects.SetCapacity(numRects);
-    for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-      rects.AppendElement(iter.Get().ToUnknownRect());
-    }
-    aDest->PushDeviceSpaceClipRects(rects.Elements(), rects.Length());
-  }
-
-  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
-  gfx::Rect rect(bounds);
-  aDest->DrawSurface(aSurface, rect, rect);
-
-  if (numRects != 1) {
-    aDest->PopClip();
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    mozilla::LayoutDeviceIntRect r = iter.Get();
+    gfx::Rect rect(r.ToUnknownRect());
+    aDest->DrawSurface(aSurface, rect, rect);
   }
 }
 
@@ -888,39 +915,34 @@ void WindowSurfaceWayland::DrawDelayedImageCommits(
   mDelayedImageCommits.Clear();
 }
 
-bool WindowSurfaceWayland::CommitImageSurfaceToWaylandBuffer(
-    const LayoutDeviceIntRegion& aRegion,
-    LayoutDeviceIntRegion& aWaylandBufferDamage) {
-  MOZ_ASSERT(!mDrawToWaylandBufferDirectly);
-
-#ifdef DEBUG
-  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
-  gfx::Rect rect(bounds);
-  MOZ_ASSERT(!rect.IsEmpty(), "Empty drawing?");
-#endif
-
-  LOGWAYLAND(
-      ("WindowSurfaceWayland::CommitImageSurfaceToWaylandBuffer [%p] "
-       "screenSize [%d x %d]\n",
-       (void*)this, mBufferScreenRect.width, mBufferScreenRect.height));
+void WindowSurfaceWayland::CacheImageSurface(
+    const LayoutDeviceIntRegion& aRegion) {
+  LOGWAYLAND(("WindowSurfaceWayland::CacheImageSurface [%p]", (void*)this));
 
   mDelayedImageCommits.AppendElement(
       WindowImageSurface(mImageSurface, aRegion));
   // mImageSurface is owned by mDelayedImageCommits
   mImageSurface = nullptr;
+}
 
-  RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(
-      /* aCanSwitchBuffer */ mWholeWindowBufferDamage);
-  if (!dt) {
-    return false;
+bool WindowSurfaceWayland::CommitImageCacheToWaylandBuffer() {
+  MOZ_ASSERT(!mDrawToWaylandBufferDirectly);
+
+  if (mDelayedImageCommits.Length()) {
+    RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(
+        /* aCanSwitchBuffer */ mWholeWindowBufferDamage);
+    if (!dt) {
+      return false;
+    }
+
+    LOGWAYLAND(
+        ("   Flushing %ld cached WindowImageSurfaces to Wayland buffer\n",
+         long(mDelayedImageCommits.Length() + 1)));
+
+    // Draw any delayed image commits first
+    DrawDelayedImageCommits(dt, mWaylandBufferDamage);
+    UnlockWaylandBuffer();
   }
-
-  LOGWAYLAND(("   Flushing %ld cached WindowImageSurfaces to Wayland buffer\n",
-              long(mDelayedImageCommits.Length() + 1)));
-
-  // Draw any delayed image commits first
-  DrawDelayedImageCommits(dt, aWaylandBufferDamage);
-  UnlockWaylandBuffer();
 
   return true;
 }
@@ -1053,10 +1075,8 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   } else {
     MOZ_ASSERT(!mWaylandBuffer->IsLocked(),
                "Drawing to already locked buffer?");
-    if (CommitImageSurfaceToWaylandBuffer(aInvalidRegion,
-                                          mWaylandBufferDamage)) {
-      // Our cached drawing is flushed, we can draw fullscreen again.
-      mDrawToWaylandBufferDirectly = true;
+    CacheImageSurface(aInvalidRegion);
+    if (CommitImageCacheToWaylandBuffer()) {
       mPendingCommit = true;
     }
   }
