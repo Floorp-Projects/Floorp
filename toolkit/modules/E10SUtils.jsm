@@ -802,6 +802,14 @@ var E10SUtils = {
   },
 
   /**
+   * The suffix after a `=` in a remoteType is dynamic, and used to control the
+   * process pool to use. The C++ version of this method is mozilla::dom::RemoteTypePrefix().
+   */
+  remoteTypePrefix(aRemoteType) {
+    return aRemoteType.split("=")[0];
+  },
+
+  /**
    * If Fission is enabled, the remote type for a standard content process will
    * start with webIsolated=.
    */

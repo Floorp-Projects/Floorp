@@ -42,14 +42,14 @@ const {
  * Takes an Enzyme wrapper (obtained with mount/shallow/…) and
  * returns a stringified version of the ObjectInspector, e.g.
  *
- *   ▼ Map { Symbol(a) → "value-a", Symbol(b) → "value-b" }
+ *   ▼ Map { "a" → "value-a", "b" → "value-b" }
  *   |    size : 2
  *   |  ▼ <entries>
- *   |  |  ▼ 0 : Symbol(a) → "value-a"
- *   |  |  |    <key> : Symbol(a)
+ *   |  |  ▼ 0 : "a" → "value-a"
+ *   |  |  |    <key> : "a"
  *   |  |  |    <value> : "value-a"
- *   |  |  ▼ 1 : Symbol(b) → "value-b"
- *   |  |  |    <key> : Symbol(b)
+ *   |  |  ▼ 1 : "b" → "value-b"
+ *   |  |  |    <key> : "b"
  *   |  |  |    <value> : "value-b"
  *   |  ▼ <prototype> : Object { … }
  *

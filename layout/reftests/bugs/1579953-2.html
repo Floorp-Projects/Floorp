@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<style>
+details::first-line { color: green; }
+* { column-count: 1 }
+</style>
+<script>
+function go() {
+  a.appendChild(document.createTextNode("details"))
+  b.createTBody()
+}
+</script>
+<body onload=go()>
+<table id="b"></table>
+<details id="a" open>
+<summary hidden></summary>
+This is the </details><!-- The entire line "This is ..." should be green. -->

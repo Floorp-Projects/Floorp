@@ -259,8 +259,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetLineHeight();
   already_AddRefed<CSSValue> DoGetTextDecoration();
-  already_AddRefed<CSSValue> DoGetTextDecorationColor();
-  already_AddRefed<CSSValue> DoGetTextDecorationStyle();
 
   /* Display properties */
   already_AddRefed<CSSValue> DoGetTransform();
