@@ -132,13 +132,8 @@ class WebReplayPlayer extends Component {
       start: 0,
       end: 1,
     };
-
-    this.lastPaint = null;
     this.overlayWidth = 1;
-
-    this.onProgressBarClick = this.onProgressBarClick.bind(this);
-    this.onProgressBarMouseOver = this.onProgressBarMouseOver.bind(this);
-    this.onPlayerMouseLeave = this.onPlayerMouseLeave.bind(this);
+    this.onClickProgressBar = this.onClickProgressBar.bind(this);
   }
 
   componentDidMount() {
@@ -174,10 +169,6 @@ class WebReplayPlayer extends Component {
     return this.toolbox.threadFront;
   }
 
-  isCached(message) {
-    return this.state.cachedPoints.includes(message.executionPoint.progress);
-  }
-
   isRecording() {
     return !this.isPaused() && this.state.recording;
   }
@@ -207,31 +198,13 @@ class WebReplayPlayer extends Component {
     return (1 - ratio) * maxSize + minSize;
   }
 
-  getClosestMessage(point) {
-    return getClosestMessage(this.state.messages, point);
-  }
-
-  getMousePosition(e) {
-    const { start, end } = this.state;
-
-    const { left, width } = e.currentTarget.getBoundingClientRect();
-    const clickLeft = e.clientX;
-
-    const clickPosition = (clickLeft - left) / width;
-    return (end - start) * clickPosition + start;
-  }
-
-  paint(point) {
-    if (this.lastPaint !== point) {
-      this.lastPaint = point;
-      this.threadFront.paint(point);
-    }
-  }
-
   onPaused(packet) {
     if (packet && packet.recordingEndpoint) {
       const { executionPoint, recordingEndpoint } = packet;
-      const closestMessage = this.getClosestMessage(executionPoint);
+      const closestMessage = getClosestMessage(
+        this.state.messages,
+        executionPoint
+      );
 
       const pausedMessage = this.state.messages.find(message =>
         pointEquals(message.executionPoint, executionPoint)
@@ -312,6 +285,23 @@ class WebReplayPlayer extends Component {
     return null;
   }
 
+  onClickProgressBar(e) {
+    if (!e.altKey) {
+      return;
+    }
+
+    const { start, end } = this.state;
+
+    const direction = e.shiftKey ? "end" : "start";
+    const { left, width } = e.currentTarget.getBoundingClientRect();
+    const clickLeft = e.clientX;
+
+    const clickPosition = (clickLeft - left) / width;
+    const position = (end - start) * clickPosition + start;
+
+    this.setTimelinePosition({ position, direction });
+  }
+
   setTimelinePosition({ position, direction }) {
     this.setState({ [direction]: position });
   }
@@ -335,38 +325,6 @@ class WebReplayPlayer extends Component {
         element.scrollIntoView({ block: "center", behavior: "smooth" });
       }
     }
-  }
-
-  onMessageMouseEnter(executionPoint) {
-    return this.paint(executionPoint);
-  }
-
-  onProgressBarClick(e) {
-    if (!e.altKey) {
-      return;
-    }
-
-    const direction = e.shiftKey ? "end" : "start";
-    const position = this.getMousePosition(e);
-    this.setTimelinePosition({ position, direction });
-  }
-
-  onProgressBarMouseOver(e) {
-    const mousePosition = this.getMousePosition(e) * 100;
-
-    const closestMessage = sortBy(this.state.messages, message =>
-      Math.abs(this.getVisiblePercent(message.executionPoint) - mousePosition)
-    ).filter(message => this.isCached(message))[0];
-
-    if (closestMessage) {
-      return this.paint(closestMessage.executionPoint);
-    }
-
-    return;
-  }
-
-  onPlayerMouseLeave() {
-    return this.threadFront.paintCurrentPoint();
   }
 
   seek(executionPoint) {
@@ -529,6 +487,7 @@ class WebReplayPlayer extends Component {
       executionPoint,
       pausedMessage,
       highlightedMessage,
+      cachedPoints,
     } = this.state;
 
     const offset = this.getVisibleOffset(message.executionPoint);
@@ -553,7 +512,9 @@ class WebReplayPlayer extends Component {
 
     const isHighlighted = highlightedMessage == message.id;
 
-    const uncached = message.executionPoint && !this.isCached(message);
+    const uncached =
+      message.executionPoint &&
+      !cachedPoints.includes(message.executionPoint.progress);
 
     const atPausedLocation =
       pausedMessage && sameLocation(pausedMessage, message);
@@ -583,7 +544,6 @@ class WebReplayPlayer extends Component {
         e.stopPropagation();
         this.seek(message.executionPoint);
       },
-      onMouseEnter: () => this.onMessageMouseEnter(message.executionPoint),
     });
   }
 
@@ -659,7 +619,6 @@ class WebReplayPlayer extends Component {
             recording: recording,
             paused: !recording,
           }),
-          onMouseLeave: this.onPlayerMouseLeave,
         },
         div(
           { className: "overlay-container " },
@@ -667,9 +626,8 @@ class WebReplayPlayer extends Component {
           div(
             {
               className: "progressBar",
-              onClick: this.onProgressBarClick,
+              onClick: this.onClickProgressBar,
               onDoubleClick: () => this.setState({ start: 0, end: 1 }),
-              onMouseOver: this.onProgressBarMouseOver,
             },
             div({
               className: "progress",
