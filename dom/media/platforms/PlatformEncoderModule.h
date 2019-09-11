@@ -202,6 +202,9 @@ class MediaDataEncoder {
   };
 
   virtual ~MediaDataEncoder() {}
+
+ public:
+  using H264Config = VideoConfig<H264Specific>;
 };
 
 struct MOZ_STACK_CLASS CreateEncoderParams final {
@@ -246,6 +249,20 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
         mBitrate(aBitrate) {
     MOZ_ASSERT(mTaskQueue);
     Set(std::forward<const Ts>(aCodecSpecific)...);
+  }
+
+  const MediaDataEncoder::H264Config ToH264Config() const {
+    const VideoInfo* info = mConfig.GetAsVideoInfo();
+    MOZ_ASSERT(info);
+
+    auto config = MediaDataEncoder::H264Config(
+        MediaDataEncoder::CodecType::H264, mUsage, info->mImage, mPixelFormat,
+        mFramerate, mBitrate);
+    if (mCodecSpecific) {
+      config.SetCodecSpecific(mCodecSpecific.ref().mH264);
+    }
+
+    return config;
   }
 
   const TrackInfo& mConfig;
