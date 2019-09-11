@@ -140,7 +140,10 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  Optional<Nullable<fetch::ResponseBodyInit>> body;
+  // We can't just pass nullptr for our null-valued Nullable, because the
+  // fetch::ResponseBodyInit is a non-temporary type due to the MOZ_RAII
+  // annotations on some of its members.
+  Nullable<fetch::ResponseBodyInit> body;
   ResponseInit init;
   init.mStatus = aStatus;
   init.mStatusText.AssignASCII("");
@@ -162,8 +165,7 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
 
 /*static*/
 already_AddRefed<Response> Response::Constructor(
-    const GlobalObject& aGlobal,
-    const Optional<Nullable<fetch::ResponseBodyInit>>& aBody,
+    const GlobalObject& aGlobal, const Nullable<fetch::ResponseBodyInit>& aBody,
     const ResponseInit& aInit, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
@@ -259,7 +261,7 @@ already_AddRefed<Response> Response::Constructor(
     }
   }
 
-  if (aBody.WasPassed() && !aBody.Value().IsNull()) {
+  if (!aBody.IsNull()) {
     if (aInit.mStatus == 204 || aInit.mStatus == 205 || aInit.mStatus == 304) {
       aRv.ThrowTypeError<MSG_RESPONSE_NULL_STATUS_WITH_BODY>();
       return nullptr;
@@ -269,7 +271,7 @@ already_AddRefed<Response> Response::Constructor(
     nsCOMPtr<nsIInputStream> bodyStream;
     int64_t bodySize = InternalResponse::UNKNOWN_BODY_SIZE;
 
-    const fetch::ResponseBodyInit& body = aBody.Value().Value();
+    const fetch::ResponseBodyInit& body = aBody.Value();
     if (body.IsReadableStream()) {
       aRv.MightThrowJSException();
 
