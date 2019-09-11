@@ -164,7 +164,7 @@ namespace detail {
 // This can live beyond the lifetime of the class derived from
 // SupportsWeakPtr.
 template <class T>
-class WeakReference : public ::mozilla::RefCounted<WeakReference<T> > {
+class WeakReference : public ::mozilla::RefCounted<WeakReference<T>> {
  public:
   explicit WeakReference(T* p) : mPtr(p) {
     MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK();
@@ -239,6 +239,7 @@ class SupportsWeakPtr {
 template <typename T>
 class WeakPtr {
   typedef detail::WeakReference<T> WeakReference;
+  typedef typename RemoveConst<T>::Type NonConstT;
 
  public:
   WeakPtr& operator=(const WeakPtr& aOther) {
@@ -252,7 +253,15 @@ class WeakPtr {
     *this = aOther;
   }
 
-  WeakPtr& operator=(T* aOther) {
+  WeakPtr& operator=(decltype(nullptr)) {
+    if (!mRef || mRef->get()) {
+      // Ensure that mRef is dereferenceable in the uninitialized state.
+      mRef = new WeakReference(nullptr);
+    }
+    return *this;
+  }
+
+  WeakPtr& operator=(SupportsWeakPtr<NonConstT> const* aOther) {
     if (aOther) {
       *this = aOther->SelfReferencingWeakPtr();
     } else if (!mRef || mRef->get()) {
@@ -264,10 +273,19 @@ class WeakPtr {
     return *this;
   }
 
-  MOZ_IMPLICIT WeakPtr(T* aOther) {
-    *this = aOther;
-    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(mRef);
+  WeakPtr& operator=(SupportsWeakPtr<NonConstT>* aOther) {
+    if (aOther) {
+      *this = aOther->SelfReferencingWeakPtr();
+    } else if (!mRef || mRef->get()) {
+      // Ensure that mRef is dereferenceable in the uninitialized state.
+      mRef = new WeakReference(nullptr);
+    }
+    // The thread safety check happens inside SelfReferencingWeakPtr
+    // or is initialized in the WeakReference constructor.
+    return *this;
   }
+
+  MOZ_IMPLICIT WeakPtr(T* aOther) { *this = aOther; }
 
   // Ensure that mRef is dereferenceable in the uninitialized state.
   WeakPtr() : mRef(new WeakReference(nullptr)) {}
