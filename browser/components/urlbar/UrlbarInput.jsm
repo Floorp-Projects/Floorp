@@ -213,7 +213,7 @@ class UrlbarInput {
     this._copyCutController = new CopyCutController(this);
     this.inputField.controllers.insertControllerAt(0, this._copyCutController);
 
-    this.initLayoutBreakout();
+    this.updateLayoutBreakout();
 
     this._initPasteAndGo();
 
@@ -239,7 +239,7 @@ class UrlbarInput {
     this.dropmarker.removeEventListener("mousedown", this);
 
     this.view.panel.remove();
-    this.endLayoutBreakout(true);
+    this.endLayoutExtend(true);
 
     // When uninit is called due to exiting the browser's customize mode,
     // this.inputField.controllers is not the original list of controllers, and
@@ -829,7 +829,7 @@ class UrlbarInput {
    */
   removeHiddenFocus() {
     this.textbox.classList.remove("hidden-focus");
-    this.startLayoutBreakout();
+    this.startLayoutExtend();
   }
 
   // Getters and Setters below.
@@ -872,17 +872,15 @@ class UrlbarInput {
     );
   }
 
-  async initLayoutBreakout() {
+  async updateLayoutBreakout() {
     if (!this.megabar) {
       return;
     }
-    this.removeAttribute("breakout");
     await this._updateLayoutBreakoutDimensions();
-    this.setAttribute("breakout", "true");
-    this.startLayoutBreakout();
+    this.startLayoutExtend();
   }
 
-  async startLayoutBreakout() {
+  startLayoutExtend() {
     if (
       !this.hasAttribute("breakout") ||
       this.hasAttribute("breakout-extend") ||
@@ -893,8 +891,6 @@ class UrlbarInput {
     ) {
       return;
     }
-    await this._updateLayoutBreakoutDimensions();
-
     this.setAttribute("breakout-extend", "true");
 
     let customizationTarget = this.textbox.closest(".customization-target");
@@ -903,7 +899,7 @@ class UrlbarInput {
     }
   }
 
-  endLayoutBreakout(force) {
+  endLayoutExtend(force) {
     if (
       !this.hasAttribute("breakout-extend") ||
       (!force &&
@@ -929,18 +925,37 @@ class UrlbarInput {
   // Private methods below.
 
   async _updateLayoutBreakoutDimensions() {
+    // When this method gets called a second time before the first call
+    // finishes, we need to disregard the first one.
+    let updateKey = {};
+    this._layoutBreakoutUpdateKey = updateKey;
+
+    this.removeAttribute("breakout");
+    this.textbox.parentNode.removeAttribute("breakout");
+
     await this.window.promiseDocumentFlushed(() => {});
     await new Promise(resolve => {
       this.window.requestAnimationFrame(() => {
-        if (!this.hasAttribute("breakout")) {
-          let inputHeight = px(getBoundsWithoutFlushing(this.textbox).height);
-          this.textbox.style.setProperty("--urlbar-height", inputHeight);
-          this.textbox.parentNode.style.minHeight = inputHeight;
+        if (this._layoutBreakoutUpdateKey != updateKey) {
+          return;
         }
+
+        this.textbox.parentNode.style.setProperty(
+          "--urlbar-container-height",
+          px(getBoundsWithoutFlushing(this.textbox.parentNode).height)
+        );
+        this.textbox.style.setProperty(
+          "--urlbar-height",
+          px(getBoundsWithoutFlushing(this.textbox).height)
+        );
         this.textbox.style.setProperty(
           "--urlbar-toolbar-height",
           px(getBoundsWithoutFlushing(this.textbox.closest("toolbar")).height)
         );
+
+        this.setAttribute("breakout", "true");
+        this.textbox.parentNode.setAttribute("breakout", "true");
+
         resolve();
       });
     });
@@ -1553,7 +1568,7 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
-    this.endLayoutBreakout();
+    this.endLayoutExtend();
 
     this.formatValue();
     this._resetSearchState();
@@ -1603,7 +1618,7 @@ class UrlbarInput {
 
   _on_focus(event) {
     this.setAttribute("focused", "true");
-    this.startLayoutBreakout();
+    this.startLayoutExtend();
 
     this._updateUrlTooltip();
     this.formatValue();

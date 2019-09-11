@@ -2115,7 +2115,7 @@ var gBrowserInit = {
     window.addEventListener("dragover", MousePosTracker);
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
-    gNavToolbox.addEventListener("customizationending", CustomizationHandler);
+    gNavToolbox.addEventListener("aftercustomization", CustomizationHandler);
 
     SessionStore.promiseInitialized.then(() => {
       // Bail out if the window has been closed in the meantime.
@@ -7077,7 +7077,7 @@ var gUIDensity = {
     }
 
     gBrowser.tabContainer.uiDensityChanged();
-    gURLBar.initLayoutBreakout();
+    gURLBar.updateLayoutBreakout();
   },
 };
 
