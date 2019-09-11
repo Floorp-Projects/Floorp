@@ -106,6 +106,8 @@ class EncodingCompleteEvent : public CancelableRunnable {
       MOZ_ASSERT(blob);
 
       rv = callback->ReceiveBlob(blob.forget());
+    } else {
+      rv = callback->ReceiveBlob(nullptr);
     }
 
     return rv;
