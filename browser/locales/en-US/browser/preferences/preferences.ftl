@@ -902,17 +902,20 @@ content-blocking-section-top-level-description = Trackers follow you around onli
 
 content-blocking-learn-more = Learn more
 
-# The terminology used to refer to categories of Content Blocking is also used in chrome/browser/browser.properties and should be translated consistently.
+## These strings are used to define the different levels of
+## Enhanced Tracking Protection.
+
 # "Standard" in this case is an adjective, meaning "default" or "normal".
-content-blocking-setting-standard =
+enhanced-tracking-protection-setting-standard =
   .label = Standard
   .accesskey = d
-content-blocking-setting-strict =
+enhanced-tracking-protection-setting-strict =
   .label = Strict
   .accesskey = r
-content-blocking-setting-custom =
+enhanced-tracking-protection-setting-custom =
   .label = Custom
   .accesskey = C
+##
 
 content-blocking-etp-standard-desc = Balanced for protection and performance. Pages will load normally.
 content-blocking-etp-strict-desc = Stronger protection, but may cause some sites or content to break.
