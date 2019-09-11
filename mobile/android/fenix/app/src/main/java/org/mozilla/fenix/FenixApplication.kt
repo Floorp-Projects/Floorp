@@ -191,16 +191,14 @@ open class FenixApplication : Application() {
         // Sets the PushFeature as the singleton instance for push messages to go to.
         // We need the push feature setup here to deliver messages in the case where the service
         // starts up the app first.
-        if (components.backgroundServices.pushConfig != null) {
-            Logger.info("Push configuration found; initializing autopush..")
-
-            val push = components.backgroundServices.push
+        components.backgroundServices.push?.let { autoPushFeature ->
+            Logger.info("AutoPushFeature is configured, initializing it...")
 
             // Install the AutoPush singleton to receive messages.
-            PushProcessor.install(push)
+            PushProcessor.install(autoPushFeature)
 
             // Initialize the service. This could potentially be done in a coroutine in the future.
-            push.initialize()
+            autoPushFeature.initialize()
         }
     }
 

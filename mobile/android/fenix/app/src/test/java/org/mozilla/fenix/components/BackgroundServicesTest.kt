@@ -42,7 +42,7 @@ class BackgroundServicesTest {
         ) = mockk<FxaAccountManager>(relaxed = true)
 
         override fun makePushConfig() = mockk<PushConfig>(relaxed = true)
-        override fun makePush() = mockk<AutoPushFeature>(relaxed = true)
+        override fun makePush(pushConfig: PushConfig) = mockk<AutoPushFeature>(relaxed = true)
     }
 
     @Test

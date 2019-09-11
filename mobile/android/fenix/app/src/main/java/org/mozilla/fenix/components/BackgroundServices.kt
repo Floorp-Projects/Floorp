@@ -9,9 +9,6 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.lifecycle.ProcessLifecycleOwner
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.push.Bus
@@ -89,10 +86,9 @@ class BackgroundServices(
         SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 240L) // four hours
     }
 
-    val pushConfig by lazy { makePushConfig() }
     private val pushService by lazy { FirebasePush() }
 
-    val push by lazy { makePush() }
+    val push by lazy { makePushConfig()?.let { makePush(it) } }
 
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
@@ -115,16 +111,16 @@ class BackgroundServices(
         context.components.analytics.metrics
     )
 
-    private val pushAccountObserver = PushAccountObserver(push)
+    private val pushAccountObserver by lazy { push?.let { PushAccountObserver(it) } }
 
     val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
 
     @VisibleForTesting(otherwise = PRIVATE)
-    fun makePush(): AutoPushFeature {
+    fun makePush(pushConfig: PushConfig): AutoPushFeature {
         return AutoPushFeature(
             context = context,
             service = pushService,
-            config = pushConfig!!
+            config = pushConfig
         )
     }
 
@@ -160,38 +156,38 @@ class BackgroundServices(
         // This is a good example of an information leak at the API level.
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
-    ).also {
+    ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
         context.settings.fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
-        it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
+        accountManager.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 
         // Register a telemetry account observer to keep track of FxA auth metrics.
-        it.register(telemetryAccountObserver)
+        accountManager.register(telemetryAccountObserver)
 
-        // Enable push if we have the config.
-        if (pushConfig != null) {
+        // Enable push if it's configured.
+        push?.let { autoPushFeature ->
             // Register the push account observer so we know how to update our push subscriptions.
-            it.register(pushAccountObserver)
+            accountManager.register(pushAccountObserver!!)
 
             val logger = Logger("AutoPushFeature")
 
             // Notify observers for Services' messages.
-            push.registerForPushMessages(
+            autoPushFeature.registerForPushMessages(
                 PushType.Services,
                 object : Bus.Observer<PushType, String> {
                     override fun onEvent(type: PushType, message: String) {
-                        it.authenticatedAccount()?.deviceConstellation()
+                        accountManager.authenticatedAccount()?.deviceConstellation()
                             ?.processRawEventAsync(message)
                     }
                 })
 
             // Notify observers for subscription changes.
-            push.registerForSubscriptions(object : PushSubscriptionObserver {
+            autoPushFeature.registerForSubscriptions(object : PushSubscriptionObserver {
                 override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
                     // Update for only the services subscription.
                     if (subscription.type == PushType.Services) {
                         logger.info("New push subscription received for FxA")
-                        it.authenticatedAccount()?.deviceConstellation()
+                        accountManager.authenticatedAccount()?.deviceConstellation()
                             ?.setDevicePushSubscriptionAsync(
                                 DevicePushSubscription(
                                     endpoint = subscription.endpoint,
@@ -203,7 +199,7 @@ class BackgroundServices(
                 }
             })
         }
-        CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }
+        accountManager.initAsync()
     }
 
     /**
