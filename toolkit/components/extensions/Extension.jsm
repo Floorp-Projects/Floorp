@@ -154,6 +154,7 @@ const PRIVILEGED_PERMS = new Set([
   "urlbar",
   "normandyAddonStudy",
   "networkStatus",
+  "memory",
 ]);
 
 /**
