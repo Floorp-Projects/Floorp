@@ -18,8 +18,8 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
       : PlacesBookmark(PlacesEventType::Bookmark_added) {}
 
   static already_AddRefed<PlacesBookmarkAddition> Constructor(
-      const GlobalObject& aGlobal, const PlacesBookmarkAdditionInit& aInitDict,
-      ErrorResult& aRv) {
+      const GlobalObject& aGlobal,
+      const PlacesBookmarkAdditionInit& aInitDict) {
     RefPtr<PlacesBookmarkAddition> event = new PlacesBookmarkAddition();
     event->mItemType = aInitDict.mItemType;
     event->mId = aInitDict.mId;

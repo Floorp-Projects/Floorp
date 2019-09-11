@@ -670,8 +670,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(MozDocumentMatcher)
 
 /* static */
 already_AddRefed<DocumentObserver> DocumentObserver::Constructor(
-    GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks,
-    ErrorResult& aRv) {
+    GlobalObject& aGlobal, dom::MozDocumentCallback& aCallbacks) {
   RefPtr<DocumentObserver> matcher =
       new DocumentObserver(aGlobal.GetAsSupports(), aCallbacks);
   return matcher.forget();

@@ -9,8 +9,11 @@ interface WindowProxy;
 typedef (MatchPatternSet or sequence<DOMString>) MatchPatternSetOrStringSequence;
 typedef (MatchGlob or DOMString) MatchGlobOrString;
 
-[Constructor(MozDocumentMatcherInit options), ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=Window]
 interface MozDocumentMatcher {
+  [Throws]
+  constructor(MozDocumentMatcherInit options);
+
   /**
    * Returns true if the script's match and exclude patterns match the given
    * URI, without reference to attributes such as `allFrames`.
@@ -132,8 +135,12 @@ enum ContentScriptRunAt {
   "document_idle",
 };
 
-[Constructor(WebExtensionPolicy extension, WebExtensionContentScriptInit options), ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=Window]
 interface WebExtensionContentScript : MozDocumentMatcher {
+  [Throws]
+  constructor(WebExtensionPolicy extension,
+	      WebExtensionContentScriptInit options);
+
   /**
    * The earliest point in the load cycle at which this script should run. For
    * static content scripts, in extensions which were present at browser
