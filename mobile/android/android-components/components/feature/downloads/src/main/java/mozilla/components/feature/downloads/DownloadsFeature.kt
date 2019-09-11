@@ -143,7 +143,7 @@ class DownloadsFeature(
             session.download.consume(this::startDownload)
         }
 
-        if (!isAlreadyADialogCreated()) {
+        if (!isAlreadyADialogCreated() && fragmentManager != null) {
             dialog.show(fragmentManager, FRAGMENT_TAG)
         }
     }

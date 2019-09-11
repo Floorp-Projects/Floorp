@@ -90,7 +90,7 @@ class StoreExtensionsKtTest {
         assertTrue(stateObserved)
 
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(stateObserved)
     }
@@ -111,13 +111,13 @@ class StoreExtensionsKtTest {
 
         // CREATED: Observer does still not get invoked
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.CREATED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.CREATED
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(stateObserved)
 
         // STARTED: Observer gets initial state and observers updates
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.STARTED
         assertTrue(stateObserved)
 
         stateObserved = false
@@ -126,19 +126,19 @@ class StoreExtensionsKtTest {
 
         // RESUMED: Observer continues to get updates
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.RESUMED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.RESUMED
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertTrue(stateObserved)
 
         // CREATED: Not observing anymore
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.CREATED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.CREATED
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(stateObserved)
 
         // DESTROYED: Not observing
         stateObserved = false
-        owner.lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(stateObserved)
     }
@@ -176,7 +176,7 @@ class StoreExtensionsKtTest {
         assertEquals(0, receivedValue)
 
         // Switching to STARTED state: Receiving initial state
-        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.STARTED
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(24, receivedValue)
         latch = CountDownLatch(1)
@@ -246,7 +246,7 @@ class StoreExtensionsKtTest {
         assertEquals(0, receivedValue)
 
         // Switching to STARTED state: Receiving initial state
-        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.STARTED
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(24, receivedValue)
         latch = CountDownLatch(1)
@@ -399,7 +399,7 @@ class StoreExtensionsKtTest {
 
         // Switching to STARTED state: Receiving initial state
         latch = CountDownLatch(1)
-        owner.lifecycleRegistry.markState(Lifecycle.State.STARTED)
+        owner.lifecycleRegistry.currentState = Lifecycle.State.STARTED
         assertTrue(latch.await(1, TimeUnit.SECONDS))
         assertEquals(24, receivedValue)
 
@@ -512,7 +512,7 @@ class StoreExtensionsKtTest {
 
 internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
     val lifecycleRegistry = LifecycleRegistry(this).apply {
-        markState(initialState)
+        currentState = initialState
     }
 
     override fun getLifecycle(): Lifecycle = lifecycleRegistry

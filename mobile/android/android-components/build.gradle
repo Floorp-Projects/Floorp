@@ -127,6 +127,12 @@ subprojects {
                     sourceCompatibility 1.8
                     targetCompatibility 1.8
                 }
+
+                tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+                    kotlinOptions {
+                        jvmTarget = "1.8"
+                    }
+                }
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {
