@@ -1372,6 +1372,7 @@ class ContentParent final : public PContentParent,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)
 
+// This is the C++ version of remoteTypePrefix in E10SUtils.jsm.
 const nsDependentSubstring RemoteTypePrefix(
     const nsAString& aContentProcessType);
 }  // namespace dom
