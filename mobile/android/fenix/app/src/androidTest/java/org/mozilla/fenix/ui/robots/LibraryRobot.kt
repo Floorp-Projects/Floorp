@@ -8,6 +8,8 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -15,12 +17,15 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the your library menu.
  */
 class LibraryRobot {
     fun verifyLibraryView() = assertLibraryView()
+    fun verifyBookmarksButton() = assertBookmarksButton()
+    fun verifyHistoryButton() = assertHistoryButton()
 
     class Transition {
 
@@ -34,13 +39,53 @@ class LibraryRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun closeMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            closeButton().click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
+        fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            bookmarksButton().click()
+
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
+        }
+
+        fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            historyButton().click()
+
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
+        }
     }
 }
+private fun goBackButton() = onView(allOf(withContentDescription("Navigate up")))
+private fun closeButton() = onView(withId(R.id.libraryClose))
+private fun bookmarksButton() = onView(allOf(withText("Bookmarks")))
+private fun historyButton() = onView(allOf(withText("History")))
 
 private fun assertLibraryView() {
-    // verify that we are in the correct library view
-    onView(allOf(withId(R.id.libraryItemTitle)))
-    onView(allOf(withText("Bookmarks")))
+    onView(allOf(
+            withText("Library"),
+            ViewMatchers.withParent(withId(R.id.navigationToolbar))))
+        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
-private fun goBackButton() = onView(allOf(withContentDescription("Navigate up")))
+private fun assertBookmarksButton() = bookmarksButton().check(
+    ViewAssertions.matches(
+        ViewMatchers.withEffectiveVisibility(
+            ViewMatchers.Visibility.VISIBLE
+        )
+    )
+)
+
+private fun assertHistoryButton() = historyButton().check(
+    ViewAssertions.matches(
+        ViewMatchers.withEffectiveVisibility(
+            ViewMatchers.Visibility.VISIBLE
+        )
+    )
+)
