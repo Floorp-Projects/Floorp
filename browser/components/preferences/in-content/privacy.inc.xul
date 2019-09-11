@@ -55,7 +55,7 @@
             <hbox>
               <radio id="standardRadio"
                      value="standard"
-                     data-l10n-id="content-blocking-setting-standard"
+                     data-l10n-id="enhanced-tracking-protection-setting-standard"
                      flex="1"/>
               <button id="standardArrow"
                       is="highlightable-button"
@@ -136,7 +136,7 @@
             <hbox>
               <radio id="strictRadio"
                      value="strict"
-                     data-l10n-id="content-blocking-setting-strict"
+                     data-l10n-id="enhanced-tracking-protection-setting-strict"
                      flex="1"/>
               <button id="strictArrow"
                       is="highlightable-button"
@@ -232,7 +232,7 @@
           <hbox>
             <radio id="customRadio"
                    value="custom"
-                   data-l10n-id="content-blocking-setting-custom"
+                   data-l10n-id="enhanced-tracking-protection-setting-custom"
                    flex="1"/>
             <button id="customArrow"
                     is="highlightable-button"
