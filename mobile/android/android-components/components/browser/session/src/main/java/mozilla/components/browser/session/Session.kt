@@ -13,6 +13,7 @@ import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.ConsumeDownloadAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
+import mozilla.components.browser.state.action.ContentAction.ConsumePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateDownloadAction
@@ -20,6 +21,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateHitResultActi
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
+import mozilla.components.browser.state.action.ContentAction.UpdatePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
@@ -462,10 +464,19 @@ class Session(
     /**
      * [Consumable] State for a prompt request from web content.
      */
-    var promptRequest: Consumable<PromptRequest> by Delegates.vetoable(Consumable.empty()) {
-        _, _, request ->
-            val consumers = wrapConsumers<PromptRequest> { onPromptRequested(this@Session, it) }
-            !request.consumeBy(consumers)
+    var promptRequest: Consumable<PromptRequest> by Delegates.vetoable(Consumable.empty()) { _, _, request ->
+        store?.let {
+            val promptRequest = request.peek()
+            if (promptRequest == null) {
+                it.syncDispatch(ConsumePromptRequestAction(id))
+            } else {
+                it.syncDispatch(UpdatePromptRequestAction(id, promptRequest))
+                request.onConsume { it.syncDispatch(ConsumePromptRequestAction(id)) }
+            }
+        }
+
+        val consumers = wrapConsumers<PromptRequest> { onPromptRequested(this@Session, it) }
+        !request.consumeBy(consumers)
     }
 
     /**

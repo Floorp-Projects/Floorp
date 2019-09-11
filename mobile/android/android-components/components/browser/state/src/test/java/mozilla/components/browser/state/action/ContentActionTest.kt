@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -329,5 +330,43 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertNull(tab.content.hitResult)
+    }
+
+    @Test
+    fun `UpdatePromptRequestAction updates request`() {
+        assertNull(tab.content.promptRequest)
+
+        val promptRequest1: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest1)
+        ).joinBlocking()
+
+        assertEquals(promptRequest1, tab.content.promptRequest)
+
+        val promptRequest2: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest2)
+        ).joinBlocking()
+
+        assertEquals(promptRequest2, tab.content.promptRequest)
+    }
+
+    @Test
+    fun `ConsumePromptRequestAction removes result`() {
+        val promptRequest: PromptRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdatePromptRequestAction(tab.id, promptRequest)
+        ).joinBlocking()
+
+        assertEquals(promptRequest, tab.content.promptRequest)
+
+        store.dispatch(
+            ContentAction.ConsumePromptRequestAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.promptRequest)
     }
 }

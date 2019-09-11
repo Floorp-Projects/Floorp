@@ -931,6 +931,25 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when prompt request changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        session.promptRequest = Consumable.empty()
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
+
+        val promptRequest: PromptRequest = mock()
+        session.promptRequest = Consumable.from(promptRequest)
+        verify(store).dispatch(ContentAction.UpdatePromptRequestAction(session.id, promptRequest))
+
+        session.promptRequest.consume { true }
+        verify(store, times(2)).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
+    }
+
+    @Test
     fun `window requests will be set on session if no observer consumes them`() {
         val openWindowRequest: WindowRequest = mock()
         val closeWindowRequest: WindowRequest = mock()
