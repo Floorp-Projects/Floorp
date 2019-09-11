@@ -2540,7 +2540,7 @@ void nsObjectLoadingContent::CreateStaticClone(
   if (mFrameLoader) {
     nsCOMPtr<nsIContent> content =
         do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
-    nsFrameLoader* fl =
+    RefPtr<nsFrameLoader> fl =
         nsFrameLoader::Create(content->AsElement(), nullptr, false);
     if (fl) {
       aDest->mFrameLoader = fl;
