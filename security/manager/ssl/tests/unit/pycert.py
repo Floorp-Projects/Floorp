@@ -37,7 +37,6 @@ nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
 nsCertType:sslServer
 TLSFeature:[<TLSFeature>,...]
 embeddedSCTList:[<key specification>:<YYYYMMDD>,...]
-delegationUsage:
 
 Where:
   [] indicates an optional field or component of a field
@@ -195,14 +194,6 @@ class UnknownTLSFeature(UnknownBaseError):
     def __init__(self, value):
         UnknownBaseError.__init__(self, value)
         self.category = 'TLSFeature'
-
-
-class UnknownDelegatedCredentialError(UnknownBaseError):
-    """Helper exception type to handle unknown Delegated Credential args."""
-
-    def __init__(self, value):
-        UnknownBaseError.__init__(self, value)
-        self.category = 'delegatedCredential'
 
 
 class InvalidSCTSpecification(Error):
@@ -510,8 +501,6 @@ class Certificate(object):
             self.addTLSFeature(value, critical)
         elif extensionType == 'embeddedSCTList':
             self.savedEmbeddedSCTListData = (value, critical)
-        elif extensionType == 'delegationUsage':
-            self.addDelegationUsage(critical)
         else:
             raise UnknownExtensionTypeError(extensionType)
 
@@ -644,12 +633,6 @@ class Certificate(object):
         if certType != 'sslServer':
             raise UnknownNSCertTypeError(certType)
         self.addExtension(univ.ObjectIdentifier('2.16.840.1.113730.1.1'), univ.BitString("'01'B"),
-                          critical)
-
-    def addDelegationUsage(self, critical):
-        if critical:
-            raise UnknownDelegatedCredentialError(critical)
-        self.addExtension(univ.ObjectIdentifier('1.3.6.1.4.1.44363.44'), univ.Null(),
                           critical)
 
     def addTLSFeature(self, features, critical):
