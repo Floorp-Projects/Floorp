@@ -893,13 +893,10 @@ class TestInterface : public nsISupports, public nsWrapperCache {
 
   // binaryNames tests
   void MethodRenamedTo();
-  void OtherMethodRenamedTo();
   void MethodRenamedTo(int8_t);
   int8_t AttributeGetterRenamedTo();
   int8_t AttributeRenamedTo();
   void SetAttributeRenamedTo(int8_t);
-  int8_t OtherAttributeRenamedTo();
-  void SetOtherAttributeRenamedTo(int8_t);
 
   // Dictionary tests
   void PassDictionary(JSContext*, const Dict&);

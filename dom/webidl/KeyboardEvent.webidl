@@ -6,6 +6,7 @@
 
 interface KeyboardEvent : UIEvent
 {
+  [BinaryName="constructorJS"]
   constructor(DOMString typeArg,
               optional KeyboardEventInit keyboardEventInitDict= {});
 

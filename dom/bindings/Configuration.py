@@ -561,23 +561,25 @@ class Descriptor(DescriptorProvider):
             for attribute in ['implicitJSContext']:
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
 
-        self._binaryNames = desc.get('binaryNames', {})
+        self._binaryNames = {}
 
         if not self.interface.isExternal():
-            def isTestInterface(iface):
-                return (iface.identifier.name in ["TestInterface",
-                                                  "TestJSImplInterface",
-                                                  "TestRenamedInterface"])
-
-            for member in self.interface.members:
-                if not member.isAttr() and not member.isMethod():
-                    continue
+            def maybeAddBinaryName(member):
                 binaryName = member.getExtendedAttribute("BinaryName")
                 if binaryName:
                     assert isinstance(binaryName, list)
                     assert len(binaryName) == 1
                     self._binaryNames.setdefault(member.identifier.name,
                                                  binaryName[0])
+            for member in self.interface.members:
+                if not member.isAttr() and not member.isMethod():
+                    continue
+                maybeAddBinaryName(member);
+
+            ctor = self.interface.ctor()
+            if ctor:
+                maybeAddBinaryName(ctor)
+
         # Some default binary names for cases when nothing else got set.
         self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
         self._binaryNames.setdefault('__stringifier', 'Stringify')
