@@ -6,6 +6,8 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import android.os.Build
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.isInExperiment
@@ -47,7 +50,7 @@ import org.mozilla.fenix.test.Mockable
  */
 @Mockable
 class BackgroundServices(
-    context: Context,
+    private val context: Context,
     historyStorage: PlacesHistoryStorage,
     bookmarkStorage: PlacesBookmarksStorage
 ) {
@@ -79,35 +82,17 @@ class BackgroundServices(
         capabilities = setOf(DeviceCapability.SEND_TAB)
     )
     // If sync has been turned off on the server then disable syncing.
-    private val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
+    @VisibleForTesting(otherwise = PRIVATE)
+    val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
         SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 240L) // four hours
     }
 
-    val pushConfig by lazy {
-        val logger = Logger("PushConfig")
-        val projectIdKey = context.getString(R.string.pref_key_push_project_id)
-        val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
-        if (resId == 0) {
-            logger.warn("No firebase configuration found; cannot support push service.")
-            return@lazy null
-        }
-
-        logger.debug("Creating push configuration for autopush.")
-        val projectId = context.resources.getString(resId)
-        PushConfig(projectId)
-    }
-
+    val pushConfig by lazy { makePushConfig() }
     private val pushService by lazy { FirebasePush() }
 
-    val push by lazy {
-        AutoPushFeature(
-            context = context,
-            service = pushService,
-            config = pushConfig!!
-        )
-    }
+    val push by lazy { makePush() }
 
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
@@ -125,73 +110,46 @@ class BackgroundServices(
         }
     }
 
-    private val telemetryAccountObserver = object : AccountObserver {
-        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            when (authType) {
-                // User signed-in into an existing FxA account.
-                AuthType.Signin ->
-                    context.components.analytics.metrics.track(Event.SyncAuthSignIn)
+    private val telemetryAccountObserver = TelemetryAccountObserver(
+        context,
+        context.components.analytics.metrics
+    )
 
-                // User created a new FxA account.
-                AuthType.Signup ->
-                    context.components.analytics.metrics.track(Event.SyncAuthSignUp)
+    private val pushAccountObserver = PushAccountObserver(push)
 
-                // User paired to an existing account via QR code scanning.
-                AuthType.Pairing ->
-                    context.components.analytics.metrics.track(Event.SyncAuthPaired)
+    val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
 
-                // User signed-in into an FxA account shared from another locally installed app
-                // (e.g. Fennec).
-                AuthType.Shared ->
-                    context.components.analytics.metrics.track(Event.SyncAuthFromShared)
-
-                // Account Manager recovered a broken FxA auth state, without direct user involvement.
-                AuthType.Recovered ->
-                    context.components.analytics.metrics.track(Event.SyncAuthRecovered)
-
-                // User signed-in into an FxA account via unknown means.
-                // Exact mechanism identified by the 'action' param.
-                is AuthType.OtherExternal ->
-                    context.components.analytics.metrics.track(Event.SyncAuthOtherExternal)
-            }
-            // Used by Leanplum as a context variable.
-            context.settings.fxaSignedIn = true
-        }
-
-        override fun onLoggedOut() {
-            context.components.analytics.metrics.track(Event.SyncAuthSignOut)
-            // Used by Leanplum as a context variable.
-            context.settings.fxaSignedIn = false
-        }
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun makePush(): AutoPushFeature {
+        return AutoPushFeature(
+            context = context,
+            service = pushService,
+            config = pushConfig!!
+        )
     }
 
-    /**
-     * When we login/logout of FxA, we need to update our push subscriptions to match the newly
-     * logged in account.
-     *
-     * We added the push service to the AccountManager observer so that we can control when the
-     * service will start/stop. Firebase was added when landing the push service to ensure it works
-     * as expected without causing any (as many) side effects.
-     *
-     * In order to use Firebase with Leanplum and other marketing features, we need it always
-     * running so we cannot leave this code in place when we implement those features.
-     *
-     * We should have this removed when we are more confident
-     * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
-     */
-    private val pushAccountObserver = object : AccountObserver {
-        override fun onLoggedOut() {
-            push.unsubscribeForType(PushType.Services)
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun makePushConfig(): PushConfig? {
+        val logger = Logger("PushConfig")
+        val projectIdKey = context.getString(R.string.pref_key_push_project_id)
+        val resId = context.resources.getIdentifier(projectIdKey, "string", context.packageName)
+        if (resId == 0) {
+            logger.warn("No firebase configuration found; cannot support push service.")
+            return null
         }
 
-        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-            if (authType != AuthType.Existing) {
-                push.subscribeForType(PushType.Services)
-            }
-        }
+        logger.debug("Creating push configuration for autopush.")
+        val projectId = context.resources.getString(resId)
+        return PushConfig(projectId)
     }
 
-    val accountManager = FxaAccountManager(
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun makeAccountManager(
+        context: Context,
+        serverConfig: ServerConfig,
+        deviceConfig: DeviceConfig,
+        syncConfig: SyncConfig?
+    ) = FxaAccountManager(
         context,
         serverConfig,
         deviceConfig,
@@ -253,5 +211,76 @@ class BackgroundServices(
      */
     val notificationManager by lazy {
         NotificationManager(context)
+    }
+}
+
+@VisibleForTesting(otherwise = PRIVATE)
+class TelemetryAccountObserver(
+    private val context: Context,
+    private val metricController: MetricController
+) : AccountObserver {
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        when (authType) {
+            // User signed-in into an existing FxA account.
+            AuthType.Signin ->
+                metricController.track(Event.SyncAuthSignIn)
+
+            // User created a new FxA account.
+            AuthType.Signup ->
+                metricController.track(Event.SyncAuthSignUp)
+
+            // User paired to an existing account via QR code scanning.
+            AuthType.Pairing ->
+                metricController.track(Event.SyncAuthPaired)
+
+            // User signed-in into an FxA account shared from another locally installed app
+            // (e.g. Fennec).
+            AuthType.Shared ->
+                metricController.track(Event.SyncAuthFromShared)
+
+            // Account Manager recovered a broken FxA auth state, without direct user involvement.
+            AuthType.Recovered ->
+                metricController.track(Event.SyncAuthRecovered)
+
+            // User signed-in into an FxA account via unknown means.
+            // Exact mechanism identified by the 'action' param.
+            is AuthType.OtherExternal ->
+                metricController.track(Event.SyncAuthOtherExternal)
+        }
+        // Used by Leanplum as a context variable.
+        context.settings.fxaSignedIn = true
+    }
+
+    override fun onLoggedOut() {
+        metricController.track(Event.SyncAuthSignOut)
+        // Used by Leanplum as a context variable.
+        context.settings.fxaSignedIn = false
+    }
+}
+
+/**
+ * When we login/logout of FxA, we need to update our push subscriptions to match the newly
+ * logged in account.
+ *
+ * We added the push service to the AccountManager observer so that we can control when the
+ * service will start/stop. Firebase was added when landing the push service to ensure it works
+ * as expected without causing any (as many) side effects.
+ *
+ * In order to use Firebase with Leanplum and other marketing features, we need it always
+ * running so we cannot leave this code in place when we implement those features.
+ *
+ * We should have this removed when we are more confident
+ * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
+ */
+@VisibleForTesting(otherwise = PRIVATE)
+class PushAccountObserver(private val push: AutoPushFeature) : AccountObserver {
+    override fun onLoggedOut() {
+        push.unsubscribeForType(PushType.Services)
+    }
+
+    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+        if (authType != AuthType.Existing) {
+            push.subscribeForType(PushType.Services)
+        }
     }
 }
