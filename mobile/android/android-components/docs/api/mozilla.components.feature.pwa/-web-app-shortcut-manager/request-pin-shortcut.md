@@ -12,4 +12,4 @@ Request to create a new shortcut on the home screen.
 
 `session` - The session to create the shortcut for.
 
-`overrideShortcutName` - (optional) The name of the shortcut
+`overrideShortcutName` - (optional) The name of the shortcut. Ignored for PWAs.

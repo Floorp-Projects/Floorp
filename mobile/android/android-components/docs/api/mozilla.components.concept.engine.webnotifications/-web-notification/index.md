@@ -2,7 +2,7 @@
 
 # WebNotification
 
-`data class WebNotification` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webnotifications/WebNotification.kt#L26)
+`data class WebNotification` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webnotifications/WebNotification.kt#L25)
 
 A notification sent by the Web Notifications API.
 

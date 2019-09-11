@@ -2,7 +2,7 @@
 
 # hitResult
 
-`val hitResult: `[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L40)
+`val hitResult: `[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L42)
 
 the target of the latest long click operation.
 

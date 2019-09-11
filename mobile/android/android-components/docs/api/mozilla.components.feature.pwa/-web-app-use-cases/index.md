@@ -28,5 +28,5 @@ These use cases allow for adding a web app or web site to the homescreen.
 
 | Name | Summary |
 |---|---|
-| [isPWA](is-p-w-a.md) | `fun isPWA(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks to see if the current session is a Progressive Web App. |
-| [isPinningSupported](is-pinning-supported.md) | `fun isPinningSupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [isInstallable](is-installable.md) | `fun isInstallable(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks to see if the current session can be installed as a Progressive Web App. |
+| [isPinningSupported](is-pinning-supported.md) | `fun isPinningSupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if the launcher supports adding shortcuts. |
