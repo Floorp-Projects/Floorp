@@ -69,17 +69,12 @@ document.addEventListener("DOMContentLoaded", e => {
   document.sendTelemetryEvent("show", "protection_report");
 
   let createGraph = data => {
-    // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
-    // to ensure we display the correct date no matter the user's location.
-    let hoursInMS12 = 12 * 60 * 60 * 1000;
-    let dateInMS = data.earliestDate
-      ? new Date(data.earliestDate).getTime() + hoursInMS12
-      : Date.now();
+    let earliestDate = data.earliestDate || Date.now();
 
     let summary = document.getElementById("graph-total-summary");
     summary.setAttribute(
       "data-l10n-args",
-      JSON.stringify({ count: data.sumEvents, earliestDate: dateInMS })
+      JSON.stringify({ count: data.sumEvents, earliestDate })
     );
     summary.setAttribute("data-l10n-id", "graph-total-tracker-summary");
 
