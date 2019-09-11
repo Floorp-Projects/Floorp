@@ -15417,11 +15417,23 @@
   "QM_REPOSITORIES_INITIALIZATION_TIME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "72",
-    "bug_numbers": [1481716, 1523682],
+    "expires_in_version": "75",
+    "bug_numbers": [1481716, 1523682, 1580238],
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 30,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["ttung@mozilla.com"],
+    "description": "Time (ms) for the QuotaManager to initialize repositories."
+  },
+  "QM_REPOSITORIES_INITIALIZATION_TIME_V2": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "77",
+    "bug_numbers": [1580238],
+    "kind": "exponential",
+    "high": 120000,
+    "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["ttung@mozilla.com"],
     "description": "Time (ms) for the QuotaManager to initialize repositories."

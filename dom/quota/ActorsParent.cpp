@@ -4299,8 +4299,11 @@ nsresult QuotaManager::LoadQuota() {
 #endif
   }
 
+  const auto now = TimeStamp::Now();
   Telemetry::AccumulateTimeDelta(Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME,
-                                 startTime, TimeStamp::Now());
+                                 startTime, now);
+  Telemetry::AccumulateTimeDelta(
+      Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME_V2, startTime, now);
 
   if (mCacheUsable) {
     rv = InvalidateCache(mStorageConnection);
