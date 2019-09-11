@@ -36,7 +36,7 @@ fuzzy-if(webrender&&winWidget,0-24,0-2) == contain-size-inline-flex-001.html con
 == contain-size-multicol-002.html contain-size-multicol-002-ref.html
 == contain-size-multicol-003.html contain-size-multicol-003-ref.html
 fuzzy-if(Android,0-4,0-4) == contain-size-select-elem-001.html contain-size-select-elem-001-ref.html # bug 1480862
-fails-if(!gtkWidget) == contain-size-select-elem-002.html contain-size-select-elem-002-ref.html # bug 1562057
+== contain-size-select-elem-002.html contain-size-select-elem-002-ref.html
 == contain-size-select-elem-003.html contain-size-select-elem-003-ref.html
 == contain-size-select-elem-004.html contain-size-select-elem-004-ref.html
 == contain-size-select-elem-005.html contain-size-select-elem-005-ref.html
