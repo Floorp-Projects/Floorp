@@ -66,7 +66,9 @@ callback interface TestSingleOperationCallbackInterface {
 enum TestEnum {
   "1",
   "a",
-  "b"
+  "b",
+  "1-2",
+  "2d-array"
 };
 
 callback TestCallback = void();

@@ -10027,7 +10027,7 @@ def getEnumValueName(value):
     if re.match("[^\x20-\x7E]", value):
         raise SyntaxError('Enum value "' + value + '" contains non-ASCII characters')
     if re.match("^[0-9]", value):
-        return '_' + value
+        value = '_' + value
     value = re.sub(r'[^0-9A-Za-z_]', '_', value)
     if re.match("^_[A-Z]|__", value):
         raise SyntaxError('Enum value "' + value + '" is reserved by the C++ spec')
@@ -12229,7 +12229,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
             }
             """,
             xrayCheck=xrayCheck)
-            
+
         if self.descriptor.isMaybeCrossOriginObject():
             # We need to enter our compartment (which we might not be
             # in right now) to get the expando props.
@@ -12617,7 +12617,7 @@ class CGDOMJSProxyHandler_className(ClassMethod):
                 if (!IsPlatformObjectSameOrigin(cx, proxy)) {
                   return "Object";
                 }
-                
+
                 """)
         else:
             crossOrigin = ""
@@ -12789,7 +12789,7 @@ class CGDOMJSProxyHandler_canNurseryAllocate(ClassMethod):
 class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
     """
     Implementation of getOwnPropertyDescriptor.  We only use this for
-    cross-origin objects. 
+    cross-origin objects.
     """
     def __init__(self, descriptor):
         assert descriptor.isMaybeCrossOriginObject()
@@ -12846,7 +12846,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
 class CGDOMJSProxyHandler_getSameOriginPrototype(ClassMethod):
     """
     Implementation of getSameOriginPrototype.  We only use this for
-    cross-origin objects. 
+    cross-origin objects.
     """
     def __init__(self, descriptor):
         assert descriptor.isMaybeCrossOriginObject()
@@ -12866,7 +12866,7 @@ class CGDOMJSProxyHandler_getSameOriginPrototype(ClassMethod):
 class CGDOMJSProxyHandler_definePropertySameOrigin(ClassMethod):
     """
     Implementation of definePropertySameOrigin.  We only use this for
-    cross-origin objects. 
+    cross-origin objects.
     """
     def __init__(self, descriptor):
         assert descriptor.isMaybeCrossOriginObject()
@@ -12889,7 +12889,7 @@ class CGDOMJSProxyHandler_definePropertySameOrigin(ClassMethod):
 
 class CGDOMJSProxyHandler_set(ClassMethod):
     """
-    Implementation of set().  We only use this for cross-origin objects. 
+    Implementation of set().  We only use this for cross-origin objects.
     """
     def __init__(self, descriptor):
         assert descriptor.isMaybeCrossOriginObject()
