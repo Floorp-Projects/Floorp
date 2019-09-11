@@ -26,6 +26,12 @@ inline uint32_t BytecodeLocation::bytecodeToOffset(JSScript* script) {
   return script->pcToOffset(this->rawBytecode_);
 }
 
+inline PropertyName* BytecodeLocation::getPropertyName(
+    const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  return script->getName(this->rawBytecode_);
+}
+
 }  // namespace js
 
 #endif
