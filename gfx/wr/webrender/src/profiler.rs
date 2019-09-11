@@ -18,7 +18,7 @@ const GRAPH_WIDTH: f32 = 1024.0;
 const GRAPH_HEIGHT: f32 = 320.0;
 const GRAPH_PADDING: f32 = 8.0;
 const GRAPH_FRAME_HEIGHT: f32 = 16.0;
-const PROFILE_PADDING: f32 = 10.0;
+const PROFILE_PADDING: f32 = 8.0;
 
 const ONE_SECOND_NS: u64 = 1000000000;
 
@@ -436,6 +436,7 @@ pub struct TextureCacheProfileCounters {
     pub pages_color8_linear: ResourceProfileCounter,
     pub pages_color8_nearest: ResourceProfileCounter,
     pub pages_picture: ResourceProfileCounter,
+    pub rasterized_blob_pixels: ResourceProfileCounter,
 }
 
 impl TextureCacheProfileCounters {
@@ -446,6 +447,7 @@ impl TextureCacheProfileCounters {
             pages_color8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)"),
             pages_color8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)"),
             pages_picture: ResourceProfileCounter::new("Picture cached pages"),
+            rasterized_blob_pixels: ResourceProfileCounter::new("Rasterized Blob Pixels"),
         }
     }
 }
@@ -592,6 +594,7 @@ impl BackendProfileCounters {
         self.ipc.consume_time.reset();
         self.ipc.send_time.reset();
         self.ipc.display_lists.reset();
+        self.resources.texture_cache.rasterized_blob_pixels.reset();
     }
 }
 
@@ -653,28 +656,34 @@ struct GraphStats {
 
 struct ProfileGraph {
     max_samples: usize,
+    scale: f32,
     values: VecDeque<f32>,
     short_description: &'static str,
+    unit_description: &'static str,
 }
 
 impl ProfileGraph {
     fn new(
         max_samples: usize,
+        scale: f32,
         short_description: &'static str,
+        unit_description: &'static str,
     ) -> Self {
         ProfileGraph {
             max_samples,
+            scale,
             values: VecDeque::new(),
             short_description,
+            unit_description,
         }
     }
 
     fn push(&mut self, ns: u64) {
-        let ms = ns as f64 / 1000000.0;
+        let val = ns as f64 * self.scale as f64;
         if self.values.len() == self.max_samples {
             self.values.pop_back();
         }
-        self.values.push_front(ms as f32);
+        self.values.push_front(val as f32);
     }
 
     fn stats(&self) -> GraphStats {
@@ -704,7 +713,7 @@ impl ProfileGraph {
         description: &'static str,
         debug_renderer: &mut DebugRenderer,
     ) -> default::Rect<f32> {
-        let size = Size2D::new(600.0, 120.0);
+        let size = Size2D::new(600.0, 100.0);
         let line_height = debug_renderer.line_height();
         let graph_rect = Rect::new(Point2D::new(x, y), size);
         let mut rect = graph_rect.inflate(10.0, 10.0);
@@ -723,21 +732,21 @@ impl ProfileGraph {
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height,
-            &format!("Min: {:.2} ms", stats.min_value),
+            &format!("Min: {:.2} {}", stats.min_value, self.unit_description),
             text_color,
             None,
         );
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height * 2.0,
-            &format!("Mean: {:.2} ms", stats.mean_value),
+            &format!("Mean: {:.2} {}", stats.mean_value, self.unit_description),
             text_color,
             None,
         );
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height * 3.0,
-            &format!("Max: {:.2} ms", stats.max_value),
+            &format!("Max: {:.2} {}", stats.max_value, self.unit_description),
             text_color,
             None,
         );
@@ -931,6 +940,7 @@ pub struct Profiler {
     renderer_graph: ProfileGraph,
     gpu_graph: ProfileGraph,
     ipc_graph: ProfileGraph,
+    blob_raster_graph: ProfileGraph,
     backend_time: AverageTimeProfileCounter,
     renderer_time: AverageTimeProfileCounter,
     gpu_time: AverageTimeProfileCounter,
@@ -940,6 +950,7 @@ pub struct Profiler {
 
 impl Profiler {
     pub fn new() -> Self {
+        let to_ms_scale = 1.0 / 1000000.0;
         Profiler {
             draw_state: DrawState {
                 x_left: 0.0,
@@ -947,10 +958,11 @@ impl Profiler {
                 x_right: 0.0,
                 y_right: 0.0,
             },
-            backend_graph: ProfileGraph::new(600, "Backend:"),
-            renderer_graph: ProfileGraph::new(600, "Renderer:"),
-            gpu_graph: ProfileGraph::new(600, "GPU:"),
-            ipc_graph: ProfileGraph::new(600, "IPC:"),
+            backend_graph: ProfileGraph::new(600, to_ms_scale, "Backend:", "ms"),
+            renderer_graph: ProfileGraph::new(600, to_ms_scale, "Renderer:", "ms"),
+            gpu_graph: ProfileGraph::new(600, to_ms_scale, "GPU:", "ms"),
+            ipc_graph: ProfileGraph::new(600, to_ms_scale, "IPC:", "ms"),
+            blob_raster_graph: ProfileGraph::new(600, 1.0, "Rasterized blob pixels:", "px"),
             gpu_frames: GpuFrameCollection::new(),
             backend_time: AverageTimeProfileCounter::new("Backend:", false, ONE_SECOND_NS / 2),
             renderer_time: AverageTimeProfileCounter::new("Renderer:", false, ONE_SECOND_NS / 2),
@@ -1323,6 +1335,11 @@ impl Profiler {
         let rect = self.gpu_graph
             .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "GPU", debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
+
+        let rect = self.blob_raster_graph
+            .draw_graph(self.draw_state.x_right, self.draw_state.y_right, "Blob pixels", debug_renderer);
+        self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
+
         let rect = self.gpu_frames
             .draw(self.draw_state.x_left, f32::max(self.draw_state.y_left, self.draw_state.y_right), debug_renderer);
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
@@ -1359,6 +1376,8 @@ impl Profiler {
         self.renderer_time.set(renderer_timers.cpu_time.nanoseconds);
         self.ipc_graph
             .push(backend_profile.ipc.total_time.nanoseconds);
+        self.blob_raster_graph
+            .push(backend_profile.resources.texture_cache.rasterized_blob_pixels.size as u64);
         self.ipc_time.set(backend_profile.ipc.total_time.nanoseconds);
         self.gpu_graph.push(gpu_graph);
         self.gpu_time.set(gpu_graph);
