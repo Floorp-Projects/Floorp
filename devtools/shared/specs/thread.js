@@ -149,6 +149,16 @@ const threadSpec = generateActorSpec({
       },
     },
 
+    paint: {
+      request: {
+        point: Arg(0, "json"),
+      },
+    },
+
+    paintCurrentPoint: {
+      request: {},
+    },
+
     // For testing.
     debuggerRequests: {
       response: {
