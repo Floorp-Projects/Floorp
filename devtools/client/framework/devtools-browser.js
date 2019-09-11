@@ -56,8 +56,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager",
-  true
+  "devtools/client/responsive/manager"
 );
 loader.lazyRequireGetter(
   this,
