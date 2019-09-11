@@ -14,6 +14,7 @@
 #include "nsFont.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_findbar.h"
@@ -261,13 +262,21 @@ void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
   int32_t intpref;
   nsresult rv = Preferences::GetInt(data->name, &intpref);
   if (NS_FAILED(rv)) {
-    return;
-  }
-  data->intVar = intpref;
-  data->isSet = true;
+    data->isSet = false;
+
 #ifdef DEBUG_akkana
-  printf("====== Changed int pref %s to %d\n", data->name, data->intVar);
+    printf("====== Cleared int pref %s\n", data->name);
 #endif
+  } else {
+    data->intVar = intpref;
+    data->isSet = true;
+
+#ifdef DEBUG_akkana
+    printf("====== Changed int pref %s to %d\n", data->name, data->intVar);
+#endif
+  }
+
+  NotifyPrefChanged();
 }
 
 // static
@@ -279,13 +288,21 @@ void nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref* data) {
   int32_t intpref;
   nsresult rv = Preferences::GetInt(data->name, &intpref);
   if (NS_FAILED(rv)) {
-    return;
-  }
-  data->floatVar = (float)intpref / 100.0f;
-  data->isSet = true;
+    data->isSet = false;
+
 #ifdef DEBUG_akkana
-  printf("====== Changed float pref %s to %f\n", data->name, data->floatVar);
+    printf("====== Cleared float pref %s\n", data->name);
 #endif
+  } else {
+    data->floatVar = (float)intpref / 100.0f;
+    data->isSet = true;
+
+#ifdef DEBUG_akkana
+    printf("====== Changed float pref %s to %f\n", data->name);
+#endif
+  }
+
+  NotifyPrefChanged();
 }
 
 // static
@@ -293,10 +310,7 @@ void nsXPLookAndFeel::ColorPrefChanged(unsigned int index,
                                        const char* prefName) {
   nsAutoString colorStr;
   nsresult rv = Preferences::GetString(prefName, colorStr);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  if (!colorStr.IsEmpty()) {
+  if (NS_SUCCEEDED(rv) && !colorStr.IsEmpty()) {
     nscolor thecolor;
     if (colorStr[0] == char16_t('#')) {
       if (NS_HexToRGBA(nsDependentString(colorStr, 1), nsHexColorType::NoAlpha,
@@ -316,6 +330,20 @@ void nsXPLookAndFeel::ColorPrefChanged(unsigned int index,
     // to force lookup when the color is next used
     int32_t id = NS_PTR_TO_INT32(index);
     CLEAR_COLOR_CACHE(id);
+
+#ifdef DEBUG_akkana
+    printf("====== Cleared color pref %s\n", prefName);
+#endif
+  }
+
+  NotifyPrefChanged();
+}
+
+// static
+void nsXPLookAndFeel::NotifyPrefChanged() {
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "look-and-feel-pref-changed", nullptr);
   }
 }
 
@@ -952,8 +980,17 @@ nsresult nsXPLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
 void nsXPLookAndFeel::RefreshImpl() {
   // Wipe out our color cache.
   uint32_t i;
-  for (i = 0; i < uint32_t(ColorID::End); i++) sCachedColors[i] = 0;
-  for (i = 0; i < COLOR_CACHE_SIZE; i++) sCachedColorBits[i] = 0;
+  for (i = 0; i < uint32_t(ColorID::End); i++) {
+    sCachedColors[i] = 0;
+  }
+  for (i = 0; i < COLOR_CACHE_SIZE; i++) {
+    sCachedColorBits[i] = 0;
+  }
+
+  // Reinit color cache from prefs.
+  for (i = 0; i < uint32_t(ColorID::End); ++i) {
+    InitColorFromPref(i);
+  }
 }
 
 nsTArray<LookAndFeelInt> nsXPLookAndFeel::GetIntCacheImpl() {
