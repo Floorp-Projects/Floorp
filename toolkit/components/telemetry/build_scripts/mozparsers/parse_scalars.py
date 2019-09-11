@@ -365,9 +365,9 @@ def load_scalars(filename, strict_type_checks=True):
     try:
         with open(filename, 'r') as f:
             scalars = yaml.safe_load(f)
-    except IOError, e:
+    except IOError as e:
         ParserError('Error opening ' + filename + ': ' + e.message).handle_now()
-    except ValueError, e:
+    except ValueError as e:
         ParserError('Error parsing scalars in {}: {}'
                     '.\nSee: {}'.format(filename, e.message, BASE_DOC_URL)).handle_now()
 

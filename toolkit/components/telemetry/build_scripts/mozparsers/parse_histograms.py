@@ -697,7 +697,7 @@ def from_Histograms_json(filename, strict_type_checks):
             def hook(ps):
                 return load_histograms_into_dict(ps, strict_type_checks)
             histograms = json.load(f, object_pairs_hook=hook)
-        except ValueError, e:
+        except ValueError as e:
             ParserError("error parsing histograms in %s: %s" % (filename, e.message)).handle_now()
     return histograms
 
