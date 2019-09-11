@@ -62,47 +62,40 @@ function debug(msg) {
  * the tab upon opening responsive design.  This object acts a helper to
  * integrate the tool into the surrounding browser UI as needed.
  */
-function ResponsiveUI(manager, window, tab) {
-  this.manager = manager;
-  this.browserWindow = window;
-  this.tab = tab;
-  this.inited = this.init();
-}
-
-ResponsiveUI.prototype = {
+class ResponsiveUI {
   /**
-   * The main browser chrome window (that holds many tabs).
+   * @param {ResponsiveUIManager} manager
+   *        The ResponsiveUIManager instance.
+   * @param {ChromeWindow} window
+   *        The main browser chrome window (that holds many tabs).
+   * @param {Tab} tab
+   *        The specific browser <tab> element this responsive instance is for.
    */
-  browserWindow: null,
+  constructor(manager, window, tab) {
+    this.manager = manager;
+    // The main browser chrome window (that holds many tabs).
+    this.browserWindow = window;
+    // The specific browser tab this responsive instance is for.
+    this.tab = tab;
 
-  /**
-   * The specific browser tab this responsive instance is for.
-   */
-  tab: null,
+    // Flag set when destruction has begun.
+    this.destroying = false;
+    // Flag set when destruction has ended.
+    this.destroyed = false;
+    /**
+     * A window reference for the chrome:// document that displays the responsive
+     * design tool.  It is safe to reference this window directly even with e10s,
+     * as the tool UI is always loaded in the parent process.  The web content
+     * contained *within* the tool UI on the other hand is loaded in the child
+     * process.
+     */
+    this.toolWindow = null;
 
-  /**
-   * Promise resovled when the UI init has completed.
-   */
-  inited: null,
+    // Promise resovled when the UI init has completed.
+    this.inited = this.init();
 
-  /**
-   * Flag set when destruction has begun.
-   */
-  destroying: false,
-
-  /**
-   * Flag set when destruction has ended.
-   */
-  destroyed: false,
-
-  /**
-   * A window reference for the chrome:// document that displays the responsive
-   * design tool.  It is safe to reference this window directly even with e10s,
-   * as the tool UI is always loaded in the parent process.  The web content
-   * contained *within* the tool UI on the other hand is loaded in the child
-   * process.
-   */
-  toolWindow: null,
+    EventEmitter.decorate(this);
+  }
 
   /**
    * Open RDM while preserving the state of the page.  We use `swapFrameLoaders`
@@ -190,7 +183,7 @@ ResponsiveUI.prototype = {
     message.post(this.toolWindow, "post-init");
 
     debug("Init done");
-  },
+  }
 
   /**
    * Close RDM and restore page content back into a regular tab.
@@ -276,7 +269,7 @@ ResponsiveUI.prototype = {
     this.destroyed = true;
 
     return true;
-  },
+  }
 
   async connectToServer() {
     // The client being instantiated here is separate from the toolbox. It is being used
@@ -287,7 +280,7 @@ ResponsiveUI.prototype = {
     await this.client.connect();
     const targetFront = await this.client.mainRoot.getTab();
     this.emulationFront = await targetFront.getFront("emulation");
-  },
+  }
 
   /**
    * Show one-time notification about reloads for emulation.
@@ -299,13 +292,13 @@ ResponsiveUI.prototype = {
       });
       Services.prefs.setBoolPref(RELOAD_NOTIFICATION_PREF, false);
     }
-  },
+  }
 
   reloadOnChange(id) {
     this.showReloadNotification();
     const pref = RELOAD_CONDITION_PREF_PREFIX + id;
     return Services.prefs.getBoolPref(pref, false);
-  },
+  }
 
   handleEvent(event) {
     const { browserWindow, tab, toolWindow } = this;
@@ -326,7 +319,7 @@ ResponsiveUI.prototype = {
         });
         break;
     }
-  },
+  }
 
   handleMessage(event) {
     if (event.origin !== "chrome://devtools") {
@@ -365,7 +358,7 @@ ResponsiveUI.prototype = {
         this.onResizeViewport(event);
         break;
     }
-  },
+  }
 
   async onChangeDevice(event) {
     const { pixelRatio, touch, userAgent } = event.data.device;
@@ -388,19 +381,19 @@ ResponsiveUI.prototype = {
     }
     // Used by tests
     this.emit("device-changed");
-  },
+  }
 
   async onChangeNetworkThrottling(event) {
     const { enabled, profile } = event.data;
     await this.updateNetworkThrottling(enabled, profile);
     // Used by tests
     this.emit("network-throttling-changed");
-  },
+  }
 
   onChangePixelRatio(event) {
     const { pixelRatio } = event.data;
     this.updateDPPX(pixelRatio);
-  },
+  }
 
   async onChangeTouchSimulation(event) {
     const { enabled } = event.data;
@@ -412,7 +405,7 @@ ResponsiveUI.prototype = {
     }
     // Used by tests
     this.emit("touch-simulation-changed");
-  },
+  }
 
   async onChangeUserAgent(event) {
     const { userAgent } = event.data;
@@ -423,7 +416,7 @@ ResponsiveUI.prototype = {
       this.getViewportBrowser().reload();
     }
     this.emit("user-agent-changed");
-  },
+  }
 
   onContentResize(event) {
     const { width, height } = event.data;
@@ -431,12 +424,12 @@ ResponsiveUI.prototype = {
       width,
       height,
     });
-  },
+  }
 
   onExit() {
     const { browserWindow, tab } = this;
     this.manager.closeIfNeeded(browserWindow, tab);
-  },
+  }
 
   async onRemoveDeviceAssociation() {
     let reloadNeeded = false;
@@ -451,7 +444,7 @@ ResponsiveUI.prototype = {
     }
     // Used by tests
     this.emit("device-association-removed");
-  },
+  }
 
   onResizeViewport(event) {
     const { width, height } = event.data;
@@ -459,12 +452,12 @@ ResponsiveUI.prototype = {
       width,
       height,
     });
-  },
+  }
 
   async onRotateViewport(event) {
     const { orientationType: type, angle, isViewportRotated } = event.data;
     await this.updateScreenOrientation(type, angle, isViewportRotated);
-  },
+  }
 
   /**
    * Restores the previous state of RDM.
@@ -522,7 +515,7 @@ ResponsiveUI.prototype = {
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
-  },
+  }
 
   /**
    * Set or clear the emulated device pixel ratio.
@@ -538,7 +531,7 @@ ResponsiveUI.prototype = {
     }
     await this.emulationFront.setDPPXOverride(dppx);
     return false;
-  },
+  }
 
   /**
    * Set or clear network throttling.
@@ -560,7 +553,7 @@ ResponsiveUI.prototype = {
       latency,
     });
     return false;
-  },
+  }
 
   /**
    * Set or clear the emulated user agent.
@@ -573,7 +566,7 @@ ResponsiveUI.prototype = {
       return this.emulationFront.clearUserAgentOverride();
     }
     return this.emulationFront.setUserAgentOverride(userAgent);
-  },
+  }
 
   /**
    * Set or clear touch simulation. When setting to true, this method will
@@ -607,7 +600,7 @@ ResponsiveUI.prototype = {
       reloadNeeded |= await this.emulationFront.clearMetaViewportOverride();
     }
     return reloadNeeded;
-  },
+  }
 
   /**
    * Sets the screen orientation values of the simulated device.
@@ -643,14 +636,14 @@ ResponsiveUI.prototype = {
     if (!isViewportRotated) {
       this.emit("only-viewport-orientation-changed");
     }
-  },
+  }
 
   /**
    * Helper for tests. Assumes a single viewport for now.
    */
   getViewportSize() {
     return this.toolWindow.getViewportSize();
-  },
+  }
 
   /**
    * Helper for tests, etc. Assumes a single viewport for now.
@@ -658,30 +651,28 @@ ResponsiveUI.prototype = {
   async setViewportSize(size) {
     await this.inited;
     this.toolWindow.setViewportSize(size);
-  },
+  }
 
   /**
    * Helper for tests/reloading the viewport. Assumes a single viewport for now.
    */
   getViewportBrowser() {
     return this.toolWindow.getViewportBrowser();
-  },
+  }
 
   /**
    * Helper for contacting the viewport content. Assumes a single viewport for now.
    */
   getViewportMessageManager() {
     return this.getViewportBrowser().messageManager;
-  },
+  }
 
   /**
    * Helper for getting the initial viewport orientation.
    */
   getInitialViewportOrientation(viewport) {
     return getOrientation(viewport, viewport);
-  },
-};
-
-EventEmitter.decorate(ResponsiveUI.prototype);
+  }
+}
 
 module.exports = ResponsiveUI;
