@@ -925,6 +925,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
    the panel is anchored to a toolbar button.
 */
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
+#PanelUI-remotetabs[mainview] #PanelUI-remotetabs-syncdisabled,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-reauthsync,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-unverified,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
