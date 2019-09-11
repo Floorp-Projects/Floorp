@@ -213,6 +213,49 @@
       window.windowUtils.restoreNormalRefresh();
     }
 
+    // Check to see that a reframed body gets its children pruned correctly.
+    async function bodyReframe(argument) {
+      // Load sub-document in iframe.
+      let event = waitForEvent(EVENT_REORDER, "iframe", "bodyReframe");
+      getNode("iframe").src =
+        `data:text/html,<div>Hello</div><div style="display: none">World</div>`;
+      await event;
+
+      // Initial tree should have one section leaf.
+      testAccessibleTree("c10",{ SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [
+            { SECTION: [
+              { role: ROLE_TEXT_LEAF, name: "Hello" }
+            ] }
+          ]}
+        ] }
+      ] });
+
+
+      let iframeDoc = getNode("iframe").contentWindow.document;
+
+      // Trigger coalesced reframing. Both the body node and its children
+      // will need reframing.
+      event = waitForEvent(EVENT_REORDER, iframeDoc, "bodyReframe");
+      iframeDoc.body.style.display = "inline-block";
+      iframeDoc.querySelector("div:first-child").style.display = "none";
+      iframeDoc.querySelector("div:last-child").style.display = "block";
+
+      await event;
+
+      // Only the second section should be showing
+      testAccessibleTree("c10",{ SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [
+            { SECTION: [
+              { role: ROLE_TEXT_LEAF, name: "World" }
+            ] }
+          ]}
+        ] }
+      ] });
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -233,6 +276,8 @@
       await removeShadowRootHost();
 
       listItemReframe();
+
+      await bodyReframe();
 
       SimpleTest.finish();
     }
@@ -291,6 +336,10 @@
     <ul>
         <li id="li">Test</li>
     </ul>
+  </div>
+
+  <div id="c10">
+    <iframe id="iframe"></iframe>
   </div>
 
   <div id="eventdump"></div>

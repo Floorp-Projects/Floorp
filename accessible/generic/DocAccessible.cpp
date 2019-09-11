@@ -1206,6 +1206,11 @@ Accessible* DocAccessible::GetAccessibleOrDescendant(nsINode* aNode) const {
   if (acc) return acc;
 
   acc = GetContainerAccessible(aNode);
+  if (acc == this && aNode == mContent) {
+    // The body node is the doc's content node.
+    return acc;
+  }
+
   if (acc) {
     uint32_t childCnt = acc->ChildCount();
     for (uint32_t idx = 0; idx < childCnt; idx++) {
