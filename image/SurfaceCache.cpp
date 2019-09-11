@@ -1644,7 +1644,7 @@ IntSize SurfaceCache::ClampVectorSize(const IntSize& aSize) {
     return aSize;
   }
 
-  int32_t proposedKB = int32_t(int64_t(aSize.width) * aSize.height / 256);
+  int64_t proposedKB = int64_t(aSize.width) * aSize.height / 256;
   if (maxSizeKB >= proposedKB) {
     return aSize;
   }
