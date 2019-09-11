@@ -512,8 +512,7 @@ nsIntSize ClippedImage::OptimalImageSizeForDest(const gfxSize& aDest,
 
     // Determine the size we'd prefer to render the inner image at, and ask the
     // inner image what size we should actually use.
-    gfxSize desiredSize(double(imgWidth) * scale.width,
-                        double(imgHeight) * scale.height);
+    gfxSize desiredSize(imgWidth * scale.width, imgHeight * scale.height);
     nsIntSize innerDesiredSize = InnerImage()->OptimalImageSizeForDest(
         desiredSize, aWhichFrame, aSamplingFilter, aFlags);
 

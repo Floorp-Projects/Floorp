@@ -139,15 +139,14 @@ class DeinterlacingFilter final : public SurfaceFilter {
     gfx::IntSize outputSize = mNext.InputSize();
     mProgressiveDisplay = aConfig.mProgressiveDisplay;
 
-    const CheckedUint32 bufferSize = CheckedUint32(outputSize.width) *
-                                     CheckedUint32(outputSize.height) *
-                                     CheckedUint32(sizeof(PixelType));
+    const uint32_t bufferSize =
+        outputSize.width * outputSize.height * sizeof(PixelType);
 
     // Use the size of the SurfaceCache as a heuristic to avoid gigantic
     // allocations. Even if DownscalingFilter allowed us to allocate space for
     // the output image, the deinterlacing buffer may still be too big, and
     // fallible allocation won't always save us in the presence of overcommit.
-    if (!bufferSize.isValid() || !SurfaceCache::CanHold(bufferSize.value())) {
+    if (!SurfaceCache::CanHold(bufferSize)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -157,13 +156,13 @@ class DeinterlacingFilter final : public SurfaceFilter {
     // pipeline may be transforming the rows it receives (for example, by
     // downscaling them), the rows may no longer exist in their original form on
     // the surface itself.
-    mBuffer.reset(new (fallible) uint8_t[bufferSize.value()]);
+    mBuffer.reset(new (fallible) uint8_t[bufferSize]);
     if (MOZ_UNLIKELY(!mBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Clear the buffer to avoid writing uninitialized memory to the output.
-    memset(mBuffer.get(), 0, bufferSize.value());
+    memset(mBuffer.get(), 0, bufferSize);
 
     ConfigureFilter(outputSize, sizeof(PixelType));
     return NS_OK;
@@ -345,19 +344,13 @@ class DeinterlacingFilter final : public SurfaceFilter {
   }
 
   uint8_t* GetRowPointer(uint32_t aRow) const {
-#ifdef DEBUG
-    uint64_t offset64 = uint64_t(aRow) * uint64_t(InputSize().width) *
-                        uint64_t(sizeof(PixelType));
-    uint64_t bufferLength = uint64_t(InputSize().width) *
-                            uint64_t(InputSize().height) *
-                            uint64_t(sizeof(PixelType));
-    MOZ_ASSERT(offset64 < bufferLength, "Start of row is outside of image");
-    MOZ_ASSERT(
-        offset64 + uint64_t(InputSize().width) * uint64_t(sizeof(PixelType)) <=
-            bufferLength,
-        "End of row is outside of image");
-#endif
     uint32_t offset = aRow * InputSize().width * sizeof(PixelType);
+    MOZ_ASSERT(
+        offset < InputSize().width * InputSize().height * sizeof(PixelType),
+        "Start of row is outside of image");
+    MOZ_ASSERT(offset + InputSize().width * sizeof(PixelType) <=
+                   InputSize().width * InputSize().height * sizeof(PixelType),
+               "End of row is outside of image");
     return mBuffer.get() + offset;
   }
 
