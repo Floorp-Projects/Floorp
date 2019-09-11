@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import kotlinx.coroutines.MainScope
@@ -17,6 +18,7 @@ import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 
 class IntentReceiverActivity : Activity() {
 
@@ -33,7 +35,10 @@ class IntentReceiverActivity : Activity() {
             return
         }
 
-        val isPrivate = this.settings.usePrivateMode
+        val isPrivate = packageManager
+            ?.getActivityInfo(componentName, PackageManager.GET_META_DATA)
+            ?.metaData
+            ?.getBoolean(PRIVATE_MODE) ?: this.settings.usePrivateMode
 
         MainScope().launch {
             // The intent property is nullable, but the rest of the code below
@@ -78,6 +83,24 @@ class IntentReceiverActivity : Activity() {
                 // session then we do not want to re-process the Intent and potentially re-open a website
                 // from a session that the user already "erased".
                 intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
+            }
+            intent.action == ACTION_OPEN_TAB || intent.action == ACTION_OPEN_PRIVATE_TAB -> {
+                intent.setClassName(applicationContext, HomeActivity::class.java.name)
+                val startPrivateMode = (intent.action == ACTION_OPEN_PRIVATE_TAB)
+                if (startPrivateMode) {
+                    intent.putExtra(
+                        HomeActivity.OPEN_TO_SEARCH,
+                        StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_PRIVATE_TAB
+                    )
+                } else {
+                    intent.putExtra(
+                        HomeActivity.OPEN_TO_SEARCH,
+                        StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_TAB
+                    )
+                }
+                intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, startPrivateMode)
+                intent.flags = intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                true
             }
             else -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
@@ -124,5 +147,8 @@ class IntentReceiverActivity : Activity() {
         private const val SPEECH_REQUEST_CODE = 0
         const val SPEECH_PROCESSING = "speech_processing"
         const val PREVIOUS_INTENT = "previous_intent"
+        const val PRIVATE_MODE = "private"
+        const val ACTION_OPEN_TAB = "org.mozilla.fenix.OPEN_TAB"
+        const val ACTION_OPEN_PRIVATE_TAB = "org.mozilla.fenix.OPEN_PRIVATE_TAB"
     }
 }

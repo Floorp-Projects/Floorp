@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
@@ -18,6 +19,7 @@ import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
 import java.security.InvalidParameterException
@@ -35,6 +37,8 @@ class Settings private constructor(
         const val FENIX_PREFERENCES = "fenix_preferences"
         private const val BLOCKED_INT = 0
         private const val ASK_TO_ALLOW_INT = 1
+        private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
+        private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
 
         private fun actionToInt(action: SitePermissionsRules.Action) = when (action) {
             SitePermissionsRules.Action.BLOCKED -> BLOCKED_INT
@@ -247,4 +251,37 @@ class Settings private constructor(
             appContext.getPreferenceKey(R.string.pref_key_search_widget_installed),
             0
         )
+
+    fun incrementNumTimesPrivateModeOpened() {
+        preferences.edit().putInt(
+            appContext.getPreferenceKey(R.string.pref_key_private_mode_opened),
+            numTimesPrivateModeOpened + 1
+        ).apply()
+    }
+
+    private var showedPrivateModeContextualFeatureRecommender by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_showed_private_mode_cfr),
+        default = false
+    )
+
+    private val numTimesPrivateModeOpened: Int
+        get() = preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_private_mode_opened), 0)
+
+    val showPrivateModeContextualFeatureRecommender: Boolean
+        get() {
+            val focusInstalled = MozillaProductDetector
+                .getInstalledMozillaProducts(appContext as Application)
+                .contains(MozillaProductDetector.MozillaProducts.FOCUS.productName)
+
+            val showCondition =
+                (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_INSTALLED && focusInstalled) ||
+                (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
+
+            if (showCondition && !showedPrivateModeContextualFeatureRecommender) {
+                showedPrivateModeContextualFeatureRecommender = true
+                return true
+            }
+
+            return false
+        }
 }

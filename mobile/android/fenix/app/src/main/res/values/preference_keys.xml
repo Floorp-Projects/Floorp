@@ -8,6 +8,7 @@
     <string name="pref_key_passwords" translatable="false">pref_key_passwords</string>
     <string name="pref_key_credit_cards_addresses" translatable="false">pref_key_credit_cards_addresses</string>
     <string name="pref_key_site_permissions" translatable="false">pref_key_site_permissions</string>
+    <string name="pref_key_add_private_browsing_shortcut" translatable="false">pref_key_add_private_browsing_shortcut</string>
     <string name="pref_key_accessibility" translatable="false">pref_key_accessibility</string>
     <string name="pref_key_accessibility_auto_size" translatable="false">pref_key_accessibility_auto_size</string>
     <string name="pref_key_accessibility_font_scale" translatable="false">pref_key_accessibility_font_scale</string>
@@ -28,6 +29,8 @@
     <string name="pref_key_leakcanary" translatable="false">pref_key_leakcanary</string>
     <string name="pref_key_remote_debugging" translatable="false">pref_key_remote_debugging</string>
     <string name="pref_key_experimentation" translatable="false">pref_key_experimentation</string>
+    <string name="pref_key_showed_private_mode_cfr" translatable="false">pref_key_showed_private_mode_cfr</string>
+    <string name="pref_key_private_mode_opened" translatable="false">pref_key_private_mode_opened</string>
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>

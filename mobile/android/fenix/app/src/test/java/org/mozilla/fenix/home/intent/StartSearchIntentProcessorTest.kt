@@ -43,7 +43,7 @@ class StartSearchIntentProcessorTest {
         val navController: NavController = mockk()
         val out: Intent = mockk()
         val intent = Intent().apply {
-            putExtra(HomeActivity.OPEN_TO_SEARCH, false)
+            removeExtra(HomeActivity.OPEN_TO_SEARCH)
         }
         StartSearchIntentProcessor(metrics).process(intent, navController, out)
 
@@ -58,7 +58,7 @@ class StartSearchIntentProcessorTest {
         val navController: NavController = mockk(relaxed = true)
         val out: Intent = mockk(relaxed = true)
         val intent = Intent().apply {
-            putExtra(HomeActivity.OPEN_TO_SEARCH, true)
+            putExtra(HomeActivity.OPEN_TO_SEARCH, StartSearchIntentProcessor.SEARCH_WIDGET)
         }
         StartSearchIntentProcessor(metrics).process(intent, navController, out)
 
@@ -71,6 +71,6 @@ class StartSearchIntentProcessorTest {
                 )
             )
         }
-        verify { out.putExtra(HomeActivity.OPEN_TO_SEARCH, false) }
+        verify { out.removeExtra(HomeActivity.OPEN_TO_SEARCH) }
     }
 }

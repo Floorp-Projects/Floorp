@@ -37,6 +37,7 @@ import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_auth_error
 import org.mozilla.fenix.R.string.pref_key_account_category
+import org.mozilla.fenix.R.string.pref_key_add_private_browsing_shortcut
 import org.mozilla.fenix.R.string.pref_key_data_choices
 import org.mozilla.fenix.R.string.pref_key_delete_browsing_data
 import org.mozilla.fenix.R.string.pref_key_help
@@ -52,6 +53,7 @@ import org.mozilla.fenix.R.string.pref_key_site_permissions
 import org.mozilla.fenix.R.string.pref_key_theme
 import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.R.string.pref_key_your_rights
+import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -142,7 +144,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
             resources.getString(pref_key_search_engine_settings) -> {
@@ -153,6 +155,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
             resources.getString(pref_key_site_permissions) -> {
                 navigateToSitePermissions()
+            }
+            resources.getString(pref_key_add_private_browsing_shortcut) -> {
+                PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
             }
             resources.getString(pref_key_accessibility) -> {
                 navigateToAccessibility()

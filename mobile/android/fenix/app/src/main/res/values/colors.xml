@@ -220,4 +220,7 @@
 
     <!-- Notification Color -->
     <color name="whats_new_notification_color">#00B3F4</color>
+
+    <!-- Static Shortcut Background Color -->
+    <color name="static_shortcut_background">#F5F5F5</color>
 </resources>

@@ -9,9 +9,13 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.PopupWindow
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -54,15 +58,18 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
@@ -84,7 +91,6 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.FragmentPreDrawManager
-import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 
@@ -212,7 +218,7 @@ class HomeFragment : Fragment(), AccountObserver {
 
             val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngineAsync(
                 requireContext(),
-                Settings.getInstance(requireContext()).defaultSearchEngineName
+                requireContext().settings.defaultSearchEngineName
             )
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
@@ -250,6 +256,10 @@ class HomeFragment : Fragment(), AccountObserver {
             browsingModeManager
         ) { newMode ->
             invokePendingDeleteJobs()
+
+            if (newMode == BrowsingMode.Private) {
+                requireContext().settings.incrementNumTimesPrivateModeOpened()
+            }
 
             if (onboarding.userHasBeenOnboarded()) {
                 getManagedEmitter<SessionControlChange>().onNext(
@@ -290,6 +300,11 @@ class HomeFragment : Fragment(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.hide()
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
+
+        if (requireContext().settings.showPrivateModeContextualFeatureRecommender &&
+            browsingModeManager.mode.isPrivate) {
+            recommendPrivateBrowsingShortcut()
+        }
     }
 
     override fun onStart() {
@@ -541,6 +556,34 @@ class HomeFragment : Fragment(), AccountObserver {
         homeViewModel.layoutManagerState =
             sessionControlComponent.view.layoutManager?.onSaveInstanceState()
         homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
+    }
+
+    private fun recommendPrivateBrowsingShortcut() {
+        context?.let {
+            val layout = LayoutInflater.from(it)
+                .inflate(R.layout.pbm_shortcut_popup, null)
+            val trackingOnboarding =
+                PopupWindow(
+                    layout,
+                    (resources.displayMetrics.widthPixels / CFR_WIDTH_DIVIDER).toInt(),
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    true
+                )
+            layout.findViewById<Button>(R.id.cfr_pos_button).apply {
+                setOnClickListener {
+                    PrivateShortcutCreateManager.createPrivateShortcut(context)
+                    trackingOnboarding.dismiss()
+                }
+            }
+            layout.findViewById<Button>(R.id.cfr_neg_button).apply {
+                setOnClickListener { trackingOnboarding.dismiss() }
+            }
+            // We want to show the popup only after privateBrowsingButton is available.
+            // Otherwise, we will encounter an activity token error.
+            privateBrowsingButton.post {
+                trackingOnboarding.showAsDropDown(privateBrowsingButton, 0, CFR_Y_OFFSET, Gravity.TOP or Gravity.END)
+            }
+        }
     }
 
     private fun hideOnboardingIfNeeded() {
@@ -896,6 +939,8 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val TELEMETRY_HOME_IDENITIFIER = "home"
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
+        private const val CFR_WIDTH_DIVIDER = 1.7
+        private const val CFR_Y_OFFSET = -20
     }
 }
 

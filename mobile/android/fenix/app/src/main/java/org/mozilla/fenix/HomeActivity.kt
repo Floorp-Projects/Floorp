@@ -86,6 +86,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        setPrivateModeIfNecessary()
+
         components.publicSuffixList.prefetch()
         setupThemeAndBrowsingMode()
 
@@ -166,6 +168,20 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             intent.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
             intent.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
             else -> null
+        }
+    }
+
+    /**
+     * External sources such as 3rd party links and shortcuts use this function to enter
+     * private mode directly before the content view is created.
+     */
+    private fun setPrivateModeIfNecessary() {
+        intent?.toSafeIntent()?.let {
+            if (it.hasExtra(PRIVATE_BROWSING_MODE)) {
+                val startPrivateMode = it.getBooleanExtra(PRIVATE_BROWSING_MODE, false)
+                settings.usePrivateMode = startPrivateMode
+                intent.removeExtra(PRIVATE_BROWSING_MODE)
+            }
         }
     }
 
@@ -347,6 +363,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         const val OPEN_TO_BROWSER = "open_to_browser"
         const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
         const val OPEN_TO_SEARCH = "open_to_search"
+        const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
         const val EXTRA_DELETE_PRIVATE_TABS = "notification_delete_and_open"
         const val EXTRA_OPENED_FROM_NOTIFICATION = "notification_open"
     }

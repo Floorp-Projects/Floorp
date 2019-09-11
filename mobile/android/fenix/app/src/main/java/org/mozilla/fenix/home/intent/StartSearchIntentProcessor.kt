@@ -14,15 +14,20 @@ import org.mozilla.fenix.ext.nav
 
 /**
  * When the search widget is tapped, Fenix should open to the search fragment.
+ * Tapping the private browsing mode launcher icon should also open to the search fragment.
  */
 class StartSearchIntentProcessor(
     private val metrics: MetricController
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
-        return if (intent.extras?.getBoolean(HomeActivity.OPEN_TO_SEARCH) == true) {
-            out.putExtra(HomeActivity.OPEN_TO_SEARCH, false)
-            metrics.track(Event.SearchWidgetNewTabPressed)
+        val event = intent.extras?.getString(HomeActivity.OPEN_TO_SEARCH)
+        return if (event != null) {
+            when (event) {
+                SEARCH_WIDGET -> metrics.track(Event.SearchWidgetNewTabPressed)
+            }
+
+            out.removeExtra(HomeActivity.OPEN_TO_SEARCH)
 
             val directions = NavGraphDirections.actionGlobalSearch(
                 sessionId = null,
@@ -33,5 +38,12 @@ class StartSearchIntentProcessor(
         } else {
             false
         }
+    }
+
+    companion object {
+        const val SEARCH_WIDGET = "search_widget"
+        const val STATIC_SHORTCUT_NEW_TAB = "static_shortcut_new_tab"
+        const val STATIC_SHORTCUT_NEW_PRIVATE_TAB = "static_shortcut_new_private_tab"
+        const val PRIVATE_BROWSING_PINNED_SHORTCUT = "private_browsing_pinned_shortcut"
     }
 }
