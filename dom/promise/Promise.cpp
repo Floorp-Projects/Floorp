@@ -524,6 +524,17 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   nsGlobalWindowInner* win =
       isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
 
+  // We're inspecting the rejection value only to report it to the console, and
+  // we do so without side-effects, so we can safely unwrap it without regard to
+  // the privileges of the Promise object that holds it. If we don't unwrap
+  // before trying to create the error report, we wind up reporting any
+  // cross-origin objects as "uncaught exception: Object".
+  Maybe<JSAutoRealm> ar;
+  if (result.isObject()) {
+    result.setObject(*js::UncheckedUnwrap(&result.toObject()));
+    ar.emplace(aCx, &result.toObject());
+  }
+
   js::ErrorReport report(aCx);
   RefPtr<Exception> exn;
   if (result.isObject() &&
