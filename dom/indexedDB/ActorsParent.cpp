@@ -9180,6 +9180,33 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
   return id;
 }
 
+const CommonIndexOpenCursorParams& GetCommonIndexOpenCursorParams(
+    const OpenCursorParams& aParams) {
+  switch (aParams.type()) {
+    case OpenCursorParams::TIndexOpenCursorParams:
+      return aParams.get_IndexOpenCursorParams().commonIndexParams();
+    case OpenCursorParams::TIndexOpenKeyCursorParams:
+      return aParams.get_IndexOpenKeyCursorParams().commonIndexParams();
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+}
+
+const CommonOpenCursorParams& GetCommonOpenCursorParams(
+    const OpenCursorParams& aParams) {
+  switch (aParams.type()) {
+    case OpenCursorParams::TObjectStoreOpenCursorParams:
+      return aParams.get_ObjectStoreOpenCursorParams().commonParams();
+    case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
+      return aParams.get_ObjectStoreOpenKeyCursorParams().commonParams();
+    case OpenCursorParams::TIndexOpenCursorParams:
+    case OpenCursorParams::TIndexOpenKeyCursorParams:
+      return GetCommonIndexOpenCursorParams(aParams).commonParams();
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+}
+
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
   return aType == OpenCursorParams::TObjectStoreOpenKeyCursorParams ||
          aType == OpenCursorParams::TIndexOpenKeyCursorParams;
@@ -13981,94 +14008,31 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
   RefPtr<FullIndexMetadata> indexMetadata;
   Cursor::Direction direction;
 
-  switch (type) {
-    case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      const ObjectStoreOpenCursorParams& params =
-          aParams.get_ObjectStoreOpenCursorParams();
-      objectStoreMetadata =
-          GetMetadataForObjectStoreId(params.commonParams().objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      if (aTrustParams && NS_WARN_IF(!VerifyRequestParams(
-                              params.commonParams().optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      direction = params.commonParams().direction();
-      break;
-    }
+  // First extract the parameters common to all open cursor variants.
+  const auto& commonParams = GetCommonOpenCursorParams(aParams);
+  objectStoreMetadata =
+      GetMetadataForObjectStoreId(commonParams.objectStoreId());
+  if (NS_WARN_IF(!objectStoreMetadata)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+  if (aTrustParams &&
+      NS_WARN_IF(!VerifyRequestParams(commonParams.optionalKeyRange()))) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+  direction = commonParams.direction();
 
-    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      const ObjectStoreOpenKeyCursorParams& params =
-          aParams.get_ObjectStoreOpenKeyCursorParams();
-      objectStoreMetadata =
-          GetMetadataForObjectStoreId(params.commonParams().objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      if (aTrustParams && NS_WARN_IF(!VerifyRequestParams(
-                              params.commonParams().optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      direction = params.commonParams().direction();
-      break;
+  // Now, for the index open cursor variants, extract the additional parameter.
+  if (type == OpenCursorParams::TIndexOpenCursorParams ||
+      type == OpenCursorParams::TIndexOpenKeyCursorParams) {
+    const auto& commonIndexParams = GetCommonIndexOpenCursorParams(aParams);
+    indexMetadata =
+        GetMetadataForIndexId(objectStoreMetadata, commonIndexParams.indexId());
+    if (NS_WARN_IF(!indexMetadata)) {
+      ASSERT_UNLESS_FUZZING();
+      return nullptr;
     }
-
-    case OpenCursorParams::TIndexOpenCursorParams: {
-      const IndexOpenCursorParams& params = aParams.get_IndexOpenCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(
-          params.commonIndexParams().commonParams().objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      indexMetadata = GetMetadataForIndexId(
-          objectStoreMetadata, params.commonIndexParams().indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(
-              params.commonIndexParams().commonParams().optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      direction = params.commonIndexParams().commonParams().direction();
-      break;
-    }
-
-    case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      const IndexOpenKeyCursorParams& params =
-          aParams.get_IndexOpenKeyCursorParams();
-      objectStoreMetadata = GetMetadataForObjectStoreId(
-          params.commonIndexParams().commonParams().objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      indexMetadata = GetMetadataForIndexId(
-          objectStoreMetadata, params.commonIndexParams().indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      if (aTrustParams &&
-          NS_WARN_IF(!VerifyRequestParams(
-              params.commonIndexParams().commonParams().optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return nullptr;
-      }
-      direction = params.commonIndexParams().commonParams().direction();
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
@@ -15052,23 +15016,7 @@ bool Cursor::Start(const OpenCursorParams& aParams) {
   }
 
   const Maybe<SerializedKeyRange>& optionalKeyRange =
-      mType == OpenCursorParams::TObjectStoreOpenCursorParams
-          ? aParams.get_ObjectStoreOpenCursorParams()
-                .commonParams()
-                .optionalKeyRange()
-          : mType == OpenCursorParams::TObjectStoreOpenKeyCursorParams
-                ? aParams.get_ObjectStoreOpenKeyCursorParams()
-                      .commonParams()
-                      .optionalKeyRange()
-                : mType == OpenCursorParams::TIndexOpenCursorParams
-                      ? aParams.get_IndexOpenCursorParams()
-                            .commonIndexParams()
-                            .commonParams()
-                            .optionalKeyRange()
-                      : aParams.get_IndexOpenKeyCursorParams()
-                            .commonIndexParams()
-                            .commonParams()
-                            .optionalKeyRange();
+      GetCommonOpenCursorParams(aParams).optionalKeyRange();
 
   RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
 
