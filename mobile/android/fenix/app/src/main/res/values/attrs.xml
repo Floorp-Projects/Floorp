@@ -23,6 +23,7 @@
     <attr name="disabled" format="reference" />
     <attr name="scrimStart" format="reference"/>
     <attr name="scrimEnd" format="reference"/>
+    <attr name="toolbarDivider" format="reference"/>
 
     <!-- Misc -->
     <attr name="homeBackground" format="reference"/>
