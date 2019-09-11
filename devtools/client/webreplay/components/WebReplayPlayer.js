@@ -425,14 +425,6 @@ class WebReplayPlayer extends Component {
   }
 
   async rewind() {
-    if (this.isRecording()) {
-      await this.threadFront.interrupt();
-    }
-
-    if (!this.isPaused()) {
-      return null;
-    }
-
     return this.threadFront.rewind();
   }
 
