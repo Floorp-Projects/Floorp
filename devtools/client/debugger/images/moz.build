@@ -38,6 +38,8 @@ DevToolsModules(
     'prettyPrint.svg',
     'regex-match.svg',
     'reload.svg',
+    'replay-pause.svg',
+    'replay-resume.svg',
     'resume.svg',
     'rewind.svg',
     'search.svg',
