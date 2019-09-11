@@ -1,0 +1,56 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "memory"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "memory",
+    "description": "API for querying browser memory statistics",
+    "permissions": ["memory"],
+    "functions": [
+      {
+        "name": "getInfo",
+        "type": "function",
+        "description": "Returns an object containing memory info",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "minimizeMemoryUsage",
+        "type": "function",
+        "description": "Minimizes memory used by the browser if possible.",
+        "async": true,
+        "parameters": []
+      }
+    ],
+    "events": [
+      {
+        "name": "onLowMemory",
+        "type": "function",
+        "description": "Event fired when memory is low.",
+        "parameters": [
+          {
+            "name": "reason",
+            "type": "string",
+            "enum": [
+              "low-memory",
+              "low-memory-ongoing",
+              "heap-minimize"
+            ],
+            "description": "Memory pressure notifications. Low-memory is passed when the pressure observer is being asked to flush, and low-memory-ongoing is passed when a low-memory condition persists. Heap-minimize is passed specifically for heap minimize calls."
+          }
+        ]
+      }
+    ]
+  }
+]
