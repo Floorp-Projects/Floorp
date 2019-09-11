@@ -45,10 +45,22 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
  * opening and closing the responsive UI.
  */
-const ResponsiveUIManager = (exports.ResponsiveUIManager = {
-  _telemetry: new Telemetry(),
+class ResponsiveUIManager {
+  constructor() {
+    this.activeTabs = new Map();
 
-  activeTabs: new Map(),
+    this.handleMenuCheck = this.handleMenuCheck.bind(this);
+
+    EventEmitter.decorate(this);
+  }
+
+  get telemetry() {
+    if (!this._telemetry) {
+      this._telemetry = new Telemetry();
+    }
+
+    return this._telemetry;
+  }
 
   /**
    * Toggle the responsive UI for a tab.
@@ -73,7 +85,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     const completed = this[action + "IfNeeded"](window, tab, options);
     completed.catch(console.error);
     return completed;
-  },
+  }
 
   /**
    * Opens the responsive UI, if not already open.
@@ -112,7 +124,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     }
 
     return this.getResponsiveUIForTab(tab);
-  },
+  }
 
   /**
    * Record all telemetry probes related to RDM opening.
@@ -127,12 +139,12 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     }
     const hostType = toolbox ? toolbox.hostType : "none";
     const hasToolbox = !!toolbox;
-    const tel = this._telemetry;
+
     if (hasToolbox) {
-      tel.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
+      this.telemetry.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
     }
 
-    tel.recordEvent("activate", "responsive_design", null, {
+    this.telemetry.recordEvent("activate", "responsive_design", null, {
       host: hostType,
       width: Math.ceil(window.outerWidth / 50) * 50,
       session_id: toolbox ? toolbox.sessionId : -1,
@@ -143,8 +155,12 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     if (!trigger) {
       trigger = "unknown";
     }
-    tel.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
-  },
+    this.telemetry.keyedScalarAdd(
+      "devtools.responsive.open_trigger",
+      trigger,
+      1
+    );
+  }
 
   /**
    * Closes the responsive UI, if not already closed.
@@ -183,7 +199,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
       // Explicitly not await on telemetry to avoid delaying RDM closing
       this.recordTelemetryClose(window, tab);
     }
-  },
+  }
 
   async recordTelemetryClose(window, tab) {
     const isKnownTab = TargetFactory.isKnownTab(tab);
@@ -194,13 +210,13 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     }
 
     const hostType = toolbox ? toolbox.hostType : "none";
-    const t = this._telemetry;
-    t.recordEvent("deactivate", "responsive_design", null, {
+
+    this.telemetry.recordEvent("deactivate", "responsive_design", null, {
       host: hostType,
       width: Math.ceil(window.outerWidth / 50) * 50,
       session_id: toolbox ? toolbox.sessionId : -1,
     });
-  },
+  }
 
   /**
    * Returns true if responsive UI is active for a given tab.
@@ -211,7 +227,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
    */
   isActiveForTab(tab) {
     return this.activeTabs.has(tab);
-  },
+  }
 
   /**
    * Returns true if responsive UI is active in any tab in the given window.
@@ -222,7 +238,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
    */
   isActiveForWindow(window) {
     return [...this.activeTabs.keys()].some(t => t.ownerGlobal === window);
-  },
+  }
 
   /**
    * Return the responsive UI controller for a tab.
@@ -234,23 +250,23 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
    */
   getResponsiveUIForTab(tab) {
     return this.activeTabs.get(tab);
-  },
+  }
 
   handleMenuCheck({ target }) {
-    ResponsiveUIManager.setMenuCheckFor(target);
-  },
+    this.setMenuCheckFor(target);
+  }
 
   initMenuCheckListenerFor(window) {
     const { tabContainer } = window.gBrowser;
     tabContainer.addEventListener("TabSelect", this.handleMenuCheck);
-  },
+  }
 
   removeMenuCheckListenerFor(window) {
     if (window && window.gBrowser && window.gBrowser.tabContainer) {
       const { tabContainer } = window.gBrowser;
       tabContainer.removeEventListener("TabSelect", this.handleMenuCheck);
     }
-  },
+  }
 
   async setMenuCheckFor(tab, window = tab.ownerGlobal) {
     await startup(window);
@@ -259,7 +275,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
     if (menu) {
       menu.setAttribute("checked", this.isActiveForTab(tab));
     }
-  },
+  }
 
   showRemoteOnlyNotification(window, tab, { trigger } = {}) {
     return showNotification(window, tab, {
@@ -267,7 +283,7 @@ const ResponsiveUIManager = (exports.ResponsiveUIManager = {
       msg: l10n.getStr("responsive.remoteOnly"),
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
     });
-  },
-});
+  }
+}
 
-EventEmitter.decorate(ResponsiveUIManager);
+module.exports = new ResponsiveUIManager();

@@ -36,8 +36,7 @@ registerCleanupFunction(() => {
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager",
-  true
+  "devtools/client/responsive/manager"
 );
 
 add_task(async function() {

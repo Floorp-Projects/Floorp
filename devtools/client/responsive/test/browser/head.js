@@ -47,8 +47,7 @@ const asyncStorage = require("devtools/shared/async-storage");
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive/manager",
-  true
+  "devtools/client/responsive/manager"
 );
 
 const E10S_MULTI_ENABLED =
