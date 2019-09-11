@@ -153,7 +153,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
         displayAndPersistProfile(code, state)
-        supportFragmentManager?.popBackStack()
+        supportFragmentManager.popBackStack()
     }
 
     private fun getAuthenticatedAccount(): FirefoxAccount? {
@@ -178,7 +178,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private fun openWebView(url: String) {
-        supportFragmentManager?.beginTransaction()?.apply {
+        supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
             addToBackStack(null)
             commit()

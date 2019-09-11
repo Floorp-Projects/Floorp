@@ -31,25 +31,26 @@ object Versions {
     const val material = "1.0.0"
 
     object AndroidX {
-        const val annotation = "1.0.2"
-        const val appcompat = "1.0.0"
+        const val annotation = "1.1.0"
+        const val appcompat = "1.1.0"
         const val browser = "1.0.0"
         const val cardview = "1.0.0"
         const val constraintlayout = "1.1.3"
-        const val core = "1.0.0"
-        const val fragment = "1.0.0"
+        const val core = "1.1.0"
+        const val fragment = "1.1.0"
         const val recyclerview = "1.0.0"
         const val test = "1.2.0"
         const val test_ext = "1.1.1"
         const val espresso = "3.2.0"
-        const val room = "2.0.0"
-        const val paging = "2.0.0"
+        const val room = "2.1.0"
+        const val paging = "2.1.0"
         const val palette = "1.0.0"
-        const val lifecycle = "2.0.0"
-        const val media = "1.0.1"
+        const val lifecycle = "2.1.0"
+        const val media = "1.1.0"
         const val work = "2.0.1"
-        const val arch_core_testing = "2.0.0"
+        const val arch_core_testing = "2.1.0"
         const val uiautomator = "2.2.0"
+        const val localbroadcastmanager = "1.0.0"
     }
 
     object Firebase {
@@ -100,6 +101,7 @@ object Dependencies {
     const val androidx_work_runtime = "androidx.work:work-runtime-ktx:${Versions.AndroidX.work}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.AndroidX.work}"
     const val androidx_espresso_core = "androidx.test.espresso:espresso-core:${Versions.AndroidX.espresso}"
+    const val androidx_localbroadcastmanager = "androidx.localbroadcastmanager:localbroadcastmanager:${Versions.AndroidX.localbroadcastmanager}"
 
     const val google_material = "com.google.android.material:material:${Versions.material}"
 

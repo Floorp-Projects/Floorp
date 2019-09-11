@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     }
 
     private fun openWebView(url: String) {
-        supportFragmentManager?.beginTransaction()?.apply {
+        supportFragmentManager.beginTransaction().apply {
             replace(R.id.container, LoginFragment.create(url, REDIRECT_URL))
             addToBackStack(null)
             commit()
@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
             accountManager.finishAuthenticationAsync(
                 FxaAuthData(action.toAuthType(), code = code, state = state)
             ).await()
-            supportFragmentManager?.popBackStack()
+            supportFragmentManager.popBackStack()
         }
     }
 

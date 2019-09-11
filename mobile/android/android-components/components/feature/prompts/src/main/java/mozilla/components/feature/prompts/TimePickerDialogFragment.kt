@@ -108,7 +108,7 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
     /**
      * Called when the user touches outside of the dialog.
      */
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         onClick(dialog, BUTTON_NEGATIVE)
     }

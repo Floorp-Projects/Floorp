@@ -46,10 +46,6 @@ internal class MediaService : Service() {
         logger.debug("Service created")
 
         mediaSession.setCallback(MediaSessionCallback())
-
-        mediaSession.setFlags(
-            MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS or
-            MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

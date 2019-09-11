@@ -36,7 +36,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
         if (savedInstanceState == null) {
             val sessionId = SafeIntent(intent).getSessionId()
-            supportFragmentManager?.beginTransaction()?.apply {
+            supportFragmentManager.beginTransaction().apply {
                 replace(R.id.container, createBrowserFragment(sessionId))
                 commit()
             }
