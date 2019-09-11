@@ -232,6 +232,9 @@ MediaTransportHandlerSTS::MediaTransportHandlerSTS(
   if (!mStsThread) {
     MOZ_CRASH();
   }
+
+  RLogConnector::CreateInstance();
+
   CSFLogDebug(LOGTAG, "%s done", __func__);
 
   // We do not set up mDNSService here, because we are not running on main (we
@@ -1086,9 +1089,6 @@ void MediaTransportHandlerSTS::ClearIceLog() {
 }
 
 void MediaTransportHandlerSTS::EnterPrivateMode() {
-  // Do this from calling thread, because that's what we do in CreateIceCtx...
-  RLogConnector::CreateInstance();
-
   if (!mStsThread->IsOnCurrentThread()) {
     mStsThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandlerSTS>(this),
@@ -1101,9 +1101,6 @@ void MediaTransportHandlerSTS::EnterPrivateMode() {
 }
 
 void MediaTransportHandlerSTS::ExitPrivateMode() {
-  // Do this from calling thread, because that's what we do in CreateIceCtx...
-  RLogConnector::CreateInstance();
-
   if (!mStsThread->IsOnCurrentThread()) {
     mStsThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandlerSTS>(this),
