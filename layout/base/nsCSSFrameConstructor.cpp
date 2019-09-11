@@ -11358,9 +11358,14 @@ bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
   // elements into <details>, we reframe the <details> and let frame constructor
   // move the main <summary> to the front when constructing the frame
   // construction items.
-  if (aFrame->IsDetailsFrame()) {
+  if (auto* details =
+          HTMLDetailsElement::FromNodeOrNull(aFrame->GetContent())) {
+    MOZ_ASSERT(aFrame->IsDetailsFrame() || aFrame->IsLineFrame() ||
+                   aFrame->IsLetterFrame(),
+               "We should be here for a DetailsFrame, or an nsFirstLineFrame "
+               "or nsFirstLetterFrame child inside the DetailsFrame!");
     TRACE("Details / Summary");
-    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    RecreateFramesForContent(details, InsertionKind::Async);
     return true;
   }
 
