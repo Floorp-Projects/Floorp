@@ -106,6 +106,7 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
 
   const now = new Date().toString();
   Services.prefs.setCharPref("services.sync.lastSync", now);
+  Services.prefs.setStringPref("services.sync.username", "test@test.com");
   UIStateInternal.syncing = false;
 
   UIStateInternal.fxAccounts = {
@@ -127,6 +128,8 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
   equal(state.syncing, false);
 
   UIStateInternal.fxAccounts = fxAccountsOrig;
+  Services.prefs.clearUserPref("services.sync.lastSync");
+  Services.prefs.clearUserPref("services.sync.username");
 });
 
 add_task(async function test_refreshState_unconfigured() {
@@ -265,6 +268,7 @@ async function configureUIState(syncing, lastSync = new Date()) {
 
   UIStateInternal._syncing = syncing;
   Services.prefs.setCharPref("services.sync.lastSync", lastSync.toString());
+  Services.prefs.setStringPref("services.sync.username", "test@test.com");
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>

@@ -543,9 +543,21 @@
                 class="PanelUI-remotetabs-instruction-box"
                 hidden="true">
             <image class="fxaSyncIllustration"/>
-            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
+            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
-                           label="&appMenuRemoteTabs.signin.label;"
+                           label="&appMenuRemoteTabs.signintosync.label;"
+                           oncommand="gSync.openPrefs('synced-tabs');"/>
+          </vbox>
+          <!-- When Sync is not enabled -->
+          <vbox id="PanelUI-remotetabs-syncdisabled"
+                flex="1"
+                align="center"
+                class="PanelUI-remotetabs-instruction-box"
+                hidden="true">
+            <image class="fxaSyncIllustration"/>
+            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
+            <toolbarbutton class="PanelUI-remotetabs-button"
+                           label="&appMenuRemoteTabs.turnonsync.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync needs re-authentication -->
@@ -555,9 +567,9 @@
                 class="PanelUI-remotetabs-instruction-box"
                 hidden="true">
             <image class="fxaSyncIllustrationIssue"/>
-            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
+            <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
-                           label="&appMenuRemoteTabs.signin.label;"
+                           label="&appMenuRemoteTabs.signintosync.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync needs verification -->

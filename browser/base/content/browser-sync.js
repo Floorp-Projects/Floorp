@@ -562,27 +562,36 @@ var gSync = {
   },
 
   updateState(state) {
-    for (let [status, menuId, boxId] of [
+    for (let [shown, menuId, boxId] of [
       [
-        UIState.STATUS_NOT_CONFIGURED,
+        state.status == UIState.STATUS_NOT_CONFIGURED,
         "sync-setup",
         "PanelUI-remotetabs-setupsync",
       ],
       [
-        UIState.STATUS_LOGIN_FAILED,
+        state.status == UIState.STATUS_SIGNED_IN && !state.syncEnabled,
+        "sync-enable",
+        "PanelUI-remotetabs-syncdisabled",
+      ],
+      [
+        state.status == UIState.STATUS_LOGIN_FAILED,
         "sync-reauthitem",
         "PanelUI-remotetabs-reauthsync",
       ],
       [
-        UIState.STATUS_NOT_VERIFIED,
+        state.status == UIState.STATUS_NOT_VERIFIED,
         "sync-unverifieditem",
         "PanelUI-remotetabs-unverified",
       ],
-      [UIState.STATUS_SIGNED_IN, "sync-syncnowitem", "PanelUI-remotetabs-main"],
+      [
+        state.status == UIState.STATUS_SIGNED_IN && state.syncEnabled,
+        "sync-syncnowitem",
+        "PanelUI-remotetabs-main",
+      ],
     ]) {
       document.getElementById(menuId).hidden = document.getElementById(
         boxId
-      ).hidden = status != state.status;
+      ).hidden = !shown;
     }
   },
 
