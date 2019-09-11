@@ -734,7 +734,7 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
         self.location = location
         # Put the new members at the beginning
         self.members = members + self.members
-    
+
     def addPartial(self, partial):
         assert self.identifier.name == partial.identifier.name
         self._partials.append(partial)
@@ -787,7 +787,7 @@ class IDLInterfaceMixin(IDLInterfaceOrInterfaceMixinOrNamespace):
 
     def __str__(self):
         return "Interface mixin '%s'" % self.identifier.name
-    
+
     def finish(self, scope):
         if self._finished:
             return
@@ -966,7 +966,11 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                               (self.identifier.name,
                                self.parent.identifier.name),
                               [self.location])
-        assert not parent or isinstance(parent, IDLInterface)
+        if parent and not isinstance(parent, IDLInterface):
+            raise WebIDLError("%s inherits from %s which is not an interface " %
+                              (self.identifier.name,
+                               self.parent.identifier.name),
+                              [self.location, parent.location])
 
         self.parent = parent
 
@@ -6117,7 +6121,7 @@ class Parser(Tokenizer):
         """
         p[0] = p[1]
 
-        
+
     def p_MixinMembersEmpty(self, p):
         """
             MixinMembers :
