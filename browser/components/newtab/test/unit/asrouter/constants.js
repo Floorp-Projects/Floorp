@@ -149,6 +149,9 @@ export class FakeRemotePageManager {
         ConfirmationHint: {
           show: sinon.stub(),
         },
+        gProtectionsHandler: {
+          showProtectionsPopup: sinon.stub(),
+        },
       },
     };
     this.portID = "6000:2";
