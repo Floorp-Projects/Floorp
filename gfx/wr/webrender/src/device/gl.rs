@@ -3311,7 +3311,7 @@ impl Device {
         }
     }
 
-    fn gl_describe_format(&self, format: ImageFormat) -> FormatDesc {
+    pub fn gl_describe_format(&self, format: ImageFormat) -> FormatDesc {
         match format {
             ImageFormat::R8 => FormatDesc {
                 internal: gl::R8,
@@ -3392,16 +3392,16 @@ impl Device {
     }
 }
 
-struct FormatDesc {
+pub struct FormatDesc {
     /// Format the texel data is internally stored in within a texture.
-    internal: gl::GLenum,
+    pub internal: gl::GLenum,
     /// Format that we expect the data to be provided when filling the texture.
-    external: gl::GLuint,
+    pub external: gl::GLuint,
     /// Format to read the texels as, so that they can be uploaded as `external`
     /// later on.
-    read: gl::GLuint,
+    pub read: gl::GLuint,
     /// Associated pixel type.
-    pixel_type: gl::GLuint,
+    pub pixel_type: gl::GLuint,
 }
 
 struct UploadChunk {
