@@ -546,6 +546,7 @@ const CFR_MESSAGES = [
         string_id: "cfr-doorhanger-sync-logins-body",
       },
       icon: "chrome://browser/content/aboutlogins/icons/intro-illustration.svg",
+      icon_class: "cfr-doorhanger-large-icon",
       buttons: {
         secondary: [
           {
