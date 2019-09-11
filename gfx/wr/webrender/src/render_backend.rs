@@ -929,7 +929,8 @@ impl RenderBackend {
                             }
 
                             self.resource_cache.add_rasterized_blob_images(
-                                txn.rasterized_blobs.take()
+                                txn.rasterized_blobs.take(),
+                                &mut profile_counters.resources.texture_cache,
                             );
                             if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
                                 self.resource_cache.set_blob_rasterizer(rasterizer, info);

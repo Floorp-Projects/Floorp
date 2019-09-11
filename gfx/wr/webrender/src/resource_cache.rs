@@ -743,7 +743,11 @@ impl ResourceCache {
         }
     }
 
-    pub fn add_rasterized_blob_images(&mut self, images: Vec<(BlobImageRequest, BlobImageResult)>) {
+    pub fn add_rasterized_blob_images(
+        &mut self,
+        images: Vec<(BlobImageRequest, BlobImageResult)>,
+        texture_cache_profile: &mut TextureCacheProfileCounters,
+    ) {
         for (request, result) in images {
             let data = match result {
                 Ok(data) => data,
@@ -752,6 +756,8 @@ impl ResourceCache {
                     continue;
                 }
             };
+
+            texture_cache_profile.rasterized_blob_pixels.inc(data.rasterized_rect.area() as usize);
 
             // First make sure we have an entry for this key (using a placeholder
             // if need be).
@@ -1604,13 +1610,16 @@ impl ResourceCache {
             texture_cache_profile,
         );
 
-        self.rasterize_missing_blob_images();
+        self.rasterize_missing_blob_images(texture_cache_profile);
 
         // Apply any updates of new / updated images (incl. blobs) to the texture cache.
         self.update_texture_cache(gpu_cache);
     }
 
-    fn rasterize_missing_blob_images(&mut self) {
+    fn rasterize_missing_blob_images(
+        &mut self,
+        texture_cache_profile: &mut TextureCacheProfileCounters,
+    ) {
         if self.missing_blob_images.is_empty() {
             return;
         }
@@ -1632,7 +1641,7 @@ impl ResourceCache {
             .unwrap()
             .rasterize(&self.missing_blob_images, is_low_priority);
 
-        self.add_rasterized_blob_images(rasterized_blobs);
+        self.add_rasterized_blob_images(rasterized_blobs, texture_cache_profile);
 
         self.missing_blob_images.clear();
     }
