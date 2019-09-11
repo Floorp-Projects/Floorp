@@ -245,7 +245,7 @@
         <!-- Ignore drawables used for localized Top Sites. -->
         <ignore regexp="^.*?/res/drawable-[xhmdpi]+/suggestedsites_[a-z]+.png$" />
         <ignore regexp="activity_stream_signin_title|activity_stream_signin_description|activity_stream_signup_button|
-        activity_stream_signin_prompt|activity_stream_signin_prompt_button" />
+        activity_stream_signin_prompt|activity_stream_signin_prompt_button|firstrun_sendtab_title|firstrun_sendtab_message" />
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
