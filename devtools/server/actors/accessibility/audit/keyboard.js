@@ -45,7 +45,7 @@ const {
 const STYLE_RULE = 1;
 
 // Accessible action for showing long description.
-const SHOW_LONG_DESC_ACTION = "showlongdesc";
+const CLICK_ACTION = "click";
 
 /**
  * Focus specific pseudo classes that the keyboard audit simulates to determine
@@ -384,10 +384,9 @@ function semanticsRule(accessible) {
     return null;
   }
 
-  // Long desc action might be present for images, ignore it in the list of
-  // actions.
+  // Ignore anything but a click action in the list of actions.
   for (let i = 0; i < accessible.actionCount; i++) {
-    if (accessible.getActionName(i) !== SHOW_LONG_DESC_ACTION) {
+    if (accessible.getActionName(i) === CLICK_ACTION) {
       return { score: FAIL, issue: MOUSE_INTERACTIVE_ONLY };
     }
   }
