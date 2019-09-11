@@ -871,6 +871,6 @@
     <string name="add_to_homescreen_cancel">Cancel</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Add</string>
-    <!-- Content description (not visible, for screen readers etc.): Text field for shortcut name-->
-    <string name="add_to_homescreen_text_description">Shortcut name</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Shortcut name</string>
 </resources>

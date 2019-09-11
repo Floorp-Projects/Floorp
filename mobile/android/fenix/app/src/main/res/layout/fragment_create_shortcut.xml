@@ -45,7 +45,7 @@
             android:id="@+id/shortcut_text"
             android:inputType="text"
             android:importantForAutofill="no"
-            android:hint="@string/add_to_homescreen_text_description"
+            android:hint="@string/add_to_homescreen_text_placeholder"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
