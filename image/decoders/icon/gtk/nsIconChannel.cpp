@@ -44,8 +44,12 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
                  NS_ERROR_UNEXPECTED);
 
   const int n_channels = 4;
-  gsize buf_size = 2 + n_channels * height * width;
-  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size);
+  CheckedInt32 buf_size =
+      2 + n_channels * CheckedInt32(height) * CheckedInt32(width);
+  if (!buf_size.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size.value());
   uint8_t* out = buf;
 
   *(out++) = width;
@@ -78,7 +82,7 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
     }
   }
 
-  NS_ASSERTION(out == buf + buf_size, "size miscalculation");
+  NS_ASSERTION(out == buf + buf_size.value(), "size miscalculation");
 
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream =
@@ -92,7 +96,7 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   // stream takes ownership of buf and will free it on destruction.
   // This function cannot fail.
-  rv = stream->AdoptData((char*)buf, buf_size);
+  rv = stream->AdoptData((char*)buf, buf_size.value());
 
   // If this no longer holds then re-examine buf's lifetime.
   MOZ_ASSERT(NS_SUCCEEDED(rv));
