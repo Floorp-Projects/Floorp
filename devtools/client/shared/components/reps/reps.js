@@ -1894,7 +1894,7 @@ function makeNodesForEntries(item) {
         return createNode({
           parent: item,
           name: index,
-          path: `${entriesPath}/${index}`,
+          path: createPath(entriesPath, index),
           contents: {
             value: GripMapEntryRep.createGripMapEntry(key, value)
           }
@@ -1905,7 +1905,7 @@ function makeNodesForEntries(item) {
         return createNode({
           parent: item,
           name: index,
-          path: `${entriesPath}/${index}`,
+          path: createPath(entriesPath, index),
           contents: {
             value
           }
@@ -2030,7 +2030,7 @@ function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
     const defaultNodes = defaultProperties.map((name, index) => createNode({
       parent: defaultPropertiesNode,
       name: maybeEscapePropertyName(name),
-      path: `${index}/${name}`,
+      path: createPath(index, name),
       contents: ownProperties[name]
     }));
     nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
@@ -2174,16 +2174,13 @@ function createNode(options) {
     return null;
   } // The path is important to uniquely identify the item in the entire
   // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name, wrapped in a Symbol
-  // to avoid name clashing,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of Symbol(`foo/bar/baz`)
-  // for the inner object.
+  // lists. The path will be separated by property name.
 
 
   return {
     parent,
     name,
-    path: parent ? Symbol(`${getSymbolDescriptor(parent.path)}/${path || name}`) : Symbol(path || name),
+    path: createPath(parent && parent.path, path || name),
     contents,
     type,
     meta
@@ -2218,10 +2215,6 @@ function createSetterNode({
     },
     type: NODE_TYPES.SET
   });
-}
-
-function getSymbolDescriptor(symbol) {
-  return symbol.toString().replace(/^(Symbol\()(.*)(\))$/, "$2");
 }
 
 function setNodeChildren(node, children) {
@@ -2423,6 +2416,10 @@ function getNonPrototypeParentGripValue(item) {
   }
 
   return getValue(parentGripNode);
+}
+
+function createPath(parentPath, path) {
+  return parentPath ? `${parentPath}◦${path}` : path;
 }
 
 module.exports = {
@@ -2969,6 +2966,7 @@ ErrorRep.propTypes = {
 function ErrorRep(props) {
   const object = props.object;
   const preview = object.preview;
+  const mode = props.mode;
   let name;
 
   if (preview && preview.name && preview.kind) {
@@ -2990,13 +2988,13 @@ function ErrorRep(props) {
 
   const content = [];
 
-  if (props.mode === MODE.TINY) {
+  if (mode === MODE.TINY) {
     content.push(name);
   } else {
     content.push(`${name}: "${preview.message}"`);
   }
 
-  if (preview.stack && props.mode !== MODE.TINY) {
+  if (preview.stack && mode !== MODE.TINY && mode !== MODE.SHORT) {
     const stacktrace = props.renderStacktrace ? props.renderStacktrace(parseStackString(preview.stack)) : getStacktraceElements(props, preview);
     content.push(stacktrace);
   }

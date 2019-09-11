@@ -60,7 +60,7 @@ describe("createNode", () => {
   it("uses the name property for the path when path is not provided", () => {
     expect(
       createNode({ name: "name", contents: "contents" }).path.toString()
-    ).toBe("Symbol(name)");
+    ).toBe("name");
   });
 
   it("wraps the path in a Symbol when provided", () => {
@@ -70,7 +70,7 @@ describe("createNode", () => {
         path: "path",
         contents: "contents",
       }).path.toString()
-    ).toBe("Symbol(path)");
+    ).toBe("path");
   });
 
   it("uses parent path to compute its path", () => {
@@ -82,6 +82,6 @@ describe("createNode", () => {
         path: "path",
         contents: "contents",
       }).path.toString()
-    ).toBe("Symbol(root/path)");
+    ).toBe("root◦path");
   });
 });

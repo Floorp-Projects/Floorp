@@ -707,8 +707,9 @@ nsresult HTMLEditRules::AfterEditInner() {
   // adjust selection HINT if needed
   if (!HTMLEditorRef()
            .TopLevelEditSubActionDataRef()
-           .mDidExplicitlySetInterLine) {
-    CheckInterlinePosition();
+           .mDidExplicitlySetInterLine &&
+      SelectionRefPtr()->IsCollapsed()) {
+    HTMLEditorRef().SetSelectionInterlinePosition();
   }
 
   return NS_OK;
@@ -9666,13 +9667,9 @@ nsresult HTMLEditRules::PinSelectionToNewBlock() {
   return NS_OK;
 }
 
-void HTMLEditRules::CheckInterlinePosition() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // If the selection isn't collapsed, do nothing.
-  if (!SelectionRefPtr()->IsCollapsed()) {
-    return;
-  }
+void HTMLEditor::SetSelectionInterlinePosition() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
 
   // Get the (collapsed) selection location
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
@@ -9680,50 +9677,63 @@ void HTMLEditRules::CheckInterlinePosition() {
     return;
   }
 
-  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
-  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+  EditorDOMPoint atCaret(firstRange->StartRef());
+  if (NS_WARN_IF(!atCaret.IsSet())) {
     return;
   }
-  MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
+  MOZ_ASSERT(atCaret.IsSetAndValid());
 
-  // First, let's check to see if we are after a <br>.  We take care of this
+  // First, let's check to see if we are after a `<br>`.  We take care of this
   // special-case first so that we don't accidentally fall through into one of
   // the other conditionals.
-  nsCOMPtr<nsIContent> node =
-      HTMLEditorRef().GetPreviousEditableHTMLNodeInBlock(atStartOfSelection);
-  if (node && node->IsHTMLElement(nsGkAtoms::br)) {
-    IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Failed to set interline position");
+  // XXX Although I don't understand "interline position", if caret is
+  //     immediately after non-editable contents, but previous editable
+  //     content is `<br>`, does this do right thing?
+  if (nsIContent* previousEditableContentInBlock =
+          GetPreviousEditableHTMLNodeInBlock(atCaret)) {
+    if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br)) {
+      IgnoredErrorResult ignoredError;
+      SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+      NS_WARNING_ASSERTION(
+          !ignoredError.Failed(),
+          "Selection::SetInterlinePosition(true) failed, but ignored");
+      return;
+    }
+  }
+
+  if (!atCaret.GetChild()) {
     return;
   }
 
-  // Are we after a block?  If so try set caret to following content
-  if (atStartOfSelection.GetChild()) {
-    node = HTMLEditorRef().GetPriorHTMLSibling(atStartOfSelection.GetChild());
-  } else {
-    node = nullptr;
-  }
-  if (node && HTMLEditor::NodeIsBlockStatic(*node)) {
-    IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Failed to set interline position");
-    return;
+  // If caret is immediately after a block, set interline position to "right".
+  // XXX Although I don't understand "interline position", if caret is
+  //     immediately after non-editable contents, but previous editable
+  //     content is a block, does this do right thing?
+  if (nsIContent* previousEditableContentInBlockAtCaret =
+          GetPriorHTMLSibling(atCaret.GetChild())) {
+    if (HTMLEditor::NodeIsBlockStatic(*previousEditableContentInBlockAtCaret)) {
+      IgnoredErrorResult ignoredError;
+      SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
+      NS_WARNING_ASSERTION(
+          !ignoredError.Failed(),
+          "Selection::SetInterlinePosition(true) failed, but ignored");
+      return;
+    }
   }
 
-  // Are we before a block?  If so try set caret to prior content
-  if (atStartOfSelection.GetChild()) {
-    node = HTMLEditorRef().GetNextHTMLSibling(atStartOfSelection.GetChild());
-  } else {
-    node = nullptr;
-  }
-  if (node && HTMLEditor::NodeIsBlockStatic(*node)) {
-    IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Failed to unset interline position");
+  // If caret is immediately before a block, set interline position to "left".
+  // XXX Although I don't understand "interline position", if caret is
+  //     immediately before non-editable contents, but next editable
+  //     content is a block, does this do right thing?
+  if (nsIContent* nextEditableContentInBlockAtCaret =
+          GetNextHTMLSibling(atCaret.GetChild())) {
+    if (HTMLEditor::NodeIsBlockStatic(*nextEditableContentInBlockAtCaret)) {
+      IgnoredErrorResult ignoredError;
+      SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
+      NS_WARNING_ASSERTION(
+          !ignoredError.Failed(),
+          "Selection::SetInterlinePosition(false) failed, but ignored");
+    }
   }
 }
 

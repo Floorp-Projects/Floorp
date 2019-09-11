@@ -81,6 +81,8 @@ const mozilla::dom::Element* Gecko_GetBeforeOrAfterPseudo(
 const mozilla::dom::Element* Gecko_GetMarkerPseudo(
     const mozilla::dom::Element*);
 
+bool Gecko_IsInAnonymousSubtree(const mozilla::dom::Element*);
+
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(
     const mozilla::dom::Element*);
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);

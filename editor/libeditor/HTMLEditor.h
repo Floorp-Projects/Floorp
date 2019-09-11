@@ -2633,6 +2633,13 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult RemoveEmptyNodesIn(nsRange& aRange);
 
+  /**
+   * SetSelectionInterlinePosition() may set interline position if caret is
+   * positioned around `<br>` or block boundary.  Don't call this when
+   * `Selection` is not collapsed.
+   */
+  void SetSelectionInterlinePosition();
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

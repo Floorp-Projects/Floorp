@@ -111,9 +111,9 @@ run_series(function(child, elt, elts, node, nodes) {
            " match :only-child");
     });
 
-styleText.data = "span:-moz-first-node { text-decoration: underline; }";
+styleText.data = "span:-moz-first-node { text-decoration-line: underline; }";
 run_series(function(child, elt, elts, node, nodes) {
-        is(cs(child).textDecoration, (node == 0) ? "underline" : "none",
+        is(cs(child).textDecorationLine, (node == 0) ? "underline" : "none",
            "child " + node + " should " + ((node == 0) ? "" : "NOT ") +
            " match :-moz-first-node");
     });

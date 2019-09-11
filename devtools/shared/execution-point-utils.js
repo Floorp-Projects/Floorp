@@ -65,10 +65,12 @@ function pointPrecedes(pointA, pointB) {
   const posB = pointB.position;
 
   // Except when we're at a checkpoint, all execution points have positions.
-  // Because the progress counter is bumped when executing script, points with
-  // the same checkpoint and progress counter will either both be at that
-  // checkpoint, or both be at an intra-checkpoint point.
-  assert(!!posA == !!posB);
+  // Ideally, we would only bump the progress counter when a script starts
+  // executing, but this is not always guaranteed to happen and so we tolerate
+  // such comparisons. See bug 1580337.
+  if (!!posA != !!posB) {
+    return !!posB;
+  }
   if (!posA || positionEquals(posA, posB)) {
     return false;
   }
@@ -191,7 +193,6 @@ function positionToString(pos) {
 
 function assert(v) {
   if (!v) {
-    dump(`Assertion failed: ${Error().stack}\n`);
     throw new Error(`Assertion failed! ${Error().stack}`);
   }
 }
