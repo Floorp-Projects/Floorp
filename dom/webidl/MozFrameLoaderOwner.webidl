@@ -5,9 +5,7 @@
  */
 
 dictionary RemotenessOptions {
-  DOMString? remoteType;
-  FrameLoader? sameProcessAsFrameLoader;
-  WindowProxy? opener;
+  required DOMString? remoteType;
 
   // Used to indicate that there is an error condition that needs to
   // be handled.
@@ -48,5 +46,5 @@ interface MozFrameLoaderOwner {
   void swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]
-  void changeRemoteness(optional RemotenessOptions aOptions = {});
+  void changeRemoteness(RemotenessOptions aOptions);
 };
