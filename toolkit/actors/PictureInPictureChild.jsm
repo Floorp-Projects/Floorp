@@ -504,7 +504,7 @@ class PictureInPictureToggleChild extends ActorChild {
       1,
       true,
       false,
-      false
+      true
     );
 
     for (let element of elements) {
