@@ -12585,8 +12585,18 @@ void Database::UnregisterTransaction(TransactionBase* aTransaction) {
 bool Database::RegisterMutableFile(MutableFile* aMutableFile) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aMutableFile);
+
+  // The lock might have been cleared already. See Bug 1577202.
+  //
+  // TODO: This might be reverted back to an assertion again if the behaviour of
+  // Close is changed to delay in case of a pending CreateFileOp. However, since
+  // support for mutable files is planned to be removed, it might not be
+  // worthwhile to implement this.
+  if (!mDirectoryLock) {
+    return false;
+  }
+
   MOZ_ASSERT(!mMutableFiles.GetEntry(aMutableFile));
-  MOZ_ASSERT(mDirectoryLock);
 
   if (NS_WARN_IF(!mMutableFiles.PutEntry(aMutableFile, fallible))) {
     return false;
