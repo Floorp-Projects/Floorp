@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
@@ -58,7 +59,9 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
             )
 
             title.text = resources.getString(titleId)
-            subtitle.text = resources.getString(subtitleId)
+            val subtitleText = resources.getString(subtitleId)
+            subtitle.text = subtitleText
+            if (subtitleText.isBlank()) subtitle.visibility = View.GONE
         }
     }
 
