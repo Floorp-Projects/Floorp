@@ -3474,9 +3474,6 @@ GeckoDriver.prototype.quit = async function(cmd) {
     flags = assert.array(cmd.parameters.flags);
   }
 
-  // bug 1298921
-  assert.firefox();
-
   let quitSeen;
   let mode = 0;
   if (flags.length > 0) {
