@@ -785,12 +785,3 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
         })
 
     return artifacts
-
-
-def should_use_artifact_map(platform):
-    """Return True if this task uses the beetmover artifact map.
-
-    This function exists solely for the beetmover artifact map
-    migration.
-    """
-    return 'devedition' not in platform

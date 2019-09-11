@@ -16,8 +16,7 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          generate_beetmover_upstream_artifacts,
                                          get_beetmover_action_scope,
                                          get_beetmover_bucket_scope,
-                                         get_worker_type_for_scope,
-                                         should_use_artifact_map)
+                                         get_worker_type_for_scope)
 from voluptuous import Optional, Required
 from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
@@ -110,21 +109,6 @@ def make_beetmover_checksums_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(locale=None):
-    # XXX: this function is called solely for Devedition, until we fix 1537713
-    # so that DevEdition uses in-tree manifests too. This will be fixed in Q3
-    upstream_artifacts = [{
-        "taskId": {"task-reference": "<beetmover-repackage>"},
-        "taskType": "beetmover",
-        "paths": [
-            "public/target.checksums",
-        ],
-        "locale": locale or "en-US",
-    }]
-
-    return upstream_artifacts
-
-
 @transforms.add
 def make_beetmover_checksums_worker(config, jobs):
     for job in jobs:
@@ -134,23 +118,13 @@ def make_beetmover_checksums_worker(config, jobs):
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-        }
-
-        if should_use_artifact_map(platform):
-            upstream_artifacts = generate_beetmover_upstream_artifacts(
+            'upstream-artifacts': generate_beetmover_upstream_artifacts(
                 config, job, platform, locale
+            ),
+            'artifact-map': generate_beetmover_artifact_map(
+                config, job, platform=platform, locale=locale
             )
-            worker['artifact-map'] = generate_beetmover_artifact_map(
-                config, job, platform=platform, locale=locale)
-        else:
-            upstream_artifacts = generate_upstream_artifacts(
-                locale
-            )
-            # Clean up un-used artifact map, to avoid confusion
-            if job['attributes'].get('artifact_map'):
-                del job['attributes']['artifact_map']
-
-        worker['upstream-artifacts'] = upstream_artifacts
+        }
 
         if locale:
             worker["locale"] = locale

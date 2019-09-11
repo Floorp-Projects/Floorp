@@ -13,28 +13,12 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          generate_beetmover_upstream_artifacts,
                                          get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
-                                         get_worker_type_for_scope,
-                                         should_use_artifact_map,
-                                         )
-from taskgraph.util.taskcluster import get_artifact_prefix
+                                         get_worker_type_for_scope)
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 transforms = TransformSequence()
-
-CHECKSUMS_BUILD_ARTIFACTS = [
-    "SHA256SUMMARY",
-    "SHA512SUMMARY"
-]
-
-CHECKSUMS_SIGNING_ARTIFACTS = [
-    "KEY",
-    "SHA256SUMS",
-    "SHA256SUMS.asc",
-    "SHA512SUMS",
-    "SHA512SUMS.asc"
-]
 
 
 release_generate_checksums_beetmover_schema = schema.extend({
@@ -107,29 +91,6 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(job, signing_task_ref, build_task_ref):
-    build_mapping = CHECKSUMS_BUILD_ARTIFACTS
-    signing_mapping = CHECKSUMS_SIGNING_ARTIFACTS
-
-    artifact_prefix = get_artifact_prefix(job)
-
-    upstream_artifacts = [{
-        "taskId": {"task-reference": build_task_ref},
-        "taskType": "build",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in build_mapping],
-        "locale": "en-US",
-    }, {
-        "taskId": {"task-reference": signing_task_ref},
-        "taskType": "signing",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in signing_mapping],
-        "locale": "en-US",
-    }]
-
-    return upstream_artifacts
-
-
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
@@ -138,39 +99,17 @@ def make_task_worker(config, jobs):
         if not valid_beetmover_job:
             raise NotImplementedError("Beetmover must have two dependencies.")
 
-        build_task = None
-        signing_task = None
-        for dependency in job["dependencies"].keys():
-            if 'signing' in dependency:
-                signing_task = dependency
-            else:
-                build_task = dependency
-
-        signing_task_ref = "<{}>".format(str(signing_task))
-        build_task_ref = "<{}>".format(str(build_task))
-
+        platform = job["attributes"]["build_platform"]
         worker = {
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
-        }
-
-        platform = job["attributes"]["build_platform"]
-        # Works with Firefox/Devedition. Commented for migration.
-        if should_use_artifact_map(platform):
-            upstream_artifacts = generate_beetmover_upstream_artifacts(
+            'upstream-artifacts': generate_beetmover_upstream_artifacts(
                 config, job, platform=None, locale=None
-            )
-        else:
-            upstream_artifacts = generate_upstream_artifacts(
-                job, signing_task_ref, build_task_ref
-            )
-
-        worker['upstream-artifacts'] = upstream_artifacts
-
-        # Works with Firefox/Devedition. Commented for migration.
-        if should_use_artifact_map(platform):
-            worker['artifact-map'] = generate_beetmover_artifact_map(
-                config, job, platform=platform)
+            ),
+            'artifact-map': generate_beetmover_artifact_map(
+                config, job, platform=platform
+            ),
+        }
 
         job["worker"] = worker
 
