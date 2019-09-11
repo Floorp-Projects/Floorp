@@ -373,9 +373,10 @@ metrics:
     - 1158
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1677
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
   mozilla_products:
     type: string_list
     lifetime: application
@@ -389,9 +390,10 @@ metrics:
     - 1192
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1953/
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
   default_moz_browser:
     type: string
     lifetime: application
@@ -403,9 +405,10 @@ metrics:
     - 1192
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1953/
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
 
 search.default_engine:
   code:
@@ -422,9 +425,10 @@ search.default_engine:
     - 800
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1606
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
   name:
     type: string
     lifetime: application
@@ -439,9 +443,10 @@ search.default_engine:
     - 800
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1606
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
   submission_url:
     type: string
     lifetime: application
@@ -457,9 +462,10 @@ search.default_engine:
     - 800
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1606
+    - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-09-01"
+    expires: "2020-03-01"
 
 bookmarks_management:
   open_in_new_tab:
