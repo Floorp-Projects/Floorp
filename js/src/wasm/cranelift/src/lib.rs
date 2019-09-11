@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-#[cfg(feature = "cranelift_x86")]
-#[macro_use]
-extern crate target_lexicon;
-
 #[macro_use]
 extern crate log;
 
