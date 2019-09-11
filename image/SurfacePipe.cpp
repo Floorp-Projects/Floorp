@@ -71,9 +71,9 @@ nsresult SurfaceSink::Configure(const SurfaceConfig& aConfig) {
   mFlipVertically = aConfig.mFlipVertically;
 
   MOZ_ASSERT(mImageData);
-  MOZ_ASSERT(
-      mImageDataLength ==
-      uint32_t(surfaceSize.width * surfaceSize.height * sizeof(uint32_t)));
+  MOZ_ASSERT(uint64_t(mImageDataLength) == uint64_t(surfaceSize.width) *
+                                               uint64_t(surfaceSize.height) *
+                                               sizeof(uint32_t));
 
   ConfigureFilter(surfaceSize, sizeof(uint32_t));
   return NS_OK;

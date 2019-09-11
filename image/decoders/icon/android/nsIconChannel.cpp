@@ -65,8 +65,12 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   // moz-icon data should have two bytes for the size,
   // then the ARGB pixel values with pre-multiplied Alpha
   const int channels = 4;
-  long int buf_size = 2 + channels * height * width;
-  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size);
+  CheckedInt32 buf_size =
+      2 + channels * CheckedInt32(height) * CheckedInt32(width);
+  if (!buf_size.isValid()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size.value());
   uint8_t* out = buf;
 
   *(out++) = width;
@@ -101,7 +105,7 @@ static nsresult moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
       do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stream->AdoptData((char*)buf, buf_size);
+  rv = stream->AdoptData((char*)buf, buf_size.value());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // nsIconProtocolHandler::NewChannel will provide the correct loadInfo for
