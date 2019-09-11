@@ -157,9 +157,7 @@ fn make_shared_flags(
 
 #[cfg(feature = "cranelift_x86")]
 fn make_isa_specific(env: &StaticEnvironment) -> DashResult<isa::Builder> {
-    use std::str::FromStr; // for the triple! macro below.
-
-    let mut ib = isa::lookup(triple!("x86_64-unknown-unknown")).map_err(BasicError::from)?;
+    let mut ib = isa::lookup_by_name("x86_64-unknown-unknown").map_err(BasicError::from)?;
 
     if !env.hasSse2 {
         return Err("SSE2 is mandatory for Baldrdash!".into());
