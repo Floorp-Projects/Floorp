@@ -13,7 +13,7 @@ interface Response {
   // include ReadableStream yet because we don't want to expose Streams API to
   // Request.
   [Throws]
-  constructor(optional (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString)? body,
+  constructor(optional (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString)? body = null,
               optional ResponseInit init = {});
 
   [NewObject] static Response error();
