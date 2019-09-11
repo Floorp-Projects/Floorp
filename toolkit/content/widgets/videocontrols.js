@@ -221,12 +221,7 @@ this.VideoControlsImplWidget = class {
       set isAudioOnly(val) {
         this._isAudioOnly = val;
         this.setFullscreenButtonState();
-
-        if (val) {
-          this.pictureInPictureToggleButton.setAttribute("hidden", true);
-        } else {
-          this.pictureInPictureToggleButton.removeAttribute("hidden");
-        }
+        this.updatePictureInPictureToggleDisplay();
 
         if (!this.isTopLevelSyntheticDocument) {
           return;
@@ -509,6 +504,7 @@ this.VideoControlsImplWidget = class {
 
       updatePictureInPictureToggleDisplay() {
         if (this.isAudioOnly) {
+          this.pictureInPictureToggleButton.setAttribute("hidden", true);
           return;
         }
 
