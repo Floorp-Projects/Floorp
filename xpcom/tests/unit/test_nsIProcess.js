@@ -130,7 +130,7 @@ function test_notify_blocking() {
   process.runAsync([], 0, {
     observe(subject, topic, data) {
       process = subject.QueryInterface(Ci.nsIProcess);
-      Assert.equal(topic, "process-finished");
+      Assert.equal(topic, "process-failed");
       Assert.equal(process.exitValue, 42);
       test_notify_nonblocking();
     },
@@ -164,7 +164,7 @@ function test_notify_killed() {
   process.runAsync([], 0, {
     observe(subject, topic, data) {
       process = subject.QueryInterface(Ci.nsIProcess);
-      Assert.equal(topic, "process-finished");
+      Assert.equal(topic, "process-failed");
       do_test_finished();
     },
   });
