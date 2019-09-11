@@ -16,10 +16,12 @@
  * https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface
  */
 
-// This chromeConstructor is used by the MockFilePicker for testing only.
-[ChromeConstructor(DOMString path),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Directory {
+  // This ChromeOnly constructor is used by the MockFilePicker for testing only.
+  [Throws, ChromeOnly]
+  constructor(DOMString path);
+
   /*
    * The leaf name of the directory.
    */
