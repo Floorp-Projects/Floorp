@@ -437,8 +437,8 @@ AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
     _NS_NEXT_TOKEN;
     mTopWindowOrigin = Substring(str, start, idx - start);
     separator = ':';
-    mIsolated = Substring(str, start, idx - start).EqualsLiteral("y");
     _NS_NEXT_TOKEN;
+    mIsolated = Substring(str, start, idx - start).EqualsLiteral("y");
     // Add code to deserialize new members here!
 #undef _NS_NEXT_TOKEN
 

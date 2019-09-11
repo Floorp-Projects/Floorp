@@ -603,7 +603,10 @@ void HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  aRv = ToDataURLImpl(aCx, aSubjectPrincipal, aType, aParams, aDataURL);
+  nsresult rv = ToDataURLImpl(aCx, aSubjectPrincipal, aType, aParams, aDataURL);
+  if (NS_FAILED(rv)) {
+    aDataURL.AssignLiteral("data:,");
+  }
 }
 
 void HTMLCanvasElement::SetMozPrintCallback(PrintCallback* aCallback) {

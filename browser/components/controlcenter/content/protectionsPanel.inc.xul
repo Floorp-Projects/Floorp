@@ -196,7 +196,7 @@
         <vbox class="panel-footer">
           <button id="protections-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  accesskey="&contentBlocking.manageSettings2.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'trackers');"/>
         </vbox>
     </panelview>
@@ -213,7 +213,7 @@
         <vbox class="panel-footer">
           <button id="protections-popup-socialblockView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  accesskey="&contentBlocking.manageSettings2.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'social');"/>
         </vbox>
     </panelview>
@@ -230,7 +230,7 @@
         <vbox class="panel-footer">
           <button id="protections-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  accesskey="&contentBlocking.manageSettings2.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cookies');"/>
         </vbox>
     </panelview>
@@ -247,7 +247,7 @@
         <vbox class="panel-footer">
           <button id="protections-popup-fingerprintersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  accesskey="&contentBlocking.manageSettings2.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'fingerprinters');"/>
         </vbox>
     </panelview>
@@ -264,7 +264,7 @@
         <vbox class="panel-footer">
           <button id="protections-popup-cryptominersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
-                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  accesskey="&contentBlocking.manageSettings2.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cryptominers');"/>
         </vbox>
     </panelview>

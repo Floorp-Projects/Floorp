@@ -35,10 +35,15 @@ void CanvasRenderingContextHelper::ToBlob(
     nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) override {
       RefPtr<Blob> blob = aBlob;
 
-      RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
+      RefPtr<Blob> newBlob;
+
+      if (blob) {
+        newBlob = Blob::Create(mGlobal, blob->Impl());
+      }
 
       RefPtr<BlobCallback> callback(mBlobCallback.forget());
       ErrorResult rv;
+
       callback->Call(newBlob, rv);
 
       mGlobal = nullptr;
