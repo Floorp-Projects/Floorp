@@ -16,12 +16,18 @@ platform_names:
     filename_platform:
         by-platform:
             linux-shippable: 'linux-i686'
+            linux-devedition-nightly: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
+            linux64-devedition-nightly: 'linux-x86_64'
             linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
+            macosx64-devedition-nightly: 'mac'
             win32-shippable: 'win32'
+            win32-devedition-nightly: 'win32'
             win64-shippable: 'win64'
+            win64-devedition-nightly: 'win64'
             win64-aarch64-shippable: 'win64-aarch64'
+            win64-aarch64-devedition-nightly: 'win64-aarch64'
             win64-asan-reporter-nightly: 'win64-asan-reporter'
 
 # A default entry, which the mappings below extend and override.
