@@ -155,15 +155,11 @@ nsresult nsDataHandler::ParsePathWithoutRef(
 
   // First, find the start of the data
   int32_t commaIdx = aPath.FindChar(',');
-
-  // This is a hack! When creating a URL using the DOM API we want to ignore
-  // if a comma is missing. But if we're actually loading a data: URI, in which
-  // case aContentCharset is not null, then we want to return an error if a
-  // comma is missing.
-  if (aContentCharset && commaIdx == kNotFound) {
+  if (commaIdx == kNotFound) {
     return NS_ERROR_MALFORMED_URI;
   }
-  if (commaIdx == 0 || commaIdx == kNotFound) {
+
+  if (commaIdx == 0) {
     // Nothing but data.
     aContentType.AssignLiteral("text/plain");
     if (aContentCharset) {
