@@ -280,7 +280,6 @@ NO_PKG_FILES += \
 	certutil* \
 	pk12util* \
 	BadCertAndPinningServer* \
-	DelegatedCredentialsServer* \
 	OCSPStaplingServer* \
 	SanctionsTestServer* \
 	GenerateOCSPResponse* \

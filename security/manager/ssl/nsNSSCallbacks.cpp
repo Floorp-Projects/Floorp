@@ -707,7 +707,6 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
       infoObject->SetKEAUsed(channelInfo.keaType);
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
-      infoObject->mIsDelegatedCredential = channelInfo.peerDelegCred;
     }
   }
 
