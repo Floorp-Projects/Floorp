@@ -4,7 +4,6 @@ py2:
     include: ['.']
     exclude:
         - build
-        - client.py
         - dom
         - editor
         - gfx
