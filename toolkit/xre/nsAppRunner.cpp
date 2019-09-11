@@ -2985,6 +2985,21 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   DisableAppNap();
 #endif
 
+#ifndef ANDROID
+  if (PR_GetEnv("MOZ_RUN_GTEST")
+#  ifdef FUZZING
+      || PR_GetEnv("FUZZER")
+#  endif
+  ) {
+    // Enable headless mode and assert that it worked, since gfxPlatform
+    // uses a static bool set after the first call to `IsHeadless`.
+    // Note: Android gtests seem to require an Activity and fail to start
+    // with headless mode enabled.
+    PR_SetEnv("MOZ_HEADLESS=1");
+    MOZ_ASSERT(gfxPlatform::IsHeadless());
+  }
+#endif  // ANDROID
+
   if (PR_GetEnv("MOZ_CHAOSMODE")) {
     ChaosFeature feature = ChaosFeature::Any;
     long featureInt = strtol(PR_GetEnv("MOZ_CHAOSMODE"), nullptr, 16);
