@@ -4,9 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[ChromeOnly, Constructor(DOMString type, optional StyleSheetApplicableStateChangeEventInit eventInitDict = {})]
+[ChromeOnly]
 interface StyleSheetApplicableStateChangeEvent : Event
 {
+  constructor(DOMString type,
+              optional StyleSheetApplicableStateChangeEventInit eventInitDict = {});
+
   readonly attribute CSSStyleSheet? stylesheet;
   readonly attribute boolean applicable;
 };

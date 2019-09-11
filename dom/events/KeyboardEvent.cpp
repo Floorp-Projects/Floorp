@@ -273,18 +273,17 @@ uint32_t KeyboardEvent::Location() {
 // static
 already_AddRefed<KeyboardEvent> KeyboardEvent::ConstructorJS(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const KeyboardEventInit& aParam, ErrorResult& aRv) {
+    const KeyboardEventInit& aParam) {
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<KeyboardEvent> newEvent = new KeyboardEvent(target, nullptr, nullptr);
-  newEvent->InitWithKeyboardEventInit(target, aType, aParam, aRv);
+  newEvent->InitWithKeyboardEventInit(target, aType, aParam);
 
   return newEvent.forget();
 }
 
 void KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
                                               const nsAString& aType,
-                                              const KeyboardEventInit& aParam,
-                                              ErrorResult& aRv) {
+                                              const KeyboardEventInit& aParam) {
   bool trusted = Init(aOwner);
   InitKeyEventJS(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                  false, false, false, false, aParam.mKeyCode, aParam.mCharCode);
@@ -328,13 +327,10 @@ void KeyboardEvent::InitKeyEventJS(const nsAString& aType, bool aCanBubble,
   keyEvent->mCharCode = aCharCode;
 }
 
-void KeyboardEvent::InitKeyboardEventJS(const nsAString& aType, bool aCanBubble,
-                                        bool aCancelable,
-                                        nsGlobalWindowInner* aView,
-                                        const nsAString& aKey,
-                                        uint32_t aLocation, bool aCtrlKey,
-                                        bool aAltKey, bool aShiftKey,
-                                        bool aMetaKey, ErrorResult& aRv) {
+void KeyboardEvent::InitKeyboardEventJS(
+    const nsAString& aType, bool aCanBubble, bool aCancelable,
+    nsGlobalWindowInner* aView, const nsAString& aKey, uint32_t aLocation,
+    bool aCtrlKey, bool aAltKey, bool aShiftKey, bool aMetaKey) {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
   mInitializedByJS = true;
   mInitializedByCtor = false;

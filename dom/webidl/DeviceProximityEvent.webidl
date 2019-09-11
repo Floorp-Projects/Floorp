@@ -4,9 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="device.sensors.proximity.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceProximityEventInit eventInitDict = {})]
+[Pref="device.sensors.proximity.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled"]
 interface DeviceProximityEvent : Event
 {
+  constructor(DOMString type,
+              optional DeviceProximityEventInit eventInitDict = {});
+
   readonly attribute double value;
   readonly attribute double min;
   readonly attribute double max;

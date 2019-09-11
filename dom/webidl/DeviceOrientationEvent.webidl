@@ -4,9 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="device.sensors.orientation.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceOrientationEventInit eventInitDict = {}), LegacyEventInit]
+[Pref="device.sensors.orientation.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", LegacyEventInit]
 interface DeviceOrientationEvent : Event
 {
+  constructor(DOMString type,
+              optional DeviceOrientationEventInit eventInitDict = {});
+
   readonly attribute double? alpha;
   readonly attribute double? beta;
   readonly attribute double? gamma;

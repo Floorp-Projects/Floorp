@@ -26,7 +26,7 @@ class KeyboardEvent : public UIEvent {
 
   static already_AddRefed<KeyboardEvent> ConstructorJS(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const KeyboardEventInit& aParam, ErrorResult& aRv);
+      const KeyboardEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override {
@@ -70,14 +70,13 @@ class KeyboardEvent : public UIEvent {
                            bool aCancelable, nsGlobalWindowInner* aView,
                            const nsAString& aKey, uint32_t aLocation,
                            bool aCtrlKey, bool aAltKey, bool aShiftKey,
-                           bool aMetaKey, ErrorResult& aRv);
+                           bool aMetaKey);
 
  protected:
   ~KeyboardEvent() {}
 
   void InitWithKeyboardEventInit(EventTarget* aOwner, const nsAString& aType,
-                                 const KeyboardEventInit& aParam,
-                                 ErrorResult& aRv);
+                                 const KeyboardEventInit& aParam);
 
  private:
   // True, if the instance is initialized by JS.

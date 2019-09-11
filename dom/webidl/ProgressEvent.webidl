@@ -4,10 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional ProgressEventInit eventInitDict = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface ProgressEvent : Event
 {
+  constructor(DOMString type, optional ProgressEventInit eventInitDict = {});
+
   readonly attribute boolean lengthComputable;
   readonly attribute unsigned long long loaded;
   readonly attribute unsigned long long total;

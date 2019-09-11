@@ -20,8 +20,11 @@ interface DeviceRotationRate {
   readonly attribute double? gamma;
 };
 
-[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled", Constructor(DOMString type, optional DeviceMotionEventInit eventInitDict = {})]
+[Pref="device.sensors.motion.enabled", Func="nsGlobalWindowInner::DeviceSensorsEnabled"]
 interface DeviceMotionEvent : Event {
+  constructor(DOMString type,
+              optional DeviceMotionEventInit eventInitDict = {});
+
   readonly attribute DeviceAcceleration? acceleration;
   readonly attribute DeviceAcceleration? accelerationIncludingGravity;
   readonly attribute DeviceRotationRate? rotationRate;

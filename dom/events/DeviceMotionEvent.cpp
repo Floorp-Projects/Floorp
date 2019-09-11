@@ -67,7 +67,7 @@ void DeviceMotionEvent::InitDeviceMotionEvent(
 
 already_AddRefed<DeviceMotionEvent> DeviceMotionEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const DeviceMotionEventInit& aEventInitDict, ErrorResult& aRv) {
+    const DeviceMotionEventInit& aEventInitDict) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<DeviceMotionEvent> e = new DeviceMotionEvent(t, nullptr, nullptr);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);

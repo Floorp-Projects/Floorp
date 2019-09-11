@@ -51,7 +51,7 @@ class VRDisplayEvent final : public Event {
 
   static already_AddRefed<VRDisplayEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const VRDisplayEventInit& aEventInitDict, ErrorResult& aRv);
+      const VRDisplayEventInit& aEventInitDict);
 };
 
 }  // namespace dom

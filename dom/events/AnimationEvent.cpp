@@ -26,7 +26,7 @@ AnimationEvent::AnimationEvent(EventTarget* aOwner, nsPresContext* aPresContext,
 // static
 already_AddRefed<AnimationEvent> AnimationEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const AnimationEventInit& aParam, ErrorResult& aRv) {
+    const AnimationEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<AnimationEvent> e = new AnimationEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

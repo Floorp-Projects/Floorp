@@ -40,7 +40,7 @@ class StreamFilterDataEvent : public Event {
 
   static already_AddRefed<StreamFilterDataEvent> Constructor(
       GlobalObject& aGlobal, const nsAString& aType,
-      const StreamFilterDataEventInit& aParam, ErrorResult& aRv) {
+      const StreamFilterDataEventInit& aParam) {
     nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
     return Constructor(target, aType, aParam);
   }

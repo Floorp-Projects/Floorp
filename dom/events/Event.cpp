@@ -314,8 +314,7 @@ bool Event::Init(mozilla::dom::EventTarget* aGlobal) {
 // static
 already_AddRefed<Event> Event::Constructor(const GlobalObject& aGlobal,
                                            const nsAString& aType,
-                                           const EventInit& aParam,
-                                           ErrorResult& aRv) {
+                                           const EventInit& aParam) {
   nsCOMPtr<mozilla::dom::EventTarget> t =
       do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(t, aType, aParam);

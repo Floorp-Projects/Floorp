@@ -30,7 +30,7 @@ class CustomEvent final : public Event {
 
   static already_AddRefed<CustomEvent> Constructor(
       const GlobalObject& aGlobal, const nsAString& aType,
-      const CustomEventInit& aParam, ErrorResult& aRv);
+      const CustomEventInit& aParam);
 
   virtual JSObject* WrapObjectInternal(
       JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

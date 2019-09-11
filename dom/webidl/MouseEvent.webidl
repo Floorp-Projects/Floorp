@@ -11,8 +11,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString typeArg, optional MouseEventInit mouseEventInitDict = {})]
 interface MouseEvent : UIEvent {
+  constructor(DOMString typeArg,
+              optional MouseEventInit mouseEventInitDict = {});
+
   [NeedsCallerType]
   readonly attribute long           screenX;
   [NeedsCallerType]

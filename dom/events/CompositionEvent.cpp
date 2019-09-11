@@ -39,7 +39,7 @@ CompositionEvent::CompositionEvent(EventTarget* aOwner,
 // static
 already_AddRefed<CompositionEvent> CompositionEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const CompositionEventInit& aParam, ErrorResult& aRv) {
+    const CompositionEventInit& aParam) {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<CompositionEvent> e = new CompositionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

@@ -36,7 +36,7 @@ PaymentRequestUpdateEvent::Constructor(
 already_AddRefed<PaymentRequestUpdateEvent>
 PaymentRequestUpdateEvent::Constructor(
     const GlobalObject& aGlobal, const nsAString& aType,
-    const PaymentRequestUpdateEventInit& aEventInitDict, ErrorResult& aRv) {
+    const PaymentRequestUpdateEventInit& aEventInitDict) {
   nsCOMPtr<mozilla::dom::EventTarget> owner =
       do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(owner, aType, aEventInitDict);

@@ -7,11 +7,13 @@
  * https://webaudio.github.io/web-midi-api/
  */
 
-[Constructor(DOMString type, optional MIDIConnectionEventInit eventInitDict = {}),
- SecureContext,
+[SecureContext,
  Pref="dom.webmidi.enabled"]
 interface MIDIConnectionEvent : Event
 {
+  constructor(DOMString type,
+              optional MIDIConnectionEventInit eventInitDict = {});
+
   readonly attribute MIDIPort? port;
 };
 

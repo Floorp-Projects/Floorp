@@ -7,9 +7,10 @@
  * https://w3c.github.io/input-events/#interface-InputEvent
  */
 
-[Constructor(DOMString type, optional InputEventInit eventInitDict = {})]
 interface InputEvent : UIEvent
 {
+  constructor(DOMString type, optional InputEventInit eventInitDict = {});
+
   readonly attribute boolean       isComposing;
 
   [Pref="dom.inputevent.inputtype.enabled"]

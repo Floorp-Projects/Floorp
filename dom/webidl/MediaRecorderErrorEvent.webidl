@@ -14,8 +14,9 @@ dictionary MediaRecorderErrorEventInit : EventInit {
   required DOMException error;
 };
 
-[Exposed=Window,
-  Constructor(DOMString type, MediaRecorderErrorEventInit eventInitDict)]
+[Exposed=Window]
 interface MediaRecorderErrorEvent : Event {
+  constructor(DOMString type, MediaRecorderErrorEventInit eventInitDict);
+
   [SameObject] readonly attribute DOMException error;
 };

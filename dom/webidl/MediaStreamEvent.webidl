@@ -11,8 +11,9 @@ dictionary MediaStreamEventInit : EventInit {
     MediaStream? stream = null;
 };
 
-[Pref="media.peerconnection.enabled",
- Constructor(DOMString type, optional MediaStreamEventInit eventInitDict = {})]
+[Pref="media.peerconnection.enabled"]
 interface MediaStreamEvent : Event {
+  constructor(DOMString type, optional MediaStreamEventInit eventInitDict = {});
+
   readonly attribute MediaStream? stream;
 };

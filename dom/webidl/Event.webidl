@@ -10,9 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional EventInit eventInitDict = {}),
- Exposed=(Window,Worker), ProbablyShortLivingWrapper]
+[Exposed=(Window,Worker), ProbablyShortLivingWrapper]
 interface Event {
+  constructor(DOMString type, optional EventInit eventInitDict = {});
+
   [Pure]
   readonly attribute DOMString type;
   [Pure, BindingAlias="srcElement"]
