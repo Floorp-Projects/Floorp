@@ -77,7 +77,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   static bool markZoneIteratively(JS::Zone* zone, GCMarker* marker);
 
   // Add zone edges for weakmaps with key delegates in a different zone.
-  static MOZ_MUST_USE bool findSweepGroupEdges(JS::Zone* zone);
+  static MOZ_MUST_USE bool findSweepGroupEdgesForZone(JS::Zone* zone);
 
   // Sweep the weak maps in a zone, removing dead weak maps and removing
   // entries of live weak maps whose keys are dead.
@@ -105,7 +105,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Instance member functions called by the above. Instantiations of WeakMap
   // override these with definitions appropriate for their Key and Value types.
   virtual void trace(JSTracer* tracer) = 0;
-  virtual bool findZoneEdges() = 0;
+  virtual bool findSweepGroupEdges() = 0;
   virtual void sweep() = 0;
   virtual void traceMappings(WeakMapTracer* tracer) = 0;
   virtual void clearAndCompact() = 0;
@@ -246,7 +246,7 @@ class WeakMap
   bool keyNeedsMark(GCMarker* marker, JSScript* script) const;
   bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
-  bool findZoneEdges() override {
+  bool findSweepGroupEdges() override {
     // This is overridden by ObjectValueMap and DebuggerWeakMap.
     return true;
   }
@@ -276,7 +276,7 @@ class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
  public:
   ObjectValueMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
 
-  bool findZoneEdges() override;
+  bool findSweepGroupEdges() override;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
