@@ -426,10 +426,7 @@
   border-bottom: 1px solid var(--theme-splitter-color);
   box-sizing: border-box;
   min-height: 29px;
-
   --progressbar-transition: 200ms;
-  --command-button-size: 14px;
-  --command-button-primary-size: 20px;
 }
 
 .theme-light .webreplay-player {
@@ -445,7 +442,7 @@
   --progress-recording-line: #d0021b;
   --progressbar-background: #fff;
   --progressbar-line-color: var(--blue-40);
-  --proggressbar-border-color: #bfc9d2;
+  --proggressbar-border-color: var(--theme-splitter-color);
   --tick-future-background: #bfc9d2;
   --tick-background: var(--blue-50);
   --tick-recording-background: #d0021b;
@@ -465,7 +462,7 @@
   --replaying-marker-location-background: #3084d0;
   --replaying-marker-background-hover: #3a8edb;
   --progressbar-background: #0c0c0d;
-  --proggressbar-border-color: #31313d;
+  --proggressbar-border-color: var(--theme-splitter-color);
   --progressbar-line-color: #0a4786;
   --tick-future-background: #bfc9d2;
   --tick-background: var(--blue-50);
@@ -573,31 +570,31 @@
 
 .webreplay-player .commands {
   display: flex;
+  margin: 0 4px;
 }
 
 .webreplay-player .command-button {
   display: flex;
-  min-width: 17px;
-  opacity: 0.7;
+  min-width: 20px;
 }
 
 .webreplay-player .command-button.primary {
-  min-width: 24px;
+  min-width: 22px;
 }
 
 .webreplay-player .btn {
-  width: var(--command-button-size);
-  height: var(--command-button-size);
-  mask-size: var(--command-button-size);
-  background: var(--command-button-background);
+  width: 14px;
+  height: 14px;
+  mask-size: 14px;
+  background: var(--theme-icon-color);
   align-self: center;
   margin: 0 auto;
 }
 
 .webreplay-player .primary .btn {
-  width: var(--command-button-primary-size);
-  height: var(--command-button-primary-size);
-  mask-size: var(--command-button-primary-size);
+  width: 18px;
+  height: 18px;
+  mask-size: 18px;
 }
 
 .webreplay-player .command-button.active:hover {

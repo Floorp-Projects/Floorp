@@ -44,26 +44,31 @@ function log(message) {
   }
 }
 
-function CommandButton({ img, className, onClick }) {
+function CommandButton({ img, className, onClick, active }) {
   const images = {
-    rewind: "resume",
-    resume: "resume",
+    rewind: "replay-resume",
+    resume: "replay-resume",
     next: "next",
     previous: "next",
-    pause: "pause",
-    play: "resume",
+    pause: "replay-pause",
+    play: "replay-resume",
   };
 
   const filename = images[img];
   const path = filename == "next" ? imgChrome : imgResource;
+  const attrs = {
+    className: classname(`command-button ${className}`, { active }),
+    onClick,
+  };
+
+  if (active) {
+    attrs.title = L10N.getStr(`toolbox.replay.${img}`);
+  }
 
   return dom.div(
-    {
-      className: `command-button ${className}`,
-      onClick,
-    },
+    attrs,
     dom.img({
-      className: `btn ${img}`,
+      className: `btn ${img} ${className}`,
       style: {
         maskImage: `url("${path}/${filename}.svg")`,
       },
@@ -404,33 +409,24 @@ class WebReplayPlayer extends Component {
 
     return [
       CommandButton({
-        className: classname("", { active: paused || recording }),
-        img: "previous",
-        onClick: () => this.previous(),
-      }),
-
-      CommandButton({
-        className: classname("", { active: paused || recording }),
+        className: "",
+        active: paused || recording,
         img: "rewind",
         onClick: () => this.rewind(),
       }),
 
       CommandButton({
-        className: classname(" primary", { active: !paused || seeking }),
+        className: "primary",
+        active: !paused || seeking,
         img: "pause",
         onClick: () => this.pause(),
       }),
 
       CommandButton({
-        className: classname("", { active: paused }),
+        className: "",
+        active: paused,
         img: "resume",
         onClick: () => this.resume(),
-      }),
-
-      CommandButton({
-        className: classname("", { active: paused }),
-        img: "next",
-        onClick: () => this.next(),
       }),
     ];
   }
