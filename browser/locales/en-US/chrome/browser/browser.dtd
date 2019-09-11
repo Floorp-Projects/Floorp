@@ -775,7 +775,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.trackingProtection4.label "Tracking Content">
 
 <!ENTITY contentBlocking.manageSettings2.label "Manage Protection Settings">
-<!ENTITY contentBlocking.manageSettings.accesskey "M">
+<!ENTITY contentBlocking.manageSettings2.accesskey "M">
 
 <!ENTITY contentBlocking.socialblock.label "Social Media Trackers">
 
