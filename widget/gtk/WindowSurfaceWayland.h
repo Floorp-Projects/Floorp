@@ -198,11 +198,15 @@ class WindowSurfaceWayland : public WindowSurface {
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(bool aCanSwitchBuffer);
   void UnlockWaylandBuffer();
 
+  bool CanDrawToWaylandBufferDirectly(
+      const LayoutDeviceIntRect& aScreenRect,
+      const LayoutDeviceIntRegion& aUpdatedRegion);
+
   already_AddRefed<gfx::DrawTarget> LockImageSurface(
       const gfx::IntSize& aLockSize);
-  bool CommitImageSurfaceToWaylandBuffer(
-      const LayoutDeviceIntRegion& aRegion,
-      LayoutDeviceIntRegion& aWaylandBufferDamage);
+
+  void CacheImageSurface(const LayoutDeviceIntRegion& aRegion);
+  bool CommitImageCacheToWaylandBuffer();
   void CommitWaylandBuffer();
 
   void DrawDelayedImageCommits(gfx::DrawTarget* aDrawTarget,
