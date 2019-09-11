@@ -25,6 +25,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
+import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class SentryServiceTest {
@@ -193,5 +194,40 @@ class SentryServiceTest {
 
         service.report(nativeCrash)
         verify(clientContext).recordBreadcrumb(any())
+    }
+
+    @Test
+    fun `Confirm Sentry breadcrumb conversion`() {
+        val client: SentryClient = mock()
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
+        val testDate = Date()
+
+        val factory = object : SentryClientFactory() {
+            override fun createSentryClient(dsn: Dsn?): SentryClient {
+                return client
+            }
+        }
+
+        val service = SentryService(
+                testContext,
+                "https://not:real6@sentry.prod.example.net/405",
+                clientFactory = factory,
+                sendEventForNativeCrashes = true
+        )
+
+        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType, testDate)
+        service.apply {
+            val sentryBreadCrumb = breadcrumb.toSentryBreadcrumb()
+            assertTrue(sentryBreadCrumb.message == testMessage)
+            assertTrue(sentryBreadCrumb.data == testData)
+            assertTrue(sentryBreadCrumb.category == testCategory)
+            assertTrue(sentryBreadCrumb.level == testLevel.toSentryBreadcrumbLevel())
+            assertTrue(sentryBreadCrumb.type == testType.toSentryBreadcrumbType())
+            assertTrue(sentryBreadCrumb.timestamp.compareTo(testDate) == 0)
+        }
     }
 }

@@ -6,6 +6,7 @@ package mozilla.components.lib.crash
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import java.util.Date
 
 /**
  * Represents a single crash breadcrumb.
@@ -35,7 +36,12 @@ data class Breadcrumb(
     /**
      * Type of the crash breadcrumb.
      */
-    val type: Type = Type.DEFAULT
+    val type: Type = Type.DEFAULT,
+
+    /**
+     * Date of of the crash breadcrumb.
+     */
+    val date: Date = Date()
 ) : Parcelable {
     /**
      * Crash breadcrumb priority level.
