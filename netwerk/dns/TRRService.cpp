@@ -295,18 +295,28 @@ nsresult TRRService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
+      !strcmp(name, TRR_PREF("builtin-excluded-domains")) ||
       !strcmp(name, kCaptivedetectCanonicalURL)) {
-    nsAutoCString excludedDomains;
-    Preferences::GetCString(TRR_PREF("excluded-domains"), excludedDomains);
-
     mExcludedDomains.Clear();
-    nsCCharSeparatedTokenizer tokenizer(
-        excludedDomains, ',', nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
-    while (tokenizer.hasMoreTokens()) {
-      nsAutoCString token(tokenizer.nextToken());
-      LOG(("TRRService::ReadPrefs excluded-domains host:[%s]\n", token.get()));
-      mExcludedDomains.PutEntry(token);
-    }
+
+    auto parseExcludedDomains = [this](const char* aPrefName) {
+      nsAutoCString excludedDomains;
+      Preferences::GetCString(aPrefName, excludedDomains);
+      if (excludedDomains.IsEmpty()) {
+        return;
+      }
+
+      nsCCharSeparatedTokenizer tokenizer(
+          excludedDomains, ',', nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+      while (tokenizer.hasMoreTokens()) {
+        nsAutoCString token(tokenizer.nextToken());
+        LOG(("TRRService::ReadPrefs %s host:[%s]\n", aPrefName, token.get()));
+        mExcludedDomains.PutEntry(token);
+      }
+    };
+
+    parseExcludedDomains(TRR_PREF("excluded-domains"));
+    parseExcludedDomains(TRR_PREF("builtin-excluded-domains"));
 
     nsAutoCString canonicalSiteURL;
     Preferences::GetCString(kCaptivedetectCanonicalURL, canonicalSiteURL);
@@ -317,7 +327,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     if (NS_SUCCEEDED(rv)) {
       nsAutoCString host;
       uri->GetHost(host);
-      LOG(("TRRService::ReadPrefs excluded-domains captive portal URL:[%s]\n",
+      LOG(("TRRService::ReadPrefs captive portal URL:[%s]\n",
            host.get()));
       mExcludedDomains.PutEntry(host);
     }
