@@ -13,7 +13,7 @@ doctest = false
 atomic_refcell = "0.1"
 cssparser = "0.25"
 cstr = "0.1.2"
-env_logger = { version = "0.5", default-features = false }
+env_logger = { version = "0.6", default-features = false }
 geckoservo = {path = "../../../ports/geckolib"}
 libc = "0.2"
 log = {version = "0.4", features = ["release_max_level_info"]}
