@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1580015 - video hangs infinitely during playing subtitle</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .container {
+      width: 500px;
+      height: 300px;
+      background: pink;
+      display: flex;
+      justify-content: center;
+    }
+
+    video {
+      min-width: 95%;
+      max-width: 95%;
+      max-height: 95%;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+<video id="v" src="gizmo.mp4" controls>
+  <track src="basic.vtt" kind="subtitles" default>
+</video>
+</div>
+<script type="text/javascript">
+/**
+ * This test is used to ensure that we don't go into an infinite processing loop
+ * during playing subtitle when setting those CSS properties on video.
+ */
+SimpleTest.waitForExplicitFinish();
+
+let video = document.getElementById("v");
+// We don't need to play whole video, in order to reduce test time, we can start
+// from the half, which can also reproduce the issue.
+video.currentTime = 3.0;
+video.play();
+video.onended = () => {
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
