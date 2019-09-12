@@ -447,10 +447,10 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
     return 0;
   }
   float length = _0 * float(mozilla::AppUnitsPerCSSPixel());
-  if (length >= nscoord_MAX) {
+  if (length >= float(nscoord_MAX)) {
     return nscoord_MAX;
   }
-  if (length <= nscoord_MIN) {
+  if (length <= float(nscoord_MIN)) {
     return nscoord_MIN;
   }
   return NSToIntRound(length);
@@ -700,7 +700,8 @@ constexpr const auto kPaintOrderShift = StylePAINT_ORDER_SHIFT;
 constexpr const auto kPaintOrderMask = StylePAINT_ORDER_MASK;
 
 template <>
-inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(nscoord aAutoSize) const {
+inline nsRect StyleGenericClipRect<LengthOrAuto>::ToLayoutRect(
+    nscoord aAutoSize) const {
   nscoord x = left.IsLength() ? left.ToLength() : 0;
   nscoord y = top.IsLength() ? top.ToLength() : 0;
   nscoord width = right.IsLength() ? right.ToLength() - x : aAutoSize;
