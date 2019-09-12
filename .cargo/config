@@ -25,7 +25,7 @@ replace-with = "vendored-sources"
 [source."https://github.com/CraneStation/Cranelift"]
 git = "https://github.com/CraneStation/Cranelift"
 replace-with = "vendored-sources"
-rev = "fc88520b88bcaad4e4a92f28a5e17347af20edbd"
+rev = "bdfd2adc6e2052319d04d9400122c5b49939f404"
 
 [source.crates-io]
 replace-with = "vendored-sources"

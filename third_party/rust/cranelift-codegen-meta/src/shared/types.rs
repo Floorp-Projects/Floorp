@@ -12,6 +12,8 @@ pub enum Bool {
     B32 = 32,
     /// 64-bit bool.
     B64 = 64,
+    /// 128-bit bool.
+    B128 = 128,
 }
 
 /// This provides an iterator through all of the supported bool variants.
@@ -34,6 +36,7 @@ impl Iterator for BoolIterator {
             2 => Some(Bool::B16),
             3 => Some(Bool::B32),
             4 => Some(Bool::B64),
+            5 => Some(Bool::B128),
             _ => return None,
         };
         self.index += 1;
@@ -51,6 +54,8 @@ pub enum Int {
     I32 = 32,
     /// 64-bit int.
     I64 = 64,
+    /// 128-bit int.
+    I128 = 128,
 }
 
 /// This provides an iterator through all of the supported int variants.
@@ -72,6 +77,7 @@ impl Iterator for IntIterator {
             1 => Some(Int::I16),
             2 => Some(Int::I32),
             3 => Some(Int::I64),
+            4 => Some(Int::I128),
             _ => return None,
         };
         self.index += 1;
@@ -189,6 +195,7 @@ mod iter_tests {
         assert_eq!(bool_iter.next(), Some(Bool::B16));
         assert_eq!(bool_iter.next(), Some(Bool::B32));
         assert_eq!(bool_iter.next(), Some(Bool::B64));
+        assert_eq!(bool_iter.next(), Some(Bool::B128));
         assert_eq!(bool_iter.next(), None);
     }
 
@@ -199,6 +206,7 @@ mod iter_tests {
         assert_eq!(int_iter.next(), Some(Int::I16));
         assert_eq!(int_iter.next(), Some(Int::I32));
         assert_eq!(int_iter.next(), Some(Int::I64));
+        assert_eq!(int_iter.next(), Some(Int::I128));
         assert_eq!(int_iter.next(), None);
     }
 
