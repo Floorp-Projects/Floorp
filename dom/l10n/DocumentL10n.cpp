@@ -100,8 +100,8 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
 
   Element* elem = mDocument->GetDocumentElement();
   if (!elem) {
-    mReady->MaybeRejectWithUndefined();
     InitialDocumentTranslationCompleted();
+    mReady->MaybeRejectWithUndefined();
     return;
   }
 
@@ -111,12 +111,14 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
   Sequence<OwningNonNull<Element>> elements;
   GetTranslatables(*elem, elements, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    mReady->MaybeRejectWithUndefined();
     InitialDocumentTranslationCompleted();
+    mReady->MaybeRejectWithUndefined();
     return;
   }
 
   RefPtr<nsXULPrototypeDocument> proto = mDocument->GetPrototype();
+
+  RefPtr<Promise> promise;
 
   // 2. Check if the document has a prototype that may cache
   //    translated elements.
@@ -149,8 +151,8 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
     if (!proto->WasL10nCached() && !elements.IsEmpty()) {
       RefPtr<Promise> translatePromise = TranslateElements(elements, proto, rv);
       if (NS_WARN_IF(!translatePromise || rv.Failed())) {
-        mReady->MaybeRejectWithUndefined();
         InitialDocumentTranslationCompleted();
+        mReady->MaybeRejectWithUndefined();
         return;
       }
       promises.AppendElement(translatePromise);
@@ -163,57 +165,45 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
       RefPtr<Promise> nonProtoTranslatePromise =
           TranslateElements(nonProtoElements, nullptr, rv);
       if (NS_WARN_IF(!nonProtoTranslatePromise || rv.Failed())) {
-        mReady->MaybeRejectWithUndefined();
         InitialDocumentTranslationCompleted();
+        mReady->MaybeRejectWithUndefined();
         return;
       }
       promises.AppendElement(nonProtoTranslatePromise);
     }
 
-    // 2.1.4. Check if anything has to be translated.
-    if (promises.IsEmpty()) {
-      // 2.1.4.1. If not, resolve the mReady and complete
-      //          initial translation.
-      mReady->MaybeResolveWithUndefined();
-      ConnectRoot(*elem, rv);
-      InitialDocumentTranslationCompleted();
-      return;
-    }
-    // 2.1.4.2. If we have any TranslateElements promises,
-    //          collect them with Promise::All and schedule
-    //          the L10nReadyHandler.
+    // 2.1.4. Collect promises with Promise::All (maybe empty).
     AutoEntryScript aes(mGlobal,
                         "DocumentL10n InitialDocumentTranslationCompleted");
-    RefPtr<Promise> promise = Promise::All(aes.cx(), promises, rv);
-    if (NS_WARN_IF(!promise || rv.Failed())) {
-      mReady->MaybeRejectWithUndefined();
-      InitialDocumentTranslationCompleted();
-      return;
-    }
-
-    RefPtr<PromiseNativeHandler> l10nReadyHandler =
-        new L10nReadyHandler(mReady, this);
-    promise->AppendNativeHandler(l10nReadyHandler);
+    promise = Promise::All(aes.cx(), promises, rv);
   } else {
     // 2.2. Handle the case when we don't have proto.
 
     // 2.2.1. Otherwise, translate all available elements,
-    //        without attempting to cache them and schedule
-    //        the L10nReadyHandler.
-    RefPtr<Promise> promise = TranslateElements(elements, nullptr, rv);
-    if (NS_WARN_IF(!promise || rv.Failed())) {
-      mReady->MaybeRejectWithUndefined();
-      InitialDocumentTranslationCompleted();
-      return;
-    }
+    //        without attempting to cache them.
+    promise = TranslateElements(elements, nullptr, rv);
+  }
 
-    RefPtr<PromiseNativeHandler> l10nReadyHandler =
-        new L10nReadyHandler(mReady, this);
-    promise->AppendNativeHandler(l10nReadyHandler);
+  if (NS_WARN_IF(!promise || rv.Failed())) {
+    InitialDocumentTranslationCompleted();
+    mReady->MaybeRejectWithUndefined();
+    return;
   }
 
   // 3. Connect the root to L10nMutations observer.
   ConnectRoot(*elem, rv);
+
+  // 4. Check if the promise is already resolved.
+  if (promise->State() == Promise::PromiseState::Resolved) {
+    // 4.1. If it is, resolved immediatelly.
+    InitialDocumentTranslationCompleted();
+    mReady->MaybeResolveWithUndefined();
+  } else {
+    // 4.2. If not, schedule the L10nReadyHandler.
+    RefPtr<PromiseNativeHandler> l10nReadyHandler =
+        new L10nReadyHandler(mReady, this);
+    promise->AppendNativeHandler(l10nReadyHandler);
+  }
 }
 
 void DocumentL10n::InitialDocumentTranslationCompleted() {
