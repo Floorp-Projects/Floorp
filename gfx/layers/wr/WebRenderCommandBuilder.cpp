@@ -1927,8 +1927,8 @@ bool WebRenderCommandBuilder::PushImage(
     return false;
   }
 
-  auto r = wr::ToLayoutRect(aRect);
-  auto c = wr::ToLayoutRect(aClip);
+  auto r = wr::ToRoundedLayoutRect(aRect);
+  auto c = wr::ToRoundedLayoutRect(aClip);
   aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
 
   return true;
@@ -2563,7 +2563,7 @@ bool WebRenderCommandBuilder::PushItemAsImage(
     return false;
   }
 
-  wr::LayoutRect dest = wr::ToLayoutRect(imageRect);
+  wr::LayoutRect dest = wr::ToRoundedLayoutRect(imageRect);
   gfx::SamplingFilter sampleFilter =
       nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(),

@@ -623,7 +623,6 @@ impl Serialize for BuiltDisplayList {
                 Real::HitTest(v) => Debug::HitTest(v),
                 Real::Line(v) => Debug::Line(v),
                 Real::Image(v) => Debug::Image(v),
-                Real::RepeatingImage(v) => Debug::RepeatingImage(v),
                 Real::YuvImage(v) => Debug::YuvImage(v),
                 Real::Border(v) => Debug::Border(v),
                 Real::BoxShadow(v) => Debug::BoxShadow(v),
@@ -728,7 +727,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::HitTest(v) => Real::HitTest(v),
                 Debug::Line(v) => Real::Line(v),
                 Debug::Image(v) => Real::Image(v),
-                Debug::RepeatingImage(v) => Real::RepeatingImage(v),
                 Debug::YuvImage(v) => Real::YuvImage(v),
                 Debug::Border(v) => Real::Border(v),
                 Debug::BoxShadow(v) => Real::BoxShadow(v),
@@ -1006,27 +1004,6 @@ impl DisplayListBuilder {
         &mut self,
         common: &di::CommonItemProperties,
         bounds: LayoutRect,
-        image_rendering: di::ImageRendering,
-        alpha_type: di::AlphaType,
-        key: ImageKey,
-        color: ColorF,
-    ) {
-        let item = di::DisplayItem::Image(di::ImageDisplayItem {
-            common: *common,
-            bounds,
-            image_key: key,
-            image_rendering,
-            alpha_type,
-            color,
-        });
-
-        self.push_item(&item);
-    }
-
-    pub fn push_repeating_image(
-        &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
         image_rendering: di::ImageRendering,
@@ -1034,7 +1011,7 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
-        let item = di::DisplayItem::RepeatingImage(di::RepeatingImageDisplayItem {
+        let item = di::DisplayItem::Image(di::ImageDisplayItem {
             common: *common,
             bounds,
             image_key: key,

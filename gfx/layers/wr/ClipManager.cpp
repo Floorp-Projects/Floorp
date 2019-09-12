@@ -304,8 +304,8 @@ Maybe<wr::WrSpaceAndClip> ClipManager::DefineScrollLayers(
   LayoutDevicePoint scrollOffset =
       metrics.GetScrollOffset() * metrics.GetDevPixelsPerCSSPixel();
   return Some(mBuilder->DefineScrollLayer(
-      viewId, parent, wr::ToLayoutRect(contentRect),
-      wr::ToLayoutRect(clipBounds), wr::ToLayoutPoint(scrollOffset)));
+      viewId, parent, wr::ToRoundedLayoutRect(contentRect),
+      wr::ToRoundedLayoutRect(clipBounds), wr::ToLayoutPoint(scrollOffset)));
 }
 
 Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
@@ -342,7 +342,7 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     // Define the clip
     spaceAndClip->space = SpatialIdAfterOverride(spaceAndClip->space);
     wr::WrClipId clipId = mBuilder->DefineClip(
-        spaceAndClip, wr::ToLayoutRect(clip), &wrRoundedRects);
+        spaceAndClip, wr::ToRoundedLayoutRect(clip), &wrRoundedRects);
     clipIds.AppendElement(clipId);
     cache[chain] = clipId;
     CLIP_LOG("cache[%p] <= %zu\n", chain, clipId.id);
@@ -373,7 +373,7 @@ void ClipManager::ItemClips::UpdateSeparateLeaf(
   Maybe<wr::LayoutRect> clipLeaf;
   if (mSeparateLeaf) {
     MOZ_ASSERT(mChain);
-    clipLeaf.emplace(wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
+    clipLeaf.emplace(wr::ToRoundedLayoutRect(LayoutDeviceRect::FromAppUnits(
         mChain->mClip.GetClipRect(), aAppUnitsPerDevPixel)));
   }
 

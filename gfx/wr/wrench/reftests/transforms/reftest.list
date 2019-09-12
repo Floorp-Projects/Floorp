@@ -22,7 +22,7 @@ platform(linux,mac) == nested-rotate-x-flat.yaml nested-rotate-x-flat.png
 platform(linux,mac) == nested-preserve-3d.yaml nested-preserve-3d.png
 platform(linux,mac) fuzzy(1,283) == near-plane-clip.yaml near-plane-clip.png
 platform(linux,mac) == perspective-mask.yaml perspective-mask.png
-skip_on(android,emulator) == rotate-clip.yaml rotate-clip-ref.yaml # Fails on Android emulator
+rotate-clip.yaml rotate-clip-ref.yaml
 skip_on(android,emulator) == clip-translate.yaml clip-translate-ref.yaml  # Fails on Android emulator
 platform(linux,mac) == perspective-clip.yaml perspective-clip.png
 platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png

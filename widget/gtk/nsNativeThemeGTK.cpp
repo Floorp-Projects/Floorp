@@ -1243,8 +1243,9 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
   nsPresContext* presContext = aFrame->PresContext();
-  wr::LayoutRect bounds = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
-      aRect, presContext->AppUnitsPerDevPixel()));
+  wr::LayoutRect bounds =
+      wr::ToRoundedLayoutRect(LayoutDeviceRect::FromAppUnits(
+          aRect, presContext->AppUnitsPerDevPixel()));
 
   switch (aAppearance) {
     case StyleAppearance::Window:
