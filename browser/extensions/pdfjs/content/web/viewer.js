@@ -1064,7 +1064,7 @@ let PDFViewerApplication = {
         scrollMode: _ui_utils.ScrollMode.UNKNOWN,
         spreadMode: _ui_utils.SpreadMode.UNKNOWN
       }).catch(() => {});
-      Promise.all([storePromise, pageLayoutPromise, pageModePromise, openActionDestPromise]).then(async ([values = {}, pageLayout, pageMode, openActionDest]) => {
+      Promise.all([_ui_utils.animationStarted, storePromise, pageLayoutPromise, pageModePromise, openActionDestPromise]).then(async ([timeStamp, values = {}, pageLayout, pageMode, openActionDest]) => {
         const viewOnLoad = _app_options.AppOptions.get('viewOnLoad');
 
         this._initializePdfHistory({
@@ -1205,7 +1205,7 @@ let PDFViewerApplication = {
         }
       });
     });
-    Promise.all([onePageRendered, _ui_utils.animationStarted]).then(() => {
+    onePageRendered.then(() => {
       pdfDocument.getOutline().then(outline => {
         this.pdfOutlineViewer.render({
           outline
@@ -3307,10 +3307,6 @@ const defaultOptions = {
   },
   pdfBug: {
     value: false,
-    kind: OptionKind.API
-  },
-  postMessageTransfers: {
-    value: true,
     kind: OptionKind.API
   },
   verbosity: {

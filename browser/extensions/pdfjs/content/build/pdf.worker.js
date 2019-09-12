@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.146';
-const pdfjsBuild = '7e37eb42';
+const pdfjsVersion = '2.3.164';
+const pdfjsBuild = '12ff2527';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -200,28 +200,13 @@ var WorkerMessageHandler = {
       testMessageProcessed = true;
 
       if (!(data instanceof Uint8Array)) {
-        handler.send('test', false);
+        handler.send('test', null);
         return;
       }
 
-      var supportTransfers = data[0] === 255;
+      const supportTransfers = data[0] === 255;
       handler.postMessageTransfers = supportTransfers;
-      var xhr = new XMLHttpRequest();
-      var responseExists = 'response' in xhr;
-
-      try {
-        xhr.responseType;
-      } catch (e) {
-        responseExists = false;
-      }
-
-      if (!responseExists) {
-        handler.send('test', false);
-        return;
-      }
-
       handler.send('test', {
-        supportTypedArray: true,
         supportTransfers
       });
     });
@@ -240,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.3.146';
+    const workerVersion = '2.3.164';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -19859,14 +19844,10 @@ var OperatorList = function OperatorListClosure() {
       this._totalLength += length;
 
       this._streamSink.enqueue({
-        operatorList: {
-          fnArray: this.fnArray,
-          argsArray: this.argsArray,
-          lastChunk,
-          length
-        },
-        pageIndex: this.pageIndex,
-        intent: this.intent
+        fnArray: this.fnArray,
+        argsArray: this.argsArray,
+        lastChunk,
+        length
       }, 1, this._transfers);
 
       this.dependencies = Object.create(null);
@@ -19971,8 +19952,26 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         return this.builtInCMapCache.get(name);
       }
 
-      const data = await this.handler.sendWithPromise('FetchBuiltInCMap', {
+      const readableStream = this.handler.sendWithStream('FetchBuiltInCMap', {
         name
+      });
+      const reader = readableStream.getReader();
+      const data = await new Promise(function (resolve, reject) {
+        function pump() {
+          reader.read().then(function ({
+            value,
+            done
+          }) {
+            if (done) {
+              return;
+            }
+
+            resolve(value);
+            pump();
+          }, reject);
+        }
+
+        pump();
       });
 
       if (data.compressionType !== _util.CMapCompressionType.NONE) {
