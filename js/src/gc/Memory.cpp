@@ -46,6 +46,9 @@ static size_t allocGranularity = 0;
 /* The number of bits used by addresses on this platform. */
 static size_t numAddressBits = 0;
 
+/* An estimate of the number of bytes available for virtual memory. */
+static size_t virtualMemoryLimit = size_t(-1);
+
 /*
  * System allocation functions may hand out regions of memory in increasing or
  * decreasing order. This ordering is used as a hint during chunk alignment to
@@ -115,6 +118,8 @@ static size_t hugeSplit = 0;
 size_t SystemPageSize() { return pageSize; }
 
 size_t SystemAddressBits() { return numAddressBits; }
+
+size_t VirtualMemoryLimit() { return virtualMemoryLimit; }
 
 bool UsingScattershotAllocator() {
 #ifdef JS_64BIT
@@ -379,6 +384,12 @@ void InitMemorySubsystem() {
     }
 #else  // !defined(JS_64BIT)
     numAddressBits = 32;
+#endif
+#ifndef XP_WIN
+    rlimit as_limit;
+    if (getrlimit(RLIMIT_AS, &as_limit) == 0 && as_limit.rlim_max != RLIM_INFINITY) {
+      virtualMemoryLimit = as_limit.rlim_max;
+    }
 #endif
   }
 }

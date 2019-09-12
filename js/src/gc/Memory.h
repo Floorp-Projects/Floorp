@@ -25,6 +25,11 @@ size_t SystemPageSize();
 // reported by the operating system or measured at startup.
 size_t SystemAddressBits();
 
+// The number of bytes of virtual memory that may be allocated or mapped, as
+// reported by the operating system on certain platforms. If no limit was able
+// to be determined, then it will be size_t(-1).
+size_t VirtualMemoryLimit();
+
 // The scattershot allocator is used on platforms that have a large address
 // range. On these platforms we allocate at random addresses.
 bool UsingScattershotAllocator();

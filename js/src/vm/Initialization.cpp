@@ -137,9 +137,9 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   RETURN_IF_FAIL(js::Mutex::Init());
 
-  RETURN_IF_FAIL(js::wasm::Init());
-
   js::gc::InitMemorySubsystem();  // Ensure gc::SystemPageSize() works.
+
+  RETURN_IF_FAIL(js::wasm::Init());
 
   js::coverage::InitLCov();
 
