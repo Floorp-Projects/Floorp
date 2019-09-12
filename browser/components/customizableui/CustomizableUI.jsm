@@ -4783,6 +4783,7 @@ OverflowableToolbar.prototype = {
 
     // The 'overflow' event may have been fired before init was called.
     if (this.overflowedDuringConstruction) {
+      log.debug("Overflowed when constructed, running overflow handler now.");
       this.onOverflow(this.overflowedDuringConstruction);
       this.overflowedDuringConstruction = null;
     }
@@ -4958,6 +4959,7 @@ OverflowableToolbar.prototype = {
       return;
     }
 
+    log.debug(`Got overflow event`);
     let child = this._target.lastElementChild;
 
     let thisOverflowResponse = ++this._lastOverflowCounter;
@@ -4968,11 +4970,21 @@ OverflowableToolbar.prototype = {
         return [this._target.scrollLeftMin, this._target.scrollLeftMax];
       }
     );
+    log.debug(
+      `Overflow event layout: scrollLeft min: ${scrollLeftMin}; max: ${scrollLeftMax}`
+    );
     if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
+      log.debug(
+        `Stop responding to overflow because we're ${thisOverflowResponse} ` +
+          `and ${this._lastOverflowCounter} is the last one.`
+      );
       return;
     }
 
     while (child && scrollLeftMin != scrollLeftMax) {
+      log.debug(
+        `Try to overflow ${child.id} given ${scrollLeftMin} != ${scrollLeftMax}`
+      );
       let prevChild = child.previousElementSibling;
 
       if (child.getAttribute("overflows") != "false") {
@@ -5005,6 +5017,7 @@ OverflowableToolbar.prototype = {
       // If the window has closed or if we re-enter because we were waiting
       // for layout, stop.
       if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
+        log.debug(`Window closed or another overflow handler started.`);
         return;
       }
     }
@@ -5019,6 +5032,7 @@ OverflowableToolbar.prototype = {
     if (aEvent.target != aEvent.target.ownerGlobal.top) {
       return;
     }
+    log.debug("Got resize event");
     if (!this._lazyResizeHandler) {
       this._lazyResizeHandler = new DeferredTask(
         this._onLazyResize.bind(this),
@@ -5042,11 +5056,15 @@ OverflowableToolbar.prototype = {
    *        anyway.
    */
   _moveItemsBackToTheirOrigin(shouldMoveAllItems, targetWidth) {
+    log.debug(
+      `Attempting to move ${shouldMoveAllItems ? "all" : "some"} items back`
+    );
     let placements = gPlacements.get(this._toolbar.id);
     let win = this._target.ownerGlobal;
     while (this._list.firstElementChild) {
       let child = this._list.firstElementChild;
       let minSize = this._collapsed.get(child.id);
+      log.debug(`Considering moving ${child.id} back, minSize: ${minSize}`);
 
       if (!shouldMoveAllItems && minSize) {
         if (!targetWidth) {
@@ -5056,10 +5074,12 @@ OverflowableToolbar.prototype = {
           );
         }
         if (targetWidth <= minSize) {
+          log.debug(`Need ${minSize} but width is ${targetWidth} so bailing`);
           break;
         }
       }
 
+      log.debug(`Moving ${child.id} back`);
       this._collapsed.delete(child.id);
       let beforeNodeIndex = placements.indexOf(child.id) + 1;
       // If this is a skipintoolbarset item, meaning it doesn't occur in the placements list,
@@ -5112,6 +5132,7 @@ OverflowableToolbar.prototype = {
     if (!this._enabled) {
       return;
     }
+    log.debug("Processing resize event");
 
     let win = this._target.ownerGlobal;
     let [min, max, targetWidth] = await win.promiseDocumentFlushed(() => {
@@ -5124,6 +5145,9 @@ OverflowableToolbar.prototype = {
     if (win.closed) {
       return;
     }
+    log.debug(
+      `Got layout information after resize, scroll min: ${min}; max: ${max}`
+    );
     if (min != max) {
       this.onOverflow();
     } else {
