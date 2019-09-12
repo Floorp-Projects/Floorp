@@ -646,6 +646,19 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   RefPtr<BrowsingContext> parentBC(
       parentWindow ? parentWindow->GetBrowsingContext() : nullptr);
 
+  // Return null for any attempt to trigger a load from a discarded browsing
+  // context. The spec is non-normative, and doesn't specify what should happen
+  // when window.open is called on a window with a null browsing context, but it
+  // does give us broad discretion over when we can decide to ignore an open
+  // request and return null.
+  //
+  // Regardless, we cannot trigger a cross-process load from a discarded
+  // browsing context, and ideally we should behave consistently whether a load
+  // is same-process or cross-process.
+  if (parentBC && parentBC->IsDiscarded()) {
+    return NS_ERROR_ABORT;
+  }
+
   // try to find an extant browsing context with the given name
   newBC = GetBrowsingContextByName(name, aForceNoOpener, parentBC);
 
