@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
+/* import-globals-from head.js */
 
 "use strict";
 
@@ -80,11 +81,20 @@ function checkTooltipGeometry(
   info("Check the tooltip geometry matches expected position and dimensions");
   const tooltipRect = tooltip.container.getBoundingClientRect();
   const anchorRect = anchor.getBoundingClientRect();
+  const { offsetTop, offsetLeft } = getOffsets(tooltip.doc);
 
   if (position === "top") {
-    is(tooltipRect.bottom, anchorRect.top, "Tooltip is above the anchor");
+    is(
+      tooltipRect.bottom,
+      anchorRect.top + offsetTop,
+      "Tooltip is above the anchor"
+    );
   } else if (position === "bottom") {
-    is(tooltipRect.top, anchorRect.bottom, "Tooltip is below the anchor");
+    is(
+      tooltipRect.top,
+      anchorRect.bottom + offsetTop,
+      "Tooltip is below the anchor"
+    );
   } else {
     ok(false, "Invalid position provided to checkTooltipGeometry");
   }
@@ -92,7 +102,7 @@ function checkTooltipGeometry(
   if (leftAligned) {
     is(
       tooltipRect.left,
-      anchorRect.left,
+      anchorRect.left + offsetLeft,
       "Tooltip left-aligned with the anchor"
     );
   }
