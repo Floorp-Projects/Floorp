@@ -111,7 +111,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.AddToHomeScreen -> {
                 MainScope().launch {
                     with(context.components.useCases.webAppUseCases) {
-                        if (isPWA()) {
+                        if (isInstallable()) {
                             addToHomescreen()
                         } else {
                             val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateShortcutFragment()
