@@ -11,7 +11,6 @@
 .fxaccounts-extra-text {
   color: var(--in-content-deemphasized-text);
   font-size: smaller;
-  max-width: 20ch;
   text-align: end;
 }
 
