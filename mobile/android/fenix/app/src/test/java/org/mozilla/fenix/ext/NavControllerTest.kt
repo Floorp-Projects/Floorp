@@ -1,28 +1,26 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import org.mozilla.fenix.TestApplication
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import io.mockk.mockk
-import io.mockk.verify
-import io.mockk.every
-import io.mockk.mockkClass
 import android.os.Bundle
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
-import org.mozilla.fenix.BuildConfig
-import androidx.navigation.NavDestination
 import androidx.navigation.Navigator.Extras
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.TestApplication
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 
-class NavControllerTest() {
+class NavControllerTest {
 
     val navController: NavController = mockk(relaxed = true)
     val navDirections = mockk<NavDirections>(relaxed = true)
@@ -30,7 +28,6 @@ class NavControllerTest() {
     val mockExtras: Extras = mockk(relaxed = true)
     val mockOptions: NavOptions = mockk(relaxed = true)
     val mockBundle: Bundle = mockk(relaxed = true)
-    val mockBuildConfig = mockkClass(BuildConfig::class)
 
     @Test
     fun `Nav with id and directions args`() {

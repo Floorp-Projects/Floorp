@@ -29,13 +29,16 @@ class DrawableTest {
         assertTrue(returnRec.contains(0, 0, -10, 10))
     }
 
-    private class TestDrawable() : Drawable() {
+    private class TestDrawable : Drawable() {
         var boundsChanged: Boolean = false
-        override fun getOpacity(): Int { return 0 }
+        override fun getOpacity(): Int {
+            return 0
+        }
+
         override fun draw(canvas: Canvas) {}
         override fun setAlpha(alpha: Int) {}
         override fun setColorFilter(cf: ColorFilter) {}
-        protected override fun onBoundsChange(bounds: Rect) {
+        override fun onBoundsChange(bounds: Rect) {
             boundsChanged = true
             super.onBoundsChange(bounds)
         }
