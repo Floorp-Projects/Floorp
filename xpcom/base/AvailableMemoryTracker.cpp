@@ -12,7 +12,6 @@
 #  include "nsICrashReporter.h"
 #  include "nsIMemoryReporter.h"
 #  include "nsMemoryPressure.h"
-#  include "psapi.h"
 #endif
 
 #include "nsIObserver.h"
@@ -87,8 +86,8 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   // Observer topics we subscribe to, see below.
   static const char* const kObserverTopics[];
 
-  static bool IsVirtualMemoryLow();
-  static bool IsCommitSpaceLow();
+  static bool IsVirtualMemoryLow(const MEMORYSTATUSEX& aStat);
+  static bool IsCommitSpaceLow(const MEMORYSTATUSEX& aStat);
 
   ~nsAvailableMemoryWatcher(){};
   bool OngoingMemoryPressure() { return mUnderMemoryPressure; }
@@ -146,38 +145,25 @@ void nsAvailableMemoryWatcher::Shutdown() {
 }
 
 /* static */
-bool nsAvailableMemoryWatcher::IsVirtualMemoryLow() {
-  if (kLowVirtualMemoryThreshold != 0) {
-    MEMORYSTATUSEX stat;
-    stat.dwLength = sizeof(stat);
-    bool success = GlobalMemoryStatusEx(&stat);
-
-    if (success && (stat.ullAvailVirtual < kLowVirtualMemoryThreshold)) {
-      sNumLowVirtualMemEvents++;
-      return true;
-    }
+bool nsAvailableMemoryWatcher::IsVirtualMemoryLow(const MEMORYSTATUSEX& aStat) {
+  if ((kLowVirtualMemoryThreshold != 0) &&
+      (aStat.ullAvailVirtual < kLowVirtualMemoryThreshold)) {
+    sNumLowVirtualMemEvents++;
+    return true;
   }
 
   return false;
 }
 
 /* static */
-bool nsAvailableMemoryWatcher::IsCommitSpaceLow() {
-  if (kLowCommitSpaceThreshold != 0) {
-    PERFORMANCE_INFORMATION info;
-    bool success = K32GetPerformanceInfo(&info, sizeof(info));
-
-    if (success) {
-      size_t commitFree = (info.CommitLimit - info.CommitTotal) * info.PageSize;
-
-      if (commitFree < kLowCommitSpaceThreshold) {
-        sNumLowCommitSpaceEvents++;
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::LowCommitSpaceEvents,
-            uint32_t(sNumLowCommitSpaceEvents));
-        return true;
-      }
-    }
+bool nsAvailableMemoryWatcher::IsCommitSpaceLow(const MEMORYSTATUSEX& aStat) {
+  if ((kLowCommitSpaceThreshold != 0) &&
+      (aStat.ullAvailPageFile < kLowCommitSpaceThreshold)) {
+    sNumLowCommitSpaceEvents++;
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::LowCommitSpaceEvents,
+        uint32_t(sNumLowCommitSpaceEvents));
+    return true;
   }
 
   return false;
@@ -224,22 +210,28 @@ void nsAvailableMemoryWatcher::AdjustPollingInterval(const bool aLowMemory) {
 // polling interval accordingly.
 NS_IMETHODIMP
 nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
-  bool lowMemory = IsVirtualMemoryLow() || IsCommitSpaceLow();
+  MEMORYSTATUSEX stat;
+  stat.dwLength = sizeof(stat);
+  bool success = GlobalMemoryStatusEx(&stat);
 
-  if (lowMemory) {
-    SendMemoryPressureEvent();
-  } else {
-    MaybeSendMemoryPressureStopEvent();
+  if (success) {
+    bool lowMemory = IsVirtualMemoryLow(stat) || IsCommitSpaceLow(stat);
+
+    if (lowMemory) {
+      SendMemoryPressureEvent();
+    } else {
+      MaybeSendMemoryPressureStopEvent();
+    }
+
+    if (lowMemory) {
+      MaybeSaveMemoryReport();
+    } else {
+      mSavedReport = false;  // Save a new report if memory gets low again
+    }
+
+    AdjustPollingInterval(lowMemory);
+    mUnderMemoryPressure = lowMemory;
   }
-
-  if (lowMemory) {
-    MaybeSaveMemoryReport();
-  } else {
-    mSavedReport = false;  // Save a new report if memory gets low again
-  }
-
-  AdjustPollingInterval(lowMemory);
-  mUnderMemoryPressure = lowMemory;
 
   return NS_OK;
 }
