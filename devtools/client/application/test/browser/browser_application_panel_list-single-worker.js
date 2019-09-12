@@ -12,9 +12,9 @@ add_task(async function() {
   const { panel, tab } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
-  // select service worker view
   selectPage(panel, "service-workers");
 
+  info("Check for non-existing service worker");
   const isWorkerListEmpty = !!doc.querySelector(".worker-list-empty");
   ok(isWorkerListEmpty, "No Service Worker displayed");
 

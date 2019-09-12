@@ -48,7 +48,9 @@ class ManifestPage extends PureComponent {
 
     return section(
       {
-        className: `app-page ${!manifest ? "app-page--empty" : ""}`,
+        className: `app-page js-manifest-page ${
+          !manifest ? "app-page--empty" : ""
+        }`,
       },
       this.shouldShowLoader ? ManifestLoader({}) : this.renderManifest()
     );

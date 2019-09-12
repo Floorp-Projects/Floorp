@@ -5,7 +5,7 @@ exports[`App renders the expected snapshot 1`] = `
   <main
     className="app"
   >
-    <Sidebar />
+    <Connect(Sidebar) />
     <Connect(PageSwitcher) />
   </main>
 </LocalizationProvider>

@@ -21,7 +21,6 @@ add_task(async function() {
   const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
-  // select service worker view
   selectPage(panel, "service-workers");
 
   await waitForWorkerRegistration(tab);
@@ -63,7 +62,6 @@ add_task(async function() {
   const { panel, tab, target } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
-  // select service worker view
   selectPage(panel, "service-workers");
 
   await waitForWorkerRegistration(tab);

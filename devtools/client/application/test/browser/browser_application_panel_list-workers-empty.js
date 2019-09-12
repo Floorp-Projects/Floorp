@@ -16,7 +16,6 @@ add_task(async function() {
   const { panel, tab } = await openNewTabAndApplicationPanel(EMPTY_URL);
   const doc = panel.panelWin.document;
 
-  // select service worker view
   selectPage(panel, "service-workers");
 
   await waitUntil(() => doc.querySelector(".js-worker-list-empty") !== null);

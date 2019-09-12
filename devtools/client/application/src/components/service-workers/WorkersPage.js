@@ -38,7 +38,9 @@ class WorkersPage extends PureComponent {
 
     return section(
       {
-        className: `app-page ${isWorkerListEmpty ? "app-page--empty" : ""}`,
+        className: `app-page js-service-workers-page ${
+          isWorkerListEmpty ? "app-page--empty" : ""
+        }`,
       },
       isWorkerListEmpty
         ? WorkerListEmpty({})
