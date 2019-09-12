@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PDocAccessible;
+
+namespace mozilla {
+namespace a11y {
+
+protocol PDocAccessiblePlatformExt {
+  manager PDocAccessible;
+
+child:
+  async __delete__();
+
+  async Pivot(uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
+
+  async NavigateText(int32_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset, bool aForward, bool aSelect);
+
+  async SetSelection(int32_t aID, int32_t aStart, int32_t aEnd);
+
+  async Cut(int32_t aID);
+
+  async Copy(int32_t aID);
+
+  async Paste(int32_t aID);
+
+  async ExploreByTouch(int32_t aID, float aX, float aY);
+  };
+}
+}
