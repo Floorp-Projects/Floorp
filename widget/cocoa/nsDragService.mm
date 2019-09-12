@@ -252,13 +252,10 @@ nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   if (!gLastDragView) {
-    // gLastDragView is only set during -[ChildView mouseDragged:].
-    // InvokeDragSessionImpl is only called while Gecko processes a mouse move
-    // event. So if we get here with gLastDragView being null, that means that
-    // the mouse button has already been released, and mouseMoved is on the
-    // stack instead of mouseDragged. In that case we need to abort the drag
-    // because the OS won't know where to drop whatever's being dragged, and we
-    // might end up with a stuck drag & drop session.
+    // gLastDragView is non-null between -[ChildView mouseDown:] and -[ChildView mouseUp:].
+    // If we get here with gLastDragView being null, that means that the mouse button has already
+    // been released. In that case we need to abort the drag because the OS won't know where to drop
+    // whatever's being dragged, and we might end up with a stuck drag & drop session.
     return NS_ERROR_FAILURE;
   }
 
