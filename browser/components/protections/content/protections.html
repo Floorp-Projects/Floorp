@@ -11,12 +11,15 @@
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="browser/branding/sync-brand.ftl">
     <link rel="localization" href="browser/protections.ftl">
+    <!-- Temporary "en-US"-only l10n strings -->
+    <link rel="localization" href="preview/protections.ftl">
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/protections.css">
     <link rel="icon" href="chrome://browser/skin/controlcenter/dashboard.svg">
     <script type="module" src="chrome://browser/content/protections.js"></script>
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
     <script type="module" src="chrome://browser/content/monitor-card.js"></script>
+    <script type="module" src="chrome://browser/content/proxy-card.js"></script>
     <title data-l10n-id="protection-report-page-title"></title>
   </head>
 
@@ -221,6 +224,17 @@
           </div>
         </div>
       </section>
+      <!-- Markup for Proxy card -->
+      <section class="card card-no-hover proxy-card hidden">
+        <div class="card-header">
+          <img class="icon" src="chrome://browser/content/logos/proxy.svg" />
+          <div class="wrapper">
+            <h3 class="card-title" data-l10n-id="proxy-title"></h3>
+            <p class="content" data-l10n-id="proxy-header-content"></p>
+          </div>
+          <a target="_blank" id="get-proxy-extension-link" data-l10n-id="get-proxy-extension-link"></a>
+         </div>
+       </section>
     </div>
   </body>
 </html>
