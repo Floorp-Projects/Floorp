@@ -497,6 +497,12 @@ function loadPrefs() {
       pref.editButton.focus();
     }
   });
+
+  window.addEventListener("keypress", event => {
+    if (event.target != search && event.key == "Escape" && gPrefInEdit) {
+      gPrefInEdit.endEdit();
+    }
+  });
 }
 
 function filterPrefs(options = {}) {
