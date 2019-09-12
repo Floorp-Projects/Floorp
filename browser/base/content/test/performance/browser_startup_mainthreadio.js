@@ -365,18 +365,6 @@ const startupPhases = {
     },
     {
       // bug 1545123
-      path: "ProfD:plugins",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "APlugns:",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
       path: "UserPlugins.parent:",
       condition: WIN,
       stat: 1,
@@ -845,6 +833,7 @@ add_task(async function() {
       entry => !("condition" in entry) || entry.condition
     );
     startupPhases[phase].forEach(entry => {
+      entry.listedPath = entry.path;
       entry.path = expandWhitelistPath(entry.path, entry.canonicalize);
     });
   }
@@ -934,6 +923,7 @@ add_task(async function() {
       for (let op in entry) {
         if (
           [
+            "listedPath",
             "path",
             "condition",
             "canonicalize",
@@ -954,7 +944,10 @@ add_task(async function() {
         ok(entry[op] >= 0, `${message} ${phase}`);
       }
       if (!("_used" in entry) && !entry.ignoreIfUnused) {
-        ok(false, `unused whitelist entry ${phase}: ${entry.path}`);
+        ok(
+          false,
+          `unused whitelist entry ${phase}: ${entry.path} (${entry.listedPath})`
+        );
         shouldPass = false;
       }
     }

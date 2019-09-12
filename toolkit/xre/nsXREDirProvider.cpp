@@ -563,25 +563,6 @@ static void LoadDirIntoArray(nsIFile* dir, const char* const* aAppendList,
   }
 }
 
-static void LoadDirsIntoArray(const nsCOMArray<nsIFile>& aSourceDirs,
-                              const char* const* aAppendList,
-                              nsCOMArray<nsIFile>& aDirectories) {
-  nsCOMPtr<nsIFile> appended;
-  bool exists;
-
-  for (int32_t i = 0; i < aSourceDirs.Count(); ++i) {
-    aSourceDirs[i]->Clone(getter_AddRefs(appended));
-    if (!appended) continue;
-
-    nsAutoCString leaf;
-    appended->GetNativeLeafName(leaf);
-    if (!Substring(leaf, leaf.Length() - 4).EqualsLiteral(".xpi")) {
-      LoadDirIntoArray(appended, aAppendList, aDirectories);
-    } else if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
-      aDirectories.AppendObject(appended);
-  }
-}
-
 NS_IMETHODIMP
 nsXREDirProvider::GetFiles(const char* aProperty,
                            nsISimpleEnumerator** aResult) {
@@ -851,36 +832,15 @@ static nsresult DeleteDirIfExists(nsIFile* dir) {
 static const char* const kAppendPrefDir[] = {"defaults", "preferences",
                                              nullptr};
 
-#ifdef DEBUG_bsmedberg
-static void DumpFileArray(const char* key, nsCOMArray<nsIFile> dirs) {
-  fprintf(stderr, "nsXREDirProvider::GetFilesInternal(%s)\n", key);
-
-  nsAutoCString path;
-  for (int32_t i = 0; i < dirs.Count(); ++i) {
-    dirs[i]->GetNativePath(path);
-    fprintf(stderr, "  %s\n", path.get());
-  }
-}
-#endif  // DEBUG_bsmedberg
-
 nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
                                             nsISimpleEnumerator** aResult) {
   nsresult rv = NS_OK;
   *aResult = nullptr;
 
-  if (!strcmp(aProperty, XRE_EXTENSIONS_DIR_LIST)) {
-    nsCOMArray<nsIFile> directories;
-
-    static const char* const kAppendNothing[] = {nullptr};
-
-    LoadDirsIntoArray(mAppBundleDirectories, kAppendNothing, directories);
-
-    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
-  } else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
+  if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
 
     LoadDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
-    LoadDirsIntoArray(mAppBundleDirectories, kAppendPrefDir, directories);
 
     rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
   } else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
@@ -890,37 +850,8 @@ nsresult nsXREDirProvider::GetFilesInternal(const char* aProperty,
     static const char* const kAppendChromeDir[] = {"chrome", nullptr};
     nsCOMArray<nsIFile> directories;
     LoadDirIntoArray(mXULAppDir, kAppendChromeDir, directories);
-    LoadDirsIntoArray(mAppBundleDirectories, kAppendChromeDir, directories);
 
     rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
-  } else if (!strcmp(aProperty, NS_APP_PLUGINS_DIR_LIST)) {
-    nsCOMArray<nsIFile> directories;
-
-    if (mozilla::Preferences::GetBool("plugins.load_appdir_plugins", false)) {
-      nsCOMPtr<nsIFile> appdir;
-      rv = XRE_GetBinaryPath(getter_AddRefs(appdir));
-      if (NS_SUCCEEDED(rv)) {
-        appdir->SetNativeLeafName(NS_LITERAL_CSTRING("plugins"));
-        directories.AppendObject(appdir);
-      }
-    }
-
-    static const char* const kAppendPlugins[] = {"plugins", nullptr};
-
-    // The root dirserviceprovider does quite a bit for us: we're mainly
-    // interested in xulapp and extension-provided plugins.
-    LoadDirsIntoArray(mAppBundleDirectories, kAppendPlugins, directories);
-
-    if (mProfileDir) {
-      nsCOMArray<nsIFile> profileDir;
-      profileDir.AppendObject(mProfileDir);
-      LoadDirsIntoArray(profileDir, kAppendPlugins, directories);
-    }
-
-    rv = NS_NewArrayEnumerator(aResult, directories, NS_GET_IID(nsIFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = NS_SUCCESS_AGGREGATE_RESULT;
   } else
     rv = NS_ERROR_FAILURE;
 

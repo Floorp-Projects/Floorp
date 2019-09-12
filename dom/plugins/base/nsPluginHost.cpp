@@ -1883,50 +1883,6 @@ int64_t GetPluginLastModifiedTime(const nsCOMPtr<nsIFile>& localfile) {
   return fileModTime;
 }
 
-bool GetPluginIsFromExtension(const nsCOMPtr<nsIFile>& pluginFile,
-                              const nsCOMArray<nsIFile>& extensionDirs) {
-  for (uint32_t i = 0; i < extensionDirs.Length(); ++i) {
-    bool contains;
-    if (NS_FAILED(extensionDirs[i]->Contains(pluginFile, &contains)) ||
-        !contains) {
-      continue;
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-void GetExtensionDirectories(nsCOMArray<nsIFile>& dirs) {
-  nsCOMPtr<nsIProperties> dirService =
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-  if (!dirService) {
-    return;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> list;
-  nsresult rv =
-      dirService->Get(XRE_EXTENSIONS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator),
-                      getter_AddRefs(list));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  bool more;
-  while (NS_SUCCEEDED(list->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsISupports> next;
-    if (NS_FAILED(list->GetNext(getter_AddRefs(next)))) {
-      break;
-    }
-    nsCOMPtr<nsIFile> file = do_QueryInterface(next);
-    if (file) {
-      file->Normalize();
-      dirs.AppendElement(file.forget());
-    }
-  }
-}
-
 struct CompareFilesByTime {
   bool LessThan(const nsCOMPtr<nsIFile>& a, const nsCOMPtr<nsIFile>& b) const {
     return GetPluginLastModifiedTime(a) < GetPluginLastModifiedTime(b);
@@ -2025,9 +1981,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile* pluginsDir,
 
   pluginFiles.Sort(CompareFilesByTime());
 
-  nsCOMArray<nsIFile> extensionDirs;
-  GetExtensionDirectories(extensionDirs);
-
   for (int32_t i = (pluginFiles.Length() - 1); i >= 0; i--) {
     nsCOMPtr<nsIFile>& localfile = pluginFiles[i];
 
@@ -2036,8 +1989,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile* pluginsDir,
     if (NS_FAILED(rv)) continue;
 
     const int64_t fileModTime = GetPluginLastModifiedTime(localfile);
-    const bool fromExtension =
-        GetPluginIsFromExtension(localfile, extensionDirs);
 
     // Look for it in our cache
     NS_ConvertUTF16toUTF8 filePath(utf16FilePath);
@@ -2122,8 +2073,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile* pluginsDir,
         continue;
       }
 
-      pluginTag =
-          new nsPluginTag(&info, fileModTime, fromExtension, blocklistState);
+      pluginTag = new nsPluginTag(&info, fileModTime, blocklistState);
       pluginTag->mLibrary = library;
       pluginFile.FreePluginInfo(info);
       // Pass whether we've seen this plugin before. If the plugin is
@@ -2316,8 +2266,8 @@ nsresult nsPluginHost::SetPluginsInContent(
           tag.version().get(), nsTArray<nsCString>(tag.mimeTypes()),
           nsTArray<nsCString>(tag.mimeDescriptions()),
           nsTArray<nsCString>(tag.extensions()), tag.isFlashPlugin(),
-          tag.supportsAsyncRender(), tag.lastModifiedTime(),
-          tag.isFromExtension(), tag.sandboxLevel(), tag.blocklistState());
+          tag.supportsAsyncRender(), tag.lastModifiedTime(), tag.sandboxLevel(),
+          tag.blocklistState());
       AddPluginTag(pluginTag);
     }
 
@@ -2403,6 +2353,20 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList,
     ScanPluginsDirectoryList(dirList, aCreatePluginList, &pluginschanged);
 
     if (pluginschanged) *aPluginsChanged = true;
+
+    // In tests, load plugins from the profile.
+    if (xpc::IsInAutomation()) {
+      nsCOMPtr<nsIFile> profDir;
+      rv = dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
+                           getter_AddRefs(profDir));
+      if (NS_SUCCEEDED(rv)) {
+        profDir->Append(NS_LITERAL_STRING("plugins"));
+        ScanPluginsDirectory(profDir, aCreatePluginList, &pluginschanged);
+        if (pluginschanged) {
+          *aPluginsChanged = true;
+        }
+      }
+    }
 
     // if we are just looking for possible changes,
     // no need to proceed if changes are detected
@@ -2534,12 +2498,11 @@ nsresult nsPluginHost::SendPluginsToContent() {
       return NS_ERROR_FAILURE;
     }
 
-    pluginTags.AppendElement(
-        PluginTag(tag->mId, tag->Name(), tag->Description(), tag->MimeTypes(),
-                  tag->MimeDescriptions(), tag->Extensions(),
-                  tag->mIsFlashPlugin, tag->mSupportsAsyncRender,
-                  tag->FileName(), tag->Version(), tag->mLastModifiedTime,
-                  tag->IsFromExtension(), tag->mSandboxLevel, blocklistState));
+    pluginTags.AppendElement(PluginTag(
+        tag->mId, tag->Name(), tag->Description(), tag->MimeTypes(),
+        tag->MimeDescriptions(), tag->Extensions(), tag->mIsFlashPlugin,
+        tag->mSupportsAsyncRender, tag->FileName(), tag->Version(),
+        tag->mLastModifiedTime, tag->mSandboxLevel, blocklistState));
   }
   nsTArray<dom::ContentParent*> parents;
   dom::ContentParent::GetAll(parents);
@@ -2722,7 +2685,7 @@ nsresult nsPluginHost::WritePluginInfo() {
                false,  // did store whether or not to unload in-process plugins
                PLUGIN_REGISTRY_FIELD_DELIMITER,
                0,  // legacy field for flags
-               PLUGIN_REGISTRY_FIELD_DELIMITER, tag->IsFromExtension(),
+               PLUGIN_REGISTRY_FIELD_DELIMITER, false,
                PLUGIN_REGISTRY_FIELD_DELIMITER, tag->BlocklistState(),
                PLUGIN_REGISTRY_FIELD_DELIMITER,
                PLUGIN_REGISTRY_END_OF_LINE_MARKER);
@@ -2928,7 +2891,6 @@ nsresult nsPluginHost::ReadPluginInfo() {
     if (5 != reader.ParseLine(values, 5)) return rv;
 
     int64_t lastmod = nsCRT::atoll(values[0]);
-    bool fromExtension = atoi(values[3]);
     uint16_t blocklistState = atoi(values[4]);
     if (!reader.NextLine()) return rv;
 
@@ -2979,8 +2941,8 @@ nsresult nsPluginHost::ReadPluginInfo() {
     RefPtr<nsPluginTag> tag = new nsPluginTag(
         name, description, filename, fullpath, version,
         (const char* const*)mimetypes, (const char* const*)mimedescriptions,
-        (const char* const*)extensions, mimetypecount, lastmod, fromExtension,
-        blocklistState, true);
+        (const char* const*)extensions, mimetypecount, lastmod, blocklistState,
+        true);
 
     delete[] heapalloced;
 
