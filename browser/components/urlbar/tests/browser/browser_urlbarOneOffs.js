@@ -257,7 +257,7 @@ add_task(async function hiddenWhenUsingSearchAlias() {
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     result,
     "Expected result should be selected"
   );

@@ -17,7 +17,7 @@ function repeat(limit, func) {
 
 function assertSelected(index) {
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     index,
     "Should have the correct item selected"
   );

@@ -18,7 +18,7 @@ function repeat(limit, func) {
 
 function assertSelected(index) {
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     index,
     "Should have selected the correct item"
   );
@@ -49,7 +49,7 @@ function assertSelected_one_off(index) {
   // This is true because although both the listbox and the one-offs can have
   // selections, the test doesn't check that.
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     -1,
     "A one-off is selected, so the listbox should not have a selection"
   );

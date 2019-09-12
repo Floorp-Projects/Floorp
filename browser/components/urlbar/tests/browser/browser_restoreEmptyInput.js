@@ -15,7 +15,7 @@ add_task(async function test() {
   await promiseAutocompleteResultPopup("", window, true);
 
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     -1,
     "Nothing selected"
   );
@@ -27,7 +27,7 @@ add_task(async function test() {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   }
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     resultCount - 1,
     "Last result selected"
   );
@@ -35,7 +35,7 @@ add_task(async function test() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     -1,
     "Nothing selected"
   );

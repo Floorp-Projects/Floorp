@@ -191,7 +191,7 @@ var UrlbarTestUtils = {
    * @param {object} win The window containing the urlbar.
    * @returns {number} The selected index.
    */
-  getSelectedIndex(win) {
+  getSelectedRowIndex(win) {
     return win.gURLBar.view.selectedRowIndex;
   },
 
@@ -200,7 +200,7 @@ var UrlbarTestUtils = {
    * @param {object} win The window containing the urlbar.
    * @param {index} index The index to select.
    */
-  setSelectedIndex(win, index) {
+  setSelectedRowIndex(win, index) {
     win.gURLBar.view.selectedRowIndex = index;
   },
 

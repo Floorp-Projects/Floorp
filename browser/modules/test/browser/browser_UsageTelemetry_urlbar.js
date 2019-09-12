@@ -740,7 +740,7 @@ add_task(async function test_suggestion_enterSelection() {
     let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     await searchInAwesomebar("query");
     info("Select the second result and press Return.");
-    UrlbarTestUtils.setSelectedIndex(window, 1);
+    UrlbarTestUtils.setSelectedRowIndex(window, 1);
     EventUtils.synthesizeKey("KEY_Enter");
     await p;
 
