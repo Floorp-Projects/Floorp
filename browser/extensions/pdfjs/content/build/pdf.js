@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.3.146';
-var pdfjsBuild = '7e37eb42';
+var pdfjsVersion = '2.3.164';
+var pdfjsBuild = '12ff2527';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1258,7 +1258,6 @@ function getDocument(src) {
 
   if (!worker) {
     const workerParams = {
-      postMessageTransfers: params.postMessageTransfers,
       verbosity: params.verbosity,
       port: _worker_options.GlobalWorkerOptions.workerPort
     };
@@ -1322,7 +1321,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.3.146',
+    apiVersion: '2.3.164',
     source: {
       data: source.data,
       url: source.url,
@@ -1927,7 +1926,7 @@ class PDFPageProxy {
           return;
         }
 
-        this._renderPageChunk(value.operatorList, intentState);
+        this._renderPageChunk(value, intentState);
 
         pump();
       }, reason => {
@@ -2145,7 +2144,6 @@ const PDFWorker = function PDFWorkerClosure() {
     constructor({
       name = null,
       port = null,
-      postMessageTransfers = true,
       verbosity = (0, _util.getVerbosityLevel)()
     } = {}) {
       if (port && pdfWorkerPorts.has(port)) {
@@ -2154,7 +2152,7 @@ const PDFWorker = function PDFWorkerClosure() {
 
       this.name = name;
       this.destroyed = false;
-      this.postMessageTransfers = postMessageTransfers !== false;
+      this.postMessageTransfers = true;
       this.verbosity = verbosity;
       this._readyCapability = (0, _util.createPromiseCapability)();
       this._port = null;
@@ -2228,7 +2226,7 @@ const PDFWorker = function PDFWorkerClosure() {
               return;
             }
 
-            if (data && data.supportTypedArray) {
+            if (data) {
               this._messageHandler = messageHandler;
               this._port = worker;
               this._webWorker = worker;
@@ -2270,7 +2268,7 @@ const PDFWorker = function PDFWorkerClosure() {
             try {
               messageHandler.send('test', testObj, [testObj.buffer]);
             } catch (ex) {
-              (0, _util.info)('Cannot use postMessage transfers');
+              (0, _util.warn)('Cannot use postMessage transfers.');
               testObj[0] = 0;
               messageHandler.send('test', testObj);
             }
@@ -2764,12 +2762,27 @@ class WorkerTransport {
         img.src = imageUrl;
       });
     });
-    messageHandler.on('FetchBuiltInCMap', data => {
+    messageHandler.on('FetchBuiltInCMap', (data, sink) => {
       if (this.destroyed) {
-        return Promise.reject(new Error('Worker was destroyed'));
+        sink.error(new Error('Worker was destroyed'));
+        return;
       }
 
-      return this.CMapReaderFactory.fetch(data);
+      let fetched = false;
+
+      sink.onPull = () => {
+        if (fetched) {
+          sink.close();
+          return;
+        }
+
+        fetched = true;
+        this.CMapReaderFactory.fetch(data).then(function (builtInCMap) {
+          sink.enqueue(builtInCMap, 1, [builtInCMap.cMapData.buffer]);
+        }).catch(function (reason) {
+          sink.error(reason);
+        });
+      };
     });
   }
 
@@ -3170,9 +3183,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.3.146';
+const version = '2.3.164';
 exports.version = version;
-const build = '7e37eb42';
+const build = '12ff2527';
 exports.build = build;
 
 /***/ }),
@@ -3452,7 +3465,8 @@ function addLinkAttributes(link, {
   rel,
   enabled = true
 } = {}) {
-  const urlNullRemoved = url ? (0, _util.removeNullCharacters)(url) : '';
+  (0, _util.assert)(url && typeof url === 'string', 'addLinkAttributes: A valid "url" parameter must provided.');
+  const urlNullRemoved = (0, _util.removeNullCharacters)(url);
 
   if (enabled) {
     link.href = link.title = urlNullRemoved;
@@ -3465,12 +3479,10 @@ function addLinkAttributes(link, {
     };
   }
 
-  if (url) {
-    const LinkTargetValues = Object.values(LinkTarget);
-    const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
-    link.target = LinkTargetStringMap[targetIndex];
-    link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
-  }
+  const LinkTargetValues = Object.values(LinkTarget);
+  const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
+  link.target = LinkTargetStringMap[targetIndex];
+  link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
 }
 
 function getFilenameFromUrl(url) {
@@ -9202,19 +9214,18 @@ class LinkAnnotationElement extends AnnotationElement {
       linkService
     } = this;
     const link = document.createElement('a');
-    (0, _display_utils.addLinkAttributes)(link, {
-      url: data.url,
-      target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
-      rel: linkService.externalLinkRel,
-      enabled: linkService.externalLinkEnabled
-    });
 
-    if (!data.url) {
-      if (data.action) {
-        this._bindNamedAction(link, data.action);
-      } else {
-        this._bindLink(link, data.dest);
-      }
+    if (data.url) {
+      (0, _display_utils.addLinkAttributes)(link, {
+        url: data.url,
+        target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
+        rel: linkService.externalLinkRel,
+        enabled: linkService.externalLinkEnabled
+      });
+    } else if (data.action) {
+      this._bindNamedAction(link, data.action);
+    } else {
+      this._bindLink(link, data.dest);
     }
 
     this.container.appendChild(link);
