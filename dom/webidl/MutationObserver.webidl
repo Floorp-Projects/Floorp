@@ -37,8 +37,10 @@ interface MutationRecord {
   readonly attribute sequence<Animation> removedAnimations;
 };
 
-[Constructor(MutationCallback mutationCallback)]
 interface MutationObserver {
+  [Throws]
+  constructor(MutationCallback mutationCallback);
+
   [Throws]
   void observe(Node target, optional MutationObserverInit options = {});
   void disconnect();

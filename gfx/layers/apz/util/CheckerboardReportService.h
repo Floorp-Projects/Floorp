@@ -105,7 +105,7 @@ class CheckerboardReportService : public nsWrapperCache {
    */
 
   static already_AddRefed<CheckerboardReportService> Constructor(
-      const dom::GlobalObject& aGlobal, ErrorResult& aRv);
+      const dom::GlobalObject& aGlobal);
 
   explicit CheckerboardReportService(nsISupports* aSupports);
 

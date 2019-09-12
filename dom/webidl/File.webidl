@@ -10,10 +10,12 @@
 
 interface nsIFile;
 
-[Constructor(sequence<BlobPart> fileBits,
-             USVString fileName, optional FilePropertyBag options = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface File : Blob {
+  [Throws]
+  constructor(sequence<BlobPart> fileBits,
+              USVString fileName, optional FilePropertyBag options = {});
+
   readonly attribute DOMString name;
 
   [GetterThrows]

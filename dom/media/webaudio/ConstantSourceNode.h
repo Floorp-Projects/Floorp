@@ -30,7 +30,7 @@ class ConstantSourceNode final : public AudioScheduledSourceNode,
 
   static already_AddRefed<ConstantSourceNode> Constructor(
       const GlobalObject& aGlobal, AudioContext& aContext,
-      const ConstantSourceOptions& aOptions, ErrorResult& aRv);
+      const ConstantSourceOptions& aOptions);
 
   void DestroyMediaStream() override;
 

@@ -21,9 +21,11 @@ dictionary WaveShaperOptions : AudioNodeOptions {
              OverSampleType  oversample = "none";
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional WaveShaperOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface WaveShaperNode : AudioNode {
+  [Throws]
+  constructor(BaseAudioContext context,
+              optional WaveShaperOptions options = {});
 
       [Cached, Pure, SetterThrows]
       attribute Float32Array? curve;

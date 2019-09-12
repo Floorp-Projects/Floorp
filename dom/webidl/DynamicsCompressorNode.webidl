@@ -18,9 +18,11 @@ dictionary DynamicsCompressorOptions : AudioNodeOptions {
              float threshold = -24;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional DynamicsCompressorOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface DynamicsCompressorNode : AudioNode {
+    [Throws]
+    constructor(BaseAudioContext context,
+                optional DynamicsCompressorOptions options = {});
 
     readonly attribute AudioParam threshold; // in Decibels
     readonly attribute AudioParam knee; // in Decibels

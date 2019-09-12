@@ -331,14 +331,12 @@ already_AddRefed<AudioContext> AudioContext::Constructor(
   return object.forget();
 }
 
-already_AddRefed<AudioBufferSourceNode> AudioContext::CreateBufferSource(
-    ErrorResult& aRv) {
+already_AddRefed<AudioBufferSourceNode> AudioContext::CreateBufferSource() {
   return AudioBufferSourceNode::Create(nullptr, *this,
-                                       AudioBufferSourceOptions(), aRv);
+                                       AudioBufferSourceOptions());
 }
 
-already_AddRefed<ConstantSourceNode> AudioContext::CreateConstantSource(
-    ErrorResult& aRv) {
+already_AddRefed<ConstantSourceNode> AudioContext::CreateConstantSource() {
   RefPtr<ConstantSourceNode> constantSourceNode = new ConstantSourceNode(this);
   return constantSourceNode.forget();
 }

@@ -24,7 +24,7 @@ SpeechGrammar::SpeechGrammar(nsISupports* aParent) : mParent(aParent) {}
 SpeechGrammar::~SpeechGrammar() = default;
 
 already_AddRefed<SpeechGrammar> SpeechGrammar::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+    const GlobalObject& aGlobal) {
   RefPtr<SpeechGrammar> speechGrammar =
       new SpeechGrammar(aGlobal.GetAsSupports());
   return speechGrammar.forget();

@@ -27,7 +27,7 @@ SpeechGrammarList::SpeechGrammarList(nsISupports* aParent) : mParent(aParent) {}
 SpeechGrammarList::~SpeechGrammarList() = default;
 
 already_AddRefed<SpeechGrammarList> SpeechGrammarList::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+    const GlobalObject& aGlobal) {
   RefPtr<SpeechGrammarList> speechGrammarList =
       new SpeechGrammarList(aGlobal.GetAsSupports());
   return speechGrammarList.forget();

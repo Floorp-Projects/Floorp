@@ -189,7 +189,7 @@ JSObject* ConstantSourceNode::WrapObject(JSContext* aCx,
 
 already_AddRefed<ConstantSourceNode> ConstantSourceNode::Constructor(
     const GlobalObject& aGlobal, AudioContext& aContext,
-    const ConstantSourceOptions& aOptions, ErrorResult& aRv) {
+    const ConstantSourceOptions& aOptions) {
   RefPtr<ConstantSourceNode> object = new ConstantSourceNode(&aContext);
   object->mOffset->SetValue(aOptions.mOffset);
   return object.forget();

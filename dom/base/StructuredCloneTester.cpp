@@ -36,7 +36,7 @@ StructuredCloneTester::StructuredCloneTester(nsISupports* aParent,
 /* static */
 already_AddRefed<StructuredCloneTester> StructuredCloneTester::Constructor(
     const GlobalObject& aGlobal, const bool aSerializable,
-    const bool aDeserializable, ErrorResult& aRv) {
+    const bool aDeserializable) {
   RefPtr<StructuredCloneTester> sct = new StructuredCloneTester(
       aGlobal.GetAsSupports(), aSerializable, aDeserializable);
   return sct.forget();

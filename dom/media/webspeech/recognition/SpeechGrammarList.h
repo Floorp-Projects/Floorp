@@ -33,7 +33,7 @@ class SpeechGrammarList final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechGrammarList)
 
   static already_AddRefed<SpeechGrammarList> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
+      const GlobalObject& aGlobal);
 
   nsISupports* GetParentObject() const;
 

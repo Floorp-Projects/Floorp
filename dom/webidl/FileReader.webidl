@@ -10,9 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor,
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface FileReader : EventTarget {
+  constructor();
+
   // async read methods
   [Throws]
   void readAsArrayBuffer(Blob blob);

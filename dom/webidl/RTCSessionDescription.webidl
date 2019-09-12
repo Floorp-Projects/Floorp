@@ -20,9 +20,11 @@ dictionary RTCSessionDescriptionInit {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
- Constructor(optional RTCSessionDescriptionInit descriptionInitDict = {})]
+ JSImplementation="@mozilla.org/dom/rtcsessiondescription;1"]
 interface RTCSessionDescription {
+  [Throws]
+  constructor(optional RTCSessionDescriptionInit descriptionInitDict = {});
+
   // These should be readonly, but writing causes deprecation warnings for a bit
   attribute RTCSdpType type;
   attribute DOMString sdp;

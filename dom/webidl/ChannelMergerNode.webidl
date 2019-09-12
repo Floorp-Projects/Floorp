@@ -14,7 +14,9 @@ dictionary ChannelMergerOptions : AudioNodeOptions {
              unsigned long numberOfInputs = 6;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional ChannelMergerOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface ChannelMergerNode : AudioNode {
+  [Throws]
+  constructor(BaseAudioContext context,
+              optional ChannelMergerOptions options = {});
 };

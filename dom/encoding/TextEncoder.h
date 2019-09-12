@@ -21,11 +21,8 @@ class TextEncoder final : public NonRefcountedDOMObject {
  public:
   // The WebIDL constructor.
 
-  static TextEncoder* Constructor(const GlobalObject& aGlobal,
-                                  ErrorResult& aRv) {
-    nsAutoPtr<TextEncoder> txtEncoder(new TextEncoder());
-    txtEncoder->Init();
-    return txtEncoder.forget();
+  static TextEncoder* Constructor(const GlobalObject& aGlobal) {
+    return new TextEncoder();
   }
 
   TextEncoder() {}
@@ -36,9 +33,6 @@ class TextEncoder final : public NonRefcountedDOMObject {
                   JS::MutableHandle<JSObject*> aReflector) {
     return TextEncoder_Binding::Wrap(aCx, this, aGivenProto, aReflector);
   }
-
- protected:
-  void Init();
 
  public:
   /**

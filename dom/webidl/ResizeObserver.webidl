@@ -16,10 +16,12 @@ dictionary ResizeObserverOptions {
     ResizeObserverBoxOptions box = "content-box";
 };
 
-[Constructor(ResizeObserverCallback callback),
- Exposed=Window,
+[Exposed=Window,
  Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserver {
+    [Throws]
+    constructor(ResizeObserverCallback callback);
+
     [Throws]
     void observe(Element target, optional ResizeObserverOptions options = {});
     [Throws]

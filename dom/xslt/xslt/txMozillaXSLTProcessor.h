@@ -84,7 +84,7 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
   mozilla::dom::DocGroup* GetDocGroup() const;
 
   static already_AddRefed<txMozillaXSLTProcessor> Constructor(
-      const mozilla::dom::GlobalObject& aGlobal, mozilla::ErrorResult& aRv);
+      const mozilla::dom::GlobalObject& aGlobal);
 
   void ImportStylesheet(nsINode& stylesheet, mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment> TransformToFragment(

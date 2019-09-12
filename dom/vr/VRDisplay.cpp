@@ -674,7 +674,7 @@ VRFrameData::~VRFrameData() { mozilla::DropJSObjects(this); }
 
 /* static */
 already_AddRefed<VRFrameData> VRFrameData::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+    const GlobalObject& aGlobal) {
   RefPtr<VRFrameData> obj = new VRFrameData(aGlobal.GetAsSupports());
   return obj.forget();
 }

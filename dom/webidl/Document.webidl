@@ -36,8 +36,10 @@ dictionary ElementCreationOptions {
 };
 
 /* https://dom.spec.whatwg.org/#interface-document */
-[Constructor]
 interface Document : Node {
+  [Throws]
+  constructor();
+
   [Throws]
   readonly attribute DOMImplementation implementation;
   [Pure, Throws, BinaryName="documentURIFromJS", NeedsCallerType]

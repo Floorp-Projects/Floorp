@@ -21,7 +21,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
  public:
   static already_AddRefed<AudioBufferSourceNode> Create(
       JSContext* aCx, AudioContext& aAudioContext,
-      const AudioBufferSourceOptions& aOptions, ErrorResult& aRv);
+      const AudioBufferSourceOptions& aOptions);
 
   void DestroyMediaStream() override;
 
@@ -33,8 +33,8 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
 
   static already_AddRefed<AudioBufferSourceNode> Constructor(
       const GlobalObject& aGlobal, AudioContext& aAudioContext,
-      const AudioBufferSourceOptions& aOptions, ErrorResult& aRv) {
-    return Create(aGlobal.Context(), aAudioContext, aOptions, aRv);
+      const AudioBufferSourceOptions& aOptions) {
+    return Create(aGlobal.Context(), aAudioContext, aOptions);
   }
 
   JSObject* WrapObject(JSContext* aCx,

@@ -15,9 +15,10 @@ dictionary DelayOptions : AudioNodeOptions {
              double delayTime = 0;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional DelayOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface DelayNode : AudioNode {
+    [Throws]
+    constructor(BaseAudioContext context, optional DelayOptions options = {});
 
     readonly attribute AudioParam delayTime;
 

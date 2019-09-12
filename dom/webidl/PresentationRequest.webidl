@@ -7,10 +7,13 @@
  * https://w3c.github.io/presentation-api/#interface-presentationrequest
  */
 
-[Constructor(DOMString url),
- Constructor(sequence<DOMString> urls),
- Pref="dom.presentation.controller.enabled"]
+[Pref="dom.presentation.controller.enabled"]
 interface PresentationRequest : EventTarget {
+  [Throws]
+  constructor(DOMString url);
+  [Throws]
+  constructor(sequence<DOMString> urls);
+
   /*
    * A requesting page use start() to start a new connection, and it will be
    * returned with the promise. UA may show a prompt box with a list of

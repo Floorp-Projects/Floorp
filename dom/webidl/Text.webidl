@@ -10,8 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(optional DOMString data = "")]
 interface Text : CharacterData {
+  [Throws]
+  constructor(optional DOMString data = "");
+
   [Throws]
   Text splitText(unsigned long offset);
   [Throws]

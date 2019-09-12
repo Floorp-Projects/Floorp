@@ -27,11 +27,13 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 
 // Bug 1072107 is for exposing this in workers.
 // [Exposed=(Window,Worker)]
-[Constructor(DOMString family,
-             (DOMString or BinaryData) source,
-             optional FontFaceDescriptors descriptors = {}),
- Pref="layout.css.font-loading-api.enabled"]
+[Pref="layout.css.font-loading-api.enabled"]
 interface FontFace {
+  [Throws]
+  constructor(DOMString family,
+              (DOMString or BinaryData) source,
+              optional FontFaceDescriptors descriptors = {});
+
   [SetterThrows] attribute DOMString family;
   [SetterThrows] attribute DOMString style;
   [SetterThrows] attribute DOMString weight;

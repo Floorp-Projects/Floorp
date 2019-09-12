@@ -18,9 +18,11 @@ enum HeadersGuardEnum {
   "immutable"
 };
 
-[Constructor(optional HeadersInit init),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Headers {
+  [Throws]
+  constructor(optional HeadersInit init);
+
   [Throws] void append(ByteString name, ByteString value);
   [Throws] void delete(ByteString name);
   [Throws] ByteString? get(ByteString name);

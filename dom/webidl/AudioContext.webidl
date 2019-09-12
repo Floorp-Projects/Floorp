@@ -19,9 +19,10 @@ dictionary AudioTimestamp {
   DOMHighResTimeStamp performanceTime;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(optional AudioContextOptions contextOptions = {})]
+[Pref="dom.webaudio.enabled"]
 interface AudioContext : BaseAudioContext {
+    [Throws]
+    constructor(optional AudioContextOptions contextOptions = {});
 
     readonly        attribute double               baseLatency;
     readonly        attribute double               outputLatency;

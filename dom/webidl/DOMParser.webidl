@@ -18,9 +18,10 @@ enum SupportedType {
   "image/svg+xml"
 };
 
-// the latter is Mozilla-specific
-[Constructor]
 interface DOMParser {
+  [Throws]
+  constructor();
+
   [NewObject, Throws]
   Document parseFromString(DOMString str, SupportedType type);
 

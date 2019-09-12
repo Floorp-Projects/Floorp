@@ -29,9 +29,11 @@ dictionary BiquadFilterOptions : AudioNodeOptions {
              float            gain = 0;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional BiquadFilterOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface BiquadFilterNode : AudioNode {
+    [Throws]
+    constructor(BaseAudioContext context,
+                optional BiquadFilterOptions options = {});
 
     attribute BiquadFilterType type;
     readonly attribute AudioParam frequency; // in Hertz
