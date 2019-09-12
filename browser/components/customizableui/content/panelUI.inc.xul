@@ -868,7 +868,7 @@
 </panel>
 
 <panel id="extension-notification-panel"
-       class="panel-no-padding"
+       class="popup-notification-panel panel-no-padding"
        role="group"
        type="arrow"
        hidden="true"
