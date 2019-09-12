@@ -203,6 +203,7 @@ pub use crate::device::{build_shader_strings, UploadMethod, VertexUsageHint, get
 pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver, FormatDesc};
 pub use crate::device::Device;
 pub use crate::frame_builder::ChasePrimitive;
+pub use crate::prim_store::PrimitiveDebugId;
 pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind, ExternalImage,
