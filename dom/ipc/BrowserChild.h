@@ -284,7 +284,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSizeModeChanged(const nsSizeMode& aSizeMode);
 
   mozilla::ipc::IPCResult RecvChildToParentMatrix(
-      const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix);
+      const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix,
+      const mozilla::ScreenRect& aRemoteDocumentRect);
 
   mozilla::ipc::IPCResult RecvActivate();
 
@@ -628,6 +629,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
   GetChildToParentConversionMatrix() const;
 
+  mozilla::ScreenRect GetRemoteDocumentRect() const;
+
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We
   // can't fetch the coalesced event one by one and dispatch it because we may
@@ -904,6 +907,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   WindowsHandle mWidgetNativeData;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
+  ScreenRect mRemoteDocumentRect;
 
   // This state is used to keep track of the current visible tabs (the ones
   // rendering layers). There may be more than one if there are multiple browser

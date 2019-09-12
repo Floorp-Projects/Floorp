@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "Units.h"  // for ScreenRect
 
 namespace mozilla {
 namespace layers {
@@ -19,18 +20,30 @@ class MatrixMessage {
   MatrixMessage() {}
 
   MatrixMessage(const Maybe<LayerToScreenMatrix4x4>& aMatrix,
+                const ScreenRect& aRemoteDocumentRect,
                 const LayersId& aLayersId)
-      : mMatrix(ToUnknownMatrix(aMatrix)), mLayersId(aLayersId) {}
+      : mMatrix(ToUnknownMatrix(aMatrix)),
+        mRemoteDocumentRect(aRemoteDocumentRect),
+        mLayersId(aLayersId) {}
 
   inline Maybe<LayerToScreenMatrix4x4> GetMatrix() const {
     return LayerToScreenMatrix4x4::FromUnknownMatrix(mMatrix);
+  }
+
+  inline ScreenRect GetRemoteDocumentRect() const {
+    return mRemoteDocumentRect;
   }
 
   inline const LayersId& GetLayersId() const { return mLayersId; }
 
   // Fields are public for IPC. Don't access directly
   // elsewhere.
+  // Transform matrix to convert this layer to screen coordinate.
   Maybe<gfx::Matrix4x4> mMatrix;  // Untyped for IPC
+  // The remote iframe document rectangle corresponding to this layer.
+  // The rectangle is the result of clipped out by ancestor async scrolling so
+  // that the rectangle will be empty if it's completely scrolled out of view.
+  ScreenRect mRemoteDocumentRect;
   LayersId mLayersId;
 };
 };  // namespace layers
