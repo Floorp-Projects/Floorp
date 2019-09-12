@@ -1386,11 +1386,7 @@ def libcxx_override_visibility(c_compiler, target):
 
 
 set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_override_visibility.empty)
-set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49',
-           libcxx_override_visibility.empty)
 set_define('_LIBCPP_ALWAYS_INLINE', libcxx_override_visibility.empty)
-set_define('_LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49',
-           libcxx_override_visibility.empty)
 
 set_define('_LIBCPP_HIDE_FROM_ABI', libcxx_override_visibility.hide_from_abi)
 
