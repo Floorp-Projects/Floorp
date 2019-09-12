@@ -1101,6 +1101,25 @@ impl<'a> DisplayListFlattener<'a> {
                 self.add_image(
                     clip_and_scroll,
                     &layout,
+                    layout.rect.size,
+                    LayoutSize::zero(),
+                    None,
+                    info.image_key,
+                    info.image_rendering,
+                    info.alpha_type,
+                    info.color,
+                );
+            }
+            DisplayItem::RepeatingImage(ref info) => {
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                    &info.common,
+                    &info.bounds,
+                    apply_pipeline_clip,
+                );
+
+                self.add_image(
+                    clip_and_scroll,
+                    &layout,
                     info.stretch_size,
                     info.tile_spacing,
                     None,
