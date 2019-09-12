@@ -6,7 +6,7 @@ build = "build.rs"
 license = "MPL-2.0"
 
 [build-dependencies]
-env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
+env_logger = {version = "0.6", default-features = false} # disable `regex` to reduce code size
 bindgen = {version = "0.51", default-features = false} # disable `logging` to reduce code size
 cmake = "0.1"
 glob = "0.2.11"
