@@ -2157,6 +2157,7 @@ class IDLType(IDLObject):
         'domstring',
         'bytestring',
         'usvstring',
+        'jsstring',
         'object',
         'date',
         'void',
@@ -2216,6 +2217,9 @@ class IDLType(IDLObject):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isJSString(self):
         return False
 
     def isVoid(self):
@@ -2443,6 +2447,9 @@ class IDLNullableType(IDLParametrizedType):
     def isUSVString(self):
         return self.inner.isUSVString()
 
+    def isJSString(self):
+        return self.inner.isJSString()
+
     def isFloat(self):
         return self.inner.isFloat()
 
@@ -2562,6 +2569,9 @@ class IDLSequenceType(IDLParametrizedType):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isJSString(self):
         return False
 
     def isVoid(self):
@@ -2817,6 +2827,9 @@ class IDLTypedefType(IDLType):
     def isUSVString(self):
         return self.inner.isUSVString()
 
+    def isJSString(self):
+        return self.inner.isJSString()
+
     def isVoid(self):
         return self.inner.isVoid()
 
@@ -2945,6 +2958,9 @@ class IDLWrapperType(IDLType):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isJSString(self):
         return False
 
     def isVoid(self):
@@ -3146,6 +3162,7 @@ class IDLBuiltinType(IDLType):
         'domstring',
         'bytestring',
         'usvstring',
+        'jsstring',
         'object',
         'date',
         'void',
@@ -3183,6 +3200,7 @@ class IDLBuiltinType(IDLType):
         Types.domstring: IDLType.Tags.domstring,
         Types.bytestring: IDLType.Tags.bytestring,
         Types.usvstring: IDLType.Tags.usvstring,
+        Types.jsstring: IDLType.Tags.jsstring,
         Types.object: IDLType.Tags.object,
         Types.date: IDLType.Tags.date,
         Types.void: IDLType.Tags.void,
@@ -3267,7 +3285,8 @@ class IDLBuiltinType(IDLType):
     def isString(self):
         return (self._typeTag == IDLBuiltinType.Types.domstring or
                 self._typeTag == IDLBuiltinType.Types.bytestring or
-                self._typeTag == IDLBuiltinType.Types.usvstring)
+                self._typeTag == IDLBuiltinType.Types.usvstring or
+                self._typeTag == IDLBuiltinType.Types.jsstring)
 
     def isByteString(self):
         return self._typeTag == IDLBuiltinType.Types.bytestring
@@ -3277,6 +3296,9 @@ class IDLBuiltinType(IDLType):
 
     def isUSVString(self):
         return self._typeTag == IDLBuiltinType.Types.usvstring
+
+    def isJSString(self):
+        return self._typeTag == IDLBuiltinType.Types.jsstring
 
     def isInteger(self):
         return self._typeTag <= IDLBuiltinType.Types.unsigned_long_long
@@ -3480,6 +3502,9 @@ BuiltinTypes = {
     IDLBuiltinType.Types.usvstring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "USVString",
                        IDLBuiltinType.Types.usvstring),
+    IDLBuiltinType.Types.jsstring:
+        IDLBuiltinType(BuiltinLocation("<builtin type>"), "JSString",
+                       IDLBuiltinType.Types.jsstring),
     IDLBuiltinType.Types.object:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "Object",
                        IDLBuiltinType.Types.object),
@@ -3646,8 +3671,8 @@ class IDLValue(IDLObject):
             # TreatNullAsEmpty is a different type for resolution reasons,
             # however once you have a value it doesn't matter
             return self
-        elif self.type.isString() and type.isByteString():
-            # Allow ByteStrings to use a default value like DOMString.
+        elif self.type.isString() and (type.isByteString() or type.isJSString()):
+            # Allow ByteStrings and JSStrings to use a default value like DOMString.
             # No coercion is required as Codegen.py will handle the
             # extra steps. We want to make sure that our string contains
             # only valid characters, so we check that here.
@@ -5671,6 +5696,7 @@ class Tokenizer(object):
         "DOMString": "DOMSTRING",
         "ByteString": "BYTESTRING",
         "USVString": "USVSTRING",
+        "JSString": "JSSTRING",
         "any": "ANY",
         "boolean": "BOOLEAN",
         "byte": "BYTE",
@@ -6897,6 +6923,7 @@ class Parser(Tokenizer):
                   | DOMSTRING
                   | BYTESTRING
                   | USVSTRING
+                  | JSSTRING
                   | ANY
                   | ATTRIBUTE
                   | BOOLEAN
@@ -7178,6 +7205,12 @@ class Parser(Tokenizer):
             BuiltinStringType : USVSTRING
         """
         p[0] = IDLBuiltinType.Types.usvstring
+
+    def p_BuiltinStringTypeJSString(self, p):
+        """
+            BuiltinStringType : JSSTRING
+        """
+        p[0] = IDLBuiltinType.Types.jsstring
 
     def p_UnsignedIntegerTypeUnsigned(self, p):
         """
