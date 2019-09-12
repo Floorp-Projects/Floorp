@@ -3731,10 +3731,7 @@ bool nsTableFrame::IsAutoBSize(WritingMode aWM) {
   if (bsize.IsAuto()) {
     return true;
   }
-  // Don't consider calc() here like this quirk for percent.
-  // FIXME(emilio): calc() causing this behavior change seems odd.
-  return bsize.HasPercent() && !bsize.AsLengthPercentage().was_calc &&
-         bsize.ToPercentage() <= 0.0f;
+  return bsize.ConvertsToPercentage() && bsize.ToPercentage() <= 0.0f;
 }
 
 nscoord nsTableFrame::CalcBorderBoxBSize(const ReflowInput& aReflowInput) {
