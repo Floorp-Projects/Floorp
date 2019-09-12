@@ -98,9 +98,13 @@ class HistoryView(
 
         when (val mode = state.mode) {
             is HistoryFragmentState.Mode.Normal ->
-                setUiForNormalMode(context.getString(R.string.library_history))
+                setUiForNormalMode(
+                    context.getString(R.string.library_history),
+                    view.history_list)
             is HistoryFragmentState.Mode.Editing ->
-                setUiForSelectingMode(context.getString(R.string.history_multi_select_title, mode.selectedItems.size))
+                setUiForSelectingMode(
+                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size),
+                    view.history_list)
         }
     }
 

@@ -125,7 +125,10 @@ class BookmarkView(
             is BookmarkFragmentState.Mode.Normal ->
                 setUiForNormalMode(state.tree)
             is BookmarkFragmentState.Mode.Selecting ->
-                setUiForSelectingMode(context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size))
+                setUiForSelectingMode(
+                    context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size),
+                    view.bookmark_list
+                )
         }
     }
 
@@ -145,7 +148,8 @@ class BookmarkView(
 
     private fun setUiForNormalMode(root: BookmarkNode?) {
         super.setUiForNormalMode(
-            if (BookmarkRoot.Mobile.matches(root)) context.getString(R.string.library_bookmarks) else root?.title
+            if (BookmarkRoot.Mobile.matches(root)) context.getString(R.string.library_bookmarks) else root?.title,
+            view.bookmark_list
         )
     }
 

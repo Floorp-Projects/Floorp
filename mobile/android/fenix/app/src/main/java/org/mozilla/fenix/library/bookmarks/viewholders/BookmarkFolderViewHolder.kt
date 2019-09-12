@@ -31,6 +31,10 @@ class BookmarkFolderViewHolder(
 
         if (!item.inRoots()) {
             setupMenu(item)
+            containerView.overflowView.visibility = when (selectionHolder.selectedItems.isEmpty()) {
+                true -> View.VISIBLE
+                false -> View.INVISIBLE
+            }
         } else {
             containerView.overflowView.visibility = View.GONE
         }
