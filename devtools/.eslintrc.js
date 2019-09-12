@@ -354,8 +354,6 @@ module.exports = {
     "no-invalid-regexp": "off",
     // disallow irregular whitespace outside of strings and comments
     "no-irregular-whitespace": "off",
-    // disallow usage of __iterator__ property
-    "no-iterator": "off",
     // disallow labels that share a name with a variable
     "no-label-var": "off",
     // disallow unnecessary nested blocks
