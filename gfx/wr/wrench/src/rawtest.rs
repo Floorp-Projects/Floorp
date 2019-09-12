@@ -163,8 +163,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(64.0, 64.0),
-            size2(64.0, 64.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -192,8 +190,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(1024.0, 1024.0),
-            size2(1024.0, 1024.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -218,8 +214,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(1024.0, 1024.0),
-            size2(1024.0, 1024.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             img,
@@ -255,7 +249,7 @@ impl<'a> RawtestHarness<'a> {
         let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.));
 
         // setup some malicious image size parameters
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             size2(151., 56.0),
@@ -335,7 +329,7 @@ impl<'a> RawtestHarness<'a> {
         };
 
         // setup some malicious image size parameters
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size * 2.,
@@ -440,7 +434,7 @@ impl<'a> RawtestHarness<'a> {
             Some(100),
         );
 
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size,
@@ -477,7 +471,7 @@ impl<'a> RawtestHarness<'a> {
             Some(100),
         );
 
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size,
@@ -532,7 +526,7 @@ impl<'a> RawtestHarness<'a> {
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size,
@@ -558,7 +552,7 @@ impl<'a> RawtestHarness<'a> {
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size,
@@ -590,7 +584,7 @@ impl<'a> RawtestHarness<'a> {
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
-        builder.push_image(
+        builder.push_repeating_image(
             &info,
             info.clip_rect,
             image_size,
@@ -656,8 +650,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(200.0, 200.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -680,8 +672,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(200.0, 200.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -767,8 +757,6 @@ impl<'a> RawtestHarness<'a> {
             builder.push_image(
                 &info,
                 info.clip_rect,
-                size2(200.0, 200.0),
-                size2(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img.as_image(),
@@ -777,8 +765,6 @@ impl<'a> RawtestHarness<'a> {
             builder.push_image(
                 &info2,
                 info2.clip_rect,
-                size2(200.0, 200.0),
-                size2(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
                 blob_img2.as_image(),
@@ -870,8 +856,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(200.0, 200.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -899,8 +883,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(200.0, 200.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -926,8 +908,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(200.0, 200.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             blob_img.as_image(),
@@ -1126,8 +1106,6 @@ impl<'a> RawtestHarness<'a> {
         builder.push_image(
             &info,
             info.clip_rect,
-            size2(150.0, 50.0),
-            size2(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
             image,

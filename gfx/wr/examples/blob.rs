@@ -236,8 +236,6 @@ impl Example for App {
         builder.push_image(
             &CommonItemProperties::new(bounds, space_and_clip),
             bounds,
-            LayoutSize::new(500.0, 500.0),
-            LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
             blob_img1.as_image(),
@@ -248,8 +246,6 @@ impl Example for App {
         builder.push_image(
             &CommonItemProperties::new(bounds, space_and_clip),
             bounds,
-            LayoutSize::new(200.0, 200.0),
-            LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
             blob_img2.as_image(),
