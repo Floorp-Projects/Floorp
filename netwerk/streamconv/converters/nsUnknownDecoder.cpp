@@ -408,7 +408,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest) {
     if (!mContentType.IsEmpty()) return;
   }
 
-  nsCOMPtr<nsIHttpChannel> channel(do_QueryInterface(aRequest));
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (loadInfo->GetSkipContentSniffing()) {
