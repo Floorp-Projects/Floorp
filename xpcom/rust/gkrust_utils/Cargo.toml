@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Jonathan Kingston <jkt@mozilla.com>"]
 
 [dependencies]
-uuid = { version = "0.6", features = ["v4"] }
+uuid = { version = "0.7", features = ["v4"] }
 nsstring = { path = "../nsstring" }

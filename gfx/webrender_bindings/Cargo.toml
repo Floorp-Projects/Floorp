@@ -17,7 +17,7 @@ gleam = "0.6.14"
 log = "0.4"
 nsstring = { path = "../../xpcom/rust/nsstring" }
 bincode = "1.0"
-uuid = { version = "0.6", features = ["v4"] }
+uuid = { version = "0.7", features = ["v4"] }
 fxhash = "0.2.1"
 
 [dependencies.webrender]
