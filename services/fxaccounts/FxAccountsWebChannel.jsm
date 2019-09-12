@@ -459,7 +459,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
       .wrappedJSObject;
     return xps.whenLoaded().then(() => {
-      return this._fxAccounts.setSignedInUser(accountData);
+      return this._fxAccounts._internal.setSignedInUser(accountData);
     });
   },
 
@@ -588,15 +588,16 @@ this.FxAccountsWebChannelHelpers.prototype = {
         log.info("changePassword ignoring unsupported field", name);
       }
     }
-    await this._fxAccounts.updateUserAccountData(newCredentials);
+    await this._fxAccounts._internal.updateUserAccountData(newCredentials);
     // Force the keys derivation, to be able to register a send-tab command
-    // in updateDeviceRegistration.
+    // in updateDeviceRegistration (but it's not clear we really do need to
+    // force keys here - see bug 1580398 for more)
     try {
-      await this._fxAccounts.getKeys();
+      await this._fxAccounts.keys.getKeys();
     } catch (e) {
       log.error("getKeys errored", e);
     }
-    await this._fxAccounts.updateDeviceRegistration();
+    await this._fxAccounts._internal.updateDeviceRegistration();
   },
 
   /**

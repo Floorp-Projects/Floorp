@@ -2655,6 +2655,21 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   OnEndHandlingTopLevelEditSubActionInternal();
 
+  /**
+   * MoveSelectedContentsToDivElementToMakeItAbsolutePosition() looks for
+   * a `<div>` element in selection first.  If not, creates new `<div>`
+   * element.  Then, move all selected contents into the target `<div>`
+   * element.
+   * Note that this creates AutoSelectionRestorer.  Therefore, callers need
+   * to check whether we have been destroyed even when this returns NS_OK.
+   *
+   * @param aTargetElement      Returns target `<div>` element which should be
+   *                            changed to absolute positioned.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
+      RefPtr<Element>* aTargetElement);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
