@@ -82,11 +82,11 @@ add_task(async function test_reset() {
     kExtKbHash: "cheese",
     verified: true,
   };
-  await fxAccounts.setSignedInUser(credentials);
+  await fxAccounts._internal.setSignedInUser(credentials);
   ok(!Services.prefs.prefHasUserValue(testPref));
   // signing the user out should reset the name pref.
   const namePref = PREF_ACCOUNT_ROOT + "device.name";
   ok(Services.prefs.prefHasUserValue(namePref));
-  await fxAccounts.signOut(/* remoteOnly = */ true);
+  await fxAccounts.signOut(/* localOnly = */ true);
   ok(!Services.prefs.prefHasUserValue(namePref));
 });

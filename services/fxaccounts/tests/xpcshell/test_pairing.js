@@ -52,14 +52,16 @@ const fxaConfig = {
   },
 };
 const fxAccounts = {
-  getScopedKeys(scope) {
-    return {
-      [scope]: {
-        kid: "123456",
-        k: KSYNC,
-        kty: "oct",
-      },
-    };
+  keys: {
+    getScopedKeys(scope) {
+      return {
+        [scope]: {
+          kid: "123456",
+          k: KSYNC,
+          kty: "oct",
+        },
+      };
+    },
   },
   authorizeOAuthCode() {
     return { code: "mycode", state: "mystate" };

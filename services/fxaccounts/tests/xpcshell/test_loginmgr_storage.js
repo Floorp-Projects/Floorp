@@ -89,7 +89,7 @@ add_task(async function test_simple() {
     kExtKbHash: "the kExtKbHash value",
     verified: true,
   };
-  await fxa.setSignedInUser(creds);
+  await fxa._internal.setSignedInUser(creds);
 
   // This should have stored stuff in both the .json file in the profile
   // dir, and the login dir.
@@ -187,7 +187,7 @@ add_task(async function test_MPLocked() {
   Assert.strictEqual(getLoginMgrData(), null, "no login mgr at the start");
   // tell the storage that the MP is locked.
   setLoginMgrLoggedInState(false);
-  await fxa.setSignedInUser(creds);
+  await fxa._internal.setSignedInUser(creds);
 
   // This should have stored stuff in the .json, and the login manager stuff
   // will not exist.
@@ -253,14 +253,14 @@ add_task(async function test_consistentWithMPEdgeCases() {
   };
 
   // Log a user in while MP is unlocked.
-  await fxa.setSignedInUser(creds1);
+  await fxa._internal.setSignedInUser(creds1);
 
   // tell the storage that the MP is locked - this will prevent logout from
   // being able to clear the data.
   setLoginMgrLoggedInState(false);
 
   // now set the second credentials.
-  await fxa.setSignedInUser(creds2);
+  await fxa._internal.setSignedInUser(creds2);
 
   // We should still have creds1 data in the login manager.
   let login = getLoginMgrData();

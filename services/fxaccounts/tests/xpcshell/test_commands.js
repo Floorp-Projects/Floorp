@@ -73,15 +73,17 @@ add_task(async function test_commands_pollDeviceCommands_push() {
         lastCommandIndex: 10,
       },
     },
+    getUserAccountData() {
+      return this.data;
+    },
+    updateUserAccountData(data) {
+      this.data = data;
+    },
   };
 
   const fxAccounts = {
-    async _withCurrentAccountState(cb) {
-      const get = () => accountState.data;
-      const set = val => {
-        accountState.data = val;
-      };
-      await cb(get, set);
+    async withCurrentAccountState(cb) {
+      await cb(accountState);
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
@@ -114,15 +116,17 @@ add_task(
           lastCommandIndex: 12,
         },
       },
+      getUserAccountData() {
+        return this.data;
+      },
+      updateUserAccountData(data) {
+        this.data = data;
+      },
     };
 
     const fxAccounts = {
-      async _withCurrentAccountState(cb) {
-        const get = () => accountState.data;
-        const set = val => {
-          accountState.data = val;
-        };
-        await cb(get, set);
+      async withCurrentAccountState(cb) {
+        await cb(accountState);
       },
     };
     const commands = new FxAccountsCommands(fxAccounts);
@@ -157,15 +161,17 @@ add_task(
       data: {
         device: {},
       },
+      getUserAccountData() {
+        return this.data;
+      },
+      updateUserAccountData(data) {
+        this.data = data;
+      },
     };
 
     const fxAccounts = {
-      async _withCurrentAccountState(cb) {
-        const get = () => accountState.data;
-        const set = val => {
-          accountState.data = val;
-        };
-        await cb(get, set);
+      async withCurrentAccountState(cb) {
+        await cb(accountState);
       },
     };
     const commands = new FxAccountsCommands(fxAccounts);
@@ -210,15 +216,17 @@ add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
         lastCommandIndex: 10,
       },
     },
+    getUserAccountData() {
+      return this.data;
+    },
+    updateUserAccountData(data) {
+      this.data = data;
+    },
   };
 
   const fxAccounts = {
-    async _withCurrentAccountState(cb) {
-      const get = () => accountState.data;
-      const set = val => {
-        accountState.data = val;
-      };
-      await cb(get, set);
+    async withCurrentAccountState(cb) {
+      await cb(accountState);
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
@@ -261,15 +269,17 @@ add_task(
       data: {
         device: {},
       },
+      getUserAccountData() {
+        return this.data;
+      },
+      updateUserAccountData(data) {
+        this.data = data;
+      },
     };
 
     const fxAccounts = {
-      async _withCurrentAccountState(cb) {
-        const get = () => accountState.data;
-        const set = val => {
-          accountState.data = val;
-        };
-        await cb(get, set);
+      async withCurrentAccountState(cb) {
+        await cb(accountState);
       },
     };
     const commands = new FxAccountsCommands(fxAccounts);
