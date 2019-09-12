@@ -592,7 +592,9 @@ function filterPrefs(options = {}) {
   }
 
   if (searchName && !gExistingPrefs.has(searchName)) {
-    gPrefsTable.appendChild(new PrefRow(searchName).getElement());
+    let addPrefRow = new PrefRow(searchName);
+    addPrefRow.odd = odd;
+    gPrefsTable.appendChild(addPrefRow.getElement());
   }
 
   // We only start observing preference changes after the first search is done,
