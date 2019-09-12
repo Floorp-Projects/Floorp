@@ -40,8 +40,8 @@
         "included": {
           "locales": {
             "matches": [
-              "ach", "af", "an", "ar", "ast", "az", "ca", "ca-valencia",
-              "cak", "da", "de", "dsb", "el", "eo", "es-CL", "es-ES",
+              "ach", "af", "an", "ar", "ast", "az", "ca", "cak", "da", "de",
+              "dsb", "el", "eo", "es-CL", "es-ES",
               "es-MX", "eu", "fa", "ff", "fi", "fr", "fy-NL", "gn",
               "gu-IN", "hi-IN", "hr", "hsb", "ia", "is", "it",
               "ja-JP-mac", "ja", "ka", "kab", "km", "kn", "lij", "lo",
@@ -261,7 +261,7 @@
         "webExtensionLocale": "be"
       }, {
         "included": { "locales": {
-          "matches": ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"]
+          "matches": ["an", "ast", "ca", "es-ES", "eu", "gl"]
         }},
         "webExtensionLocale": "es"
       }, {
@@ -468,8 +468,7 @@
       "engineName": "diec2",
       "webExtensionId": "diec2@search.mozilla.org",
       "webExtensionVersion": "1.2",
-      "appliesTo": [{
-        "included": { "locales": { "matches": ["ca", "ca-valencia"]}}}]
+      "appliesTo": [{ "included": { "locales": { "matches": ["ca"]}}}]
     },
     {
       "engineName": "drae",
@@ -752,10 +751,10 @@
       "webExtensionVersion": "1.0",
       "appliesTo": [{
         "included": { "locales": { "matches": [
-          "en-US", "ach", "an", "bs", "ca", "ca-valencia", "crh",
-          "en-CA", "ga-IE", "gn", "hr", "ia", "ka", "kk", "km", "lo",
-          "lt", "mai",  "ms", "my", "ne-NP", "oc", "pt-BR", "sl", "tl",
-          "tr", "ur", "uz", "wo"
+          "en-US", "ach", "an", "bs", "ca", "crh", "en-CA", "ga-IE",
+          "gn", "hr", "ia", "ka", "kk", "km", "lo", "lt", "mai",
+          "ms", "my", "ne-NP", "oc", "pt-BR", "sl", "tl", "tr",
+          "ur", "uz", "wo"
         ]}}
       }, {
         "included": { "locales": { "matches": ["ja-JP-mac", "ja"]}},
@@ -817,7 +816,7 @@
       "appliesTo": [ {
         "included": { "locales": { "matches": [
           "af", "an", "ar", "as", "ast", "az", "be", "bg",
-          "br", "bs", "ca", "ca-valencia", "crh", "cy", "da", "de", "dsb",
+          "br", "bs", "ca", "crh", "cy", "da", "de", "dsb",
           "el", "eo", "et", "eu", "fa", "fi", "fy-NL", "ga-IE",
           "gd", "gl", "gn", "he", "hr", "hsb", "hu", "ia",
           "id", "is", "it", "ka", "kab", "kk", "km", "kn",
