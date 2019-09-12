@@ -165,7 +165,15 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
-        getSessionById()?.let { quickActionSheetSessionObserver?.updateBookmarkState(it) }
+        getSessionById()?.let {
+            /**
+             * The session mode may be changed if the user is originally in Normal Mode and then
+             * opens a 3rd party link in Private Browsing Mode. Hence, we update the theme here.
+             * This fixes issue #5254.
+             */
+            (activity as HomeActivity).updateThemeForSession(it)
+            quickActionSheetSessionObserver?.updateBookmarkState(it)
+        }
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
