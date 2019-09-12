@@ -574,6 +574,20 @@ class TextEditor : public EditorBase,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidInsertText(
       uint32_t aNewLength, uint32_t aInsertedOffset, uint32_t aInsertedLength);
 
+ protected:  // edit sub-action handler
+  /**
+   * TruncateInsertionStringForMaxLength() truncates aInsertionString for
+   * making handling insertion not cause overflow from `maxlength` value.
+   *
+   * @param aInsertionString    [in/out] New insertion string.  This is
+   *                            truncated if there is no enough space to
+   *                            insert the new string.
+   * @return                    If aInsertionString is truncated one or
+   *                            more characters, returns "as handled".
+   */
+  EditActionResult TruncateInsertionStringForMaxLength(
+      nsAString& aInsertionString, uint32_t aMaxLength);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
