@@ -839,15 +839,6 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditSubAction::eSetPositionToAbsolute: {
-      nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef())
-              .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return DidAbsolutePosition();
-    }
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
@@ -862,6 +853,8 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eRedo:
     case EditSubAction::eRemoveList:
     case EditSubAction::eSetOrClearAlignment:
+    case EditSubAction::eSetPositionToAbsolute:
+    case EditSubAction::eSetPositionToStatic:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
       return NS_ERROR_UNEXPECTED;
     default:
@@ -10922,7 +10915,27 @@ nsresult HTMLEditRules::WillAbsolutePosition(bool* aCancel, bool* aHandled) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return NS_OK;
+
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement) {
+    return NS_OK;
+  }
+
+  OwningNonNull<Element> newBlock(
+      *HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement);
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .SetPositionToAbsoluteOrStatic(*newBlock, true);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "SetPositionToAbsoluteOrStatic() failed");
+  return rv;
 }
 
 nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
@@ -11203,25 +11216,6 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
     }
     // Forget curList, if any
     curList = nullptr;
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::DidAbsolutePosition() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (!HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement) {
-    return NS_OK;
-  }
-  OwningNonNull<Element> newBlock(
-      *HTMLEditorRef().TopLevelEditSubActionDataRef().mNewBlockElement);
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .SetPositionToAbsoluteOrStatic(*newBlock, true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
   return NS_OK;
 }
