@@ -104,6 +104,26 @@
           {"$ref": "ColorArray"},
           {"type": "null"}
         ]
+      },
+      {
+        "id": "OnClickData",
+        "type": "object",
+        "description": "Information sent when a browser action is clicked.",
+        "properties": {
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["Shift", "Alt", "Command", "Ctrl", "MacCtrl"]
+            },
+            "description": "An array of keyboard modifiers that were held while the menu item was clicked."
+          },
+          "button": {
+            "type": "integer",
+            "optional": true,
+            "description": "An integer value of button by which menu item was clicked."
+          }
+        }
       }
     ],
     "functions": [
@@ -448,6 +468,11 @@
           {
             "name": "tab",
             "$ref": "tabs.Tab"
+          },
+          {
+            "name": "info",
+            "$ref": "OnClickData",
+            "optional": true
           }
         ]
       }
