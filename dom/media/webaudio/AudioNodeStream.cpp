@@ -14,7 +14,6 @@
 #include "AudioContext.h"
 #include "nsMathUtils.h"
 #include "AlignmentUtils.h"
-#include "blink/Reverb.h"
 
 using namespace mozilla::dom;
 
@@ -219,22 +218,6 @@ void AudioNodeStream::SetBuffer(AudioChunk&& aBuffer) {
   };
 
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aBuffer)));
-}
-
-void AudioNodeStream::SetReverb(WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeStream* aStream, WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount)
-        : ControlMessage(aStream), mReverb(aReverb), mImpulseChanelCount(aImpulseChannelCount) {}
-    void Run() override {
-      static_cast<AudioNodeStream*>(mStream)->Engine()->SetReverb(
-          mReverb.forget(), mImpulseChanelCount);
-    }
-    nsAutoPtr<WebCore::Reverb> mReverb;
-    uint32_t mImpulseChanelCount;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aReverb, aImpulseChannelCount));
 }
 
 void AudioNodeStream::SetRawArrayData(nsTArray<float>& aData) {
