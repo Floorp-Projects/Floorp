@@ -1,3 +1,13 @@
+add_task(async function setup_pref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // To avoid throttling requestAnimationFrame callbacks in invisible
+      // iframes
+      ["layout.throttled_frame_rate", 60],
+    ],
+  });
+});
+
 add_task(async function test_main() {
   function httpURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
@@ -27,11 +37,21 @@ add_task(async function test_main() {
         });
       },
     },
+    { url: httpURL("helper_fission_animation_styling_in_oopif.html") },
     // add additional tests here
   ];
   if (isWebRender) {
     subtests = subtests.concat([
       // add additional WebRender-specific tests here
+    ]);
+  } else {
+    subtests = subtests.concat([
+      // Bug 1576514: On WebRender this test casues an assertion.
+      {
+        url: httpURL(
+          "helper_fission_animation_styling_in_transformed_oopif.html"
+        ),
+      },
     ]);
   }
 

@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for scrolled out of view animation optimization in an OOPIF</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(runAsyncContinuation(test))
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
+
+async function setup_in_oopif() {
+  const setup = function() {
+    // Load utility functions for animation stuff.
+    const script = document.createElement("script");
+    script.setAttribute("src", "/tests/dom/animation/test/testcommon.js");
+    document.head.appendChild(script);
+
+    const extraStyle = document.createElement("style");
+    document.head.appendChild(extraStyle);
+    // an animation doesn't cause any geometric changes and doesn't run on the
+    // compositor either
+    extraStyle.sheet.insertRule("@keyframes anim { from { color: red; } to { color: blue; } }", 0);
+
+    const div = document.createElement("div");
+    // Position an element for animation at top: 20px.
+    div.style = "position: absolute; top: 20px; animation: anim 1s infinite";
+    div.setAttribute("id", "target");
+    div.innerHTML = "hello";
+    document.body.appendChild(div);
+    script.onload = () => {
+      // Force to flush the first style to avoid the first style is observed.
+      target.getAnimations()[0];
+      // FIXME: Bug 1578309 use anim.ready instead.
+      waitForFrame().then(() => {
+        FissionTestHelper.fireEventInEmbedder("OOPIF:SetupDone", true);
+      });
+    }
+    return true;
+  }
+
+  const iframePromise = promiseOneEvent("OOPIF:SetupDone", null);
+
+  await FissionTestHelper.sendToOopif(testframe, setup.toSource() + "()");
+  await iframePromise;
+}
+
+async function observe_styling_in_oopif(aFrameCount) {
+  const observe_styling = function(frameCount) {
+    // Start in a rAF callback.
+    waitForAnimationFrames(1).then(() => {
+      observeStyling(frameCount).then(markers => {
+        FissionTestHelper.fireEventInEmbedder("OOPIF:StyleCount", markers.length);
+      });
+    });
+
+    return true;
+  }
+
+  const iframePromise = promiseOneEvent("OOPIF:StyleCount", null);
+  await FissionTestHelper.sendToOopif(testframe, observe_styling.toSource() + `(${aFrameCount})`);
+
+  const styleCountData = await iframePromise;
+  return styleCountData.data;
+}
+
+// The actual test
+
+async function* test() {
+  // Generate an infinite animation which is initially clipped out by
+  // overflow: hidden style in the out-of-process iframe.
+  await setup_in_oopif();
+
+  let styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 0,
+     "Animation in an out-of-process iframe which is initially clipped out " +
+       "due to 'overflow: hidden' should be throttled");
+
+  // Scroll synchronously to a position where the iframe gets visible.
+  scroller.scrollTo(0, 1000);
+  await new Promise(resolve => {
+    scroller.addEventListener("scroll", resolve, { once: true });
+  });
+
+  // Wait for a frame to make sure the notification of the last scroll position
+  // from APZC reaches the iframe process
+  await observe_styling_in_oopif(1);
+
+  styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 5,
+     "Animation in an out-of-process iframe which is no longer clipped out " +
+       "should NOT be throttled");
+
+  // Scroll synchronously to a position where the iframe is invisible again.
+  scroller.scrollTo(0, 0);
+  await new Promise(resolve => {
+    scroller.addEventListener("scroll", resolve, { once: true });
+  });
+
+  // Wait for a frame to make sure the notification of the last scroll position
+  // from APZC reaches the iframe process
+  await observe_styling_in_oopif(1);
+
+  styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 0,
+     "Animation in an out-of-process iframe which is clipped out again " +
+       "should be throttled again");
+
+  // ===== Asyncronous scrolling tests =====
+  scroller.style.overflow = "scroll";
+  // Scroll asynchronously to a position where the animating element gets
+  // visible.
+  scroller.scrollTo({ left: 0, top: 750, behavior: "smooth"});
+
+  // Wait for the asyncronous scroll finish. `60` frames is the same number in
+  // helper_fission_scroll_oopif.html
+  await observe_styling_in_oopif(60);
+
+  styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 5,
+     "Animation in an out-of-process iframe which is now visible by " +
+       "asynchronous scrolling should NOT be throttled");
+
+  // Scroll asynchronously to a position where the iframe is still visible but
+  // the animating element gets invisible.
+  scroller.scrollTo({ left: 0, top: 720, behavior: "smooth"});
+
+  // Wait for the asyncronous scroll finish.
+  await observe_styling_in_oopif(60);
+
+  styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 0,
+     "Animation in an out-of-process iframe which is scrolled out of view by " +
+       "asynchronous scrolling should be throttled");
+
+  // Scroll asynchronously to a position where the animating element gets
+  // visible again.
+  scroller.scrollTo({ left: 0, top: 750, behavior: "smooth"});
+
+  // Wait for the asyncronous scroll finish.
+  await observe_styling_in_oopif(60);
+
+  styleCount = await observe_styling_in_oopif(5);
+  is(styleCount, 5,
+     "Animation in an out-of-process iframe appeared by the asynchronous " +
+       "scrolling should be NOT throttled");
+}
+
+  </script>
+</head>
+<div style="width: 300px; height: 300px; overflow: hidden;" id="scroller">
+  <div style="width: 100%; height: 1000px;"></div>
+  <!-- I am not sure it's worth setting scrolling="no" and pointer-events: none. -->
+  <!-- I just want to make sure that HitTestingTreeNode is generated even with these properties. -->
+  <iframe scrolling="no" style="pointer-events: none;" id="testframe"></iframe>
+</div>
+</html>
