@@ -78,21 +78,28 @@ class MediaEncoderListener {
  *    been initialized and when there's data available.
  *    => encoder->RegisterListener(listener);
  *
- * 3) When the MediaEncoderListener is notified that the MediaEncoder has
+ * 3) Connect the sources to be recorded. Either through:
+ *    => encoder->ConnectAudioNode(node);
+ *    or
+ *    => encoder->ConnectMediaStreamTrack(track);
+ *    These should not be mixed. When connecting MediaStreamTracks there is
+ *    support for at most one of each kind.
+ *
+ * 4) When the MediaEncoderListener is notified that the MediaEncoder has
  *    data available, we can encode data. This also encodes metadata on its
  *    first invocation.
  *    => encoder->GetEncodedData(...);
  *
- * 4) To stop encoding, there are multiple options:
+ * 5) To stop encoding, there are multiple options:
  *
- *    4.1) Stop() for a graceful stop.
+ *    5.1) Stop() for a graceful stop.
  *         => encoder->Stop();
  *
- *    4.2) Cancel() for an immediate stop, if you don't need the data currently
+ *    5.2) Cancel() for an immediate stop, if you don't need the data currently
  *         buffered.
  *         => encoder->Cancel();
  *
- *    4.3) When all input tracks end, the MediaEncoder will automatically stop
+ *    5.3) When all input tracks end, the MediaEncoder will automatically stop
  *         and shut down.
  */
 class MediaEncoder {
@@ -220,6 +227,12 @@ class MediaEncoder {
 
  private:
   /**
+   * Sets mGraphStream if not already set, using a new stream from aStream's
+   * graph.
+   */
+  void EnsureGraphStreamFrom(MediaStream* aStream);
+
+  /**
    * Takes a regular runnable and dispatches it to the graph wrapped in a
    * ControlMessage.
    */
@@ -263,6 +276,9 @@ class MediaEncoder {
   // A video track that we are encoding. Will be null if the input stream
   // doesn't contain video on start() or if the input is an AudioNode.
   RefPtr<dom::VideoStreamTrack> mVideoTrack;
+
+  // A stream to keep the MediaStreamGraph alive while we're recording.
+  RefPtr<SharedDummyStream> mGraphStream;
 
   TimeStamp mStartTime;
   const nsString mMIMEType;
