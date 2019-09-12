@@ -9,7 +9,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
@@ -38,6 +37,7 @@ import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.ui.autocomplete.AutocompleteView
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.OnFilterListener
@@ -349,14 +349,9 @@ class BrowserToolbar @JvmOverloads constructor(
                 listener.invoke()
             }
 
-            val outValue = TypedValue()
-
-            context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless,
-                outValue,
-                true)
-
-            displayToolbar.siteSecurityIconView.setBackgroundResource(outValue.resourceId)
+            displayToolbar.siteSecurityIconView.setBackgroundResource(
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+            )
         }
     }
 
@@ -372,14 +367,9 @@ class BrowserToolbar @JvmOverloads constructor(
                 listener.invoke()
             }
 
-            val outValue = TypedValue()
-
-            context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless,
-                outValue,
-                true)
-
-            displayToolbar.trackingProtectionIconView.setBackgroundResource(outValue.resourceId)
+            displayToolbar.trackingProtectionIconView.setBackgroundResource(
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+            )
         }
     }
 

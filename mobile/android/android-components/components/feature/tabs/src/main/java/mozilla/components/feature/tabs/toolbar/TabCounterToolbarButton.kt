@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tabs.toolbar
 
-import android.util.TypedValue
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +11,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.tabs.R
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.ui.tabcounter.TabCounter
 import java.lang.ref.WeakReference
 
@@ -38,9 +38,9 @@ class TabCounterToolbarButton(
         }
 
         // Set selectableItemBackgroundBorderless
-        val outValue = TypedValue()
-        parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
-        view.setBackgroundResource(outValue.resourceId)
+        val selectableItemBackgroundBorderless =
+            parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+        view.setBackgroundResource(selectableItemBackgroundBorderless)
         return view
     }
 

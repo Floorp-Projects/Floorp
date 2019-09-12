@@ -16,11 +16,15 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
 import android.os.Process
 import android.view.accessibility.AccessibilityManager
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.getSystemService
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.R
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 /**
  * The (visible) version name of the application, as specified by the <manifest> tag's versionName
@@ -130,3 +134,10 @@ inline fun Context.runOnlyInMainProcess(block: () -> Unit) {
         block()
     }
 }
+
+/**
+ * Returns the color int corresponding to the attribute.
+ */
+@ColorInt
+fun Context.getColorFromAttr(@AttrRes attr: Int) =
+    ContextCompat.getColor(this, theme.resolveAttribute(attr))

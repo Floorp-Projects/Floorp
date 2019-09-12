@@ -6,7 +6,6 @@ package mozilla.components.browser.toolbar.display
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
@@ -19,6 +18,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 @Suppress("ViewConstructor") // This view is only instantiated in code
 internal class MenuButton(
@@ -35,12 +35,7 @@ internal class MenuButton(
     }
 
     init {
-        val outValue = TypedValue()
-        context.theme.resolveAttribute(
-            android.R.attr.selectableItemBackgroundBorderless,
-            outValue,
-            true)
-        setBackgroundResource(outValue.resourceId)
+        setBackgroundResource(context.theme.resolveAttribute(android.R.attr.selectableItemBackground))
 
         visibility = View.GONE
         isClickable = true
