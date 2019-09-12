@@ -152,17 +152,6 @@ class TextEditRules {
                                        int32_t aMaxLength);
 
   /**
-   * Called before inserting a line break into the editor.
-   * This method removes selected text if selection isn't collapsed.
-   * Therefore, this might cause destroying the editor.
-   *
-   * @param aMaxLength          The maximum string length which the editor
-   *                            allows to set.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult WillInsertLineBreak(int32_t aMaxLength);
-
-  /**
    * Called before setting text to the text editor.
    * This method may actually set text to it.  Therefore, this might cause
    * destroying the text editor.
