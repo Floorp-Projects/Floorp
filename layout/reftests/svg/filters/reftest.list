@@ -65,7 +65,7 @@ skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feG
 
 # no tests for feTurbulence
 
-fuzzy-if(geckoview&&webrender,0-8,0-199) == filter-clipped-rect-01.svg pass.svg
+fuzzy-if(geckoview&&webrender,0-8,0-220) == filter-clipped-rect-01.svg pass.svg
 == filter-in-pattern-01.svg pass.svg
 fuzzy(0-5,0-67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
 random-if(winWidget) == filter-in-mask-01.svg pass.svg # bug 1356139
