@@ -51,7 +51,7 @@ use std::{cmp, fmt, hash, ops, u32, usize, mem};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
-use crate::util::{MatrixHelpers, MaxRect, Recycler};
+use crate::util::{MatrixHelpers, MaxRect, Recycler, ScaleOffset, RectHelpers};
 use crate::util::{clamp_to_scale_factor, pack_as_float, project_rect, raster_rect_to_device_pixels};
 use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use smallvec::SmallVec;
@@ -131,6 +131,91 @@ impl PrimitiveOpacity {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct SpaceSnapper {
+    pub ref_spatial_node_index: SpatialNodeIndex,
+    current_target_spatial_node_index: SpatialNodeIndex,
+    snapping_transform: Option<ScaleOffset>,
+    pub device_pixel_scale: DevicePixelScale,
+}
+
+impl SpaceSnapper {
+    pub fn new(
+        ref_spatial_node_index: SpatialNodeIndex,
+        device_pixel_scale: DevicePixelScale,
+    ) -> Self {
+        SpaceSnapper {
+            ref_spatial_node_index,
+            current_target_spatial_node_index: SpatialNodeIndex::INVALID,
+            snapping_transform: None,
+            device_pixel_scale,
+        }
+    }
+
+    pub fn new_with_target(
+        ref_spatial_node_index: SpatialNodeIndex,
+        target_node_index: SpatialNodeIndex,
+        device_pixel_scale: DevicePixelScale,
+        clip_scroll_tree: &ClipScrollTree,
+    ) -> Self {
+        let mut snapper = SpaceSnapper {
+            ref_spatial_node_index,
+            current_target_spatial_node_index: SpatialNodeIndex::INVALID,
+            snapping_transform: None,
+            device_pixel_scale,
+        };
+
+        snapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
+        snapper
+    }
+
+    pub fn set_target_spatial_node(
+        &mut self,
+        target_node_index: SpatialNodeIndex,
+        clip_scroll_tree: &ClipScrollTree,
+    ) {
+        if target_node_index == self.current_target_spatial_node_index {
+            return
+        }
+
+        let ref_spatial_node = &clip_scroll_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
+        let target_spatial_node = &clip_scroll_tree.spatial_nodes[target_node_index.0 as usize];
+
+        self.current_target_spatial_node_index = target_node_index;
+        self.snapping_transform = match (ref_spatial_node.snapping_transform, target_spatial_node.snapping_transform) {
+            (Some(ref ref_scale_offset), Some(ref target_scale_offset)) => {
+                Some(ref_scale_offset
+                    .inverse()
+                    .accumulate(target_scale_offset)
+                    .scale(self.device_pixel_scale.0))
+            }
+            _ => None,
+        };
+    }
+
+    pub fn snap_rect<F>(&self, rect: &Rect<f32, F>) -> Rect<f32, F> where F: fmt::Debug {
+        debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
+        match self.snapping_transform {
+            Some(ref scale_offset) => {
+                let snapped_device_rect : DeviceRect = scale_offset.map_rect(rect).snap();
+                scale_offset.unmap_rect(&snapped_device_rect)
+            }
+            None => *rect,
+        }
+    }
+
+    pub fn snap_size<F>(&self, size: &Size2D<f32, F>) -> Size2D<f32, F> where F: fmt::Debug {
+        debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
+        match self.snapping_transform {
+            Some(ref scale_offset) => {
+                let rect = Rect::<f32, F>::new(Point2D::<f32, F>::zero(), *size);
+                let snapped_device_rect : DeviceRect = scale_offset.map_rect(&rect).snap();
+                scale_offset.unmap_rect(&snapped_device_rect).size
+            }
+            None => *size,
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct SpaceMapper<F, T> {

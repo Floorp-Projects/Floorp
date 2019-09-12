@@ -38,6 +38,10 @@ pub struct SpatialNode {
     /// Content scale/offset relative to the coordinate system.
     pub content_transform: ScaleOffset,
 
+    /// Snapping scale/offset relative to the coordinate system. If None, then
+    /// we should not snap entities bound to this spatial node.
+    pub snapping_transform: Option<ScaleOffset>,
+
     /// The axis-aligned coordinate system id of this node.
     pub coordinate_system_id: CoordinateSystemId,
 
@@ -111,6 +115,7 @@ impl SpatialNode {
         SpatialNode {
             viewport_transform: ScaleOffset::identity(),
             content_transform: ScaleOffset::identity(),
+            snapping_transform: None,
             coordinate_system_id: CoordinateSystemId(0),
             transform_kind: TransformedRectKind::AxisAligned,
             parent: parent_index,
@@ -633,6 +638,55 @@ impl SpatialNode {
             SpatialNodeType::ScrollFrame(info) if info.external_id == Some(external_id) => true,
             _ => false,
         }
+    }
+
+    /// Updates the snapping transform.
+    pub fn update_snapping(
+        &mut self,
+        parent: Option<&SpatialNode>,
+    ) {
+        // Reset in case of an early return.
+        self.snapping_transform = None;
+
+        // We need to incorporate the parent scale/offset with the child.
+        // If the parent does not have a scale/offset, then we know we are
+        // not 2d axis aligned and thus do not need to snap its children
+        // either.
+        let parent_scale_offset = match parent {
+            Some(parent) => {
+                match parent.snapping_transform {
+                    Some(scale_offset) => scale_offset,
+                    None => return,
+                }
+            },
+            _ => ScaleOffset::identity(),
+        };
+
+        let scale_offset = match self.node_type {
+            SpatialNodeType::ReferenceFrame(ref info) => {
+                match info.source_transform {
+                    PropertyBinding::Value(ref value) => {
+                        // We can only get a ScaleOffset if the transform is 2d axis
+                        // aligned.
+                        match ScaleOffset::from_transform(value) {
+                            Some(scale_offset) => {
+                                let origin_offset = info.origin_in_parent_reference_frame;
+                                ScaleOffset::from_offset(origin_offset.to_untyped())
+                                    .accumulate(&scale_offset)
+                            }
+                            None => return,
+                        }
+                    }
+
+                    // Assume animations start at the identity transform for snapping purposes.
+                    // TODO(aosmond): Is there a better known starting point?
+                    PropertyBinding::Binding(..) => ScaleOffset::identity(),
+                }
+            }
+            _ => ScaleOffset::identity(),
+        };
+
+        self.snapping_transform = Some(parent_scale_offset.accumulate(&scale_offset));
     }
 
     /// Returns true for ReferenceFrames whose source_transform is
