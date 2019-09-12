@@ -12,7 +12,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '/accessible/windows/msaa',
     ]
 else:
-    DIRS += ['other', 'extension']
+    DIRS += ['other']
     LOCAL_INCLUDES += [
         '/accessible/ipc/other',
     ]
