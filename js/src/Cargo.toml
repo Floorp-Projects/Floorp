@@ -16,7 +16,7 @@ path = "lib.rs"
 
 [build-dependencies]
 num_cpus = "1.1.0"
-glob = "0.2.11"
+glob = "0.3"
 
 [dependencies]
 libc = "0.2"
