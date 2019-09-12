@@ -52,11 +52,9 @@ class DOMQuad final : public nsWrapperCache {
                                                const DOMPointInit& aP1,
                                                const DOMPointInit& aP2,
                                                const DOMPointInit& aP3,
-                                               const DOMPointInit& aP4,
-                                               ErrorResult& aRV);
+                                               const DOMPointInit& aP4);
   static already_AddRefed<DOMQuad> Constructor(const GlobalObject& aGlobal,
-                                               const DOMRectReadOnly& aRect,
-                                               ErrorResult& aRV);
+                                               const DOMRectReadOnly& aRect);
 
   already_AddRefed<DOMRectReadOnly> GetBounds() const;
   DOMPoint* P1() const { return mPoints[0]; }

@@ -18,9 +18,12 @@ interface Report {
   readonly attribute ReportBody? body;
 };
 
-[Constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options = {}),
- Pref="dom.reporting.enabled"]
+[Pref="dom.reporting.enabled"]
 interface ReportingObserver {
+  [Throws]
+  constructor(ReportingObserverCallback callback,
+              optional ReportingObserverOptions options = {});
+
   void observe();
   void disconnect();
   ReportList takeRecords();
@@ -45,10 +48,12 @@ interface DeprecationReportBody : ReportBody {
   readonly attribute unsigned long? columnNumber;
 };
 
-[Constructor(), Deprecated="DeprecatedTestingInterface",
+[Deprecated="DeprecatedTestingInterface",
  Pref="dom.reporting.testing.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface TestingDeprecatedInterface {
+  constructor();
+
   [Deprecated="DeprecatedTestingMethod"]
   void deprecatedMethod();
 

@@ -4,8 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor, Func="IsChromeOrXBL"]
+[Func="IsChromeOrXBL"]
 interface ChromeNodeList : NodeList {
+  constructor();
+
   [Throws]
   void append(Node aNode);
   [Throws]

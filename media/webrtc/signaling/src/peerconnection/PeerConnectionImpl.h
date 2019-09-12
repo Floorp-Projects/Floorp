@@ -175,7 +175,7 @@ class PeerConnectionImpl final
                   JS::MutableHandle<JSObject*> aReflector);
 
   static already_AddRefed<PeerConnectionImpl> Constructor(
-      const mozilla::dom::GlobalObject& aGlobal, ErrorResult& rv);
+      const mozilla::dom::GlobalObject& aGlobal);
   static PeerConnectionImpl* CreatePeerConnection();
 
   nsresult CreateRemoteSourceStreamInfo(RefPtr<RemoteSourceStreamInfo>* aInfo,

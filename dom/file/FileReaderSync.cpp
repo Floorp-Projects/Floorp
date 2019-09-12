@@ -37,7 +37,7 @@ using mozilla::dom::Optional;
 
 // static
 already_AddRefed<FileReaderSync> FileReaderSync::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+    const GlobalObject& aGlobal) {
   RefPtr<FileReaderSync> frs = new FileReaderSync();
 
   return frs.forget();

@@ -166,8 +166,7 @@ bool CheckerboardReportService::IsEnabled(JSContext* aCtx, JSObject* aGlobal) {
 
 /*static*/
 already_AddRefed<CheckerboardReportService>
-CheckerboardReportService::Constructor(const dom::GlobalObject& aGlobal,
-                                       ErrorResult& aRv) {
+CheckerboardReportService::Constructor(const dom::GlobalObject& aGlobal) {
   RefPtr<CheckerboardReportService> ces =
       new CheckerboardReportService(aGlobal.GetAsSupports());
   return ces.forget();

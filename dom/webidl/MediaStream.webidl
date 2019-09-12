@@ -28,11 +28,15 @@ dictionary DisplayMediaStreamConstraints {
     (boolean or MediaTrackConstraints) audio = false;
 };
 
-[Exposed=Window,
- Constructor,
- Constructor (MediaStream stream),
- Constructor (sequence<MediaStreamTrack> tracks)]
+[Exposed=Window]
 interface MediaStream : EventTarget {
+    [Throws]
+    constructor();
+    [Throws]
+    constructor(MediaStream stream);
+    [Throws]
+    constructor(sequence<MediaStreamTrack> tracks);
+
     readonly    attribute DOMString    id;
     sequence<MediaStreamTrack> getAudioTracks ();
     sequence<MediaStreamTrack> getVideoTracks ();

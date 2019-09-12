@@ -14,10 +14,12 @@ dictionary PCErrorData
 };
 
 [ChromeOnly,
- JSImplementation="@mozilla.org/dom/peerconnectionobserver;1",
- Constructor (RTCPeerConnection domPC)]
+ JSImplementation="@mozilla.org/dom/peerconnectionobserver;1"]
 interface PeerConnectionObserver
 {
+  [Throws]
+  constructor(RTCPeerConnection domPC);
+
   /* JSEP callbacks */
   void onCreateOfferSuccess(DOMString offer);
   void onCreateOfferError(PCErrorData error);

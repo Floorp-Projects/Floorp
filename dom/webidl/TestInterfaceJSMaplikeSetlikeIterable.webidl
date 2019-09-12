@@ -4,9 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceMaplike {
+  [Throws]
+  constructor();
+
   maplike<DOMString, long>;
   void setInternal(DOMString aKey, long aValue);
   void clearInternal();
@@ -14,9 +16,11 @@ interface TestInterfaceMaplike {
   boolean hasInternal(DOMString aKey);
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceMaplikeObject {
+  [Throws]
+  constructor();
+
   readonly maplike<DOMString, TestInterfaceMaplike>;
   void setInternal(DOMString aKey);
   void clearInternal();
@@ -25,44 +29,56 @@ interface TestInterfaceMaplikeObject {
 };
 
 [Pref="dom.expose_test_interfaces",
- JSImplementation="@mozilla.org/dom/test-interface-js-maplike;1",
- Constructor()]
+ JSImplementation="@mozilla.org/dom/test-interface-js-maplike;1"]
 interface TestInterfaceJSMaplike {
+  [Throws]
+  constructor();
+
   readonly maplike<DOMString, long>;
   void setInternal(DOMString aKey, long aValue);
   void clearInternal();
   boolean deleteInternal(DOMString aKey);
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceSetlike {
+  [Throws]
+  constructor();
+
   setlike<DOMString>;
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceSetlikeNode {
+  [Throws]
+  constructor();
+
   setlike<Node>;
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceIterableSingle {
+  [Throws]
+  constructor();
+
   iterable<long>;
   getter long(unsigned long index);
   readonly attribute unsigned long length;
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceIterableDouble {
+  [Throws]
+  constructor();
+
   iterable<DOMString, DOMString>;
 };
 
-[Constructor(),
- Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces"]
 interface TestInterfaceIterableDoubleUnion {
+  [Throws]
+  constructor();
+
   iterable<DOMString, (DOMString or long)>;
 };
 

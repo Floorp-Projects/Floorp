@@ -16,10 +16,13 @@ dictionary OfflineAudioContextOptions {
     required float         sampleRate;
 };
 
-[Constructor (OfflineAudioContextOptions contextOptions),
-Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate),
-Pref="dom.webaudio.enabled"]
+[Pref="dom.webaudio.enabled"]
 interface OfflineAudioContext : BaseAudioContext {
+    [Throws]
+    constructor(OfflineAudioContextOptions contextOptions);
+    [Throws]
+    constructor(unsigned long numberOfChannels, unsigned long length,
+                float sampleRate);
 
     [Throws]
     Promise<AudioBuffer> startRendering();

@@ -44,10 +44,10 @@ interface BaseAudioContext : EventTarget {
                                          optional DecodeErrorCallback errorCallback);
 
     // AudioNode creation
-    [NewObject, Throws]
+    [NewObject]
     AudioBufferSourceNode createBufferSource();
 
-    [NewObject, Throws]
+    [NewObject]
     ConstantSourceNode createConstantSource();
 
     [NewObject, Throws]

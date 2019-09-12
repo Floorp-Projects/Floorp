@@ -25,9 +25,11 @@ dictionary OscillatorOptions : AudioNodeOptions {
              PeriodicWave   periodicWave;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional OscillatorOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface OscillatorNode : AudioScheduledSourceNode {
+    [Throws]
+    constructor(BaseAudioContext context,
+                optional OscillatorOptions options = {});
 
     [SetterThrows]
     attribute OscillatorType type;

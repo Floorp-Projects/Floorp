@@ -12,8 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-void TextEncoder::Init() {}
-
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          const nsAString& aString,
                          JS::MutableHandle<JSObject*> aRetval,

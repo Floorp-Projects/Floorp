@@ -12,9 +12,10 @@ callback PromiseReturner = Promise<any>();
 interface WrapperCachedNonISupportsTestInterface {
 };
 
-[Pref="dom.expose_test_interfaces",
- Constructor]
+[Pref="dom.expose_test_interfaces"]
 interface TestFunctions {
+  constructor();
+
   [Throws]
   static void throwUncatchableException();
 

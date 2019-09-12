@@ -12,10 +12,11 @@
 
 typedef (BufferSource or Blob or USVString) BlobPart;
 
-[Constructor(optional sequence<BlobPart> blobParts,
-             optional BlobPropertyBag options = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Blob {
+  [Throws]
+  constructor(optional sequence<BlobPart> blobParts,
+              optional BlobPropertyBag options = {});
 
   [GetterThrows]
   readonly attribute unsigned long long size;

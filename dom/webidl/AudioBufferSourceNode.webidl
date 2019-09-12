@@ -19,9 +19,10 @@ dictionary AudioBufferSourceOptions {
              float        playbackRate = 1;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional AudioBufferSourceOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface AudioBufferSourceNode : AudioScheduledSourceNode {
+    constructor(BaseAudioContext context,
+                optional AudioBufferSourceOptions options = {});
 
     attribute AudioBuffer? buffer;
 

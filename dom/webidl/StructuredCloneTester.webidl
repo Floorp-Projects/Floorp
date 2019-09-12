@@ -4,11 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(boolean serializable, boolean deserializable),
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Pref="dom.testing.structuredclonetester.enabled",
  Serializable]
 interface StructuredCloneTester {
+  constructor(boolean serializable, boolean deserializable);
+
   readonly attribute boolean serializable;
   readonly attribute boolean deserializable;
 };

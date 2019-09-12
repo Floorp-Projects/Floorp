@@ -16,9 +16,10 @@ dictionary AudioBufferOptions {
     required float         sampleRate;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(AudioBufferOptions options)]
+[Pref="dom.webaudio.enabled"]
 interface AudioBuffer {
+    [Throws]
+    constructor(AudioBufferOptions options);
 
     readonly attribute float sampleRate;
     readonly attribute unsigned long length;

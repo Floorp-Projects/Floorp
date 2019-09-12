@@ -10,9 +10,11 @@
 typedef (Request or USVString) RequestInfo;
 typedef unsigned long nsContentPolicyType;
 
-[Constructor(RequestInfo input, optional RequestInit init = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Request {
+  [Throws]
+  constructor(RequestInfo input, optional RequestInit init = {});
+
   readonly attribute ByteString method;
   readonly attribute USVString url;
   [SameObject, BinaryName="headers_"] readonly attribute Headers headers;

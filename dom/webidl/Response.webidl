@@ -7,11 +7,15 @@
  * https://fetch.spec.whatwg.org/#response-class
  */
 
-// This should be Constructor(optional BodyInit... but BodyInit doesn't include
-// ReadableStream yet because we don't want to expose Streams API to Request.
-[Constructor(optional (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString)? body, optional ResponseInit init = {}),
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Response {
+  // This should be constructor(optional BodyInit... but BodyInit doesn't
+  // include ReadableStream yet because we don't want to expose Streams API to
+  // Request.
+  [Throws]
+  constructor(optional (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString)? body,
+              optional ResponseInit init = {});
+
   [NewObject] static Response error();
   [Throws,
    NewObject] static Response redirect(USVString url, optional unsigned short status = 302);

@@ -16,8 +16,10 @@
 interface nsISupports;
 
 /* Must be created first. Observer events will be dispatched on the thread provided */
-[ChromeOnly, Constructor]
+[ChromeOnly]
 interface PeerConnectionImpl  {
+  constructor();
+
   /* Must be called first. Observer events dispatched on the thread provided */
   [Throws]
   void initialize(PeerConnectionObserver observer, Window window,

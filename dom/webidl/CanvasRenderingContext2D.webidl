@@ -373,12 +373,13 @@ interface TextMetrics {
 
 };
 
-[Pref="canvas.path.enabled",
- Constructor,
- Constructor(Path2D other),
- Constructor(DOMString pathString)]
+[Pref="canvas.path.enabled"]
 interface Path2D
 {
+  constructor();
+  constructor(Path2D other);
+  constructor(DOMString pathString);
+
   [Throws] void addPath(Path2D path, optional DOMMatrix2DInit transform = {});
 };
 Path2D includes CanvasPathMethods;

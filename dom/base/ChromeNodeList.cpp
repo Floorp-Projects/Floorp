@@ -11,7 +11,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 already_AddRefed<ChromeNodeList> ChromeNodeList::Constructor(
-    const GlobalObject& aGlobal, ErrorResult& aRv) {
+    const GlobalObject& aGlobal) {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   Document* root = win ? win->GetExtantDoc() : nullptr;
   RefPtr<ChromeNodeList> list = new ChromeNodeList(root);

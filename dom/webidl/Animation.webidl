@@ -14,9 +14,11 @@ enum AnimationPlayState { "idle", "running", "paused", "finished" };
 
 enum AnimationReplaceState { "active", "removed", "persisted" };
 
-[Constructor(optional AnimationEffect? effect = null,
-             optional AnimationTimeline? timeline)]
 interface Animation : EventTarget {
+  [Throws]
+  constructor(optional AnimationEffect? effect = null,
+              optional AnimationTimeline? timeline);
+
   attribute DOMString id;
   [Func="Document::IsWebAnimationsEnabled", Pure]
   attribute AnimationEffect? effect;

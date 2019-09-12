@@ -7,10 +7,11 @@
  * https://wiki.whatwg.org/wiki/OffscreenCanvas
  */
 
-[Constructor(unsigned long width, unsigned long height),
- Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Pref="gfx.offscreencanvas.enabled"]
 interface OffscreenCanvas : EventTarget {
+  constructor(unsigned long width, unsigned long height);
+
   [Pure, SetterThrows]
   attribute unsigned long width;
   [Pure, SetterThrows]

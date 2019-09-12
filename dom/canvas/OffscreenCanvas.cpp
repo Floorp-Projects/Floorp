@@ -57,8 +57,7 @@ JSObject* OffscreenCanvas::WrapObject(JSContext* aCx,
 
 /* static */
 already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
-    const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight,
-    ErrorResult& aRv) {
+    const GlobalObject& aGlobal, uint32_t aWidth, uint32_t aHeight) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<OffscreenCanvas> offscreenCanvas = new OffscreenCanvas(
       global, aWidth, aHeight, layers::LayersBackend::LAYERS_NONE, nullptr);

@@ -15,8 +15,10 @@ dictionary TextEncoderEncodeIntoResult {
   unsigned long long written;
 };
 
-[Constructor, Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface TextEncoder {
+  constructor();
+
   [Constant]
   readonly attribute DOMString encoding;
   /*

@@ -358,7 +358,7 @@ void DOMException::GetName(nsString& retval) { CopyUTF8toUTF16(mName, retval); }
 
 already_AddRefed<DOMException> DOMException::Constructor(
     GlobalObject& /* unused */, const nsAString& aMessage,
-    const Optional<nsAString>& aName, ErrorResult& aError) {
+    const Optional<nsAString>& aName) {
   nsresult exceptionResult = NS_OK;
   uint16_t exceptionCode = 0;
   nsCString name(NS_LITERAL_CSTRING("Error"));

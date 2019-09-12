@@ -36,7 +36,7 @@ already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::FromRect(
 
 already_AddRefed<DOMRectReadOnly> DOMRectReadOnly::Constructor(
     const GlobalObject& aGlobal, double aX, double aY, double aWidth,
-    double aHeight, ErrorResult& aRv) {
+    double aHeight) {
   RefPtr<DOMRectReadOnly> obj =
       new DOMRectReadOnly(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();
@@ -103,8 +103,7 @@ already_AddRefed<DOMRect> DOMRect::FromRect(const GlobalObject& aGlobal,
 
 already_AddRefed<DOMRect> DOMRect::Constructor(const GlobalObject& aGlobal,
                                                double aX, double aY,
-                                               double aWidth, double aHeight,
-                                               ErrorResult& aRv) {
+                                               double aWidth, double aHeight) {
   RefPtr<DOMRect> obj =
       new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();

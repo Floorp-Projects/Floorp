@@ -31,7 +31,7 @@ class StructuredCloneTester final : public nsISupports, public nsWrapperCache {
 
   static already_AddRefed<StructuredCloneTester> Constructor(
       const GlobalObject& aGlobal, const bool aSerializable,
-      const bool aDeserializable, ErrorResult& aRv);
+      const bool aDeserializable);
 
   bool Serializable() const;
 

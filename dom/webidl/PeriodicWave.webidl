@@ -19,7 +19,9 @@ dictionary PeriodicWaveOptions : PeriodicWaveConstraints {
              sequence<float> imag;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional PeriodicWaveOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface PeriodicWave {
+  [Throws]
+  constructor(BaseAudioContext context,
+              optional PeriodicWaveOptions options = {});
 };

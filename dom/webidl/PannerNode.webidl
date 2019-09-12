@@ -38,9 +38,10 @@ dictionary PannerOptions : AudioNodeOptions {
              double            coneOuterGain = 0;
 };
 
-[Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, optional PannerOptions options = {})]
+[Pref="dom.webaudio.enabled"]
 interface PannerNode : AudioNode {
+    [Throws]
+    constructor(BaseAudioContext context, optional PannerOptions options = {});
 
     // Default for stereo is equalpower
     attribute PanningModelType panningModel;

@@ -5,8 +5,9 @@
 
 interface nsIVariant;
 
-[Constructor]
 interface XSLTProcessor {
+    constructor();
+
     /**
      * Import the stylesheet into this XSLTProcessor for transformations.
      *

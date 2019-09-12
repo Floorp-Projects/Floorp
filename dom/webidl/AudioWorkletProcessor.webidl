@@ -10,9 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=AudioWorklet,
- Constructor (optional AudioWorkletNodeOptions options = {})]
+[Exposed=AudioWorklet]
 interface AudioWorkletProcessor {
+    constructor(optional AudioWorkletNodeOptions options = {});
+
     [Throws]
     readonly attribute MessagePort port;
 };

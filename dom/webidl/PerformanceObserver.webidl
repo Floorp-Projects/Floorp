@@ -17,9 +17,11 @@ callback PerformanceObserverCallback = void (PerformanceObserverEntryList entrie
                                              PerformanceObserver observer);
 
 [Pref="dom.enable_performance_observer",
- Constructor(PerformanceObserverCallback callback),
  Exposed=(Window,Worker)]
 interface PerformanceObserver {
+    [Throws]
+    constructor(PerformanceObserverCallback callback);
+
     [Throws] void observe(optional PerformanceObserverInit options = {});
     void disconnect();
     PerformanceEntryList takeRecords();

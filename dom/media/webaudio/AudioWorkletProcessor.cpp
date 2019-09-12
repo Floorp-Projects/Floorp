@@ -24,8 +24,7 @@ AudioWorkletProcessor::AudioWorkletProcessor(nsIGlobalObject* aParent)
 
 /* static */
 already_AddRefed<AudioWorkletProcessor> AudioWorkletProcessor::Constructor(
-    const GlobalObject& aGlobal, const AudioWorkletNodeOptions& aOptions,
-    ErrorResult& aRv) {
+    const GlobalObject& aGlobal, const AudioWorkletNodeOptions& aOptions) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
 

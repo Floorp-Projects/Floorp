@@ -134,10 +134,11 @@ interface VRPose
   [Constant, Throws] readonly attribute Float32Array? angularAcceleration;
 };
 
-[Constructor,
- Pref="dom.vr.enabled",
+[Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRFrameData {
+  constructor();
+
   readonly attribute DOMHighResTimeStamp timestamp;
 
   [Throws, Pure] readonly attribute Float32Array leftProjectionMatrix;

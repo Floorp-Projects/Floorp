@@ -18,7 +18,7 @@ class ChromeNodeList final : public nsSimpleContentList {
   explicit ChromeNodeList(nsINode* aOwner) : nsSimpleContentList(aOwner) {}
 
   static already_AddRefed<ChromeNodeList> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& aRv);
+      const GlobalObject& aGlobal);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

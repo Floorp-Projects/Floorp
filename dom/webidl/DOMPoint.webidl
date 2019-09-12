@@ -11,11 +11,14 @@
  */
 
 [Pref="layout.css.DOMPoint.enabled",
- Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
-             optional unrestricted double z = 0, optional unrestricted double w = 1),
  Exposed=(Window,Worker),
  Serializable]
 interface DOMPointReadOnly {
+    constructor(optional unrestricted double x = 0,
+                optional unrestricted double y = 0,
+                optional unrestricted double z = 0,
+                optional unrestricted double w = 1);
+
     [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other = {});
 
     readonly attribute unrestricted double x;
@@ -29,11 +32,14 @@ interface DOMPointReadOnly {
 };
 
 [Pref="layout.css.DOMPoint.enabled",
- Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
-             optional unrestricted double z = 0, optional unrestricted double w = 1),
  Exposed=(Window,Worker),
  Serializable]
 interface DOMPoint : DOMPointReadOnly {
+    constructor(optional unrestricted double x = 0,
+                optional unrestricted double y = 0,
+                optional unrestricted double z = 0,
+                optional unrestricted double w = 1);
+
     [NewObject] static DOMPoint fromPoint(optional DOMPointInit other = {});
 
     inherit attribute unrestricted double x;
