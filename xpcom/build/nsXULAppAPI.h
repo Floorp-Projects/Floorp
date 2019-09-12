@@ -58,16 +58,6 @@
 #define XRE_USER_APP_DATA_DIR "UAppData"
 
 /**
- * A directory service key which provides a list of all enabled extension
- * directories and files (packed XPIs).  The list includes compatible
- * platform-specific extension subdirectories.
- *
- * @note The directory list will have no members when the application is
- *       launched in safe mode.
- */
-#define XRE_EXTENSIONS_DIR_LIST "XREExtDL"
-
-/**
  * A directory service key which provides the executable file used to
  * launch the current process.  This is the same value returned by the
  * XRE_GetBinaryPath function defined below.

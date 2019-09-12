@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  *   The engine name to install.
  */
 function installAddonEngine(name = "engine-addon") {
-  const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
   const profD = do_get_profile().QueryInterface(Ci.nsIFile);
 
   let dir = profD.clone();
@@ -28,29 +27,9 @@ function installAddonEngine(name = "engine-addon") {
   dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   do_get_file("data/install.rdf").copyTo(dir, "install.rdf");
-  let addonDir = dir.clone();
   dir.append("searchplugins");
   dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   do_get_file("data/" + name + ".xml").copyTo(dir, "bug645970.xml");
-
-  Services.dirsvc.registerProvider({
-    QueryInterface: ChromeUtils.generateQI([
-      Ci.nsIDirectoryServiceProvider,
-      Ci.nsIDirectoryServiceProvider2,
-    ]),
-
-    getFile(prop, persistant) {
-      throw Cr.NS_ERROR_FAILURE;
-    },
-
-    getFiles(prop) {
-      if (prop == XRE_EXTENSIONS_DIR_LIST) {
-        return [addonDir].values();
-      }
-
-      throw Cr.NS_ERROR_FAILURE;
-    },
-  });
 }
 
 /**
