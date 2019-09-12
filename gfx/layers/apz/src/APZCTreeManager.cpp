@@ -969,14 +969,14 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     // when those properties change.
     node = RecycleOrCreateNode(aProofOfTreeLock, aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(),
-                         (!parentHasPerspective && aLayer.GetClipRect())
-                             ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
-                             : Nothing(),
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(),
+        (!parentHasPerspective && aLayer.GetClipRect())
+            ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
+            : Nothing(),
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
     node->SetScrollbarData(aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollbarData());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
@@ -1095,11 +1095,11 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
 
     Maybe<ParentLayerIntRegion> clipRegion =
         parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(), clipRegion,
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(), clipRegion,
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
     apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
@@ -1199,11 +1199,11 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
 
     Maybe<ParentLayerIntRegion> clipRegion =
         parentHasPerspective ? Nothing() : ComputeClipRegion(aLayer);
-    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
-                         aLayer.GetTransformTyped(), clipRegion,
-                         GetEventRegionsOverride(aParent, aLayer),
-                         aLayer.IsBackfaceHidden(),
-                         !!aLayer.IsAsyncZoomContainer());
+    node->SetHitTestData(
+        GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+        aLayer.GetRemoteDocumentRect(), aLayer.GetTransformTyped(), clipRegion,
+        GetEventRegionsOverride(aParent, aLayer), aLayer.IsBackfaceHidden(),
+        !!aLayer.IsAsyncZoomContainer());
   }
 
   // Note: if layer properties must be propagated to nodes, RecvUpdate in

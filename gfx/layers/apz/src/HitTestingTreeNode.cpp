@@ -208,12 +208,14 @@ LayersId HitTestingTreeNode::GetLayersId() const { return mLayersId; }
 
 void HitTestingTreeNode::SetHitTestData(
     const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
+    const LayerIntRect& aRemoteDocumentRect,
     const CSSTransformMatrix& aTransform,
     const Maybe<ParentLayerIntRegion>& aClipRegion,
     const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
     bool aIsAsyncZoomContainer) {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
+  mRemoteDocumentRect = aRemoteDocumentRect;
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
