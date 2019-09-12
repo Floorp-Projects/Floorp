@@ -151,10 +151,6 @@ class TextEditRules {
   MOZ_MUST_USE nsresult DeleteSelectionWithTransaction(
       nsIEditor::EDirection aCollapsedAction, bool* aCancel, bool* aHandled);
 
-  nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
-
-  nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
-
   /**
    * Called prior to nsIEditor::OutputToString.
    *

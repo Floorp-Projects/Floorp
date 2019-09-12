@@ -207,10 +207,6 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return WillSetText(aCancel, aHandled, aInfo.inString, aInfo.maxLength);
     case EditSubAction::eDeleteSelectedContent:
       return WillDeleteSelection(aInfo.collapsedAction, aCancel, aHandled);
-    case EditSubAction::eSetTextProperty:
-      return WillSetTextProperty(aCancel, aHandled);
-    case EditSubAction::eRemoveTextProperty:
-      return WillRemoveTextProperty(aCancel, aHandled);
     case EditSubAction::eComputeTextToOutput:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
                             aCancel, aHandled);
@@ -855,32 +851,6 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   }
 
   *aHandled = true;
-  return NS_OK;
-}
-
-nsresult TextEditRules::WillSetTextProperty(bool* aCancel, bool* aHandled) {
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // XXX: should probably return a success value other than NS_OK that means
-  // "not allowed"
-  if (IsPlaintextEditor()) {
-    *aCancel = true;
-  }
-  return NS_OK;
-}
-
-nsresult TextEditRules::WillRemoveTextProperty(bool* aCancel, bool* aHandled) {
-  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // XXX: should probably return a success value other than NS_OK that means
-  // "not allowed"
-  if (IsPlaintextEditor()) {
-    *aCancel = true;
-  }
   return NS_OK;
 }
 
