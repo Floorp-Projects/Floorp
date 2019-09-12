@@ -8,10 +8,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,10 +34,12 @@ internal class BreadcrumbRecorderTest {
             }
         }
 
-        val reporter = spy(CrashReporter(
-            services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
-        ))
+        val reporter = spy(
+            CrashReporter(
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+            )
+        )
 
         fun getBreadcrumbMessage(@Suppress("UNUSED_PARAMETER") destination: NavDestination): String {
             return "test"
@@ -46,15 +48,10 @@ internal class BreadcrumbRecorderTest {
         val navController: NavController = mock()
         val navDestination: NavDestination = mock()
 
-        val breadcrumb = Breadcrumb(
-            message = getBreadcrumbMessage(navDestination),
-            category = "DestinationChanged",
-            level = Breadcrumb.Level.INFO
-        )
-
-        val breadCrumbRecorder = BreadcrumbsRecorder(reporter, navController, ::getBreadcrumbMessage)
+        val breadCrumbRecorder =
+            BreadcrumbsRecorder(reporter, navController, ::getBreadcrumbMessage)
         breadCrumbRecorder.onDestinationChanged(navController, navDestination, null)
 
-        verify(reporter).recordCrashBreadcrumb(breadcrumb)
+        verify(reporter).recordCrashBreadcrumb(any())
     }
 }
