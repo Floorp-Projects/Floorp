@@ -142,41 +142,14 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * Called before changing an element to absolute positioned.
-   * This method only prepares the operation since DidAbsolutePosition() will
-   * change it actually later.  mNewBlockElement of TopLevelEditSubActionData
-   * is set to the target element and if necessary, some ancestor nodes of
-   * selection may be split.
+   * mNewBlockElement of TopLevelEditSubActionData is set to the target
+   * element and if necessary, some ancestor nodes of selection may be split.
    *
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
-
-  /**
-   * PrepareToMakeElementAbsolutePosition() is helper method of
-   * WillAbsolutePosition() since in some cases, needs to restore selection
-   * with AutoSelectionRestorer.  So, all callers have to check if
-   * CanHandleEditAction() still returns true after a call of this method.
-   * XXX Should be documented outline of this method.
-   *
-   * @param aHandled            Returns true if the edit action is handled.
-   * @param aTargetElement      Returns target element which should be
-   *                            changed to absolute positioned.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult PrepareToMakeElementAbsolutePosition(
-      bool* aHandled, RefPtr<Element>* aTargetElement);
-
-  /**
-   * Called if nobody handles the edit action to make an element absolute
-   * positioned.
-   * This method actually changes the element which is computed by
-   * WillAbsolutePosition() to absolute positioned.
-   * Therefore, this might cause destroying the HTML editor.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult DidAbsolutePosition();
 
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);

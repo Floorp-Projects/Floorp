@@ -207,7 +207,7 @@ var Authentication = {
         account.password,
         true
       );
-      await fxAccounts.setSignedInUser(credentials);
+      await fxAccounts._internal.setSignedInUser(credentials);
       if (!credentials.verified) {
         await this._completeVerification(account.username);
       }

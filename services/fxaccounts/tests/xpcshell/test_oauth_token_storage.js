@@ -130,7 +130,7 @@ async function createMockFxA() {
     kExtKbHash: "cheese",
     verified: true,
   };
-  await fxa.setSignedInUser(credentials);
+  await fxa._internal.setSignedInUser(credentials);
   return fxa;
 }
 
@@ -140,7 +140,7 @@ add_task(async function testCacheStorage() {
   let fxa = await createMockFxA();
 
   // Hook what the impl calls to save to disk.
-  let cas = fxa.internal.currentAccountState;
+  let cas = fxa._internal.currentAccountState;
   let origPersistCached = cas._persistCachedTokens.bind(cas);
   cas._persistCachedTokens = function() {
     return origPersistCached().then(() => {

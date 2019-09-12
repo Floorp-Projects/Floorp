@@ -206,7 +206,7 @@ var configureFxAccountIdentity = function(
     },
   };
   let mockFxAClient = new MockFxAccountsClient();
-  fxa.internal._fxAccountsClient = mockFxAClient;
+  fxa._internal._fxAccountsClient = mockFxAClient;
 
   let mockTSC = {
     // TokenServerClient
