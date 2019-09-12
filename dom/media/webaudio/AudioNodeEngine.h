@@ -11,10 +11,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 
-namespace WebCore {
-class Reverb;
-}  // namespace WebCore
-
 namespace mozilla {
 
 namespace dom {
@@ -282,10 +278,6 @@ class AudioNodeEngine {
   // returns.
   virtual void SetRawArrayData(nsTArray<float>& aData) {
     NS_ERROR("SetRawArrayData called on an engine that doesn't support it");
-  }
-
-  virtual void SetReverb(WebCore::Reverb* aBuffer, uint32_t aImpulseChannelCount) {
-    NS_ERROR("SetReverb called on engine that doesn't support it");
   }
 
   /**
