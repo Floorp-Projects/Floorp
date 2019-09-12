@@ -14,7 +14,7 @@ fuzzy(0-100,0-30) == 1149923.html 1149923-ref.html # use fuzzy due to few distor
 == 1444904.html 1444904-ref.html
 == 1451168.html 1451168-ref.html
 == 1461313.html 1461313-ref.html
-fuzzy(5-32,21908-26621) fuzzy-if(webrender,5-5,868-1039) == 1463802.html 1463802-ref.html
+fuzzy(5-32,21908-26621) fuzzy-if(webrender,0-9,0-100) == 1463802.html 1463802-ref.html
 fuzzy(0-11,0-4) == 1474722.html 1474722-ref.html
 == 1501195.html 1501195-ref.html
 == 1519754.html 1519754-ref.html

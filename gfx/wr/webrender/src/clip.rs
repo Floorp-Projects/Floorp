@@ -1002,9 +1002,9 @@ impl ClipItemKeyKind {
         }
     }
 
-    pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect) -> Self {
+    pub fn image_mask(image_mask: &ImageMask) -> Self {
         ClipItemKeyKind::ImageMask(
-            mask_rect.into(),
+            image_mask.rect.into(),
             image_mask.image,
             image_mask.repeat,
         )

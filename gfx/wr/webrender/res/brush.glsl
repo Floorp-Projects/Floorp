@@ -70,7 +70,9 @@ void main(void) {
             ph.local_clip_rect,
             ph.z,
             transform,
-            pic_task
+            pic_task,
+            ph.local_rect,
+            ph.snap_offsets
         );
 
         // TODO(gw): transform bounds may be referenced by

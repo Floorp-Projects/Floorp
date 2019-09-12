@@ -3328,7 +3328,7 @@ void nsCSSBorderRenderer::CreateWebRenderCommands(
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc) {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
-  wr::LayoutRect roundedRect = wr::ToLayoutRect(outerRect);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(outerRect);
   wr::LayoutRect clipRect = roundedRect;
   wr::BorderSide side[4];
   NS_FOR_CSS_SIDES(i) {
@@ -3345,7 +3345,7 @@ void nsCSSBorderRenderer::CreateWebRenderCommands(
   if (mLocalClip) {
     LayoutDeviceRect localClip =
         LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
-    clipRect = wr::ToLayoutRect(localClip.Intersect(outerRect));
+    clipRect = wr::ToRoundedLayoutRect(localClip.Intersect(outerRect));
   }
 
   Range<const wr::BorderSide> wrsides(side, 4);
@@ -3593,7 +3593,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
   if (!mClip.IsEmpty()) {
     LayoutDeviceRect clipRect =
         LayoutDeviceRect::FromAppUnits(mClip, appUnitsPerDevPixel);
-    clip = wr::ToLayoutRect(clipRect);
+    clip = wr::ToRoundedLayoutRect(clipRect);
   }
 
   ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
