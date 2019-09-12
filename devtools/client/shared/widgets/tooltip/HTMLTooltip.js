@@ -280,7 +280,13 @@ const calculateHorizontalPosition = (
 const getRelativeRect = function(node, relativeTo) {
   // getBoxQuads is a non-standard WebAPI which will not work on non-firefox
   // browser when running launchpad on Chrome.
-  if (!node.getBoxQuads || !node.getBoxQuads({ relativeTo })[0]) {
+  if (
+    !node.getBoxQuads ||
+    !node.getBoxQuads({
+      relativeTo,
+      createFramesForSuppressedWhitespace: false,
+    })[0]
+  ) {
     const { top, left, width, height } = node.getBoundingClientRect();
     const right = left + width;
     const bottom = top + height;
@@ -290,7 +296,9 @@ const getRelativeRect = function(node, relativeTo) {
   // Width and Height can be taken from the rect.
   const { width, height } = node.getBoundingClientRect();
 
-  const quadBounds = node.getBoxQuads({ relativeTo })[0].getBounds();
+  const quadBounds = node
+    .getBoxQuads({ relativeTo, createFramesForSuppressedWhitespace: false })[0]
+    .getBounds();
   const top = quadBounds.top;
   const left = quadBounds.left;
 

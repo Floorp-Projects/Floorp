@@ -164,6 +164,7 @@ function getAdjustedQuads(boundaryWindow, node, region, { ignoreZoom } = {}) {
   const quads = node.getBoxQuads({
     box: region,
     relativeTo: boundaryWindow.document,
+    createFramesForSuppressedWhitespace: false,
   });
 
   if (!quads.length) {
