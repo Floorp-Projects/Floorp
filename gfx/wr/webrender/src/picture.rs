@@ -23,7 +23,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PointKey, PrimitiveTemplateKind};
-use crate::prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
+use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use crate::print_tree::PrintTreePrinter;
@@ -3556,6 +3556,18 @@ impl PicturePrimitive {
             // This inflaction factor is to be applied to the surface itself.
             if self.options.inflate_if_required {
                 surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.inflation_factor);
+
+                // The picture's local rect is calculated as the union of the
+                // snapped primitive rects, which should result in a snapped
+                // local rect, unless it was inflated.
+                let snap_surface_to_raster = SpaceSnapper::new_with_target(
+                    surface.raster_spatial_node_index,
+                    self.spatial_node_index,
+                    surface.device_pixel_scale,
+                    frame_context.clip_scroll_tree,
+                );
+
+                surface.rect = snap_surface_to_raster.snap_rect(&surface.rect);
             }
 
             let mut surface_rect = surface.rect * Scale::new(1.0);

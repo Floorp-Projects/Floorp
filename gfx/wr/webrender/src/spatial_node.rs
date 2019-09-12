@@ -7,9 +7,9 @@ use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, Refe
 use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds};
 use api::units::*;
 use crate::clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
-use euclid::SideOffsets2D;
+use euclid::{Scale, SideOffsets2D};
 use crate::scene::SceneProperties;
-use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind};
+use crate::util::{LayoutFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind, VectorHelpers};
 
 #[derive(Clone, Debug)]
 pub enum SpatialNodeType {
@@ -104,6 +104,23 @@ fn compute_offset_from(
         current = ancestor.parent;
     }
     offset
+}
+
+/// Snap an offset to be incorporated into a transform, where the local space
+/// may be considered the world space. We convert from world space to device
+/// space using the global device pixel scale, which may not always be correct
+/// if there are intermediate surfaces used, however those are either cases
+/// where snapping is not important (e.g. has perspective or is not axis
+/// aligned), or an edge case (e.g. SVG filters) which we can accept
+/// imperfection for now.
+fn snap_offset(
+    offset: LayoutVector2D,
+    global_device_pixel_scale: DevicePixelScale,
+) -> LayoutVector2D {
+    let world_offset = offset * Scale::new(1.0);
+    let snapped_device_offset = (world_offset * global_device_pixel_scale).snap();
+    let snapped_world_offset = snapped_device_offset / global_device_pixel_scale;
+    snapped_world_offset * Scale::new(1.0)
 }
 
 impl SpatialNode {
@@ -248,6 +265,7 @@ impl SpatialNode {
         &mut self,
         state: &mut TransformUpdateState,
         coord_systems: &mut Vec<CoordinateSystem>,
+        global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         previous_spatial_nodes: &[SpatialNode],
     ) {
@@ -258,7 +276,7 @@ impl SpatialNode {
             return;
         }
 
-        self.update_transform(state, coord_systems, scene_properties, previous_spatial_nodes);
+        self.update_transform(state, coord_systems, global_device_pixel_scale, scene_properties, previous_spatial_nodes);
         //TODO: remove the field entirely?
         self.transform_kind = if self.coordinate_system_id.0 == 0 {
             TransformedRectKind::AxisAligned
@@ -288,6 +306,7 @@ impl SpatialNode {
         &mut self,
         state: &mut TransformUpdateState,
         coord_systems: &mut Vec<CoordinateSystem>,
+        global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         previous_spatial_nodes: &[SpatialNode],
     ) {
@@ -330,7 +349,7 @@ impl SpatialNode {
                     // between our reference frame and this node. Finally, we also include
                     // whatever local transformation this reference frame provides.
                     let relative_transform = resolved_transform
-                        .post_translate(state.parent_accumulated_scroll_offset)
+                        .post_translate(snap_offset(state.parent_accumulated_scroll_offset, global_device_pixel_scale))
                         .to_transform()
                         .with_destination::<LayoutPixel>();
 
@@ -405,13 +424,13 @@ impl SpatialNode {
                 // provided by our own sticky positioning.
                 let accumulated_offset = state.parent_accumulated_scroll_offset + sticky_offset;
                 self.viewport_transform = state.coordinate_system_relative_scale_offset
-                    .offset(accumulated_offset.to_untyped());
+                    .offset(snap_offset(accumulated_offset, global_device_pixel_scale).to_untyped());
 
                 // The transformation for any content inside of us is the viewport transformation, plus
                 // whatever scrolling offset we supply as well.
                 let added_offset = accumulated_offset + self.scroll_offset();
                 self.content_transform = state.coordinate_system_relative_scale_offset
-                    .offset(added_offset.to_untyped());
+                    .offset(snap_offset(added_offset, global_device_pixel_scale).to_untyped());
 
                 if let SpatialNodeType::StickyFrame(ref mut info) = self.node_type {
                     info.current_offset = sticky_offset;
@@ -904,7 +923,7 @@ fn test_cst_perspective_relative_scroll() {
         pipeline_id,
     );
 
-    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+    cst.update_tree(WorldPoint::zero(), DevicePixelScale::new(1.0), &SceneProperties::new());
 
     let scroll_offset = compute_offset_from(
         cst.spatial_nodes[ref_frame.0 as usize].parent,
