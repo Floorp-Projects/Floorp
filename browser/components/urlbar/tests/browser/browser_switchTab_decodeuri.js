@@ -24,7 +24,7 @@ add_task(async function test_switchtab_decodeuri() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(
     window,
-    UrlbarTestUtils.getSelectedIndex(window)
+    UrlbarTestUtils.getSelectedRowIndex(window)
   );
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH);
 

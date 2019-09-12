@@ -100,7 +100,7 @@ add_task(async function tipIsSecondResult() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     "The first result should be selected."
   );
@@ -113,7 +113,7 @@ add_task(async function tipIsSecondResult() {
     "The selected element should be the tip button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     1,
     "getSelectedIndex should return 1 even though the tip button is selected."
   );
@@ -126,14 +126,14 @@ add_task(async function tipIsSecondResult() {
     "The selected element should be the tip help button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     1,
     "getSelectedIndex should return 1 even though the help button is selected."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     2,
     "The third result should be selected."
   );
@@ -194,7 +194,7 @@ add_task(async function tipIsOnlyResult() {
     "The selected element should be the tip button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     "getSelectedIndex should return 0."
   );
@@ -207,14 +207,14 @@ add_task(async function tipIsOnlyResult() {
     "The selected element should be the tip help button."
   );
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     0,
     "getSelectedIndex should return 0."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     -1,
     "There should be no selection."
   );

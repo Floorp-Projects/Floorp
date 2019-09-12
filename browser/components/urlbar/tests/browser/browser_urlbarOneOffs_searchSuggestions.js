@@ -194,7 +194,7 @@ add_task(async function overridden_engine_not_reused() {
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(
-    UrlbarTestUtils.getSelectedIndex(window),
+    UrlbarTestUtils.getSelectedRowIndex(window),
     result,
     "Expected result should be selected"
   );
