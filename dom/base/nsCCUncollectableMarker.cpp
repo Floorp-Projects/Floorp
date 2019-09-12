@@ -386,7 +386,7 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
     eDone = 5
   };
 
-  static_assert(eDone == NS_MAJOR_FORGET_SKIPPABLE_CALLS,
+  static_assert(eDone == kMajorForgetSkippableCalls,
                 "There must be one forgetSkippable call per cleanup state.");
 
   static uint32_t sFSState = eDone;

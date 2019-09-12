@@ -23,12 +23,14 @@ class nsICycleCollectorListener;
 class nsIDocShell;
 
 namespace mozilla {
+
 template <class>
 class Maybe;
 struct CycleCollectorResults;
-}  // namespace mozilla
 
-#define NS_MAJOR_FORGET_SKIPPABLE_CALLS 5
+static const uint32_t kMajorForgetSkippableCalls = 5;
+
+}  // namespace mozilla
 
 class nsJSContext : public nsIScriptContext {
  public:
