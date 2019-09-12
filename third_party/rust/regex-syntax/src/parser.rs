@@ -25,10 +25,7 @@ impl ParserBuilder {
 
     /// Build a parser from this configuration with the given pattern.
     pub fn build(&self) -> Parser {
-        Parser {
-            ast: self.ast.build(),
-            hir: self.hir.build(),
-        }
+        Parser { ast: self.ast.build(), hir: self.hir.build() }
     }
 
     /// Set the nesting limit for this parser.
@@ -88,10 +85,10 @@ impl ParserBuilder {
     /// an expression that will only ever match valid UTF-8 (otherwise, the
     /// parser will return an error).
     ///
-    /// Note that currently, even when invalid UTF-8 is banned, the parser
-    /// will permit a negated ASCII word boundary (i.e., `(?-u:\B)`) even
-    /// though it can actually match at invalid UTF-8 boundaries. This bug
-    /// will be fixed on the next semver release.
+    /// Perhaps surprisingly, when invalid UTF-8 isn't allowed, a negated ASCII
+    /// word boundary (uttered as `(?-u:\B)` in the concrete syntax) will cause
+    /// the parser to return an error. Namely, a negated ASCII word boundary
+    /// can result in matching positions that aren't valid UTF-8 boundaries.
     pub fn allow_invalid_utf8(&mut self, yes: bool) -> &mut ParserBuilder {
         self.hir.allow_invalid_utf8(yes);
         self
@@ -132,10 +129,7 @@ impl ParserBuilder {
     ///
     /// By default this is disabled. It may alternatively be selectively
     /// enabled in the regular expression itself via the `s` flag.
-    pub fn dot_matches_new_line(
-        &mut self,
-        yes: bool,
-    ) -> &mut ParserBuilder {
+    pub fn dot_matches_new_line(&mut self, yes: bool) -> &mut ParserBuilder {
         self.hir.dot_matches_new_line(yes);
         self
     }

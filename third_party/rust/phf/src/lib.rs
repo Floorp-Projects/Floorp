@@ -1,9 +1,43 @@
-//! Compile time optimized maps and sets.
+//! Compile-time generated maps and sets.
 //!
-//! PHF data structures can be generated via the syntax extensions in the
-//! `phf_macros` crate or via code generation in the `phf_codegen` crate. See
-//! the documentation of those crates for more details.
-#![doc(html_root_url="https://docs.rs/phf/0.7.20")]
+//! The `phf::Map` and `phf::Set` types have roughly comparable performance to
+//! a standard hash table, but can be generated as compile-time static values.
+//!
+//! # Usage
+//!
+//! If the `macros` Cargo feature is enabled, the `phf_map`, `phf_set`,
+//! `phf_ordered_map`, and `phf_ordered_set` macros can be used to construct
+//! the PHF type. This currently requires a nightly compiler.
+//!
+//! ```toml
+//! [dependencies]
+//! phf = { version = "0.7.24", features = ["macros"] }
+//! ```
+//!
+//! ```
+//! #![feature(proc_macro_hygiene)]
+//!
+//! use phf::{phf_map, phf_set};
+//!
+//! static MY_MAP: phf::Map<&'static str, u32> = phf_map! {
+//!     "hello" => 1,
+//!     "world" => 2,
+//! };
+//!
+//! static MY_SET: phf::Set<&'static str> = phf_set! {
+//!     "hello world",
+//!     "hola mundo",
+//! };
+//!
+//! fn main() {
+//!     assert_eq!(MY_MAP["hello"], 1);
+//!     assert!(MY_SET.contains("hello world"));
+//! }
+//! ```
+//!
+//! Alternatively, you can use the phf_codegen crate to generate PHF datatypes
+//! in a build script. This method can be used with a stable compiler.
+#![doc(html_root_url="https://docs.rs/phf/0.7")]
 #![warn(missing_docs)]
 #![cfg_attr(feature = "core", no_std)]
 
@@ -11,6 +45,11 @@
 extern crate std as core;
 
 extern crate phf_shared;
+#[cfg(feature = "macros")]
+extern crate phf_macros;
+
+#[cfg(feature = "macros")]
+pub use phf_macros::*;
 
 use core::ops::Deref;
 

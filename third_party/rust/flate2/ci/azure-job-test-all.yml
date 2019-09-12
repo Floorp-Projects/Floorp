@@ -1,0 +1,21 @@
+parameters:
+  toolchain: 'stable'
+  vmImage: 'ubuntu-16.04'
+  name: ''
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  steps:
+    - template: azure-install-rust.yml
+      parameters:
+        toolchain: ${{ parameters.toolchain }}
+    - script: cargo build
+    - script: rustdoc --test README.md -L target/debug/deps --extern flate2=target/debug/libflate2.rlib
+    - script: cargo test
+    - script: cargo test --features zlib
+    - script: cargo test --features tokio
+    - script: cargo test --features "tokio zlib"
+    - script: cargo test --features zlib --no-default-features
+    - script: cargo test --features miniz-sys --no-default-features

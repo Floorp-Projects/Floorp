@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,23 +11,22 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "serde_bytes"
-version = "0.10.4"
+version = "0.11.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
-include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Optimized handling of `&[u8]` and `Vec<u8>` for Serde"
-homepage = "https://serde.rs"
 documentation = "https://docs.serde.rs/serde_bytes/"
 readme = "README.md"
 keywords = ["serde", "serialization", "no_std"]
 categories = ["encoding"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/bytes"
 [dependencies.serde]
 version = "1.0"
 default-features = false
 [dev-dependencies.bincode]
-version = "0.8"
+version = "1.0"
 
 [dev-dependencies.serde_derive]
 version = "1.0"
@@ -39,3 +38,5 @@ version = "1.0"
 alloc = ["serde/alloc"]
 default = ["std"]
 std = ["serde/std"]
+[badges.travis-ci]
+repository = "serde-rs/bytes"

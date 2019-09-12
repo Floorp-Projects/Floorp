@@ -12,7 +12,7 @@
 
 [package]
 name = "rayon-core"
-version = "1.5.0"
+version = "1.6.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 build = "build.rs"
 links = "rayon-core"
@@ -49,7 +49,7 @@ path = "tests/simple_panic.rs"
 name = "scoped_threadpool"
 path = "tests/scoped_threadpool.rs"
 [dependencies.crossbeam-deque]
-version = "0.6.3"
+version = "0.7"
 
 [dependencies.crossbeam-queue]
 version = "0.1.2"

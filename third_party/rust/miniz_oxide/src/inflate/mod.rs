@@ -1,10 +1,11 @@
 //! This module contains functionality for decompression.
 
-use std::{mem, usize};
 use std::io::Cursor;
+use std::usize;
 
 pub mod core;
 mod output_buffer;
+pub mod stream;
 use self::core::*;
 
 const TINFL_STATUS_FAILED_CANNOT_MAKE_PROGRESS: i32 = -4;
@@ -71,16 +72,9 @@ pub fn decompress_to_vec_zlib(input: &[u8]) -> Result<Vec<u8>, TINFLStatus> {
 
 fn decompress_to_vec_inner(input: &[u8], flags: u32) -> Result<Vec<u8>, TINFLStatus> {
     let flags = flags | inflate_flags::TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF;
-    let mut ret = Vec::with_capacity(input.len() * 2);
+    let mut ret: Vec<u8> = vec![0; input.len() * 2];
 
-    // # Unsafe
-    // We trust decompress to not read the unitialized bytes as it's wrapped
-    // in a cursor that's position is set to the end of the initialized data.
-    unsafe {
-        let cap = ret.capacity();
-        ret.set_len(cap);
-    };
-    let mut decomp = unsafe { DecompressorOxide::with_init_state_only() };
+    let mut decomp = Box::<DecompressorOxide>::default();
 
     let mut in_pos = 0;
     let mut out_pos = 0;
@@ -99,19 +93,12 @@ fn decompress_to_vec_inner(input: &[u8], flags: u32) -> Result<Vec<u8>, TINFLSta
             TINFLStatus::Done => {
                 ret.truncate(out_pos);
                 return Ok(ret);
-            },
+            }
 
             TINFLStatus::HasMoreOutput => {
-                // We need more space so extend the buffer.
-                ret.reserve(out_pos);
-                // # Unsafe
-                // We trust decompress to not read the unitialized bytes as it's wrapped
-                // in a cursor that's position is set to the end of the initialized data.
-                unsafe {
-                    let cap = ret.capacity();
-                    ret.set_len(cap);
-                }
-            },
+                // We need more space so resize the buffer.
+                ret.resize(ret.len() + out_pos, 0);
+            }
 
             _ => return Err(status),
         }
@@ -125,8 +112,7 @@ mod test {
     #[test]
     fn decompress_vec() {
         let encoded = [
-            120, 156, 243, 72, 205, 201, 201, 215, 81, 168,
-            202, 201, 76,  82,   4,   0,  27, 101,  4,  19,
+            120, 156, 243, 72, 205, 201, 201, 215, 81, 168, 202, 201, 76, 82, 4, 0, 27, 101, 4, 19,
         ];
         let res = decompress_to_vec_zlib(&encoded[..]).unwrap();
         assert_eq!(res.as_slice(), &b"Hello, zlib!"[..]);

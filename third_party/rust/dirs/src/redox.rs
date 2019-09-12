@@ -3,11 +3,13 @@ extern crate redox_users;
 use std::env;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use self::redox_users::All;
 use self::redox_users::AllUsers;
+use self::redox_users::Config;
 
 pub fn home_dir() -> Option<PathBuf> {
     let current_uid = redox_users::get_uid().ok()?;
-    let users = AllUsers::new(false).ok()?;
+    let users = AllUsers::new(Config::default()).ok()?;
     let user = users.get_by_id(current_uid)?;
 
     Some(PathBuf::from(user.home.clone()))

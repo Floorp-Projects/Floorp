@@ -8,7 +8,7 @@ use unwind;
 pub(super) enum JobResult<T> {
     None,
     Ok(T),
-    Panic(Box<Any + Send>),
+    Panic(Box<dyn Any + Send>),
 }
 
 /// A `Job` is used to advertise work for other threads that they may
@@ -109,10 +109,14 @@ where
     R: Send,
 {
     unsafe fn execute(this: *const Self) {
+        fn call<R>(func: impl FnOnce(bool) -> R) -> impl FnOnce() -> R {
+            move || func(true)
+        }
+
         let this = &*this;
         let abort = unwind::AbortIfPanic;
         let func = (*this.func.get()).take().unwrap();
-        (*this.result.get()) = match unwind::halt_unwinding(|| func(true)) {
+        (*this.result.get()) = match unwind::halt_unwinding(call(func)) {
             Ok(x) => JobResult::Ok(x),
             Err(x) => JobResult::Panic(x),
         };

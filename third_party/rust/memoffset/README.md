@@ -15,8 +15,15 @@ Add the following dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-memoffset = "0.2"
+memoffset = "0.3"
 ```
+
+Versions ">= 0.3" can be used in a constant expression context (though not in a `const fn`),
+but require a rust version greater than or equal to 1.33.
+These versions will compile fine with rustc versions greater or equal to 1.19, but will
+lack support for constant expression.
+
+If you wish to use an older rustc version, lock your dependency to "0.2"
 
 Add the following lines at the top of your `main.rs` or `lib.rs` files.
 

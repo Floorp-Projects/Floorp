@@ -92,7 +92,7 @@ pub fn expand_bytes(
 /// `CaptureRef` represents a reference to a capture group inside some text.
 /// The reference is either a capture group name or a number.
 ///
-/// It is also tagged with the position in the text immediately proceding the
+/// It is also tagged with the position in the text following the
 /// capture reference.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct CaptureRef<'a> {
@@ -204,6 +204,7 @@ mod tests {
     find!(find_cap_ref3, "$0", c!(0, 2));
     find!(find_cap_ref4, "$5", c!(5, 2));
     find!(find_cap_ref5, "$10", c!(10, 3));
+    // see https://github.com/rust-lang/regex/pull/585 for more on characters following numbers
     find!(find_cap_ref6, "$42a", c!("42a", 4));
     find!(find_cap_ref7, "${42}a", c!(42, 5));
     find!(find_cap_ref8, "${42");
@@ -212,4 +213,8 @@ mod tests {
     find!(find_cap_ref11, "$");
     find!(find_cap_ref12, " ");
     find!(find_cap_ref13, "");
+    find!(find_cap_ref14, "$1-$2", c!(1,2));
+    find!(find_cap_ref15, "$1_$2", c!("1_",3));
+    find!(find_cap_ref16, "$x-$y", c!("x",2));
+    find!(find_cap_ref17, "$x_$y", c!("x_",3));
 }

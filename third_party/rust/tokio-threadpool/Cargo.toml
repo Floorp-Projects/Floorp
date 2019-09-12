@@ -12,23 +12,23 @@
 
 [package]
 name = "tokio-threadpool"
-version = "0.1.10"
+version = "0.1.14"
 authors = ["Carl Lerche <me@carllerche.com>"]
 description = "A task scheduler backed by a work-stealing thread pool.\n"
 homepage = "https://github.com/tokio-rs/tokio"
-documentation = "https://docs.rs/tokio-threadpool/0.1.10/tokio_threadpool"
+documentation = "https://docs.rs/tokio-threadpool/0.1.14/tokio_threadpool"
 keywords = ["futures", "tokio"]
 categories = ["concurrency", "asynchronous"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
-[dependencies.crossbeam-channel]
-version = "0.3.3"
-
 [dependencies.crossbeam-deque]
-version = "0.6.1"
+version = "0.7.0"
+
+[dependencies.crossbeam-queue]
+version = "0.1.0"
 
 [dependencies.crossbeam-utils]
-version = "0.6.2"
+version = "0.6.4"
 
 [dependencies.futures]
 version = "0.1.19"
@@ -42,8 +42,11 @@ version = "1.2"
 [dependencies.rand]
 version = "0.6"
 
+[dependencies.slab]
+version = "0.4.1"
+
 [dependencies.tokio-executor]
-version = "0.1.2"
+version = "0.1.7"
 [dev-dependencies.env_logger]
 version = "0.5"
 

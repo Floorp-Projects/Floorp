@@ -6,8 +6,8 @@ by interacting with the Windows console. Several convenient abstractions
 are provided for use in single-threaded or multi-threaded command line
 applications.
 
-[![Linux build status](https://api.travis-ci.org/BurntSushi/ripgrep.png)](https://travis-ci.org/BurntSushi/ripgrep)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/BurntSushi/ripgrep?svg=true)](https://ci.appveyor.com/project/BurntSushi/ripgrep)
+[![Linux build status](https://api.travis-ci.org/BurntSushi/termcolor.png)](https://travis-ci.org/BurntSushi/termcolor)
+[![Windows build status](https://ci.appveyor.com/api/projects/status/github/BurntSushi/termcolor?svg=true)](https://ci.appveyor.com/project/BurntSushi/termcolor)
 [![](https://img.shields.io/crates/v/termcolor.svg)](https://crates.io/crates/termcolor)
 
 Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
@@ -22,7 +22,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-termcolor = "0.3"
+termcolor = "1"
 ```
 
 and this to your crate root:

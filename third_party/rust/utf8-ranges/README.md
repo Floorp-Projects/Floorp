@@ -1,3 +1,6 @@
+**DEPRECATED:** This crate has been folded into the
+[`regex-syntax`](https://docs.rs/regex-syntax) and is now deprecated.
+
 utf8-ranges
 ===========
 This crate converts contiguous ranges of Unicode scalar values to UTF-8 byte
@@ -36,7 +39,7 @@ fn main() {
 
 The output:
 
-```
+```text
 [0-7F]
 [C2-DF][80-BF]
 [E0][A0-BF][80-BF]

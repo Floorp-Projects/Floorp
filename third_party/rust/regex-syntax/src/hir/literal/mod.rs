@@ -1,13 +1,3 @@
-// Copyright 2018 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 /*!
 Provides routines for extracting literal prefixes and suffixes from an `Hir`.
 */
@@ -61,11 +51,7 @@ pub struct Literal {
 impl Literals {
     /// Returns a new empty set of literals using default limits.
     pub fn empty() -> Literals {
-        Literals {
-            lits: vec![],
-            limit_size: 250,
-            limit_class: 10,
-        }
+        Literals { lits: vec![], limit_size: 250, limit_class: 10 }
     }
 
     /// Returns a set of literal prefixes extracted from the given `Hir`.
@@ -162,8 +148,7 @@ impl Literals {
     /// Returns a new empty set of literals using this set's limits.
     pub fn to_empty(&self) -> Literals {
         let mut lits = Literals::empty();
-        lits.set_limit_size(self.limit_size)
-            .set_limit_class(self.limit_class);
+        lits.set_limit_size(self.limit_size).set_limit_class(self.limit_class);
         lits
     }
 
@@ -177,10 +162,8 @@ impl Literals {
         for lit in &self.lits[1..] {
             len = cmp::min(
                 len,
-                lit.iter()
-                   .zip(lit0)
-                   .take_while(|&(a, b)| a == b)
-                   .count());
+                lit.iter().zip(lit0).take_while(|&(a, b)| a == b).count(),
+            );
         }
         &self.lits[0][..len]
     }
@@ -196,10 +179,11 @@ impl Literals {
             len = cmp::min(
                 len,
                 lit.iter()
-                   .rev()
-                   .zip(lit0.iter().rev())
-                   .take_while(|&(a, b)| a == b)
-                   .count());
+                    .rev()
+                    .zip(lit0.iter().rev())
+                    .take_while(|&(a, b)| a == b)
+                    .count(),
+            );
         }
         &self.lits[0][self.lits[0].len() - len..]
     }
@@ -243,8 +227,7 @@ impl Literals {
         }
         let mut old: Vec<Literal> = self.lits.iter().cloned().collect();
         let mut new = self.to_empty();
-    'OUTER:
-        while let Some(mut candidate) = old.pop() {
+        'OUTER: while let Some(mut candidate) = old.pop() {
             if candidate.is_empty() {
                 continue;
             }
@@ -437,7 +420,8 @@ impl Literals {
         }
         let mut i = 1;
         while size + (i * self.lits.len()) <= self.limit_size
-            && i < bytes.len() {
+            && i < bytes.len()
+        {
             i += 1;
         }
         for lit in &mut self.lits {
@@ -579,22 +563,20 @@ impl Literals {
         }
         // This is an approximation since codepoints in a char class can encode
         // to 1-4 bytes.
-        let new_byte_count =
-            if self.lits.is_empty() {
-                size
-            } else {
-                self.lits
-                    .iter()
-                    .fold(0, |accum, lit| {
-                        accum + if lit.is_cut() {
-                            // If the literal is cut, then we'll never add
-                            // anything to it, so don't count it.
-                            0
-                        } else {
-                            (lit.len() + 1) * size
-                        }
-                    })
-            };
+        let new_byte_count = if self.lits.is_empty() {
+            size
+        } else {
+            self.lits.iter().fold(0, |accum, lit| {
+                accum
+                    + if lit.is_cut() {
+                        // If the literal is cut, then we'll never add
+                        // anything to it, so don't count it.
+                        0
+                    } else {
+                        (lit.len() + 1) * size
+                    }
+            })
+        };
         new_byte_count > self.limit_size
     }
 }
@@ -621,34 +603,27 @@ fn prefixes(expr: &Hir, lits: &mut Literals) {
         HirKind::Group(hir::Group { ref hir, .. }) => {
             prefixes(&**hir, lits);
         }
-        HirKind::Repetition(ref x) => {
-            match x.kind {
-                hir::RepetitionKind::ZeroOrOne => {
-                    repeat_zero_or_one_literals(&x.hir, lits, prefixes);
-                }
-                hir::RepetitionKind::ZeroOrMore => {
-                    repeat_zero_or_more_literals(&x.hir, lits, prefixes);
-                }
-                hir::RepetitionKind::OneOrMore => {
-                    repeat_one_or_more_literals(&x.hir, lits, prefixes);
-                }
-                hir::RepetitionKind::Range(ref rng) => {
-                    let (min, max) = match *rng {
-                        hir::RepetitionRange::Exactly(m) => {
-                            (m, Some(m))
-                        }
-                        hir::RepetitionRange::AtLeast(m) => {
-                            (m, None)
-                        }
-                        hir::RepetitionRange::Bounded(m, n) => {
-                            (m, Some(n))
-                        }
-                    };
-                    repeat_range_literals(
-                        &x.hir, min, max, x.greedy, lits, prefixes)
-                }
+        HirKind::Repetition(ref x) => match x.kind {
+            hir::RepetitionKind::ZeroOrOne => {
+                repeat_zero_or_one_literals(&x.hir, lits, prefixes);
             }
-        }
+            hir::RepetitionKind::ZeroOrMore => {
+                repeat_zero_or_more_literals(&x.hir, lits, prefixes);
+            }
+            hir::RepetitionKind::OneOrMore => {
+                repeat_one_or_more_literals(&x.hir, lits, prefixes);
+            }
+            hir::RepetitionKind::Range(ref rng) => {
+                let (min, max) = match *rng {
+                    hir::RepetitionRange::Exactly(m) => (m, Some(m)),
+                    hir::RepetitionRange::AtLeast(m) => (m, None),
+                    hir::RepetitionRange::Bounded(m, n) => (m, Some(n)),
+                };
+                repeat_range_literals(
+                    &x.hir, min, max, x.greedy, lits, prefixes,
+                )
+            }
+        },
         HirKind::Concat(ref es) if es.is_empty() => {}
         HirKind::Concat(ref es) if es.len() == 1 => prefixes(&es[0], lits),
         HirKind::Concat(ref es) => {
@@ -684,7 +659,7 @@ fn suffixes(expr: &Hir, lits: &mut Literals) {
         HirKind::Literal(hir::Literal::Unicode(c)) => {
             let mut buf = [0u8; 4];
             let i = c.encode_utf8(&mut buf).len();
-            let mut buf = &mut buf[..i];
+            let buf = &mut buf[..i];
             buf.reverse();
             lits.cross_add(buf);
         }
@@ -704,34 +679,27 @@ fn suffixes(expr: &Hir, lits: &mut Literals) {
         HirKind::Group(hir::Group { ref hir, .. }) => {
             suffixes(&**hir, lits);
         }
-        HirKind::Repetition(ref x) => {
-            match x.kind {
-                hir::RepetitionKind::ZeroOrOne => {
-                    repeat_zero_or_one_literals(&x.hir, lits, suffixes);
-                }
-                hir::RepetitionKind::ZeroOrMore => {
-                    repeat_zero_or_more_literals(&x.hir, lits, suffixes);
-                }
-                hir::RepetitionKind::OneOrMore => {
-                    repeat_one_or_more_literals(&x.hir, lits, suffixes);
-                }
-                hir::RepetitionKind::Range(ref rng) => {
-                    let (min, max) = match *rng {
-                        hir::RepetitionRange::Exactly(m) => {
-                            (m, Some(m))
-                        }
-                        hir::RepetitionRange::AtLeast(m) => {
-                            (m, None)
-                        }
-                        hir::RepetitionRange::Bounded(m, n) => {
-                            (m, Some(n))
-                        }
-                    };
-                    repeat_range_literals(
-                        &x.hir, min, max, x.greedy, lits, suffixes)
-                }
+        HirKind::Repetition(ref x) => match x.kind {
+            hir::RepetitionKind::ZeroOrOne => {
+                repeat_zero_or_one_literals(&x.hir, lits, suffixes);
             }
-        }
+            hir::RepetitionKind::ZeroOrMore => {
+                repeat_zero_or_more_literals(&x.hir, lits, suffixes);
+            }
+            hir::RepetitionKind::OneOrMore => {
+                repeat_one_or_more_literals(&x.hir, lits, suffixes);
+            }
+            hir::RepetitionKind::Range(ref rng) => {
+                let (min, max) = match *rng {
+                    hir::RepetitionRange::Exactly(m) => (m, Some(m)),
+                    hir::RepetitionRange::AtLeast(m) => (m, None),
+                    hir::RepetitionRange::Bounded(m, n) => (m, Some(n)),
+                };
+                repeat_range_literals(
+                    &x.hir, min, max, x.greedy, lits, suffixes,
+                )
+            }
+        },
         HirKind::Concat(ref es) if es.is_empty() => {}
         HirKind::Concat(ref es) if es.len() == 1 => suffixes(&es[0], lits),
         HirKind::Concat(ref es) => {
@@ -822,11 +790,14 @@ fn repeat_range_literals<F: FnMut(&Hir, &mut Literals)>(
         // This is a bit conservative. If `max` is set, then we could
         // treat this as a finite set of alternations. For now, we
         // just treat it as `e*`.
-        f(&Hir::repetition(hir::Repetition {
-            kind: hir::RepetitionKind::ZeroOrMore,
-            greedy: greedy,
-            hir: Box::new(e.clone()),
-        }), lits);
+        f(
+            &Hir::repetition(hir::Repetition {
+                kind: hir::RepetitionKind::ZeroOrMore,
+                greedy: greedy,
+                hir: Box::new(e.clone()),
+            }),
+            lits,
+        );
     } else {
         if min > 0 {
             let n = cmp::min(lits.limit_size, min as usize);
@@ -869,10 +840,10 @@ fn alternate_literals<F: FnMut(&Hir, &mut Literals)>(
 impl fmt::Debug for Literals {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Literals")
-         .field("lits", &self.lits)
-         .field("limit_size", &self.limit_size)
-         .field("limit_class", &self.limit_class)
-         .finish()
+            .field("lits", &self.lits)
+            .field("limit_size", &self.limit_size)
+            .field("limit_class", &self.limit_class)
+            .finish()
     }
 }
 
@@ -921,16 +892,22 @@ impl fmt::Debug for Literal {
 }
 
 impl AsRef<[u8]> for Literal {
-    fn as_ref(&self) -> &[u8] { &self.v }
+    fn as_ref(&self) -> &[u8] {
+        &self.v
+    }
 }
 
 impl ops::Deref for Literal {
     type Target = Vec<u8>;
-    fn deref(&self) -> &Vec<u8> { &self.v }
+    fn deref(&self) -> &Vec<u8> {
+        &self.v
+    }
 }
 
 impl ops::DerefMut for Literal {
-    fn deref_mut(&mut self) -> &mut Vec<u8> { &mut self.v }
+    fn deref_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.v
+    }
 }
 
 fn position(needle: &[u8], mut haystack: &[u8]) -> Option<usize> {
@@ -986,24 +963,22 @@ fn escape_byte(byte: u8) -> String {
 }
 
 fn cls_char_count(cls: &hir::ClassUnicode) -> usize {
-    cls.iter()
-        .map(|&r| 1 + (r.end as u32) - (r.start as u32))
-        .sum::<u32>() as usize
+    cls.iter().map(|&r| 1 + (r.end as u32) - (r.start as u32)).sum::<u32>()
+        as usize
 }
 
 fn cls_byte_count(cls: &hir::ClassBytes) -> usize {
-    cls.iter()
-        .map(|&r| 1 + (r.end as u32) - (r.start as u32))
-        .sum::<u32>() as usize
+    cls.iter().map(|&r| 1 + (r.end as u32) - (r.start as u32)).sum::<u32>()
+        as usize
 }
 
 #[cfg(test)]
 mod tests {
     use std::fmt;
 
-    use ParserBuilder;
+    use super::{escape_bytes, Literal, Literals};
     use hir::Hir;
-    use super::{Literals, Literal, escape_bytes};
+    use ParserBuilder;
 
     // To make test failures easier to read.
     #[derive(Debug, Eq, PartialEq)]
@@ -1014,15 +989,13 @@ mod tests {
     fn escape_lits(blits: &[Literal]) -> Vec<ULiteral> {
         let mut ulits = vec![];
         for blit in blits {
-            ulits.push(ULiteral {
-                v: escape_bytes(&blit),
-                cut: blit.is_cut(),
-            });
+            ulits
+                .push(ULiteral { v: escape_bytes(&blit), cut: blit.is_cut() });
         }
         ulits
     }
 
-    fn create_lits<I: IntoIterator<Item=Literal>>(it: I) -> Literals {
+    fn create_lits<I: IntoIterator<Item = Literal>>(it: I) -> Literals {
         Literals {
             lits: it.into_iter().collect(),
             limit_size: 0,
@@ -1038,7 +1011,9 @@ mod tests {
     }
 
     impl ULiteral {
-        fn is_cut(&self) -> bool { self.cut }
+        fn is_cut(&self) -> bool {
+            self.cut
+        }
     }
 
     impl fmt::Debug for ULiteral {
@@ -1130,19 +1105,39 @@ mod tests {
     test_lit!(pfx_one_lit1, prefixes, "a", M("a"));
     test_lit!(pfx_one_lit2, prefixes, "abc", M("abc"));
     test_lit!(pfx_one_lit3, prefixes, "(?u)☃", M("\\xe2\\x98\\x83"));
+    #[cfg(feature = "unicode-case")]
     test_lit!(pfx_one_lit4, prefixes, "(?ui)☃", M("\\xe2\\x98\\x83"));
-    test_lit!(pfx_class1, prefixes, "[1-4]",
-              M("1"), M("2"), M("3"), M("4"));
-    test_lit!(pfx_class2, prefixes, "(?u)[☃Ⅰ]",
-              M("\\xe2\\x85\\xa0"), M("\\xe2\\x98\\x83"));
-    test_lit!(pfx_class3, prefixes, "(?ui)[☃Ⅰ]",
-              M("\\xe2\\x85\\xa0"), M("\\xe2\\x85\\xb0"),
-              M("\\xe2\\x98\\x83"));
-    test_lit!(pfx_one_lit_casei1, prefixes, "(?i)a",
-              M("A"), M("a"));
-    test_lit!(pfx_one_lit_casei2, prefixes, "(?i)abc",
-              M("ABC"), M("aBC"), M("AbC"), M("abC"),
-              M("ABc"), M("aBc"), M("Abc"), M("abc"));
+    test_lit!(pfx_class1, prefixes, "[1-4]", M("1"), M("2"), M("3"), M("4"));
+    test_lit!(
+        pfx_class2,
+        prefixes,
+        "(?u)[☃Ⅰ]",
+        M("\\xe2\\x85\\xa0"),
+        M("\\xe2\\x98\\x83")
+    );
+    #[cfg(feature = "unicode-case")]
+    test_lit!(
+        pfx_class3,
+        prefixes,
+        "(?ui)[☃Ⅰ]",
+        M("\\xe2\\x85\\xa0"),
+        M("\\xe2\\x85\\xb0"),
+        M("\\xe2\\x98\\x83")
+    );
+    test_lit!(pfx_one_lit_casei1, prefixes, "(?i-u)a", M("A"), M("a"));
+    test_lit!(
+        pfx_one_lit_casei2,
+        prefixes,
+        "(?i-u)abc",
+        M("ABC"),
+        M("aBC"),
+        M("AbC"),
+        M("abC"),
+        M("ABc"),
+        M("aBc"),
+        M("Abc"),
+        M("abc")
+    );
     test_lit!(pfx_group1, prefixes, "(a)", M("a"));
     test_lit!(pfx_rep_zero_or_one1, prefixes, "a?");
     test_lit!(pfx_rep_zero_or_one2, prefixes, "(?:abc)?");
@@ -1162,11 +1157,28 @@ mod tests {
     // Test regexes with concatenations.
     test_lit!(pfx_cat1, prefixes, "(?:a)(?:b)", M("ab"));
     test_lit!(pfx_cat2, prefixes, "[ab]z", M("az"), M("bz"));
-    test_lit!(pfx_cat3, prefixes, "(?i)[ab]z",
-              M("AZ"), M("BZ"), M("aZ"), M("bZ"),
-              M("Az"), M("Bz"), M("az"), M("bz"));
-    test_lit!(pfx_cat4, prefixes, "[ab][yz]",
-              M("ay"), M("by"), M("az"), M("bz"));
+    test_lit!(
+        pfx_cat3,
+        prefixes,
+        "(?i-u)[ab]z",
+        M("AZ"),
+        M("BZ"),
+        M("aZ"),
+        M("bZ"),
+        M("Az"),
+        M("Bz"),
+        M("az"),
+        M("bz")
+    );
+    test_lit!(
+        pfx_cat4,
+        prefixes,
+        "[ab][yz]",
+        M("ay"),
+        M("by"),
+        M("az"),
+        M("bz")
+    );
     test_lit!(pfx_cat5, prefixes, "a*b", C("a"), M("b"));
     test_lit!(pfx_cat6, prefixes, "a*b*c", C("a"), C("b"), M("c"));
     test_lit!(pfx_cat7, prefixes, "a*b*c+", C("a"), C("b"), C("c"));
@@ -1190,8 +1202,17 @@ mod tests {
     test_lit!(pfx_alt4, prefixes, "a|b*");
     test_lit!(pfx_alt5, prefixes, "a|b+", M("a"), C("b"));
     test_lit!(pfx_alt6, prefixes, "a|(?:b|c*)");
-    test_lit!(pfx_alt7, prefixes, "(a|b)*c|(a|ab)*c",
-              C("a"), C("b"), M("c"), C("a"), C("ab"), M("c"));
+    test_lit!(
+        pfx_alt7,
+        prefixes,
+        "(a|b)*c|(a|ab)*c",
+        C("a"),
+        C("b"),
+        M("c"),
+        C("a"),
+        C("ab"),
+        M("c")
+    );
     test_lit!(pfx_alt8, prefixes, "a*b|c", C("a"), M("b"), M("c"));
 
     // Test regexes with empty assertions.
@@ -1228,7 +1249,11 @@ mod tests {
         pfx_crazy1,
         prefixes,
         r"M[ou]'?am+[ae]r .*([AEae]l[- ])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy]",
-        C("Mo\\'am"), C("Mu\\'am"), C("Moam"), C("Muam"));
+        C("Mo\\'am"),
+        C("Mu\\'am"),
+        C("Moam"),
+        C("Muam")
+    );
 
     // ************************************************************************
     // Tests for quiting prefix literal search.
@@ -1269,16 +1294,41 @@ mod tests {
     test_exhausted!(pfx_exhausted1, prefixes, "[a-z]");
     test_exhausted!(pfx_exhausted2, prefixes, "[a-z]*A");
     test_exhausted!(pfx_exhausted3, prefixes, "A[a-z]Z", C("A"));
-    test_exhausted!(pfx_exhausted4, prefixes, "(?i)foobar",
-                    C("FO"), C("fO"), C("Fo"), C("fo"));
-    test_exhausted!(pfx_exhausted5, prefixes, "(?:ab){100}",
-                    C("abababababababababab"));
-    test_exhausted!(pfx_exhausted6, prefixes, "(?:(?:ab){100})*cd",
-                    C("ababababab"), M("cd"));
-    test_exhausted!(pfx_exhausted7, prefixes, "z(?:(?:ab){100})*cd",
-                    C("zababababab"), M("zcd"));
-    test_exhausted!(pfx_exhausted8, prefixes, "aaaaaaaaaaaaaaaaaaaaz",
-                    C("aaaaaaaaaaaaaaaaaaaa"));
+    test_exhausted!(
+        pfx_exhausted4,
+        prefixes,
+        "(?i-u)foobar",
+        C("FO"),
+        C("fO"),
+        C("Fo"),
+        C("fo")
+    );
+    test_exhausted!(
+        pfx_exhausted5,
+        prefixes,
+        "(?:ab){100}",
+        C("abababababababababab")
+    );
+    test_exhausted!(
+        pfx_exhausted6,
+        prefixes,
+        "(?:(?:ab){100})*cd",
+        C("ababababab"),
+        M("cd")
+    );
+    test_exhausted!(
+        pfx_exhausted7,
+        prefixes,
+        "z(?:(?:ab){100})*cd",
+        C("zababababab"),
+        M("zcd")
+    );
+    test_exhausted!(
+        pfx_exhausted8,
+        prefixes,
+        "aaaaaaaaaaaaaaaaaaaaz",
+        C("aaaaaaaaaaaaaaaaaaaa")
+    );
 
     // ************************************************************************
     // Tests for suffix literal extraction.
@@ -1288,19 +1338,39 @@ mod tests {
     test_lit!(sfx_one_lit1, suffixes, "a", M("a"));
     test_lit!(sfx_one_lit2, suffixes, "abc", M("abc"));
     test_lit!(sfx_one_lit3, suffixes, "(?u)☃", M("\\xe2\\x98\\x83"));
+    #[cfg(feature = "unicode-case")]
     test_lit!(sfx_one_lit4, suffixes, "(?ui)☃", M("\\xe2\\x98\\x83"));
-    test_lit!(sfx_class1, suffixes, "[1-4]",
-              M("1"), M("2"), M("3"), M("4"));
-    test_lit!(sfx_class2, suffixes, "(?u)[☃Ⅰ]",
-              M("\\xe2\\x85\\xa0"), M("\\xe2\\x98\\x83"));
-    test_lit!(sfx_class3, suffixes, "(?ui)[☃Ⅰ]",
-              M("\\xe2\\x85\\xa0"), M("\\xe2\\x85\\xb0"),
-              M("\\xe2\\x98\\x83"));
-    test_lit!(sfx_one_lit_casei1, suffixes, "(?i)a",
-              M("A"), M("a"));
-    test_lit!(sfx_one_lit_casei2, suffixes, "(?i)abc",
-              M("ABC"), M("ABc"), M("AbC"), M("Abc"),
-              M("aBC"), M("aBc"), M("abC"), M("abc"));
+    test_lit!(sfx_class1, suffixes, "[1-4]", M("1"), M("2"), M("3"), M("4"));
+    test_lit!(
+        sfx_class2,
+        suffixes,
+        "(?u)[☃Ⅰ]",
+        M("\\xe2\\x85\\xa0"),
+        M("\\xe2\\x98\\x83")
+    );
+    #[cfg(feature = "unicode-case")]
+    test_lit!(
+        sfx_class3,
+        suffixes,
+        "(?ui)[☃Ⅰ]",
+        M("\\xe2\\x85\\xa0"),
+        M("\\xe2\\x85\\xb0"),
+        M("\\xe2\\x98\\x83")
+    );
+    test_lit!(sfx_one_lit_casei1, suffixes, "(?i-u)a", M("A"), M("a"));
+    test_lit!(
+        sfx_one_lit_casei2,
+        suffixes,
+        "(?i-u)abc",
+        M("ABC"),
+        M("ABc"),
+        M("AbC"),
+        M("Abc"),
+        M("aBC"),
+        M("aBc"),
+        M("abC"),
+        M("abc")
+    );
     test_lit!(sfx_group1, suffixes, "(a)", M("a"));
     test_lit!(sfx_rep_zero_or_one1, suffixes, "a?");
     test_lit!(sfx_rep_zero_or_one2, suffixes, "(?:abc)?");
@@ -1320,11 +1390,28 @@ mod tests {
     // Test regexes with concatenations.
     test_lit!(sfx_cat1, suffixes, "(?:a)(?:b)", M("ab"));
     test_lit!(sfx_cat2, suffixes, "[ab]z", M("az"), M("bz"));
-    test_lit!(sfx_cat3, suffixes, "(?i)[ab]z",
-              M("AZ"), M("Az"), M("BZ"), M("Bz"),
-              M("aZ"), M("az"), M("bZ"), M("bz"));
-    test_lit!(sfx_cat4, suffixes, "[ab][yz]",
-              M("ay"), M("az"), M("by"), M("bz"));
+    test_lit!(
+        sfx_cat3,
+        suffixes,
+        "(?i-u)[ab]z",
+        M("AZ"),
+        M("Az"),
+        M("BZ"),
+        M("Bz"),
+        M("aZ"),
+        M("az"),
+        M("bZ"),
+        M("bz")
+    );
+    test_lit!(
+        sfx_cat4,
+        suffixes,
+        "[ab][yz]",
+        M("ay"),
+        M("az"),
+        M("by"),
+        M("bz")
+    );
     test_lit!(sfx_cat5, suffixes, "a*b", C("ab"), M("b"));
     test_lit!(sfx_cat6, suffixes, "a*b*c", C("bc"), C("ac"), M("c"));
     test_lit!(sfx_cat7, suffixes, "a*b*c+", C("c"));
@@ -1348,8 +1435,17 @@ mod tests {
     test_lit!(sfx_alt4, suffixes, "a|b*");
     test_lit!(sfx_alt5, suffixes, "a|b+", M("a"), C("b"));
     test_lit!(sfx_alt6, suffixes, "a|(?:b|c*)");
-    test_lit!(sfx_alt7, suffixes, "(a|b)*c|(a|ab)*c",
-              C("ac"), C("bc"), M("c"), C("ac"), C("abc"), M("c"));
+    test_lit!(
+        sfx_alt7,
+        suffixes,
+        "(a|b)*c|(a|ab)*c",
+        C("ac"),
+        C("bc"),
+        M("c"),
+        C("ac"),
+        C("abc"),
+        M("c")
+    );
     test_lit!(sfx_alt8, suffixes, "a*b|c", C("ab"), M("b"), M("c"));
 
     // Test regexes with empty assertions.
@@ -1385,16 +1481,41 @@ mod tests {
     test_exhausted!(sfx_exhausted1, suffixes, "[a-z]");
     test_exhausted!(sfx_exhausted2, suffixes, "A[a-z]*");
     test_exhausted!(sfx_exhausted3, suffixes, "A[a-z]Z", C("Z"));
-    test_exhausted!(sfx_exhausted4, suffixes, "(?i)foobar",
-                    C("AR"), C("Ar"), C("aR"), C("ar"));
-    test_exhausted!(sfx_exhausted5, suffixes, "(?:ab){100}",
-                    C("abababababababababab"));
-    test_exhausted!(sfx_exhausted6, suffixes, "cd(?:(?:ab){100})*",
-                    C("ababababab"), M("cd"));
-    test_exhausted!(sfx_exhausted7, suffixes, "cd(?:(?:ab){100})*z",
-                    C("abababababz"), M("cdz"));
-    test_exhausted!(sfx_exhausted8, suffixes, "zaaaaaaaaaaaaaaaaaaaa",
-                    C("aaaaaaaaaaaaaaaaaaaa"));
+    test_exhausted!(
+        sfx_exhausted4,
+        suffixes,
+        "(?i-u)foobar",
+        C("AR"),
+        C("Ar"),
+        C("aR"),
+        C("ar")
+    );
+    test_exhausted!(
+        sfx_exhausted5,
+        suffixes,
+        "(?:ab){100}",
+        C("abababababababababab")
+    );
+    test_exhausted!(
+        sfx_exhausted6,
+        suffixes,
+        "cd(?:(?:ab){100})*",
+        C("ababababab"),
+        M("cd")
+    );
+    test_exhausted!(
+        sfx_exhausted7,
+        suffixes,
+        "cd(?:(?:ab){100})*z",
+        C("abababababz"),
+        M("cdz")
+    );
+    test_exhausted!(
+        sfx_exhausted8,
+        suffixes,
+        "zaaaaaaaaaaaaaaaaaaaa",
+        C("aaaaaaaaaaaaaaaaaaaa")
+    );
 
     // ************************************************************************
     // Tests for generating unambiguous literal sets.
@@ -1404,8 +1525,7 @@ mod tests {
         ($name:ident, $given:expr, $expected:expr) => {
             #[test]
             fn $name() {
-                let given: Vec<Literal> =
-                    $given
+                let given: Vec<Literal> = $given
                     .into_iter()
                     .map(|ul| {
                         let cut = ul.is_cut();
@@ -1420,35 +1540,52 @@ mod tests {
     }
 
     test_unamb!(unambiguous1, vec![M("z"), M("azb")], vec![C("a"), C("z")]);
-    test_unamb!(unambiguous2,
-                vec![M("zaaaaaa"), M("aa")], vec![C("aa"), C("z")]);
-    test_unamb!(unambiguous3,
-                vec![M("Sherlock"), M("Watson")],
-                vec![M("Sherlock"), M("Watson")]);
+    test_unamb!(
+        unambiguous2,
+        vec![M("zaaaaaa"), M("aa")],
+        vec![C("aa"), C("z")]
+    );
+    test_unamb!(
+        unambiguous3,
+        vec![M("Sherlock"), M("Watson")],
+        vec![M("Sherlock"), M("Watson")]
+    );
     test_unamb!(unambiguous4, vec![M("abc"), M("bc")], vec![C("a"), C("bc")]);
     test_unamb!(unambiguous5, vec![M("bc"), M("abc")], vec![C("a"), C("bc")]);
     test_unamb!(unambiguous6, vec![M("a"), M("aa")], vec![C("a")]);
     test_unamb!(unambiguous7, vec![M("aa"), M("a")], vec![C("a")]);
     test_unamb!(unambiguous8, vec![M("ab"), M("a")], vec![C("a")]);
-    test_unamb!(unambiguous9,
-                vec![M("ac"), M("bc"), M("c"), M("ac"), M("abc"), M("c")],
-                vec![C("a"), C("b"), C("c")]);
-    test_unamb!(unambiguous10,
-                vec![M("Mo'"), M("Mu'"), M("Mo"), M("Mu")],
-                vec![C("Mo"), C("Mu")]);
-    test_unamb!(unambiguous11,
-                vec![M("zazb"), M("azb")], vec![C("a"), C("z")]);
+    test_unamb!(
+        unambiguous9,
+        vec![M("ac"), M("bc"), M("c"), M("ac"), M("abc"), M("c")],
+        vec![C("a"), C("b"), C("c")]
+    );
+    test_unamb!(
+        unambiguous10,
+        vec![M("Mo'"), M("Mu'"), M("Mo"), M("Mu")],
+        vec![C("Mo"), C("Mu")]
+    );
+    test_unamb!(
+        unambiguous11,
+        vec![M("zazb"), M("azb")],
+        vec![C("a"), C("z")]
+    );
     test_unamb!(unambiguous12, vec![M("foo"), C("foo")], vec![C("foo")]);
-    test_unamb!(unambiguous13,
-                vec![M("ABCX"), M("CDAX"), M("BCX")],
-                vec![C("A"), C("BCX"), C("CD")]);
-    test_unamb!(unambiguous14,
-                vec![M("IMGX"), M("MVIX"), M("MGX"), M("DSX")],
-                vec![M("DSX"), C("I"), C("MGX"), C("MV")]);
-    test_unamb!(unambiguous15,
-                vec![M("IMG_"), M("MG_"), M("CIMG")],
-                vec![C("C"), C("I"), C("MG_")]);
-
+    test_unamb!(
+        unambiguous13,
+        vec![M("ABCX"), M("CDAX"), M("BCX")],
+        vec![C("A"), C("BCX"), C("CD")]
+    );
+    test_unamb!(
+        unambiguous14,
+        vec![M("IMGX"), M("MVIX"), M("MGX"), M("DSX")],
+        vec![M("DSX"), C("I"), C("MGX"), C("MV")]
+    );
+    test_unamb!(
+        unambiguous15,
+        vec![M("IMG_"), M("MG_"), M("CIMG")],
+        vec![C("C"), C("I"), C("MG_")]
+    );
 
     // ************************************************************************
     // Tests for suffix trimming.
@@ -1457,8 +1594,7 @@ mod tests {
         ($name:ident, $trim:expr, $given:expr, $expected:expr) => {
             #[test]
             fn $name() {
-                let given: Vec<Literal> =
-                    $given
+                let given: Vec<Literal> = $given
                     .into_iter()
                     .map(|ul| {
                         let cut = ul.is_cut();
@@ -1469,7 +1605,7 @@ mod tests {
                 let got = lits.trim_suffix($trim).unwrap();
                 assert_eq!($expected, escape_lits(got.literals()));
             }
-        }
+        };
     }
 
     test_trim!(trim1, 1, vec![M("ab"), M("yz")], vec![C("a"), C("y")]);
@@ -1485,8 +1621,7 @@ mod tests {
         ($name:ident, $given:expr, $expected:expr) => {
             #[test]
             fn $name() {
-                let given: Vec<Literal> =
-                    $given
+                let given: Vec<Literal> = $given
                     .into_iter()
                     .map(|s: &str| Literal {
                         v: s.to_owned().into_bytes(),
@@ -1521,8 +1656,7 @@ mod tests {
         ($name:ident, $given:expr, $expected:expr) => {
             #[test]
             fn $name() {
-                let given: Vec<Literal> =
-                    $given
+                let given: Vec<Literal> = $given
                     .into_iter()
                     .map(|s: &str| Literal {
                         v: s.to_owned().into_bytes(),

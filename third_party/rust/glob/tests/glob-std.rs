@@ -17,8 +17,8 @@ extern crate tempdir;
 
 use glob::glob;
 use std::env;
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 use tempdir::TempDir;
 
 #[test]
@@ -79,63 +79,91 @@ fn main() {
     mk_file("r/three/c.md", false);
 
     // all recursive entities
-    assert_eq!(glob_vec("r/**"), vec!(
-        PathBuf::from("r/another"),
-        PathBuf::from("r/one"),
-        PathBuf::from("r/one/another"),
-        PathBuf::from("r/one/another/deep"),
-        PathBuf::from("r/three"),
-        PathBuf::from("r/two")));
+    assert_eq!(
+        glob_vec("r/**"),
+        vec!(
+            PathBuf::from("r/another"),
+            PathBuf::from("r/one"),
+            PathBuf::from("r/one/another"),
+            PathBuf::from("r/one/another/deep"),
+            PathBuf::from("r/three"),
+            PathBuf::from("r/two")
+        )
+    );
 
     // collapse consecutive recursive patterns
-    assert_eq!(glob_vec("r/**/**"), vec!(
-        PathBuf::from("r/another"),
-        PathBuf::from("r/one"),
-        PathBuf::from("r/one/another"),
-        PathBuf::from("r/one/another/deep"),
-        PathBuf::from("r/three"),
-        PathBuf::from("r/two")));
+    assert_eq!(
+        glob_vec("r/**/**"),
+        vec!(
+            PathBuf::from("r/another"),
+            PathBuf::from("r/one"),
+            PathBuf::from("r/one/another"),
+            PathBuf::from("r/one/another/deep"),
+            PathBuf::from("r/three"),
+            PathBuf::from("r/two")
+        )
+    );
 
-    assert_eq!(glob_vec("r/**/*"), vec!(
-        PathBuf::from("r/another"),
-        PathBuf::from("r/another/a.md"),
-        PathBuf::from("r/current_dir.md"),
-        PathBuf::from("r/one"),
-        PathBuf::from("r/one/a.md"),
-        PathBuf::from("r/one/another"),
-        PathBuf::from("r/one/another/a.md"),
-        PathBuf::from("r/one/another/deep"),
-        PathBuf::from("r/one/another/deep/spelunking.md"),
-        PathBuf::from("r/three"),
-        PathBuf::from("r/three/c.md"),
-        PathBuf::from("r/two"),
-        PathBuf::from("r/two/b.md")));
+    assert_eq!(
+        glob_vec("r/**/*"),
+        vec!(
+            PathBuf::from("r/another"),
+            PathBuf::from("r/another/a.md"),
+            PathBuf::from("r/current_dir.md"),
+            PathBuf::from("r/one"),
+            PathBuf::from("r/one/a.md"),
+            PathBuf::from("r/one/another"),
+            PathBuf::from("r/one/another/a.md"),
+            PathBuf::from("r/one/another/deep"),
+            PathBuf::from("r/one/another/deep/spelunking.md"),
+            PathBuf::from("r/three"),
+            PathBuf::from("r/three/c.md"),
+            PathBuf::from("r/two"),
+            PathBuf::from("r/two/b.md")
+        )
+    );
 
     // followed by a wildcard
-    assert_eq!(glob_vec("r/**/*.md"), vec!(
-        PathBuf::from("r/another/a.md"),
-        PathBuf::from("r/current_dir.md"),
-        PathBuf::from("r/one/a.md"),
-        PathBuf::from("r/one/another/a.md"),
-        PathBuf::from("r/one/another/deep/spelunking.md"),
-        PathBuf::from("r/three/c.md"),
-        PathBuf::from("r/two/b.md")));
+    assert_eq!(
+        glob_vec("r/**/*.md"),
+        vec!(
+            PathBuf::from("r/another/a.md"),
+            PathBuf::from("r/current_dir.md"),
+            PathBuf::from("r/one/a.md"),
+            PathBuf::from("r/one/another/a.md"),
+            PathBuf::from("r/one/another/deep/spelunking.md"),
+            PathBuf::from("r/three/c.md"),
+            PathBuf::from("r/two/b.md")
+        )
+    );
 
     // followed by a precise pattern
-    assert_eq!(glob_vec("r/one/**/a.md"), vec!(
-        PathBuf::from("r/one/a.md"),
-        PathBuf::from("r/one/another/a.md")));
+    assert_eq!(
+        glob_vec("r/one/**/a.md"),
+        vec!(
+            PathBuf::from("r/one/a.md"),
+            PathBuf::from("r/one/another/a.md")
+        )
+    );
 
     // followed by another recursive pattern
     // collapses consecutive recursives into one
-    assert_eq!(glob_vec("r/one/**/**/a.md"), vec!(
-        PathBuf::from("r/one/a.md"),
-        PathBuf::from("r/one/another/a.md")));
+    assert_eq!(
+        glob_vec("r/one/**/**/a.md"),
+        vec!(
+            PathBuf::from("r/one/a.md"),
+            PathBuf::from("r/one/another/a.md")
+        )
+    );
 
     // followed by two precise patterns
-    assert_eq!(glob_vec("r/**/another/a.md"), vec!(
-        PathBuf::from("r/another/a.md"),
-        PathBuf::from("r/one/another/a.md")));
+    assert_eq!(
+        glob_vec("r/**/another/a.md"),
+        vec!(
+            PathBuf::from("r/another/a.md"),
+            PathBuf::from("r/one/another/a.md")
+        )
+    );
 
     assert_eq!(glob_vec(""), Vec::<PathBuf>::new());
     assert_eq!(glob_vec("."), vec!(PathBuf::from(".")));
@@ -155,20 +183,32 @@ fn main() {
         assert_eq!(glob_vec("aaa\\apple"), vec!(PathBuf::from("aaa/apple")));
     }
 
-    assert_eq!(glob_vec("???/"), vec!(
-        PathBuf::from("aaa"),
-        PathBuf::from("bbb"),
-        PathBuf::from("ccc"),
-        PathBuf::from("xyz")));
+    assert_eq!(
+        glob_vec("???/"),
+        vec!(
+            PathBuf::from("aaa"),
+            PathBuf::from("bbb"),
+            PathBuf::from("ccc"),
+            PathBuf::from("xyz")
+        )
+    );
 
-    assert_eq!(glob_vec("aaa/tomato/tom?to.txt"), vec!(
-        PathBuf::from("aaa/tomato/tomato.txt"),
-        PathBuf::from("aaa/tomato/tomoto.txt")));
+    assert_eq!(
+        glob_vec("aaa/tomato/tom?to.txt"),
+        vec!(
+            PathBuf::from("aaa/tomato/tomato.txt"),
+            PathBuf::from("aaa/tomato/tomoto.txt")
+        )
+    );
 
-    assert_eq!(glob_vec("xyz/?"), vec!(
-        PathBuf::from("xyz/x"),
-        PathBuf::from("xyz/y"),
-        PathBuf::from("xyz/z")));
+    assert_eq!(
+        glob_vec("xyz/?"),
+        vec!(
+            PathBuf::from("xyz/x"),
+            PathBuf::from("xyz/y"),
+            PathBuf::from("xyz/z")
+        )
+    );
 
     assert_eq!(glob_vec("a*"), vec!(PathBuf::from("aaa")));
     assert_eq!(glob_vec("*a*"), vec!(PathBuf::from("aaa")));
@@ -179,23 +219,39 @@ fn main() {
     assert_eq!(glob_vec("*a*a*a*"), vec!(PathBuf::from("aaa")));
     assert_eq!(glob_vec("aaa*/"), vec!(PathBuf::from("aaa")));
 
-    assert_eq!(glob_vec("aaa/*"), vec!(
-        PathBuf::from("aaa/apple"),
-        PathBuf::from("aaa/orange"),
-        PathBuf::from("aaa/tomato")));
+    assert_eq!(
+        glob_vec("aaa/*"),
+        vec!(
+            PathBuf::from("aaa/apple"),
+            PathBuf::from("aaa/orange"),
+            PathBuf::from("aaa/tomato")
+        )
+    );
 
-    assert_eq!(glob_vec("aaa/*a*"), vec!(
-        PathBuf::from("aaa/apple"),
-        PathBuf::from("aaa/orange"),
-        PathBuf::from("aaa/tomato")));
+    assert_eq!(
+        glob_vec("aaa/*a*"),
+        vec!(
+            PathBuf::from("aaa/apple"),
+            PathBuf::from("aaa/orange"),
+            PathBuf::from("aaa/tomato")
+        )
+    );
 
-    assert_eq!(glob_vec("*/*/*.txt"), vec!(
-        PathBuf::from("aaa/tomato/tomato.txt"),
-        PathBuf::from("aaa/tomato/tomoto.txt")));
+    assert_eq!(
+        glob_vec("*/*/*.txt"),
+        vec!(
+            PathBuf::from("aaa/tomato/tomato.txt"),
+            PathBuf::from("aaa/tomato/tomoto.txt")
+        )
+    );
 
-    assert_eq!(glob_vec("*/*/t[aob]m?to[.]t[!y]t"), vec!(
-        PathBuf::from("aaa/tomato/tomato.txt"),
-        PathBuf::from("aaa/tomato/tomoto.txt")));
+    assert_eq!(
+        glob_vec("*/*/t[aob]m?to[.]t[!y]t"),
+        vec!(
+            PathBuf::from("aaa/tomato/tomato.txt"),
+            PathBuf::from("aaa/tomato/tomoto.txt")
+        )
+    );
 
     assert_eq!(glob_vec("./aaa"), vec!(PathBuf::from("aaa")));
     assert_eq!(glob_vec("./*"), glob_vec("*"));
@@ -219,60 +275,103 @@ fn main() {
     assert_eq!(glob_vec("aa[!a]"), Vec::<PathBuf>::new());
     assert_eq!(glob_vec("aa[!abc]"), Vec::<PathBuf>::new());
 
-    assert_eq!(glob_vec("bbb/specials/[[]"), vec!(PathBuf::from("bbb/specials/[")));
-    assert_eq!(glob_vec("bbb/specials/!"), vec!(PathBuf::from("bbb/specials/!")));
-    assert_eq!(glob_vec("bbb/specials/[]]"), vec!(PathBuf::from("bbb/specials/]")));
+    assert_eq!(
+        glob_vec("bbb/specials/[[]"),
+        vec!(PathBuf::from("bbb/specials/["))
+    );
+    assert_eq!(
+        glob_vec("bbb/specials/!"),
+        vec!(PathBuf::from("bbb/specials/!"))
+    );
+    assert_eq!(
+        glob_vec("bbb/specials/[]]"),
+        vec!(PathBuf::from("bbb/specials/]"))
+    );
 
     if env::consts::FAMILY != "windows" {
-        assert_eq!(glob_vec("bbb/specials/[*]"), vec!(PathBuf::from("bbb/specials/*")));
-        assert_eq!(glob_vec("bbb/specials/[?]"), vec!(PathBuf::from("bbb/specials/?")));
+        assert_eq!(
+            glob_vec("bbb/specials/[*]"),
+            vec!(PathBuf::from("bbb/specials/*"))
+        );
+        assert_eq!(
+            glob_vec("bbb/specials/[?]"),
+            vec!(PathBuf::from("bbb/specials/?"))
+        );
     }
 
     if env::consts::FAMILY == "windows" {
+        assert_eq!(
+            glob_vec("bbb/specials/[![]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[![]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/]")));
+        assert_eq!(
+            glob_vec("bbb/specials/[!]]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/[")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[!]]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/[")));
-
-        assert_eq!(glob_vec("bbb/specials/[!!]"), vec!(
-            PathBuf::from("bbb/specials/["),
-            PathBuf::from("bbb/specials/]")));
-
+        assert_eq!(
+            glob_vec("bbb/specials/[!!]"),
+            vec!(
+                PathBuf::from("bbb/specials/["),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
     } else {
+        assert_eq!(
+            glob_vec("bbb/specials/[![]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/*"),
+                PathBuf::from("bbb/specials/?"),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[![]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/*"),
-            PathBuf::from("bbb/specials/?"),
-            PathBuf::from("bbb/specials/]")));
+        assert_eq!(
+            glob_vec("bbb/specials/[!]]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/*"),
+                PathBuf::from("bbb/specials/?"),
+                PathBuf::from("bbb/specials/[")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[!]]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/*"),
-            PathBuf::from("bbb/specials/?"),
-            PathBuf::from("bbb/specials/[")));
+        assert_eq!(
+            glob_vec("bbb/specials/[!!]"),
+            vec!(
+                PathBuf::from("bbb/specials/*"),
+                PathBuf::from("bbb/specials/?"),
+                PathBuf::from("bbb/specials/["),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[!!]"), vec!(
-            PathBuf::from("bbb/specials/*"),
-            PathBuf::from("bbb/specials/?"),
-            PathBuf::from("bbb/specials/["),
-            PathBuf::from("bbb/specials/]")));
+        assert_eq!(
+            glob_vec("bbb/specials/[!*]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/?"),
+                PathBuf::from("bbb/specials/["),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
 
-        assert_eq!(glob_vec("bbb/specials/[!*]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/?"),
-            PathBuf::from("bbb/specials/["),
-            PathBuf::from("bbb/specials/]")));
-
-        assert_eq!(glob_vec("bbb/specials/[!?]"), vec!(
-            PathBuf::from("bbb/specials/!"),
-            PathBuf::from("bbb/specials/*"),
-            PathBuf::from("bbb/specials/["),
-            PathBuf::from("bbb/specials/]")));
-
+        assert_eq!(
+            glob_vec("bbb/specials/[!?]"),
+            vec!(
+                PathBuf::from("bbb/specials/!"),
+                PathBuf::from("bbb/specials/*"),
+                PathBuf::from("bbb/specials/["),
+                PathBuf::from("bbb/specials/]")
+            )
+        );
     }
 }

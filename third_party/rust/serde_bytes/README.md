@@ -2,6 +2,13 @@
 
 Wrapper types to enable optimized handling of `&[u8]` and `Vec<u8>`.
 
+```toml
+[dependencies]
+serde_bytes = "0.11"
+```
+
+## Explanation
+
 Without specialization, Rust forces Serde to treat `&[u8]` just like any
 other slice and `Vec<u8>` just like any other vector. In reality this
 particular slice and vector can often be serialized and deserialized in a
@@ -11,17 +18,15 @@ When working with such a format, you can opt into specialized handling of
 `&[u8]` by wrapping it in `serde_bytes::Bytes` and `Vec<u8>` by wrapping it
 in `serde_bytes::ByteBuf`.
 
-This crate supports the Serde `with` attribute to enable efficient handling
-of `&[u8]` and `Vec<u8>` in structs without needing a wrapper type.
+Additionally this crate supports the Serde `with` attribute to enable efficient
+handling of `&[u8]` and `Vec<u8>` in structs without needing a wrapper type.
+
+## Example
 
 ```rust
-#[macro_use]
-extern crate serde_derive;
+use serde::{Deserialize, Serialize};
 
-extern crate serde;
-extern crate serde_bytes;
-
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct Efficient<'a> {
     #[serde(with = "serde_bytes")]
     bytes: &'a [u8],
@@ -29,27 +34,21 @@ struct Efficient<'a> {
     #[serde(with = "serde_bytes")]
     byte_buf: Vec<u8>,
 }
-
-#[derive(Serialize, Deserialize)]
-struct Packet {
-    #[serde(with = "serde_bytes")]
-    payload: Vec<u8>,
-}
 ```
 
-## License
+<br>
 
-Serde is licensed under either of
+#### License
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
-at your option.
+<br>
 
-### Contribution
-
+<sub>
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
+</sub>

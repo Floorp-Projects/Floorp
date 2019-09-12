@@ -12,13 +12,13 @@
 
 [package]
 name = "adler32"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["Remi Rampin <remirampin@gmail.com>"]
 description = "Minimal Adler32 implementation for Rust."
 documentation = "https://remram44.github.io/adler32-rs/index.html"
 readme = "README.md"
 keywords = ["adler32", "hash", "rolling"]
-license = "BSD-3-Clause"
+license = "BSD-3-Clause AND Zlib"
 repository = "https://github.com/remram44/adler32-rs"
 [dev-dependencies.rand]
-version = "0.3"
+version = "0.4"

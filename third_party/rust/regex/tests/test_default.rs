@@ -85,3 +85,37 @@ fn disallow_octal() {
 fn allow_octal() {
     assert!(regex::RegexBuilder::new(r"\0").octal(true).build().is_ok());
 }
+
+#[test]
+fn oibits() {
+    use std::panic::UnwindSafe;
+    use regex::{Regex, RegexBuilder};
+    use regex::bytes;
+
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+    fn assert_unwind_safe<T: UnwindSafe>() {}
+
+    assert_send::<Regex>();
+    assert_sync::<Regex>();
+    assert_unwind_safe::<Regex>();
+    assert_send::<RegexBuilder>();
+    assert_sync::<RegexBuilder>();
+    assert_unwind_safe::<RegexBuilder>();
+
+    assert_send::<bytes::Regex>();
+    assert_sync::<bytes::Regex>();
+    assert_unwind_safe::<bytes::Regex>();
+    assert_send::<bytes::RegexBuilder>();
+    assert_sync::<bytes::RegexBuilder>();
+    assert_unwind_safe::<bytes::RegexBuilder>();
+}
+
+// See: https://github.com/rust-lang/regex/issues/568
+#[test]
+fn oibits_regression() {
+    use std::panic;
+    use regex::Regex;
+
+    let _ = panic::catch_unwind(|| Regex::new("a").unwrap());
+}

@@ -1,11 +1,12 @@
-#[cfg(any(unix, target_os = "redox"))]
-mod unix;
-
-#[cfg(any(unix, target_os = "redox"))]
-pub use self::unix::*;
-
-#[cfg(windows)]
-mod windows;
-
-#[cfg(windows)]
-pub use self::windows::*;
+cfg_if! {
+    if #[cfg(any(unix, target_os = "redox"))] {
+        mod unix;
+        pub use self::unix::*;
+    } else if #[cfg(windows)] {
+        mod windows;
+        pub use self::windows::*;
+    } else {
+        mod other;
+        pub use self::other::*;
+    }
+}

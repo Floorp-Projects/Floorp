@@ -12,7 +12,7 @@
 
 [package]
 name = "rayon"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 exclude = ["/ci/*", "/scripts/*", "/.travis.yml", "/appveyor.yml", "/bors.toml"]
 description = "Simple work-stealing parallelism for Rust"
@@ -23,14 +23,14 @@ categories = ["concurrency"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/rayon-rs/rayon"
 [dependencies.crossbeam-deque]
-version = "0.6.3"
+version = "0.7"
 
 [dependencies.either]
 version = "1.0"
 default-features = false
 
 [dependencies.rayon-core]
-version = "1.5.0"
+version = "1.6.0"
 [dev-dependencies.doc-comment]
 version = "0.3"
 

@@ -7,30 +7,29 @@
 //!   - Optional, enabled by default
 //!   - Use libstd; disable to use `no_std` instead.
 //!
-//! - `use_union`
-//!   - Optional
-//!   - Requires Rust nightly channel
-//!   - Experimental: This flag uses nightly so it *may break* unexpectedly
-//!     at some point; since it doesn't change API this flag may also change
-//!     to do nothing in the future.
-//!   - Use the unstable feature untagged unions for the internal implementation,
-//!     which may have reduced space overhead
 //! - `serde-1`
 //!   - Optional
 //!   - Enable serialization for ArrayVec and ArrayString using serde 1.0
+//! - `array-sizes-33-128`, `array-sizes-129-255`
+//!   - Optional
+//!   - Enable more array sizes (see [Array] for more information)
 //!
 //! ## Rust Version
 //!
-//! This version of arrayvec requires Rust 1.14 or later.
+//! This version of arrayvec requires Rust 1.13 or later.
 //!
 #![doc(html_root_url="https://docs.rs/arrayvec/0.4/")]
 #![cfg_attr(not(feature="std"), no_std)]
-extern crate nodrop;
+#![cfg_attr(has_union_feature, feature(untagged_unions))]
+
 #[cfg(feature="serde-1")]
 extern crate serde;
 
 #[cfg(not(feature="std"))]
 extern crate core as std;
+
+#[cfg(not(has_manually_drop_in_union))]
+extern crate nodrop;
 
 use std::cmp;
 use std::iter;
@@ -50,11 +49,17 @@ use std::fmt;
 #[cfg(feature="std")]
 use std::io;
 
-#[cfg(not(feature="use_union"))]
-use nodrop::NoDrop;
 
-#[cfg(feature="use_union")]
-use std::mem::ManuallyDrop as NoDrop;
+#[cfg(has_stable_maybe_uninit)]
+#[path="maybe_uninit_stable.rs"]
+mod maybe_uninit;
+#[cfg(all(not(has_stable_maybe_uninit), has_manually_drop_in_union))]
+mod maybe_uninit;
+#[cfg(all(not(has_stable_maybe_uninit), not(has_manually_drop_in_union)))]
+#[path="maybe_uninit_nodrop.rs"]
+mod maybe_uninit;
+
+use maybe_uninit::MaybeUninit;
 
 #[cfg(feature="serde-1")]
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
@@ -72,14 +77,6 @@ pub use array_string::ArrayString;
 pub use errors::CapacityError;
 
 
-unsafe fn new_array<A: Array>() -> A {
-    // Note: Returning an uninitialized value here only works
-    // if we can be sure the data is never used. The nullable pointer
-    // inside enum optimization conflicts with this this for example,
-    // so we need to be extra careful. See `NoDrop` enum.
-    mem::uninitialized()
-}
-
 /// A vector with a fixed capacity.
 ///
 /// The `ArrayVec` is a vector backed by a fixed size array. It keeps track of
@@ -93,7 +90,7 @@ unsafe fn new_array<A: Array>() -> A {
 ///
 /// ArrayVec can be converted into a by value iterator.
 pub struct ArrayVec<A: Array> {
-    xs: NoDrop<A>,
+    xs: MaybeUninit<A>,
     len: A::Index,
 }
 
@@ -130,7 +127,7 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     pub fn new() -> ArrayVec<A> {
         unsafe {
-            ArrayVec { xs: NoDrop::new(new_array()), len: Index::from(0) }
+            ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::from(0) }
         }
     }
 
@@ -257,7 +254,8 @@ impl<A: Array> ArrayVec<A> {
     /// It is an error if the index is greater than the length or if the
     /// arrayvec is full.
     ///
-    /// ***Panics*** on errors. See `try_result` for fallible version.
+    /// ***Panics*** if the array is full or the `index` is out of bounds. See
+    /// `try_insert` for fallible version.
     ///
     /// ```
     /// use arrayvec::ArrayVec;
@@ -306,7 +304,7 @@ impl<A: Array> ArrayVec<A> {
         unsafe { // infallible
             // The spot to put the new value
             {
-                let p = self.get_unchecked_mut(index) as *mut _;
+                let p: *mut _ = self.get_unchecked_mut(index);
                 // Shift everything over to make space. (Duplicating the
                 // `index`th element into two consecutive places.)
                 ptr::copy(p, p.offset(1), len - index);
@@ -513,7 +511,6 @@ impl<A: Array> ArrayVec<A> {
         self.len = Index::from(length);
     }
 
-
     /// Create a draining iterator that removes the specified range in the vector
     /// and yields the removed items from start to end. The element range is
     /// removed even if the iterator is not consumed until the end.
@@ -573,7 +570,7 @@ impl<A: Array> ArrayVec<A> {
             Err(self)
         } else {
             unsafe {
-                let array = ptr::read(&*self.xs);
+                let array = ptr::read(self.xs.ptr() as *const A);
                 mem::forget(self);
                 Ok(array)
             }
@@ -602,7 +599,7 @@ impl<A: Array> Deref for ArrayVec<A> {
     #[inline]
     fn deref(&self) -> &[A::Item] {
         unsafe {
-            slice::from_raw_parts(self.xs.as_ptr(), self.len())
+            slice::from_raw_parts(self.xs.ptr(), self.len())
         }
     }
 }
@@ -612,7 +609,7 @@ impl<A: Array> DerefMut for ArrayVec<A> {
     fn deref_mut(&mut self) -> &mut [A::Item] {
         let len = self.len();
         unsafe {
-            slice::from_raw_parts_mut(self.xs.as_mut_ptr(), len)
+            slice::from_raw_parts_mut(self.xs.ptr_mut(), len)
         }
     }
 }
@@ -628,7 +625,7 @@ impl<A: Array> DerefMut for ArrayVec<A> {
 /// ```
 impl<A: Array> From<A> for ArrayVec<A> {
     fn from(array: A) -> Self {
-        ArrayVec { xs: NoDrop::new(array), len: Index::from(A::capacity()) }
+        ArrayVec { xs: MaybeUninit::from(array), len: Index::from(A::capacity()) }
     }
 }
 
@@ -739,12 +736,35 @@ impl<A: Array> Drop for IntoIter<A> {
         let len = self.v.len();
         unsafe {
             self.v.set_len(0);
-            let elements = slice::from_raw_parts(self.v.get_unchecked_mut(index),
-                                                 len - index);
-            for elt in elements {
-                ptr::read(elt);
-            }
+            let elements = slice::from_raw_parts_mut(
+                self.v.get_unchecked_mut(index),
+                len - index);
+            ptr::drop_in_place(elements);
         }
+    }
+}
+
+impl<A: Array> Clone for IntoIter<A>
+where
+    A::Item: Clone,
+{
+    fn clone(&self) -> IntoIter<A> {
+        self.v[self.index.to_usize()..]
+            .iter()
+            .cloned()
+            .collect::<ArrayVec<A>>()
+            .into_iter()
+    }
+}
+
+impl<A: Array> fmt::Debug for IntoIter<A>
+where
+    A::Item: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list()
+            .entries(&self.v[self.index.to_usize()..])
+            .finish()
     }
 }
 
@@ -894,22 +914,16 @@ impl<A: Array> Clone for ArrayVec<A>
     fn clone_from(&mut self, rhs: &Self) {
         // recursive case for the common prefix
         let prefix = cmp::min(self.len(), rhs.len());
-        {
-            let a = &mut self[..prefix];
-            let b = &rhs[..prefix];
-            for i in 0..prefix {
-                a[i].clone_from(&b[i]);
-            }
-        }
+        self[..prefix].clone_from_slice(&rhs[..prefix]);
+
         if prefix < self.len() {
             // rhs was shorter
             for _ in 0..self.len() - prefix {
                 self.pop();
             }
         } else {
-            for elt in &rhs[self.len()..] {
-                self.push(elt.clone());
-            }
+            let rhs_elems = rhs[self.len()..].iter().cloned();
+            self.extend(rhs_elems);
         }
     }
 }

@@ -5,7 +5,7 @@ use std::ptr;
 
 use clang_sys::*;
 
-use libc::{c_char};
+use libc::c_char;
 
 fn parse() {
     unsafe {
@@ -25,7 +25,7 @@ fn parse() {
     }
 }
 
-#[cfg(feature="runtime")]
+#[cfg(feature = "runtime")]
 #[test]
 fn test() {
     load().unwrap();
@@ -33,7 +33,7 @@ fn test() {
     unload().unwrap();
 }
 
-#[cfg(not(feature="runtime"))]
+#[cfg(not(feature = "runtime"))]
 #[test]
 fn test() {
     parse();

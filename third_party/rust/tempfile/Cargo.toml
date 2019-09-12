@@ -12,16 +12,20 @@
 
 [package]
 name = "tempfile"
-version = "3.0.2"
+version = "3.0.5"
 authors = ["Steven Allen <steven@stebalien.com>", "The Rust Project Developers", "Ashley Mannix <ashleymannix@live.com.au>", "Jason White <jasonaw0@gmail.com>"]
+exclude = ["/.travis.yml", "/appveyor.yml"]
 description = "A library for managing temporary files and directories.\n"
 homepage = "http://stebalien.com/projects/tempfile-rs"
 documentation = "https://docs.rs/tempfile"
 keywords = ["tempfile", "tmpfile", "filesystem"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Stebalien/tempfile"
+[dependencies.cfg-if]
+version = "0.1"
+
 [dependencies.rand]
-version = "0.4"
+version = "0.6"
 
 [dependencies.remove_dir_all]
 version = "0.5"

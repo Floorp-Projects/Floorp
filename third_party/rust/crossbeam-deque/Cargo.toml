@@ -12,10 +12,10 @@
 
 [package]
 name = "crossbeam-deque"
-version = "0.6.3"
+version = "0.7.1"
 authors = ["The Crossbeam Project Developers"]
 description = "Concurrent work-stealing deque"
-homepage = "https://github.com/crossbeam-rs/crossbeam"
+homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
 documentation = "https://docs.rs/crossbeam-deque"
 readme = "README.md"
 keywords = ["chase-lev", "lock-free", "scheduler", "scheduling"]
@@ -26,6 +26,6 @@ repository = "https://github.com/crossbeam-rs/crossbeam"
 version = "0.7"
 
 [dependencies.crossbeam-utils]
-version = "0.6"
+version = "0.6.5"
 [dev-dependencies.rand]
 version = "0.6"

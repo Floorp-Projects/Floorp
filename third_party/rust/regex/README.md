@@ -7,11 +7,11 @@ linear time with respect to the size of the regular expression and search text.
 Much of the syntax and implementation is inspired
 by [RE2](https://github.com/google/re2).
 
-[![Build Status](https://travis-ci.org/rust-lang/regex.svg?branch=master)](https://travis-ci.org/rust-lang/regex)
+[![Build Status](https://travis-ci.com/rust-lang/regex.svg?branch=master)](https://travis-ci.com/rust-lang/regex)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/rust-lang/regex?svg=true)](https://ci.appveyor.com/project/rust-lang-libs/regex)
 [![Coverage Status](https://coveralls.io/repos/github/rust-lang/regex/badge.svg?branch=master)](https://coveralls.io/github/rust-lang/regex?branch=master)
-[![](http://meritbadge.herokuapp.com/regex)](https://crates.io/crates/regex)
-[![Rust](https://img.shields.io/badge/rust-1.20%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
+[![](https://meritbadge.herokuapp.com/regex)](https://crates.io/crates/regex)
+[![Rust](https://img.shields.io/badge/rust-1.24.1%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
 
 ### Documentation
 
@@ -32,7 +32,7 @@ Add this to your `Cargo.toml`:
 regex = "1"
 ```
 
-and this to your crate root:
+and this to your crate root (if you're using Rust 2015):
 
 ```rust
 extern crate regex;
@@ -42,8 +42,6 @@ Here's a simple example that matches a date in YYYY-MM-DD format and prints the
 year, month and day:
 
 ```rust
-extern crate regex;
-
 use regex::Regex;
 
 fn main() {
@@ -66,8 +64,6 @@ If you have lots of dates in text that you'd like to iterate over, then it's
 easy to adapt the above example with an iterator:
 
 ```rust
-extern crate regex;
-
 use regex::Regex;
 
 const TO_SEARCH: &'static str = "
@@ -91,7 +87,7 @@ fn main() {
 
 This example outputs:
 
-```
+```text
 year: 2010, month: 03, day: 14
 year: 2014, month: 10, day: 14
 ```
@@ -111,10 +107,7 @@ regular expressions are compiled exactly once.
 
 For example:
 
-```rust
-#[macro_use] extern crate lazy_static;
-extern crate regex;
-
+```rust,ignore
 use regex::Regex;
 
 fn some_helper_function(text: &str) -> bool {
@@ -210,7 +203,7 @@ recommended for general use.
 
 ### Minimum Rust version policy
 
-This crate's minimum supported `rustc` version is `1.20.0`.
+This crate's minimum supported `rustc` version is `1.24.1`.
 
 The current **tentative** policy is that the minimum Rust version required
 to use this crate can be increased in minor version updates. For example, if
@@ -232,3 +225,7 @@ This project is licensed under either of
    http://opensource.org/licenses/MIT)
 
 at your option.
+
+The data in `regex-syntax/src/unicode_tables/` is licensed under the Unicode
+License Agreement
+([LICENSE-UNICODE](http://www.unicode.org/copyright.html#License)).

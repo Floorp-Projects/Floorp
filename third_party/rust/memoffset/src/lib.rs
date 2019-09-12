@@ -23,6 +23,9 @@
 //! Some of the funcationality of the crate makes no sense when used along with structs that
 //! are not `#[repr(C, packed)]`, but it is up to the user to make sure that they are.
 //!
+//! This functionality should work for `const`s but presently doesn't work on `const fn`. Storing a
+//! value in a const and then returning it from a `const fn` should workaround most cases.
+//!
 //! ## Examples
 //! ```
 //! #[macro_use]
@@ -37,7 +40,7 @@
 //! fn main() {
 //!     assert_eq!(offset_of!(HelpMeIAmTrappedInAStructFactory, a), 15);
 //!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, a), 15..19);
-//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, help_me_before_they_[2] .. a), 2..15);
+//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, help_me_before_they_ .. a), 0..15);
 //! }
 //! ```
 //!
@@ -63,6 +66,9 @@
 // Doing this enables this crate to function under both std and no-std crates.
 #[doc(hidden)]
 pub use core::mem;
+
+#[doc(hidden)]
+pub use core::ptr;
 
 #[macro_use]
 mod offset_of;

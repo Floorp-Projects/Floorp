@@ -108,3 +108,40 @@ mat!(uni_class_gencat_unassigned,
      r"\p{Unassigned}", "\u{10FFFF}", Some((0, 4)));
 mat!(uni_class_gencat_uppercase_letter,
      r"\p{Uppercase_Letter}", "Ꝋ", Some((0, 3)));
+
+// Test a smattering of properties.
+mat!(uni_class_prop_emoji1, r"\p{Emoji}", "\u{23E9}", Some((0, 3)));
+mat!(uni_class_prop_emoji2, r"\p{emoji}", "\u{1F21A}", Some((0, 4)));
+mat!(uni_class_prop_picto1,
+     r"\p{extendedpictographic}", "\u{1FA6E}", Some((0, 4)));
+mat!(uni_class_prop_picto2,
+     r"\p{extendedpictographic}", "\u{1FFFD}", Some((0, 4)));
+
+// grapheme_cluster_break
+mat!(uni_class_gcb_prepend,
+     r"\p{grapheme_cluster_break=prepend}", "\u{11D46}", Some((0, 4)));
+mat!(uni_class_gcb_ri1,
+     r"\p{gcb=regional_indicator}", "\u{1F1E6}", Some((0, 4)));
+mat!(uni_class_gcb_ri2,
+     r"\p{gcb=ri}", "\u{1F1E7}", Some((0, 4)));
+mat!(uni_class_gcb_ri3,
+     r"\p{gcb=regionalindicator}", "\u{1F1FF}", Some((0, 4)));
+mat!(uni_class_gcb_lvt,
+     r"\p{gcb=lvt}", "\u{C989}", Some((0, 3)));
+mat!(uni_class_gcb_zwj,
+     r"\p{gcb=zwj}", "\u{200D}", Some((0, 3)));
+
+// word_break
+mat!(uni_class_wb1,
+     r"\p{word_break=Hebrew_Letter}", "\u{FB46}", Some((0, 3)));
+mat!(uni_class_wb2, r"\p{wb=hebrewletter}", "\u{FB46}", Some((0, 3)));
+mat!(uni_class_wb3, r"\p{wb=ExtendNumLet}", "\u{FF3F}", Some((0, 3)));
+mat!(uni_class_wb4, r"\p{wb=WSegSpace}", "\u{3000}", Some((0, 3)));
+mat!(uni_class_wb5, r"\p{wb=numeric}", "\u{1E950}", Some((0, 4)));
+
+// sentence_break
+mat!(uni_class_sb1, r"\p{sentence_break=Lower}", "\u{0469}", Some((0, 2)));
+mat!(uni_class_sb2, r"\p{sb=lower}", "\u{0469}", Some((0, 2)));
+mat!(uni_class_sb3, r"\p{sb=Close}", "\u{FF60}", Some((0, 3)));
+mat!(uni_class_sb4, r"\p{sb=Close}", "\u{1F677}", Some((0, 4)));
+mat!(uni_class_sb5, r"\p{sb=SContinue}", "\u{FF64}", Some((0, 3)));

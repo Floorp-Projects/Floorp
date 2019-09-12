@@ -20,11 +20,17 @@ pub struct BufReader<R> {
     cap: usize,
 }
 
-impl<R> ::std::fmt::Debug for BufReader<R> where R: ::std::fmt::Debug {
-    fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error>{
+impl<R> ::std::fmt::Debug for BufReader<R>
+where
+    R: ::std::fmt::Debug,
+{
+    fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
         fmt.debug_struct("BufReader")
             .field("reader", &self.inner)
-            .field("buffer", &format_args!("{}/{}", self.cap - self.pos, self.buf.len()))
+            .field(
+                "buffer",
+                &format_args!("{}/{}", self.cap - self.pos, self.buf.len()),
+            )
             .finish()
     }
 }
@@ -73,8 +79,8 @@ impl<R: Read> Read for BufReader<R> {
             return self.inner.read(buf);
         }
         let nread = {
-            let mut rem = try!(self.fill_buf());
-            try!(rem.read(buf))
+            let mut rem = self.fill_buf()?;
+            rem.read(buf)?
         };
         self.consume(nread);
         Ok(nread)
@@ -86,7 +92,7 @@ impl<R: Read> BufRead for BufReader<R> {
         // If we've reached the end of our internal buffer then we need to fetch
         // some more data from the underlying reader.
         if self.pos == self.cap {
-            self.cap = try!(self.inner.read(&mut self.buf));
+            self.cap = self.inner.read(&mut self.buf)?;
             self.pos = 0;
         }
         Ok(&self.buf[self.pos..self.cap])

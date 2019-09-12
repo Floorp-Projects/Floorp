@@ -14,9 +14,9 @@
 //!
 //! ## Resource Leaking
 //!
-//! `tempfile` will (almost) never fail to cleanup temporary resources but `TempDir` and `NamedTempFile` will if
+//! `tempfile` will (almost) never fail to cleanup temporary resources, but `TempDir` and `NamedTempFile` will if
 //! their destructors don't run. This is because `tempfile` relies on the OS to cleanup the
-//! underlying file so the file while `TempDir` and `NamedTempFile` rely on their destructors to do so.
+//! underlying file, while `TempDir` and `NamedTempFile` rely on their destructors to do so.
 //!
 //! ## Security
 //!
@@ -92,6 +92,8 @@
        html_root_url = "https://docs.rs/tempfile/2.2.0")]
 #![cfg_attr(test, deny(warnings))]
 
+#[macro_use]
+extern crate cfg_if;
 extern crate rand;
 extern crate remove_dir_all;
 
@@ -110,12 +112,15 @@ const NUM_RAND_CHARS: usize = 6;
 use std::path::Path;
 use std::{env, io};
 
+mod error;
 mod dir;
 mod file;
 mod util;
+mod spooled;
 
 pub use dir::{tempdir, tempdir_in, TempDir};
 pub use file::{tempfile, tempfile_in, NamedTempFile, PersistError, TempPath};
+pub use spooled::{spooled_tempfile, SpooledTempFile};
 
 /// Create a new temporary file or directory with custom parameters.
 #[derive(Debug, Clone, Eq, PartialEq)]

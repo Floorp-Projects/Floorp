@@ -2,8 +2,8 @@ use std::ffi::CString;
 use std::io::prelude::*;
 use std::time;
 
-use Compression;
 use bufreader::BufReader;
+use Compression;
 
 pub static FHCRC: u8 = 1 << 1;
 pub static FEXTRA: u8 = 1 << 2;
@@ -14,12 +14,11 @@ pub mod bufread;
 pub mod read;
 pub mod write;
 
-
 /// A structure representing the header of a gzip stream.
 ///
 /// The header can contain metadata about the file that was compressed, if
 /// present.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub struct GzHeader {
     extra: Option<Vec<u8>>,
     filename: Option<Vec<u8>>,
@@ -104,7 +103,7 @@ impl GzHeader {
 ///                 .filename("hello_world.txt")
 ///                 .comment("test file, please delete")
 ///                 .write(f, Compression::default());
-/// gz.write(b"hello world")?;
+/// gz.write_all(b"hello world")?;
 /// gz.finish()?;
 /// # Ok(())
 /// # }
@@ -258,8 +257,8 @@ mod tests {
     use std::io::prelude::*;
 
     use super::{read, write, GzBuilder};
-    use Compression;
     use rand::{thread_rng, Rng};
+    use Compression;
 
     #[test]
     fn roundtrip() {
@@ -286,7 +285,7 @@ mod tests {
     fn roundtrip_big() {
         let mut real = Vec::new();
         let mut w = write::GzEncoder::new(Vec::new(), Compression::default());
-        let v = thread_rng().gen_iter::<u8>().take(1024).collect::<Vec<_>>();
+        let v = ::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
             real.extend(to_write.iter().map(|x| *x));
@@ -301,10 +300,7 @@ mod tests {
 
     #[test]
     fn roundtrip_big2() {
-        let v = thread_rng()
-            .gen_iter::<u8>()
-            .take(1024 * 1024)
-            .collect::<Vec<_>>();
+        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut r = read::GzDecoder::new(read::GzEncoder::new(&v[..], Compression::default()));
         let mut res = Vec::new();
         r.read_to_end(&mut res).unwrap();
