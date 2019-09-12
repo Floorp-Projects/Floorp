@@ -163,7 +163,7 @@ interface imgIContainer : nsISupports
    * be performed only if ImageLib estimates it can be completed very quickly.
    *
    * FLAG_ASYNC_NOTIFY: Send notifications asynchronously, even if we decode
-   * synchronously beause of FLAG_SYNC_DECODE or FLAG_SYNC_DECODE_IF_FAST.
+   * synchronously because of FLAG_SYNC_DECODE or FLAG_SYNC_DECODE_IF_FAST.
    *
    * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
    * it's not already premultiplied in the image data.

@@ -593,7 +593,7 @@ void nsBMPEncoder::EncodeFileHeader() {
   ENCODE(&mImageBufferCurr, littleEndianBFH.dataoffset);
 }
 
-// Encodes the BMP infor header mBMPInfoHeader
+// Encodes the BMP info header mBMPInfoHeader
 void nsBMPEncoder::EncodeInfoHeader() {
   V5InfoHeader littleEndianmBIH = mBMPInfoHeader;
   NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.bihsize, 1);
