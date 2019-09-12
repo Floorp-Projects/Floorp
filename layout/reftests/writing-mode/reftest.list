@@ -148,8 +148,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1188061-2-nsChangeHint_U
 # tests involving sideways-lr mode
 == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
 == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
-fuzzy-if(winWidget,0-3,0-84) fails-if(webrender&&!gtkWidget) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
-fuzzy-if(winWidget,0-3,0-112) fails-if(webrender||Android) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
+fuzzy-if(winWidget,0-3,0-84) fails-if(webrender&&!(gtkWidget||cocoaWidget)) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
+fuzzy-if(winWidget,0-3,0-112) fails-if(webrender&&!cocoaWidget) fails-if(Android) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
 fuzzy-if(gtkWidget,0-255,0-6) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview&&webrender,0-255,0-4) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
