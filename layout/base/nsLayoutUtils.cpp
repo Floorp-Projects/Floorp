@@ -10086,32 +10086,30 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
       MotionPathData{point - anchorPoint.ToUnknownPoint(), angle, shift});
 }
 
-// static
-bool nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(
-    const nsIFrame* aFrame) {
+static Maybe<ScreenRect> GetFrameVisibleRectOnScreen(const nsIFrame* aFrame) {
   // We actually want the in-process top prescontext here.
   nsPresContext* topContextInProcess =
       aFrame->PresContext()->GetToplevelContentDocumentPresContext();
   if (!topContextInProcess) {
     // We are in chrome process.
-    return false;
+    return Nothing();
   }
 
   if (topContextInProcess->Document()->IsTopLevelContentDocument()) {
     // We are in the top of content document.
-    return false;
+    return Nothing();
   }
 
   nsIDocShell* docShell = topContextInProcess->GetDocShell();
   BrowserChild* browserChild = BrowserChild::GetFrom(docShell);
   if (!browserChild) {
     // We are not in out-of-process iframe.
-    return false;
+    return Nothing();
   }
 
   if (!browserChild->GetEffectsInfo().IsVisible()) {
     // There is no visible rect on this iframe at all.
-    return true;
+    return Nothing();
   }
 
   nsIFrame* rootFrame = topContextInProcess->PresShell()->GetRootFrame();
@@ -10126,5 +10124,43 @@ bool nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(
           rectInLayoutDevicePixel),
       PixelCastJustification::ContentProcessIsLayerInUiProcess);
 
-  return !browserChild->GetRemoteDocumentRect().Intersects(transformedToRoot);
+  return Some(
+      browserChild->GetRemoteDocumentRect().Intersect(transformedToRoot));
+}
+
+// static
+bool nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(
+    const nsIFrame* aFrame) {
+  Maybe<ScreenRect> visibleRect = GetFrameVisibleRectOnScreen(aFrame);
+  if (visibleRect.isNothing()) {
+    return false;
+  }
+
+  return visibleRect->IsEmpty();
+}
+
+// static
+bool nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
+    const nsIFrame* aFrame, nscoord aMargin) {
+  Maybe<ScreenRect> visibleRect = GetFrameVisibleRectOnScreen(aFrame);
+  if (visibleRect.isNothing()) {
+    return false;
+  }
+
+  nsPresContext* topContextInProcess =
+      aFrame->PresContext()->GetToplevelContentDocumentPresContext();
+  MOZ_ASSERT(topContextInProcess);
+
+  nsIDocShell* docShell = topContextInProcess->GetDocShell();
+  BrowserChild* browserChild = BrowserChild::GetFrom(docShell);
+  MOZ_ASSERT(browserChild);
+
+  Size scale =
+      browserChild->GetChildToParentConversionMatrix().As2D().ScaleFactors(
+          true);
+  ScreenSize margin(scale.width * CSSPixel::FromAppUnits(aMargin),
+                    scale.height * CSSPixel::FromAppUnits(aMargin));
+
+  return visibleRect->width < margin.width ||
+         visibleRect->height < margin.height;
 }
