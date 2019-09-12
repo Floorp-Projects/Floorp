@@ -5,7 +5,6 @@ py3:
     exclude:
         - browser/app
         - build
-        - client.py
         - dom/canvas/test
         - gfx
         - ipc/ipdl

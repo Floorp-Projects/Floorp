@@ -316,6 +316,15 @@ pub struct RectangleKey {
     pub h: f32,
 }
 
+impl RectangleKey {
+    pub fn intersects(&self, other: &Self) -> bool {
+        self.x < other.x + other.w
+            && other.x < self.x + self.w
+            && self.y < other.y + other.h
+            && other.y < self.y + self.h
+    }
+}
+
 impl Eq for RectangleKey {}
 
 impl hash::Hash for RectangleKey {

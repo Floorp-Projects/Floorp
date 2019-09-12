@@ -282,7 +282,7 @@ class UrlbarView {
     this.input.dropmarker.removeAttribute("open");
 
     this.input.removeAttribute("open");
-    this.input.endLayoutBreakout();
+    this.input.endLayoutExtend();
 
     this._rows.textContent = "";
 
@@ -496,7 +496,7 @@ class UrlbarView {
     this.input.dropmarker.setAttribute("open", "true");
 
     this.input.setAttribute("open", "true");
-    this.input.startLayoutBreakout();
+    this.input.startLayoutExtend();
 
     this.window.addEventListener("mousedown", this);
     this.panel.addEventListener("mousedown", this);

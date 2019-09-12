@@ -144,3 +144,21 @@
    fun:_ZN11nsPK11Token12InitPasswordEPKDs
    ...
 }
+{
+   We intentionally leak TLS data in the global servo thread-pool until we can free it consistently (https://github.com/rayon-rs/rayon/issues/688)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_ZN3std6thread5local4fast12Key$LT$T$GT$14try_initialize*
+   fun:_ZN5style5bloom19StyleBloom$LT$E$GT$3new*
+   ...
+}
+{
+   We intentionally leak TLS data in the global servo thread-pool until we can free it consistently (https://github.com/rayon-rs/rayon/issues/688)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_ZN3std6thread5local4fast12Key$LT$T$GT$14try_initialize*
+   fun:_ZN5style7sharing26StyleSharingCache$LT$E$GT$3new*
+   ...
+}

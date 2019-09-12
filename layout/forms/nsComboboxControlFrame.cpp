@@ -717,9 +717,10 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
         presContext, aRenderingContext, GetWritingMode());
   }
 
-  const bool isContainSize = StyleDisplay()->IsContainSize();
+  const bool isSizedAsEmpty = StyleDisplay()->IsContainSize() ||
+                              mDisplayedOptionTextOrPreview.IsEmpty();
   nscoord displayISize = 0;
-  if (MOZ_LIKELY(mDisplayFrame) && !isContainSize) {
+  if (MOZ_LIKELY(mDisplayFrame) && !isSizedAsEmpty) {
     displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                         mDisplayFrame, aType);
   }
@@ -730,14 +731,14 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
         LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
     if (aType == nsLayoutUtils::MIN_ISIZE) {
       dropdownContentISize =
-          isContainSize ? 0 : mDropdownFrame->GetMinISize(aRenderingContext);
+          isSizedAsEmpty ? 0 : mDropdownFrame->GetMinISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
         dropdownContentISize += scrollbarWidth;
       }
     } else {
       NS_ASSERTION(aType == nsLayoutUtils::PREF_ISIZE, "Unexpected type");
       dropdownContentISize =
-          isContainSize ? 0 : mDropdownFrame->GetPrefISize(aRenderingContext);
+          isSizedAsEmpty ? 0 : mDropdownFrame->GetPrefISize(aRenderingContext);
       if (isUsingOverlayScrollbars) {
         dropdownContentISize += scrollbarWidth;
       }
@@ -988,8 +989,11 @@ void nsComboboxControlFrame::HandleRedisplayTextEvent() {
 void nsComboboxControlFrame::ActuallyDisplayText(bool aNotify) {
   RefPtr<nsTextNode> displayContent = mDisplayContent;
   if (mDisplayedOptionTextOrPreview.IsEmpty()) {
-    // Have to use a non-breaking space for line-block-size calculations
-    // to be right
+    // Have to use a non-collapsing space of some kind
+    // for line-block-size calculations to be right.
+    // Which one doesn't really matter,
+    // as the inline size will be ignored
+    // (see isSizedAsEmpty in GetIntrinsicISize).
     static const char16_t space = 0xA0;
     displayContent->SetText(&space, 1, aNotify);
   } else {
