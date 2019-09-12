@@ -45,7 +45,7 @@
             android:src="@drawable/pause_with_background"
             android:visibility="gone"
             app:layout_constraintCircleAngle="45"
-            app:layout_constraintCircleRadius="30dp"
+            app:layout_constraintCircleRadius="28dp"
             app:layout_constraintCircle="@id/favicon_image"
             app:layout_constraintEnd_toEndOf="@id/favicon_image"
             app:layout_constraintTop_toTopOf="@id/favicon_image" />
