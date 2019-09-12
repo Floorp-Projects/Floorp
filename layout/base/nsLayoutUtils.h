@@ -2983,6 +2983,13 @@ class nsLayoutUtils {
   static mozilla::Maybe<mozilla::MotionPathData> ResolveMotionPath(
       const nsIFrame* aFrame);
 
+  /**
+   * Returns true if |aFrame| is scrolled out of view by a scrollable element in
+   * a cross-process ancestor document.
+   * Note this function only works for frames in out-of-process iframes.
+   **/
+  static bool FrameIsScrolledOutOfViewInCrossProcess(const nsIFrame* aFrame);
+
  private:
   /**
    * Helper function for LogTestDataForPaint().
