@@ -408,6 +408,8 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
   chan->GetContentLength(&contentLength);
   nsCString contentType;
   chan->GetContentType(contentType);
+  nsresult channelStatus = NS_OK;
+  chan->GetStatus(&channelStatus);
 
   nsCString entityID;
   nsCOMPtr<nsIResumableChannel> resChan = do_QueryInterface(aRequest);
@@ -432,8 +434,9 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
   chan->GetURI(getter_AddRefs(uri));
   SerializeURI(uri, uriparam);
 
-  if (mIPCClosed || !SendOnStartRequest(mStatus, contentLength, contentType,
-                                        lastModified, entityID, uriparam)) {
+  if (mIPCClosed ||
+      !SendOnStartRequest(channelStatus, contentLength, contentType,
+                          lastModified, entityID, uriparam)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -479,7 +482,10 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
   if (NS_FAILED(rv)) return rv;
 
-  if (mIPCClosed || !SendOnDataAvailable(mStatus, data, aOffset, aCount))
+  nsresult channelStatus = NS_OK;
+  mChannel->GetStatus(&channelStatus);
+
+  if (mIPCClosed || !SendOnDataAvailable(channelStatus, data, aOffset, aCount))
     return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
