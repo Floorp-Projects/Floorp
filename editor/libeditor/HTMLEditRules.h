@@ -151,21 +151,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
 
-  /**
-   * PrepareToMakeElementAbsolutePosition() is helper method of
-   * WillAbsolutePosition() since in some cases, needs to restore selection
-   * with AutoSelectionRestorer.  So, all callers have to check if
-   * CanHandleEditAction() still returns true after a call of this method.
-   * XXX Should be documented outline of this method.
-   *
-   * @param aHandled            Returns true if the edit action is handled.
-   * @param aTargetElement      Returns target element which should be
-   *                            changed to absolute positioned.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult PrepareToMakeElementAbsolutePosition(
-      bool* aHandled, RefPtr<Element>* aTargetElement);
-
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString& outFormat);
