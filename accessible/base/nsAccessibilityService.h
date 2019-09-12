@@ -246,25 +246,6 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   }
 
   /**
-   * Return the associated value for a given attribute if
-   * it appears in the MarkupMap. Otherwise, it returns null.
-   */
-  nsStaticAtom* MarkupAttribute(const nsIContent* aContent,
-                                nsStaticAtom* aAtom) const {
-    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
-        mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
-    if (markupMap) {
-      for (size_t i = 0; i < mozilla::ArrayLength(markupMap->attrs); i++) {
-        const mozilla::a11y::MarkupAttrInfo* info = markupMap->attrs + i;
-        if (info->name == aAtom) {
-          return info->value;
-        }
-      }
-    }
-    return nullptr;
-  }
-
-  /**
    * Set the object attribute defined by markup for the given element.
    */
   void MarkupAttributes(const nsIContent* aContent,
