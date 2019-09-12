@@ -890,7 +890,7 @@ bool VectorImage::MaybeRestrictSVGContext(
 
     if (overridePAR) {
       // The SVGImageContext must take account of the preserveAspectRatio
-      // overide:
+      // override:
       MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
                  "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
                  "preserveAspectRatio override is supplied");

@@ -273,7 +273,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
         default:
           mState = JPEG_ERROR;
           MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                  ("} (unknown colorpsace (3))"));
+                  ("} (unknown colorspace (3))"));
           return Transition::TerminateFailure();
       }
 

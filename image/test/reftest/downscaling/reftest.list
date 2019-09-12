@@ -1,7 +1,7 @@
 # Reftests for downscaling
 #
 # Downscaling can be a lossy process, so a bit of mismatch is acceptable here,
-# as long as it's barely noticable visually. When necessary, this can be
+# as long as it's barely noticeable visually. When necessary, this can be
 # explicitly allowed via 'fuzzy'/'fuzzy-if' annotations.
 #
 # Many of these tests check primarily that we don't lose rows or columns of

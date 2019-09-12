@@ -74,7 +74,7 @@ interface imgILoader : nsISupports
   /**
    * Start the load and decode of an image.
    * @param aChannel the channel to load the image from.  This must
-   *                 already be opened before ths method is called, and there
+   *                 already be opened before this method is called, and there
    *                 must have been no OnDataAvailable calls for it yet.
    * @param aObserver the observer (may be null)
    * @param cx some random data

@@ -17,7 +17,7 @@ function dumpToFile(aData) {
   var outputStream = Cc[
     "@mozilla.org/network/file-output-stream;1"
   ].createInstance(Ci.nsIFileOutputStream);
-  // WR_ONLY|CREAT|TRUNC
+  // WR_ONLY|CREATE|TRUNC
   outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0o644, null);
 
   var bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
@@ -164,7 +164,7 @@ function run_test() {
     istream = imgTools.encodeScaledImage(container, "image/jpeg", 16, 16);
 
     var encodedBytes = streamToArray(istream);
-    // Get bytes for exected result
+    // Get bytes for expected result
     var refName = "image1png16x16.jpg";
     var refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -182,7 +182,7 @@ function run_test() {
     istream = imgTools.encodeImage(container, "image/jpeg");
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image1png64x64.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -225,7 +225,7 @@ function run_test() {
       istream = imgTools.encodeScaledImage(container, "image/png", 16, 16);
 
       encodedBytes = streamToArray(istream);
-      // Get bytes for exected result
+      // Get bytes for expected result
       refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
       refFile = do_get_file(refName);
       istream = getFileInputStream(refFile);
@@ -245,7 +245,7 @@ function run_test() {
       istream = imgTools.encodeImage(container, "image/png");
       encodedBytes = streamToArray(istream);
 
-      // Get bytes for exected result
+      // Get bytes for expected result
       refName = isWindows ? "image2jpg32x32-win.png" : "image2jpg32x32.png";
       refFile = do_get_file(refName);
       istream = getFileInputStream(refFile);
@@ -288,7 +288,7 @@ function run_test() {
     istream = imgTools.encodeScaledImage(container, "image/png", 32, 32);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image3ico32x32.png";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -306,7 +306,7 @@ function run_test() {
     istream = imgTools.encodeImage(container, "image/png");
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image3ico16x16.png";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -354,7 +354,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image4gif32x32bmp32bpp.ico";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -380,7 +380,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image4gif16x16bmp32bpp.ico";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -404,7 +404,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image4gif32x32bmp24bpp.ico";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -430,7 +430,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image4gif16x16bmp24bpp.ico";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -475,7 +475,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg16x16cropped.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -500,7 +500,7 @@ function run_test() {
     );
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg16x16cropped2.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -518,7 +518,7 @@ function run_test() {
     istream = imgTools.encodeCroppedImage(container, "image/jpeg", 0, 0, 16, 0);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg16x32cropped3.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -536,7 +536,7 @@ function run_test() {
     istream = imgTools.encodeCroppedImage(container, "image/jpeg", 0, 0, 0, 16);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg32x16cropped4.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -554,7 +554,7 @@ function run_test() {
     istream = imgTools.encodeCroppedImage(container, "image/jpeg", 0, 0, 0, 0);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg32x32.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -572,7 +572,7 @@ function run_test() {
     istream = imgTools.encodeScaledImage(container, "image/jpeg", 0, 16);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg32x16scaled.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -590,7 +590,7 @@ function run_test() {
     istream = imgTools.encodeScaledImage(container, "image/jpeg", 16, 0);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg16x32scaled.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
@@ -608,7 +608,7 @@ function run_test() {
     istream = imgTools.encodeScaledImage(container, "image/jpeg", 0, 0);
     encodedBytes = streamToArray(istream);
 
-    // Get bytes for exected result
+    // Get bytes for expected result
     refName = "image2jpg32x32.jpg";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);

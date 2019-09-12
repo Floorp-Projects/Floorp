@@ -1513,7 +1513,7 @@ RasterImage::RequestDiscard() {
   return NS_OK;
 }
 
-// Indempotent error flagging routine. If a decoder is open, shuts it down.
+// Idempotent error flagging routine. If a decoder is open, shuts it down.
 void RasterImage::DoError() {
   // If we've flagged an error before, we have nothing to do
   if (mError) {

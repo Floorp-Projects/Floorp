@@ -283,7 +283,7 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr, const nsACString& aMimeType,
 /**
  * This takes a DataSourceSurface rather than a SourceSurface because some
  * of the callers have a DataSourceSurface and we don't want to call
- * GetDataSurface on such surfaces since that may incure a conversion to
+ * GetDataSurface on such surfaces since that may incur a conversion to
  * SurfaceType::DATA which we don't need.
  */
 static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
