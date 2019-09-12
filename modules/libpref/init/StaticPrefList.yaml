@@ -4607,19 +4607,19 @@
 # text underline offset
 - name: layout.css.text-underline-offset.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # text decoration thickness
 - name: layout.css.text-decoration-thickness.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # text decoration skip ink
 - name: layout.css.text-decoration-skip-ink.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for CSS column-span enabled?
