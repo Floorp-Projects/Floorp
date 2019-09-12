@@ -28,6 +28,7 @@ dependencies {
     implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':support-utils')
+    implementation project(':support-webextensions')
     implementation project(':ui-icons')
 
     implementation Dependencies.androidx_core_ktx

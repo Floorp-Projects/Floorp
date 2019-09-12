@@ -23,11 +23,9 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONException
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -42,7 +40,7 @@ class FxaWebChannelFeatureTest {
 
     @Before
     fun setup() {
-        FxaWebChannelFeature.installedWebExt = null
+        WebExtensionController.installedExtensions.clear()
     }
 
     @Test
@@ -50,35 +48,32 @@ class FxaWebChannelFeatureTest {
         val engine = mock<Engine>()
         val sessionManager = mock<SessionManager>()
         val accountManager = mock<FxaAccountManager>()
-
         val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager)
-        assertNull(FxaWebChannelFeature.installedWebExt)
         webchannelFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
         val onError = argumentCaptor<((String, Throwable) -> Unit)>()
         verify(engine, times(1)).installWebExtension(
-                eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
-                eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
-                eq(true),
-                onSuccess.capture(),
-                onError.capture()
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
+            eq(true),
+            onSuccess.capture(),
+            onError.capture()
         )
 
         onSuccess.value.invoke(mock())
-        assertNotNull(FxaWebChannelFeature.installedWebExt)
 
+        // Already installed, should not try to install again.
         webchannelFeature.start()
         verify(engine, times(1)).installWebExtension(
-                eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
-                eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
-                eq(true),
-                onSuccess.capture(),
-                onError.capture()
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
+            eq(true),
+            any(),
+            any()
         )
-
-        onError.value.invoke(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID, RuntimeException())
     }
+
     @Test
     fun `start registers observer for selected session`() {
         val engine = mock<Engine>()
@@ -100,35 +95,34 @@ class FxaWebChannelFeatureTest {
         val engineSession = mock<EngineSession>()
         val ext = mock<WebExtension>()
         val messageHandler = argumentCaptor<MessageHandler>()
+        val controller = mock<WebExtensionController>()
 
-        FxaWebChannelFeature.installedWebExt = ext
-
-        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
-        whenever(sessionManager.selectedSession).thenReturn(session)
-        val webchannelFeature = spy(FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager))
-
-        webchannelFeature.start()
-        verify(ext).registerContentMessageHandler(eq(engineSession), eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID), messageHandler.capture())
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         val port = mock<Port>()
         whenever(port.engineSession).thenReturn(engineSession)
+        whenever(ext.getConnectedPort(any(), any())).thenReturn(port)
 
-        messageHandler.value.onPortConnected(port)
-        assertTrue(FxaWebChannelFeature.ports.containsValue(port))
+        whenever(controller.portConnected(any(), any())).thenReturn(true)
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.selectedSession).thenReturn(session)
+        val webchannelFeature = spy(FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager))
+        webchannelFeature.extensionController = controller
 
-        messageHandler.value.onPortDisconnected(port)
-        assertFalse(FxaWebChannelFeature.ports.containsValue(port))
+        webchannelFeature.start()
+        verify(controller).registerContentMessageHandler(eq(engineSession), messageHandler.capture(), any())
     }
 
     @Test
     fun `port is removed with session`() {
         val port = mock<Port>()
+        val controller = mock<WebExtensionController>()
         val selectedSession = mock<Session>()
-        val webchannelFeature = prepareFeatureForTest(port, selectedSession)
+        val selectedEngineSession = mock<EngineSession>()
+        val webchannelFeature = prepareFeatureForTest(port, selectedSession, selectedEngineSession, controller)
 
-        val size = FxaWebChannelFeature.ports.size
         webchannelFeature.onSessionRemoved(selectedSession)
-        assertEquals(size - 1, FxaWebChannelFeature.ports.size)
+        verify(controller).disconnectPort(eq(selectedEngineSession), any())
     }
 
     @Test
@@ -139,21 +133,17 @@ class FxaWebChannelFeatureTest {
         val session = mock<Session>()
         val engineSession = mock<EngineSession>()
         val ext = mock<WebExtension>()
+        val controller = mock<WebExtensionController>()
         val messageHandler = argumentCaptor<MessageHandler>()
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
         val webchannelFeature = spy(FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager))
+        webchannelFeature.extensionController = controller
 
         webchannelFeature.onSessionAdded(session)
-        verify(ext).registerContentMessageHandler(eq(engineSession), eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID), messageHandler.capture())
-
-        val port = mock<Port>()
-        whenever(port.engineSession).thenReturn(engineSession)
-
-        messageHandler.value.onPortConnected(port)
-        assertTrue(FxaWebChannelFeature.ports.containsValue(port))
+        verify(controller).registerContentMessageHandler(eq(engineSession), messageHandler.capture(), any())
     }
 
     @Test
@@ -168,7 +158,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -192,7 +182,7 @@ class FxaWebChannelFeatureTest {
              }
             }""".trimIndent()
         )
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
         assertTrue(responseToTheWebChannel.value.getCWTSSupport()!!)
     }
@@ -210,7 +200,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -236,7 +226,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
@@ -259,7 +249,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -285,7 +275,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
@@ -311,7 +301,7 @@ class FxaWebChannelFeatureTest {
         val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
         val logoutDeferred = CompletableDeferred<Unit>()
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.accountProfile()).thenReturn(mock())
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
@@ -339,7 +329,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
@@ -364,7 +354,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
@@ -391,7 +381,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
@@ -416,7 +406,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS, SyncEngine.PASSWORDS)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.accountProfile()).thenReturn(null)
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
@@ -443,7 +433,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         val capabilitiesFromWebChannel = responseToTheWebChannel.value.getSupportedEngines()
@@ -466,7 +456,7 @@ class FxaWebChannelFeatureTest {
         val responseToTheWebChannel = argumentCaptor<JSONObject>()
         val port = mock<Port>()
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(null)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -492,7 +482,7 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(requestFromTheWebChannel, mock())
+        messageHandler.value.onPortMessage(requestFromTheWebChannel, port)
         verify(port).postMessage(responseToTheWebChannel.capture())
 
         assertNull(responseToTheWebChannel.value.getCWTSSupport())
@@ -511,7 +501,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val port = mock<Port>()
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
         whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
@@ -548,7 +538,7 @@ class FxaWebChannelFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val port = mock<Port>()
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
         whenever(accountManager.finishAuthenticationAsync(any())).thenReturn(CompletableDeferred(false))
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
         whenever(port.engineSession).thenReturn(engineSession)
@@ -587,7 +577,7 @@ class FxaWebChannelFeatureTest {
         val port = mock<Port>()
         val expectedEngines = setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS)
 
-        FxaWebChannelFeature.installedWebExt = ext
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
@@ -613,27 +603,35 @@ class FxaWebChannelFeatureTest {
             }""".trimIndent()
         )
 
-        messageHandler.value.onPortMessage(jsonToWebChannel, mock())
+        messageHandler.value.onPortMessage(jsonToWebChannel, port)
         verify(port).postMessage(jsonFromWebChannel.capture())
 
         assertTrue(jsonFromWebChannel.value.getOk())
     }
 
-    private fun prepareFeatureForTest(port: Port, session: Session = mock()): FxaWebChannelFeature {
+    private fun prepareFeatureForTest(
+        port: Port,
+        session: Session = mock(),
+        engineSession: EngineSession = mock(),
+        controller: WebExtensionController? = null
+    ): FxaWebChannelFeature {
         val engine = mock<Engine>()
         val sessionManager = mock<SessionManager>()
         val accountManager = mock<FxaAccountManager>()
         val ext = mock<WebExtension>()
-        val engineSession = mock<EngineSession>()
 
+        whenever(ext.getConnectedPort(eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID), any())).thenReturn(port)
         whenever(sessionManager.selectedSession).thenReturn(session)
         whenever(sessionManager.getEngineSession(session)).thenReturn(engineSession)
         whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
-        val webchannelFeature = FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager)
-        FxaWebChannelFeature.installedWebExt = ext
-        FxaWebChannelFeature.ports[engineSession] = port
-        return webchannelFeature
+        WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
+
+        val feature = FxaWebChannelFeature(testContext, null, engine, sessionManager, accountManager)
+        if (controller != null) {
+            feature.extensionController = controller
+        }
+        return feature
     }
 
     private fun JSONObject.getSupportedEngines(): List<String> {

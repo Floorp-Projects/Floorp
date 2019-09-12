@@ -202,6 +202,8 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
+* 🔵 [**Webextensions**](components/support/webextensions/README.md) - A component containing building blocks for features implemented as web extensions.
+
 ## Standalone libraries
 
 * ⚪ [**Crash**](components/lib/crash/README.md) - A generic crash reporter component that can report crashes to multiple services.

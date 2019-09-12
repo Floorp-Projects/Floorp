@@ -21,8 +21,16 @@ class GeckoWebExtension(
         url,
         id,
         createWebExtensionFlags(allowContentMessaging)
-    )
+    ),
+    private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
 ) : WebExtension(id, url) {
+
+    /**
+     * Uniquely identifies a port using its name and the session it
+     * was opened for. Ports connected from background scripts will
+     * have a null session.
+     */
+    data class PortId(val name: String, val session: EngineSession? = null)
 
     /**
      * See [WebExtension.registerBackgroundMessageHandler].
@@ -35,6 +43,7 @@ class GeckoWebExtension(
             }
 
             override fun onDisconnect(port: GeckoNativeWebExtension.Port) {
+                connectedPorts.remove(PortId(name))
                 messageHandler.onPortDisconnected(GeckoPort(port))
             }
         }
@@ -43,7 +52,9 @@ class GeckoWebExtension(
 
             override fun onConnect(port: GeckoNativeWebExtension.Port) {
                 port.setDelegate(portDelegate)
-                messageHandler.onPortConnected(GeckoPort(port))
+                val geckoPort = GeckoPort(port)
+                connectedPorts[PortId(name)] = geckoPort
+                messageHandler.onPortConnected(geckoPort)
             }
 
             override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
@@ -66,7 +77,9 @@ class GeckoWebExtension(
             }
 
             override fun onDisconnect(port: GeckoNativeWebExtension.Port) {
-                messageHandler.onPortDisconnected(GeckoPort(port, session))
+                val geckoPort = GeckoPort(port, session)
+                connectedPorts.remove(PortId(name, session))
+                messageHandler.onPortDisconnected(geckoPort)
             }
         }
 
@@ -74,7 +87,9 @@ class GeckoWebExtension(
 
             override fun onConnect(port: GeckoNativeWebExtension.Port) {
                 port.setDelegate(portDelegate)
-                messageHandler.onPortConnected(GeckoPort(port, session))
+                val geckoPort = GeckoPort(port, session)
+                connectedPorts[PortId(name, session)] = geckoPort
+                messageHandler.onPortConnected(geckoPort)
             }
 
             override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
@@ -94,6 +109,25 @@ class GeckoWebExtension(
         val geckoSession = (session as GeckoEngineSession).geckoSession
         return geckoSession.getMessageDelegate(nativeExtension, name) != null
     }
+
+    /**
+     * See [WebExtension.getConnectedPort].
+     */
+    override fun getConnectedPort(name: String, session: EngineSession?): Port? {
+        return connectedPorts[PortId(name, session)]
+    }
+
+    /**
+     * See [WebExtension.disconnectPort].
+     */
+    override fun disconnectPort(name: String, session: EngineSession?) {
+        val portId = PortId(name, session)
+        val port = connectedPorts[portId]
+        port?.let {
+            it.disconnect()
+            connectedPorts.remove(portId)
+        }
+    }
 }
 
 /**
@@ -104,8 +138,16 @@ class GeckoPort(
     engineSession: EngineSession? = null
 ) : Port(engineSession) {
 
-    override fun postMessage(message: Any) {
-        nativePort.postMessage(message as JSONObject)
+    override fun postMessage(message: JSONObject) {
+        nativePort.postMessage(message)
+    }
+
+    override fun name(): String {
+        return nativePort.name
+    }
+
+    override fun disconnect() {
+        nativePort.disconnect()
     }
 }
 
