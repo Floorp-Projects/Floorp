@@ -96,7 +96,7 @@ use style::gecko_bindings::sugar::ownership::{
     HasBoxFFI, HasSimpleFFI, Owned, OwnedOrNull, Strong,
 };
 use style::gecko_bindings::sugar::refptr::RefPtr;
-use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
+use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, StyleThreadPool, STYLE_THREAD_POOL};
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
@@ -183,12 +183,6 @@ pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_InitializeCooperativeThread() {
-    // Pretend that we're a Servo Layout thread to make some assertions happy.
-    thread_state::initialize(thread_state::ThreadState::LAYOUT);
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn Servo_Shutdown() {
     DUMMY_URL_DATA = ptr::null_mut();
     Stylist::shutdown();
@@ -253,8 +247,10 @@ fn traverse_subtree(
     debug!("Traversing subtree from {:?}", element);
 
     let thread_pool_holder = &*STYLE_THREAD_POOL;
+    let pool;
     let thread_pool = if traversal_flags.contains(TraversalFlags::ParallelTraversal) {
-        thread_pool_holder.style_thread_pool.as_ref()
+        pool = thread_pool_holder.pool();
+        pool.as_ref()
     } else {
         None
     };
@@ -1207,11 +1203,6 @@ pub extern "C" fn Servo_Property_IsDiscreteAnimatable(property: nsCSSPropertyID)
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleWorkerThreadCount() -> u32 {
-    STYLE_THREAD_POOL.num_threads as u32
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_Element_ClearData(element: &RawGeckoElement) {
     unsafe { GeckoElement(element).clear_data() };
 }
@@ -1415,7 +1406,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
         should_record_use_counters,
     );
 
-    if let Some(thread_pool) = STYLE_THREAD_POOL.style_thread_pool.as_ref() {
+    if let Some(thread_pool) = STYLE_THREAD_POOL.pool().as_ref() {
         thread_pool.spawn(|| {
             profiler_label!(Parse);
             async_parser.parse();
@@ -1423,6 +1414,12 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     } else {
         async_parser.parse();
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_ShutdownThreadPool() {
+    debug_assert!(is_main_thread() && !is_in_servo_traversal());
+    StyleThreadPool::shutdown();
 }
 
 #[no_mangle]

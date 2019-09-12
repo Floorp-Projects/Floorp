@@ -2843,17 +2843,10 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
-  if (mContentBlockingAllowListPrincipal) {
-    PrincipalInfo principalInfo;
-    rv = PrincipalToPrincipalInfo(mContentBlockingAllowListPrincipal,
-                                  &principalInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    openArgs.contentBlockingAllowListPrincipal() = principalInfo;
-  } else {
-    openArgs.contentBlockingAllowListPrincipal() = void_t();
-  }
+  openArgs.contentBlockingAllowListPrincipal() =
+      mContentBlockingAllowListPrincipal
+          ? Some(RefPtr<nsIPrincipal>(mContentBlockingAllowListPrincipal))
+          : Nothing();
 
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 

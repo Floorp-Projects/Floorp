@@ -356,6 +356,7 @@ impl FrameBuilder {
             ROOT_SPATIAL_NODE_INDEX,
             global_device_pixel_scale,
             PrimitiveVisibilityMask::all(),
+            None,
         );
 
         let root_render_task_id = render_tasks.add(root_render_task);
@@ -931,8 +932,12 @@ pub fn build_render_pass(
                             //           designed to support batch merging, which isn't
                             //           relevant for picture cache targets. We
                             //           can restructure / tidy this up a bit.
+                            let scissor_rect  = match render_tasks[task_id].kind {
+                                RenderTaskKind::Picture(ref info) => info.scissor_rect,
+                                _ => unreachable!(),
+                            };
                             let mut batch_containers = Vec::new();
-                            let mut alpha_batch_container = AlphaBatchContainer::new(None);
+                            let mut alpha_batch_container = AlphaBatchContainer::new(scissor_rect);
                             batcher.build(
                                 &mut batch_containers,
                                 &mut alpha_batch_container,

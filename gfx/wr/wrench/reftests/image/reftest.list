@@ -14,3 +14,4 @@ skip_on(android) == segments.yaml segments.png
 platform(linux,mac) == yuv.yaml yuv.png
 skip_on(android) == tiled-clip-chain.yaml tiled-clip-chain-ref.yaml
 skip_on(android) == tiled-complex-clip.yaml tiled-complex-clip-ref.yaml
+platform(linux,mac) == texture-rect.yaml texture-rect-ref.yaml
