@@ -21,3 +21,4 @@ pipelines:
         bounds: [1075, -1, 12, 199]
         "clip-rect": [1075, -1, 12, 199]
         image: checkerboard(4, 8, 8)
+        stretch-size: 72 72

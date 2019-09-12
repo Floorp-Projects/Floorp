@@ -104,6 +104,7 @@ pub enum DisplayItem {
     Gradient(GradientDisplayItem),
     RadialGradient(RadialGradientDisplayItem),
     Image(ImageDisplayItem),
+    RepeatingImage(RepeatingImageDisplayItem),
     YuvImage(YuvImageDisplayItem),
     BackdropFilter(BackdropFilterDisplayItem),
 
@@ -148,6 +149,7 @@ pub enum DebugDisplayItem {
     Gradient(GradientDisplayItem),
     RadialGradient(RadialGradientDisplayItem),
     Image(ImageDisplayItem),
+    RepeatingImage(RepeatingImageDisplayItem),
     YuvImage(YuvImageDisplayItem),
     BackdropFilter(BackdropFilterDisplayItem),
 
@@ -1071,10 +1073,28 @@ pub struct IframeDisplayItem {
     pub ignore_missing_pipeline: bool,
 }
 
-/// This describes an image or, more generally, a background-image and its tiling.
-/// (A background-image repeats in a grid to fill the specified area).
+/// This describes an image that fills the specified area. It stretches or shrinks
+/// the image as necessary. While RepeatingImageDisplayItem could otherwise provide
+/// a superset of the functionality, it has been problematic inferring the desired
+/// repetition properties when snapping changes the size of the primitive.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ImageDisplayItem {
+    pub common: CommonItemProperties,
+    /// The area to tile the image over (first tile starts at origin of this rect)
+    // FIXME: this should ideally just be `tile_origin` here, with the clip_rect
+    // defining the bounds of the item. Needs non-trivial backend changes.
+    pub bounds: LayoutRect,
+    pub image_key: ImageKey,
+    pub image_rendering: ImageRendering,
+    pub alpha_type: AlphaType,
+    /// A hack used by gecko to color a simple bitmap font used for tofu glyphs
+    pub color: ColorF,
+}
+
+/// This describes a background-image and its tiling. It repeats in a grid to fill
+/// the specified area.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
+pub struct RepeatingImageDisplayItem {
     pub common: CommonItemProperties,
     /// The area to tile the image over (first tile starts at origin of this rect)
     // FIXME: this should ideally just be `tile_origin` here, with the clip_rect
@@ -1406,6 +1426,7 @@ impl DisplayItem {
             DisplayItem::Gradient(..) => "gradient",
             DisplayItem::Iframe(..) => "iframe",
             DisplayItem::Image(..) => "image",
+            DisplayItem::RepeatingImage(..) => "repeating_image",
             DisplayItem::Line(..) => "line",
             DisplayItem::PopAllShadows => "pop_all_shadows",
             DisplayItem::PopReferenceFrame => "pop_reference_frame",
