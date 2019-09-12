@@ -27,7 +27,8 @@ def lint(paths, config, fix=None, **lintargs):
                     else:
                         res = {'path': f,
                                'message': "Trailing whitespace",
-                               'level': 'error'
+                               'level': 'error',
+                               'lineno': i + 1,
                                }
                         results.append(result.from_config(config, **res))
                 else:
