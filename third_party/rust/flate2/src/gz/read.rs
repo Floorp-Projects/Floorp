@@ -1,10 +1,15 @@
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 
-use super::{GzBuilder, GzHeader};
-use Compression;
-use bufreader::BufReader;
+#[cfg(feature = "tokio")]
+use futures::Poll;
+#[cfg(feature = "tokio")]
+use tokio_io::{AsyncRead, AsyncWrite};
+
 use super::bufread;
+use super::{GzBuilder, GzHeader};
+use bufreader::BufReader;
+use Compression;
 
 /// A gzip streaming encoder
 ///
@@ -37,9 +42,7 @@ pub struct GzEncoder<R> {
     inner: bufread::GzEncoder<BufReader<R>>,
 }
 
-pub fn gz_encoder<R: Read>(inner: bufread::GzEncoder<BufReader<R>>)
-    -> GzEncoder<R>
-{
+pub fn gz_encoder<R: Read>(inner: bufread::GzEncoder<BufReader<R>>) -> GzEncoder<R> {
     GzEncoder { inner: inner }
 }
 
@@ -111,7 +114,7 @@ impl<R: Read + Write> Write for GzEncoder<R> {
 ///
 /// # fn main() {
 /// #    let mut e = GzEncoder::new(Vec::new(), Compression::default());
-/// #    e.write(b"Hello World").unwrap();
+/// #    e.write_all(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());
 /// # }
@@ -172,6 +175,9 @@ impl<R: Read> Read for GzDecoder<R> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead> AsyncRead for GzDecoder<R> {}
+
 impl<R: Read + Write> Write for GzDecoder<R> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -179,6 +185,13 @@ impl<R: Read + Write> Write for GzDecoder<R> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + AsyncRead> AsyncWrite for GzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
     }
 }
 
@@ -207,7 +220,7 @@ impl<R: Read + Write> Write for GzDecoder<R> {
 ///
 /// # fn main() {
 /// #    let mut e = GzEncoder::new(Vec::new(), Compression::default());
-/// #    e.write(b"Hello World").unwrap();
+/// #    e.write_all(b"Hello World").unwrap();
 /// #    let bytes = e.finish().unwrap();
 /// #    println!("{}", decode_reader(bytes).unwrap());
 /// # }
@@ -269,6 +282,9 @@ impl<R: Read> Read for MultiGzDecoder<R> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead> AsyncRead for MultiGzDecoder<R> {}
+
 impl<R: Read + Write> Write for MultiGzDecoder<R> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -276,5 +292,12 @@ impl<R: Read + Write> Write for MultiGzDecoder<R> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + AsyncRead> AsyncWrite for MultiGzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
     }
 }

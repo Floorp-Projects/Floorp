@@ -10,9 +10,9 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::cmp;
 use std::sync::Arc;
 
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder, MatchKind};
 use thread_local::CachedThreadLocal;
 use syntax::ParserBuilder;
 use syntax::hir::Hir;
@@ -86,6 +86,16 @@ struct ExecReadOnly {
     /// Prefix literals are stored on the `Program`, since they are used inside
     /// the matching engines.
     suffixes: LiteralSearcher,
+    /// An Aho-Corasick automaton with leftmost-first match semantics.
+    ///
+    /// This is only set when the entire regex is a simple unanchored
+    /// alternation of literals. We could probably use it more circumstances,
+    /// but this is already hacky enough in this architecture.
+    ///
+    /// N.B. We use u32 as a state ID representation under the assumption that
+    /// if we were to exhaust the ID space, we probably would have long
+    /// surpassed the compilation size limit.
+    ac: Option<AhoCorasick<u32>>,
     /// match_type encodes as much upfront knowledge about how we're going to
     /// execute a search as possible.
     match_type: MatchType,
@@ -287,6 +297,7 @@ impl ExecBuilder {
                 dfa: Program::new(),
                 dfa_reverse: Program::new(),
                 suffixes: LiteralSearcher::empty(),
+                ac: None,
                 match_type: MatchType::Nothing,
             });
             return Ok(Exec { ro: ro, cache: CachedThreadLocal::new() });
@@ -312,19 +323,37 @@ impl ExecBuilder {
                      .reverse(true)
                      .compile(&parsed.exprs)?;
 
-        let prefixes = parsed.prefixes.unambiguous_prefixes();
-        let suffixes = parsed.suffixes.unambiguous_suffixes();
-        nfa.prefixes = LiteralSearcher::prefixes(prefixes);
+        nfa.prefixes = LiteralSearcher::prefixes(parsed.prefixes);
         dfa.prefixes = nfa.prefixes.clone();
         dfa.dfa_size_limit = self.options.dfa_size_limit;
         dfa_reverse.dfa_size_limit = self.options.dfa_size_limit;
+
+        let mut ac = None;
+        if parsed.exprs.len() == 1 {
+            if let Some(lits) = alternation_literals(&parsed.exprs[0]) {
+                // If we have a small number of literals, then let Teddy
+                // handle things (see literal/mod.rs).
+                if lits.len() > 32 {
+                    let fsm = AhoCorasickBuilder::new()
+                        .match_kind(MatchKind::LeftmostFirst)
+                        .auto_configure(&lits)
+                        // We always want this to reduce size, regardless of
+                        // what auto-configure does.
+                        .byte_classes(true)
+                        .build_with_size::<u32, _, _>(&lits)
+                        .expect("AC automaton too big");
+                    ac = Some(fsm);
+                }
+            }
+        }
 
         let mut ro = ExecReadOnly {
             res: self.options.pats,
             nfa: nfa,
             dfa: dfa,
             dfa_reverse: dfa_reverse,
-            suffixes: LiteralSearcher::suffixes(suffixes),
+            suffixes: LiteralSearcher::suffixes(parsed.suffixes),
+            ac: ac,
             match_type: MatchType::Nothing,
         };
         ro.match_type = ro.choose_match_type(self.match_type);
@@ -557,7 +586,8 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
         match self.ro.match_type {
             MatchType::Literal(ty) => {
                 self.find_literals(ty, text, start).and_then(|(s, e)| {
-                    self.captures_nfa_with_match(slots, text, s, e)
+                    self.captures_nfa_type(
+                        MatchNfaType::Auto, slots, text, s, e)
                 })
             }
             MatchType::Dfa => {
@@ -566,17 +596,21 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
                 } else {
                     match self.find_dfa_forward(text, start) {
                         dfa::Result::Match((s, e)) => {
-                            self.captures_nfa_with_match(slots, text, s, e)
+                            self.captures_nfa_type(
+                                MatchNfaType::Auto, slots, text, s, e)
                         }
                         dfa::Result::NoMatch(_) => None,
-                        dfa::Result::Quit => self.captures_nfa(slots, text, start),
+                        dfa::Result::Quit => {
+                            self.captures_nfa(slots, text, start)
+                        }
                     }
                 }
             }
             MatchType::DfaAnchoredReverse => {
                 match self.find_dfa_anchored_reverse(text, start) {
                     dfa::Result::Match((s, e)) => {
-                        self.captures_nfa_with_match(slots, text, s, e)
+                        self.captures_nfa_type(
+                            MatchNfaType::Auto, slots, text, s, e)
                     }
                     dfa::Result::NoMatch(_) => None,
                     dfa::Result::Quit => self.captures_nfa(slots, text, start),
@@ -585,14 +619,15 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
             MatchType::DfaSuffix => {
                 match self.find_dfa_reverse_suffix(text, start) {
                     dfa::Result::Match((s, e)) => {
-                        self.captures_nfa_with_match(slots, text, s, e)
+                        self.captures_nfa_type(
+                            MatchNfaType::Auto, slots, text, s, e)
                     }
                     dfa::Result::NoMatch(_) => None,
                     dfa::Result::Quit => self.captures_nfa(slots, text, start),
                 }
             }
             MatchType::Nfa(ty) => {
-                self.captures_nfa_type(ty, slots, text, start)
+                self.captures_nfa_type(ty, slots, text, start, text.len())
             }
             MatchType::Nothing => None,
             MatchType::DfaMany => {
@@ -632,6 +667,11 @@ impl<'c> ExecNoSync<'c> {
                 let lits = &self.ro.suffixes;
                 lits.find_end(&text[start..])
                     .map(|(s, e)| (start + s, start + e))
+            }
+            AhoCorasick => {
+                self.ro.ac.as_ref().unwrap()
+                    .find(&text[start..])
+                    .map(|m| (start + m.start(), start + m.end()))
             }
         }
     }
@@ -745,12 +785,13 @@ impl<'c> ExecNoSync<'c> {
         debug_assert!(lcs.len() >= 1);
         let mut start = original_start;
         let mut end = start;
+        let mut last_literal = start;
         while end <= text.len() {
-            start = end;
-            end += match lcs.find(&text[end..]) {
+            last_literal += match lcs.find(&text[last_literal..]) {
                 None => return Some(NoMatch(text.len())),
-                Some(start) => start + lcs.len(),
+                Some(i) => i,
             };
+            end = last_literal + lcs.len();
             match dfa::Fsm::reverse(
                 &self.ro.dfa_reverse,
                 self.cache,
@@ -759,8 +800,12 @@ impl<'c> ExecNoSync<'c> {
                 end - start,
             ) {
                 Match(0) | NoMatch(0) => return None,
-                Match(s) => return Some(Match((s + start, end))),
-                NoMatch(_) => continue,
+                Match(i) => return Some(Match((start + i, end))),
+                NoMatch(i) => {
+                    start += i;
+                    last_literal += 1;
+                    continue;
+                }
                 Quit => return Some(Quit),
             };
         }
@@ -825,7 +870,7 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         start: usize,
     ) -> bool {
-        self.exec_nfa(ty, &mut [false], &mut [], true, text, start)
+        self.exec_nfa(ty, &mut [false], &mut [], true, text, start, text.len())
     }
 
     /// Finds the shortest match using an NFA.
@@ -841,7 +886,15 @@ impl<'c> ExecNoSync<'c> {
         start: usize,
     ) -> Option<usize> {
         let mut slots = [None, None];
-        if self.exec_nfa(ty, &mut [false], &mut slots, true, text, start) {
+        if self.exec_nfa(
+            ty,
+            &mut [false],
+            &mut slots,
+            true,
+            text,
+            start,
+            text.len()
+        ) {
             slots[1]
         } else {
             None
@@ -856,7 +909,15 @@ impl<'c> ExecNoSync<'c> {
         start: usize,
     ) -> Option<(usize, usize)> {
         let mut slots = [None, None];
-        if self.exec_nfa(ty, &mut [false], &mut slots, false, text, start) {
+        if self.exec_nfa(
+            ty,
+            &mut [false],
+            &mut slots,
+            false,
+            text,
+            start,
+            text.len()
+        ) {
             match (slots[0], slots[1]) {
                 (Some(s), Some(e)) => Some((s, e)),
                 _ => None,
@@ -864,26 +925,6 @@ impl<'c> ExecNoSync<'c> {
         } else {
             None
         }
-    }
-
-    /// Like find_nfa, but fills in captures and restricts the search space
-    /// using previously found match information.
-    ///
-    /// `slots` should have length equal to `2 * nfa.captures.len()`.
-    fn captures_nfa_with_match(
-        &self,
-        slots: &mut [Slot],
-        text: &[u8],
-        match_start: usize,
-        match_end: usize,
-    ) -> Option<(usize, usize)> {
-        // We can't use match_end directly, because we may need to examine one
-        // "character" after the end of a match for lookahead operators. We
-        // need to move two characters beyond the end, since some look-around
-        // operations may falsely assume a premature end of text otherwise.
-        let e = cmp::min(
-            next_utf8(text, next_utf8(text, match_end)), text.len());
-        self.captures_nfa(slots, &text[..e], match_start)
     }
 
     /// Like find_nfa, but fills in captures.
@@ -895,7 +936,8 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         start: usize,
     ) -> Option<(usize, usize)> {
-        self.captures_nfa_type(MatchNfaType::Auto, slots, text, start)
+        self.captures_nfa_type(
+            MatchNfaType::Auto, slots, text, start, text.len())
     }
 
     /// Like captures_nfa, but allows specification of type of NFA engine.
@@ -905,8 +947,9 @@ impl<'c> ExecNoSync<'c> {
         slots: &mut [Slot],
         text: &[u8],
         start: usize,
+        end: usize,
     ) -> Option<(usize, usize)> {
-        if self.exec_nfa(ty, &mut [false], slots, false, text, start) {
+        if self.exec_nfa(ty, &mut [false], slots, false, text, start, end) {
             match (slots[0], slots[1]) {
                 (Some(s), Some(e)) => Some((s, e)),
                 _ => None,
@@ -924,6 +967,7 @@ impl<'c> ExecNoSync<'c> {
         quit_after_match: bool,
         text: &[u8],
         start: usize,
+        end: usize,
     ) -> bool {
         use self::MatchNfaType::*;
         if let Auto = ty {
@@ -935,10 +979,10 @@ impl<'c> ExecNoSync<'c> {
         }
         match ty {
             Auto => unreachable!(),
-            Backtrack => self.exec_backtrack(matches, slots, text, start),
+            Backtrack => self.exec_backtrack(matches, slots, text, start, end),
             PikeVM => {
                 self.exec_pikevm(
-                    matches, slots, quit_after_match, text, start)
+                    matches, slots, quit_after_match, text, start, end)
             }
         }
     }
@@ -951,6 +995,7 @@ impl<'c> ExecNoSync<'c> {
         quit_after_match: bool,
         text: &[u8],
         start: usize,
+        end: usize,
     ) -> bool {
         if self.ro.nfa.uses_bytes() {
             pikevm::Fsm::exec(
@@ -960,7 +1005,8 @@ impl<'c> ExecNoSync<'c> {
                 slots,
                 quit_after_match,
                 ByteInput::new(text, self.ro.nfa.only_utf8),
-                start)
+                start,
+                end)
         } else {
             pikevm::Fsm::exec(
                 &self.ro.nfa,
@@ -969,7 +1015,8 @@ impl<'c> ExecNoSync<'c> {
                 slots,
                 quit_after_match,
                 CharInput::new(text),
-                start)
+                start,
+                end)
         }
     }
 
@@ -980,6 +1027,7 @@ impl<'c> ExecNoSync<'c> {
         slots: &mut [Slot],
         text: &[u8],
         start: usize,
+        end: usize,
     ) -> bool {
         if self.ro.nfa.uses_bytes() {
             backtrack::Bounded::exec(
@@ -988,7 +1036,8 @@ impl<'c> ExecNoSync<'c> {
                 matches,
                 slots,
                 ByteInput::new(text, self.ro.nfa.only_utf8),
-                start)
+                start,
+                end)
         } else {
             backtrack::Bounded::exec(
                 &self.ro.nfa,
@@ -996,7 +1045,8 @@ impl<'c> ExecNoSync<'c> {
                 matches,
                 slots,
                 CharInput::new(text),
-                start)
+                start,
+                end)
         }
     }
 
@@ -1040,11 +1090,15 @@ impl<'c> ExecNoSync<'c> {
                             &mut [],
                             false,
                             text,
-                            start)
+                            start,
+                            text.len())
                     }
                 }
             }
-            Nfa(ty) => self.exec_nfa(ty, matches, &mut [], false, text, start),
+            Nfa(ty) => {
+                self.exec_nfa(
+                    ty, matches, &mut [], false, text, start, text.len())
+            }
             Nothing => false,
         }
     }
@@ -1076,7 +1130,9 @@ impl Exec {
     /// Get a searcher that isn't Sync.
     #[inline(always)] // reduces constant overhead
     pub fn searcher(&self) -> ExecNoSync {
-        let create = || Box::new(RefCell::new(ProgramCacheInner::new(&self.ro)));
+        let create = || {
+            Box::new(RefCell::new(ProgramCacheInner::new(&self.ro)))
+        };
         ExecNoSync {
             ro: &self.ro, // a clone is too expensive here! (and not needed)
             cache: self.cache.get_or(create),
@@ -1158,6 +1214,9 @@ impl ExecReadOnly {
         // aren't anchored. We would then only search for all of them when at
         // the beginning of the input and use the subset in all other cases.
         if self.res.len() == 1 {
+            if self.ac.is_some() {
+                return Literal(MatchLiteralType::AhoCorasick);
+            }
             if self.nfa.prefixes.complete() {
                 return if self.nfa.is_anchored_start {
                     Literal(MatchLiteralType::AnchoredStart)
@@ -1225,7 +1284,7 @@ impl ExecReadOnly {
 #[derive(Clone, Copy, Debug)]
 enum MatchType {
     /// A single or multiple literal search. This is only used when the regex
-    /// can be decomposed into unambiguous literal search.
+    /// can be decomposed into a literal search.
     Literal(MatchLiteralType),
     /// A normal DFA search.
     Dfa,
@@ -1249,6 +1308,9 @@ enum MatchLiteralType {
     AnchoredStart,
     /// Match literals only at the end of text.
     AnchoredEnd,
+    /// Use an Aho-Corasick automaton. This requires `ac` to be Some on
+    /// ExecReadOnly.
+    AhoCorasick,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1271,7 +1333,7 @@ enum MatchNfaType {
 /// available to a particular program.
 pub type ProgramCache = RefCell<ProgramCacheInner>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct ProgramCacheInner {
     pub pikevm: pikevm::Cache,
     pub backtrack: backtrack::Cache,
@@ -1288,6 +1350,59 @@ impl ProgramCacheInner {
             dfa_reverse: dfa::Cache::new(&ro.dfa_reverse),
         }
     }
+}
+
+/// Alternation literals checks if the given HIR is a simple alternation of
+/// literals, and if so, returns them. Otherwise, this returns None.
+fn alternation_literals(expr: &Hir) -> Option<Vec<Vec<u8>>> {
+    use syntax::hir::{HirKind, Literal};
+
+    // This is pretty hacky, but basically, if `is_alternation_literal` is
+    // true, then we can make several assumptions about the structure of our
+    // HIR. This is what justifies the `unreachable!` statements below.
+    //
+    // This code should be refactored once we overhaul this crate's
+    // optimization pipeline, because this is a terribly inflexible way to go
+    // about things.
+
+    if !expr.is_alternation_literal() {
+        return None;
+    }
+    let alts = match *expr.kind() {
+        HirKind::Alternation(ref alts) => alts,
+        _ => return None, // one literal isn't worth it
+    };
+
+    let extendlit = |lit: &Literal, dst: &mut Vec<u8>| {
+        match *lit {
+            Literal::Unicode(c) => {
+                let mut buf = [0; 4];
+                dst.extend_from_slice(c.encode_utf8(&mut buf).as_bytes());
+            }
+            Literal::Byte(b) => {
+                dst.push(b);
+            }
+        }
+    };
+
+    let mut lits = vec![];
+    for alt in alts {
+        let mut lit = vec![];
+        match *alt.kind() {
+            HirKind::Literal(ref x) => extendlit(x, &mut lit),
+            HirKind::Concat(ref exprs) => {
+                for e in exprs {
+                    match *e.kind() {
+                        HirKind::Literal(ref x) => extendlit(x, &mut lit),
+                        _ => unreachable!("expected literal, got {:?}", e),
+                    }
+                }
+            }
+            _ => unreachable!("expected literal or concat, got {:?}", alt),
+        }
+        lits.push(lit);
+    }
+    Some(lits)
 }
 
 #[cfg(test)]

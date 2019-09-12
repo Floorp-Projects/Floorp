@@ -107,6 +107,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         quit_after_match: bool,
         input: I,
         start: usize,
+        end: usize,
     ) -> bool {
         let mut cache = cache.borrow_mut();
         let cache = &mut cache.pikevm;
@@ -124,6 +125,7 @@ impl<'r, I: Input> Fsm<'r, I> {
             slots,
             quit_after_match,
             at,
+            end,
         )
     }
 
@@ -135,6 +137,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         slots: &mut [Slot],
         quit_after_match: bool,
         mut at: InputAt,
+        end: usize,
     ) -> bool {
         let mut matched = false;
         let mut all_matched = false;
@@ -212,7 +215,7 @@ impl<'r, I: Input> Fsm<'r, I> {
                     }
                 }
             }
-            if at.is_end() {
+            if at.pos() == end || at.is_end() {
                 break;
             }
             at = at_next;

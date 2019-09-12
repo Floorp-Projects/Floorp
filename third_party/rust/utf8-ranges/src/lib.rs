@@ -89,7 +89,14 @@ which uses it for executing automata on their term index.
 
 #![deny(missing_docs)]
 
-#[cfg(test)] extern crate quickcheck;
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 use std::char;
 use std::fmt;

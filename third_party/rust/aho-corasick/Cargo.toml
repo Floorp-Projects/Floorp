@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,18 +12,17 @@
 
 [package]
 name = "aho-corasick"
-version = "0.6.8"
+version = "0.7.6"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
-exclude = ["benches/sherlock.txt"]
-description = "Fast multiple substring searching with finite state machines."
+exclude = ["/aho-corasick-debug", "/ci/*", "/.travis.yml", "/appveyor.yml"]
+autotests = false
+description = "Fast multiple substring searching."
 homepage = "https://github.com/BurntSushi/aho-corasick"
 readme = "README.md"
-keywords = ["string", "search", "text", "aho", "corasick"]
+keywords = ["string", "search", "text", "aho", "multi"]
+categories = ["text-processing"]
 license = "Unlicense/MIT"
 repository = "https://github.com/BurntSushi/aho-corasick"
-[profile.test]
-debug = true
-
 [profile.bench]
 debug = true
 
@@ -32,41 +31,17 @@ debug = true
 
 [lib]
 name = "aho_corasick"
-
-[[bin]]
-name = "aho-corasick-dot"
-path = "src/main.rs"
-test = false
-bench = false
-doc = false
-
-[[bench]]
-name = "bench"
-path = "benches/bench.rs"
-test = false
-bench = true
 [dependencies.memchr]
-version = "2"
-[dev-dependencies.csv]
-version = "1"
-
-[dev-dependencies.docopt]
-version = "1"
-
-[dev-dependencies.memmap]
-version = "0.6"
-
-[dev-dependencies.quickcheck]
-version = "0.7"
+version = "2.2.0"
 default-features = false
+[dev-dependencies.doc-comment]
+version = "0.3.1"
 
-[dev-dependencies.rand]
-version = "0.5"
+[features]
+default = ["std"]
+std = ["memchr/use_std"]
+[badges.appveyor]
+repository = "BurntSushi/aho-corasick"
 
-[dev-dependencies.serde]
-version = "1"
-
-[dev-dependencies.serde_derive]
-version = "1"
 [badges.travis-ci]
 repository = "BurntSushi/aho-corasick"

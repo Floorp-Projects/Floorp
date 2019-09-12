@@ -1,5 +1,5 @@
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 use std::mem;
 
 #[cfg(feature = "tokio")]
@@ -42,7 +42,6 @@ pub struct ZlibEncoder<R> {
     obj: R,
     data: Compress,
 }
-
 
 impl<R: BufRead> ZlibEncoder<R> {
     /// Creates a new encoder which will read uncompressed data from the given
@@ -151,7 +150,7 @@ impl<R: AsyncWrite + BufRead> AsyncWrite for ZlibEncoder<R> {
 ///
 /// # fn main() {
 /// # let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
-/// # e.write(b"Hello World").unwrap();
+/// # e.write_all(b"Hello World").unwrap();
 /// # let bytes = e.finish().unwrap();
 /// # println!("{}", decode_bufreader(bytes).unwrap());
 /// # }

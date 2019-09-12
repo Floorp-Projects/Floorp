@@ -30,3 +30,9 @@ fn regression_subsequent_matches() {
     assert!(set.matches(text).matched(1));
     assert!(set.matches(text).matched(1));
 }
+
+#[test]
+fn get_set_patterns() {
+    let set = regex_set!(&["a", "b"]);
+    assert_eq!(vec!["a", "b"], set.patterns());
+}

@@ -55,6 +55,7 @@ fn test_drop() {
 
     let flag = &Cell::new(0);
 
+    #[derive(Clone)]
     struct Bump<'a>(&'a Cell<i32>);
 
     impl<'a> Drop for Bump<'a> {
@@ -105,6 +106,24 @@ fn test_drop() {
         assert_eq!(flag.get(), 3);
     }
 
+    // test cloning into_iter
+    flag.set(0);
+    {
+        let mut array = ArrayVec::<[_; 3]>::new();
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        array.push(Bump(flag));
+        let mut iter = array.into_iter();
+        assert_eq!(flag.get(), 0);
+        iter.next();
+        assert_eq!(flag.get(), 1);
+        let clone = iter.clone();
+        assert_eq!(flag.get(), 1);
+        drop(clone);
+        assert_eq!(flag.get(), 3);
+        drop(iter);
+        assert_eq!(flag.get(), 5);
+    }
 }
 
 #[test]
@@ -143,6 +162,14 @@ fn test_compact_size() {
     type QuadArray = ArrayVec<[u32; 3]>;
     println!("{}", mem::size_of::<QuadArray>());
     assert!(mem::size_of::<QuadArray>() <= 24);
+}
+
+#[test]
+fn test_still_works_with_option_arrayvec() {
+    type RefArray = ArrayVec<[&'static i32; 2]>;
+    let array = Some(RefArray::new());
+    assert!(array.is_some());
+    println!("{:?}", array);
 }
 
 #[test]
@@ -465,4 +492,26 @@ fn test_default() {
     let v: ArrayVec<[net::TcpStream; 4]> = Default::default();
     assert_eq!(s.len(), 0);
     assert_eq!(v.len(), 0);
+}
+
+#[cfg(feature="array-sizes-33-128")]
+#[test]
+fn test_sizes_33_128() {
+    ArrayVec::from([0u8; 52]);
+    ArrayVec::from([0u8; 127]);
+}
+
+#[cfg(feature="array-sizes-129-255")]
+#[test]
+fn test_sizes_129_255() {
+    ArrayVec::from([0u8; 237]);
+    ArrayVec::from([0u8; 255]);
+}
+
+
+#[test]
+fn test_newish_stable_uses_maybe_uninit() {
+    if option_env!("ARRAYVECTEST_ENSURE_MAYBEUNINIT").map(|s| !s.is_empty()).unwrap_or(false) {
+        assert!(cfg!(has_stable_maybe_uninit));
+    }
 }

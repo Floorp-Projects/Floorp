@@ -1,0 +1,59 @@
+trigger:
+  - master
+
+jobs:
+- template: ci/azure-job-test-all.yml
+  parameters:
+    name: Linux_stable
+- template: ci/azure-job-test-all.yml
+  parameters:
+    vmImage: macOS-10.13
+    name: Darwin_stable
+- template: ci/azure-job-test-all.yml
+  parameters:
+    toolchain: beta
+    name: Linux_beta
+- template: ci/azure-job-test-all.yml
+  parameters:
+    toolchain: nightly
+    name: Linux_nightly
+- template: ci/azure-job-test-all.yml
+  parameters:
+    vmImage: vs2017-win2016
+    name: Windows_stable
+- template: ci/azure-job-test-all.yml
+  parameters:
+    vmImage: vs2017-win2016
+    toolchain: stable-x86_64-gnu
+    name: Windows_stable_MinGW
+- job: systest
+  steps:
+    - template: ci/azure-install-rust.yml
+    - script: cargo run --manifest-path systest/Cargo.toml
+- job: wasm
+  steps:
+    - template: ci/azure-install-rust.yml
+    - script: rustup target add wasm32-unknown-unknown
+    - script: cargo build --target wasm32-unknown-unknown
+- job: wasi
+  steps:
+    - template: ci/azure-install-rust.yml
+      parameters:
+        toolchain: nightly
+    - script: rustup target add wasm32-wasi
+    - script: cargo build --target wasm32-wasi
+- job: rust_backend
+  steps:
+    - template: ci/azure-install-rust.yml
+    - script: cargo test --features rust_backend
+      continueOnError: true
+    - script: cargo test --features rust_backend --no-default-features
+      continueOnError: true
+- job: docs
+  steps:
+    - template: ci/azure-install-rust.yml
+    - script: cargo doc --no-deps --all-features
+    - script: curl -LsSf https://git.io/fhJ8n | rustc - && (cd target/doc && ../../rust_out)
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      env:
+        GITHUB_DEPLOY_KEY: $(GITHUB_DEPLOY_KEY)

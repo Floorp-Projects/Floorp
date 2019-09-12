@@ -98,6 +98,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
         slots: &'s mut [Slot],
         input: I,
         start: usize,
+        end: usize,
     ) -> bool {
         let mut cache = cache.borrow_mut();
         let cache = &mut cache.backtrack;
@@ -109,7 +110,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
             slots: slots,
             m: cache,
         };
-        b.exec_(start)
+        b.exec_(start, end)
     }
 
     /// Clears the cache such that the backtracking engine can be executed
@@ -147,7 +148,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
 
     /// Start backtracking at the given position in the input, but also look
     /// for literal prefixes.
-    fn exec_(&mut self, mut at: InputAt) -> bool {
+    fn exec_(&mut self, mut at: InputAt, end: usize) -> bool {
         self.clear();
         // If this is an anchored regex at the beginning of the input, then
         // we're either already done or we only need to try backtracking once.
@@ -170,7 +171,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
             if matched && self.prog.matches.len() == 1 {
                 return true;
             }
-            if at.is_end() {
+            if at.pos() == end || at.is_end() {
                 break;
             }
             at = self.input.at(at.next_pos());

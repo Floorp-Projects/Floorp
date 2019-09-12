@@ -1,10 +1,6 @@
 use std::io;
-use std::mem;
 
-use winapi::shared::minwindef::{DWORD, WORD};
-use winapi::um::consoleapi;
-use winapi::um::processenv;
-use winapi::um::winbase::{STD_ERROR_HANDLE, STD_OUTPUT_HANDLE};
+use winapi::shared::minwindef::{WORD};
 use winapi::um::wincon::{
     self,
     FOREGROUND_BLUE as FG_BLUE,
@@ -12,6 +8,7 @@ use winapi::um::wincon::{
     FOREGROUND_RED as FG_RED,
     FOREGROUND_INTENSITY as FG_INTENSITY,
 };
+use winapi_util as winutil;
 
 const FG_CYAN: WORD = FG_BLUE | FG_GREEN;
 const FG_MAGENTA: WORD = FG_BLUE | FG_RED;
@@ -32,25 +29,34 @@ const FG_WHITE: WORD = FG_BLUE | FG_GREEN | FG_RED;
 /// stdout before setting new text attributes.
 #[derive(Debug)]
 pub struct Console {
-    handle_id: DWORD,
+    kind: HandleKind,
     start_attr: TextAttributes,
     cur_attr: TextAttributes,
 }
 
+#[derive(Clone, Copy, Debug)]
+enum HandleKind {
+    Stdout,
+    Stderr,
+}
+
+impl HandleKind {
+    fn handle(&self) -> winutil::HandleRef {
+        match *self {
+            HandleKind::Stdout => winutil::HandleRef::stdout(),
+            HandleKind::Stderr => winutil::HandleRef::stderr(),
+        }
+    }
+}
+
 impl Console {
     /// Get a console for a standard I/O stream.
-    fn create_for_stream(handle_id: DWORD) -> io::Result<Console> {
-        let mut info = unsafe { mem::zeroed() };
-        let res = unsafe {
-            let handle = processenv::GetStdHandle(handle_id);
-            wincon::GetConsoleScreenBufferInfo(handle, &mut info)
-        };
-        if res == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        let attr = TextAttributes::from_word(info.wAttributes);
+    fn create_for_stream(kind: HandleKind) -> io::Result<Console> {
+        let h = kind.handle();
+        let info = winutil::console::screen_buffer_info(&h)?;
+        let attr = TextAttributes::from_word(info.attributes());
         Ok(Console {
-            handle_id: handle_id,
+            kind: kind,
             start_attr: attr,
             cur_attr: attr,
         })
@@ -60,27 +66,22 @@ impl Console {
     ///
     /// If there was a problem creating the console, then an error is returned.
     pub fn stdout() -> io::Result<Console> {
-        Self::create_for_stream(STD_OUTPUT_HANDLE)
+        Self::create_for_stream(HandleKind::Stdout)
     }
 
     /// Create a new Console to stderr.
     ///
     /// If there was a problem creating the console, then an error is returned.
     pub fn stderr() -> io::Result<Console> {
-        Self::create_for_stream(STD_ERROR_HANDLE)
+        Self::create_for_stream(HandleKind::Stderr)
     }
 
     /// Applies the current text attributes.
     fn set(&mut self) -> io::Result<()> {
-        let attr = self.cur_attr.to_word();
-        let res = unsafe {
-            let handle = processenv::GetStdHandle(self.handle_id);
-            wincon::SetConsoleTextAttribute(handle, attr)
-        };
-        if res == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        Ok(())
+        winutil::console::set_text_attributes(
+            self.kind.handle(),
+            self.cur_attr.to_word(),
+        )
     }
 
     /// Apply the given intensity and color attributes to the console
@@ -132,11 +133,8 @@ impl Console {
     ) -> io::Result<()> {
         let vt = wincon::ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 
-        let mut old_mode = 0;
-        let handle = unsafe { processenv::GetStdHandle(self.handle_id) };
-        if unsafe { consoleapi::GetConsoleMode(handle, &mut old_mode) } == 0 {
-            return Err(io::Error::last_os_error());
-        }
+        let handle = self.kind.handle();
+        let old_mode = winutil::console::mode(&handle)?;
         let new_mode =
             if yes {
                 old_mode | vt
@@ -146,10 +144,7 @@ impl Console {
         if old_mode == new_mode {
             return Ok(());
         }
-        if unsafe { consoleapi::SetConsoleMode(handle, new_mode) } == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        Ok(())
+        winutil::console::set_mode(&handle, new_mode)
     }
 }
 

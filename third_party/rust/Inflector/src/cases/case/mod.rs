@@ -94,7 +94,7 @@ fn char_is_seperator(character: &char) -> bool {
 }
 
 fn trim_right(convertable_string: &str) -> &str {
-    convertable_string.trim_right_matches(is_not_alphanumeric)
+    convertable_string.trim_end_matches(is_not_alphanumeric)
 }
 
 fn is_not_alphanumeric(character: char) -> bool {

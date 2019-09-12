@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,19 +12,22 @@
 
 [package]
 name = "wincolor"
-version = "0.1.6"
+version = "1.0.2"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = "A simple Windows specific API for controlling text color in a Windows console.\n"
-homepage = "https://github.com/BurntSushi/ripgrep/tree/master/wincolor"
+homepage = "https://github.com/BurntSushi/termcolor/tree/master/wincolor"
 documentation = "https://docs.rs/wincolor"
 readme = "README.md"
 keywords = ["windows", "win", "color", "ansi", "console"]
-license = "Unlicense/MIT"
-repository = "https://github.com/BurntSushi/ripgrep/tree/master/wincolor"
+license = "Unlicense OR MIT"
+repository = "https://github.com/BurntSushi/termcolor/tree/master/wincolor"
 
 [lib]
 name = "wincolor"
 bench = false
 [dependencies.winapi]
 version = "0.3"
-features = ["consoleapi", "minwindef", "processenv", "winbase", "wincon"]
+features = ["minwindef", "wincon"]
+
+[dependencies.winapi-util]
+version = "0.1.1"

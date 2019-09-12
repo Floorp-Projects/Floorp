@@ -303,13 +303,13 @@ library benchmarks (especially RE2).
 If you're hacking on one of the matching engines and just want to see
 benchmarks, then all you need to run is:
 
-    $ ./bench/run rust
+    $ (cd bench && ./run rust)
 
 If you want to compare your results with older benchmarks, then try:
 
-    $ ./bench/run rust | tee old
+    $ (cd bench && ./run rust | tee old)
     $ ... make it faster
-    $ ./bench/run rust | tee new
+    $ (cd bench && ./run rust | tee new)
     $ cargo benchcmp old new --improvements
 
 The `cargo-benchcmp` utility is available here:

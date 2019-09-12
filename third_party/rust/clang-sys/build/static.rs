@@ -32,15 +32,20 @@ fn get_library_name(path: &Path) -> Option<String> {
 
 /// Returns the LLVM libraries required to link to `libclang` statically.
 fn get_llvm_libraries() -> Vec<String> {
-    common::run_llvm_config(&["--libs"]).unwrap().split_whitespace().filter_map(|p| {
-        // Depending on the version of `llvm-config` in use, listed libraries may be in one of two
-        // forms, a full path to the library or simply prefixed with `-l`.
-        if p.starts_with("-l") {
-            Some(p[2..].into())
-        } else {
-            get_library_name(Path::new(p))
-        }
-    }).collect()
+    common::run_llvm_config(&["--libs"])
+        .unwrap()
+        .split_whitespace()
+        .filter_map(|p| {
+            // Depending on the version of `llvm-config` in use, listed
+            // libraries may be in one of two forms, a full path to the library
+            // or simply prefixed with `-l`.
+            if p.starts_with("-l") {
+                Some(p[2..].into())
+            } else {
+                get_library_name(Path::new(p))
+            }
+        })
+        .collect()
 }
 
 /// Clang libraries required to link to `libclang` 3.5 and later statically.
@@ -62,9 +67,15 @@ const CLANG_LIBRARIES: &[&str] = &[
 
 /// Returns the Clang libraries required to link to `libclang` statically.
 fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
-    let pattern = directory.as_ref().join("libclang*.a").to_string_lossy().to_string();
+    let pattern = directory
+        .as_ref()
+        .join("libclang*.a")
+        .to_string_lossy()
+        .to_string();
     if let Ok(libraries) = glob::glob(&pattern) {
-        libraries.filter_map(|l| l.ok().and_then(|l| get_library_name(&l))).collect()
+        libraries
+            .filter_map(|l| l.ok().and_then(|l| get_library_name(&l)))
+            .collect()
     } else {
         CLANG_LIBRARIES.iter().map(|l| l.to_string()).collect()
     }
@@ -72,7 +83,12 @@ fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
 
 /// Returns a directory containing `libclang` static libraries.
 fn find() -> PathBuf {
-    let name = if cfg!(target_os="windows") { "libclang.lib" } else { "libclang.a" };
+    let name = if cfg!(target_os = "windows") {
+        "libclang.lib"
+    } else {
+        "libclang.a"
+    };
+
     let files = common::search_libclang_directories(&[name.into()], "LIBCLANG_STATIC_PATH");
     if let Some((directory, _)) = files.into_iter().nth(0) {
         directory
@@ -93,21 +109,28 @@ pub fn link() {
 
     // Determine the shared mode used by LLVM.
     let mode = common::run_llvm_config(&["--shared-mode"]).map(|m| m.trim().to_owned());
-    let prefix = if mode.ok().map_or(false, |m| m == "static") { "static=" } else { "" };
+    let prefix = if mode.map_or(false, |m| m == "static") {
+        "static="
+    } else {
+        ""
+    };
 
     // Specify required LLVM static libraries.
-    println!("cargo:rustc-link-search=native={}", common::run_llvm_config(&["--libdir"]).unwrap().trim_right());
+    println!(
+        "cargo:rustc-link-search=native={}",
+        common::run_llvm_config(&["--libdir"]).unwrap().trim_end()
+    );
     for library in get_llvm_libraries() {
         println!("cargo:rustc-link-lib={}{}", prefix, library);
     }
 
     // Specify required system libraries.
     // MSVC doesn't need this, as it tracks dependencies inside `.lib` files.
-    if cfg!(target_os="freebsd") {
+    if cfg!(target_os = "freebsd") {
         println!("cargo:rustc-flags=-l ffi -l ncursesw -l c++ -l z");
-    } else if cfg!(target_os="linux") {
+    } else if cfg!(target_os = "linux") {
         println!("cargo:rustc-flags=-l ffi -l ncursesw -l stdc++ -l z");
-    } else if cfg!(target_os="macos") {
+    } else if cfg!(target_os = "macos") {
         println!("cargo:rustc-flags=-l ffi -l ncurses -l c++ -l z");
     }
 }

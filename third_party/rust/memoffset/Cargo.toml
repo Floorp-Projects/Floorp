@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "memoffset"
-version = "0.2.1"
+version = "0.5.1"
 authors = ["Gilad Naaman <gilad.naaman@gmail.com>"]
 description = "offset_of functionality for Rust structs."
 readme = "README.md"
@@ -20,5 +20,5 @@ keywords = ["mem", "offset", "offset_of", "offsetof"]
 categories = ["no-std"]
 license = "MIT"
 repository = "https://github.com/Gilnaa/memoffset"
-
-[dependencies]
+[build-dependencies.rustc_version]
+version = "0.2.3"

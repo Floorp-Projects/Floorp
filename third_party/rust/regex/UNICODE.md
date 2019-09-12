@@ -108,8 +108,15 @@ properties correspond to properties required by RL1.2):
 * `Default_Ignorable_Code_Point` \*
 * `Deprecated`
 * `Diacritic`
+* `Emoji`
+* `Emoji_Presentation`
+* `Emoji_Modifier`
+* `Emoji_Modifier_Base`
+* `Emoji_Component`
+* `Extended_Pictographic`
 * `Extender`
 * `Grapheme_Base`
+* `Grapheme_Cluster_Break`
 * `Grapheme_Extend`
 * `Hex_Digit`
 * `IDS_Binary_Operator`
@@ -127,6 +134,7 @@ properties correspond to properties required by RL1.2):
 * `Quotation_Mark`
 * `Radical`
 * `Regional_Indicator`
+* `Sentence_Break`
 * `Sentence_Terminal`
 * `Soft_Dotted`
 * `Terminal_Punctuation`
@@ -134,6 +142,7 @@ properties correspond to properties required by RL1.2):
 * `Uppercase` \*
 * `Variation_Selector`
 * `White_Space` \*
+* `Word_Break`
 * `XID_Continue`
 * `XID_Start`
 

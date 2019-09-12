@@ -22,6 +22,51 @@ __ https://docs.rs/arrayvec
 Recent Changes (arrayvec)
 -------------------------
 
+- 0.4.11
+
+  - In Rust 1.36 or later, use newly stable MaybeUninit. This extends the
+    soundness work introduced in 0.4.9, we are finally able to use this in
+    stable. We use feature detection (build script) to enable this at build
+    time.
+
+- 0.4.10
+
+  - Use ``repr(C)`` in the ``union`` version that was introduced in 0.4.9, to
+    allay some soundness concerns.
+
+- 0.4.9
+
+  - Use ``union`` in the implementation on when this is detected to be supported
+    (nightly only for now). This is a better solution for treating uninitialized
+    regions correctly, and we'll use it in stable Rust as soon as we are able.
+    When this is enabled, the ``ArrayVec`` has no space overhead in its memory
+    layout, although the size of the vec should not be relied upon. (See `#114`_)
+  - ``ArrayString`` updated to not use uninitialized memory, it instead zeros its
+    backing array. This will be refined in the next version, since we
+    need to make changes to the user visible API.
+  - The ``use_union`` feature now does nothing (like its documentation foretold).
+
+.. _`#114`: https://github.com/bluss/arrayvec/pull/114
+
+- 0.4.8
+
+  - Implement Clone and Debug for ``IntoIter`` by @clarcharr
+  - Add more array sizes under crate features. These cover all in the range
+    up to 128 and 129 to 255 respectively (we have a few of those by default):
+
+    - ``array-size-33-128``
+    - ``array-size-129-255``
+
+- 0.4.7
+
+  - Fix future compat warning about raw pointer casts
+  - Use ``drop_in_place`` when dropping the arrayvec by-value iterator
+  - Decrease mininum Rust version (see docs) by @jeehoonkang
+
+- 0.3.25
+
+  - Fix future compat warning about raw pointer casts
+
 - 0.4.6
 
   - Fix compilation on 16-bit targets. This means, the 65536 array size is not

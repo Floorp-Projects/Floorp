@@ -1,3 +1,26 @@
+# 0.1.14 (April 22, 2019)
+
+### Added
+- Add `panic_handler` for customizing action taken on panic (#1052).
+
+# 0.1.13 (March 22, 2019)
+
+### Added
+- `TypedExecutor` implementations (#993)
+
+# 0.1.12 (March 1, 2019)
+
+### Fixed
+- Documentation typos (#915).
+
+### Changed
+- Update crossbeam dependencies (#874).
+
+# 0.1.11 (January 24, 2019)
+
+### Fixed
+- Drop incomplete tasks when threadpool is dropped (#722).
+
 # 0.1.10 (January 6, 2019)
 
 * Fix deadlock bug in `blocking` (#795).

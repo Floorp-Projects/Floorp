@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "redox_users"
-version = "0.2.0"
+version = "0.3.1"
 authors = ["Jose Narvaez <goyox86@gmail.com>", "Wesley Hershberger <mggmugginsmc@gmail.com>"]
 description = "A Rust library to access Redox users and groups functionality"
 documentation = "https://docs.rs/redox_users"
@@ -20,15 +20,14 @@ readme = "README.md"
 keywords = ["redox", "auth"]
 license = "MIT"
 repository = "https://gitlab.redox-os.org/redox-os/users"
-[dependencies.argon2rs]
-version = "0.2"
-default-features = false
-
 [dependencies.failure]
 version = "0.1.1"
 
-[dependencies.rand]
-version = "0.4"
+[dependencies.rand_os]
+version = "0.1"
 
 [dependencies.redox_syscall]
 version = "0.1"
+
+[dependencies.rust-argon2]
+version = "0.5"

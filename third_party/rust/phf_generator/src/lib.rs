@@ -1,13 +1,14 @@
-#![doc(html_root_url="https://docs.rs/phf_generator/0.7.20")]
+#![doc(html_root_url="https://docs.rs/phf_generator/0.7")]
 extern crate phf_shared;
 extern crate rand;
 
 use phf_shared::PhfHash;
-use rand::{SeedableRng, XorShiftRng, Rng};
+use rand::{SeedableRng, Rng};
+use rand::rngs::SmallRng;
 
 const DEFAULT_LAMBDA: usize = 5;
 
-const FIXED_SEED: [u32; 4] = [3141592653, 589793238, 462643383, 2795028841];
+const FIXED_SEED: u64 = 1234567890;
 
 pub struct HashState {
     pub key: u64,
@@ -16,7 +17,7 @@ pub struct HashState {
 }
 
 pub fn generate_hash<H: PhfHash>(entries: &[H]) -> HashState {
-    let mut rng = XorShiftRng::from_seed(FIXED_SEED);
+    let mut rng = SmallRng::seed_from_u64(FIXED_SEED);
     loop {
         if let Some(s) = try_generate_hash(entries, &mut rng) {
             return s;
@@ -24,7 +25,7 @@ pub fn generate_hash<H: PhfHash>(entries: &[H]) -> HashState {
     }
 }
 
-fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut XorShiftRng) -> Option<HashState> {
+fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<HashState> {
     struct Bucket {
         idx: usize,
         keys: Vec<usize>,
