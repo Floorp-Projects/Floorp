@@ -471,15 +471,23 @@ fn main() {
     let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
-            let items = s
-                .split(',')
-                .map(|s| s.parse::<f32>().unwrap())
-                .collect::<Vec<_>>();
-            let rect = LayoutRect::new(
-                LayoutPoint::new(items[0], items[1]),
-                LayoutSize::new(items[2], items[3]),
-            );
-            webrender::ChasePrimitive::LocalRect(rect)
+            match s.find(',') {
+                Some(_) => {
+                    let items = s
+                        .split(',')
+                        .map(|s| s.parse::<f32>().unwrap())
+                        .collect::<Vec<_>>();
+                    let rect = LayoutRect::new(
+                        LayoutPoint::new(items[0], items[1]),
+                        LayoutSize::new(items[2], items[3]),
+                    );
+                    webrender::ChasePrimitive::LocalRect(rect)
+                }
+                None => {
+                    let id = s.parse::<usize>().unwrap();
+                    webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
+                }
+            }
         },
         None => webrender::ChasePrimitive::Nothing,
     };

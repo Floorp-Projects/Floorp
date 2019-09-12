@@ -72,7 +72,7 @@ args:
       help: Disable batching of instanced draw calls
   - chase:
       long: chase
-      help: Chase a particular primitive matching the local rect
+      help: Chase a particular primitive matching the local rect or ID
       takes_value: true
   - dump_shader_source:
       long: dump-shader-source
