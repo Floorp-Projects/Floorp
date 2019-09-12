@@ -24,6 +24,8 @@ TODO:
   these settings are set.
 """
 
+from __future__ import print_function
+
 from copy import deepcopy
 from optparse import OptionParser, Option, OptionGroup
 import os
@@ -185,18 +187,18 @@ def download_config_file(url, file_name):
     max_sleeptime = 5 * 60
     while True:
         if n >= attempts:
-            print "Failed to download from url %s after %d attempts, quiting..." % (url, attempts)
+            print("Failed to download from url %s after %d attempts, quiting..." % (url, attempts))
             raise SystemError(-1)
         try:
             contents = urllib2.urlopen(url, timeout=30).read()
             break
-        except urllib2.URLError, e:
-            print "Error downloading from url %s: %s" % (url, str(e))
-        except socket.timeout, e:
-            print "Time out accessing %s: %s" % (url, str(e))
-        except socket.error, e:
-            print "Socket error when accessing %s: %s" % (url, str(e))
-        print "Sleeping %d seconds before retrying" % sleeptime
+        except urllib2.URLError as e:
+            print("Error downloading from url %s: %s" % (url, str(e)))
+        except socket.timeout as e:
+            print("Time out accessing %s: %s" % (url, str(e)))
+        except socket.error as e:
+            print("Socket error when accessing %s: %s" % (url, str(e)))
+        print("Sleeping %d seconds before retrying" % sleeptime)
         time.sleep(sleeptime)
         sleeptime = sleeptime * 2
         if sleeptime > max_sleeptime:
@@ -207,8 +209,8 @@ def download_config_file(url, file_name):
         f = open(file_name, 'w')
         f.write(contents)
         f.close()
-    except IOError, e:
-        print "Error writing downloaded contents to file %s: %s" % (file_name, str(e))
+    except IOError as e:
+        print("Error writing downloaded contents to file %s: %s" % (file_name, str(e)))
         raise SystemError(-1)
 
 
@@ -427,9 +429,9 @@ class BaseConfig(object):
             raise SystemExit(-1)
 
     def list_actions(self):
-        print "Actions available:"
+        print("Actions available:")
         for a in self.all_actions:
-            print "    " + ("*" if a in self.default_actions else " "), a
+            print("    " + ("*" if a in self.default_actions else " "), a)
         raise SystemExit(0)
 
     def get_cfgs_from_files(self, all_config_files, options):

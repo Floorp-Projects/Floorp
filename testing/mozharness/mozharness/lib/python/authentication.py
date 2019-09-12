@@ -5,6 +5,8 @@
 # ***** END LICENSE BLOCK *****
 
 """module for http authentication operations"""
+from __future__ import print_function
+
 import getpass
 import os
 
@@ -39,10 +41,10 @@ def get_credentials():
         with open(CREDENTIALS_PATH, "w+") as file_handler:
             file_handler.write("%s\n" % https_username)
 
-        os.chmod(CREDENTIALS_PATH, 0600)
+        os.chmod(CREDENTIALS_PATH, 0o600)
 
     if not LDAP_PASSWORD:
-        print "Please enter your LDAP password (we won't store it):"
+        print("Please enter your LDAP password (we won't store it):")
         LDAP_PASSWORD = getpass.getpass()
 
     return https_username, LDAP_PASSWORD

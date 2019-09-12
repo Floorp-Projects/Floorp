@@ -34,7 +34,7 @@ class VCSToolsScript(VCSScript):
                         parent_dir=os.path.dirname(file_path),
                         create_parent_dir=True,
                     )
-                    self.chmod(file_path, 0755)
+                    self.chmod(file_path, 0o755)
         else:
             # We simply verify that everything is in order
             # or if the user forgot to specify developer mode
