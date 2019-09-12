@@ -56,9 +56,6 @@ py2commands="
     jstestbrowser
     jstests
     lint
-    mach-commands
-    mach-completion
-    mach-debug-commands
     marionette-test
     mochitest
     mozbuild-reference
@@ -86,7 +83,6 @@ py2commands="
     run-android
     run-desktop
     rusttests
-    settings
     show-log
     static-analysis
     talos-test
