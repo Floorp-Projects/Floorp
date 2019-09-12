@@ -227,3 +227,30 @@ const showFilterPopupPresetsAndCreatePreset = async function(
 
   await onRender;
 };
+
+/**
+ * Our calculations are slightly off so we add offsets for hidpi and non-hidpi
+ * screens.
+ *
+ * @param {Document} doc
+ *        The document that owns the tooltip.
+ */
+function getOffsets(doc) {
+  let offsetTop = 0;
+  let offsetLeft = 0;
+
+  if (doc && doc.defaultView.devicePixelRatio === 2) {
+    // On hidpi screens our calculations are off by 2 vertical pixels.
+    offsetTop = 2;
+  } else {
+    // On non-hidpi screens our calculations are off by 1 vertical pixel.
+    offsetTop = 1;
+  }
+
+  if (doc && doc.defaultView.devicePixelRatio !== 2) {
+    // On hidpi screens our calculations are off by 1 horizontal pixel.
+    offsetLeft = 1;
+  }
+
+  return { offsetTop, offsetLeft };
+}
