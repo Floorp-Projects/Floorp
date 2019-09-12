@@ -155,7 +155,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsCOMPtr<nsIFile> mPluginTempDir;
   nsCOMPtr<nsIFile> mPluginProcessSandboxTempDir;
 #endif
-  nsCOMArray<nsIFile> mAppBundleDirectories;
 
  private:
   static nsresult SetUserDataProfileDirectory(nsCOMPtr<nsIFile>& aFile,

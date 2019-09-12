@@ -115,22 +115,21 @@ class nsPluginTag final : public nsIInternalPluginTag {
   };
 
   nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
-              bool fromExtension, uint32_t aBlocklistState);
+              uint32_t aBlocklistState);
   nsPluginTag(const char* aName, const char* aDescription,
               const char* aFileName, const char* aFullPath,
               const char* aVersion, const char* const* aMimeTypes,
               const char* const* aMimeDescriptions,
               const char* const* aExtensions, int32_t aVariants,
-              int64_t aLastModifiedTime, bool fromExtension,
-              uint32_t aBlocklistState, bool aArgsAreUTF8 = false);
+              int64_t aLastModifiedTime, uint32_t aBlocklistState,
+              bool aArgsAreUTF8 = false);
   nsPluginTag(uint32_t aId, const char* aName, const char* aDescription,
               const char* aFileName, const char* aFullPath,
               const char* aVersion, nsTArray<nsCString> aMimeTypes,
               nsTArray<nsCString> aMimeDescriptions,
               nsTArray<nsCString> aExtensions, bool aIsFlashPlugin,
               bool aSupportsAsyncRender, int64_t aLastModifiedTime,
-              bool aFromExtension, int32_t aSandboxLevel,
-              uint32_t aBlocklistState);
+              int32_t aSandboxLevel, uint32_t aBlocklistState);
 
   void TryUnloadPlugin(bool inShutdown);
 
@@ -149,8 +148,6 @@ class nsPluginTag final : public nsIInternalPluginTag {
 
   bool HasSameNameAndMimes(const nsPluginTag* aPluginTag) const;
   const nsCString& GetNiceFileName() override;
-
-  bool IsFromExtension() const;
 
   RefPtr<nsPluginTag> mNext;
   uint32_t mId;
@@ -176,7 +173,6 @@ class nsPluginTag final : public nsIInternalPluginTag {
   virtual ~nsPluginTag();
 
   nsCString mNiceFileName;  // UTF-8
-  bool mIsFromExtension;
   uint32_t mBlocklistState;
 
   void InitMime(const char* const* aMimeTypes,

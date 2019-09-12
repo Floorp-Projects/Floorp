@@ -184,7 +184,7 @@ bool nsIInternalPluginTag::HasMimeType(const nsACString& aMimeType) const {
 /* nsPluginTag */
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
-                         bool fromExtension, uint32_t aBlocklistState)
+                         uint32_t aBlocklistState)
     : nsIInternalPluginTag(aPluginInfo->fName, aPluginInfo->fDescription,
                            aPluginInfo->fFileName, aPluginInfo->fVersion),
       mId(sNextId++),
@@ -197,7 +197,6 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
       mLastModifiedTime(aLastModifiedTime),
       mSandboxLevel(0),
       mIsSandboxLoggingEnabled(false),
-      mIsFromExtension(fromExtension),
       mBlocklistState(aBlocklistState) {
   InitMime(aPluginInfo->fMimeTypeArray, aPluginInfo->fMimeDescriptionArray,
            aPluginInfo->fExtensionArray, aPluginInfo->fVariantCount);
@@ -211,8 +210,8 @@ nsPluginTag::nsPluginTag(const char* aName, const char* aDescription,
                          const char* aVersion, const char* const* aMimeTypes,
                          const char* const* aMimeDescriptions,
                          const char* const* aExtensions, int32_t aVariants,
-                         int64_t aLastModifiedTime, bool fromExtension,
-                         uint32_t aBlocklistState, bool aArgsAreUTF8)
+                         int64_t aLastModifiedTime, uint32_t aBlocklistState,
+                         bool aArgsAreUTF8)
     : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion),
       mId(sNextId++),
       mContentProcessRunningCount(0),
@@ -224,7 +223,6 @@ nsPluginTag::nsPluginTag(const char* aName, const char* aDescription,
       mLastModifiedTime(aLastModifiedTime),
       mSandboxLevel(0),
       mIsSandboxLoggingEnabled(false),
-      mIsFromExtension(fromExtension),
       mBlocklistState(aBlocklistState) {
   InitMime(aMimeTypes, aMimeDescriptions, aExtensions,
            static_cast<uint32_t>(aVariants));
@@ -240,8 +238,7 @@ nsPluginTag::nsPluginTag(uint32_t aId, const char* aName,
                          nsTArray<nsCString> aMimeDescriptions,
                          nsTArray<nsCString> aExtensions, bool aIsFlashPlugin,
                          bool aSupportsAsyncRender, int64_t aLastModifiedTime,
-                         bool aFromExtension, int32_t aSandboxLevel,
-                         uint32_t aBlocklistState)
+                         int32_t aSandboxLevel, uint32_t aBlocklistState)
     : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion, aMimeTypes,
                            aMimeDescriptions, aExtensions),
       mId(aId),
@@ -254,7 +251,6 @@ nsPluginTag::nsPluginTag(uint32_t aId, const char* aName,
       mSandboxLevel(aSandboxLevel),
       mIsSandboxLoggingEnabled(false),
       mNiceFileName(),
-      mIsFromExtension(aFromExtension),
       mBlocklistState(aBlocklistState) {}
 
 nsPluginTag::~nsPluginTag() {
@@ -532,10 +528,8 @@ nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
     return rv;
   }
 
-  const char* const pref =
-      mIsFromExtension ? kPrefDefaultEnabledStateXpi : kPrefDefaultEnabledState;
-
-  enabledState = Preferences::GetInt(pref, nsIPluginTag::STATE_ENABLED);
+  enabledState = Preferences::GetInt(kPrefDefaultEnabledState,
+                                     nsIPluginTag::STATE_ENABLED);
   if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
     enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
   }
@@ -684,8 +678,6 @@ nsPluginTag::GetId(uint32_t* aId) {
   *aId = mId;
   return NS_OK;
 }
-
-bool nsPluginTag::IsFromExtension() const { return mIsFromExtension; }
 
 /* nsFakePluginTag */
 

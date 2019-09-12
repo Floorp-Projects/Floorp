@@ -21,7 +21,6 @@ struct PluginTag
   nsCString filename;
   nsCString version;
   int64_t lastModifiedTime;
-  bool isFromExtension;
   int32_t sandboxLevel;
   uint16_t blocklistState;
 };

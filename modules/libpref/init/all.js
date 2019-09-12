@@ -2586,8 +2586,6 @@ pref("input_event_queue.default_duration_per_event", 1);
 // required to process the following input events.
 pref("input_event_queue.count_for_prediction", 9);
 
-pref("plugins.load_appdir_plugins", false);
-
 // This only supports one hidden ctp plugin, edit nsPluginArray.cpp if adding a second
 pref("plugins.navigator.hidden_ctp_plugin", "");
 
