@@ -14,6 +14,7 @@
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/Document.h"
 
 namespace mozilla {
